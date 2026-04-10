@@ -11,9 +11,7 @@ interface HologramFaceProps {
   voiceState: "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
   enableCamera?: boolean;
   onTripleTap?: () => void;
-  /** Emotion override from AI analysis (e.g. "happy", "sad", "curious") */
   emotionOverride?: FaceState;
-  /** Emotion intensity 0-1 (default 0.7) */
   emotionIntensity?: number;
 }
 
@@ -64,7 +62,6 @@ export function HologramFace({
     }
   }, [onTripleTap]);
 
-  // Emotion override takes precedence over voiceState mapping
   const baseFaceState: FaceState = wakeFlash ? "attentive" : mapToFaceState(voiceState);
   const faceState: FaceState = emotionOverride && voiceState !== "speaking" ? emotionOverride : baseFaceState;
 
@@ -74,14 +71,15 @@ export function HologramFace({
       onClick={handleTap}
       style={{ touchAction: "manipulation" }}
     >
-      {/* Ambient aura */}
+      {/* Soft pastel aura — warm glow behind face */}
       <div className="absolute inset-0 rounded-full pointer-events-none"
         style={{
           background: `radial-gradient(circle, 
-            hsla(200, 100%, 65%, ${voiceState === "speaking" ? 0.22 : voiceState === "listening" ? 0.16 : 0.1}) 0%, 
-            hsla(280, 50%, 55%, ${voiceState === "speaking" ? 0.1 : 0.04}) 35%,
-            hsla(330, 40%, 50%, ${voiceState === "speaking" ? 0.05 : 0.02}) 55%,
-            transparent 75%)`,
+            hsla(215, 80%, 75%, ${voiceState === "speaking" ? 0.25 : voiceState === "listening" ? 0.18 : 0.12}) 0%, 
+            hsla(270, 45%, 75%, ${voiceState === "speaking" ? 0.14 : 0.06}) 30%,
+            hsla(320, 40%, 75%, ${voiceState === "speaking" ? 0.06 : 0.03}) 50%,
+            hsla(45, 60%, 80%, 0.02) 65%,
+            transparent 80%)`,
           transition: "background 0.6s ease",
         }}
       />
@@ -92,21 +90,26 @@ export function HologramFace({
         style={{ background: "transparent" }}
       >
         <Suspense fallback={null}>
-          <ambientLight intensity={0.45} color="#e8f4ff" />
+          {/* Soft warm lighting — pastel anime style */}
+          <ambientLight intensity={0.55} color="#f0f0ff" />
           <directionalLight
             position={[2, 3, 4]}
-            intensity={voiceState === "speaking" ? 1.1 : 0.75}
-            color={voiceState === "speaking" ? "#99ddff" : "#bbddee"}
+            intensity={voiceState === "speaking" ? 1.2 : 0.85}
+            color={voiceState === "speaking" ? "#aaddff" : "#cce0f0"}
           />
-          <directionalLight position={[-2, 1, 3]} intensity={0.4} color="#cc99ff" />
+          <directionalLight position={[-2, 1, 3]} intensity={0.45} color="#ddb3ff" />
           <pointLight
             position={[0, 0.5, 3]}
-            intensity={voiceState === "listening" ? 0.9 : 0.55}
-            color="#77ddff"
+            intensity={voiceState === "listening" ? 0.95 : 0.6}
+            color="#88ccff"
             distance={8}
           />
-          <pointLight position={[0, -1.5, 1]} intensity={0.28} color="#ffccdd" distance={5} />
-          <pointLight position={[0, 2, 1]} intensity={0.18} color="#aaeeff" distance={5} />
+          {/* Warm bottom fill — gives anime/Pixar warmth */}
+          <pointLight position={[0, -1.5, 1]} intensity={0.35} color="#ffd4e8" distance={5} />
+          {/* Top rim — cool highlight */}
+          <pointLight position={[0, 2, 1]} intensity={0.22} color="#bbddff" distance={5} />
+          {/* Side accent — lavender */}
+          <pointLight position={[-2, 0, 2]} intensity={0.15} color="#ccaaff" distance={6} />
 
           <FaceScene
             faceState={faceState}

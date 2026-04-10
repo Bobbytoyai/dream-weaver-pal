@@ -28,6 +28,40 @@ interface StoryModeProps {
   onParentMode: () => void;
 }
 
+/* ── Floating Particles ── */
+const FloatingParticles = () => {
+  const particles = Array.from({ length: 10 }, (_, i) => ({
+    id: i,
+    size: 3 + Math.random() * 6,
+    left: Math.random() * 100,
+    delay: Math.random() * 10,
+    duration: 12 + Math.random() * 12,
+    color: [
+      "hsla(270, 55%, 65%, 0.2)",
+      "hsla(215, 80%, 60%, 0.18)",
+      "hsla(45, 80%, 65%, 0.15)",
+      "hsla(320, 50%, 65%, 0.15)",
+      "hsla(155, 55%, 55%, 0.15)",
+    ][i % 5],
+  }));
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map(p => (
+        <div key={p.id} className="floating-particle"
+          style={{
+            width: p.size, height: p.size,
+            left: `${p.left}%`, bottom: "-10px",
+            backgroundColor: p.color,
+            animationDuration: `${p.duration}s`,
+            animationDelay: `${p.delay}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
 export default function StoryMode({ childName, childAge, onBack, parentSettings, onParentMode }: StoryModeProps) {
   const currentVoiceId = parentSettings?.voiceType || "female";
   const [phase, setPhase] = useState<StoryPhase>("pick");
@@ -43,13 +77,11 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
   const audioQueue = useAudioQueue();
   const { incrementStoriesHeard, addFavoriteTheme } = useChildMemory(childName);
 
-  // Init SFX bus
   useEffect(() => {
     const cleanup = initSfxEventBus();
     return cleanup;
   }, []);
 
-  // Emit state changes
   const prevVoiceState = useRef<VoiceState>("idle");
   useEffect(() => {
     if (voiceState === prevVoiceState.current) return;
@@ -91,13 +123,11 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
     const abortController = new AbortController();
     abortRef.current = abortController;
 
-    // Try to get a template for this theme
     const template = await getRandomStory(theme, childAge);
     setStoryTitle(template?.title || `Histoire ${theme}`);
 
     eventBus.emit({ type: "STORY_START", theme, title: template?.title || theme });
 
-    // Play a "hmm" filler while loading
     fetchTTSAudio("Il était une fois…", abortController.signal, currentVoiceId).then(url => {
       if (!abortController.signal.aborted) {
         setVoiceState("speaking");
@@ -124,7 +154,6 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
         allDoneRef.current = true;
         setStoryText(fullText);
 
-        // Save to memory
         if (template) {
           incrementStoriesHeard(template.id, theme);
         }
@@ -156,7 +185,6 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
     setPhase("pick");
   }, [audioQueue]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       abortRef.current?.abort();
@@ -165,9 +193,24 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-between h-screen bg-background px-4 py-6 max-w-lg mx-auto select-none overflow-hidden">
+    <div className="child-light flex flex-col items-center justify-between h-screen px-4 py-6 max-w-lg mx-auto select-none overflow-hidden relative"
+      style={{ background: `linear-gradient(180deg, hsl(270, 45%, 96%) 0%, hsl(235, 50%, 96%) 40%, hsl(215, 55%, 96%) 70%, hsl(320, 35%, 96.5%) 100%)` }}>
+
+      {/* Floating particles */}
+      <FloatingParticles />
+
       {/* Hologram */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0">
+      <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 relative z-10">
+        {/* Soft glow */}
+        <div className="absolute w-80 h-80 rounded-full glow-pulse pointer-events-none"
+          style={{
+            background: `radial-gradient(circle, 
+              hsla(270, 55%, 70%, ${voiceState === "speaking" ? 0.18 : 0.1}) 0%, 
+              hsla(215, 60%, 70%, 0.06) 40%,
+              transparent 70%)`,
+          }}
+        />
+
         <div className="relative w-72 h-72 md:w-80 md:h-80">
           <HologramFace
             voiceState={voiceState}
@@ -177,14 +220,14 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
         </div>
 
         {/* Story title / status */}
-        <p className="mt-3 text-sm font-semibold text-muted-foreground tracking-wide uppercase">
+        <p className="mt-3 text-sm font-bold text-foreground/70 tracking-wide uppercase">
           {phase === "pick" && "Choisis un thème !"}
           {phase === "loading" && "Préparation de l'histoire…"}
           {phase === "telling" && (storyTitle || "Il était une fois…")}
           {phase === "done" && "Fin de l'histoire ✨"}
         </p>
 
-        {/* Scrolling story text when telling */}
+        {/* Scrolling story text */}
         {(phase === "telling" || phase === "done") && storyText && (
           <div className="mt-3 max-h-24 overflow-y-auto px-4 w-full">
             <p className="text-xs text-muted-foreground/70 text-center leading-relaxed">
@@ -195,25 +238,20 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
       </div>
 
       {/* Bottom controls */}
-      <div className="pb-6 pt-2 w-full">
+      <div className="pb-6 pt-2 w-full relative z-10">
         {phase === "pick" && (
           <>
             <div className="grid grid-cols-3 gap-3 mb-4">
               {THEMES.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => startStory(t.id)}
-                  className="flex flex-col items-center gap-1 py-3 px-2 rounded-2xl bg-card border-2 border-border hover:border-primary hover:scale-105 active:scale-95 transition-all"
-                >
-                  <span className="text-2xl">{t.emoji}</span>
+                <button key={t.id} onClick={() => startStory(t.id)}
+                  className="flex flex-col items-center gap-1.5 py-4 px-2 rounded-3xl bg-white/70 backdrop-blur-sm border border-border/40 shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300">
+                  <span className="text-3xl">{t.emoji}</span>
                   <span className="text-xs font-bold text-foreground">{t.label}</span>
                 </button>
               ))}
             </div>
-            <button
-              onClick={onBack}
-              className="flex items-center justify-center gap-2 w-full py-3 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
-            >
+            <button onClick={onBack}
+              className="flex items-center justify-center gap-2 w-full py-3 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors duration-300">
               <ArrowLeft className="w-4 h-4" />
               Retour
             </button>
@@ -221,10 +259,8 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
         )}
 
         {(phase === "telling" || phase === "loading") && (
-          <button
-            onClick={stopStory}
-            className="flex items-center justify-center gap-2 w-full py-3 rounded-full bg-destructive/10 text-destructive font-bold text-sm hover:bg-destructive/20 transition-all active:scale-95"
-          >
+          <button onClick={stopStory}
+            className="flex items-center justify-center gap-2 w-full py-3.5 rounded-full bg-white/60 backdrop-blur-sm border border-destructive/20 text-destructive font-bold text-sm hover:bg-destructive/10 transition-all duration-300 active:scale-95">
             <X className="w-4 h-4" />
             Arrêter l'histoire
           </button>
@@ -232,22 +268,16 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
 
         {phase === "done" && (
           <div className="flex flex-col gap-3">
-            <button
-              onClick={() => currentTheme && startStory(currentTheme)}
-              className="w-full py-3 rounded-full bg-primary text-primary-foreground font-bold text-sm hover:scale-105 transition-all active:scale-95"
-            >
+            <button onClick={() => currentTheme && startStory(currentTheme)}
+              className="w-full py-3.5 rounded-full bg-primary text-primary-foreground font-bold text-sm shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300 active:scale-95">
               🔄 Encore une !
             </button>
-            <button
-              onClick={() => { setPhase("pick"); setStoryText(""); }}
-              className="w-full py-3 rounded-full bg-card border-2 border-border text-foreground font-bold text-sm hover:border-primary transition-all"
-            >
+            <button onClick={() => { setPhase("pick"); setStoryText(""); }}
+              className="w-full py-3.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/40 text-foreground font-bold text-sm shadow-sm hover:shadow-md transition-all duration-300">
               📚 Autre thème
             </button>
-            <button
-              onClick={onBack}
-              className="flex items-center justify-center gap-2 w-full py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
+            <button onClick={onBack}
+              className="flex items-center justify-center gap-2 w-full py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors duration-300">
               <ArrowLeft className="w-4 h-4" />
               Retour
             </button>
