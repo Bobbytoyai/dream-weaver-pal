@@ -40,10 +40,10 @@ const VOICE_PROFILES: Record<string, VoiceSettings> = {
   // Speed réduit = rythme lent, sécurisant
   female: {
     voiceId: "XrExE9yKIg1WjnnlVkGX",   // Matilda
-    stability: 0.92,
-    similarity_boost: 0.85,
-    style: 0.10,
-    speed: 0.82,
+    stability: 0.88,
+    similarity_boost: 0.82,
+    style: 0.25,
+    speed: 0.92,
   },
   // 👨 Papa — calme, protecteur, confiant
   // Stability très haute = voix posée, stable
