@@ -42,7 +42,7 @@ function filterSentence(text: string): string | null {
 }
 
 // ─── Voice profiles ─────────────────────────────────────────
-export type VoiceProfile = "child" | "female" | "male";
+export type VoiceProfile = "child" | "female" | "male" | "sister" | "brother";
 export type Emotion = "happy" | "sad" | "scared" | "excited" | "calm" | "curious" | "angry" | "bored";
 
 // ─── TTS Audio Cache ────────────────────────────────────────
@@ -194,6 +194,8 @@ export async function previewVoiceProfile(profile: VoiceProfile): Promise<void> 
     child: "Salut ! Je suis Bobby ! On va bien s'amuser ensemble, hein ?",
     female: "Bonjour mon cœur ! Je suis là pour toi, on va passer un super moment !",
     male: "Hey bonhomme ! C'est Bobby. Je suis là, tu peux compter sur moi.",
+    sister: "Hey ! C'est moi ta grande sœur Bobby ! Allez, on s'amuse ?",
+    brother: "Yo ! C'est ton grand frère Bobby ! Prêt pour l'aventure ?",
   };
   const text = previewTexts[profile];
   try {
