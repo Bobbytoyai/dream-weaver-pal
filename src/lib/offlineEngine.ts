@@ -44,8 +44,11 @@ export type OfflineIntent =
   | "EMOTION_POSITIVE"
   | "EMOTION_NEGATIVE"
   | "FAREWELL"
-  | "IDENTITY"       // "c'est quoi ton nom", "tu es qui"
+  | "IDENTITY"
   | "COMPLIMENT"
+  | "CALM_REQUEST"    // "bonne nuit", "dodo", "fatigue"
+  | "HUMOR"           // "blague", "drôle"
+  | "ADVENTURE"       // "on explore", "on voyage"
   | "UNKNOWN";
 
 interface IntentRule {
