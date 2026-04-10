@@ -20,6 +20,7 @@ import { getCachedResponse, isSimpleGreeting } from "@/lib/responseCache";
 import { hasWakeWord, stripWakeWord, isJustWakeWord, computeWakeConfidence } from "@/lib/wakeWordEngine";
 import { isOffline, getOfflineResponse } from "@/lib/offlineEngine";
 import { useNetworkMode } from "@/hooks/useNetworkMode";
+import { orchestrate, refineExpression, getSilenceRelaunch } from "@/lib/orchestrator";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TYPES
