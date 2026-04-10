@@ -13,7 +13,7 @@ interface FaceMeshProps {
 }
 
 export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIntensity = 0.7 }: FaceMeshProps) {
-  const headRef = useRef<THREE.Group>(null);
+  const rootRef = useRef<THREE.Group>(null);
   const leftEyeRef = useRef<THREE.Group>(null);
   const rightEyeRef = useRef<THREE.Group>(null);
   const leftPupilRef = useRef<THREE.Mesh>(null);
@@ -25,9 +25,6 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const mouthRef = useRef<THREE.Mesh>(null);
   const leftEyelidRef = useRef<THREE.Mesh>(null);
   const rightEyelidRef = useRef<THREE.Mesh>(null);
-  const glowShellRef = useRef<THREE.Mesh>(null);
-  const leftCheekRef = useRef<THREE.Mesh>(null);
-  const rightCheekRef = useRef<THREE.Mesh>(null);
   const leftHighlight1Ref = useRef<THREE.Mesh>(null);
   const rightHighlight1Ref = useRef<THREE.Mesh>(null);
   const leftHighlight2Ref = useRef<THREE.Mesh>(null);
@@ -35,90 +32,58 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   const animation = useFaceAnimation(faceState, gazeRef, audioAmplitude, viseme, emotionIntensity);
 
-  // --- Materials (soft pastel cartoon style) ---
-  const skinMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("hsl(210, 30%, 78%)"),
-    emissive: new THREE.Color("hsl(200, 45%, 32%)"),
-    emissiveIntensity: 0.25, roughness: 0.55, metalness: 0.05,
-    transparent: true, opacity: 0.9,
-  }), []);
-
+  // --- Materials (soft pastel cartoon, warm glow) ---
   const eyeWhiteMat = useMemo(() => new THREE.MeshStandardMaterial({
     color: 0xf5ffff,
     emissive: new THREE.Color("hsl(200, 85%, 88%)"),
-    emissiveIntensity: 0.4, roughness: 0.1, metalness: 0,
+    emissiveIntensity: 0.45, roughness: 0.08, metalness: 0,
   }), []);
 
   const irisMat = useMemo(() => new THREE.MeshStandardMaterial({
     color: new THREE.Color("hsl(195, 100%, 55%)"),
     emissive: new THREE.Color("hsl(195, 100%, 48%)"),
-    emissiveIntensity: 0.6, roughness: 0.1, metalness: 0.1,
+    emissiveIntensity: 0.6, roughness: 0.08, metalness: 0.1,
   }), []);
 
   const pupilMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("hsl(210, 80%, 12%)"),
-    emissive: new THREE.Color("hsl(200, 100%, 35%)"),
-    emissiveIntensity: 0.35, roughness: 0.08, metalness: 0.15,
+    color: new THREE.Color("hsl(210, 80%, 10%)"),
+    emissive: new THREE.Color("hsl(200, 100%, 30%)"),
+    emissiveIntensity: 0.3, roughness: 0.05, metalness: 0.1,
   }), []);
 
   const eyebrowMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("hsl(210, 35%, 52%)"),
-    emissive: new THREE.Color("hsl(210, 45%, 32%)"),
-    emissiveIntensity: 0.2, roughness: 0.6,
+    color: new THREE.Color("hsl(210, 40%, 48%)"),
+    emissive: new THREE.Color("hsl(210, 50%, 30%)"),
+    emissiveIntensity: 0.25, roughness: 0.5,
   }), []);
 
   const mouthMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("hsl(340, 45%, 58%)"),
-    emissive: new THREE.Color("hsl(340, 55%, 38%)"),
-    emissiveIntensity: 0.3, roughness: 0.4,
+    color: new THREE.Color("hsl(340, 50%, 55%)"),
+    emissive: new THREE.Color("hsl(340, 60%, 35%)"),
+    emissiveIntensity: 0.35, roughness: 0.35,
   }), []);
 
   const eyelidMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("hsl(210, 28%, 68%)"),
-    emissive: new THREE.Color("hsl(200, 35%, 32%)"),
+    color: new THREE.Color("hsl(210, 25%, 65%)"),
+    emissive: new THREE.Color("hsl(200, 30%, 30%)"),
     emissiveIntensity: 0.2, roughness: 0.5, metalness: 0.05,
   }), []);
 
-  const blushMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("hsl(330, 55%, 68%)"),
-    emissive: new THREE.Color("hsl(330, 65%, 48%)"),
-    emissiveIntensity: 0.4, roughness: 0.6,
-    transparent: true, opacity: 0.3,
-  }), []);
-
-  const glowMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("hsl(200, 100%, 72%)"),
-    emissive: new THREE.Color("hsl(200, 100%, 62%)"),
-    emissiveIntensity: 0.6, transparent: true, opacity: 0.08,
-    roughness: 0, metalness: 1, side: THREE.BackSide,
-  }), []);
-
   const highlightMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 2,
+    color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 2.5,
     transparent: true, opacity: 0.9,
-  }), []);
-
-  const noseMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("hsl(210, 28%, 70%)"),
-    emissive: new THREE.Color("hsl(200, 38%, 30%)"),
-    emissiveIntensity: 0.2, roughness: 0.45, metalness: 0.03,
-  }), []);
-
-  const earInnerMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("hsl(330, 35%, 72%)"),
-    emissive: new THREE.Color("hsl(330, 45%, 38%)"),
-    emissiveIntensity: 0.15, roughness: 0.5,
   }), []);
 
   useFrame((_, delta) => {
     const state = animation.update(delta);
-    if (!headRef.current) return;
+    if (!rootRef.current) return;
 
-    headRef.current.rotation.x = state.headTiltX;
-    headRef.current.rotation.y = state.headTiltY;
-    headRef.current.rotation.z = state.headTiltZ;
+    // Root group rotation (head movement without a head mesh)
+    rootRef.current.rotation.x = state.headTiltX;
+    rootRef.current.rotation.y = state.headTiltY;
+    rootRef.current.rotation.z = state.headTiltZ;
 
-    // --- Pupils follow gaze ---
+    // --- Pupils ---
     if (leftPupilRef.current) {
       leftPupilRef.current.position.x = state.pupilX;
       leftPupilRef.current.position.y = state.pupilY;
@@ -143,7 +108,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(pScale);
     if (rightPupilRef.current) rightPupilRef.current.scale.setScalar(pScale);
 
-    // --- Eyelids (blink) ---
+    // --- Eyelids ---
     const eyelidScale = 1 - state.eyeOpenness;
     if (leftEyelidRef.current) {
       leftEyelidRef.current.scale.y = Math.max(0.01, eyelidScale);
@@ -154,44 +119,34 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       rightEyelidRef.current.visible = eyelidScale > 0.05;
     }
 
-    // --- Eye scale (bigger = more interest) ---
-    const eyeScale = 0.88 + state.eyeOpenness * 0.18;
+    // --- Eye scale ---
+    const eyeScale = 0.85 + state.eyeOpenness * 0.2;
     if (leftEyeRef.current) leftEyeRef.current.scale.setScalar(eyeScale);
     if (rightEyeRef.current) rightEyeRef.current.scale.setScalar(eyeScale);
 
     // --- Eyebrows ---
     if (leftEyebrowRef.current) {
-      leftEyebrowRef.current.position.y = 0.72 + state.eyebrowHeight;
+      leftEyebrowRef.current.position.y = 0.58 + state.eyebrowHeight;
       leftEyebrowRef.current.rotation.z = -state.eyebrowTilt;
     }
     if (rightEyebrowRef.current) {
-      rightEyebrowRef.current.position.y = 0.72 + state.eyebrowHeight;
+      rightEyebrowRef.current.position.y = 0.58 + state.eyebrowHeight;
       rightEyebrowRef.current.rotation.z = state.eyebrowTilt;
     }
 
-    // --- Mouth (viseme-driven) ---
+    // --- Mouth ---
     if (mouthRef.current) {
       mouthRef.current.scale.x = 0.5 + state.mouthWidth * 0.7;
       mouthRef.current.scale.y = 0.2 + state.mouthOpenness * 2.0;
       mouthRef.current.scale.z = 0.8 + state.mouthRound * 0.5;
-      mouthRef.current.position.y = -0.32 + state.mouthCurve * 0.07 - state.jawDrop * 0.04;
-      mouthRef.current.position.z = 0.88 + state.mouthOpenness * 0.03;
+      mouthRef.current.position.y = -0.55 + state.mouthCurve * 0.07 - state.jawDrop * 0.04;
+      mouthRef.current.position.z = 0.05 + state.mouthOpenness * 0.02;
     }
 
-    // --- Cheek blush ---
-    if (leftCheekRef.current) {
-      (leftCheekRef.current.material as THREE.MeshStandardMaterial).opacity = 0.1 + state.cheekGlow * 0.55;
-      (leftCheekRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.2 + state.cheekGlow * 0.65;
-    }
-    if (rightCheekRef.current) {
-      (rightCheekRef.current.material as THREE.MeshStandardMaterial).opacity = 0.1 + state.cheekGlow * 0.55;
-      (rightCheekRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.2 + state.cheekGlow * 0.65;
-    }
+    // --- Iris glow ---
+    irisMat.emissiveIntensity = 0.35 + state.irisGlow * 0.65;
 
-    // --- Iris glow (living eyes, always slightly shimmering) ---
-    irisMat.emissiveIntensity = 0.35 + state.irisGlow * 0.6;
-
-    // --- Eye sparkle highlights (dynamic intensity) ---
+    // --- Eye sparkle ---
     const sparkleOpacity = 0.4 + state.eyeSparkle * 0.6;
     if (leftHighlight1Ref.current) {
       (leftHighlight1Ref.current.material as THREE.MeshStandardMaterial).opacity = sparkleOpacity;
@@ -205,94 +160,66 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (rightHighlight2Ref.current) {
       (rightHighlight2Ref.current.material as THREE.MeshStandardMaterial).opacity = sparkleOpacity * 0.7;
     }
-
-    // --- Global glow ---
-    glowMat.opacity = state.glowIntensity * 0.15;
-    glowMat.emissiveIntensity = 0.3 + state.glowIntensity * 0.8;
-    skinMat.emissiveIntensity = 0.18 + state.glowIntensity * 0.25;
   });
 
-  return (
-    <group ref={headRef}>
-      {/* Head sphere (rounded, soft) */}
-      <mesh material={skinMat}><sphereGeometry args={[1, 48, 48]} /></mesh>
-      <mesh ref={glowShellRef} material={glowMat} scale={1.06}><sphereGeometry args={[1, 32, 32]} /></mesh>
+  // Eye spacing & positioning (no head sphere — elements float)
+  const eyeSpacing = 0.55;
+  const eyeY = 0.1;
 
-      {/* LEFT EYE — bigger, rounder, more segments for softness */}
-      <group ref={leftEyeRef} position={[-0.34, 0.18, 0.82]}>
-        <mesh material={eyeWhiteMat}><sphereGeometry args={[0.24, 32, 32]} /></mesh>
-        <mesh ref={leftIrisRef} position={[0, 0, 0.14]} material={irisMat}><sphereGeometry args={[0.14, 24, 24]} /></mesh>
-        <mesh ref={leftPupilRef} position={[0, 0, 0.19]} material={pupilMat}><sphereGeometry args={[0.065, 20, 20]} /></mesh>
-        {/* Primary sparkle */}
-        <mesh ref={leftHighlight1Ref} position={[0.06, 0.06, 0.22]} material={highlightMat.clone()}>
-          <sphereGeometry args={[0.03, 12, 12]} />
+  return (
+    <group ref={rootRef}>
+      {/* LEFT EYE */}
+      <group ref={leftEyeRef} position={[-eyeSpacing, eyeY, 0]}>
+        <mesh material={eyeWhiteMat}><sphereGeometry args={[0.35, 48, 48]} /></mesh>
+        <mesh ref={leftIrisRef} position={[0, 0, 0.22]} material={irisMat}><sphereGeometry args={[0.2, 32, 32]} /></mesh>
+        <mesh ref={leftPupilRef} position={[0, 0, 0.3]} material={pupilMat}><sphereGeometry args={[0.09, 24, 24]} /></mesh>
+        {/* Sparkle highlights */}
+        <mesh ref={leftHighlight1Ref} position={[0.08, 0.09, 0.33]} material={highlightMat.clone()}>
+          <sphereGeometry args={[0.045, 16, 16]} />
         </mesh>
-        {/* Secondary sparkle */}
-        <mesh ref={leftHighlight2Ref} position={[-0.035, -0.025, 0.21]} material={highlightMat.clone()} scale={0.6}>
-          <sphereGeometry args={[0.025, 10, 10]} />
+        <mesh ref={leftHighlight2Ref} position={[-0.05, -0.04, 0.32]} material={highlightMat.clone()} scale={0.55}>
+          <sphereGeometry args={[0.035, 12, 12]} />
         </mesh>
-        {/* Third tiny sparkle for extra life */}
-        <mesh position={[0.02, 0.08, 0.2]} material={highlightMat} scale={0.3}>
-          <sphereGeometry args={[0.02, 8, 8]} />
+        <mesh position={[0.03, 0.12, 0.31]} material={highlightMat} scale={0.25}>
+          <sphereGeometry args={[0.025, 8, 8]} />
         </mesh>
-        {/* Eyelid — rounded box */}
-        <mesh ref={leftEyelidRef} position={[0, 0.11, 0.06]} material={eyelidMat}>
-          <boxGeometry args={[0.52, 0.24, 0.24]} />
+        {/* Eyelid */}
+        <mesh ref={leftEyelidRef} position={[0, 0.18, 0.1]} material={eyelidMat}>
+          <boxGeometry args={[0.78, 0.35, 0.35]} />
         </mesh>
       </group>
 
       {/* RIGHT EYE */}
-      <group ref={rightEyeRef} position={[0.34, 0.18, 0.82]}>
-        <mesh material={eyeWhiteMat}><sphereGeometry args={[0.24, 32, 32]} /></mesh>
-        <mesh ref={rightIrisRef} position={[0, 0, 0.14]} material={irisMat}><sphereGeometry args={[0.14, 24, 24]} /></mesh>
-        <mesh ref={rightPupilRef} position={[0, 0, 0.19]} material={pupilMat}><sphereGeometry args={[0.065, 20, 20]} /></mesh>
-        <mesh ref={rightHighlight1Ref} position={[0.06, 0.06, 0.22]} material={highlightMat.clone()}>
-          <sphereGeometry args={[0.03, 12, 12]} />
+      <group ref={rightEyeRef} position={[eyeSpacing, eyeY, 0]}>
+        <mesh material={eyeWhiteMat}><sphereGeometry args={[0.35, 48, 48]} /></mesh>
+        <mesh ref={rightIrisRef} position={[0, 0, 0.22]} material={irisMat}><sphereGeometry args={[0.2, 32, 32]} /></mesh>
+        <mesh ref={rightPupilRef} position={[0, 0, 0.3]} material={pupilMat}><sphereGeometry args={[0.09, 24, 24]} /></mesh>
+        <mesh ref={rightHighlight1Ref} position={[0.08, 0.09, 0.33]} material={highlightMat.clone()}>
+          <sphereGeometry args={[0.045, 16, 16]} />
         </mesh>
-        <mesh ref={rightHighlight2Ref} position={[-0.035, -0.025, 0.21]} material={highlightMat.clone()} scale={0.6}>
-          <sphereGeometry args={[0.025, 10, 10]} />
+        <mesh ref={rightHighlight2Ref} position={[-0.05, -0.04, 0.32]} material={highlightMat.clone()} scale={0.55}>
+          <sphereGeometry args={[0.035, 12, 12]} />
         </mesh>
-        <mesh position={[0.02, 0.08, 0.2]} material={highlightMat} scale={0.3}>
-          <sphereGeometry args={[0.02, 8, 8]} />
+        <mesh position={[0.03, 0.12, 0.31]} material={highlightMat} scale={0.25}>
+          <sphereGeometry args={[0.025, 8, 8]} />
         </mesh>
-        <mesh ref={rightEyelidRef} position={[0, 0.11, 0.06]} material={eyelidMat}>
-          <boxGeometry args={[0.52, 0.24, 0.24]} />
+        <mesh ref={rightEyelidRef} position={[0, 0.18, 0.1]} material={eyelidMat}>
+          <boxGeometry args={[0.78, 0.35, 0.35]} />
         </mesh>
       </group>
 
-      {/* EYEBROWS — thicker, softer capsule */}
-      <mesh ref={leftEyebrowRef} position={[-0.34, 0.72, 0.8]} material={eyebrowMat}>
-        <capsuleGeometry args={[0.04, 0.24, 6, 12]} />
+      {/* EYEBROWS — thick rounded capsules */}
+      <mesh ref={leftEyebrowRef} position={[-eyeSpacing, 0.58, 0.15]} material={eyebrowMat}>
+        <capsuleGeometry args={[0.055, 0.3, 8, 16]} />
       </mesh>
-      <mesh ref={rightEyebrowRef} position={[0.34, 0.72, 0.8]} material={eyebrowMat}>
-        <capsuleGeometry args={[0.04, 0.24, 6, 12]} />
-      </mesh>
-
-      {/* NOSE — soft round */}
-      <mesh position={[0, 0, 0.96]} material={noseMat}><sphereGeometry args={[0.07, 16, 16]} /></mesh>
-
-      {/* MOUTH — capsule for roundness */}
-      <mesh ref={mouthRef} position={[0, -0.32, 0.88]} material={mouthMat}>
-        <capsuleGeometry args={[0.05, 0.18, 6, 12]} />
+      <mesh ref={rightEyebrowRef} position={[eyeSpacing, 0.58, 0.15]} material={eyebrowMat}>
+        <capsuleGeometry args={[0.055, 0.3, 8, 16]} />
       </mesh>
 
-      {/* CHEEKS — soft blush circles */}
-      <mesh ref={leftCheekRef} position={[-0.58, -0.08, 0.65]} material={blushMat.clone()} rotation={[0, -0.4, 0]}>
-        <circleGeometry args={[0.15, 24]} />
+      {/* MOUTH — floating capsule */}
+      <mesh ref={mouthRef} position={[0, -0.55, 0.05]} material={mouthMat}>
+        <capsuleGeometry args={[0.06, 0.22, 8, 16]} />
       </mesh>
-      <mesh ref={rightCheekRef} position={[0.58, -0.08, 0.65]} material={blushMat.clone()} rotation={[0, 0.4, 0]}>
-        <circleGeometry args={[0.15, 24]} />
-      </mesh>
-
-      {/* EARS — rounded */}
-      <group position={[-0.92, 0.15, 0]}>
-        <mesh material={skinMat}><sphereGeometry args={[0.17, 16, 16]} /></mesh>
-        <mesh position={[0.03, 0, 0.05]} material={earInnerMat} scale={0.6}><sphereGeometry args={[0.17, 12, 12]} /></mesh>
-      </group>
-      <group position={[0.92, 0.15, 0]}>
-        <mesh material={skinMat}><sphereGeometry args={[0.17, 16, 16]} /></mesh>
-        <mesh position={[-0.03, 0, 0.05]} material={earInnerMat} scale={0.6}><sphereGeometry args={[0.17, 12, 12]} /></mesh>
-      </group>
     </group>
   );
 }
