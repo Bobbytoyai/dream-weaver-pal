@@ -65,7 +65,10 @@ export function HologramFace({
   }, [onTripleTap]);
 
   const baseFaceState: FaceState = wakeFlash ? "attentive" : mapToFaceState(voiceState);
-  const faceState: FaceState = emotionOverride && voiceState !== "speaking" ? emotionOverride : baseFaceState;
+  // v3.0: Keep emotion override active DURING speaking for expression coherence
+  const faceState: FaceState = emotionOverride && voiceState === "speaking" ? "speaking" : (emotionOverride || baseFaceState);
+  // Pass emotion to FaceScene for blending during speech
+  const emotionDuringSpeech: FaceState | undefined = voiceState === "speaking" ? emotionOverride : undefined;
 
   return (
     <div
@@ -118,6 +121,7 @@ export function HologramFace({
             gazeRef={gazeRef}
             getViseme={getViseme}
             emotionIntensity={emotionIntensity}
+            emotionDuringSpeech={emotionDuringSpeech}
             bobbyColor={bobbyColor}
           />
           <HologramParticles intensity={voiceState === "speaking" ? 0.8 : voiceState === "listening" ? 0.5 : 0.25} />

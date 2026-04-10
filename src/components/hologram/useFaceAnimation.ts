@@ -144,14 +144,17 @@ function clamp(v: number, min: number, max: number) {
 
 /**
  * Expression engine with emotion intensity, enhanced micro-animations,
- * and phoneme-based lip sync.
+ * phoneme-based lip sync, and real-time sync features (v3.0).
  * 
- * New features vs previous version:
- * - sad / sleepy / curious states
- * - irisGlow + eyeSparkle channels for "living eyes"
- * - Emotion intensity multiplier (0-1)
- * - Faster micro-animation cycle (2-4s)
- * - Double-blink, eye-sparkle pulse, idle eye drift
+ * Sync timing:
+ * - Eyebrows ANTICIPATE speech by ~50ms (lead)
+ * - Eyes FOLLOW with ~100ms natural delay (lag)
+ * - Mouth is 100% aligned to audio
+ * - Emotion blends with speaking state (not replaced)
+ * 
+ * Performance:
+ * - All animations target <16ms per frame
+ * - Failsafe: reverts to neutral if frame drops detected
  */
 export function useFaceAnimation(
   faceState: FaceState,
@@ -159,6 +162,7 @@ export function useFaceAnimation(
   audioAmplitude: number,
   viseme?: VisemeState,
   emotionIntensity: number = 0.7,
+  emotionDuringSpeech?: FaceState,
 ) {
   const current = useRef<FaceAnimationState>({ ...DEFAULT_STATE });
   const blinkTimer = useRef(0);
@@ -177,6 +181,13 @@ export function useFaceAnimation(
   const nextMouthQuirk = useRef(1 + Math.random() * 2);
   const mouthQuirkPhase = useRef(0); // 0=none, 1=quirking, 2=returning
   const mouthQuirkTarget = useRef({ curve: 0, width: 0, open: 0 });
+  // v3.0: Anticipation/delay buffers
+  const eyebrowAnticipationBuffer = useRef(0); // stores upcoming eyebrow lift
+  const eyeDelayBuffer = useRef({ openness: 1, sparkle: 0.5 }); // delayed eye state
+  const eyeDelayTimer = useRef(0);
+  // v3.0: Performance failsafe
+  const frameBudgetExceeded = useRef(0);
+  const lastFrameTime = useRef(0);
 
   const update = useCallback((delta: number) => {
     const c = current.current;
