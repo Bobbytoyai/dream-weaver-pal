@@ -8,12 +8,13 @@ type AiMsg = { role: "user" | "assistant"; content: string };
 
 // Fallback spoken messages for errors
 const FALLBACK_FR: Record<string, string> = {
-  not_heard: "Je n'ai pas bien entendu, tu peux répéter ?",
-  thinking: "hmm… attends une seconde…",
-  error: "Oups, un petit souci… réessaie !",
+  not_heard: "Hmm… j'ai pas bien entendu… tu peux répéter ?",
+  thinking: "hmm… attends…",
+  error: "Oh… un petit souci… réessaie !",
   reengage: "Tu es encore là ?",
-  session_end: "Je suis là quand tu veux… à bientôt !",
+  session_end: "Je suis là quand tu veux revenir",
   welcome: "Salut ! Appuie sur le micro pour me parler !",
+  interrupted: "Ah oui, pardon ! Dis-moi",
 };
 
 interface VoiceScreenProps {
