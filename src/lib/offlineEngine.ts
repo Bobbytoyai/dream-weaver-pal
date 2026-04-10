@@ -10,10 +10,18 @@
  * - Intelligent follow-ups
  * - Safety filter
  * - Action priority routing
+ * - Devine l'Animal interactive game
  * 
  * Pipeline: STT → Normalize → Intent → Context → Response → Follow-up → TTS
  * Target latency: <300ms
  */
+
+import {
+  isAnimalGameActive,
+  isAnimalGameTrigger,
+  startAnimalGame,
+  handleAnimalGameInput,
+} from "./animalGuessGame";
 
 // ─── Network State ──────────────────────────────────────────
 export type NetworkMode = "ONLINE" | "OFFLINE" | "HYBRID";
@@ -1873,15 +1881,19 @@ const TONGUE_TWISTERS = [
   "Essaie de dire vite : Tonton, ton thé t'a-t-il ôté ta toux ? 🍵",
 ];
 
-export type MiniGameType = "riddle" | "true_false" | "animal_quiz" | "would_you_rather" | "tongue_twister";
+export type MiniGameType = "riddle" | "true_false" | "animal_quiz" | "would_you_rather" | "tongue_twister" | "animal_guess";
 
 function pickMiniGame(): { type: MiniGameType; text: string } {
   const gameType = pickRandom(
-    ["riddle", "true_false", "animal_quiz", "would_you_rather", "tongue_twister"],
+    ["riddle", "true_false", "animal_quiz", "would_you_rather", "tongue_twister", "animal_guess"],
     "game_type"
   ) as MiniGameType;
 
   switch (gameType) {
+    case "animal_guess": {
+      const intro = startAnimalGame(undefined, 7);
+      return { type: "animal_guess", text: intro };
+    }
     case "riddle": {
       const r = RIDDLES[Math.floor(Math.random() * RIDDLES.length)];
       return { type: "riddle", text: `Devinette ! ${r.question} 🤔` };
@@ -1932,6 +1944,20 @@ export function getOfflineResponse(
     const resp = pickRandom(SAFE_REDIRECTS, "BLOCKED");
     updateContext("BLOCKED", "", resp);
     return { text: resp, intent: "BLOCKED", isOffline: true };
+  }
+
+  // 1b. Devine l'Animal game — if active, route ALL input to the game
+  if (isAnimalGameActive()) {
+    const gameResp = handleAnimalGameInput(text, childName);
+    updateContext("PLAY_REQUEST", text, gameResp);
+    return { text: gameResp, intent: "PLAY_REQUEST", isOffline: true, gameType: "animal_guess" as MiniGameType };
+  }
+
+  // 1c. Detect "Devine l'Animal" trigger
+  if (isAnimalGameTrigger(text)) {
+    const gameResp = startAnimalGame(childName, 7);
+    updateContext("PLAY_REQUEST", text, gameResp);
+    return { text: gameResp, intent: "PLAY_REQUEST", isOffline: true, gameType: "animal_guess" as MiniGameType };
   }
 
   // 2. Multi-turn follow-up: handle answers to Bobby's previous questions
