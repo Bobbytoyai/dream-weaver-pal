@@ -168,6 +168,7 @@ export function useConversationStateMachine({
   const isSpeakingRef = useRef(false);
   const retryCountRef = useRef(0);
   const narrationAbortRef = useRef<AbortController | null>(null);
+  const speakAndListenRef = useRef<((text: string) => void) | null>(null);
 
   const audioQueue = useAudioQueue();
   const session = useSessionTracker(childName, childAge);
@@ -274,17 +275,61 @@ export function useConversationStateMachine({
     }
   }, [clearAllTimers, goToSleep, recorder, session, transition]);
 
+  // ─── BACKCHANNEL ───
+  const backchannelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const silenceRelaunchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const backchannelCountRef = useRef(0);
+
+  const clearListeningTimers = useCallback(() => {
+    if (backchannelTimerRef.current) { clearTimeout(backchannelTimerRef.current); backchannelTimerRef.current = null; }
+    if (silenceRelaunchTimerRef.current) { clearTimeout(silenceRelaunchTimerRef.current); silenceRelaunchTimerRef.current = null; }
+  }, []);
+
   const goToListening = useCallback(() => {
     clearAllTimers();
+    clearListeningTimers();
     accumulatedTextRef.current = "";
     isSpeakingRef.current = false;
     retryCountRef.current = 0;
+    backchannelCountRef.current = 0;
     transition("LISTENING");
     setPartialText("");
     silenceTimerRef.current = setTimeout(() => {
       if (machineStateRef.current === "LISTENING") goToIdle();
     }, SILENCE_IDLE_TIMEOUT);
-  }, [clearAllTimers, goToIdle, transition]);
+
+    // 3s silence soft relaunch — gentle prompt if child said nothing
+    silenceRelaunchTimerRef.current = setTimeout(() => {
+      if (machineStateRef.current === "LISTENING" && accumulatedTextRef.current.trim().length === 0 && conversationActiveRef.current) {
+        const relaunch = getSilenceRelaunch();
+        setBobbyFaceEmotion("curious");
+        setBobbyEmotionIntensity(0.5);
+        // Use speakAndListenRef to avoid forward-reference issue
+        speakAndListenRef.current?.(relaunch);
+      }
+    }, 6000);
+
+    // Backchannel: visual micro-nod every ~4s during active listening
+    const scheduleBackchannel = () => {
+      backchannelTimerRef.current = setTimeout(() => {
+        if (machineStateRef.current === "LISTENING" && accumulatedTextRef.current.trim().length > 0) {
+          backchannelCountRef.current++;
+          // Visual nod: brief "attentive" face pulse
+          setBobbyFaceEmotion("attentive");
+          setBobbyEmotionIntensity(0.4);
+          setTimeout(() => {
+            if (machineStateRef.current === "LISTENING") {
+              setBobbyFaceEmotion("listening");
+              setBobbyEmotionIntensity(0.7);
+            }
+          }, 600);
+          // Only schedule another if we haven't done too many
+          if (backchannelCountRef.current < 3) scheduleBackchannel();
+        }
+      }, 3500 + Math.random() * 1500);
+    };
+    scheduleBackchannel();
+  }, [clearAllTimers, clearListeningTimers, goToIdle, transition]);
 
   const goToSpeaking = useCallback(() => {
     clearAllTimers();
@@ -310,6 +355,7 @@ export function useConversationStateMachine({
       audioQueue.setOnAllDone(() => { eventBus.emit({ type: "SPEECH_STOP" }); goToListening(); });
     } catch { goToListening(); }
   }, [audioQueue, currentVoiceId, currentVoiceSpeed, goToListening, goToSpeaking, isCalmMode]);
+  useEffect(() => { speakAndListenRef.current = speakAndListen; }, [speakAndListen]);
 
   const interrupt = useCallback(() => {
     abortRef.current?.abort();
