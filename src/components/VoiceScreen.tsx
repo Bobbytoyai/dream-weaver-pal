@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { BookOpen, Settings, Camera, Mic, MicOff } from "lucide-react";
-import { streamVoiceChat, fetchTTSAudio, useAudioQueue } from "@/lib/voicePipeline";
+import { streamVoiceChat, fetchTTSAudio, useAudioQueue, preloadVoiceProfile, detectEmotionForTTS } from "@/lib/voicePipeline";
+import type { Emotion } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import { useWakeWord } from "@/hooks/useWakeWord";
 import { useDeepgramSTT } from "@/hooks/useDeepgramSTT";
