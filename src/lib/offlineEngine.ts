@@ -1945,6 +1945,10 @@ export function getOfflineResponse(
     return continuation;
   }
 
+  // 3b. Multi-turn conversational context (pourquoi?, et toi?, references to earlier exchanges)
+  const contextual = handleConversationalContext(text, childName);
+  if (contextual) return contextual;
+
   // 3. Try QA fuzzy match (highest priority)
   const qaMatch = matchQA(normalized);
   if (qaMatch) {
