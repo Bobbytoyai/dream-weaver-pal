@@ -145,14 +145,17 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
         {step === 1 && (
           <div className="flex flex-col items-center text-center w-full">
             <div className="w-20 h-20 mb-6 relative">
-              <HologramFace voiceState="listening" enableCamera={false} />
+              <HologramFace voiceState="listening" enableCamera={false} emotionOverride={nameEmotion === "idle" ? undefined : nameEmotion} />
             </div>
             <h2 className="text-3xl font-extrabold text-foreground mb-2">Comment tu t'appelles ?</h2>
             <p className="text-muted-foreground text-sm mb-8">Bobby veut connaître ton prénom !</p>
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                setNameEmotion(e.target.value.trim().length >= 2 ? "happy" : e.target.value.length > 0 ? "excited" : "idle");
+              }}
               placeholder="Ton prénom..."
               autoFocus
               className="w-full rounded-2xl border-2 border-border bg-[hsl(var(--muted))]/30 backdrop-blur-sm px-6 py-4 text-lg text-center font-bold text-foreground placeholder:text-muted-foreground/40 focus:border-[hsl(var(--primary))] focus:bg-[hsl(var(--muted))]/50 focus:outline-none focus:ring-2 focus:ring-[hsla(200,100%,60%,0.3)] transition-all"
