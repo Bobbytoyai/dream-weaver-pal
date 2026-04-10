@@ -92,3 +92,30 @@
 .voice-pulse-ring {
   animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
 }
+
+/* ── Tab transition animations ── */
+.tab-content-wrapper {
+  will-change: transform, opacity;
+}
+
+@keyframes tabExitLeft {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(-30px); opacity: 0; }
+}
+@keyframes tabExitRight {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(30px); opacity: 0; }
+}
+@keyframes tabEnterRight {
+  from { transform: translateX(30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes tabEnterLeft {
+  from { transform: translateX(-30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.tab-exit-left { animation: tabExitLeft 0.15s ease-in forwards; }
+.tab-exit-right { animation: tabExitRight 0.15s ease-in forwards; }
+.tab-enter-right { animation: tabEnterRight 0.28s ease-out forwards; }
+.tab-enter-left { animation: tabEnterLeft 0.28s ease-out forwards; }
