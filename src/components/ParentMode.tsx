@@ -440,13 +440,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const emotionCounts = allEmotions.reduce((acc, e) => { acc[e] = (acc[e] || 0) + 1; return acc; }, {} as Record<string, number>);
 
   const recentAnalyses = analyses.slice(0, 7);
-  const avgEmotions = recentAnalyses.length > 0
-    ? Object.keys(emotionScoreLabels).reduce((acc, key) => {
-        const sum = recentAnalyses.reduce((s, a) => s + ((a.emotions as any)?.[key] || 0), 0);
-        acc[key] = Math.round(sum / recentAnalyses.length);
-        return acc;
-      }, {} as Record<string, number>)
-    : {};
 
   const allAlerts = analyses.flatMap(a => (a.alerts || []).map(alert => ({
     ...alert, date: a.created_at, sessionId: a.session_id,
@@ -491,6 +484,18 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     };
   }, [analyses]);
 
+  // Real emotion averages from actual analyses only
+  const avgEmotions = useMemo(() => {
+    if (recentAnalyses.length === 0) return {};
+    return Object.keys(emotionScoreLabels).reduce((acc, key) => {
+      const values = recentAnalyses.map(a => ((a.emotions as any)?.[key] || 0)).filter(v => v > 0);
+      if (values.length > 0) {
+        acc[key] = Math.round(values.reduce((s, v) => s + v, 0) / values.length);
+      }
+      return acc;
+    }, {} as Record<string, number>);
+  }, [recentAnalyses]);
+
   const allInterests = useMemo(() => {
     const counts: Record<string, number> = {};
     analyses.forEach(a => {
@@ -499,13 +504,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     return Object.entries(counts).sort(([, a], [, b]) => b - a).slice(0, 12);
   }, [analyses]);
 
+  // Chart data — only real data, no interpolation
   const emotionChartData = useMemo(() => {
-    // Generate demo data for days without real data to make chart useful
-    const seededRandom = (seed: number) => {
-      const x = Math.sin(seed) * 10000;
-      return x - Math.floor(x);
-    };
-
     const days: { date: string; label: string; joy: number; curiosity: number; frustration: number; fear: number; sadness: number; excitement: number; count: number }[] = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
@@ -527,27 +527,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       day.excitement += emo.excitement || 0;
       day.count++;
     }
-
-    // Fill empty days with plausible interpolated/demo values for visual clarity
-    const daysWithData = days.filter(d => d.count > 0);
-    if (daysWithData.length > 0 && daysWithData.length < 4) {
-      const avgJoy = Math.round(daysWithData.reduce((s, d) => s + d.joy / d.count, 0) / daysWithData.length);
-      const avgCuriosity = Math.round(daysWithData.reduce((s, d) => s + d.curiosity / d.count, 0) / daysWithData.length);
-      const avgExcitement = Math.round(daysWithData.reduce((s, d) => s + d.excitement / d.count, 0) / daysWithData.length);
-      days.forEach((d, idx) => {
-        if (d.count === 0) {
-          const seed = idx * 7 + 42;
-          d.joy = Math.max(10, avgJoy + Math.round((seededRandom(seed) - 0.5) * 30));
-          d.curiosity = Math.max(10, avgCuriosity + Math.round((seededRandom(seed + 1) - 0.5) * 25));
-          d.excitement = Math.max(5, avgExcitement + Math.round((seededRandom(seed + 2) - 0.5) * 20));
-          d.frustration = Math.round(seededRandom(seed + 3) * 15);
-          d.sadness = Math.round(seededRandom(seed + 4) * 10);
-          d.fear = Math.round(seededRandom(seed + 5) * 8);
-          d.count = 1;
-        }
-      });
-    }
-
     return days.map(d => ({
       name: d.label,
       Joie: d.count > 0 ? Math.round(d.joy / d.count) : null,
@@ -559,74 +538,96 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     }));
   }, [analyses]);
 
-  const radarData = useMemo(() => {
-    if (!avgScores) return [];
-    return [
-      { subject: "Sociabilité", value: avgScores.sociability },
-      { subject: "Curiosité", value: avgScores.curiosity },
-      { subject: "Stabilité", value: avgScores.stability },
-    ];
-  }, [avgScores]);
+  // Average session duration
+  const avgSessionDuration = useMemo(() => {
+    const withDuration = sessions.filter(s => s.duration_seconds && s.duration_seconds > 0);
+    if (withDuration.length === 0) return 0;
+    return Math.round(withDuration.reduce((s, ses) => s + (ses.duration_seconds || 0), 0) / withDuration.length);
+  }, [sessions]);
+
+  // Average messages per session
+  const avgMessagesPerSession = useMemo(() => {
+    if (sessions.length === 0) return 0;
+    return Math.round(sessions.reduce((s, ses) => s + ses.message_count, 0) / sessions.length);
+  }, [sessions]);
+
+  // Engagement distribution
+  const engagementDist = useMemo(() => {
+    const dist = { high: 0, medium: 0, low: 0 };
+    recentAnalyses.forEach(a => {
+      if (a.engagement_level === "high") dist.high++;
+      else if (a.engagement_level === "medium") dist.medium++;
+      else dist.low++;
+    });
+    return dist;
+  }, [recentAnalyses]);
+
+  // Mood distribution
+  const moodDist = useMemo(() => {
+    const dist = { positive: 0, neutral: 0, low: 0 };
+    recentAnalyses.forEach(a => {
+      const mood = a.mood_score || "neutral";
+      if (mood === "positive") dist.positive++;
+      else if (mood === "low") dist.low++;
+      else dist.neutral++;
+    });
+    return dist;
+  }, [recentAnalyses]);
+
+  // Weekly activity (sessions per day of week)
+  const weeklyActivity = useMemo(() => {
+    const days = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+    const counts = new Array(7).fill(0);
+    sessions.forEach(s => {
+      const d = new Date(s.started_at).getDay();
+      counts[d === 0 ? 6 : d - 1]++;
+    });
+    return days.map((label, i) => ({ label, count: counts[i] }));
+  }, [sessions]);
+
+  // Last session info
+  const lastSession = sessions[0] || null;
+  const lastAnalysis = lastSession ? analyses.find(a => a.session_id === lastSession.id) : null;
 
   const filteredSessions = useMemo(() => {
     if (!tagFilter) return sessions;
     return sessions.filter(s => s.tags?.includes(tagFilter));
   }, [sessions, tagFilter]);
 
-  const engagementDescription = useMemo(() => {
-    const highCount = recentAnalyses.filter(a => a.engagement_level === "high").length;
-    const total = recentAnalyses.length;
-    if (total === 0) return { label: "—", level: "neutral" };
-    const ratio = highCount / total;
-    if (ratio >= 0.6) return { label: "Élevé", level: "high" };
-    if (ratio >= 0.3) return { label: "Moyen", level: "medium" };
-    return { label: "Faible", level: "low" };
-  }, [recentAnalyses]);
-
-  // ─── Insight du jour ──────────────────────────────────────────
-  const dailyInsight = useMemo(() => {
-    if (recentAnalyses.length === 0) return null;
-
+  // Smart daily insights — picks one relevant insight
+  const dailyInsights = useMemo(() => {
     const insights: string[] = [];
+    if (recentAnalyses.length === 0) return insights;
 
-    // Topic trend
-    if (topTopics.length > 0) {
-      const top = topTopics[0];
-      insights.push(`${childName} s'intéresse beaucoup à "${top[0]}" cette semaine (mentionné ${top[1]} fois).`);
-    }
-
-    // Emotion trend
-    const joyAvg = recentAnalyses.reduce((s, a) => s + ((a.emotions as any)?.joy || 0), 0) / recentAnalyses.length;
-    const curiosityAvg = recentAnalyses.reduce((s, a) => s + ((a.emotions as any)?.curiosity || 0), 0) / recentAnalyses.length;
-    if (joyAvg > 60) {
-      insights.push(`${childName} est globalement très joyeux dans ses échanges avec Bobby ! 🌟`);
-    } else if (curiosityAvg > 50) {
-      insights.push(`${childName} montre une belle curiosité — Bobby stimule son envie d'apprendre !`);
-    }
-
-    // Engagement trend
-    const highEngCount = recentAnalyses.filter(a => a.engagement_level === "high").length;
-    if (highEngCount >= Math.ceil(recentAnalyses.length * 0.6)) {
-      insights.push(`L'engagement de ${childName} est excellent : ${highEngCount} sessions très engagées sur ${recentAnalyses.length}.`);
-    }
-
-    // Score evolution
-    if (avgScores) {
-      if (avgScores.sociability > 70) {
-        insights.push(`${childName} développe de belles compétences sociales (score : ${avgScores.sociability}/100).`);
-      }
-      if (avgScores.curiosity > 70) {
-        insights.push(`La curiosité de ${childName} est remarquable (score : ${avgScores.curiosity}/100) !`);
+    // Dominant emotion
+    const sortedEmotions = Object.entries(avgEmotions).sort(([, a], [, b]) => b - a);
+    if (sortedEmotions.length > 0) {
+      const [topEmo, topVal] = sortedEmotions[0];
+      const info = emotionScoreLabels[topEmo];
+      if (info && topVal > 40) {
+        insights.push(`${info.emoji} ${childName} est principalement ${info.label.toLowerCase()} (${topVal}%) dans ses échanges.`);
       }
     }
 
-    // Session frequency
-    if (todaySessions.length > 0) {
-      insights.push(`${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} aujourd'hui, pour ${formatDuration(todayDuration)} d'échanges.`);
+    // Interests
+    if (allInterests.length > 0) {
+      const top3 = allInterests.slice(0, 3).map(([i]) => i).join(", ");
+      insights.push(`🎯 Centres d'intérêt principaux : ${top3}.`);
     }
 
-    return insights.length > 0 ? insights[Math.floor(Date.now() / 86400000) % insights.length] : null;
-  }, [recentAnalyses, topTopics, avgScores, childName, todaySessions, todayDuration]);
+    // Engagement
+    if (engagementDist.high > 0) {
+      const pct = Math.round((engagementDist.high / recentAnalyses.length) * 100);
+      insights.push(`🔥 ${pct}% des sessions sont très engagées.`);
+    }
+
+    // Scores
+    if (avgScores && avgScores.curiosity > 60) {
+      insights.push(`🔍 Curiosité élevée (${avgScores.curiosity}/100) — Bobby stimule l'apprentissage !`);
+    }
+
+    return insights;
+  }, [recentAnalyses, avgEmotions, allInterests, engagementDist, avgScores, childName]);
 
   // ─── Key moments (emotional highlights) ───────────────────────
   const keyMoments = useMemo(() => {
@@ -737,75 +738,70 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   // RENDER: DASHBOARD
   // ═══════════════════════════════════════════════════════════════
 
-  const renderDashboard = () => (
+  const emotionConfig: Record<string, { emoji: string; color: string }> = {
+    Joie: { emoji: "😊", color: "hsl(145, 65%, 42%)" },
+    Curiosité: { emoji: "🧐", color: "hsl(210, 80%, 55%)" },
+    Excitation: { emoji: "🤩", color: "hsl(36, 90%, 50%)" },
+    Frustration: { emoji: "😤", color: "hsl(0, 75%, 55%)" },
+    Peur: { emoji: "😰", color: "hsl(260, 45%, 58%)" },
+    Tristesse: { emoji: "😢", color: "hsl(0, 0%, 55%)" },
+  };
+
+  const renderDashboard = () => {
+    const hasData = totalSessions > 0;
+    const hasAnalysis = recentAnalyses.length > 0;
+
+    return (
     <div className="p-4 space-y-3">
-      {/* ── Insight du jour ── */}
-      {dailyInsight && (
-        <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Star className="w-4 h-4 text-primary" />
-            <h3 className="text-[13px] font-semibold text-foreground">💡 Insight du jour</h3>
+
+      {/* ═══ 1. KPI HERO ROW ═══ */}
+      <div className="grid grid-cols-4 gap-2">
+        {[
+          { value: totalSessions, label: "Sessions", emoji: "💬", accent: "from-blue-500/15 to-blue-600/5" },
+          { value: totalMessages, label: "Messages", emoji: "📝", accent: "from-green-500/15 to-green-600/5" },
+          { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", accent: "from-purple-500/15 to-purple-600/5" },
+          { value: todaySessions.length, label: "Aujourd'hui", emoji: "📅", accent: "from-orange-500/15 to-orange-600/5" },
+        ].map((kpi) => (
+          <div key={kpi.label} className={`bg-gradient-to-br ${kpi.accent} rounded-2xl p-3 text-center border border-border/30`}>
+            <span className="text-lg block">{kpi.emoji}</span>
+            <p className="text-base font-extrabold text-foreground mt-1">{kpi.value}</p>
+            <p className="text-[9px] text-muted-foreground font-medium mt-0.5">{kpi.label}</p>
           </div>
-          <p className="text-[13px] text-foreground leading-relaxed">{dailyInsight}</p>
+        ))}
+      </div>
+
+      {/* ═══ 2. INSIGHTS INTELLIGENTS ═══ */}
+      {dailyInsights.length > 0 && (
+        <div className="bg-card rounded-2xl p-4 border border-border/30">
+          <div className="flex items-center gap-2 mb-3">
+            <Star className="w-4 h-4 text-primary" />
+            <h3 className="text-[13px] font-bold text-foreground">Analyse de la semaine</h3>
+          </div>
+          <div className="space-y-2">
+            {dailyInsights.map((insight, i) => (
+              <p key={i} className="text-[12px] text-foreground/80 leading-relaxed pl-2 border-l-2 border-primary/20">
+                {insight}
+              </p>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* ── Daily Summary Card ── */}
-      <div className="bg-card rounded-2xl p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Résumé du jour</p>
-            <h3 className="text-lg font-bold text-foreground mt-0.5">{new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}</h3>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <Calendar className="w-5 h-5 text-primary" />
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-3 gap-4">
-          <StatPill emoji={dominantMood ? emotionLabels[dominantMood[0]]?.emoji || "🙂" : "🙂"} 
-            value={dominantMood ? emotionLabels[dominantMood[0]]?.label || "Calme" : "Calme"} label="Humeur" />
-          <StatPill emoji={engagementDescription.level === "high" ? "🔥" : engagementDescription.level === "medium" ? "👍" : "💤"} 
-            value={engagementDescription.label} label="Engagement" />
-          <StatPill emoji="💬" value={todaySessions.length} label="Sessions" />
-        </div>
-
-        {topTopics.length > 0 && (
-          <div className="mt-4 pt-3 border-t border-border">
-            <p className="text-[10px] text-muted-foreground font-medium mb-2">🎯 Intérêts principaux</p>
-            <div className="flex flex-wrap gap-1.5">
-              {topTopics.slice(0, 4).map(([topic]) => (
-                <span key={topic} className="px-2.5 py-1 rounded-full bg-primary/8 text-primary text-[11px] font-medium">{topic}</span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {smartAlerts.length === 0 && (
-          <div className="mt-4 pt-3 border-t border-border flex items-center gap-2">
-            <span className="text-success text-sm">✓</span>
-            <p className="text-[11px] text-muted-foreground">Rien à signaler</p>
-          </div>
-        )}
-      </div>
-
-      {/* ── Smart Alerts ── */}
+      {/* ═══ 3. ALERTES ═══ */}
       {smartAlerts.length > 0 && (
-        <div className="bg-card rounded-2xl p-4">
+        <div className="bg-card rounded-2xl p-4 border border-destructive/20">
           <div className="flex items-center gap-2 mb-3">
             <Bell className="w-4 h-4 text-destructive" />
-            <h3 className="text-[13px] font-semibold text-foreground">Alertes</h3>
+            <h3 className="text-[13px] font-bold text-foreground">Alertes</h3>
+            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-destructive/10 text-destructive font-bold">{smartAlerts.length}</span>
           </div>
           <div className="space-y-2">
             {smartAlerts.map((alert, i) => (
               <div key={i} className={`flex items-start gap-2.5 p-2.5 rounded-xl ${
-                alert.severity === "critical" ? "bg-destructive/8" :
+                alert.severity === "critical" ? "bg-destructive/10" :
                 alert.severity === "warning" ? "bg-destructive/5" : "bg-muted/50"
               }`}>
-                <span className="text-sm mt-0.5">{
-                  alert.severity === "critical" ? "🔴" :
-                  alert.severity === "warning" ? "🟡" : "🔵"
-                }</span>
+                <span className="text-sm mt-0.5">{alert.severity === "critical" ? "🔴" : alert.severity === "warning" ? "🟡" : "🔵"}</span>
                 <p className="text-[12px] text-foreground leading-relaxed">{alert.message}</p>
               </div>
             ))}
@@ -813,62 +809,96 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </div>
       )}
 
-      {/* ── Quick Presets ── */}
-      <Card title="Modes rapides" icon={Zap}>
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            { id: "calm", label: "😌 Calme", desc: "Voix douce, rythme lent" },
-            { id: "game", label: "🎮 Jeu", desc: "Énergique, fun" },
-            { id: "night", label: "🌙 Nuit", desc: "Ultra doux, apaisant" },
-            { id: "education", label: "📚 Éducatif", desc: "Apprentissage ludique" },
-          ].map(preset => (
-            <button key={preset.id} onClick={() => applyPreset(preset.id)}
-              className="text-left p-3 rounded-xl bg-muted/50 hover:bg-primary/8 transition-all">
-              <span className="text-[13px] font-semibold text-foreground block">{preset.label}</span>
-              <span className="text-[10px] text-muted-foreground">{preset.desc}</span>
-            </button>
-          ))}
-        </div>
-      </Card>
-
-      {/* ── Behavioral Scores ── */}
+      {/* ═══ 4. SCORES COMPORTEMENTAUX ═══ */}
       {avgScores && (
-        <Card title="Comportement" icon={Brain}>
-          <div className="flex justify-around py-2">
+        <div className="bg-card rounded-2xl p-4 border border-border/30">
+          <div className="flex items-center gap-2 mb-4">
+            <Brain className="w-4 h-4 text-muted-foreground" />
+            <h3 className="text-[13px] font-bold text-foreground">Développement</h3>
+          </div>
+          <div className="flex justify-around">
             <ScoreGauge label="Sociabilité" score={avgScores.sociability} emoji="🤝" color="hsl(var(--primary))" />
             <ScoreGauge label="Curiosité" score={avgScores.curiosity} emoji="🔍" color="hsl(36, 90%, 50%)" />
-            <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="hsl(var(--success))" />
+            <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="hsl(145, 65%, 42%)" />
           </div>
-        </Card>
+
+          {/* Engagement + Mood mini bars */}
+          <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-border/50">
+            <div>
+              <p className="text-[10px] text-muted-foreground font-medium mb-1.5">Engagement</p>
+              <div className="flex gap-1 h-3">
+                {recentAnalyses.length > 0 ? (
+                  <>
+                    <div className="rounded-full bg-primary" style={{ width: `${(engagementDist.high / recentAnalyses.length) * 100}%` }} title={`Élevé: ${engagementDist.high}`} />
+                    <div className="rounded-full bg-primary/40" style={{ width: `${(engagementDist.medium / recentAnalyses.length) * 100}%` }} title={`Moyen: ${engagementDist.medium}`} />
+                    <div className="rounded-full bg-muted" style={{ width: `${(engagementDist.low / recentAnalyses.length) * 100}%` }} title={`Faible: ${engagementDist.low}`} />
+                  </>
+                ) : <div className="rounded-full bg-muted w-full" />}
+              </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-[9px] text-muted-foreground">🔥 {engagementDist.high}</span>
+                <span className="text-[9px] text-muted-foreground">👍 {engagementDist.medium}</span>
+                <span className="text-[9px] text-muted-foreground">💤 {engagementDist.low}</span>
+              </div>
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground font-medium mb-1.5">Humeur</p>
+              <div className="flex gap-1 h-3">
+                {recentAnalyses.length > 0 ? (
+                  <>
+                    <div className="rounded-full bg-green-500" style={{ width: `${(moodDist.positive / recentAnalyses.length) * 100}%` }} />
+                    <div className="rounded-full bg-yellow-400" style={{ width: `${(moodDist.neutral / recentAnalyses.length) * 100}%` }} />
+                    <div className="rounded-full bg-red-400" style={{ width: `${(moodDist.low / recentAnalyses.length) * 100}%` }} />
+                  </>
+                ) : <div className="rounded-full bg-muted w-full" />}
+              </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-[9px] text-muted-foreground">🟢 {moodDist.positive}</span>
+                <span className="text-[9px] text-muted-foreground">🟡 {moodDist.neutral}</span>
+                <span className="text-[9px] text-muted-foreground">🔴 {moodDist.low}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
-      {/* ── Emotion Bars ── */}
+      {/* ═══ 5. ÉMOTIONS MOYENNES ═══ */}
       {Object.keys(avgEmotions).length > 0 && (
-        <Card title="Émotions moyennes" icon={Heart}>
-          <div className="space-y-2.5">
+        <div className="bg-card rounded-2xl p-4 border border-border/30">
+          <div className="flex items-center gap-2 mb-3">
+            <Heart className="w-4 h-4 text-muted-foreground" />
+            <h3 className="text-[13px] font-bold text-foreground">Émotions</h3>
+            <span className="ml-auto text-[10px] text-muted-foreground">{recentAnalyses.length} sessions analysées</span>
+          </div>
+          <div className="space-y-2">
             {Object.entries(avgEmotions).filter(([, v]) => v > 0).sort(([, a], [, b]) => b - a).map(([key, value]) => {
               const info = emotionScoreLabels[key] || { label: key, emoji: "❓" };
+              const barColor = key === "joy" ? "bg-green-500" : key === "curiosity" ? "bg-blue-500" : key === "excitement" ? "bg-orange-400" : key === "frustration" ? "bg-red-400" : key === "fear" ? "bg-purple-400" : "bg-gray-400";
               return (
-                <div key={key} className="flex items-center gap-2">
-                  <span className="w-5 text-center text-sm">{info.emoji}</span>
-                  <span className="text-[12px] text-foreground w-20 font-medium">{info.label}</span>
-                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${value}%` }} />
+                <div key={key} className="flex items-center gap-2.5">
+                  <span className="text-base w-6 text-center">{info.emoji}</span>
+                  <span className="text-[12px] text-foreground w-20 font-semibold">{info.label}</span>
+                  <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
+                    <div className={`h-full ${barColor} rounded-full transition-all duration-700`} style={{ width: `${value}%` }} />
                   </div>
-                  <span className="text-[11px] text-muted-foreground w-8 text-right font-medium">{value}%</span>
+                  <span className="text-[12px] text-foreground w-10 text-right font-bold">{value}%</span>
                 </div>
               );
             })}
           </div>
-        </Card>
+        </div>
       )}
 
-      {/* ── 7-day Chart ── */}
+      {/* ═══ 6. GRAPHIQUE ÉVOLUTION ═══ */}
       {emotionChartData.some(d => d.Joie !== null) && (
-        <Card title="Évolution (7 jours)" icon={TrendingUp}>
-          <div className="w-full h-64">
+        <div className="bg-card rounded-2xl p-4 border border-border/30">
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp className="w-4 h-4 text-muted-foreground" />
+            <h3 className="text-[13px] font-bold text-foreground">Évolution (7 jours)</h3>
+          </div>
+          <div className="w-full h-52">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={emotionChartData} margin={{ top: 10, right: 10, left: -15, bottom: 5 }}>
+              <AreaChart data={emotionChartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
                 <defs>
                   <linearGradient id="gradJoie" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="hsl(145, 65%, 42%)" stopOpacity={0.3} />
@@ -878,105 +908,179 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     <stop offset="5%" stopColor="hsl(210, 80%, 55%)" stopOpacity={0.3} />
                     <stop offset="95%" stopColor="hsl(210, 80%, 55%)" stopOpacity={0} />
                   </linearGradient>
-                  <linearGradient id="gradExcitation" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(36, 90%, 50%)" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="hsl(36, 90%, 50%)" stopOpacity={0} />
-                  </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} domain={[0, 100]} axisLine={false} tickLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} domain={[0, 100]} axisLine={false} tickLine={false} />
                 <Tooltip
                   content={({ active, payload, label }) => {
                     if (!active || !payload?.length) return null;
-                    const emotionConfig: Record<string, { emoji: string; color: string }> = {
-                      Joie: { emoji: "😊", color: "hsl(145, 65%, 42%)" },
-                      Curiosité: { emoji: "🧐", color: "hsl(210, 80%, 55%)" },
-                      Excitation: { emoji: "🤩", color: "hsl(36, 90%, 50%)" },
-                      Frustration: { emoji: "😤", color: "hsl(0, 75%, 55%)" },
-                      Peur: { emoji: "😰", color: "hsl(260, 45%, 58%)" },
-                      Tristesse: { emoji: "😢", color: "hsl(0, 0%, 55%)" },
-                    };
                     return (
-                      <div className="bg-card border border-border rounded-2xl p-3 shadow-lg min-w-[140px]">
-                        <p className="text-[12px] font-bold text-foreground mb-2">{label}</p>
-                        <div className="space-y-1.5">
-                          {payload.filter(p => (p.value as number) > 0).sort((a, b) => (b.value as number) - (a.value as number)).map(p => {
-                            const cfg = emotionConfig[p.name as string] || { emoji: "❓", color: "#888" };
-                            return (
-                              <div key={p.name} className="flex items-center gap-2">
-                                <span className="text-sm">{cfg.emoji}</span>
-                                <span className="text-[11px] text-foreground flex-1">{p.name}</span>
-                                <span className="text-[12px] font-bold" style={{ color: cfg.color }}>{p.value}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
+                      <div className="bg-card border border-border rounded-xl p-2.5 shadow-lg min-w-[130px]">
+                        <p className="text-[11px] font-bold text-foreground mb-1.5">{label}</p>
+                        {payload.filter(p => (p.value as number) > 0).sort((a, b) => (b.value as number) - (a.value as number)).map(p => {
+                          const cfg = emotionConfig[p.name as string] || { emoji: "❓", color: "#888" };
+                          return (
+                            <div key={p.name} className="flex items-center gap-1.5 py-0.5">
+                              <span className="text-xs">{cfg.emoji}</span>
+                              <span className="text-[10px] text-foreground flex-1">{p.name}</span>
+                              <span className="text-[11px] font-bold" style={{ color: cfg.color }}>{p.value}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     );
                   }}
                 />
-                <Area type="monotone" dataKey="Joie" stroke="hsl(145, 65%, 42%)" strokeWidth={2.5} fill="url(#gradJoie)" dot={{ r: 4, fill: "hsl(145, 65%, 42%)", strokeWidth: 2, stroke: "hsl(var(--card))" }} connectNulls />
-                <Area type="monotone" dataKey="Curiosité" stroke="hsl(210, 80%, 55%)" strokeWidth={2.5} fill="url(#gradCuriosite)" dot={{ r: 4, fill: "hsl(210, 80%, 55%)", strokeWidth: 2, stroke: "hsl(var(--card))" }} connectNulls />
-                <Area type="monotone" dataKey="Excitation" stroke="hsl(36, 90%, 50%)" strokeWidth={2} fill="url(#gradExcitation)" dot={{ r: 3, fill: "hsl(36, 90%, 50%)", strokeWidth: 2, stroke: "hsl(var(--card))" }} connectNulls />
-                <Area type="monotone" dataKey="Frustration" stroke="hsl(0, 75%, 55%)" strokeWidth={1.5} fill="transparent" dot={{ r: 3, fill: "hsl(0, 75%, 55%)" }} connectNulls />
-                <Area type="monotone" dataKey="Peur" stroke="hsl(260, 45%, 58%)" strokeWidth={1.5} fill="transparent" dot={{ r: 3, fill: "hsl(260, 45%, 58%)" }} connectNulls />
-                <Area type="monotone" dataKey="Tristesse" stroke="hsl(0, 0%, 55%)" strokeWidth={1.5} fill="transparent" dot={{ r: 3, fill: "hsl(0, 0%, 55%)" }} connectNulls />
+                <Area type="monotone" dataKey="Joie" stroke="hsl(145, 65%, 42%)" strokeWidth={2} fill="url(#gradJoie)" dot={{ r: 3, fill: "hsl(145, 65%, 42%)", strokeWidth: 1.5, stroke: "hsl(var(--card))" }} connectNulls />
+                <Area type="monotone" dataKey="Curiosité" stroke="hsl(210, 80%, 55%)" strokeWidth={2} fill="url(#gradCuriosite)" dot={{ r: 3, fill: "hsl(210, 80%, 55%)", strokeWidth: 1.5, stroke: "hsl(var(--card))" }} connectNulls />
+                <Area type="monotone" dataKey="Excitation" stroke="hsl(36, 90%, 50%)" strokeWidth={1.5} fill="transparent" dot={{ r: 2.5, fill: "hsl(36, 90%, 50%)" }} connectNulls />
+                <Area type="monotone" dataKey="Frustration" stroke="hsl(0, 75%, 55%)" strokeWidth={1.5} fill="transparent" dot={{ r: 2, fill: "hsl(0, 75%, 55%)" }} connectNulls />
+                <Area type="monotone" dataKey="Peur" stroke="hsl(260, 45%, 58%)" strokeWidth={1} fill="transparent" dot={{ r: 2, fill: "hsl(260, 45%, 58%)" }} connectNulls />
+                <Area type="monotone" dataKey="Tristesse" stroke="hsl(0, 0%, 55%)" strokeWidth={1} fill="transparent" dot={{ r: 2, fill: "hsl(0, 0%, 55%)" }} connectNulls />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex flex-wrap gap-3 mt-3">
-            {[
-              { label: "Joie", emoji: "😊", color: "hsl(145, 65%, 42%)" },
-              { label: "Curiosité", emoji: "🧐", color: "hsl(210, 80%, 55%)" },
-              { label: "Excitation", emoji: "🤩", color: "hsl(36, 90%, 50%)" },
-              { label: "Frustration", emoji: "😤", color: "hsl(0, 75%, 55%)" },
-              { label: "Peur", emoji: "😰", color: "hsl(260, 45%, 58%)" },
-              { label: "Tristesse", emoji: "😢", color: "hsl(0, 0%, 55%)" },
-            ].map(e => (
-              <span key={e.label} className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
-                <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: e.color }} />
-                {e.emoji} {e.label}
+          <div className="flex flex-wrap gap-2 mt-2">
+            {Object.entries(emotionConfig).map(([label, cfg]) => (
+              <span key={label} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cfg.color }} />
+                {cfg.emoji} {label}
               </span>
             ))}
-          </div>
-        </Card>
-      )}
-
-      {/* ── Interests ── */}
-      {allInterests.length > 0 && (
-        <Card title="Centres d'intérêt" icon={Sparkles}>
-          <div className="flex flex-wrap gap-2">
-            {allInterests.map(([interest, count]) => (
-              <span key={interest} className="px-3 py-1.5 rounded-full bg-primary/8 text-primary text-[11px] font-medium"
-                style={{ fontSize: `${Math.min(13, 10 + count * 1)}px` }}>
-                {interest} <span className="opacity-40">×{count}</span>
-              </span>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* ── Global Stats ── */}
-      <Card title="Statistiques" icon={BarChart3}>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="text-center">
-            <p className="text-xl font-bold text-primary">{totalSessions}</p>
-            <p className="text-[10px] text-muted-foreground">Sessions</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xl font-bold text-primary">{totalMessages}</p>
-            <p className="text-[10px] text-muted-foreground">Messages</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xl font-bold text-primary">{formatDuration(totalDuration)}</p>
-            <p className="text-[10px] text-muted-foreground">Temps total</p>
           </div>
         </div>
-      </Card>
-    </div>
-  );
+      )}
 
+      {/* ═══ 7. CENTRES D'INTÉRÊT ═══ */}
+      {allInterests.length > 0 && (
+        <div className="bg-card rounded-2xl p-4 border border-border/30">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-4 h-4 text-muted-foreground" />
+            <h3 className="text-[13px] font-bold text-foreground">Centres d'intérêt</h3>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {allInterests.map(([interest, count]) => (
+              <span key={interest} className="px-2.5 py-1 rounded-full bg-primary/8 text-primary text-[11px] font-medium border border-primary/10">
+                {interest} <span className="opacity-40 text-[9px]">×{count}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ═══ 8. STATISTIQUES DÉTAILLÉES ═══ */}
+      <div className="bg-card rounded-2xl p-4 border border-border/30">
+        <div className="flex items-center gap-2 mb-4">
+          <BarChart3 className="w-4 h-4 text-muted-foreground" />
+          <h3 className="text-[13px] font-bold text-foreground">Statistiques détaillées</h3>
+        </div>
+        <div className="space-y-3">
+          {[
+            { label: "Durée moyenne / session", value: formatDuration(avgSessionDuration), icon: "⏱️" },
+            { label: "Messages / session", value: avgMessagesPerSession, icon: "💬" },
+            { label: "Sessions analysées", value: `${recentAnalyses.length} / ${totalSessions}`, icon: "🔬" },
+            { label: "Durée aujourd'hui", value: formatDuration(todayDuration), icon: "📅" },
+          ].map((stat) => (
+            <div key={stat.label} className="flex items-center justify-between py-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm">{stat.icon}</span>
+                <span className="text-[12px] text-muted-foreground">{stat.label}</span>
+              </div>
+              <span className="text-[13px] font-bold text-foreground">{stat.value}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Activité par jour */}
+        {hasData && (
+          <div className="mt-4 pt-3 border-t border-border/50">
+            <p className="text-[10px] text-muted-foreground font-medium mb-2">Activité par jour</p>
+            <div className="flex items-end gap-1 h-12">
+              {weeklyActivity.map((day) => {
+                const maxCount = Math.max(...weeklyActivity.map(d => d.count), 1);
+                const height = (day.count / maxCount) * 100;
+                return (
+                  <div key={day.label} className="flex-1 flex flex-col items-center gap-0.5">
+                    <div className="w-full rounded-t-sm bg-primary/20 relative" style={{ height: `${Math.max(height, 4)}%` }}>
+                      {day.count > 0 && (
+                        <div className="absolute inset-0 rounded-t-sm bg-primary" style={{ height: `${height}%` }} />
+                      )}
+                    </div>
+                    <span className="text-[8px] text-muted-foreground">{day.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ═══ 9. DERNIÈRE SESSION ═══ */}
+      {lastSession && (
+        <div className="bg-card rounded-2xl p-4 border border-border/30">
+          <div className="flex items-center gap-2 mb-3">
+            <Clock className="w-4 h-4 text-muted-foreground" />
+            <h3 className="text-[13px] font-bold text-foreground">Dernière session</h3>
+            <span className="ml-auto text-[10px] text-muted-foreground">{formatDate(lastSession.started_at)}</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            <div className="text-center p-2 rounded-lg bg-muted/30">
+              <p className="text-sm font-bold text-foreground">{lastSession.message_count}</p>
+              <p className="text-[9px] text-muted-foreground">messages</p>
+            </div>
+            <div className="text-center p-2 rounded-lg bg-muted/30">
+              <p className="text-sm font-bold text-foreground">{formatDuration(lastSession.duration_seconds)}</p>
+              <p className="text-[9px] text-muted-foreground">durée</p>
+            </div>
+            <div className="text-center p-2 rounded-lg bg-muted/30">
+              <p className="text-sm font-bold text-foreground">
+                {lastAnalysis ? (lastAnalysis.engagement_level === "high" ? "🔥" : lastAnalysis.engagement_level === "medium" ? "👍" : "💤") : "—"}
+              </p>
+              <p className="text-[9px] text-muted-foreground">engagement</p>
+            </div>
+          </div>
+          {lastAnalysis?.summary && (
+            <p className="text-[11px] text-foreground/70 leading-relaxed bg-muted/20 rounded-lg p-2.5">
+              {lastAnalysis.summary}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* ═══ 10. MODES RAPIDES ═══ */}
+      <div className="bg-card rounded-2xl p-4 border border-border/30">
+        <div className="flex items-center gap-2 mb-3">
+          <Zap className="w-4 h-4 text-muted-foreground" />
+          <h3 className="text-[13px] font-bold text-foreground">Modes rapides</h3>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { id: "calm", emoji: "😌", label: "Calme" },
+            { id: "game", emoji: "🎮", label: "Jeu" },
+            { id: "night", emoji: "🌙", label: "Nuit" },
+            { id: "education", emoji: "📚", label: "Éducatif" },
+          ].map(preset => (
+            <button key={preset.id} onClick={() => applyPreset(preset.id)}
+              className="flex flex-col items-center p-2.5 rounded-xl bg-muted/40 hover:bg-primary/10 transition-all active:scale-95">
+              <span className="text-xl">{preset.emoji}</span>
+              <span className="text-[10px] font-semibold text-foreground mt-1">{preset.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ═══ ÉTAT VIDE ═══ */}
+      {!hasData && (
+        <div className="bg-card rounded-2xl p-8 text-center border border-border/30">
+          <span className="text-4xl block mb-3">🎙️</span>
+          <h3 className="text-base font-bold text-foreground mb-1">Pas encore de sessions</h3>
+          <p className="text-[12px] text-muted-foreground">Les métriques apparaîtront après la première conversation de {childName} avec Bobby.</p>
+        </div>
+      )}
+    </div>
+    );
+  };
   // ═══════════════════════════════════════════════════════════════
   // RENDER: SESSION DETAIL
   // ═══════════════════════════════════════════════════════════════
