@@ -3,12 +3,14 @@ import { BookOpen, Settings, Camera, Mic, MicOff } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import { useWakeWord } from "@/hooks/useWakeWord";
+import { useDeepgramSTT } from "@/hooks/useDeepgramSTT";
 import { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
 import { setSfxVolume, initSfxEventBus } from "@/lib/sfx";
 import { useChildMemory } from "@/hooks/useChildMemory";
 import { useConversationRecorder } from "@/hooks/useConversationRecorder";
 import { eventBus } from "@/lib/eventBus";
+import { getCachedResponse, isSimpleGreeting } from "@/lib/responseCache";
 
 type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
 type AiMsg = { role: "user" | "assistant"; content: string };
@@ -81,75 +83,7 @@ function isEcho(transcript: string): boolean {
   return false;
 }
 
-function useContinuousListening(onResult: (text: string) => void, enabled: boolean) {
-  const recognitionRef = useRef<any>(null);
-  const enabledRef = useRef(enabled);
-  const isRunningRef = useRef(false);
-
-  useEffect(() => {
-    enabledRef.current = enabled;
-  }, [enabled]);
-
-  const start = useCallback(() => {
-    if (isRunningRef.current) return;
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) return;
-
-    const rec = new SR();
-    rec.continuous = false;
-    rec.interimResults = false;
-    rec.lang = "fr-FR";
-    rec.maxAlternatives = 3;
-    recognitionRef.current = rec;
-    isRunningRef.current = true;
-
-    rec.onresult = (event: any) => {
-      let best = "";
-      for (let i = 0; i < event.results.length; i++) {
-        const transcript = String(event.results[i][0].transcript || "").trim();
-        if (transcript.length > best.length) best = transcript;
-      }
-
-      if (best.length > 2) {
-        if (isEcho(best)) return;
-        onResult(best);
-      }
-    };
-
-    rec.onend = () => {
-      isRunningRef.current = false;
-      recognitionRef.current = null;
-      if (enabledRef.current) {
-        setTimeout(() => start(), 200);
-      }
-    };
-
-    rec.onerror = (e: any) => {
-      isRunningRef.current = false;
-      recognitionRef.current = null;
-      if (e.error === "no-speech" && enabledRef.current) {
-        setTimeout(() => start(), 200);
-      }
-    };
-
-    try {
-      rec.start();
-    } catch {
-      isRunningRef.current = false;
-    }
-  }, [onResult]);
-
-  const stop = useCallback(() => {
-    enabledRef.current = false;
-    isRunningRef.current = false;
-    try {
-      recognitionRef.current?.abort();
-    } catch {}
-    recognitionRef.current = null;
-  }, []);
-
-  return { start, stop };
-}
+// Deepgram STT replaces useContinuousListening — see integration below
 
 interface VoiceScreenProps {
   childName: string;
@@ -381,12 +315,26 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     allSentencesDoneRef.current = false;
     pendingSentencesRef.current = 0;
 
+    // Build memory context for bobby-brain
+    const memoryParts: string[] = [];
+    if (memory) {
+      if (memory.favoriteThemes.length > 0) memoryParts.push(`Thèmes favoris: ${memory.favoriteThemes.join(", ")}`);
+      if (memory.totalStoriesHeard > 0) memoryParts.push(`Histoires écoutées: ${memory.totalStoriesHeard}`);
+      const prefs = memory.preferences as Record<string, unknown>;
+      if (prefs && Object.keys(prefs).length > 0) {
+        const prefStr = Object.entries(prefs).map(([k, v]) => `${k}: ${v}`).join(", ");
+        memoryParts.push(`Préférences: ${prefStr}`);
+      }
+    }
+    const memoryContext = memoryParts.length > 0 ? memoryParts.join("\n") : undefined;
+
     await streamVoiceChat({
       messages: newHistory,
       childName,
       childAge,
       mode,
       parentSettings,
+      memoryContext,
       signal: abortController.signal,
       onSentence: (sentence) => {
         if (!abortController.signal.aborted) {
@@ -412,7 +360,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         if (!abortController.signal.aborted) speakFallback("error");
       },
     });
-  }, [audioQueue, childAge, childName, clearTimers, conversationHistory, goToListening, parentSettings, processSentenceForTTS, session, speakFallback]);
+  }, [audioQueue, childAge, childName, clearTimers, conversationHistory, goToListening, memory, parentSettings, processSentenceForTTS, session, speakFallback]);
 
   const handleContinuousResult = useCallback((text: string) => {
     clearTimers();
@@ -429,18 +377,55 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       return;
     }
 
-    getAIResponse(cleaned);
-  }, [clearTimers, getAIResponse, interrupt, speakFallback]);
+    // Use cached response for simple greetings (instant, no LLM call)
+    if (isSimpleGreeting(cleaned)) {
+      const cached = getCachedResponse("greeting");
+      setState("speaking");
+      setContinuousListenEnabled(false);
+      eventBus.emit({ type: "SPEECH_START" });
+      recentBobbyTextsRef.current = [cached, ...recentBobbyTextsRef.current].slice(0, 8);
+      fetchTTSAudio(cached, undefined, currentVoiceId).then(url => {
+        audioQueue.enqueue(url);
+        audioQueue.setOnAllDone(() => {
+          eventBus.emit({ type: "SPEECH_STOP" });
+          goToListening();
+        });
+      }).catch(() => goToListening());
+      setConversationHistory(prev => [...prev, { role: "user", content: cleaned }, { role: "assistant", content: cached }]);
+      session.addMessage("user", cleaned);
+      session.addMessage("assistant", cached);
+      return;
+    }
 
-  const continuousListening = useContinuousListening(handleContinuousResult, continuousListenEnabled);
+    getAIResponse(cleaned);
+  }, [audioQueue, clearTimers, currentVoiceId, getAIResponse, goToListening, interrupt, session, speakFallback]);
+
+  // Deepgram STT for continuous listening (replaces Web Speech API)
+  const deepgramSTT = useDeepgramSTT({
+    onPartial: useCallback((text: string) => {
+      if (continuousListenEnabled) {
+        setPartialText(text);
+      }
+    }, [continuousListenEnabled]),
+    onFinal: useCallback((text: string) => {
+      if (continuousListenEnabled && text.trim().length > 2) {
+        setPartialText("");
+        handleContinuousResult(text.trim());
+      }
+    }, [continuousListenEnabled, handleContinuousResult]),
+    onError: useCallback(() => {
+      console.warn("[Deepgram] STT error, will retry on next listen cycle");
+    }, []),
+    language: "fr",
+  });
 
   useEffect(() => {
     if (continuousListenEnabled) {
-      continuousListening.start();
+      deepgramSTT.start();
     } else {
-      continuousListening.stop();
+      deepgramSTT.stop();
     }
-  }, [continuousListenEnabled, continuousListening]);
+  }, [continuousListenEnabled, deepgramSTT]);
 
   const handleWake = useCallback((transcript: string) => {
     if (stateRef.current === "speaking" || stateRef.current === "processing") {
