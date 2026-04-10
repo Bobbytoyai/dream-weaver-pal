@@ -14,6 +14,7 @@ interface FaceMeshProps {
   audioAmplitude: number;
   viseme?: VisemeState;
   emotionIntensity?: number;
+  emotionDuringSpeech?: FaceState;
   bobbyColor?: string;
 }
 
@@ -29,7 +30,7 @@ function createMangaEyeShape(w: number, h: number): THREE.Shape {
   return shape;
 }
 
-export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIntensity = 0.7, bobbyColor }: FaceMeshProps) {
+export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIntensity = 0.7, emotionDuringSpeech, bobbyColor }: FaceMeshProps) {
   const rootRef = useRef<THREE.Group>(null);
   const leftEyeRef = useRef<THREE.Group>(null);
   const rightEyeRef = useRef<THREE.Group>(null);
@@ -46,7 +47,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const leftCheekRef = useRef<THREE.Mesh>(null);
   const rightCheekRef = useRef<THREE.Mesh>(null);
 
-  const animation = useFaceAnimation(faceState, gazeRef, audioAmplitude, viseme, emotionIntensity);
+  const animation = useFaceAnimation(faceState, gazeRef, audioAmplitude, viseme, emotionIntensity, emotionDuringSpeech);
 
   // ─── Color theme from parent settings ─────────────────────
   const colorHSL = useMemo(() => {
