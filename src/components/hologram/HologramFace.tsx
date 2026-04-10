@@ -132,11 +132,12 @@ export function HologramFace({
   );
 }
 
-function FaceScene({ faceState, gazeRef, getViseme, emotionIntensity, bobbyColor }: {
+function FaceScene({ faceState, gazeRef, getViseme, emotionIntensity, emotionDuringSpeech, bobbyColor }: {
   faceState: FaceState;
   gazeRef: React.MutableRefObject<{ x: number; y: number }>;
   getViseme: () => VisemeState;
   emotionIntensity: number;
+  emotionDuringSpeech?: FaceState;
   bobbyColor?: string;
 }) {
   const visemeRef = useRef<VisemeState>({
@@ -154,6 +155,7 @@ function FaceScene({ faceState, gazeRef, getViseme, emotionIntensity, bobbyColor
       audioAmplitude={visemeRef.current.amplitude}
       viseme={visemeRef.current}
       emotionIntensity={emotionIntensity}
+      emotionDuringSpeech={emotionDuringSpeech}
       bobbyColor={bobbyColor}
     />
   );
