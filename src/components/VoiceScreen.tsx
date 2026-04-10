@@ -58,6 +58,33 @@ function isJustWakeWord(text: string): boolean {
   return stripped.length < 3 || /^[?,!.\s]*$/.test(stripped);
 }
 
+// --- ECHO DETECTION ---
+// Tracks what Bobby said so we can filter it from mic input
+const recentBobbyTextsRef = { current: [] as string[] };
+
+function normalizeForComparison(text: string): string {
+  return text.toLowerCase().replace(/[^a-zàâäéèêëïîôùûüÿç0-9 ]/g, "").replace(/\s+/g, " ").trim();
+}
+
+function isEcho(transcript: string): boolean {
+  const normalized = normalizeForComparison(transcript);
+  if (normalized.length < 5) return false;
+  
+  for (const bobbyText of recentBobbyTextsRef.current) {
+    const bobbyNorm = normalizeForComparison(bobbyText);
+    // Check if the transcript is a substantial substring of what Bobby said
+    if (bobbyNorm.includes(normalized)) return true;
+    if (normalized.includes(bobbyNorm) && bobbyNorm.length > 10) return true;
+    
+    // Check word overlap (>60% means likely echo)
+    const transcriptWords = normalized.split(" ");
+    const bobbyWords = new Set(bobbyNorm.split(" "));
+    const overlap = transcriptWords.filter(w => bobbyWords.has(w)).length;
+    if (transcriptWords.length > 3 && overlap / transcriptWords.length > 0.6) return true;
+  }
+  return false;
+}
+
 // --- CONTINUOUS LISTENING (after Bobby speaks, listen for follow-up) ---
 function useContinuousListening(onResult: (text: string) => void, enabled: boolean) {
   const recognitionRef = useRef<any>(null);
@@ -86,6 +113,11 @@ function useContinuousListening(onResult: (text: string) => void, enabled: boole
         if (transcript.length > best.length) best = transcript;
       }
       if (best.length > 2) {
+        // ECHO FILTER: skip if this sounds like Bobby's own speech
+        if (isEcho(best)) {
+          console.log("[Echo] Filtered Bobby's own speech:", best.slice(0, 50));
+          return;
+        }
         onResult(best);
       }
     };
@@ -93,9 +125,8 @@ function useContinuousListening(onResult: (text: string) => void, enabled: boole
     rec.onend = () => {
       isRunningRef.current = false;
       recognitionRef.current = null;
-      // Auto-restart if still in listening mode
       if (enabledRef.current) {
-        setTimeout(() => start(), 100);
+        setTimeout(() => start(), 200);
       }
     };
 
@@ -103,7 +134,7 @@ function useContinuousListening(onResult: (text: string) => void, enabled: boole
       isRunningRef.current = false;
       recognitionRef.current = null;
       if (e.error === "no-speech" && enabledRef.current) {
-        setTimeout(() => start(), 100);
+        setTimeout(() => start(), 200);
       }
     };
 
@@ -225,15 +256,22 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const goToListening = useCallback(() => {
     setState("listening");
     setMicStatus("active");
-    setContinuousListenEnabled(true);
+    // Small delay before re-enabling mic to avoid capturing tail-end of Bobby's speech
+    setTimeout(() => {
+      setContinuousListenEnabled(true);
+    }, 600);
     startSilenceTimers();
   }, [startSilenceTimers]);
 
   const speakFallback = useCallback(async (key: string) => {
     try {
       setState("speaking");
+      setContinuousListenEnabled(false); // STOP listening while Bobby speaks
       eventBus.emit({ type: "SPEECH_START" });
-      const url = await fetchTTSAudio(FALLBACK_FR[key] || FALLBACK_FR.error);
+      const fallbackText = FALLBACK_FR[key] || FALLBACK_FR.error;
+      // Track Bobby's speech for echo detection
+      recentBobbyTextsRef.current = [fallbackText, ...recentBobbyTextsRef.current].slice(0, 5);
+      const url = await fetchTTSAudio(fallbackText);
       audioQueue.enqueue(url);
       audioQueue.setOnAllDone(() => {
         eventBus.emit({ type: "SPEECH_STOP" });
@@ -242,7 +280,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
           conversationActiveRef.current = false;
           setContinuousListenEnabled(false);
         } else {
-          // After speaking, go to listening mode for continuous conversation
           goToListening();
         }
       });
@@ -261,10 +298,13 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
   const processSentenceForTTS = useCallback(async (sentence: string, signal?: AbortSignal) => {
     pendingSentencesRef.current++;
+    // Track Bobby's speech for echo detection
+    recentBobbyTextsRef.current = [sentence, ...recentBobbyTextsRef.current].slice(0, 8);
     try {
       const url = await fetchTTSAudio(sentence, signal);
       if (!signal?.aborted) {
         setState("speaking");
+        setContinuousListenEnabled(false); // STOP listening while speaking
         audioQueue.enqueue(url);
       }
     } catch {
@@ -274,7 +314,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       if (pendingSentencesRef.current === 0 && allSentencesDoneRef.current) {
         audioQueue.setOnAllDone(() => {
           eventBus.emit({ type: "SPEECH_STOP" });
-          // After Bobby finishes speaking → go to LISTENING for follow-up
           goToListening();
         });
       }
@@ -299,7 +338,9 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     else if (detectedIntent === "game") mode = "game";
     else if (detectedIntent === "emotion_support") mode = "chat"; // handled by system prompt
 
-    const newHistory: AiMsg[] = [...conversationHistory, { role: "user", content: userText }];
+    // Keep only last 10 messages for context (prevents confusion)
+    const trimmedHistory = conversationHistory.length > 10 ? conversationHistory.slice(-10) : conversationHistory;
+    const newHistory: AiMsg[] = [...trimmedHistory, { role: "user", content: userText }];
     const abortController = new AbortController();
     abortRef.current = abortController;
     allSentencesDoneRef.current = false;
