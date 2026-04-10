@@ -862,12 +862,44 @@ export function getOfflineResponse(
   text: string,
   childName?: string,
 ): OfflineResponse {
+  // 1. Safety filter first
+  if (isBlockedContent(text)) {
+    return {
+      text: pickRandom(SAFE_REDIRECTS, "BLOCKED"),
+      intent: "BLOCKED",
+      isOffline: true,
+    };
+  }
+
+  // 2. Try QA fuzzy match (highest priority)
+  const qaMatch = matchQA(text);
+  if (qaMatch) {
+    const response = pickRandom(qaMatch.responses, `qa_${qaMatch.triggers[0]}`);
+    const intent = qaMatch.intent || detectOfflineIntent(text);
+    // If it's a story request, also return a story
+    if (intent === "STORY_REQUEST") {
+      const theme = detectStoryTheme(text);
+      const story = pickRandom(LOCAL_STORIES[theme], `story_${theme}`);
+      return { text: personalize(story, childName), intent, isOffline: true, theme };
+    }
+    // If it's a play request, give a game
+    if (intent === "PLAY_REQUEST") {
+      const game = pickMiniGame();
+      return { text: personalize(game.text, childName), intent, isOffline: true, gameType: game.type };
+    }
+    return { text: personalize(response, childName), intent, isOffline: true };
+  }
+
+  // 3. Fallback to intent-based response
   const intent = detectOfflineIntent(text);
   const lower = text.toLowerCase().trim();
 
   let response: string;
 
   switch (intent) {
+    case "BLOCKED":
+      response = pickRandom(SAFE_REDIRECTS, "BLOCKED");
+      break;
     case "GREETING":
       response = pickRandom(RESPONSES.GREETING, "GREETING");
       break;
@@ -908,7 +940,6 @@ export function getOfflineResponse(
       response = pickRandom(RESPONSES.CALM, "CALM");
       break;
     case "HUMOR": {
-      // Mix jokes + tongue twisters for humor intent
       const useJoke = Math.random() > 0.3;
       if (useJoke) {
         const jokes = [
