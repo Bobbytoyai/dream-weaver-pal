@@ -213,34 +213,34 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     }
 
     if (upperLipRef.current) {
-      upperLipRef.current.scale.x = 0.4 * sq.scaleX;
-      upperLipRef.current.scale.y = 0.1 + state.mouthOpenness * 0.12;
-      upperLipRef.current.position.y = state.mouthOpenness * 0.06 + state.mouthCurve * 0.03;
-      upperLipRef.current.rotation.z = state.mouthCurve * 0.1;
+      upperLipRef.current.scale.x = 1.0 * sq.scaleX;
+      upperLipRef.current.scale.y = 0.22 + state.mouthOpenness * 0.25;
+      upperLipRef.current.position.y = state.mouthOpenness * 0.12 + state.mouthCurve * 0.06;
+      upperLipRef.current.rotation.z = state.mouthCurve * 0.12;
     }
     if (lowerLipRef.current) {
-      lowerLipRef.current.scale.x = 0.38 * sq.scaleX;
-      lowerLipRef.current.scale.y = 0.09 + state.mouthOpenness * 0.1;
-      lowerLipRef.current.position.y = -state.mouthOpenness * 0.18 - state.jawDrop * 0.1;
-      lowerLipRef.current.rotation.z = -state.mouthCurve * 0.06;
+      lowerLipRef.current.scale.x = 0.95 * sq.scaleX;
+      lowerLipRef.current.scale.y = 0.2 + state.mouthOpenness * 0.22;
+      lowerLipRef.current.position.y = -state.mouthOpenness * 0.35 - state.jawDrop * 0.18;
+      lowerLipRef.current.rotation.z = -state.mouthCurve * 0.08;
     }
 
     const mouthOpen = state.mouthOpenness > 0.06;
     if (mouthInteriorRef.current) {
       mouthInteriorRef.current.visible = mouthOpen;
-      mouthInteriorRef.current.scale.x = 0.28 * sq.scaleX;
-      mouthInteriorRef.current.scale.y = 0.06 + state.mouthOpenness * 1.0;
+      mouthInteriorRef.current.scale.x = 0.7 * sq.scaleX;
+      mouthInteriorRef.current.scale.y = 0.15 + state.mouthOpenness * 2.0;
     }
     if (teethRef.current) {
       teethRef.current.visible = state.mouthOpenness > 0.1;
-      teethRef.current.scale.x = 0.24 * sq.scaleX;
-      teethRef.current.position.y = state.mouthOpenness * 0.03;
+      teethRef.current.scale.x = 0.6 * sq.scaleX;
+      teethRef.current.position.y = state.mouthOpenness * 0.06;
     }
     if (tongueRef.current) {
       const show = state.mouthOpenness > 0.25;
       tongueRef.current.visible = show;
       if (show) {
-        tongueRef.current.scale.x = 0.13 * sq.scaleX;
+        tongueRef.current.scale.x = 0.3 * sq.scaleX;
         tongueRef.current.position.y = -state.mouthOpenness * 0.12 - 0.02;
         tongueRef.current.position.x = Math.sin(performance.now() * 0.008) * 0.008;
       }
@@ -373,20 +373,25 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
       {/* ===== MOUTH ===== */}
       <group ref={mouthGroupRef} position={[0, -0.42, mouthZ]}>
-        <mesh ref={upperLipRef} position={[0, 0.02, 0]} material={upperLipMat}>
-          <capsuleGeometry args={[0.045, 0.16, 12, 20]} />
+        {/* Upper lip — wide ellipse, flat like a real lip */}
+        <mesh ref={upperLipRef} position={[0, 0.04, 0]} material={upperLipMat} scale={[1, 0.35, 0.5]}>
+          <sphereGeometry args={[0.22, 32, 16]} />
         </mesh>
-        <mesh ref={lowerLipRef} position={[0, -0.02, 0.005]} material={lowerLipMat}>
-          <capsuleGeometry args={[0.04, 0.14, 12, 20]} />
+        {/* Lower lip — slightly fuller */}
+        <mesh ref={lowerLipRef} position={[0, -0.04, 0.008]} material={lowerLipMat} scale={[1, 0.4, 0.55]}>
+          <sphereGeometry args={[0.2, 32, 16]} />
         </mesh>
-        <mesh ref={mouthInteriorRef} position={[0, -0.005, -0.015]} material={mouthInteriorMat}>
-          <sphereGeometry args={[0.06, 16, 16]} />
+        {/* Mouth interior — dark cavity */}
+        <mesh ref={mouthInteriorRef} position={[0, -0.005, -0.02]} material={mouthInteriorMat} scale={[1, 1, 0.6]}>
+          <sphereGeometry args={[0.14, 24, 16]} />
         </mesh>
-        <mesh ref={teethRef} position={[0, 0.01, 0.008]} material={teethMat}>
-          <boxGeometry args={[0.13, 0.018, 0.016]} />
+        {/* Teeth */}
+        <mesh ref={teethRef} position={[0, 0.02, 0.01]} material={teethMat}>
+          <boxGeometry args={[0.28, 0.04, 0.025]} />
         </mesh>
-        <mesh ref={tongueRef} position={[0, -0.02, -0.004]} material={tongueMat}>
-          <sphereGeometry args={[0.035, 12, 12]} />
+        {/* Tongue */}
+        <mesh ref={tongueRef} position={[0, -0.04, -0.005]} material={tongueMat} scale={[1, 0.6, 0.7]}>
+          <sphereGeometry args={[0.08, 16, 12]} />
         </mesh>
       </group>
 
