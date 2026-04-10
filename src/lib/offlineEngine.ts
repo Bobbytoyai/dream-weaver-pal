@@ -1895,11 +1895,11 @@ const TONGUE_TWISTERS = [
   "Essaie de dire vite : Tonton, ton thé t'a-t-il ôté ta toux ? 🍵",
 ];
 
-export type MiniGameType = "riddle" | "true_false" | "animal_quiz" | "would_you_rather" | "tongue_twister" | "animal_guess" | "memory_game";
+export type MiniGameType = "riddle" | "true_false" | "animal_quiz" | "would_you_rather" | "tongue_twister" | "animal_guess" | "memory_game" | "learning";
 
 function pickMiniGame(): { type: MiniGameType; text: string } {
   const gameType = pickRandom(
-    ["riddle", "true_false", "animal_quiz", "would_you_rather", "tongue_twister", "animal_guess", "memory_game"],
+    ["riddle", "true_false", "animal_quiz", "would_you_rather", "tongue_twister", "animal_guess", "memory_game", "learning"],
     "game_type"
   ) as MiniGameType;
 
@@ -1911,6 +1911,10 @@ function pickMiniGame(): { type: MiniGameType; text: string } {
     case "memory_game": {
       const intro = startMemoryGame(undefined, 7);
       return { type: "memory_game", text: intro };
+    }
+    case "learning": {
+      const intro = startLearning(undefined, 7);
+      return { type: "learning", text: intro };
     }
     case "riddle": {
       const r = RIDDLES[Math.floor(Math.random() * RIDDLES.length)];
