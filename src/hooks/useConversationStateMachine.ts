@@ -22,6 +22,7 @@ import { isOffline, getOfflineResponse } from "@/lib/offlineEngine";
 import { useNetworkMode } from "@/hooks/useNetworkMode";
 import { orchestrate, refineExpression, getSilenceRelaunch } from "@/lib/orchestrator";
 import { getFailsafeResponse, getLatencyFiller, getSoftResetPhrase, reportModuleHealth, recordLatency, isHighLatency, isLowPower } from "@/lib/stabilityEngine";
+import { recordUserTurn, resetCognitiveState, getReengagePhrase, type CognitiveHints } from "@/lib/cognitiveEngine";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TYPES
@@ -453,6 +454,20 @@ export function useConversationStateMachine({
     startStuckTimer("PROCESSING");
     setPartialText("");
 
+    // Cognitive engine: record turn & get adaptive hints
+    const cognitiveHints = recordUserTurn(userText);
+
+    // If child is losing attention or exhausted, re-engage locally first
+    if (cognitiveHints.shouldReengage && cognitiveHints.reengageStrategy) {
+      const phrase = getReengagePhrase(cognitiveHints.reengageStrategy);
+      if (cognitiveHints.reengageStrategy === "break") {
+        setBobbyFaceEmotion("calm");
+        setBobbyEmotionIntensity(0.4);
+        speakAndListen(phrase);
+        return;
+      }
+    }
+
     const emotion = orchestratorHints?.childEmotion || detectEmotionForTTS(userText);
     currentEmotionRef.current = emotion;
     session.addMessage("user", userText, emotion);
@@ -527,6 +542,7 @@ export function useConversationStateMachine({
       await streamVoiceChat({
         messages: newHistory,
         childName, childAge, mode, parentSettings, memoryContext,
+        cognitiveContext: cognitiveHints.promptContext || undefined,
         signal: abortController.signal,
         onSentence: (sentence) => {
           clearTimeout(recoveryTimer);
@@ -659,6 +675,7 @@ export function useConversationStateMachine({
     if (!sessionStartedRef.current) {
       session.startSession();
       sessionStartedRef.current = true;
+      resetCognitiveState();
       recorder.startRecording(sttStreamRef.current ?? undefined);
       eventBus.emit({ type: "SESSION_START" });
     }

@@ -273,6 +273,7 @@ export async function streamVoiceChat({
   mode,
   parentSettings,
   memoryContext,
+  cognitiveContext,
   onSentence,
   onDone,
   onError,
@@ -284,6 +285,7 @@ export async function streamVoiceChat({
   mode: string;
   parentSettings?: any;
   memoryContext?: string;
+  cognitiveContext?: string;
   onSentence: (sentence: string) => void;
   onDone: (fullText: string) => void;
   onError: (error: string) => void;
@@ -296,7 +298,7 @@ export async function streamVoiceChat({
         "Content-Type": "application/json",
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
-      body: JSON.stringify({ messages, childName, childAge, mode, parentSettings, memoryContext }),
+      body: JSON.stringify({ messages, childName, childAge, mode, parentSettings, memoryContext, cognitiveContext }),
       signal,
     });
 

@@ -40,7 +40,7 @@ function detectIntent(text: string, mode?: string): Intent {
 
 // ─── Prompt builder — voice-optimized, conversational ──────
 
-function buildSystemPrompt(intent: Intent, childName: string, childAge: number, parentSettings: any, memoryContext?: string): string {
+function buildSystemPrompt(intent: Intent, childName: string, childAge: number, parentSettings: any, memoryContext?: string, cognitiveContext?: string): string {
   const ageGroup = childAge <= 5 ? "3-5 ans" : childAge <= 7 ? "5-7 ans" : childAge <= 10 ? "8-10 ans" : "11-12 ans";
   const personality = parentSettings?.personality || "balanced";
   const contentFilter = parentSettings?.contentFilter || "standard";
@@ -52,6 +52,7 @@ function buildSystemPrompt(intent: Intent, childName: string, childAge: number, 
   else if (personality === "educational") personalityNote = "\nStyle: ÉDUCATIF — intègre un fait éducatif.";
 
   const memoryBlock = memoryContext ? `\n# Mémoire\n${memoryContext}` : "";
+  const cognitiveBlock = cognitiveContext ? `\n# Adaptation comportementale\n${cognitiveContext}` : "";
 
   let safetyBlock = `# Sécurité (non négociable)
 - JAMAIS de contenu violent, effrayant, sexuel, inapproprié
@@ -67,7 +68,7 @@ function buildSystemPrompt(intent: Intent, childName: string, childAge: number, 
 
   const base = `# Rôle
 Tu es Bobby, un petit être vivant dans un jouet. Ami et compagnon de ${childName} (${childAge} ans, ${ageGroup}).
-Tu parles à voix haute — tes réponses seront lues par un synthétiseur vocal.${personalityNote}${memoryBlock}
+Tu parles à voix haute — tes réponses seront lues par un synthétiseur vocal.${personalityNote}${memoryBlock}${cognitiveBlock}
 
 # Instructions vocales
 - Sois chaleureux, amical et naturel.
@@ -243,7 +244,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, childName, childAge, mode, parentSettings, memoryContext } = await req.json();
+    const { messages, childName, childAge, mode, parentSettings, memoryContext, cognitiveContext } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -293,7 +294,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const systemPrompt = buildSystemPrompt(intent, childName, childAge, parentSettings, memoryContext) + storyContext;
+    const systemPrompt = buildSystemPrompt(intent, childName, childAge, parentSettings, memoryContext, cognitiveContext) + storyContext;
 
     // Keep only recent messages for speed (voice needs fast responses)
     const recentMessages = messages.length > 6 ? messages.slice(-6) : messages;
