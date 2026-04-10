@@ -8,10 +8,10 @@ interface ModeSelectorProps {
 }
 
 const modes = [
-  { id: "chat" as const, label: "Chat", icon: Sparkles, emoji: "💬" },
-  { id: "story" as const, label: "Story", icon: BookOpen, emoji: "📖" },
-  { id: "game" as const, label: "Game", icon: Gamepad2, emoji: "🎮" },
-  { id: "learn" as const, label: "Learn", icon: GraduationCap, emoji: "🧠" },
+  { id: "chat" as const, label: "Discuter", icon: Sparkles, emoji: "💬" },
+  { id: "story" as const, label: "Histoire", icon: BookOpen, emoji: "📖" },
+  { id: "game" as const, label: "Jeu", icon: Gamepad2, emoji: "🎮" },
+  { id: "learn" as const, label: "Apprendre", icon: GraduationCap, emoji: "🧠" },
 ];
 
 const ModeSelector = ({ activeMode, onModeChange }: ModeSelectorProps) => {
