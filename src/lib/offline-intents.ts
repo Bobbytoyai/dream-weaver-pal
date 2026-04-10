@@ -284,7 +284,18 @@ import { QA_DATABASE } from "./qa-database";
 
 const QA_MATCH_THRESHOLD = 0.60;
 
+export interface QAMatchResult {
+  entry: QAEntry;
+  confidence: number;
+}
+
 export function matchQA(input: string): QAEntry | null {
+  const result = matchQAWithConfidence(input);
+  return result ? result.entry : null;
+}
+
+/** Match QA with confidence score (0-1) for offline-first routing */
+export function matchQAWithConfidence(input: string): QAMatchResult | null {
   const normalized = normalizeInput(input);
   let bestMatch: QAEntry | null = null;
   let bestScore = 0;
@@ -292,8 +303,12 @@ export function matchQA(input: string): QAEntry | null {
   for (const entry of QA_DATABASE) {
     for (const trigger of entry.triggers) {
       const trigNorm = normalizeInput(trigger);
-      if (normalized === trigNorm || normalized.includes(trigNorm) || trigNorm.includes(normalized)) {
-        return entry;
+      // Exact or substring match → high confidence
+      if (normalized === trigNorm) return { entry, confidence: 1.0 };
+      if (normalized.includes(trigNorm) || trigNorm.includes(normalized)) {
+        const conf = 0.9;
+        if (conf > bestScore) { bestScore = conf; bestMatch = entry; }
+        continue;
       }
       const sim = similarity(normalized, trigNorm);
       const overlap = wordOverlap(normalized, trigNorm);
@@ -305,5 +320,5 @@ export function matchQA(input: string): QAEntry | null {
       }
     }
   }
-  return bestMatch;
+  return bestMatch ? { entry: bestMatch, confidence: bestScore } : null;
 }

@@ -24,6 +24,7 @@ import { orchestrate, refineExpression, getSilenceRelaunch } from "@/lib/orchest
 import { getFailsafeResponse, getLatencyFiller, getSoftResetPhrase, reportModuleHealth, recordLatency, isHighLatency, isLowPower } from "@/lib/stabilityEngine";
 import { recordUserTurn, resetCognitiveState, getReengagePhrase, initFromMemory, getPersistedCognitiveData, recordIntent, type CognitiveHints } from "@/lib/cognitiveEngine";
 import { updateMemory } from "@/lib/memoryService";
+import { cacheAIResponse, updateLocalProfileFromCognitive } from "@/lib/localMemoryStore";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TYPES
@@ -302,6 +303,15 @@ export function useConversationStateMachine({
         interactionStyle: cogData.interactionStyle,
         preferredTopics: cogData.preferredTopics,
       }).catch(console.error);
+
+      // Also persist to localStorage for offline-first intelligence
+      updateLocalProfileFromCognitive(childName, {
+        engagementTriggers: cogData.engagementTriggers,
+        behaviorPatterns: cogData.behaviorPatterns,
+        learningSpeed: cogData.learningSpeed,
+        interactionStyle: cogData.interactionStyle,
+        preferredTopics: cogData.preferredTopics,
+      });
 
       if (sessionId) {
         recorder.stopRecording(sessionId).then(() => undefined);
@@ -606,6 +616,8 @@ export function useConversationStateMachine({
             setConversationHistory([...newHistory, { role: "assistant", content: text }]);
             session.addMessage("assistant", text);
             eventBus.emit({ type: "RESPONSE_READY", text });
+            // Cache AI response locally for offline reuse
+            cacheAIResponse(userText, text, detectedIntent, refined.faceState, childName);
           }
           if (pendingSentencesRef.current === 0) {
             audioQueue.setOnAllDone(() => { eventBus.emit({ type: "SPEECH_STOP" }); goToListening(); });
