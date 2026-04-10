@@ -1,4 +1,5 @@
 import type { ChatMode } from "@/components/ModeSelector";
+import { recordUserTurn } from "@/lib/cognitiveEngine";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -21,13 +22,20 @@ export async function streamChat({
   onDone: () => void;
   onError: (error: string) => void;
 }) {
+  // Cognitive engine: track user turn for adaptive behavior
+  const lastUserMsg = [...messages].reverse().find(m => m.role === "user");
+  const cognitiveHints = lastUserMsg ? recordUserTurn(lastUserMsg.content) : null;
+
   const resp = await fetch(CHAT_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
-    body: JSON.stringify({ messages, childName, childAge, mode }),
+    body: JSON.stringify({
+      messages, childName, childAge, mode,
+      cognitiveContext: cognitiveHints?.promptContext || undefined,
+    }),
   });
 
   if (!resp.ok) {
