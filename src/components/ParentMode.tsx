@@ -1225,30 +1225,198 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const renderSecurite = () => (
     <div className="p-4 space-y-4">
+      {/* ── Code PIN parental ── */}
+      <Card title="Code PIN parental" icon={Lock}>
+        <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
+          Protège l'accès au Mode Parent avec un code à 4 chiffres
+        </p>
+        <div className="flex gap-2 items-center">
+          <input
+            type="password"
+            maxLength={4}
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={settings.parentPin}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+              updateSetting("parentPin", val);
+            }}
+            placeholder="● ● ● ●"
+            className="flex-1 px-4 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground text-center tracking-[0.5em] placeholder:text-muted-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-mono"
+          />
+          {settings.parentPin.length === 4 && (
+            <span className="text-xs text-primary font-bold flex items-center gap-1">
+              <Shield className="w-3.5 h-3.5" /> Actif
+            </span>
+          )}
+          {settings.parentPin.length > 0 && settings.parentPin.length < 4 && (
+            <span className="text-xs text-amber-400 font-bold">{4 - settings.parentPin.length} chiffres manquants</span>
+          )}
+        </div>
+        {settings.parentPin.length === 4 && (
+          <button
+            onClick={() => updateSetting("parentPin", "")}
+            className="mt-2 text-xs text-destructive hover:underline"
+          >
+            Supprimer le code PIN
+          </button>
+        )}
+      </Card>
+
+      {/* ── Niveau de filtrage ── */}
       <Card title="Niveau de filtrage" icon={Shield}>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-2">
           {([
             ["standard", "🟢", "Standard", "Contenu adapté aux enfants"],
-            ["strict", "🔒", "Strict", "Filtre renforcé, positif"],
+            ["strict", "🔒", "Strict", "Filtre renforcé, exclusivement positif"],
           ] as const).map(([val, emoji, label, desc]) => (
             <button key={val} onClick={() => updateSetting("contentFilter", val)}
-              className={`p-4 rounded-2xl text-left transition-all duration-200 border-2 ${
+              className={`w-full p-4 rounded-2xl text-left transition-all duration-200 border-2 ${
                 settings.contentFilter === val
                   ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
                   : "bg-muted/50 border-transparent hover:bg-muted"
               }`}>
-              <span className="text-2xl block mb-1">{emoji}</span>
-              <h4 className="text-sm font-extrabold text-foreground">{label}</h4>
-              <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{desc}</p>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{emoji}</span>
+                <div>
+                  <h4 className="text-sm font-extrabold text-foreground">{label}</h4>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{desc}</p>
+                </div>
+              </div>
             </button>
           ))}
         </div>
       </Card>
-      <Card>
-        <SettingRow icon={Shield} title="Mode ultra-safe" desc="Protection maximale activée">
-          <Toggle value={settings.ultraSafe} onChange={(v) => updateSetting("ultraSafe", v)} />
-        </SettingRow>
+
+      {/* ── Protections automatiques ── */}
+      <Card title="Protections automatiques" icon={Shield}>
+        <div className="space-y-1">
+          <SettingRow icon={Shield} title="Mode ultra-safe" desc="Protection maximale activée">
+            <Toggle value={settings.ultraSafe} onChange={(v) => updateSetting("ultraSafe", v)} />
+          </SettingRow>
+          <SettingRow icon={Lock} title="Bloquer infos personnelles" desc="Empêche l'enfant de partager nom, adresse, téléphone">
+            <Toggle value={settings.blockPersonalInfo} onChange={(v) => updateSetting("blockPersonalInfo", v)} />
+          </SettingRow>
+          <SettingRow icon={Shield} title="Bloquer les liens externes" desc="Bobby ne mentionne aucun site web ou URL">
+            <Toggle value={settings.blockExternalLinks} onChange={(v) => updateSetting("blockExternalLinks", v)} />
+          </SettingRow>
+        </div>
       </Card>
+
+      {/* ── Niveau de langage ── */}
+      <Card title="Niveau de langage" icon={BookOpen}>
+        <div className="grid grid-cols-3 gap-2">
+          {([
+            ["simple", "🧒", "Simple", "Mots faciles"],
+            ["adapté", "📖", "Adapté", "Selon l'âge"],
+            ["avancé", "🎓", "Avancé", "Vocabulaire riche"],
+          ] as const).map(([val, emoji, label, sub]) => (
+            <button key={val} onClick={() => updateSetting("languageLevel", val)}
+              className={`p-3 rounded-2xl text-center transition-all duration-200 border-2 ${
+                settings.languageLevel === val
+                  ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
+                  : "bg-muted/50 border-transparent hover:bg-muted"
+              }`}>
+              <span className="text-lg block">{emoji}</span>
+              <span className={`text-xs font-bold block ${settings.languageLevel === val ? "text-primary" : "text-foreground"}`}>{label}</span>
+              <span className="text-[10px] text-muted-foreground">{sub}</span>
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      {/* ── Mot de sécurité ── */}
+      <Card title="Mot de sécurité" icon={AlertTriangle}>
+        <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
+          Si l'enfant dit ce mot, Bobby réagit immédiatement selon l'action choisie
+        </p>
+        <input
+          type="text"
+          value={settings.safeWord}
+          onChange={(e) => updateSetting("safeWord", e.target.value.slice(0, 30))}
+          placeholder="Ex: 'au secours', 'aide-moi'…"
+          className="w-full px-4 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all mb-3"
+        />
+        {settings.safeWord.trim() && (
+          <div className="grid grid-cols-3 gap-2">
+            {([
+              ["pause", "⏸️", "Pause", "Met en pause"],
+              ["alert", "🔔", "Alerte", "Notifie le parent"],
+              ["stop", "🛑", "Stop", "Arrête Bobby"],
+            ] as const).map(([val, emoji, label, desc]) => (
+              <button key={val} onClick={() => updateSetting("safeWordAction", val)}
+                className={`p-3 rounded-2xl text-center transition-all duration-200 border-2 ${
+                  settings.safeWordAction === val
+                    ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
+                    : "bg-muted/50 border-transparent hover:bg-muted"
+                }`}>
+                <span className="text-lg block">{emoji}</span>
+                <span className={`text-[10px] font-bold ${settings.safeWordAction === val ? "text-primary" : "text-foreground"}`}>{label}</span>
+                <p className="text-[9px] text-muted-foreground">{desc}</p>
+              </button>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* ── Alertes sensibles ── */}
+      <Card title="Alertes de contenu sensible" icon={AlertTriangle}>
+        <SettingRow icon={AlertTriangle} title="Alertes activées" desc="Notifier si un sujet sensible est détecté">
+          <Toggle value={settings.alertOnSensitive} onChange={(v) => updateSetting("alertOnSensitive", v)} />
+        </SettingRow>
+        {settings.alertOnSensitive && (
+          <div className="mt-3 space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {settings.alertTopics.map(topic => (
+                <button key={topic} onClick={() => updateSetting("alertTopics", settings.alertTopics.filter(t => t !== topic))}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold hover:bg-amber-500/20 transition-all">
+                  ⚠️ {topic} <X className="w-3 h-3" />
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input type="text"
+                placeholder="Ajouter un sujet d'alerte…"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) {
+                    const val = (e.target as HTMLInputElement).value.trim();
+                    if (!settings.alertTopics.includes(val)) {
+                      updateSetting("alertTopics", [...settings.alertTopics, val]);
+                    }
+                    (e.target as HTMLInputElement).value = "";
+                  }
+                }}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              />
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* ── Contact d'urgence ── */}
+      <Card title="Contact d'urgence" icon={User}>
+        <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
+          Reçoit une notification si Bobby détecte une situation préoccupante
+        </p>
+        <div className="space-y-2">
+          <input
+            type="text"
+            value={settings.emergencyContact.name}
+            onChange={(e) => updateNested("emergencyContact", "name", e.target.value.slice(0, 50))}
+            placeholder="Nom du contact"
+            className="w-full px-4 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+          />
+          <input
+            type="email"
+            value={settings.emergencyContact.email}
+            onChange={(e) => updateNested("emergencyContact", "email", e.target.value.slice(0, 100))}
+            placeholder="Email du contact"
+            className="w-full px-4 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+          />
+        </div>
+      </Card>
+
+      {/* ── Sujets bloqués ── */}
       <Card title="Sujets bloqués" icon={EyeOff}>
         <div className="space-y-3">
           {settings.blockedTopics.length > 0 && (
@@ -1284,6 +1452,35 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             </button>
           </div>
         </div>
+      </Card>
+
+      {/* ── Longueur max des messages ── */}
+      <Card title="Longueur max des réponses" icon={FileText}>
+        <p className="text-[10px] text-muted-foreground mb-2 leading-tight">
+          Limite la longueur des réponses de Bobby (en caractères)
+        </p>
+        <div className="grid grid-cols-4 gap-2">
+          {([200, 500, 1000, 2000] as const).map(val => (
+            <button key={val} onClick={() => updateSetting("maxMessageLength", val)}
+              className={`py-3 rounded-2xl text-center transition-all duration-200 border-2 ${
+                settings.maxMessageLength === val
+                  ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
+                  : "bg-muted/50 border-transparent hover:bg-muted"
+              }`}>
+              <span className={`text-sm font-bold block ${settings.maxMessageLength === val ? "text-primary" : "text-foreground"}`}>
+                {val}
+              </span>
+              <span className="text-[9px] text-muted-foreground">car.</span>
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      {/* ── Watermark de session ── */}
+      <Card>
+        <SettingRow icon={Eye} title="Watermark de session" desc="Ajoute un identifiant invisible à chaque session pour traçabilité">
+          <Toggle value={settings.sessionWatermark} onChange={(v) => updateSetting("sessionWatermark", v)} />
+        </SettingRow>
       </Card>
     </div>
   );
