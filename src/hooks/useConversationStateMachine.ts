@@ -177,6 +177,18 @@ export function useConversationStateMachine({
   const { memory } = useChildMemory(childName);
   const recorder = useConversationRecorder();
 
+  // Initialize cognitive engine from persisted memory
+  useEffect(() => {
+    if (memory) {
+      initFromMemory({
+        progressionLevel: memory.progressionLevel,
+        interactionCount: memory.interactionCount,
+        relationshipScore: memory.relationshipScore,
+        lastEmotions: memory.lastEmotions,
+      });
+    }
+  }, [memory]);
+
   // ─── TRANSITION ───
   const transition = useCallback((to: ConversationState) => {
     const from = machineStateRef.current;
