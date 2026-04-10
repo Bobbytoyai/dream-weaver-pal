@@ -1,4 +1,4 @@
-/* v2 — SmartSTT */
+/* v3 — SmartSTT + Wake Word Engine */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { BookOpen, Settings, Camera, Mic, MicOff } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue, preloadVoiceProfile, detectEmotionForTTS } from "@/lib/voicePipeline";
@@ -12,6 +12,7 @@ import { useChildMemory } from "@/hooks/useChildMemory";
 import { useConversationRecorder } from "@/hooks/useConversationRecorder";
 import { eventBus } from "@/lib/eventBus";
 import { getCachedResponse, isSimpleGreeting } from "@/lib/responseCache";
+import { hasWakeWord, stripWakeWord, isJustWakeWord, computeWakeConfidence } from "@/lib/wakeWordEngine";
 
 type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
 type AiMsg = { role: "user" | "assistant"; content: string };
@@ -49,21 +50,7 @@ function detectEmotion(text: string): string | undefined {
   if (lower.match(/colère|énervé|fâché|énerve|rage|grrr/)) return "angry";
   return undefined;
 }
-
-function stripWakeWord(text: string): string {
-  return text.replace(/\b(bobby|boby|bobbie|bobi)\b/gi, "").replace(/\s+/g, " ").trim();
-}
-
-function isJustWakeWord(text: string): boolean {
-  const stripped = stripWakeWord(text);
-  return stripped.length < 3 || /^[?,!.\s]*$/.test(stripped);
-}
-
-const WAKE_RE = /\b(bobby|boby|bobbie|bobi|bob y|bo bi|babi|bobé|buby|bubby)\b/i;
-
-function hasWakeWord(text: string): boolean {
-  return WAKE_RE.test(text);
-}
+// Wake word functions imported from @/lib/wakeWordEngine
 
 const recentBobbyTextsRef = { current: [] as string[] };
 
@@ -511,11 +498,37 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   }, [audioQueue, clearTimers, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, interrupt, isCalmMode, recorder, session, speakFallback, startSilenceTimers]);
 
   // ─── Smart STT with Deepgram → Native fallback ───
+  // Wake word detection on PARTIALS for instant reaction (<200ms)
+  const wakeTriggeredFromPartialRef = useRef(false);
+
   const deepgramSTT = useSmartSTT({
     onPartial: useCallback((text: string) => {
       setPartialText(text);
-    }, []),
+
+      // Detect wake word on partial transcripts when idle — instant reaction!
+      if (
+        (stateRef.current === "idle" || stateRef.current === "session_end") &&
+        !wakeTriggeredFromPartialRef.current &&
+        hasWakeWord(text, true) // true = partial mode, slightly higher threshold
+      ) {
+        console.log("[VoiceScreen] ⚡ Wake word on PARTIAL — instant activation!");
+        wakeTriggeredFromPartialRef.current = true;
+        // Don't process yet — wait for final transcript to get full sentence
+        // But start visual feedback immediately
+        eventBus.emit({ type: "WAKE_DETECTED", confidence: computeWakeConfidence(text) });
+
+        if (!sessionStartedRef.current) {
+          session.startSession();
+          sessionStartedRef.current = true;
+          recorder.startRecording();
+          eventBus.emit({ type: "SESSION_START" });
+        }
+        conversationActiveRef.current = true;
+        eventBus.emit({ type: "WAKE_TRIGGERED" });
+      }
+    }, [session, recorder]),
     onFinal: useCallback((text: string) => {
+      wakeTriggeredFromPartialRef.current = false; // reset for next utterance
       if (text.trim().length > 2) {
         setPartialText("");
         handleTranscript(text.trim());
