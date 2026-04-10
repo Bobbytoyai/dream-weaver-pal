@@ -468,10 +468,28 @@ export function useFaceAnimation(
     // --- LERP ALL VALUES ---
     const mouthSpeed = faceState === "speaking" ? baseSpeed * 5 : baseSpeed * 3;
 
-    c.eyeOpenness = lerp(c.eyeOpenness, ((targets.eyeOpenness ?? 1) + sleepyEyeWobble + speechEyeWiden) * blinkMult, delta * baseSpeed * 2.5);
-    c.eyebrowHeight = lerp(c.eyebrowHeight, (targets.eyebrowHeight ?? 0) + microOffset.current.eyebrow + speechEyebrowLift, delta * (faceState === "speaking" ? baseSpeed * 3 : baseSpeed));
+    // v3.0: EYEBROW ANTICIPATION — eyebrows lead speech by ~50ms
+    // Buffer the eyebrow target and use it slightly ahead of audio
+    const eyebrowTarget = (targets.eyebrowHeight ?? 0) + microOffset.current.eyebrow + speechEyebrowLift;
+    const anticipatedEyebrow = eyebrowTarget + (eyebrowTarget - eyebrowAnticipationBuffer.current) * 0.3;
+    eyebrowAnticipationBuffer.current = eyebrowTarget;
+    c.eyebrowHeight = lerp(c.eyebrowHeight, anticipatedEyebrow, delta * (faceState === "speaking" ? baseSpeed * 4 : baseSpeed));
     c.eyebrowTilt = lerp(c.eyebrowTilt, targets.eyebrowTilt ?? 0, delta * baseSpeed);
 
+    // v3.0: EYE DELAY — eyes follow with +100ms natural delay
+    eyeDelayTimer.current += delta;
+    const eyeTargetOpenness = ((targets.eyeOpenness ?? 1) + sleepyEyeWobble + speechEyeWiden) * blinkMult;
+    const eyeTargetSparkle = (targets.eyeSparkle ?? 0.5) * (0.7 + sparkleWave * 0.3);
+    // Smooth delay: update delayed buffer at ~10Hz for natural lag
+    if (eyeDelayTimer.current > 0.1) {
+      eyeDelayBuffer.current.openness = eyeTargetOpenness;
+      eyeDelayBuffer.current.sparkle = eyeTargetSparkle;
+      eyeDelayTimer.current = 0;
+    }
+    // Use delayed values for eyes (creates natural 100ms lag)
+    c.eyeOpenness = lerp(c.eyeOpenness, eyeDelayBuffer.current.openness, delta * baseSpeed * 2.5);
+
+    // Mouth — 100% sync with audio (no delay)
     c.mouthOpenness = lerp(c.mouthOpenness, mouthOpenTarget, delta * mouthSpeed);
     c.mouthWidth = lerp(c.mouthWidth, mouthWidthTarget + microOffset.current.mouthQuirk, delta * mouthSpeed * 0.8);
     c.mouthRound = lerp(c.mouthRound, mouthRoundTarget, delta * mouthSpeed * 0.7);
@@ -507,10 +525,22 @@ export function useFaceAnimation(
     c.glowIntensity = lerp(c.glowIntensity, targets.glowIntensity ?? 0.3, delta * baseSpeed * 0.6);
     c.cheekGlow = lerp(c.cheekGlow, (targets.cheekGlow ?? 0.1) + speechCheekBoost, delta * baseSpeed * 0.8);
     c.irisGlow = lerp(c.irisGlow, (targets.irisGlow ?? 0.4) * sparkleWave, delta * baseSpeed * 1.2);
-    c.eyeSparkle = lerp(c.eyeSparkle, (targets.eyeSparkle ?? 0.5) * (0.7 + sparkleWave * 0.3), delta * baseSpeed);
+    c.eyeSparkle = lerp(c.eyeSparkle, eyeDelayBuffer.current.sparkle, delta * baseSpeed);
+
+    // v3.0: PERFORMANCE FAILSAFE — if frame takes >16ms, simplify next frame
+    const frameTime = performance.now() - frameStart;
+    if (frameTime > 16) {
+      frameBudgetExceeded.current++;
+      if (frameBudgetExceeded.current > 10) {
+        // Too many slow frames: disable micro-expressions temporarily
+        microOffset.current = { eyebrow: 0, headX: 0, headZ: 0, pupilDrift: 0, mouthQuirk: 0 };
+      }
+    } else {
+      frameBudgetExceeded.current = Math.max(0, frameBudgetExceeded.current - 1);
+    }
 
     return { ...c };
-  }, [audioAmplitude, faceState, gazeRef, viseme, emotionIntensity]);
+  }, [audioAmplitude, faceState, gazeRef, viseme, emotionIntensity, emotionDuringSpeech]);
 
   return { update, current };
 }
