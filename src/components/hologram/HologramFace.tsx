@@ -7,15 +7,11 @@ import { useAudioAmplitude } from "./useAudioAmplitude";
 import { FaceState } from "./useFaceAnimation";
 
 interface HologramFaceProps {
-  /** Current voice/interaction state */
   voiceState: "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
-  /** Enable camera-based face tracking */
   enableCamera?: boolean;
-  /** Called when triple-tapped for parent mode */
   onTripleTap?: () => void;
 }
 
-/** Maps voice states to face animation states */
 function mapToFaceState(voiceState: HologramFaceProps["voiceState"]): FaceState {
   switch (voiceState) {
     case "listening": return "listening";
@@ -52,11 +48,14 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
       onClick={handleTap}
       style={{ touchAction: "manipulation" }}
     >
-      {/* Holographic background glow */}
-      <div className="absolute inset-0 rounded-full"
+      {/* Ambient holographic glow */}
+      <div className="absolute inset-0 rounded-full pointer-events-none"
         style={{
-          background: `radial-gradient(circle, hsla(200, 100%, 70%, ${voiceState === "speaking" ? 0.15 : voiceState === "listening" ? 0.12 : 0.06}) 0%, transparent 70%)`,
-          transition: "background 0.5s ease",
+          background: `radial-gradient(circle, 
+            hsla(200, 100%, 60%, ${voiceState === "speaking" ? 0.2 : voiceState === "listening" ? 0.15 : 0.08}) 0%, 
+            hsla(260, 60%, 55%, ${voiceState === "speaking" ? 0.08 : 0.03}) 40%,
+            transparent 70%)`,
+          transition: "background 0.8s ease",
         }}
       />
 
@@ -66,34 +65,41 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
         style={{ background: "transparent" }}
       >
         <Suspense fallback={null}>
-          {/* Lighting */}
-          <ambientLight intensity={0.5} />
-          <directionalLight position={[2, 3, 4]} intensity={0.8} color="hsl(40, 80%, 95%)" />
-          <directionalLight position={[-2, 1, 3]} intensity={0.3} color="hsl(200, 80%, 85%)" />
-          <pointLight position={[0, 0, 3]} intensity={0.4} color="hsl(200, 100%, 80%)" distance={8} />
+          {/* Dynamic lighting — shifts with state */}
+          <ambientLight intensity={0.3} />
+          <directionalLight
+            position={[2, 3, 4]}
+            intensity={voiceState === "speaking" ? 1.0 : 0.6}
+            color={voiceState === "speaking" ? "#88ddff" : "#aaccee"}
+          />
+          <directionalLight
+            position={[-2, 1, 3]}
+            intensity={0.3}
+            color="#8866cc"
+          />
+          <pointLight
+            position={[0, 0, 3]}
+            intensity={voiceState === "listening" ? 0.8 : 0.4}
+            color="#66ccff"
+            distance={8}
+          />
+          {/* Rim light for holographic edge glow */}
+          <pointLight
+            position={[0, -2, 1]}
+            intensity={0.2}
+            color="#44ffcc"
+            distance={5}
+          />
 
-          {/* 3D Face */}
           <FaceScene faceState={faceState} gazeRef={gazeRef} getAmplitude={getAmplitude} />
-
-          {/* Holographic effects */}
-          <HologramParticles intensity={voiceState === "speaking" ? 0.7 : voiceState === "listening" ? 0.5 : 0.3} />
+          <HologramParticles intensity={voiceState === "speaking" ? 0.8 : voiceState === "listening" ? 0.5 : 0.25} />
           <ScanRing />
         </Suspense>
       </Canvas>
-
-      {/* State indicator overlay */}
-      {voiceState === "listening" && (
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
-          <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: "0.3s" }} />
-          <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: "0.6s" }} />
-        </div>
-      )}
     </div>
   );
 }
 
-/** Inner scene component that uses useFrame */
 function FaceScene({ faceState, gazeRef, getAmplitude }: {
   faceState: FaceState;
   gazeRef: React.MutableRefObject<{ x: number; y: number }>;
