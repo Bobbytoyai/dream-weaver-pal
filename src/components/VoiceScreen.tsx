@@ -250,7 +250,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const startStuckTimer = useCallback((forState: ConversationState) => {
     if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current);
     stuckTimerRef.current = setTimeout(() => {
-      if (machineStateRef.current === forState && forState !== "IDLE" && forState !== "LISTENING") {
+      if (machineStateRef.current === forState && forState !== "IDLE" && forState !== "LISTENING" && forState !== "SLEEP") {
         console.warn(`[StateMachine] ⚠️ Stuck in ${forState} for ${STUCK_TIMEOUT}ms — auto-recovering`);
         abortRef.current?.abort();
         audioQueue.stopAll();
@@ -264,11 +264,28 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   // TRANSITIONS
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+  // → SLEEP (low power after 2 min idle)
+  const goToSleep = useCallback(() => {
+    console.log("[StateMachine] 💤 Entering SLEEP mode (2min inactivity)");
+    clearAllTimers();
+    conversationActiveRef.current = false;
+    transition("SLEEP");
+    if (sessionStartedRef.current) {
+      session.endSession();
+      eventBus.emit({ type: "SESSION_END" });
+      sessionStartedRef.current = false;
+    }
+  }, [clearAllTimers, session, transition]);
+
   // → IDLE (end conversation)
   const goToIdle = useCallback(async () => {
     clearAllTimers();
     conversationActiveRef.current = false;
     transition("IDLE");
+    // Start sleep timer → SLEEP after 2 minutes
+    sleepTimerRef.current = setTimeout(() => {
+      if (machineStateRef.current === "IDLE") goToSleep();
+    }, SLEEP_TIMEOUT);
     if (sessionStartedRef.current) {
       const messageCount = session.messageCountRef?.current ?? 0;
       const sessionId = await session.endSession();
@@ -279,7 +296,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         if (messageCount > 0) recorder.triggerAnalysis(sessionId).then(() => undefined);
       }
     }
-  }, [clearAllTimers, recorder, session, transition]);
+  }, [clearAllTimers, goToSleep, recorder, session, transition]);
 
   // → LISTENING (ready for input)
   const goToListening = useCallback(() => {
