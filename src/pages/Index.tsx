@@ -35,6 +35,7 @@ const Index = () => {
   const [profile, setProfile] = useState<{ name: string; age: number } | null>(loadProfile);
   const [mode, setMode] = useState<"voice" | "story" | "parent" | "activities">("voice");
   const [pendingNarration, setPendingNarration] = useState<PendingNarration | null>(null);
+  const [activeGameCategory, setActiveGameCategory] = useState<string | null>(null);
   const [parentSettings, setParentSettings] = useState<ParentSettings>(() => {
     const saved = loadProfile();
     return {
