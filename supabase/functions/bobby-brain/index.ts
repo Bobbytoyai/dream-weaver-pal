@@ -244,7 +244,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, childName, childAge, mode, parentSettings, memoryContext } = await req.json();
+    const { messages, childName, childAge, mode, parentSettings, memoryContext, cognitiveContext } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -294,7 +294,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const systemPrompt = buildSystemPrompt(intent, childName, childAge, parentSettings, memoryContext) + storyContext;
+    const systemPrompt = buildSystemPrompt(intent, childName, childAge, parentSettings, memoryContext, cognitiveContext) + storyContext;
 
     // Keep only recent messages for speed (voice needs fast responses)
     const recentMessages = messages.length > 6 ? messages.slice(-6) : messages;
