@@ -148,15 +148,16 @@ const FloatingParticles = () => {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // DEBUG OVERLAY
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const DebugOverlay = ({ state, micArmed, micRunning, partialText, lastRecognized, lastAiResponse, sttBackend }: {
+const DebugOverlay = ({ state, micArmed, micRunning, partialText, lastRecognized, lastAiResponse, sttBackend, offline }: {
   state: ConversationState; micArmed: boolean; micRunning: boolean;
-  partialText: string; lastRecognized: string; lastAiResponse: string; sttBackend: string;
+  partialText: string; lastRecognized: string; lastAiResponse: string; sttBackend: string; offline: boolean;
 }) => (
   <div className="fixed top-0 left-0 right-0 z-50 bg-black/85 text-white p-3 text-[10px] font-mono space-y-1 pointer-events-none max-h-48 overflow-y-auto">
     <div className="flex gap-3 flex-wrap">
       <span>State: <span className={`font-bold ${state === "ERROR" ? "text-red-400" : state === "LISTENING" ? "text-green-400" : state === "SPEAKING" ? "text-blue-400" : state === "PROCESSING" ? "text-yellow-400" : state === "SLEEP" ? "text-indigo-400" : "text-gray-400"}`}>{state}</span></span>
       <span>Mic: {micArmed ? (micRunning ? "🟢 ON" : "🟡 ARMED") : "🔴 OFF"}</span>
       <span>STT: {sttBackend}</span>
+      <span>Net: {offline ? "🔴 OFFLINE" : "🟢 ONLINE"}</span>
     </div>
     {partialText && <div className="text-green-300 truncate">📝 Partial: "{partialText}"</div>}
     {lastRecognized && <div className="text-cyan-300 truncate">✅ Recognized: "{lastRecognized}"</div>}
