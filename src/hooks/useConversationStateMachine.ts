@@ -49,6 +49,7 @@ const STUCK_TIMEOUT = 3500;
 const AI_RESPONSE_TIMEOUT = 5000;
 const MAX_AI_RETRIES = 1;
 const LOW_CONFIDENCE_THRESHOLD = 0.45;
+const MAX_HISTORY_LENGTH = 20;
 
 export const FALLBACK_FR: Record<string, string> = {
   not_heard: "Je n'ai pas bien entendu. Tu peux répéter ?",
@@ -74,16 +75,9 @@ function detectIntent(text: string): Intent {
   return "chat";
 }
 
+// detectEmotion centralized — reuse detectEmotionForTTS from voicePipeline
 function detectEmotion(text: string): string | undefined {
-  const lower = text.toLowerCase();
-  if (lower.match(/triste|pleure|mal|manque|malheureux/)) return "sad";
-  if (lower.match(/peur|effrayé|cauchemar|noir|monstre/)) return "scared";
-  if (lower.match(/ennui|ennuie|rien à faire|boring/)) return "bored";
-  if (lower.match(/content|super|génial|trop bien|cool|adore|aime|heureux|yay/)) return "happy";
-  if (lower.match(/pourquoi|comment|c'est quoi|sais pas/)) return "curious";
-  if (lower.match(/wow|waouh|incroyable|fou|dingue/)) return "excited";
-  if (lower.match(/colère|énervé|fâché|énerve|rage|grrr/)) return "angry";
-  return undefined;
+  return detectEmotionForTTS(text);
 }
 
 // Echo detection
@@ -142,7 +136,13 @@ export function useConversationStateMachine({
   // ─── STATE ───
   const [machineState, setMachineState] = useState<ConversationState>("IDLE");
   const machineStateRef = useRef<ConversationState>("IDLE");
-  const [conversationHistory, setConversationHistory] = useState<AiMsg[]>([]);
+  const [conversationHistory, setConversationHistoryRaw] = useState<AiMsg[]>([]);
+  const setConversationHistory = useCallback((v: AiMsg[] | ((prev: AiMsg[]) => AiMsg[])) => {
+    setConversationHistoryRaw(prev => {
+      const next = typeof v === "function" ? v(prev) : v;
+      return next.length > MAX_HISTORY_LENGTH ? next.slice(-MAX_HISTORY_LENGTH) : next;
+    });
+  }, []);
   const [partialText, setPartialText] = useState("");
   const [micArmed, setMicArmed] = useState(false);
   const [lastRecognized, setLastRecognized] = useState("");
@@ -184,6 +184,10 @@ export function useConversationStateMachine({
   // ─── INIT ───
   useEffect(() => { initSfxEventBus(); }, []);
   useEffect(() => { setSfxVolume(parentSettings?.sfxVolume ?? 0.7); }, [parentSettings?.sfxVolume]);
+  // Whisper mode: lower TTS volume in calm/night mode
+  useEffect(() => {
+    audioQueue.setVolume(isCalmMode ? 0.45 : 1.0);
+  }, [isCalmMode, audioQueue]);
   useEffect(() => { preloadVoiceProfile(currentVoiceId as any); }, [currentVoiceId]);
 
   useEffect(() => {
