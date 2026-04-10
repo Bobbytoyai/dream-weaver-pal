@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Gamepad2, BookOpen, GraduationCap, Laugh, HelpCircle, CheckCircle, Trophy, ArrowLeft, RotateCcw } from "lucide-react";
+import { Gamepad2, BookOpen, GraduationCap, Laugh, CheckCircle, Trophy, ArrowLeft, RotateCcw, Library } from "lucide-react";
 import { loadScore, resetScores, getScoreSummary, type GameScore } from "@/lib/gameEngine";
+import StoryLibrary from "@/components/StoryLibrary";
 
 export type ContentCategory = "jeux" | "educatif" | "histoires" | "blagues";
 export type SubCategory = "quiz_animaux" | "quiz_educatif" | "vrai_faux" | "devinettes" | "histoires" | "blagues";
@@ -9,6 +10,7 @@ interface ContentCategoriesProps {
   childName: string;
   onSelectCategory: (sub: SubCategory) => void;
   onBack: () => void;
+  voiceProfile?: string;
 }
 
 const CATEGORIES: { id: ContentCategory; label: string; emoji: string; icon: typeof Gamepad2; desc: string; subs: { id: SubCategory; label: string; emoji: string }[] }[] = [
@@ -27,9 +29,9 @@ const CATEGORIES: { id: ContentCategory; label: string; emoji: string; icon: typ
     ],
   },
   {
-    id: "histoires", label: "Histoires", emoji: "📖", icon: BookOpen, desc: "Histoires magiques",
+    id: "histoires", label: "Bibliothèque", emoji: "📚", icon: Library, desc: "Histoires, contes & aventures",
     subs: [
-      { id: "histoires", label: "Écouter une histoire", emoji: "✨" },
+      { id: "histoires", label: "Explorer la bibliothèque", emoji: "📖" },
     ],
   },
   {
@@ -40,14 +42,44 @@ const CATEGORIES: { id: ContentCategory; label: string; emoji: string; icon: typ
   },
 ];
 
-const ContentCategories = ({ childName, onSelectCategory, onBack }: ContentCategoriesProps) => {
+const ContentCategories = ({ childName, onSelectCategory, onBack, voiceProfile = "female" }: ContentCategoriesProps) => {
   const [expanded, setExpanded] = useState<ContentCategory | null>(null);
   const [score, setScore] = useState<GameScore>(loadScore);
+  const [showStoryLibrary, setShowStoryLibrary] = useState(false);
 
   const handleReset = () => {
     const s = resetScores();
     setScore(s);
   };
+
+  const handleSelectCategory = (sub: SubCategory) => {
+    if (sub === "histoires") {
+      setShowStoryLibrary(true);
+    } else {
+      onSelectCategory(sub);
+    }
+  };
+
+  // Show embedded StoryLibrary
+  if (showStoryLibrary) {
+    return (
+      <div className="flex flex-col h-screen max-w-lg mx-auto bg-background">
+        <div className="flex items-center gap-3 px-4 py-3 bg-card border-b border-border">
+          <button onClick={() => setShowStoryLibrary(false)} className="p-2 rounded-full hover:bg-muted transition-colors">
+            <ArrowLeft className="w-5 h-5 text-foreground" />
+          </button>
+          <div className="flex-1">
+            <h2 className="text-lg font-extrabold text-foreground">Bibliothèque</h2>
+            <p className="text-xs text-muted-foreground">Histoires, contes & aventures</p>
+          </div>
+          <span className="text-2xl">📚</span>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          <StoryLibrary childName={childName} voiceProfile={voiceProfile} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen max-w-lg mx-auto bg-background">
@@ -91,7 +123,14 @@ const ContentCategories = ({ childName, onSelectCategory, onBack }: ContentCateg
           return (
             <div key={cat.id} className="rounded-2xl border border-border bg-card overflow-hidden transition-all duration-200">
               <button
-                onClick={() => setExpanded(isExpanded ? null : cat.id)}
+                onClick={() => {
+                  // For histoires, go directly to library
+                  if (cat.id === "histoires") {
+                    setShowStoryLibrary(true);
+                    return;
+                  }
+                  setExpanded(isExpanded ? null : cat.id);
+                }}
                 className="w-full flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors"
               >
                 <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl">
@@ -111,7 +150,7 @@ const ContentCategories = ({ childName, onSelectCategory, onBack }: ContentCateg
                     return (
                       <button
                         key={sub.id}
-                        onClick={() => onSelectCategory(sub.id)}
+                        onClick={() => handleSelectCategory(sub.id)}
                         className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/30 hover:bg-primary/10 border border-transparent hover:border-primary/20 transition-all"
                       >
                         <span className="text-xl">{sub.emoji}</span>
