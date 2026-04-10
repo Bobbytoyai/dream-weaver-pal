@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { ArrowLeft, Clock, MessageSquare, Heart, Brain, Loader2, RefreshCw, Mic, BookOpen, Timer, Sparkles, Shield, Camera, Volume2, VolumeX, Play, Pause, AlertTriangle, TrendingUp, Trash2, ChevronRight, BarChart3, Calendar } from "lucide-react";
+import {
+  ArrowLeft, Clock, MessageSquare, Heart, Brain, Loader2, RefreshCw,
+  Mic, BookOpen, Timer, Sparkles, Shield, Camera, Volume2, VolumeX,
+  Play, Pause, AlertTriangle, TrendingUp, Trash2, ChevronRight,
+  BarChart3, Calendar, User, Zap, Moon, Sun, Hand, Lock,
+  Download, ToggleLeft, Settings, Eye, EyeOff
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+
+// ─── Types ───────────────────────────────────────────────────────────
 
 interface ParentModeProps {
   childName: string;
@@ -10,28 +18,69 @@ interface ParentModeProps {
 }
 
 export interface ParentSettings {
+  // Profile
   personality: "balanced" | "calm" | "energetic" | "educational";
-  contentFilter: "standard" | "strict";
+  childAge: number;
+  // Voice
+  voiceSpeed: "normal" | "slow" | "fast";
+  voicePitch: number;
+  sfxVolume: number;
+  enableCamera: boolean;
+  // Content modes
+  contentModes: {
+    freeChat: boolean;
+    educational: boolean;
+    games: boolean;
+    stories: boolean;
+  };
+  // Stories
   enabledThemes: string[];
+  storyDuration: "courte" | "moyenne" | "longue";
+  storyInteractive: boolean;
+  // Security
+  contentFilter: "standard" | "strict";
+  blockedTopics: string[];
+  ultraSafe: boolean;
+  // Limits
   timeLimitMinutes: number | null;
   autoStop: boolean;
-  voiceSpeed: "normal" | "slow" | "fast";
-  enableCamera: boolean;
-  sfxVolume: number;
+  nightMode: {
+    active: boolean;
+    startHour: string;
+    endHour: string;
+  };
+  // Interactions
+  interactions: {
+    wakeWord: boolean;
+    tap: boolean;
+    interruption: boolean;
+  };
+  // Data
   recordConversations: boolean;
 }
 
 export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
   personality: "balanced",
-  contentFilter: "standard",
+  childAge: 7,
+  voiceSpeed: "normal",
+  voicePitch: 1.0,
+  sfxVolume: 0.7,
+  enableCamera: false,
+  contentModes: { freeChat: true, educational: true, games: true, stories: true },
   enabledThemes: ["princesse", "pirate", "espace", "animaux", "éducatif"],
+  storyDuration: "moyenne",
+  storyInteractive: true,
+  contentFilter: "standard",
+  blockedTopics: [],
+  ultraSafe: true,
   timeLimitMinutes: null,
   autoStop: true,
-  voiceSpeed: "normal",
-  enableCamera: false,
-  sfxVolume: 0.7,
+  nightMode: { active: false, startHour: "20:00", endHour: "07:00" },
+  interactions: { wakeWord: true, tap: true, interruption: true },
   recordConversations: true,
 };
+
+// ─── Helpers ─────────────────────────────────────────────────────────
 
 interface Session {
   id: string;
@@ -93,6 +142,7 @@ const ALL_THEMES = [
   { id: "espace", label: "🚀 Espace" },
   { id: "animaux", label: "🐉 Animaux" },
   { id: "éducatif", label: "🧠 Éducatif" },
+  { id: "magie", label: "✨ Magie" },
 ];
 
 const formatDuration = (seconds: number | null): string => {
@@ -108,17 +158,62 @@ const formatDate = (date: string): string => {
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 };
 
-type Tab = "dashboard" | "sessions" | "voice" | "content" | "time" | "personality" | "security";
+// ─── Toggle Component ─────────────────────────────────────────────
+
+const Toggle = ({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) => (
+  <button onClick={() => onChange(!value)}
+    className={`w-12 h-7 rounded-full transition-all ${value ? "bg-primary" : "bg-muted"}`}>
+    <div className={`w-5 h-5 rounded-full bg-card shadow transition-transform ${value ? "translate-x-6" : "translate-x-1"}`} />
+  </button>
+);
+
+// ─── Setting Row ──────────────────────────────────────────────────
+
+const SettingRow = ({ icon: Icon, title, desc, children }: {
+  icon: any; title: string; desc?: string; children: React.ReactNode;
+}) => (
+  <div className="flex items-center justify-between py-3">
+    <div className="flex items-center gap-3 flex-1 min-w-0">
+      <Icon className="w-5 h-5 text-primary shrink-0" />
+      <div className="min-w-0">
+        <h4 className="text-sm font-bold text-foreground">{title}</h4>
+        {desc && <p className="text-xs text-muted-foreground truncate">{desc}</p>}
+      </div>
+    </div>
+    <div className="shrink-0 ml-3">{children}</div>
+  </div>
+);
+
+// ─── Section Card ─────────────────────────────────────────────────
+
+const Card = ({ title, icon: Icon, children }: { title?: string; icon?: any; children: React.ReactNode }) => (
+  <div className="bg-card rounded-2xl p-4 border border-border">
+    {title && (
+      <div className="flex items-center gap-2 mb-3">
+        {Icon && <Icon className="w-5 h-5 text-primary" />}
+        <h3 className="text-sm font-bold text-foreground">{title}</h3>
+      </div>
+    )}
+    {children}
+  </div>
+);
+
+// ─── Tab config ───────────────────────────────────────────────────
+
+type Tab = "dashboard" | "sessions" | "profil" | "voix" | "contenu" | "securite" | "limites" | "donnees";
 
 const tabs: { id: Tab; icon: any; label: string }[] = [
   { id: "dashboard", icon: BarChart3, label: "Tableau" },
   { id: "sessions", icon: MessageSquare, label: "Sessions" },
-  { id: "content", icon: BookOpen, label: "Contenu" },
-  { id: "personality", icon: Sparkles, label: "Perso" },
-  { id: "voice", icon: Mic, label: "Voix" },
-  { id: "time", icon: Timer, label: "Temps" },
-  { id: "security", icon: Shield, label: "Sécurité" },
+  { id: "profil", icon: User, label: "Profil" },
+  { id: "voix", icon: Mic, label: "Voix" },
+  { id: "contenu", icon: BookOpen, label: "Contenu" },
+  { id: "securite", icon: Shield, label: "Sécurité" },
+  { id: "limites", icon: Timer, label: "Limites" },
+  { id: "donnees", icon: Lock, label: "Données" },
 ];
+
+// ─── Main Component ───────────────────────────────────────────────
 
 const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: ParentModeProps) => {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
@@ -130,12 +225,24 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [analyzing, setAnalyzing] = useState(false);
   const [settings, setSettings] = useState<ParentSettings>(parentSettings || DEFAULT_PARENT_SETTINGS);
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
+  const [newBlockedTopic, setNewBlockedTopic] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => { loadData(); }, []);
 
   const updateSetting = <K extends keyof ParentSettings>(key: K, value: ParentSettings[K]) => {
     const next = { ...settings, [key]: value };
+    setSettings(next);
+    onSettingsChange?.(next);
+  };
+
+  const updateNested = <K extends keyof ParentSettings>(
+    key: K,
+    subKey: string,
+    value: any
+  ) => {
+    const current = settings[key] as any;
+    const next = { ...settings, [key]: { ...current, [subKey]: value } };
     setSettings(next);
     onSettingsChange?.(next);
   };
@@ -160,12 +267,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const analyzeSession = async (session: Session) => {
     setSelectedSession(session);
-    // Check if analysis already exists
     const existing = analyses.find(a => a.session_id === session.id);
-    if (existing) {
-      setSelectedAnalysis(existing);
-      return;
-    }
+    if (existing) { setSelectedAnalysis(existing); return; }
     setAnalyzing(true);
     try {
       const resp = await fetch(
@@ -184,19 +287,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         setSelectedAnalysis(data.analysis);
         loadData();
       }
-    } catch {
-      // ignore
-    } finally {
-      setAnalyzing(false);
-    }
+    } catch { /* ignore */ } finally { setAnalyzing(false); }
   };
 
   const playAudio = async (audioPath: string) => {
-    if (playingAudio === audioPath) {
-      audioRef.current?.pause();
-      setPlayingAudio(null);
-      return;
-    }
+    if (playingAudio === audioPath) { audioRef.current?.pause(); setPlayingAudio(null); return; }
     const { data } = await supabase.storage.from("conversation-audio").createSignedUrl(audioPath, 3600);
     if (data?.signedUrl) {
       if (audioRef.current) audioRef.current.pause();
@@ -212,12 +307,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     await supabase.from("conversation_analyses").delete().eq("session_id", sessionId);
     await supabase.from("session_messages").delete().eq("session_id", sessionId);
     await supabase.from("child_sessions").delete().eq("id", sessionId);
-    // Also try to delete audio
     await supabase.storage.from("conversation-audio").remove([`${sessionId}.webm`]);
     loadData();
     setSelectedSession(null);
     setSelectedAnalysis(null);
   };
+
+  // ─── Computed ─────────────────────────────────────────────────
 
   const totalSessions = sessions.length;
   const totalMessages = sessions.reduce((acc, s) => acc + s.message_count, 0);
@@ -225,7 +321,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const allEmotions = sessions.flatMap(s => s.detected_emotions || []);
   const emotionCounts = allEmotions.reduce((acc, e) => { acc[e] = (acc[e] || 0) + 1; return acc; }, {} as Record<string, number>);
 
-  // Compute aggregated analysis data
   const recentAnalyses = analyses.slice(0, 7);
   const avgEmotions = recentAnalyses.length > 0
     ? Object.keys(emotionScoreLabels).reduce((acc, key) => {
@@ -236,39 +331,104 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     : {};
 
   const allAlerts = analyses.flatMap(a => (a.alerts || []).map(alert => ({
-    ...alert,
-    date: a.created_at,
-    sessionId: a.session_id,
+    ...alert, date: a.created_at, sessionId: a.session_id,
   })));
 
   const allTopics = analyses.flatMap(a => a.topics_detected || []);
   const topicCounts = allTopics.reduce((acc, t) => { acc[t] = (acc[t] || 0) + 1; return acc; }, {} as Record<string, number>);
   const topTopics = Object.entries(topicCounts).sort(([, a], [, b]) => b - a).slice(0, 8);
 
-  // --- DASHBOARD TAB ---
+  // Today's sessions
+  const today = new Date().toDateString();
+  const todaySessions = sessions.filter(s => new Date(s.started_at).toDateString() === today);
+  const todayDuration = todaySessions.reduce((acc, s) => acc + (s.duration_seconds || 0), 0);
+  const dominantMood = Object.entries(emotionCounts).sort(([, a], [, b]) => b - a)[0];
+
+  // ─── Presets ──────────────────────────────────────────────────
+
+  const applyPreset = (name: string) => {
+    let next = { ...settings };
+    switch (name) {
+      case "calm":
+        next.voiceSpeed = "slow";
+        next.personality = "calm";
+        next.storyDuration = "longue";
+        next.sfxVolume = 0.3;
+        break;
+      case "game":
+        next.contentModes = { ...next.contentModes, games: true };
+        next.personality = "energetic";
+        next.voiceSpeed = "fast";
+        break;
+      case "night":
+        next.nightMode = { ...next.nightMode, active: true };
+        next.personality = "calm";
+        next.voiceSpeed = "slow";
+        next.sfxVolume = 0.2;
+        break;
+      case "education":
+        next.personality = "educational";
+        next.contentModes = { ...next.contentModes, educational: true };
+        break;
+    }
+    setSettings(next);
+    onSettingsChange?.(next);
+  };
+
+  // ═══════════════════════════════════════════════════════════════
+  // RENDER: DASHBOARD
+  // ═══════════════════════════════════════════════════════════════
+
   const renderDashboard = () => (
     <div className="p-4 space-y-4">
-      {/* Daily summary card */}
+      {/* Quick summary */}
       <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-4 border border-primary/20">
         <div className="flex items-center gap-2 mb-3">
           <Calendar className="w-5 h-5 text-primary" />
-          <h3 className="text-sm font-bold text-foreground">Résumé récent</h3>
+          <h3 className="text-sm font-bold text-foreground">Aujourd'hui</h3>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-3 mb-3">
           <div className="text-center">
-            <p className="text-2xl font-extrabold text-primary">{totalSessions}</p>
+            <p className="text-2xl font-extrabold text-primary">{todaySessions.length}</p>
             <p className="text-[10px] text-muted-foreground">Sessions</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-extrabold text-primary">{totalMessages}</p>
-            <p className="text-[10px] text-muted-foreground">Messages</p>
+            <p className="text-2xl font-extrabold text-primary">{formatDuration(todayDuration)}</p>
+            <p className="text-[10px] text-muted-foreground">Temps</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-extrabold text-foreground">{formatDuration(totalDuration)}</p>
-            <p className="text-[10px] text-muted-foreground">Temps total</p>
+            <p className="text-2xl font-extrabold text-foreground">
+              {dominantMood ? emotionLabels[dominantMood[0]]?.emoji || "—" : "—"}
+            </p>
+            <p className="text-[10px] text-muted-foreground">Humeur</p>
           </div>
         </div>
+        {topTopics.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {topTopics.slice(0, 4).map(([topic]) => (
+              <span key={topic} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">{topic}</span>
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* Quick presets */}
+      <Card title="Modes rapides" icon={Zap}>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { id: "calm", label: "😌 Mode calme", desc: "Voix douce, rythme lent" },
+            { id: "game", label: "🎮 Mode jeu", desc: "Énergique, fun" },
+            { id: "night", label: "🌙 Mode nuit", desc: "Ultra doux, apaisant" },
+            { id: "education", label: "📚 Mode éducatif", desc: "Apprentissage ludique" },
+          ].map(preset => (
+            <button key={preset.id} onClick={() => applyPreset(preset.id)}
+              className="text-left p-3 rounded-xl bg-muted hover:bg-primary/10 hover:border-primary/30 border border-transparent transition-all">
+              <span className="text-sm font-bold text-foreground block">{preset.label}</span>
+              <span className="text-[10px] text-muted-foreground">{preset.desc}</span>
+            </button>
+          ))}
+        </div>
+      </Card>
 
       {/* Alerts */}
       {allAlerts.length > 0 && (
@@ -291,13 +451,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </div>
       )}
 
-      {/* Emotion scores */}
+      {/* Emotion averages */}
       {Object.keys(avgEmotions).length > 0 && (
-        <div className="bg-card rounded-2xl p-4 border border-border">
-          <div className="flex items-center gap-2 mb-3">
-            <Heart className="w-5 h-5 text-accent" />
-            <h3 className="text-sm font-bold text-foreground">Émotions moyennes (7 dernières sessions)</h3>
-          </div>
+        <Card title="Émotions moyennes" icon={Heart}>
           <div className="space-y-2">
             {Object.entries(avgEmotions).filter(([, v]) => v > 0).sort(([, a], [, b]) => b - a).map(([key, value]) => {
               const info = emotionScoreLabels[key] || { label: key, emoji: "❓" };
@@ -306,48 +462,33 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   <span className="w-6 text-center">{info.emoji}</span>
                   <span className="text-xs text-foreground w-20">{info.label}</span>
                   <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full transition-all"
-                      style={{ width: `${value}%` }}
-                    />
+                    <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${value}%` }} />
                   </div>
                   <span className="text-xs text-muted-foreground w-8 text-right">{value}%</span>
                 </div>
               );
             })}
           </div>
-        </div>
+        </Card>
       )}
 
-      {/* Topics */}
-      {topTopics.length > 0 && (
-        <div className="bg-card rounded-2xl p-4 border border-border">
-          <div className="flex items-center gap-2 mb-3">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            <h3 className="text-sm font-bold text-foreground">Sujets les plus abordés</h3>
+      {/* All-time stats */}
+      <Card title="Statistiques globales" icon={TrendingUp}>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="text-center">
+            <p className="text-xl font-extrabold text-primary">{totalSessions}</p>
+            <p className="text-[10px] text-muted-foreground">Sessions</p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {topTopics.map(([topic, count]) => (
-              <span key={topic} className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold">
-                {topic} ({count})
-              </span>
-            ))}
+          <div className="text-center">
+            <p className="text-xl font-extrabold text-primary">{totalMessages}</p>
+            <p className="text-[10px] text-muted-foreground">Messages</p>
           </div>
-        </div>
-      )}
-
-      {/* Frequent emotions from sessions */}
-      {Object.keys(emotionCounts).length > 0 && (
-        <div className="bg-card rounded-2xl p-4 border border-border">
-          <h3 className="text-sm font-bold text-foreground mb-2">Émotions détectées (temps réel)</h3>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(emotionCounts).sort(([, a], [, b]) => b - a).map(([emotion, count]) => {
-              const info = emotionLabels[emotion] || { label: emotion, color: "bg-muted text-muted-foreground", emoji: "❓" };
-              return <span key={emotion} className={`px-3 py-1 rounded-full text-xs font-bold ${info.color}`}>{info.emoji} {info.label} ({count})</span>;
-            })}
+          <div className="text-center">
+            <p className="text-xl font-extrabold text-foreground">{formatDuration(totalDuration)}</p>
+            <p className="text-[10px] text-muted-foreground">Temps total</p>
           </div>
         </div>
-      )}
+      </Card>
 
       {totalSessions === 0 && !loading && (
         <div className="text-center py-8 text-muted-foreground">
@@ -359,14 +500,16 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     </div>
   );
 
-  // --- SESSION DETAIL ---
+  // ═══════════════════════════════════════════════════════════════
+  // RENDER: SESSION DETAIL
+  // ═══════════════════════════════════════════════════════════════
+
   const renderSessionDetail = () => {
     const analysis = selectedAnalysis || analyses.find(a => a.session_id === selectedSession?.id);
     const moodInfo = moodLabels[(analysis?.mood_score || "neutral")] || moodLabels.neutral;
 
     return (
       <div className="p-4 space-y-4">
-        {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-card rounded-2xl p-3 text-center border border-border">
             <Clock className="w-5 h-5 mx-auto mb-1 text-primary" />
@@ -385,49 +528,29 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
         </div>
 
-        {/* Audio playback */}
         {analysis?.audio_path && (
-          <div className="bg-card rounded-2xl p-4 border border-border">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Mic className="w-5 h-5 text-primary" />
-                <h3 className="text-sm font-bold text-foreground">Réécouter</h3>
-              </div>
-              <button
-                onClick={() => playAudio(analysis.audio_path!)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-all"
-              >
-                {playingAudio === analysis.audio_path ? (
-                  <><Pause className="w-4 h-4" /> Pause</>
-                ) : (
-                  <><Play className="w-4 h-4" /> Écouter</>
-                )}
-              </button>
-            </div>
-          </div>
+          <Card title="Réécouter" icon={Mic}>
+            <button onClick={() => playAudio(analysis.audio_path!)}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-all">
+              {playingAudio === analysis.audio_path
+                ? <><Pause className="w-4 h-4" /> Pause</>
+                : <><Play className="w-4 h-4" /> Écouter</>}
+            </button>
+          </Card>
         )}
 
-        {/* AI Analysis */}
         {analyzing ? (
-          <div className="bg-card rounded-2xl p-4 border border-border flex items-center gap-3">
-            <Loader2 className="w-5 h-5 animate-spin text-primary" />
-            <span className="text-sm text-muted-foreground">Analyse en cours…</span>
-          </div>
+          <Card><div className="flex items-center gap-3"><Loader2 className="w-5 h-5 animate-spin text-primary" /><span className="text-sm text-muted-foreground">Analyse en cours…</span></div></Card>
         ) : analysis ? (
           <>
-            {/* Summary */}
-            <div className="bg-card rounded-2xl p-4 border border-border">
-              <div className="flex items-center gap-2 mb-3">
-                <Brain className="w-5 h-5 text-primary" />
-                <h3 className="text-sm font-bold text-foreground">Résumé</h3>
-              </div>
-              <p className="text-sm text-foreground leading-relaxed">{analysis.summary}</p>
-            </div>
+            {analysis.summary && (
+              <Card title="Résumé" icon={Brain}>
+                <p className="text-sm text-foreground leading-relaxed">{analysis.summary}</p>
+              </Card>
+            )}
 
-            {/* Emotion bars */}
             {analysis.emotions && Object.keys(analysis.emotions).length > 0 && (
-              <div className="bg-card rounded-2xl p-4 border border-border">
-                <h3 className="text-sm font-bold text-foreground mb-3">Émotions</h3>
+              <Card title="Émotions" icon={Heart}>
                 <div className="space-y-2">
                   {Object.entries(analysis.emotions).filter(([, v]) => (v as number) > 0).sort(([, a], [, b]) => (b as number) - (a as number)).map(([key, value]) => {
                     const info = emotionScoreLabels[key] || { label: key, emoji: "❓" };
@@ -443,39 +566,32 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     );
                   })}
                 </div>
-              </div>
+              </Card>
             )}
 
-            {/* Topics */}
             {analysis.topics_detected?.length > 0 && (
-              <div className="bg-card rounded-2xl p-4 border border-border">
-                <h3 className="text-sm font-bold text-foreground mb-2">Sujets abordés</h3>
+              <Card title="Sujets abordés">
                 <div className="flex flex-wrap gap-2">
                   {analysis.topics_detected.map((t, i) => (
                     <span key={i} className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold">{t}</span>
                   ))}
                 </div>
-              </div>
+              </Card>
             )}
 
-            {/* Behavior insights */}
             {analysis.behavior_insights?.length > 0 && (
-              <div className="bg-card rounded-2xl p-4 border border-border">
-                <h3 className="text-sm font-bold text-foreground mb-2">Observations</h3>
+              <Card title="Observations">
                 <ul className="space-y-1.5">
                   {analysis.behavior_insights.map((insight, i) => (
                     <li key={i} className="text-sm text-foreground flex items-start gap-2">
-                      <span className="text-primary mt-0.5">•</span>
-                      {insight}
+                      <span className="text-primary mt-0.5">•</span>{insight}
                     </li>
                   ))}
                 </ul>
-              </div>
+              </Card>
             )}
 
-            {/* Engagement */}
-            <div className="bg-card rounded-2xl p-4 border border-border">
-              <h3 className="text-sm font-bold text-foreground mb-2">Engagement</h3>
+            <Card title="Engagement">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-[10px] text-muted-foreground">Niveau</p>
@@ -488,9 +604,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   </div>
                 )}
               </div>
-            </div>
+            </Card>
 
-            {/* Alerts */}
             {analysis.alerts?.length > 0 && (
               <div className="bg-destructive/5 rounded-2xl p-4 border border-destructive/20">
                 <div className="flex items-center gap-2 mb-2">
@@ -503,7 +618,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </div>
             )}
 
-            {/* Transcription */}
             {analysis.full_transcription && (
               <details className="bg-card rounded-2xl border border-border overflow-hidden">
                 <summary className="p-4 text-sm font-bold text-foreground cursor-pointer hover:bg-muted/50 transition-colors">
@@ -522,37 +636,34 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </button>
         )}
 
-        {/* Delete */}
         <button
           onClick={() => {
-            if (confirm("Supprimer cette session et toutes ses données ?")) {
-              deleteSession(selectedSession!.id);
-            }
+            if (confirm("Supprimer cette session et toutes ses données ?")) deleteSession(selectedSession!.id);
           }}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-destructive/10 text-destructive text-sm font-bold hover:bg-destructive/20 transition-all"
-        >
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-destructive/10 text-destructive text-sm font-bold hover:bg-destructive/20 transition-all">
           <Trash2 className="w-4 h-4" /> Supprimer cette session
         </button>
       </div>
     );
   };
 
-  // --- SESSIONS LIST ---
+  // ═══════════════════════════════════════════════════════════════
+  // RENDER: SESSIONS LIST
+  // ═══════════════════════════════════════════════════════════════
+
   const renderSessionsList = () => (
     <div className="p-4">
       <h3 className="text-sm font-bold text-foreground mb-3">Toutes les sessions</h3>
       {loading ? (
         <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
       ) : sessions.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          <p className="text-sm">Aucune session enregistrée.</p>
-        </div>
+        <div className="text-center py-8 text-muted-foreground"><p className="text-sm">Aucune session enregistrée.</p></div>
       ) : (
         <div className="space-y-2">
           {sessions.map(session => {
             const hasAnalysis = analyses.some(a => a.session_id === session.id);
             const analysis = analyses.find(a => a.session_id === session.id);
-            const moodInfo = moodLabels[(analysis?.mood_score || "neutral")] || moodLabels.neutral;
+            const mood = moodLabels[(analysis?.mood_score || "neutral")] || moodLabels.neutral;
             return (
               <button key={session.id} onClick={() => analyzeSession(session)}
                 className="w-full bg-card rounded-2xl p-4 border border-border hover:border-primary transition-all text-left">
@@ -565,16 +676,14 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">{session.message_count} msg</span>
-                  {hasAnalysis && <span className="text-sm">{moodInfo.emoji}</span>}
+                  {hasAnalysis && <span className="text-sm">{mood.emoji}</span>}
                   {session.detected_emotions?.slice(0, 3).map((e, i) => {
                     const info = emotionLabels[e] || { label: e, color: "bg-muted text-muted-foreground", emoji: "❓" };
                     return <span key={i} className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${info.color}`}>{info.label}</span>;
                   })}
                   {hasAnalysis && <Brain className="w-3 h-3 text-primary ml-auto" />}
                 </div>
-                {analysis?.summary && (
-                  <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{analysis.summary}</p>
-                )}
+                {analysis?.summary && <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{analysis.summary}</p>}
               </button>
             );
           })}
@@ -583,131 +692,33 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     </div>
   );
 
-  // --- SETTINGS TABS (reused from original) ---
-  const renderVoiceTab = () => (
+  // ═══════════════════════════════════════════════════════════════
+  // RENDER: PROFIL
+  // ═══════════════════════════════════════════════════════════════
+
+  const renderProfil = () => (
     <div className="p-4 space-y-4">
-      <div className="bg-card rounded-2xl p-4 border border-border">
-        <h3 className="text-sm font-bold text-foreground mb-3">Vitesse de la voix</h3>
-        <div className="flex gap-2">
-          {([["slow", "Lent"], ["normal", "Normal"], ["fast", "Rapide"]] as const).map(([val, label]) => (
-            <button key={val} onClick={() => updateSetting("voiceSpeed", val)}
-              className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${settings.voiceSpeed === val ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="bg-card rounded-2xl p-4 border border-border">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Camera className="w-5 h-5 text-primary" />
-            <div>
-              <h3 className="text-sm font-bold text-foreground">Suivi du visage</h3>
-              <p className="text-xs text-muted-foreground">Bobby suit le visage de l'enfant</p>
+      <Card title="Profil de l'enfant" icon={User}>
+        <div className="space-y-3">
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Prénom</p>
+            <p className="text-lg font-extrabold text-foreground">{childName}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Âge</p>
+            <div className="flex gap-2">
+              {[5, 6, 7, 8, 9, 10, 11, 12].map(age => (
+                <button key={age} onClick={() => updateSetting("childAge", age)}
+                  className={`w-10 h-10 rounded-xl text-sm font-bold transition-all ${settings.childAge === age ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                  {age}
+                </button>
+              ))}
             </div>
           </div>
-          <button onClick={async () => {
-            if (!settings.enableCamera) {
-              try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 320, height: 240 } });
-                stream.getTracks().forEach(t => t.stop());
-                updateSetting("enableCamera", true);
-              } catch { alert("Impossible d'accéder à la caméra."); }
-            } else { updateSetting("enableCamera", false); }
-          }}
-            className={`w-12 h-7 rounded-full transition-all ${settings.enableCamera ? "bg-primary" : "bg-muted"}`}>
-            <div className={`w-5 h-5 rounded-full bg-card shadow transition-transform ${settings.enableCamera ? "translate-x-6" : "translate-x-1"}`} />
-          </button>
         </div>
-      </div>
-      <div className="bg-card rounded-2xl p-4 border border-border">
-        <div className="flex items-center gap-3 mb-3">
-          {settings.sfxVolume === 0 ? <VolumeX className="w-5 h-5 text-muted-foreground" /> : <Volume2 className="w-5 h-5 text-primary" />}
-          <div>
-            <h3 className="text-sm font-bold text-foreground">Effets sonores</h3>
-            <p className="text-xs text-muted-foreground">{settings.sfxVolume === 0 ? "Désactivés" : `Volume : ${Math.round(settings.sfxVolume * 100)}%`}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <button onClick={() => updateSetting("sfxVolume", settings.sfxVolume === 0 ? 0.7 : 0)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${settings.sfxVolume === 0 ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
-            {settings.sfxVolume === 0 ? "Off" : "On"}
-          </button>
-          <input type="range" min="0" max="100" value={Math.round(settings.sfxVolume * 100)}
-            onChange={(e) => updateSetting("sfxVolume", Number(e.target.value) / 100)}
-            className="flex-1 h-2 rounded-full appearance-none bg-muted accent-primary" />
-        </div>
-      </div>
-      {/* Recording toggle */}
-      <div className="bg-card rounded-2xl p-4 border border-border">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Mic className="w-5 h-5 text-primary" />
-            <div>
-              <h3 className="text-sm font-bold text-foreground">Enregistrer les conversations</h3>
-              <p className="text-xs text-muted-foreground">Sauvegarde audio pour réécoute</p>
-            </div>
-          </div>
-          <button onClick={() => updateSetting("recordConversations", !settings.recordConversations)}
-            className={`w-12 h-7 rounded-full transition-all ${settings.recordConversations ? "bg-primary" : "bg-muted"}`}>
-            <div className={`w-5 h-5 rounded-full bg-card shadow transition-transform ${settings.recordConversations ? "translate-x-6" : "translate-x-1"}`} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+      </Card>
 
-  const renderContentTab = () => (
-    <div className="p-4 space-y-4">
-      <div className="bg-card rounded-2xl p-4 border border-border">
-        <h3 className="text-sm font-bold text-foreground mb-3">Thèmes d'histoires</h3>
-        <div className="space-y-2">
-          {ALL_THEMES.map(theme => (
-            <button key={theme.id} onClick={() => toggleTheme(theme.id)}
-              className={`w-full flex items-center justify-between p-3 rounded-xl text-sm font-bold transition-all ${
-                settings.enabledThemes.includes(theme.id) ? "bg-primary/10 text-primary border border-primary/30" : "bg-muted text-muted-foreground"
-              }`}>
-              <span>{theme.label}</span>
-              <span className="text-xs">{settings.enabledThemes.includes(theme.id) ? "✓ Activé" : "Désactivé"}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderTimeTab = () => (
-    <div className="p-4 space-y-4">
-      <div className="bg-card rounded-2xl p-4 border border-border">
-        <h3 className="text-sm font-bold text-foreground mb-3">Limite de temps</h3>
-        <div className="flex gap-2 flex-wrap">
-          {([null, 10, 20, 30, 60] as const).map(val => (
-            <button key={String(val)} onClick={() => updateSetting("timeLimitMinutes", val)}
-              className={`py-2 px-4 rounded-xl text-sm font-bold transition-all ${settings.timeLimitMinutes === val ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-              {val === null ? "Illimité" : `${val} min`}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="bg-card rounded-2xl p-4 border border-border">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-foreground">Arrêt automatique</h3>
-            <p className="text-xs text-muted-foreground">Arrêt après 40s de silence</p>
-          </div>
-          <button onClick={() => updateSetting("autoStop", !settings.autoStop)}
-            className={`w-12 h-7 rounded-full transition-all ${settings.autoStop ? "bg-primary" : "bg-muted"}`}>
-            <div className={`w-5 h-5 rounded-full bg-card shadow transition-transform ${settings.autoStop ? "translate-x-6" : "translate-x-1"}`} />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderPersonalityTab = () => (
-    <div className="p-4 space-y-4">
-      <div className="bg-card rounded-2xl p-4 border border-border">
-        <h3 className="text-sm font-bold text-foreground mb-3">Style de personnalité</h3>
+      <Card title="Personnalité de Bobby" icon={Sparkles}>
         <div className="space-y-2">
           {([
             ["balanced", "⚖️ Équilibré", "Mode par défaut, chaleureux"],
@@ -722,14 +733,135 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             </button>
           ))}
         </div>
-      </div>
+      </Card>
+
+      {settings.enabledThemes.length > 0 && (
+        <Card title="Thèmes favoris">
+          <div className="flex flex-wrap gap-2">
+            {settings.enabledThemes.map(t => {
+              const theme = ALL_THEMES.find(th => th.id === t);
+              return <span key={t} className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold">{theme?.label || t}</span>;
+            })}
+          </div>
+        </Card>
+      )}
     </div>
   );
 
-  const renderSecurityTab = () => (
+  // ═══════════════════════════════════════════════════════════════
+  // RENDER: VOIX
+  // ═══════════════════════════════════════════════════════════════
+
+  const renderVoix = () => (
     <div className="p-4 space-y-4">
-      <div className="bg-card rounded-2xl p-4 border border-border">
-        <h3 className="text-sm font-bold text-foreground mb-3">Filtre de contenu</h3>
+      <Card title="Vitesse de la voix" icon={Mic}>
+        <div className="flex gap-2">
+          {([["slow", "🐢 Lent"], ["normal", "🔊 Normal"], ["fast", "⚡ Rapide"]] as const).map(([val, label]) => (
+            <button key={val} onClick={() => updateSetting("voiceSpeed", val)}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${settings.voiceSpeed === val ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      <Card>
+        <SettingRow icon={Camera} title="Suivi du visage" desc="Bobby suit le visage de l'enfant">
+          <Toggle value={settings.enableCamera} onChange={async (v) => {
+            if (v) {
+              try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 320, height: 240 } });
+                stream.getTracks().forEach(t => t.stop());
+                updateSetting("enableCamera", true);
+              } catch { alert("Impossible d'accéder à la caméra."); }
+            } else { updateSetting("enableCamera", false); }
+          }} />
+        </SettingRow>
+      </Card>
+
+      <Card title="Effets sonores" icon={settings.sfxVolume === 0 ? VolumeX : Volume2}>
+        <div className="flex items-center gap-3">
+          <button onClick={() => updateSetting("sfxVolume", settings.sfxVolume === 0 ? 0.7 : 0)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${settings.sfxVolume === 0 ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
+            {settings.sfxVolume === 0 ? "Off" : "On"}
+          </button>
+          <input type="range" min="0" max="100" value={Math.round(settings.sfxVolume * 100)}
+            onChange={(e) => updateSetting("sfxVolume", Number(e.target.value) / 100)}
+            className="flex-1 h-2 rounded-full appearance-none bg-muted accent-primary" />
+          <span className="text-xs text-muted-foreground w-10 text-right">{Math.round(settings.sfxVolume * 100)}%</span>
+        </div>
+      </Card>
+    </div>
+  );
+
+  // ═══════════════════════════════════════════════════════════════
+  // RENDER: CONTENU
+  // ═══════════════════════════════════════════════════════════════
+
+  const renderContenu = () => (
+    <div className="p-4 space-y-4">
+      <Card title="Modes de contenu" icon={BookOpen}>
+        <div className="space-y-1">
+          {([
+            ["freeChat", "💬 Discussion libre", "Bobby bavarde librement"],
+            ["educational", "📚 Éducatif", "Apprentissage ludique"],
+            ["games", "🎮 Jeux", "Devinettes, quiz, défis"],
+            ["stories", "📖 Histoires", "Contes et aventures"],
+          ] as const).map(([key, label, desc]) => (
+            <div key={key} className="flex items-center justify-between py-2.5">
+              <div>
+                <span className="text-sm font-bold text-foreground">{label}</span>
+                <p className="text-xs text-muted-foreground">{desc}</p>
+              </div>
+              <Toggle
+                value={settings.contentModes[key as keyof typeof settings.contentModes]}
+                onChange={(v) => updateNested("contentModes", key, v)}
+              />
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card title="Thèmes d'histoires" icon={Sparkles}>
+        <div className="space-y-2">
+          {ALL_THEMES.map(theme => (
+            <button key={theme.id} onClick={() => toggleTheme(theme.id)}
+              className={`w-full flex items-center justify-between p-3 rounded-xl text-sm font-bold transition-all ${
+                settings.enabledThemes.includes(theme.id) ? "bg-primary/10 text-primary border border-primary/30" : "bg-muted text-muted-foreground"
+              }`}>
+              <span>{theme.label}</span>
+              <span className="text-xs">{settings.enabledThemes.includes(theme.id) ? "✓" : "—"}</span>
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      <Card title="Durée des histoires">
+        <div className="flex gap-2">
+          {([["courte", "⚡ Courte"], ["moyenne", "📖 Moyenne"], ["longue", "📚 Longue"]] as const).map(([val, label]) => (
+            <button key={val} onClick={() => updateSetting("storyDuration", val)}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${settings.storyDuration === val ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      <Card>
+        <SettingRow icon={Sparkles} title="Histoires interactives" desc="L'enfant fait des choix dans l'histoire">
+          <Toggle value={settings.storyInteractive} onChange={(v) => updateSetting("storyInteractive", v)} />
+        </SettingRow>
+      </Card>
+    </div>
+  );
+
+  // ═══════════════════════════════════════════════════════════════
+  // RENDER: SÉCURITÉ
+  // ═══════════════════════════════════════════════════════════════
+
+  const renderSecurite = () => (
+    <div className="p-4 space-y-4">
+      <Card title="Niveau de filtrage" icon={Shield}>
         <div className="space-y-2">
           {([
             ["standard", "🟢 Standard", "Contenu adapté aux enfants"],
@@ -742,40 +874,195 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             </button>
           ))}
         </div>
-      </div>
-      {/* Privacy controls */}
-      <div className="bg-card rounded-2xl p-4 border border-border">
-        <h3 className="text-sm font-bold text-foreground mb-3">🔐 Vie privée</h3>
-        <button
-          onClick={() => {
-            if (confirm("Supprimer TOUT l'historique des conversations ? Cette action est irréversible.")) {
-              Promise.all([
-                supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
-                supabase.from("session_messages").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
-                supabase.from("child_sessions").delete().eq("child_name", childName),
-              ]).then(() => {
-                loadData();
-              });
-            }
-          }}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-destructive/10 text-destructive text-sm font-bold hover:bg-destructive/20 transition-all"
-        >
-          <Trash2 className="w-4 h-4" /> Effacer tout l'historique
-        </button>
-      </div>
+      </Card>
+
+      <Card>
+        <SettingRow icon={Shield} title="Mode ultra-safe" desc="Protection maximale activée">
+          <Toggle value={settings.ultraSafe} onChange={(v) => updateSetting("ultraSafe", v)} />
+        </SettingRow>
+      </Card>
+
+      <Card title="Sujets bloqués" icon={EyeOff}>
+        <div className="space-y-3">
+          {settings.blockedTopics.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {settings.blockedTopics.map(topic => (
+                <button key={topic} onClick={() => updateSetting("blockedTopics", settings.blockedTopics.filter(t => t !== topic))}
+                  className="flex items-center gap-1 px-3 py-1 rounded-full bg-destructive/10 text-destructive text-xs font-bold hover:bg-destructive/20 transition-all">
+                  {topic} ✕
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newBlockedTopic}
+              onChange={(e) => setNewBlockedTopic(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && newBlockedTopic.trim()) {
+                  updateSetting("blockedTopics", [...settings.blockedTopics, newBlockedTopic.trim()]);
+                  setNewBlockedTopic("");
+                }
+              }}
+              placeholder="Ajouter un sujet…"
+              className="flex-1 px-3 py-2 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
+            />
+            <button
+              onClick={() => {
+                if (newBlockedTopic.trim()) {
+                  updateSetting("blockedTopics", [...settings.blockedTopics, newBlockedTopic.trim()]);
+                  setNewBlockedTopic("");
+                }
+              }}
+              className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-all">
+              +
+            </button>
+          </div>
+        </div>
+      </Card>
     </div>
   );
+
+  // ═══════════════════════════════════════════════════════════════
+  // RENDER: LIMITES
+  // ═══════════════════════════════════════════════════════════════
+
+  const renderLimites = () => (
+    <div className="p-4 space-y-4">
+      <Card title="Limite de temps journalier" icon={Timer}>
+        <div className="flex gap-2 flex-wrap">
+          {([null, 10, 20, 30, 60] as const).map(val => (
+            <button key={String(val)} onClick={() => updateSetting("timeLimitMinutes", val)}
+              className={`py-2 px-4 rounded-xl text-sm font-bold transition-all ${settings.timeLimitMinutes === val ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+              {val === null ? "∞ Illimité" : `${val} min`}
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      <Card>
+        <SettingRow icon={Clock} title="Arrêt automatique" desc="Arrêt après 40s de silence">
+          <Toggle value={settings.autoStop} onChange={(v) => updateSetting("autoStop", v)} />
+        </SettingRow>
+      </Card>
+
+      <Card title="Mode nuit" icon={Moon}>
+        <div className="space-y-3">
+          <SettingRow icon={Moon} title="Activer le mode nuit" desc="Bobby ne répond plus pendant la nuit">
+            <Toggle value={settings.nightMode.active} onChange={(v) => updateNested("nightMode", "active", v)} />
+          </SettingRow>
+          {settings.nightMode.active && (
+            <div className="flex items-center gap-3 pt-2">
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground mb-1">Début</p>
+                <input type="time" value={settings.nightMode.startHour}
+                  onChange={(e) => updateNested("nightMode", "startHour", e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-muted border border-border text-sm text-foreground outline-none focus:border-primary" />
+              </div>
+              <Sun className="w-4 h-4 text-muted-foreground mt-4" />
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground mb-1">Fin</p>
+                <input type="time" value={settings.nightMode.endHour}
+                  onChange={(e) => updateNested("nightMode", "endHour", e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-muted border border-border text-sm text-foreground outline-none focus:border-primary" />
+              </div>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <Card title="Interactions" icon={Hand}>
+        <div className="space-y-1">
+          {([
+            ["wakeWord", "🎤 Mot de réveil", "Dire \"Bobby\" pour activer"],
+            ["tap", "👆 Toucher", "Toucher l'écran pour activer"],
+            ["interruption", "✋ Interruption", "L'enfant peut interrompre Bobby"],
+          ] as const).map(([key, label, desc]) => (
+            <div key={key} className="flex items-center justify-between py-2.5">
+              <div>
+                <span className="text-sm font-bold text-foreground">{label}</span>
+                <p className="text-xs text-muted-foreground">{desc}</p>
+              </div>
+              <Toggle
+                value={settings.interactions[key as keyof typeof settings.interactions]}
+                onChange={(v) => updateNested("interactions", key, v)}
+              />
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+
+  // ═══════════════════════════════════════════════════════════════
+  // RENDER: DONNÉES
+  // ═══════════════════════════════════════════════════════════════
+
+  const renderDonnees = () => (
+    <div className="p-4 space-y-4">
+      <Card title="Enregistrement" icon={Mic}>
+        <SettingRow icon={Mic} title="Enregistrer les conversations" desc="Sauvegarde audio pour réécoute">
+          <Toggle value={settings.recordConversations} onChange={(v) => updateSetting("recordConversations", v)} />
+        </SettingRow>
+      </Card>
+
+      <Card title="Gestion des données" icon={Lock}>
+        <div className="space-y-3">
+          <button
+            onClick={async () => {
+              const sessData = sessions.map(s => ({
+                date: s.started_at,
+                duration: s.duration_seconds,
+                messages: s.message_count,
+                emotions: s.detected_emotions,
+                topics: s.topics,
+              }));
+              const blob = new Blob([JSON.stringify(sessData, null, 2)], { type: "application/json" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `bobby-data-${childName}-${new Date().toISOString().slice(0, 10)}.json`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary/10 text-primary text-sm font-bold hover:bg-primary/20 transition-all">
+            <Download className="w-4 h-4" /> Exporter les données
+          </button>
+
+          <button
+            onClick={() => {
+              if (confirm("Supprimer TOUT l'historique des conversations ? Cette action est irréversible.")) {
+                Promise.all([
+                  supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
+                  supabase.from("session_messages").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
+                  supabase.from("child_sessions").delete().eq("child_name", childName),
+                ]).then(() => loadData());
+              }
+            }}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-destructive/10 text-destructive text-sm font-bold hover:bg-destructive/20 transition-all">
+            <Trash2 className="w-4 h-4" /> Effacer tout l'historique
+          </button>
+        </div>
+      </Card>
+    </div>
+  );
+
+  // ═══════════════════════════════════════════════════════════════
+  // RENDER: MAIN
+  // ═══════════════════════════════════════════════════════════════
 
   const renderTabContent = () => {
     if (selectedSession) return renderSessionDetail();
     switch (activeTab) {
       case "dashboard": return renderDashboard();
       case "sessions": return renderSessionsList();
-      case "voice": return renderVoiceTab();
-      case "content": return renderContentTab();
-      case "time": return renderTimeTab();
-      case "personality": return renderPersonalityTab();
-      case "security": return renderSecurityTab();
+      case "profil": return renderProfil();
+      case "voix": return renderVoix();
+      case "contenu": return renderContenu();
+      case "securite": return renderSecurite();
+      case "limites": return renderLimites();
+      case "donnees": return renderDonnees();
       default: return renderDashboard();
     }
   };
@@ -792,7 +1079,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         <div className="flex-1">
           <h2 className="text-lg font-extrabold text-foreground">Mode Parent</h2>
           <p className="text-xs text-muted-foreground">
-            {selectedSession ? formatDate(selectedSession.started_at) : `Suivi de ${childName}`}
+            {selectedSession ? formatDate(selectedSession.started_at) : `Contrôle de ${childName}`}
           </p>
         </div>
         {!selectedSession && (
@@ -807,11 +1094,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         <div className="flex border-b border-border bg-card overflow-x-auto">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 min-w-0 flex flex-col items-center gap-1 py-3 px-1.5 text-[10px] font-bold transition-all ${
+              className={`flex-1 min-w-0 flex flex-col items-center gap-1 py-3 px-1 text-[10px] font-bold transition-all ${
                 activeTab === tab.id ? "text-primary border-b-2 border-primary" : "text-muted-foreground"
               }`}>
               <tab.icon className="w-4 h-4" />
-              <span>{tab.label}</span>
+              <span className="truncate">{tab.label}</span>
             </button>
           ))}
         </div>
