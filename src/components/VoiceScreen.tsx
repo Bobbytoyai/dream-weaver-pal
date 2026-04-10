@@ -36,13 +36,12 @@ function detectEmotion(text: string): string | undefined {
 
 /** Strip wake word from transcript to get the actual command */
 function stripWakeWord(text: string): string {
-  return text.replace(/\b(bobby|boby|bobbie)\b/gi, "").replace(/\s+/g, " ").trim();
+  return text.replace(/\b(bobby|boby|bobbie|bobi)\b/gi, "").replace(/\s+/g, " ").trim();
 }
 
 /** Check if transcript is just the wake word with no real command */
 function isJustWakeWord(text: string): boolean {
   const stripped = stripWakeWord(text);
-  // If after removing bobby, there's barely anything left
   return stripped.length < 3 || /^[?,!.\s]*$/.test(stripped);
 }
 
@@ -70,18 +69,15 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
   const audioQueue = useAudioQueue();
   const session = useSessionTracker(childName, childAge);
-  const { memory, addFavoriteTheme } = useChildMemory(childName);
+  const { memory, loading, saveSettings } = useChildMemory(childName);
 
-  // Wake word is active when Bobby is idle or session_end
   const wakeWordEnabled = state === "idle" || state === "session_end";
 
-  // Initialize SFX event bus listener (once)
   useEffect(() => {
     const cleanup = initSfxEventBus();
     return cleanup;
   }, []);
 
-  // Emit STATE_CHANGED on every state transition
   const prevStateRef = useRef<VoiceState>("idle");
   useEffect(() => {
     if (state === prevStateRef.current) return;
@@ -89,9 +85,10 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     prevStateRef.current = state;
   }, [state]);
 
-  useEffect(() => { stateRef.current = state; }, [state]);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
-  // Sync SFX volume from parent settings
   useEffect(() => {
     setSfxVolume(parentSettings?.sfxVolume ?? 0.7);
   }, [parentSettings?.sfxVolume]);
@@ -242,7 +239,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     });
   }, [conversationHistory, childName, childAge, audioQueue, clearTimers, processSentenceForTTS, speakFallback, startSilenceTimers, session]);
 
-  // Handle wake word detection
   const handleWake = useCallback((transcript: string) => {
     if (stateRef.current === "speaking" || stateRef.current === "processing") {
       interrupt();
@@ -256,19 +252,16 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
     eventBus.emit({ type: "WAKE_TRIGGERED" });
 
-    // If just "Bobby" with no command, greet and wait
     if (isJustWakeWord(transcript)) {
       speakFallback("wake_greeting");
       return;
     }
 
-    // Otherwise process the full phrase (minus wake word)
     const command = stripWakeWord(transcript);
     getAIResponse(command);
   }, [interrupt, session, speakFallback, getAIResponse]);
 
-  // Wake word listener
-  useWakeWord({
+  const { startListening } = useWakeWord({
     enabled: wakeWordEnabled,
     onWake: handleWake,
     onPartial: setPartialText,
@@ -283,7 +276,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     onParentMode();
   }, [onParentMode, session]);
 
-  // State label
   const stateLabel = {
     idle: partialText ? `"${partialText}"` : 'Dis "Bobby" pour me parler !',
     listening: "J'écoute…",
@@ -295,7 +287,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
   return (
     <div className="flex flex-col items-center justify-between h-screen bg-background px-4 py-6 max-w-lg mx-auto select-none overflow-hidden">
-      {/* Top bar — parent mode + story */}
       <div className="w-full flex items-center justify-between px-2">
         <button
           onClick={onSwitchToStory}
@@ -305,11 +296,10 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
           Histoires
         </button>
 
-        {/* Camera active indicator */}
         {parentSettings?.enableCamera && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30">
-            <Camera className="w-3.5 h-3.5 text-primary" />
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-primary">
+            <Camera className="w-3.5 h-3.5" />
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
           </div>
         )}
 
@@ -322,9 +312,14 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         </button>
       </div>
 
-      {/* 3D Hologram Face — takes most of the screen */}
       <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0">
-        <div className="relative w-80 h-80 md:w-96 md:h-96">
+        <div
+          className="relative w-80 h-80 md:w-96 md:h-96"
+          onPointerDownCapture={() => {
+            if (!wakeWordEnabled) return;
+            startListening({ fromUserGesture: true });
+          }}
+        >
           <HologramFace
             voiceState={state}
             enableCamera={parentSettings?.enableCamera ?? false}
@@ -332,21 +327,23 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
           />
         </div>
 
-        {/* State label */}
         <p className="mt-4 text-sm font-semibold text-muted-foreground tracking-wide uppercase text-center px-4">
           {stateLabel}
         </p>
 
-        {/* Wake word indicator */}
         {wakeWordEnabled && (
-          <div className="mt-2 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-xs text-muted-foreground/60">Écoute active</span>
+          <div className="mt-2 flex flex-col items-center gap-1.5">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-xs text-muted-foreground/60">Écoute active</span>
+            </div>
+            <span className="text-[11px] text-muted-foreground/50 text-center">
+              Touche Bobby une fois si le micro ne s'active pas
+            </span>
           </div>
         )}
       </div>
 
-      {/* Bottom spacer */}
       <div className="pb-4" />
     </div>
   );

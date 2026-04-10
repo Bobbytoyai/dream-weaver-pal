@@ -33,13 +33,14 @@ const DEFAULT_STATE: FaceAnimationState = {
   pupilX: 0, pupilY: 0, glowIntensity: 0.3,
 };
 
-function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t;
+}
 
-/**
- * Face animation hook.
- * CRITICAL: gazeRef is passed as a React ref so we read .current EVERY FRAME
- * inside update(), not once at render time (which would be stale).
- */
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
 export function useFaceAnimation(
   faceState: FaceState,
   gazeRef: React.MutableRefObject<{ x: number; y: number }>,
@@ -53,31 +54,27 @@ export function useFaceAnimation(
   const microTimer = useRef(0);
   const microOffset = useRef({ eyebrow: 0, headX: 0, headZ: 0 });
 
-  // Store faceState and audioAmplitude in refs so useCallback is stable
-  const faceStateRef = useRef(faceState);
-  faceStateRef.current = faceState;
-  const audioRef = useRef(audioAmplitude);
-  audioRef.current = audioAmplitude;
-
   const update = useCallback((delta: number) => {
     const c = current.current;
-    const currentFaceState = faceStateRef.current;
-    const currentAmplitude = audioRef.current;
-    // READ gaze from ref every frame — this is the key fix
     const gaze = gazeRef.current;
-    const targets = { ...DEFAULT_STATE, ...STATE_TARGETS[currentFaceState] };
+    const gazeX = clamp(gaze.x, -1, 1);
+    const gazeY = clamp(gaze.y, -1, 1);
+    const targets = { ...DEFAULT_STATE, ...STATE_TARGETS[faceState] };
     const speed = 5;
 
-    // Blinking
     blinkTimer.current += delta;
     if (blinkState.current === 0 && blinkTimer.current >= nextBlink.current) {
       blinkState.current = 1;
       blinkTimer.current = 0;
     }
+
     let blinkMult = 1;
     if (blinkState.current === 1) {
       blinkMult = Math.max(0, 1 - blinkTimer.current * 12);
-      if (blinkMult <= 0.05) { blinkState.current = 2; blinkTimer.current = 0; }
+      if (blinkMult <= 0.05) {
+        blinkState.current = 2;
+        blinkTimer.current = 0;
+      }
     } else if (blinkState.current === 2) {
       blinkMult = Math.min(1, blinkTimer.current * 8);
       if (blinkMult >= 0.95) {
@@ -87,11 +84,9 @@ export function useFaceAnimation(
       }
     }
 
-    // Breathing
     breathPhase.current += delta * 1.2;
     const breathOffset = Math.sin(breathPhase.current) * 0.01;
 
-    // Micro-expressions
     microTimer.current += delta;
     if (microTimer.current > 1.5 + Math.random() * 2) {
       microTimer.current = 0;
@@ -102,28 +97,24 @@ export function useFaceAnimation(
       };
     }
 
-    // Lip sync
-    const mouthTarget = currentFaceState === "speaking"
-      ? Math.min(0.6, currentAmplitude * 2.5)
+    const mouthTarget = faceState === "speaking"
+      ? Math.min(0.6, audioAmplitude * 2.5)
       : targets.mouthOpenness;
 
-    // Lerp all values — gaze now uses LIVE ref values
     c.eyeOpenness = lerp(c.eyeOpenness, targets.eyeOpenness * blinkMult, delta * speed * 2);
     c.eyebrowHeight = lerp(c.eyebrowHeight, targets.eyebrowHeight + microOffset.current.eyebrow, delta * speed);
     c.eyebrowTilt = lerp(c.eyebrowTilt, targets.eyebrowTilt, delta * speed);
     c.mouthOpenness = lerp(c.mouthOpenness, mouthTarget, delta * speed * 3);
     c.mouthWidth = lerp(c.mouthWidth, targets.mouthWidth, delta * speed);
-    c.headTiltX = lerp(c.headTiltX, targets.headTiltX + breathOffset + microOffset.current.headX, delta * speed * 0.8);
-    // Head follows gaze horizontally (stronger factor for visible tracking)
-    c.headTiltY = lerp(c.headTiltY, gaze.x * 0.4, delta * speed * 0.8);
-    c.headTiltZ = lerp(c.headTiltZ, targets.headTiltZ + microOffset.current.headZ, delta * speed * 0.8);
-    // Pupils track gaze (larger range for clearly visible eye movement)
-    c.pupilX = lerp(c.pupilX, gaze.x * 0.06, delta * speed * 1.5);
-    c.pupilY = lerp(c.pupilY, gaze.y * 0.04, delta * speed * 1.5);
+    c.headTiltX = lerp(c.headTiltX, targets.headTiltX - gazeY * 0.24 + breathOffset + microOffset.current.headX, delta * speed * 0.9);
+    c.headTiltY = lerp(c.headTiltY, gazeX * 0.55, delta * speed * 0.9);
+    c.headTiltZ = lerp(c.headTiltZ, targets.headTiltZ + microOffset.current.headZ + gazeX * 0.05, delta * speed * 0.8);
+    c.pupilX = lerp(c.pupilX, gazeX * 0.07, delta * speed * 1.8);
+    c.pupilY = lerp(c.pupilY, gazeY * 0.055, delta * speed * 1.8);
     c.glowIntensity = lerp(c.glowIntensity, targets.glowIntensity, delta * speed * 0.5);
 
     return { ...c };
-  }, [gazeRef]); // only depends on gazeRef (stable ref identity)
+  }, [audioAmplitude, faceState, gazeRef]);
 
   return { update, current };
 }
