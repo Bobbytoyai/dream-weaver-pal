@@ -764,10 +764,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", gradient: "from-purple-500/15 to-purple-600/5" },
           { value: todaySessions.length, label: "Aujourd'hui", emoji: "📅", gradient: "from-orange-500/15 to-orange-600/5" },
         ].map((kpi) => (
-          <div key={kpi.label} className={`bg-gradient-to-br ${kpi.gradient} rounded-2xl p-4 border border-border/30 aspect-square flex flex-col items-center justify-center`}>
-            <span className="text-2xl block mb-2">{kpi.emoji}</span>
-            <p className="text-xl font-extrabold text-foreground">{kpi.value}</p>
-            <p className="text-[10px] text-muted-foreground font-medium mt-1">{kpi.label}</p>
+          <div key={kpi.label} className={`bg-gradient-to-br ${kpi.gradient} rounded-xl p-2.5 border border-border/30 flex flex-col items-center justify-center`}>
+            <span className="text-lg block mb-1">{kpi.emoji}</span>
+            <p className="text-base font-extrabold text-foreground">{kpi.value}</p>
+            <p className="text-[9px] text-muted-foreground font-medium mt-0.5">{kpi.label}</p>
           </div>
         ))}
       </div>
