@@ -3,7 +3,7 @@ import { BookOpen, Settings, Camera, Mic, MicOff } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue, preloadVoiceProfile, detectEmotionForTTS } from "@/lib/voicePipeline";
 import type { Emotion } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
-import { useNativeSTT } from "@/hooks/useNativeSTT";
+import { useDeepgramSTT } from "@/hooks/useDeepgramSTT";
 import { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
 import { setSfxVolume, initSfxEventBus } from "@/lib/sfx";
@@ -480,8 +480,8 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     getAIResponse(cleaned);
   }, [audioQueue, clearTimers, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, interrupt, isCalmMode, recorder, session, speakFallback, startSilenceTimers]);
 
-  // ─── Native Speech Recognition — always on when mic is armed ───
-  const nativeSTT = useNativeSTT({
+  // ─── Deepgram Speech Recognition — always on when mic is armed ───
+  const deepgramSTT = useDeepgramSTT({
     onPartial: useCallback((text: string) => {
       setPartialText(text);
     }, []),
@@ -492,9 +492,9 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       }
     }, [handleTranscript]),
     onError: useCallback((err: string) => {
-      console.warn("[NativeSTT] Error:", err);
+      console.warn("[DeepgramSTT] Error:", err);
     }, []),
-    language: "fr-FR",
+    language: "fr",
   });
 
   // Start/stop STT based on micArmed AND not speaking
@@ -504,11 +504,11 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
   useEffect(() => {
     if (shouldListen) {
-      nativeSTT.start();
+      deepgramSTT.start();
     } else {
-      nativeSTT.stop();
+      deepgramSTT.stop();
     }
-  }, [shouldListen, nativeSTT]);
+  }, [shouldListen, deepgramSTT]);
 
   // ─── Tap to arm microphone (browser policy) ───
   const armMic = useCallback(() => {
