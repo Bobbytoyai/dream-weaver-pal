@@ -1497,7 +1497,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         <>
           <Card title="Type de voix" icon={Mic}>
             <div className="grid grid-cols-2 gap-2">
-              {(["child", "female", "male", "custom"] as const).map((type) => {
+              {(["child", "female", "male", "sister", "brother", "custom"] as const).map((type) => {
                 const info = VOICE_MAP[type];
                 const isCustom = type === "custom";
                 const selected = settings.voiceType === type;
