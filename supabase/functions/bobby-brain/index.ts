@@ -147,6 +147,7 @@ L'enfant exprime une émotion difficile.
 // ─── Knowledge base lookup ─────────────────────────────────
 
 interface KBMatch {
+  id: string;
   answer: string;
   emotion: string;
 }
@@ -158,7 +159,7 @@ async function findKnowledgeMatch(userText: string, childAge: number): Promise<K
 
   try {
     const resp = await fetch(
-      `${SUPABASE_URL}/rest/v1/knowledge_base?is_active=eq.true&age_min=lte.${childAge}&age_max=gte.${childAge}&select=question,keywords,answer,priority,emotion&order=priority.desc`,
+      `${SUPABASE_URL}/rest/v1/knowledge_base?is_active=eq.true&age_min=lte.${childAge}&age_max=gte.${childAge}&select=id,question,keywords,answer,priority,emotion&order=priority.desc`,
       {
         headers: {
           apikey: SUPABASE_SERVICE_ROLE_KEY,
@@ -176,14 +177,14 @@ async function findKnowledgeMatch(userText: string, childAge: number): Promise<K
     for (const entry of entries) {
       for (const kw of (entry.keywords || [])) {
         const kwNorm = kw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        if (lower.includes(kwNorm)) return { answer: entry.answer, emotion: entry.emotion || "happy" };
+        if (lower.includes(kwNorm)) return { id: entry.id, answer: entry.answer, emotion: entry.emotion || "happy" };
       }
     }
 
     for (const entry of entries) {
       const qWords = entry.question.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").split(/\s+/).filter((w: string) => w.length > 3);
       const matchCount = qWords.filter((qw: string) => words.some(w => w.includes(qw) || qw.includes(w)));
-      if (matchCount.length >= 2) return { answer: entry.answer, emotion: entry.emotion || "happy" };
+      if (matchCount.length >= 2) return { id: entry.id, answer: entry.answer, emotion: entry.emotion || "happy" };
     }
 
     return null;
@@ -271,6 +272,22 @@ Deno.serve(async (req) => {
       const answer = kbMatch.answer.replace(/\{child_name\}/g, childName);
       const emotionMeta = `data: ${JSON.stringify({ choices: [{ delta: { content: "" } }], metadata: { emotion: kbMatch.emotion, source: "kb" } })}\n\n`;
       const sseData = emotionMeta + `data: ${JSON.stringify({ choices: [{ delta: { content: answer } }] })}\n\ndata: [DONE]\n\n`;
+
+      // v4.0: Increment usage_count (fire-and-forget, don't block response)
+      const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+      const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_kb_usage`, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_SERVICE_ROLE_KEY,
+            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ entry_id: kbMatch.id }),
+        }).catch(() => {});
+      }
+
       return new Response(sseData, {
         headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
       });

@@ -23,6 +23,7 @@ interface KBEntry {
   is_active: boolean;
   age_min: number;
   age_max: number;
+  usage_count: number;
   created_at: string;
 }
 
@@ -326,6 +327,7 @@ const Admin = () => {
                       <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-300">{entry.category}</span>
                       <span className="text-xs text-white/40">P{entry.priority}</span>
                       <span className="text-xs text-white/40">{entry.age_min}-{entry.age_max} ans</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300" title="Nombre d'utilisations">🔄 {entry.usage_count || 0}</span>
                       {!entry.is_active && <span className="text-xs text-red-400">Désactivé</span>}
                     </div>
                     <p className="text-white font-medium text-sm truncate">{entry.question}</p>

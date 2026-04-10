@@ -188,6 +188,7 @@ export type Database = {
           priority: number
           question: string
           updated_at: string
+          usage_count: number
         }
         Insert: {
           age_max?: number
@@ -202,6 +203,7 @@ export type Database = {
           priority?: number
           question: string
           updated_at?: string
+          usage_count?: number
         }
         Update: {
           age_max?: number
@@ -216,6 +218,7 @@ export type Database = {
           priority?: number
           question?: string
           updated_at?: string
+          usage_count?: number
         }
         Relationships: []
       }
@@ -313,7 +316,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_kb_usage: { Args: { entry_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

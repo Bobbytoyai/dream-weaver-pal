@@ -1,0 +1,1 @@
+ALTER TABLE public.knowledge_base ADD COLUMN IF NOT EXISTS usage_count integer NOT NULL DEFAULT 0;
