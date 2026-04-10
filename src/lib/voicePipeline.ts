@@ -5,35 +5,50 @@ const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts`;
 
 type AiMsg = { role: "user" | "assistant"; content: string };
 
-let useBrowserTTS = false;
-
-// --- POST-RESPONSE SAFETY FILTER (client-side double-check) ---
 const UNSAFE_PATTERNS = [
   /\b(mourir|mort|tuer|sang|arme|fusil|couteau|drogue|alcool|sexe)\b/i,
 ];
 
+const LEADING_FILLER_PATTERN = /^(?:(?:h+m+|hmm+|euh+|oh+|ohhh+|ah+)[\s,.!…-]*)+/i;
+
+function sanitizeSpokenText(text: string): string {
+  return text
+    .replace(LEADING_FILLER_PATTERN, "")
+    .replace(/\b(?:h+m+|hmm+|euh+)\b[\s,.!…-]*/gi, "")
+    .replace(/\s+/g, " ")
+    .replace(/\s*([,.!?…])\s*/g, "$1 ")
+    .trim();
+}
+
 function filterSentence(text: string): string | null {
-  for (const p of UNSAFE_PATTERNS) {
-    if (p.test(text)) return null; // skip this sentence
+  const cleaned = sanitizeSpokenText(text);
+  if (cleaned.length < 2) return null;
+  for (const pattern of UNSAFE_PATTERNS) {
+    if (pattern.test(cleaned)) return null;
   }
-  return text;
+  return cleaned;
 }
 
 function speakWithBrowserTTS(text: string): Promise<string> {
+  const spokenText = sanitizeSpokenText(text);
+  if (!spokenText) return Promise.resolve("__browser_tts__");
+
   return new Promise((resolve, reject) => {
     if (!("speechSynthesis" in window)) {
       reject(new Error("Browser TTS not supported"));
       return;
     }
 
-    const utterance = new SpeechSynthesisUtterance(text);
+    const utterance = new SpeechSynthesisUtterance(spokenText);
     utterance.lang = "fr-FR";
-    utterance.rate = 1.05;
-    utterance.pitch = 1.3; // Higher pitch for child cartoon voice
+    utterance.rate = 1.02;
+    utterance.pitch = 1.18;
 
     const voices = speechSynthesis.getVoices();
-    const frVoice = voices.find(v => v.lang.startsWith("fr") && v.name.toLowerCase().includes("female"))
-      || voices.find(v => v.lang.startsWith("fr"));
+    const frVoice =
+      voices.find((voice) => voice.lang.startsWith("fr") && voice.name.toLowerCase().includes("female")) ||
+      voices.find((voice) => voice.lang.startsWith("fr"));
+
     if (frVoice) utterance.voice = frVoice;
 
     utterance.onend = () => resolve("__browser_tts__");
@@ -42,9 +57,48 @@ function speakWithBrowserTTS(text: string): Promise<string> {
   });
 }
 
+async function requestEdgeTTS(text: string, signal?: AbortSignal): Promise<string> {
+  const response = await fetch(TTS_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    },
+    body: JSON.stringify({ text }),
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error(`TTS endpoint error (${response.status})`);
+  }
+
+  const contentType = response.headers.get("Content-Type") || "";
+  if (contentType.includes("application/json")) {
+    const data = await response.json();
+    if (data?.fallback) {
+      throw new Error(data.error || "TTS fallback");
+    }
+    throw new Error(data?.error || "Unexpected JSON response");
+  }
+
+  const audioBlob = await response.blob();
+  if (audioBlob.size < 100) {
+    throw new Error("TTS returned tiny audio");
+  }
+
+  return URL.createObjectURL(audioBlob);
+}
+
 export async function streamVoiceChat({
-  messages, childName, childAge, mode, parentSettings,
-  onSentence, onDone, onError, signal,
+  messages,
+  childName,
+  childAge,
+  mode,
+  parentSettings,
+  onSentence,
+  onDone,
+  onError,
+  signal,
 }: {
   messages: AiMsg[];
   childName: string;
@@ -73,7 +127,10 @@ export async function streamVoiceChat({
       return;
     }
 
-    if (!resp.body) { onError("no_response"); return; }
+    if (!resp.body) {
+      onError("no_response");
+      return;
+    }
 
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();
@@ -83,8 +140,7 @@ export async function streamVoiceChat({
 
     const flushSentence = () => {
       const trimmed = sentenceBuffer.trim();
-      if (trimmed.length > 3) {
-        // Apply client-side safety filter
+      if (trimmed.length > 0) {
         const safe = filterSentence(trimmed);
         if (safe) {
           onSentence(safe);
@@ -127,61 +183,28 @@ export async function streamVoiceChat({
     }
 
     flushSentence();
-    onDone(fullText);
+    onDone(fullText.trim());
   } catch (e: any) {
     if (e.name !== "AbortError") onError(e.message || "stream_error");
   }
 }
 
-export async function fetchTTSAudio(
-  text: string,
-  signal?: AbortSignal
-): Promise<string> {
-  if (useBrowserTTS) {
-    return speakWithBrowserTTS(text);
-  }
+export async function fetchTTSAudio(text: string, signal?: AbortSignal): Promise<string> {
+  const spokenText = sanitizeSpokenText(text);
+  if (!spokenText) return "__browser_tts__";
 
   try {
-    const response = await fetch(TTS_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-      },
-      body: JSON.stringify({ text }),
-      signal,
-    });
+    return await requestEdgeTTS(spokenText, signal);
+  } catch (firstError: any) {
+    if (firstError.name === "AbortError") throw firstError;
 
-    if (!response.ok) {
-      console.warn("TTS endpoint error, falling back to browser TTS");
-      useBrowserTTS = true;
-      return speakWithBrowserTTS(text);
+    try {
+      return await requestEdgeTTS(spokenText, signal);
+    } catch (secondError: any) {
+      if (secondError.name === "AbortError") throw secondError;
+      console.warn("TTS fetch error, using browser fallback for this sentence only:", secondError.message);
+      return speakWithBrowserTTS(spokenText);
     }
-
-    const contentType = response.headers.get("Content-Type") || "";
-    if (contentType.includes("application/json")) {
-      const data = await response.json();
-      if (data?.fallback) {
-        console.warn("ElevenLabs unavailable, using browser TTS:", data.error);
-        useBrowserTTS = true;
-        return speakWithBrowserTTS(text);
-      }
-      throw new Error(data?.error || "Unexpected JSON response");
-    }
-
-    const audioBlob = await response.blob();
-    if (audioBlob.size < 100) {
-      console.warn("TTS returned tiny audio, falling back");
-      useBrowserTTS = true;
-      return speakWithBrowserTTS(text);
-    }
-
-    return URL.createObjectURL(audioBlob);
-  } catch (e: any) {
-    if (e.name === "AbortError") throw e;
-    console.warn("TTS fetch error, falling back to browser TTS:", e.message);
-    useBrowserTTS = true;
-    return speakWithBrowserTTS(text);
   }
 }
 
