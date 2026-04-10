@@ -198,6 +198,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const [showDebug, setShowDebug] = useState(false);
   const [lastRecognized, setLastRecognized] = useState("");
   const [lastAiResponse, setLastAiResponse] = useState("");
+  const [piperProgress, setPiperProgress] = useState<number>(-1); // -1 = not started, 0-1 = downloading, 1 = done
   const currentEmotionRef = useRef<Emotion | undefined>(undefined);
 
   // Transition helper — ensures ref stays in sync + emits events
@@ -214,8 +215,14 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
   // Preload Piper voice model in background for offline readiness
   useEffect(() => {
-    preloadPiperVoice(currentVoiceId as any).catch(() => {
+    setPiperProgress(0);
+    preloadPiperVoice(currentVoiceId as any, (p) => {
+      setPiperProgress(p);
+    }).then(() => {
+      setPiperProgress(1);
+    }).catch(() => {
       console.warn("[VoiceScreen] Piper voice preload failed (non-critical)");
+      setPiperProgress(-1);
     });
   }, [currentVoiceId]);
 
@@ -813,6 +820,24 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         <div className="fixed top-2 left-2 z-40 px-3 py-1 rounded-full bg-orange-500/90 text-white text-[10px] font-bold animate-pulse">
           ⚡ Mode Offline
         </div>
+      )}
+
+      {/* Piper download progress */}
+      {piperProgress >= 0 && piperProgress < 1 && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-4 py-2 rounded-full bg-card/90 backdrop-blur-sm border border-border shadow-lg">
+          <div className="w-24 h-2 rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-300"
+              style={{ width: `${Math.round(piperProgress * 100)}%` }}
+            />
+          </div>
+          <span className="text-[10px] font-bold text-muted-foreground whitespace-nowrap">
+            ⬇️ Voix offline {Math.round(piperProgress * 100)}%
+          </span>
+        </div>
+      )}
+      {piperProgress === 1 && (
+        <PiperReadyToast />
       )}
 
       <FloatingParticles />
