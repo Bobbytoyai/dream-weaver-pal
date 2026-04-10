@@ -401,82 +401,26 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     }
   }, [audioQueue, childAge, childName, clearTimers, conversationHistory, goToListening, memory, parentSettings, processSentenceForTTS, session, speakFallback]);
 
-  // ─── Unified Deepgram handler — wake word + conversation ───
+  // ─── Continuous Listening: flush accumulated text ───
+  const flushAccumulatedText = useCallback(() => {
+    if (utteranceFlushTimerRef.current) clearTimeout(utteranceFlushTimerRef.current);
+    const text = accumulatedTextRef.current.trim();
+    accumulatedTextRef.current = "";
+    if (text.length < 3) {
+      startSilenceTimers();
+      return;
+    }
+    console.log("[VoiceScreen] 🔄 Flushing accumulated:", text);
 
-  const handleTranscript = useCallback((text: string) => {
-    const trimmed = text.trim();
-    if (trimmed.length < 2) return;
-    console.log("[VoiceScreen] Transcript:", trimmed, "state:", stateRef.current);
-
-    // Skip echoes (Bobby hearing himself)
-    if (isEcho(trimmed)) {
-      console.log("[VoiceScreen] Echo — ignoring");
+    // Skip echoes
+    if (isEcho(text)) {
+      console.log("[VoiceScreen] Echo — ignoring accumulated");
+      startSilenceTimers();
       return;
     }
 
-    const wake = hasWakeWord(trimmed);
-
-    // ─── IDLE / SESSION_END: wake word mode ───
-    if (stateRef.current === "idle" || stateRef.current === "session_end") {
-      if (!wake) {
-        // No wake word → show partial but ignore
-        return;
-      }
-
-      // Wake word detected!
-      console.log("[VoiceScreen] 🎤 Wake word detected!");
-      eventBus.emit({ type: "WAKE_DETECTED", confidence: 0.9 });
-
-      if (!sessionStartedRef.current) {
-        session.startSession();
-        sessionStartedRef.current = true;
-        recorder.startRecording();
-        eventBus.emit({ type: "SESSION_START" });
-      }
-      conversationActiveRef.current = true;
-      eventBus.emit({ type: "WAKE_TRIGGERED" });
-
-      // Just wake word alone → greet
-      if (isJustWakeWord(trimmed)) {
-        speakFallback("wake_greeting");
-        return;
-      }
-
-      // Wake word + message → respond directly
-      const command = stripWakeWord(trimmed);
-      console.log("[VoiceScreen] Command after wake:", command);
-
-      if (isSimpleGreeting(command)) {
-        const cached = getCachedResponse("greeting");
-        setState("speaking");
-        eventBus.emit({ type: "SPEECH_START" });
-        recentBobbyTextsRef.current = [cached, ...recentBobbyTextsRef.current].slice(0, 8);
-        fetchTTSAudio(cached, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode).then(url => {
-          audioQueue.enqueue(url);
-          audioQueue.setOnAllDone(() => {
-            eventBus.emit({ type: "SPEECH_STOP" });
-            goToListening();
-          });
-        }).catch(() => goToListening());
-        setConversationHistory(prev => [...prev, { role: "user", content: command }, { role: "assistant", content: cached }]);
-        session.addMessage("user", command);
-        session.addMessage("assistant", cached);
-        return;
-      }
-
-      getAIResponse(command);
-      return;
-    }
-
-    // ─── SPEAKING / PROCESSING: user interrupts ───
-    if (stateRef.current === "speaking" || stateRef.current === "processing") {
-      interrupt();
-      // Fall through to handle as conversation input
-    }
-
-    // ─── LISTENING / INTERRUPTED: conversation mode ───
-    clearTimers();
-    const cleaned = wake ? stripWakeWord(trimmed) : trimmed;
+    const wake = hasWakeWord(text);
+    const cleaned = wake ? stripWakeWord(text) : text;
 
     if (cleaned.length < 3) {
       if (wake) speakFallback("wake_greeting");
@@ -503,10 +447,78 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     }
 
     getAIResponse(cleaned);
-  }, [audioQueue, clearTimers, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, interrupt, isCalmMode, recorder, session, speakFallback, startSilenceTimers]);
+  }, [audioQueue, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, isCalmMode, session, speakFallback, startSilenceTimers]);
 
-  // ─── Smart STT with Deepgram → Native fallback ───
-  // Wake word detection on PARTIALS for instant reaction (<200ms)
+  // Schedule a flush after adaptive delay
+  const scheduleFlush = useCallback(() => {
+    if (utteranceFlushTimerRef.current) clearTimeout(utteranceFlushTimerRef.current);
+    const text = accumulatedTextRef.current.trim();
+    const delay = text.length < 15 ? SHORT_UTTERANCE_FLUSH : UTTERANCE_FLUSH_DELAY;
+    console.log("[VoiceScreen] Scheduling flush in", delay, "ms for:", text);
+    utteranceFlushTimerRef.current = setTimeout(() => {
+      // Only flush if user is not actively speaking
+      if (!isSpeakingRef.current) {
+        flushAccumulatedText();
+      }
+    }, delay);
+  }, [flushAccumulatedText]);
+
+  // ─── Unified Deepgram handler — wake word + conversation ───
+
+  const handleTranscript = useCallback((text: string) => {
+    const trimmed = text.trim();
+    if (trimmed.length < 2) return;
+    console.log("[VoiceScreen] Final chunk:", trimmed, "state:", stateRef.current);
+
+    // ─── IDLE / SESSION_END: wake word required ───
+    if (stateRef.current === "idle" || stateRef.current === "session_end") {
+      if (!hasWakeWord(trimmed)) return;
+
+      console.log("[VoiceScreen] 🎤 Wake word detected!");
+      eventBus.emit({ type: "WAKE_DETECTED", confidence: 0.9 });
+
+      if (!sessionStartedRef.current) {
+        session.startSession();
+        sessionStartedRef.current = true;
+        recorder.startRecording();
+        eventBus.emit({ type: "SESSION_START" });
+      }
+      conversationActiveRef.current = true;
+      eventBus.emit({ type: "WAKE_TRIGGERED" });
+
+      if (isJustWakeWord(trimmed)) {
+        speakFallback("wake_greeting");
+        return;
+      }
+
+      // Wake word + message → accumulate and schedule flush
+      const command = stripWakeWord(trimmed);
+      accumulatedTextRef.current = command;
+      scheduleFlush();
+      return;
+    }
+
+    // ─── SPEAKING / PROCESSING: user interrupts ───
+    if (stateRef.current === "speaking" || stateRef.current === "processing") {
+      interrupt();
+    }
+
+    // ─── LISTENING / INTERRUPTED: accumulate transcript chunks ───
+    clearTimers();
+    const wake = hasWakeWord(trimmed);
+    const cleaned = wake ? stripWakeWord(trimmed) : trimmed;
+
+    if (cleaned.length < 2) return;
+
+    // Accumulate — don't send yet, wait for UtteranceEnd
+    accumulatedTextRef.current += (accumulatedTextRef.current ? " " : "") + cleaned;
+    console.log("[VoiceScreen] Accumulated so far:", accumulatedTextRef.current);
+
+    // Schedule a safety flush in case UtteranceEnd never fires
+    scheduleFlush();
+  }, [clearTimers, interrupt, recorder, scheduleFlush, session, speakFallback]);
+
+  // ─── Smart STT with continuous listening ───
   const wakeTriggeredFromPartialRef = useRef(false);
 
   const deepgramSTT = useSmartSTT({
@@ -517,12 +529,10 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       if (
         (stateRef.current === "idle" || stateRef.current === "session_end") &&
         !wakeTriggeredFromPartialRef.current &&
-        hasWakeWord(text, true) // true = partial mode, slightly higher threshold
+        hasWakeWord(text, true)
       ) {
         console.log("[VoiceScreen] ⚡ Wake word on PARTIAL — instant activation!");
         wakeTriggeredFromPartialRef.current = true;
-        // Don't process yet — wait for final transcript to get full sentence
-        // But start visual feedback immediately
         eventBus.emit({ type: "WAKE_DETECTED", confidence: computeWakeConfidence(text) });
 
         if (!sessionStartedRef.current) {
@@ -536,12 +546,30 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       }
     }, [session, recorder]),
     onFinal: useCallback((text: string) => {
-      wakeTriggeredFromPartialRef.current = false; // reset for next utterance
+      wakeTriggeredFromPartialRef.current = false;
       if (text.trim().length > 2) {
         setPartialText("");
         handleTranscript(text.trim());
       }
     }, [handleTranscript]),
+    // ─── Continuous listening: UtteranceEnd triggers flush ───
+    onUtteranceEnd: useCallback(() => {
+      console.log("[VoiceScreen] 📢 UtteranceEnd — child stopped speaking");
+      isSpeakingRef.current = false;
+      if (accumulatedTextRef.current.trim().length > 2) {
+        // Short delay to catch any trailing finals
+        scheduleFlush();
+      }
+    }, [scheduleFlush]),
+    onSpeechStarted: useCallback(() => {
+      console.log("[VoiceScreen] 🎙️ SpeechStarted — child is speaking");
+      isSpeakingRef.current = true;
+      // Cancel any pending flush — child is still talking
+      if (utteranceFlushTimerRef.current) {
+        clearTimeout(utteranceFlushTimerRef.current);
+        utteranceFlushTimerRef.current = null;
+      }
+    }, []),
     onError: useCallback((err: string) => {
       console.warn("[STT] Error:", err);
     }, []),
