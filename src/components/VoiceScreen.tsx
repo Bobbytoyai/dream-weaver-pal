@@ -282,7 +282,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       setContinuousListenEnabled(false);
       eventBus.emit({ type: "SPEECH_START" });
       recentBobbyTextsRef.current = [fallbackText, ...recentBobbyTextsRef.current].slice(0, 5);
-      const url = await fetchTTSAudio(fallbackText);
+      const url = await fetchTTSAudio(fallbackText, undefined, currentVoiceId);
       audioQueue.enqueue(url);
       audioQueue.setOnAllDone(() => {
         eventBus.emit({ type: "SPEECH_STOP" });
@@ -312,7 +312,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     recentBobbyTextsRef.current = [sentence, ...recentBobbyTextsRef.current].slice(0, 8);
 
     try {
-      const url = await fetchTTSAudio(sentence, signal);
+      const url = await fetchTTSAudio(sentence, signal, currentVoiceId);
       if (!signal?.aborted) {
         setState("speaking");
         setContinuousListenEnabled(false);
