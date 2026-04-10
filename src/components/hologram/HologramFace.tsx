@@ -3,7 +3,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { FaceMesh } from "./FaceMesh";
 import { HologramParticles, ScanRing } from "./HologramEffects";
 import { useGazeTracker } from "./useGazeTracker";
-import { useAudioAmplitude } from "./useAudioAmplitude";
+import { useAudioAmplitude, type VisemeState } from "./useAudioAmplitude";
 import { FaceState } from "./useFaceAnimation";
 import { eventBus } from "@/lib/eventBus";
 
@@ -26,11 +26,10 @@ function mapToFaceState(voiceState: HologramFaceProps["voiceState"]): FaceState 
 
 export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: HologramFaceProps) {
   const { gazeRef, cameraActive } = useGazeTracker(enableCamera);
-  const { connectAudio, getAmplitude } = useAudioAmplitude();
+  const { connectAudio, getAmplitude, getViseme } = useAudioAmplitude();
   const tapCountRef = useRef(0);
   const tapTimerRef = useRef<number>(0);
 
-  // Wake animation: briefly show "attentive" face on wake
   const [wakeFlash, setWakeFlash] = useState(false);
   useEffect(() => {
     const unsub = eventBus.on("WAKE_DETECTED", () => {
@@ -41,8 +40,6 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
   }, []);
 
   const handleTap = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    // Stop propagation so the parent onPointerDownCapture handles mic activation
-    // This tap handler is ONLY for the secret parent mode access (7 rapid taps)
     const now = Date.now();
     if (now - tapTimerRef.current > 600) {
       tapCountRef.current = 0;
@@ -57,7 +54,6 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
     }
   }, [onTripleTap]);
 
-  // Map voice state → face state, with wake flash override
   const faceState: FaceState = wakeFlash ? "attentive" : mapToFaceState(voiceState);
 
   return (
@@ -66,7 +62,6 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
       onClick={handleTap}
       style={{ touchAction: "manipulation" }}
     >
-      {/* Ambient holographic glow — warm */}
       <div className="absolute inset-0 rounded-full pointer-events-none"
         style={{
           background: `radial-gradient(circle, 
@@ -84,7 +79,6 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
         style={{ background: "transparent" }}
       >
         <Suspense fallback={null}>
-          {/* Warm, soft lighting */}
           <ambientLight intensity={0.4} color="#e8f4ff" />
           <directionalLight
             position={[2, 3, 4]}
@@ -92,18 +86,16 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
             color={voiceState === "speaking" ? "#99ddff" : "#bbddee"}
           />
           <directionalLight position={[-2, 1, 3]} intensity={0.35} color="#cc99ff" />
-          {/* Key light — warm front glow */}
           <pointLight
             position={[0, 0.5, 3]}
             intensity={voiceState === "listening" ? 0.9 : 0.5}
             color="#77ddff"
             distance={8}
           />
-          {/* Rim light — subtle warmth */}
           <pointLight position={[0, -1.5, 1]} intensity={0.25} color="#ffccdd" distance={5} />
           <pointLight position={[0, 2, 1]} intensity={0.15} color="#aaeeff" distance={5} />
 
-          <FaceScene faceState={faceState} gazeRef={gazeRef} getAmplitude={getAmplitude} />
+          <FaceScene faceState={faceState} gazeRef={gazeRef} getViseme={getViseme} />
           <HologramParticles intensity={voiceState === "speaking" ? 0.8 : voiceState === "listening" ? 0.5 : 0.25} />
           <ScanRing />
         </Suspense>
@@ -112,22 +104,25 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
   );
 }
 
-function FaceScene({ faceState, gazeRef, getAmplitude }: {
+function FaceScene({ faceState, gazeRef, getViseme }: {
   faceState: FaceState;
   gazeRef: React.MutableRefObject<{ x: number; y: number }>;
-  getAmplitude: () => number;
+  getViseme: () => VisemeState;
 }) {
-  const amplitudeRef = useRef(0);
+  const visemeRef = useRef<VisemeState>({
+    viseme: "REST", amplitude: 0, mouthOpenness: 0, mouthWidth: 0.5, mouthRound: 0, jawDrop: 0,
+  });
 
   useFrame(() => {
-    amplitudeRef.current = getAmplitude();
+    visemeRef.current = getViseme();
   });
 
   return (
     <FaceMesh
       faceState={faceState}
       gazeRef={gazeRef}
-      audioAmplitude={amplitudeRef.current}
+      audioAmplitude={visemeRef.current.amplitude}
+      viseme={visemeRef.current}
     />
   );
 }
