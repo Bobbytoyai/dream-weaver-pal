@@ -4,6 +4,10 @@ import { streamVoiceChat, fetchTTSAudio, useAudioQueue } from "@/lib/voicePipeli
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import { ParentSettings } from "@/components/ParentMode";
 import { HologramFace } from "@/components/hologram/HologramFace";
+import {
+  playListeningPling, playStopBip, playThinkingShimmer,
+  playSpeakingChime, playSessionEnd, playInterrupted
+} from "@/lib/sfx";
 
 type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
 type AiMsg = { role: "user" | "assistant"; content: string };
@@ -55,7 +59,21 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
 
   useEffect(() => { stateRef.current = state; }, [state]);
 
+  // Play SFX on state transitions
+  const prevStateRef = useRef<VoiceState>("idle");
   useEffect(() => {
+    if (state === prevStateRef.current) return;
+    switch (state) {
+      case "listening": playListeningPling(); break;
+      case "processing": playThinkingShimmer(); break;
+      case "speaking": if (prevStateRef.current !== "processing") playSpeakingChime(); break;
+      case "interrupted": playInterrupted(); break;
+      case "session_end": playSessionEnd(); break;
+      case "idle": if (prevStateRef.current === "listening") playStopBip(); break;
+    }
+    prevStateRef.current = state;
+  }, [state]);
+
     return () => {
       recognitionRef.current?.abort?.();
       recognitionRef.current?.stop?.();
