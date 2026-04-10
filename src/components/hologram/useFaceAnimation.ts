@@ -291,11 +291,16 @@ export function useFaceAnimation(
       sleepyEyeWobble = Math.sin(breathPhase.current * 0.5) * 0.08;
     }
 
-    // --- LIP SYNC (cartoon-exaggerated viseme mapping) ---
+    // --- LIP SYNC + EXPRESSIVE FACE (cartoon-exaggerated viseme mapping) ---
     let mouthOpenTarget: number;
     let mouthWidthTarget: number;
     let mouthRoundTarget: number;
     let jawDropTarget: number;
+    // Speech-reactive expression modifiers
+    let speechEyebrowLift = 0;
+    let speechEyeWiden = 0;
+    let speechHeadNod = 0;
+    let speechCheekBoost = 0;
 
     if (faceState === "speaking" && viseme && viseme.amplitude > 0.01) {
       // Cartoon exaggeration: amplify all viseme values
@@ -311,17 +316,34 @@ export function useFaceAnimation(
 
       // Squash & stretch: wider mouth = less tall, taller mouth = less wide
       if (mouthOpenTarget > 0.3) {
-        mouthWidthTarget *= 0.85; // compress width when wide open
+        mouthWidthTarget *= 0.85;
       }
       if (mouthWidthTarget > 0.65) {
-        mouthOpenTarget *= 0.9; // compress height when wide smile
+        mouthOpenTarget *= 0.9;
       }
+
+      // ── Sync eyes/eyebrows/head with speech intensity ──
+      const amp = viseme.amplitude;
+      // Eyebrows rise on emphasis (loud syllables)
+      speechEyebrowLift = amp > 0.15 ? (amp - 0.15) * 0.35 : 0;
+      // Eyes widen slightly on emphasis
+      speechEyeWiden = amp > 0.12 ? (amp - 0.12) * 0.15 : 0;
+      // Subtle head nod on rhythm
+      speechHeadNod = Math.sin(breathPhase.current * 6) * amp * 0.04;
+      // Cheeks glow more when smiling/speaking enthusiastically
+      speechCheekBoost = mouthWidthTarget > 0.6 ? (mouthWidthTarget - 0.6) * 0.4 : 0;
+
     } else if (faceState === "speaking") {
       // Fallback amplitude-based (cartoon style)
       mouthOpenTarget = Math.min(0.85, audioAmplitude * 4);
       mouthWidthTarget = targets.mouthWidth ?? 0.55;
       mouthRoundTarget = audioAmplitude > 0.3 ? 0.2 : 0;
       jawDropTarget = audioAmplitude * 2;
+
+      speechEyebrowLift = audioAmplitude > 0.15 ? (audioAmplitude - 0.15) * 0.3 : 0;
+      speechEyeWiden = audioAmplitude > 0.12 ? (audioAmplitude - 0.12) * 0.12 : 0;
+      speechHeadNod = Math.sin(breathPhase.current * 6) * audioAmplitude * 0.03;
+      speechCheekBoost = audioAmplitude > 0.2 ? audioAmplitude * 0.15 : 0;
     } else {
       mouthOpenTarget = targets.mouthOpenness ?? 0;
       mouthWidthTarget = targets.mouthWidth ?? 0.5;
@@ -332,8 +354,8 @@ export function useFaceAnimation(
     // --- LERP ALL VALUES ---
     const mouthSpeed = faceState === "speaking" ? baseSpeed * 5 : baseSpeed * 3;
 
-    c.eyeOpenness = lerp(c.eyeOpenness, ((targets.eyeOpenness ?? 1) + sleepyEyeWobble) * blinkMult, delta * baseSpeed * 2.5);
-    c.eyebrowHeight = lerp(c.eyebrowHeight, (targets.eyebrowHeight ?? 0) + microOffset.current.eyebrow, delta * baseSpeed);
+    c.eyeOpenness = lerp(c.eyeOpenness, ((targets.eyeOpenness ?? 1) + sleepyEyeWobble + speechEyeWiden) * blinkMult, delta * baseSpeed * 2.5);
+    c.eyebrowHeight = lerp(c.eyebrowHeight, (targets.eyebrowHeight ?? 0) + microOffset.current.eyebrow + speechEyebrowLift, delta * (faceState === "speaking" ? baseSpeed * 3 : baseSpeed));
     c.eyebrowTilt = lerp(c.eyebrowTilt, targets.eyebrowTilt ?? 0, delta * baseSpeed);
 
     c.mouthOpenness = lerp(c.mouthOpenness, mouthOpenTarget, delta * mouthSpeed);
@@ -346,7 +368,7 @@ export function useFaceAnimation(
 
     c.headTiltX = lerp(
       c.headTiltX,
-      (targets.headTiltX ?? 0) - gazeY * 0.18 + breathX + microOffset.current.headX,
+      (targets.headTiltX ?? 0) - gazeY * 0.18 + breathX + microOffset.current.headX + speechHeadNod,
       delta * gazeSpeed * 0.7
     );
     c.headTiltY = lerp(c.headTiltY, gazeX * 0.45, delta * gazeSpeed * 0.8);
@@ -368,7 +390,7 @@ export function useFaceAnimation(
     );
 
     c.glowIntensity = lerp(c.glowIntensity, targets.glowIntensity ?? 0.3, delta * baseSpeed * 0.6);
-    c.cheekGlow = lerp(c.cheekGlow, targets.cheekGlow ?? 0.1, delta * baseSpeed * 0.8);
+    c.cheekGlow = lerp(c.cheekGlow, (targets.cheekGlow ?? 0.1) + speechCheekBoost, delta * baseSpeed * 0.8);
     c.irisGlow = lerp(c.irisGlow, (targets.irisGlow ?? 0.4) * sparkleWave, delta * baseSpeed * 1.2);
     c.eyeSparkle = lerp(c.eyeSparkle, (targets.eyeSparkle ?? 0.5) * (0.7 + sparkleWave * 0.3), delta * baseSpeed);
 
