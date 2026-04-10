@@ -10,10 +10,18 @@
  * - Intelligent follow-ups
  * - Safety filter
  * - Action priority routing
+ * - Devine l'Animal interactive game
  * 
  * Pipeline: STT → Normalize → Intent → Context → Response → Follow-up → TTS
  * Target latency: <300ms
  */
+
+import {
+  isAnimalGameActive,
+  isAnimalGameTrigger,
+  startAnimalGame,
+  handleAnimalGameInput,
+} from "./animalGuessGame";
 
 // ─── Network State ──────────────────────────────────────────
 export type NetworkMode = "ONLINE" | "OFFLINE" | "HYBRID";
