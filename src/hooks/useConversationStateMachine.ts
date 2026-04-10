@@ -49,6 +49,7 @@ const STUCK_TIMEOUT = 3500;
 const AI_RESPONSE_TIMEOUT = 5000;
 const MAX_AI_RETRIES = 1;
 const LOW_CONFIDENCE_THRESHOLD = 0.45;
+const MAX_HISTORY_LENGTH = 20;
 
 export const FALLBACK_FR: Record<string, string> = {
   not_heard: "Je n'ai pas bien entendu. Tu peux répéter ?",

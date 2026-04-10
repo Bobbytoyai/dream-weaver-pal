@@ -14,28 +14,42 @@ import { useRef, useCallback, useEffect } from "react";
 const DEEPGRAM_WS_URL = "wss://api.deepgram.com/v1/listen";
 const TOKEN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/deepgram-token`;
 
-// Cache the token to avoid re-fetching on every start
+// Cache the token — Deepgram tokens last ~1h, cache for 45min
 let cachedToken: string | null = null;
 let tokenFetchPromise: Promise<string> | null = null;
+const TOKEN_CACHE_MS = 45 * 60 * 1000; // 45 minutes
+const TOKEN_MAX_RETRIES = 3;
 
 async function getToken(): Promise<string> {
   if (cachedToken) return cachedToken;
   if (tokenFetchPromise) return tokenFetchPromise;
 
   tokenFetchPromise = (async () => {
-    const resp = await fetch(TOKEN_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-      },
-    });
-    if (!resp.ok) throw new Error("Failed to get Deepgram token");
-    const { key } = await resp.json();
-    cachedToken = key;
-    // Clear cache after 50 seconds (keys may expire)
-    setTimeout(() => { cachedToken = null; }, 50000);
-    return key;
+    let lastError: Error | null = null;
+    for (let attempt = 0; attempt < TOKEN_MAX_RETRIES; attempt++) {
+      try {
+        const resp = await fetch(TOKEN_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+        });
+        if (!resp.ok) throw new Error(`Token fetch failed: ${resp.status}`);
+        const { key } = await resp.json();
+        cachedToken = key;
+        setTimeout(() => { cachedToken = null; }, TOKEN_CACHE_MS);
+        return key;
+      } catch (err: any) {
+        lastError = err;
+        if (attempt < TOKEN_MAX_RETRIES - 1) {
+          const delay = (attempt + 1) * 500; // 500ms, 1000ms
+          console.warn(`[DeepgramSTT] Token retry ${attempt + 1}/${TOKEN_MAX_RETRIES} in ${delay}ms`);
+          await new Promise(r => setTimeout(r, delay));
+        }
+      }
+    }
+    throw lastError || new Error("Failed to get Deepgram token");
   })();
 
   try {
