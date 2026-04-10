@@ -79,8 +79,44 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
         {/* STEP 0: Welcome */}
         {step === 0 && (
           <div className="flex flex-col items-center text-center">
-            <div className="relative mb-6 w-40 h-40">
+            <div className="relative mb-6 w-44 h-44">
+              {/* Glow aura */}
               <div className="absolute inset-0 rounded-full bg-[hsla(215,85%,58%,0.2)] blur-2xl scale-150 glow-pulse" />
+              {/* Sparkle particles orbiting Bobby */}
+              {[...Array(12)].map((_, i) => {
+                const angle = (i / 12) * 360;
+                const radius = 72 + Math.random() * 16;
+                const size = 3 + Math.random() * 4;
+                const duration = 2.5 + Math.random() * 2;
+                const delay = Math.random() * 3;
+                return (
+                  <div
+                    key={i}
+                    className="absolute rounded-full pointer-events-none"
+                    style={{
+                      width: size,
+                      height: size,
+                      left: `calc(50% + ${Math.cos(angle * Math.PI / 180) * radius}px - ${size / 2}px)`,
+                      top: `calc(50% + ${Math.sin(angle * Math.PI / 180) * radius}px - ${size / 2}px)`,
+                      background: [
+                        'hsla(215, 90%, 75%, 0.9)',
+                        'hsla(270, 80%, 78%, 0.85)',
+                        'hsla(45, 95%, 75%, 0.9)',
+                        'hsla(320, 70%, 75%, 0.8)',
+                        'hsla(180, 80%, 75%, 0.85)',
+                      ][i % 5],
+                      boxShadow: `0 0 ${size * 2}px ${size}px ${[
+                        'hsla(215, 90%, 75%, 0.4)',
+                        'hsla(270, 80%, 78%, 0.35)',
+                        'hsla(45, 95%, 75%, 0.4)',
+                        'hsla(320, 70%, 75%, 0.3)',
+                        'hsla(180, 80%, 75%, 0.35)',
+                      ][i % 5]}`,
+                      animation: `sparkle-orbit ${duration}s ease-in-out ${delay}s infinite alternate, sparkle-fade ${duration * 0.7}s ease-in-out ${delay}s infinite alternate`,
+                    }}
+                  />
+                );
+              })}
               <HologramFace voiceState="idle" enableCamera={false} />
             </div>
             <h1 className="text-4xl font-extrabold text-foreground mb-2 tracking-tight">
