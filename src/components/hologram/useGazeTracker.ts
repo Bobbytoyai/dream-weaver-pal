@@ -28,6 +28,11 @@ export function useGazeTracker(enableCamera: boolean = false) {
   const faceLostTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idleWanderPhaseRef = useRef(Math.random() * Math.PI * 2);
   const lastEmitRef = useRef(0);
+  const lastInputTimeRef = useRef(0); // tracks when mouse/touch last moved
+  const inputTargetRef = useRef({ x: 0, y: 0 }); // raw cursor target (unsmoothed)
+
+  // How long after last input before idle wander kicks in (ms)
+  const IDLE_TIMEOUT = 5000;
 
   // Idle wandering gaze (soft random movement when no input)
   const updateIdleWander = useCallback((delta: number) => {
@@ -51,19 +56,15 @@ export function useGazeTracker(enableCamera: boolean = false) {
     }
   }, []);
 
-  // Mouse/touch tracking
+  // Mouse/touch tracking — store target, mark input time
   useEffect(() => {
     if (cameraActive) return; // camera takes priority
 
     const handleMove = (clientX: number, clientY: number) => {
       const x = clamp((clientX / window.innerWidth) * 2 - 1, -1, 1);
       const y = clamp(-((clientY / window.innerHeight) * 2 - 1), -1, 1);
-      // Smooth interpolation for natural feel
-      gazeRef.current = {
-        x: smoothLerp(gazeRef.current.x, x, 0.3),
-        y: smoothLerp(gazeRef.current.y, y, 0.3),
-      };
-      emitGazeUpdate();
+      inputTargetRef.current = { x, y };
+      lastInputTimeRef.current = performance.now();
     };
 
     const onPointer = (e: PointerEvent) => handleMove(e.clientX, e.clientY);
@@ -77,9 +78,9 @@ export function useGazeTracker(enableCamera: boolean = false) {
       window.removeEventListener("pointermove", onPointer);
       window.removeEventListener("touchmove", onTouch);
     };
-  }, [cameraActive, emitGazeUpdate]);
+  }, [cameraActive]);
 
-  // Idle wandering animation (runs continuously via rAF)
+  // Continuous smooth interpolation loop — cursor following + idle wander
   useEffect(() => {
     let animId = 0;
     let lastTime = performance.now();
@@ -89,8 +90,19 @@ export function useGazeTracker(enableCamera: boolean = false) {
       const delta = (now - lastTime) / 1000;
       lastTime = now;
 
-      if (!faceDetectedRef.current && !cameraActive) {
-        // Only wander if mouse isn't actively moving (check staleness)
+      const timeSinceInput = now - lastInputTimeRef.current;
+      const hasRecentInput = timeSinceInput < IDLE_TIMEOUT;
+
+      if (hasRecentInput && !cameraActive) {
+        // Smoothly follow cursor — continuous lerp each frame for fluid motion
+        const lerpFactor = 1 - Math.pow(0.04, delta); // ~0.18 at 60fps, frame-rate independent
+        gazeRef.current = {
+          x: smoothLerp(gazeRef.current.x, inputTargetRef.current.x, lerpFactor),
+          y: smoothLerp(gazeRef.current.y, inputTargetRef.current.y, lerpFactor),
+        };
+        emitGazeUpdate();
+      } else if (!faceDetectedRef.current && !cameraActive) {
+        // No recent input → gentle idle wander
         updateIdleWander(delta);
       }
 
@@ -99,7 +111,7 @@ export function useGazeTracker(enableCamera: boolean = false) {
 
     animId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(animId);
-  }, [cameraActive, updateIdleWander]);
+  }, [cameraActive, updateIdleWander, emitGazeUpdate]);
 
   // Camera-based face/hand tracking
   useEffect(() => {

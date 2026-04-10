@@ -378,15 +378,16 @@ export function useFaceAnimation(
       delta * gazeSpeed * 0.6
     );
 
+    // Strong, fluid pupil tracking — eyes lock onto cursor position
     c.pupilX = lerp(
       c.pupilX,
-      gazeX * 0.22 + thinkingPupilX + microOffset.current.pupilDrift + eyeDriftX,
-      delta * pupilSpeed * 1.4
+      gazeX * 0.32 + thinkingPupilX + microOffset.current.pupilDrift + eyeDriftX,
+      delta * pupilSpeed * 2.0
     );
     c.pupilY = lerp(
       c.pupilY,
-      gazeY * 0.16 + thinkingPupilY + breathY + eyeDriftY,
-      delta * pupilSpeed * 1.4
+      gazeY * 0.24 + thinkingPupilY + breathY + eyeDriftY,
+      delta * pupilSpeed * 2.0
     );
 
     c.glowIntensity = lerp(c.glowIntensity, targets.glowIntensity ?? 0.3, delta * baseSpeed * 0.6);
