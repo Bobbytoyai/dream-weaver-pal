@@ -213,11 +213,16 @@ export type Database = {
         Row: {
           age_max: number
           age_min: number
+          category: string
           created_at: string
           duration: string
+          full_text: string | null
           id: string
           interactive: boolean
+          is_favorite: boolean
           language: string
+          mood: string | null
+          summary: string | null
           template_text: string
           theme: string
           title: string
@@ -225,11 +230,16 @@ export type Database = {
         Insert: {
           age_max?: number
           age_min?: number
+          category?: string
           created_at?: string
           duration?: string
+          full_text?: string | null
           id?: string
           interactive?: boolean
+          is_favorite?: boolean
           language?: string
+          mood?: string | null
+          summary?: string | null
           template_text: string
           theme: string
           title: string
@@ -237,11 +247,16 @@ export type Database = {
         Update: {
           age_max?: number
           age_min?: number
+          category?: string
           created_at?: string
           duration?: string
+          full_text?: string | null
           id?: string
           interactive?: boolean
+          is_favorite?: boolean
           language?: string
+          mood?: string | null
+          summary?: string | null
           template_text?: string
           theme?: string
           title?: string
