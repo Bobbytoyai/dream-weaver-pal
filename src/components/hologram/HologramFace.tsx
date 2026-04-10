@@ -40,17 +40,17 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
     return unsub;
   }, []);
 
-  const handleTap = useCallback(() => {
+  const handleTap = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    // Stop propagation so the parent onPointerDownCapture handles mic activation
+    // This tap handler is ONLY for the secret parent mode access (7 rapid taps)
     const now = Date.now();
-    if (now - tapTimerRef.current > 400) {
+    if (now - tapTimerRef.current > 600) {
       tapCountRef.current = 0;
     }
     tapCountRef.current++;
     tapTimerRef.current = now;
 
-    eventBus.emit({ type: "TAP_TRIGGERED" });
-
-    if (tapCountRef.current >= 5) {
+    if (tapCountRef.current >= 7) {
       tapCountRef.current = 0;
       eventBus.emit({ type: "TRIPLE_TAP" });
       onTripleTap?.();
