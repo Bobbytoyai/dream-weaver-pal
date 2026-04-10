@@ -18,33 +18,48 @@ export type Database = {
         Row: {
           child_name: string
           created_at: string
+          emotional_history: Json
           favorite_themes: string[]
           id: string
+          interaction_count: number
+          last_emotions: string[]
           last_story_id: string | null
           preferences: Json
           privacy_mode: boolean | null
+          progression_level: number
+          relationship_score: number
           total_stories_heard: number
           updated_at: string
         }
         Insert: {
           child_name: string
           created_at?: string
+          emotional_history?: Json
           favorite_themes?: string[]
           id?: string
+          interaction_count?: number
+          last_emotions?: string[]
           last_story_id?: string | null
           preferences?: Json
           privacy_mode?: boolean | null
+          progression_level?: number
+          relationship_score?: number
           total_stories_heard?: number
           updated_at?: string
         }
         Update: {
           child_name?: string
           created_at?: string
+          emotional_history?: Json
           favorite_themes?: string[]
           id?: string
+          interaction_count?: number
+          last_emotions?: string[]
           last_story_id?: string | null
           preferences?: Json
           privacy_mode?: boolean | null
+          progression_level?: number
+          relationship_score?: number
           total_stories_heard?: number
           updated_at?: string
         }
