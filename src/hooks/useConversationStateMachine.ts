@@ -392,7 +392,7 @@ export function useConversationStateMachine({
   // AI RESPONSE
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const lastAIRequestTimeRef = useRef(0);
-  const getAIResponse = useCallback(async (userText: string, intent?: Intent) => {
+  const getAIResponse = useCallback(async (userText: string, intent?: Intent, orchestratorHints?: ReturnType<typeof orchestrate>) => {
     // Rate limit: prevent duplicate AI requests within 800ms
     const now = Date.now();
     if (now - lastAIRequestTimeRef.current < 800) {
@@ -402,22 +402,25 @@ export function useConversationStateMachine({
     lastAIRequestTimeRef.current = now;
 
     transition("PROCESSING");
-    // SFX is auto-triggered by eventBus STATE_CHANGED → no manual playThinkingShimmer needed
     clearAllTimers();
     startStuckTimer("PROCESSING");
     setPartialText("");
 
-    const emotion = detectEmotionForTTS(userText);
+    const emotion = orchestratorHints?.childEmotion || detectEmotionForTTS(userText);
     currentEmotionRef.current = emotion;
     session.addMessage("user", userText, emotion);
     eventBus.emit({ type: "VOICE_INPUT", transcript: userText });
     if (emotion) eventBus.emit({ type: "EMOTION_DETECTED", emotion });
     setLastRecognized(userText);
 
+    // Use orchestrator hints for face pre-state
+    if (orchestratorHints) {
+      setBobbyFaceEmotion(orchestratorHints.faceState);
+      setBobbyEmotionIntensity(orchestratorHints.faceIntensity);
+    }
+
     const detectedIntent = intent || detectIntent(userText);
-    let mode = "chat";
-    if (detectedIntent === "story") mode = "story";
-    else if (detectedIntent === "game") mode = "game";
+    const mode = orchestratorHints?.aiMode || (detectedIntent === "story" ? "story" : detectedIntent === "game" ? "game" : "chat");
 
     // History already capped at MAX_HISTORY_LENGTH by setter; trim to last 10 for API speed
     const trimmedHistory = conversationHistory.slice(-10);
@@ -427,16 +430,19 @@ export function useConversationStateMachine({
     allSentencesDoneRef.current = false;
     pendingSentencesRef.current = 0;
 
-    const memoryParts: string[] = [];
-    if (memory) {
-      if (memory.favoriteThemes.length > 0) memoryParts.push(`Thèmes favoris: ${memory.favoriteThemes.join(", ")}`);
-      if (memory.totalStoriesHeard > 0) memoryParts.push(`Histoires écoutées: ${memory.totalStoriesHeard}`);
-      const prefs = memory.preferences as Record<string, unknown>;
-      if (prefs && Object.keys(prefs).length > 0) {
-        memoryParts.push(`Préférences: ${Object.entries(prefs).map(([k, v]) => `${k}: ${v}`).join(", ")}`);
+    // Use orchestrator memory context if available, otherwise build locally
+    const memoryContext = orchestratorHints?.memoryContext || (() => {
+      const memoryParts: string[] = [];
+      if (memory) {
+        if (memory.favoriteThemes.length > 0) memoryParts.push(`Thèmes favoris: ${memory.favoriteThemes.join(", ")}`);
+        if (memory.totalStoriesHeard > 0) memoryParts.push(`Histoires écoutées: ${memory.totalStoriesHeard}`);
+        const prefs = memory.preferences as Record<string, unknown>;
+        if (prefs && Object.keys(prefs).length > 0) {
+          memoryParts.push(`Préférences: ${Object.entries(prefs).map(([k, v]) => `${k}: ${v}`).join(", ")}`);
+        }
       }
-    }
-    const memoryContext = memoryParts.length > 0 ? memoryParts.join("\n") : undefined;
+      return memoryParts.length > 0 ? memoryParts.join("\n") : undefined;
+    })();
 
     const recoveryTimer = setTimeout(() => {
       if (machineStateRef.current === "PROCESSING") {
