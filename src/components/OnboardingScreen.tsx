@@ -175,7 +175,7 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
         {step === 2 && (
           <div className="flex flex-col items-center text-center w-full">
             <div className="w-20 h-20 mb-6 relative">
-              <HologramFace voiceState="idle" enableCamera={false} />
+              <HologramFace voiceState="idle" enableCamera={false} emotionOverride={ageEmotion === "idle" ? undefined : ageEmotion} />
             </div>
             <h2 className="text-3xl font-extrabold text-foreground mb-2">Tu as quel âge, {name.trim()} ?</h2>
             <p className="text-muted-foreground text-sm mb-6">Pour que Bobby s'adapte à toi !</p>
@@ -183,7 +183,12 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
               {ageGroups.map((a) => (
                 <button
                   key={a}
-                  onClick={() => setAge(a)}
+                  onClick={() => {
+                    setAge(a);
+                    setAgeEmotion("surprised");
+                    clearTimeout(ageEmotionTimer.current);
+                    ageEmotionTimer.current = window.setTimeout(() => setAgeEmotion("happy"), 800);
+                  }}
                   className={`relative rounded-2xl py-3.5 text-xl font-extrabold transition-all duration-200 ${
                     age === a
                       ? "bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] scale-110 shadow-lg shadow-[hsla(215,85%,58%,0.35)]"
