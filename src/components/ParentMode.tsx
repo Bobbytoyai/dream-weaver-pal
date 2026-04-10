@@ -1035,41 +1035,26 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   // RENDER: VOIX
   // ═══════════════════════════════════════════════════════════════
 
-  const VOICE_MAP: Record<string, { id: string; label: string; emoji: string; desc: string }> = {
-    child: { id: "e79twtVS2278lVZZQiAD", label: "Enfant", emoji: "👦", desc: "Voix douce et enjouée" },
-    female: { id: "Xb7hH8MSUJpSbSDYk0k2", label: "Femme", emoji: "👩", desc: "Voix chaleureuse et rassurante" },
-    male: { id: "onwK4e9ZLuTAKqWW03F9", label: "Homme", emoji: "👨", desc: "Voix grave et bienveillante" },
-    custom: { id: "", label: "Personnaliser", emoji: "🎨", desc: "Bientôt disponible" },
+  const VOICE_MAP: Record<string, { label: string; emoji: string; desc: string }> = {
+    child: { label: "Enfant", emoji: "👦", desc: "Voix mignonne type dessin animé" },
+    female: { label: "Femme", emoji: "👩", desc: "Voix douce, type maman" },
+    male: { label: "Homme", emoji: "👨", desc: "Voix grave et rassurante" },
+    custom: { label: "Personnaliser", emoji: "🎨", desc: "Bientôt disponible" },
   };
 
   const [previewPlaying, setPreviewPlaying] = useState(false);
 
   const previewVoice = async (voiceType: string) => {
     if (previewPlaying || voiceType === "custom") return;
-    const voiceInfo = VOICE_MAP[voiceType];
-    if (!voiceInfo?.id) return;
     setPreviewPlaying(true);
     try {
-      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ text: `Salut ! Je suis Bobby, ton compagnon préféré !`, voiceId: voiceInfo.id }),
-      });
-      const ct = resp.headers.get("Content-Type") || "";
-      if (ct.includes("audio")) {
-        const blob = await resp.blob();
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        audio.onended = () => { URL.revokeObjectURL(url); setPreviewPlaying(false); };
-        audio.onerror = () => { URL.revokeObjectURL(url); setPreviewPlaying(false); };
-        await audio.play();
-      } else {
-        setPreviewPlaying(false);
-      }
-    } catch { setPreviewPlaying(false); }
+      const { previewVoiceProfile } = await import("@/lib/voicePipeline");
+      await previewVoiceProfile(voiceType as any);
+    } catch (e) {
+      console.warn("Preview error:", e);
+    } finally {
+      setPreviewPlaying(false);
+    }
   };
 
   const renderVoix = () => (

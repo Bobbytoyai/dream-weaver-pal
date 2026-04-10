@@ -28,14 +28,8 @@ interface StoryModeProps {
   onParentMode: () => void;
 }
 
-const VOICE_IDS: Record<string, string> = {
-  child: "e79twtVS2278lVZZQiAD",
-  female: "Xb7hH8MSUJpSbSDYk0k2",
-  male: "onwK4e9ZLuTAKqWW03F9",
-};
-
 export default function StoryMode({ childName, childAge, onBack, parentSettings, onParentMode }: StoryModeProps) {
-  const currentVoiceId = VOICE_IDS[parentSettings?.voiceType || "female"] || VOICE_IDS.female;
+  const currentVoiceId = parentSettings?.voiceType || "female";
   const [phase, setPhase] = useState<StoryPhase>("pick");
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [currentTheme, setCurrentTheme] = useState<string | null>(null);
