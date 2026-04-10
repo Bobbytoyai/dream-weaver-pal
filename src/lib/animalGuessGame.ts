@@ -6,6 +6,8 @@
  * Adaptatif selon l'âge, toujours encourageant, jamais frustrant.
  */
 
+import { recordAnswer } from "./gameEngine";
+
 // ─── Animal Database ────────────────────────────────────────
 
 export interface AnimalData {
