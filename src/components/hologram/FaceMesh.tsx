@@ -121,20 +121,22 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
     rootRef.current.rotation.z = state.headTiltZ * 0.5;
 
-    // Pupils — more wandering, less fixed on user
+    // Pupils — deeply follow cursor, subtle wander layered on top
     const t = performance.now() * 0.001;
-    const wanderX = Math.sin(t * 0.7) * 0.06 + Math.sin(t * 1.9) * 0.03;
-    const wanderY = Math.cos(t * 0.5) * 0.04 + Math.sin(t * 1.3) * 0.02;
+    const wanderX = Math.sin(t * 0.4) * 0.015 + Math.sin(t * 1.1) * 0.008;
+    const wanderY = Math.cos(t * 0.3) * 0.01 + Math.sin(t * 0.8) * 0.006;
+    const gazeX = state.pupilX * 0.35 + wanderX;
+    const gazeY = state.pupilY * 0.28 + wanderY;
     [leftPupilRef, rightPupilRef].forEach(ref => {
       if (ref.current) {
-        ref.current.position.x = state.pupilX * 0.08 + wanderX;
-        ref.current.position.y = state.pupilY * 0.06 + wanderY;
+        ref.current.position.x = gazeX;
+        ref.current.position.y = gazeY;
       }
     });
     [leftIrisRef, rightIrisRef].forEach(ref => {
       if (ref.current) {
-        ref.current.position.x = state.pupilX * 0.05 + wanderX * 0.6;
-        ref.current.position.y = state.pupilY * 0.04 + wanderY * 0.6;
+        ref.current.position.x = gazeX * 0.75;
+        ref.current.position.y = gazeY * 0.75;
       }
     });
 
