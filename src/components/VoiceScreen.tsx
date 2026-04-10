@@ -398,7 +398,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       setContinuousListenEnabled(false);
       eventBus.emit({ type: "SPEECH_START" });
       recentBobbyTextsRef.current = [cached, ...recentBobbyTextsRef.current].slice(0, 8);
-      fetchTTSAudio(cached, undefined, currentVoiceId, undefined, currentVoiceSpeed).then(url => {
+      fetchTTSAudio(cached, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode).then(url => {
         audioQueue.enqueue(url);
         audioQueue.setOnAllDone(() => {
           eventBus.emit({ type: "SPEECH_STOP" });
