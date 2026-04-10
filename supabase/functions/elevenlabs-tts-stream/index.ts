@@ -1,6 +1,12 @@
 /**
- * ElevenLabs TTS Streaming — returns audio stream for immediate playback.
- * Uses eleven_turbo_v2_5 for lowest latency.
+ * ElevenLabs TTS Streaming — Emotional Voice System
+ * 
+ * 3 voice profiles with emotion-aware settings:
+ * 🎭 Enfant (Lily) — cartoon, animated, playful
+ * 👩 Maman (Matilda) — warm, maternal, funny
+ * 👨 Papa (George) — deep, calm, protective
+ * 
+ * Emotion modifiers adjust stability/style/speed per detected mood.
  */
 
 const corsHeaders = {
@@ -8,39 +14,77 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// 3 French voice profiles for Bobby
-// 🎭 Cartoon = fun, animated, playful (dessin animé)
-// 👩 Maman = warm, reassuring, slightly funny
-// 👨 Papa = deep, calm, protective
-const VOICE_PROFILES: Record<string, { voiceId: string; stability: number; similarity_boost: number; style: number; speed: number }> = {
+// ─── Voice Profiles ─────────────────────────────────────────
+interface VoiceSettings {
+  voiceId: string;
+  stability: number;
+  similarity_boost: number;
+  style: number;
+  speed: number;
+}
+
+const VOICE_PROFILES: Record<string, VoiceSettings> = {
   child: {
-    voiceId: "pFZP5JQG7iQjIQuC4Bku",   // Lily — bright, cartoon-like
-    stability: 0.35,
-    similarity_boost: 0.8,
-    style: 0.7,
-    speed: 1.1,
+    voiceId: "pFZP5JQG7iQjIQuC4Bku",   // Lily — bright, cartoon-like, expressive
+    stability: 0.38,
+    similarity_boost: 0.82,
+    style: 0.65,
+    speed: 1.08,
   },
   female: {
-    voiceId: "XrExE9yKIg1WjnnlVkGX",   // Matilda — warm, maternal, fun
-    stability: 0.5,
-    similarity_boost: 0.75,
-    style: 0.45,
-    speed: 1.0,
+    voiceId: "XrExE9yKIg1WjnnlVkGX",   // Matilda — warm, maternal, slightly fun
+    stability: 0.52,
+    similarity_boost: 0.78,
+    style: 0.40,
+    speed: 0.98,
   },
   male: {
-    voiceId: "JBFqnCBsd6RMkjVDRZzb",   // George — deep, reassuring dad
-    stability: 0.65,
-    similarity_boost: 0.7,
-    style: 0.25,
-    speed: 0.95,
+    voiceId: "JBFqnCBsd6RMkjVDRZzb",   // George — deep, reassuring, protective
+    stability: 0.68,
+    similarity_boost: 0.72,
+    style: 0.22,
+    speed: 0.93,
   },
 };
 
+// ─── Emotion Modifiers ──────────────────────────────────────
+// Adjust voice settings based on detected emotion for natural delivery
+type Emotion = "happy" | "sad" | "scared" | "excited" | "calm" | "curious" | "angry" | "bored";
+
+interface EmotionModifier {
+  stabilityDelta: number;
+  styleDelta: number;
+  speedDelta: number;
+}
+
+const EMOTION_MODIFIERS: Record<Emotion, EmotionModifier> = {
+  happy:   { stabilityDelta: -0.08, styleDelta: +0.15, speedDelta: +0.05 },
+  excited: { stabilityDelta: -0.12, styleDelta: +0.20, speedDelta: +0.08 },
+  sad:     { stabilityDelta: +0.15, styleDelta: -0.10, speedDelta: -0.08 },
+  scared:  { stabilityDelta: +0.10, styleDelta: +0.05, speedDelta: -0.05 },
+  calm:    { stabilityDelta: +0.20, styleDelta: -0.15, speedDelta: -0.10 },
+  curious: { stabilityDelta: -0.05, styleDelta: +0.10, speedDelta: +0.03 },
+  angry:   { stabilityDelta: +0.05, styleDelta: +0.10, speedDelta: +0.05 },
+  bored:   { stabilityDelta: +0.10, styleDelta: -0.05, speedDelta: -0.03 },
+};
+
+function applyEmotion(base: VoiceSettings, emotion?: string): VoiceSettings {
+  if (!emotion || !(emotion in EMOTION_MODIFIERS)) return base;
+  const mod = EMOTION_MODIFIERS[emotion as Emotion];
+  return {
+    ...base,
+    stability: Math.max(0.1, Math.min(1, base.stability + mod.stabilityDelta)),
+    style: Math.max(0, Math.min(1, base.style + mod.styleDelta)),
+    speed: Math.max(0.7, Math.min(1.2, base.speed + mod.speedDelta)),
+  };
+}
+
+// ─── Main Handler ───────────────────────────────────────────
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { text, voiceProfile } = await req.json();
+    const { text, voiceProfile, emotion } = await req.json();
     
     if (!text || text.trim().length === 0) {
       return new Response(new ArrayBuffer(0), {
@@ -51,7 +95,8 @@ Deno.serve(async (req) => {
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     if (!ELEVENLABS_API_KEY) throw new Error("ELEVENLABS_API_KEY not configured");
 
-    const profile = VOICE_PROFILES[voiceProfile || "female"] || VOICE_PROFILES.female;
+    const baseProfile = VOICE_PROFILES[voiceProfile || "female"] || VOICE_PROFILES.female;
+    const profile = applyEmotion(baseProfile, emotion);
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${profile.voiceId}/stream?output_format=mp3_22050_32`,
@@ -63,7 +108,7 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           text: text.trim(),
-          model_id: "eleven_turbo_v2_5",
+          model_id: "eleven_multilingual_v2",
           voice_settings: {
             stability: profile.stability,
             similarity_boost: profile.similarity_boost,
@@ -83,7 +128,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Stream audio directly to client
     return new Response(response.body, {
       headers: {
         ...corsHeaders,
