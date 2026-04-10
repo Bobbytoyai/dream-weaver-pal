@@ -97,23 +97,6 @@ const Index = () => {
     );
   }
 
-  if (mode === "activities") {
-    return (
-      <ContentCategories
-        childName={childName}
-        onSelectCategory={(sub) => {
-          setActiveGameCategory(sub);
-          if (sub === "histoires") {
-            setMode("story");
-          } else {
-            // Go back to voice with game context
-            setMode("voice");
-          }
-        }}
-        onBack={() => { setActiveGameCategory(null); setMode("voice"); }}
-      />
-    );
-  }
 
   return (
     <VoiceScreen
@@ -122,7 +105,7 @@ const Index = () => {
       onSwitchToChat={() => {}}
       onSwitchToStory={() => setMode("story")}
       onParentMode={() => setMode("parent")}
-      onActivities={() => setMode("activities")}
+      
       parentSettings={parentSettings}
       activeGameCategory={activeGameCategory}
       onClearGame={() => setActiveGameCategory(null)}
