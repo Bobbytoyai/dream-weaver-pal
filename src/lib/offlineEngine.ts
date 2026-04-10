@@ -143,12 +143,23 @@ function wordOverlap(input: string, target: string): number {
 
 type Mood = "neutral" | "happy" | "sad" | "scared" | "excited" | "calm" | "bored";
 
+interface ConversationTurn {
+  role: "user" | "bobby";
+  text: string;
+  intent: OfflineIntent;
+  topic: string;
+  timestamp: number;
+}
+
 interface ConversationContext {
   lastIntent: OfflineIntent;
   lastTopic: string;
   mood: Mood;
   interactionCount: number;
   lastResponses: string[];  // track last 5 responses for anti-repetition
+  history: ConversationTurn[];  // multi-turn conversation memory (last 20 turns)
+  mentionedTopics: Set<string>;  // all topics mentioned in session
+  childPreferences: Record<string, number>;  // topic → mention count
 }
 
 const context: ConversationContext = {
@@ -157,7 +168,32 @@ const context: ConversationContext = {
   mood: "neutral",
   interactionCount: 0,
   lastResponses: [],
+  history: [],
+  mentionedTopics: new Set(),
+  childPreferences: {},
 };
+
+// ─── Topic extraction ───────────────────────────────────────
+const TOPIC_KEYWORDS: Record<string, string[]> = {
+  pirate: ["pirate", "trésor", "bateau", "mer", "capitaine", "île"],
+  princesse: ["princesse", "château", "roi", "reine", "fée", "magie", "couronne"],
+  espace: ["espace", "astronaute", "fusée", "étoile", "planète", "lune", "alien"],
+  animaux: ["animal", "chat", "chien", "lapin", "ours", "loup", "dragon", "dinosaure"],
+  nature: ["forêt", "montagne", "rivière", "fleur", "arbre", "jardin"],
+  nourriture: ["manger", "gâteau", "chocolat", "bonbon", "goûter", "faim"],
+  famille: ["maman", "papa", "frère", "sœur", "famille", "mamie", "papi"],
+  école: ["école", "maîtresse", "copain", "copine", "classe", "apprendre"],
+  sport: ["foot", "ballon", "courir", "nager", "vélo", "sport"],
+};
+
+function extractTopics(text: string): string[] {
+  const lower = normalizeInput(text);
+  const found: string[] = [];
+  for (const [topic, keywords] of Object.entries(TOPIC_KEYWORDS)) {
+    if (keywords.some(kw => lower.includes(kw))) found.push(topic);
+  }
+  return found;
+}
 
 function updateContext(intent: OfflineIntent, topic: string, response: string) {
   context.lastIntent = intent;
@@ -165,6 +201,23 @@ function updateContext(intent: OfflineIntent, topic: string, response: string) {
   context.interactionCount++;
   context.lastResponses.push(response);
   if (context.lastResponses.length > 5) context.lastResponses.shift();
+
+  // Store turn in history
+  context.history.push(
+    { role: "user", text: topic, intent, topic, timestamp: Date.now() },
+    { role: "bobby", text: response, intent, topic, timestamp: Date.now() },
+  );
+  // Keep last 20 turns (10 exchanges)
+  if (context.history.length > 20) {
+    context.history = context.history.slice(-20);
+  }
+
+  // Track topics
+  const topics = extractTopics(topic);
+  topics.forEach(t => {
+    context.mentionedTopics.add(t);
+    context.childPreferences[t] = (context.childPreferences[t] || 0) + 1;
+  });
 
   // Update mood based on intent
   if (intent === "EMOTION_POSITIVE") context.mood = "happy";
@@ -191,6 +244,180 @@ export function resetConversationContext() {
   context.mood = "neutral";
   context.interactionCount = 0;
   context.lastResponses = [];
+  context.history = [];
+  context.mentionedTopics.clear();
+  context.childPreferences = {};
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 4b. MULTI-TURN CONTEXTUAL RESPONSES
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function getRecentUserMessages(n = 3): string[] {
+  return context.history
+    .filter(t => t.role === "user")
+    .slice(-n)
+    .map(t => t.text);
+}
+
+function getFavoriteTopics(): string[] {
+  return Object.entries(context.childPreferences)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([topic]) => topic);
+}
+
+// Contextual references to previous exchanges
+function buildContextualPrefix(childName?: string): string | null {
+  if (context.history.length < 4) return null; // Need at least 2 exchanges
+
+  const recent = getRecentUserMessages(2);
+  const favTopics = getFavoriteTopics();
+  const name = childName || "";
+
+  // If child keeps talking about the same topic, acknowledge it
+  if (favTopics.length > 0 && context.childPreferences[favTopics[0]] >= 3) {
+    const topicPhrases: Record<string, string[]> = {
+      pirate: [`Tu adores les pirates ${name} !`, `Encore des pirates ? Trop bien !`],
+      princesse: [`Toi tu adores les princesses !`, `Encore une histoire de princesse !`],
+      espace: [`L'espace te passionne ${name} !`, `Toi t'es un vrai astronaute !`],
+      animaux: [`Toi tu adores les animaux !`, `Les animaux c'est ta passion !`],
+      nature: [`Tu aimes la nature ${name} !`],
+      nourriture: [`Tu as faim ou tu adores parler de nourriture ? 😄`],
+      famille: [`Ta famille a l'air super !`],
+      école: [`Tu me racontes l'école ?`],
+      sport: [`Tu es sportif ${name} !`],
+    };
+    const phrases = topicPhrases[favTopics[0]];
+    if (phrases && Math.random() > 0.6) {
+      return pickRandom(phrases, `ctx_topic_${favTopics[0]}`);
+    }
+  }
+
+  // Reference something said earlier
+  if (recent.length >= 2 && Math.random() > 0.7) {
+    const referenceBack = [
+      `Tout à l'heure tu parlais de ça, j'ai bien aimé ! `,
+      `On s'amuse bien aujourd'hui ! `,
+      `Ça fait ${context.interactionCount} fois qu'on parle, c'est chouette ! `,
+    ];
+    return pickRandom(referenceBack, "ctx_ref");
+  }
+
+  // Mood-aware opening
+  if (context.mood === "happy" && Math.random() > 0.7) {
+    return pickRandom(["Tu as l'air super content ! ", "Quelle bonne humeur ! "], "ctx_mood_happy");
+  }
+  if (context.mood === "sad" && Math.random() > 0.5) {
+    return pickRandom(["Je suis toujours là pour toi. ", "On reste ensemble. "], "ctx_mood_sad");
+  }
+
+  return null;
+}
+
+// Handle follow-up answers to Bobby's questions
+function handleFollowUpAnswer(text: string, childName?: string): OfflineResponse | null {
+  const normalized = normalizeInput(text);
+  const lastBobbyTurn = [...context.history].reverse().find(t => t.role === "bobby");
+  if (!lastBobbyTurn) return null;
+
+  const lastBobbyText = lastBobbyTurn.text.toLowerCase();
+
+  // Bobby asked "pirate, princesse ou espace ?"
+  if (lastBobbyText.includes("pirate") && lastBobbyText.includes("princesse") && lastBobbyText.includes("espace")) {
+    const theme = detectStoryTheme(text) || "aventure" as StoryTheme;
+    if (theme !== "aventure" || /pirate|princesse|espace|animal/.test(normalized)) {
+      const story = pickRandom(LOCAL_STORIES[theme], `story_followup_${theme}`);
+      const finalText = personalize(story, childName);
+      updateContext("STORY_REQUEST", text, finalText);
+      return { text: finalText, intent: "STORY_REQUEST", isOffline: true, theme };
+    }
+  }
+
+  // Bobby asked "devinette ou quiz ?" or "tu choisis"
+  if (lastBobbyText.includes("devinette") || lastBobbyText.includes("quiz") || lastBobbyText.includes("tu choisis")) {
+    if (/devinette|devine/.test(normalized)) {
+      const r = RIDDLES[Math.floor(Math.random() * RIDDLES.length)];
+      const resp = `Devinette ! ${r.question} 🤔`;
+      updateContext("PLAY_REQUEST", text, resp);
+      return { text: resp, intent: "PLAY_REQUEST", isOffline: true, gameType: "riddle" };
+    }
+    if (/quiz|vrai|faux/.test(normalized)) {
+      const tf = TRUE_FALSE[Math.floor(Math.random() * TRUE_FALSE.length)];
+      const resp = `Vrai ou Faux ? ${tf.statement} 🤔`;
+      updateContext("PLAY_REQUEST", text, resp);
+      return { text: resp, intent: "PLAY_REQUEST", isOffline: true, gameType: "true_false" };
+    }
+  }
+
+  // Bobby asked a riddle → child tries to answer
+  if (lastBobbyText.includes("qui suis-je") || lastBobbyText.includes("devinette")) {
+    const matchedRiddle = RIDDLES.find(r => lastBobbyText.includes(normalizeInput(r.question)));
+    if (matchedRiddle) {
+      const isCorrect = normalized.includes(normalizeInput(matchedRiddle.answer));
+      if (isCorrect) {
+        const resp = personalize(pickRandom([
+          "Bravo {name} ! C'est ça ! 🎉",
+          "Oui ! Bien joué ! Tu es trop fort ! 🌟",
+          "Exact ! Tu es un champion ! 💪",
+        ], "riddle_correct"), childName);
+        updateContext("EMOTION_POSITIVE", text, resp);
+        return { text: resp, intent: "EMOTION_POSITIVE", isOffline: true };
+      } else {
+        const resp = personalize(pickRandom([
+          `Presque ! La réponse c'était ${matchedRiddle.answer} ! On en fait une autre ? 😊`,
+          `Non c'est ${matchedRiddle.answer} ! Mais c'était dur ! Encore une ? 🤔`,
+          `C'était ${matchedRiddle.answer} ! Tu veux réessayer avec une autre ? 😊`,
+        ], "riddle_wrong"), childName);
+        updateContext("PLAY_REQUEST", text, resp);
+        return { text: resp, intent: "PLAY_REQUEST", isOffline: true };
+      }
+    }
+  }
+
+  // Bobby asked vrai ou faux → child answers
+  if (lastBobbyText.includes("vrai ou faux")) {
+    const matchedTF = TRUE_FALSE.find(tf => lastBobbyText.includes(normalizeInput(tf.statement)));
+    if (matchedTF) {
+      const saidTrue = /vrai|oui|yes/.test(normalized);
+      const saidFalse = /faux|non|nan/.test(normalized);
+      if (saidTrue || saidFalse) {
+        const isCorrect = (saidTrue && matchedTF.answer) || (saidFalse && !matchedTF.answer);
+        const resp = isCorrect
+          ? personalize(`Bravo {name} ! ${matchedTF.explanation}`, childName)
+          : personalize(`Eh non ! ${matchedTF.explanation}`, childName);
+        updateContext(isCorrect ? "EMOTION_POSITIVE" : "PLAY_REQUEST", text, resp);
+        return { text: resp, intent: isCorrect ? "EMOTION_POSITIVE" : "PLAY_REQUEST", isOffline: true };
+      }
+    }
+  }
+
+  // Bobby asked animal quiz → child answers
+  if (lastBobbyText.includes("quiz animaux")) {
+    const matchedAQ = ANIMAL_QUIZ.find(aq => lastBobbyText.includes(normalizeInput(aq.question)));
+    if (matchedAQ) {
+      const isCorrect = normalized.includes(normalizeInput(matchedAQ.answer));
+      const resp = isCorrect
+        ? personalize(pickRandom(["Bravo {name} ! C'est ça ! 🎉", "Oui ! Bien joué ! 🌟"], "aq_correct"), childName)
+        : personalize(`C'est ${matchedAQ.answer} ! Bien essayé ! On continue ? 😊`, childName);
+      updateContext(isCorrect ? "EMOTION_POSITIVE" : "PLAY_REQUEST", text, resp);
+      return { text: resp, intent: isCorrect ? "EMOTION_POSITIVE" : "PLAY_REQUEST", isOffline: true };
+    }
+  }
+
+  // Bobby asked "would you rather" → acknowledge the choice
+  if (lastBobbyText.includes("tu préfères")) {
+    const resp = personalize(pickRandom([
+      "Bonne réponse ! Moi aussi j'aurais peut-être choisi pareil ! 😊",
+      "Intéressant ! Tu as bien choisi {name} ! 😄",
+      "Oh cool ! Moi je sais pas ce que j'aurais choisi ! 🤔",
+      "Super choix ! On fait autre chose ? 😊",
+    ], "wyr_response"), childName);
+    updateContext("EMOTION_POSITIVE", text, resp);
+    return { text: resp, intent: "EMOTION_POSITIVE", isOffline: true };
+  }
+
+  return null;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1231,7 +1458,11 @@ export function getOfflineResponse(
     return { text: resp, intent: "BLOCKED", isOffline: true };
   }
 
-  // 2. Context-aware continuation ("encore", "continue" based on last intent)
+  // 2. Multi-turn follow-up: handle answers to Bobby's previous questions
+  const followUpAnswer = handleFollowUpAnswer(text, childName);
+  if (followUpAnswer) return followUpAnswer;
+
+  // 3. Context-aware continuation ("encore", "continue" based on last intent)
   const continuation = handleContextualContinuation(text, childName);
   if (continuation) {
     updateContext(continuation.intent, context.lastTopic, continuation.text);
@@ -1355,9 +1586,10 @@ export function getOfflineResponse(
       break;
   }
 
+  const contextPrefix = buildContextualPrefix(childName);
   const finalText = personalize(response, childName);
   const followUp = getFollowUp(intent);
-  const fullResponse = finalText + followUp;
+  const fullResponse = (contextPrefix ? contextPrefix + " " : "") + finalText + followUp;
   updateContext(intent, text, fullResponse);
   return { text: fullResponse, intent, isOffline: true };
 }
