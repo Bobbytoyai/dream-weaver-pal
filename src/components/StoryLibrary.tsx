@@ -325,14 +325,29 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
                     <Clock className="w-2.5 h-2.5" />
                     {DURATION_LABELS[story.duration] || story.duration}
                   </span>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); toggleFavorite(story.id); }}
-                    className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
-                      story.is_favorite ? "text-red-500" : "text-muted-foreground/30 group-hover:text-red-300"
-                    }`}
-                  >
-                    <Heart className={`w-3.5 h-3.5 ${story.is_favorite ? "fill-current" : ""}`} />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    {downloadedIds.has(story.id) ? (
+                      <CheckCircle className="w-3.5 h-3.5 text-success" />
+                    ) : (
+                      <button
+                        onClick={(e) => downloadStory(story, e)}
+                        disabled={downloadingId === story.id}
+                        className="w-6 h-6 rounded-full flex items-center justify-center transition-all text-muted-foreground/40 group-hover:text-primary"
+                      >
+                        {downloadingId === story.id
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : <Download className="w-3.5 h-3.5" />}
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleFavorite(story.id); }}
+                      className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                        story.is_favorite ? "text-red-500" : "text-muted-foreground/30 group-hover:text-red-300"
+                      }`}
+                    >
+                      <Heart className={`w-3.5 h-3.5 ${story.is_favorite ? "fill-current" : ""}`} />
+                    </button>
+                  </div>
                 </div>
               </button>
             ))}
