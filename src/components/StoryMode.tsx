@@ -66,7 +66,7 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
   const processSentenceForTTS = useCallback(async (sentence: string, signal?: AbortSignal) => {
     pendingRef.current++;
     try {
-      const url = await fetchTTSAudio(sentence, signal);
+      const url = await fetchTTSAudio(sentence, signal, currentVoiceId);
       if (!signal?.aborted) {
         setVoiceState("speaking");
         eventBus.emit({ type: "SPEECH_START" });
@@ -104,7 +104,7 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
     eventBus.emit({ type: "STORY_START", theme, title: template?.title || theme });
 
     // Play a "hmm" filler while loading
-    fetchTTSAudio("Il était une fois…", abortController.signal).then(url => {
+    fetchTTSAudio("Il était une fois…", abortController.signal, currentVoiceId).then(url => {
       if (!abortController.signal.aborted) {
         setVoiceState("speaking");
         eventBus.emit({ type: "SPEECH_START" });
