@@ -164,7 +164,6 @@ Deno.serve(async (req) => {
     // Safety pre-filter on last user message
     const lastUserMsg = [...messages].reverse().find((m: any) => m.role === "user");
     if (lastUserMsg && !isSafeInput(lastUserMsg.content)) {
-      // Return safe redirect as SSE stream
       const safeResponse = "Hmm… parlons d'autre chose ! Tu veux qu'on joue ou que je te raconte une histoire ?";
       const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content: safeResponse } }] })}\n\ndata: [DONE]\n\n`;
       return new Response(sseData, {
@@ -176,8 +175,55 @@ Deno.serve(async (req) => {
     const userText = lastUserMsg?.content || "";
     const intent = detectIntent(userText, mode);
     
+    // If story intent, try to fetch a pre-written story from DB
+    let storyContext = "";
+    if (intent === "story") {
+      try {
+        // Detect which theme the child asked for
+        const lower = userText.toLowerCase();
+        let themeFilter: string | null = null;
+        if (/pirate/.test(lower)) themeFilter = "pirate";
+        else if (/princesse|prince/.test(lower)) themeFilter = "princesse";
+        else if (/espace|fusée|planète|étoile/.test(lower)) themeFilter = "espace";
+        else if (/animal|animaux|chat|chien|dragon/.test(lower)) themeFilter = "animaux";
+        else if (/magi[eq]|sorcier|fée/.test(lower)) themeFilter = "magie";
+
+        // Fetch from Supabase
+        const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+        const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+        
+        if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+          let query = `${SUPABASE_URL}/rest/v1/story_templates?select=title,full_text,theme,category&age_min=lte.${childAge}&age_max=gte.${childAge}`;
+          if (themeFilter) query += `&theme=eq.${themeFilter}`;
+          query += `&limit=1&order=created_at.desc`;
+
+          const dbResp = await fetch(query, {
+            headers: {
+              apikey: SUPABASE_SERVICE_ROLE_KEY,
+              Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+            },
+          });
+
+          if (dbResp.ok) {
+            const stories = await dbResp.json();
+            if (stories.length > 0 && stories[0].full_text) {
+              const story = stories[0];
+              const personalizedText = story.full_text.replace(/\{child_name\}/g, childName);
+              storyContext = `\n\n# HISTOIRE PRÉ-ÉCRITE À RACONTER
+Titre: "${story.title}"
+IMPORTANT: Raconte cette histoire exactement comme écrite ci-dessous, avec ton propre ton et des pauses naturelles. Adapte le rythme pour l'oral. Ne résume PAS, raconte phrase par phrase.
+
+${personalizedText}`;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to fetch story from DB:", e);
+      }
+    }
+
     // Build agent-specific system prompt
-    const systemPrompt = buildSystemPrompt(intent, childName, childAge, parentSettings, memoryContext);
+    const systemPrompt = buildSystemPrompt(intent, childName, childAge, parentSettings, memoryContext) + storyContext;
 
     // Keep only recent messages for speed
     const recentMessages = messages.length > 8 ? messages.slice(-8) : messages;
@@ -200,8 +246,8 @@ Deno.serve(async (req) => {
           ...recentMessages,
         ],
         stream: true,
-        temperature: intent === "emotion_support" ? 0.25 : intent === "story" ? 0.6 : 0.35,
-        max_tokens: intent === "story" ? 200 : 80,
+        temperature: intent === "emotion_support" ? 0.25 : intent === "story" ? 0.4 : 0.35,
+        max_tokens: intent === "story" ? 800 : 80,
       }),
     });
 
