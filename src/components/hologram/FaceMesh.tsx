@@ -60,12 +60,12 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   }), []);
 
   const irisMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(35, 55%, 40%)"),
+    color: new THREE.Color("hsl(25, 60%, 32%)"),
     transparent: true, opacity: 0.9,
   }), []);
 
   const irisInnerMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(40, 65%, 52%)"),
+    color: new THREE.Color("hsl(30, 50%, 42%)"),
     transparent: true, opacity: 0.8,
   }), []);
 
