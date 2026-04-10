@@ -955,7 +955,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         <div className="space-y-3">
           <div>
             <p className="text-xs text-muted-foreground mb-1">Prénom</p>
-            <p className="text-lg font-extrabold text-foreground">{childName}</p>
+            <input
+              type="text"
+              value={settings.childName}
+              onChange={(e) => updateSetting("childName", e.target.value)}
+              placeholder="Prénom de l'enfant"
+              className="w-full bg-muted rounded-xl px-4 py-2.5 text-lg font-extrabold text-foreground outline-none focus:ring-2 focus:ring-primary transition-all"
+            />
           </div>
           <div>
             <p className="text-xs text-muted-foreground mb-1">Âge</p>
