@@ -627,10 +627,58 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   }, [sessionMessages]);
 
   const jumpToMoment = (msgIdx: number) => {
-    if (!audioRef.current || !audioDuration || sessionMessages.length === 0) return;
+    if (!audioRef.current || !audioDuration || sessionMessages.length === 0) {
+      // No audio recording — use TTS to read the moment
+      speakMessage(sessionMessages[msgIdx]?.content || "");
+      return;
+    }
     const pct = (msgIdx / sessionMessages.length) * 100;
     seekAudio(pct);
     setActiveMessageIdx(msgIdx);
+  };
+
+  const [ttsPlaying, setTtsPlaying] = useState<string | null>(null);
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const speakMessage = async (text: string) => {
+    if (!text) return;
+    
+    // Toggle off if same text
+    if (ttsPlaying === text) {
+      ttsAudioRef.current?.pause();
+      setTtsPlaying(null);
+      return;
+    }
+
+    // Stop previous
+    ttsAudioRef.current?.pause();
+    setTtsPlaying(text);
+
+    try {
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ text: text.slice(0, 500), voiceProfile: "female" }),
+        }
+      );
+      if (!resp.ok) throw new Error("TTS failed");
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      ttsAudioRef.current = audio;
+      audio.onended = () => {
+        setTtsPlaying(null);
+        URL.revokeObjectURL(url);
+      };
+      audio.play();
+    } catch {
+      setTtsPlaying(null);
+    }
   };
 
   // ─── Sessions grouped by day ──────────────────────────────────
@@ -1148,7 +1196,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 <div className="max-h-80 overflow-y-auto space-y-2">
                   {sessionMessages.map((msg, i) => {
                     const isChild = msg.role === "user";
-                    const isActive = i === activeMessageIdx && playingAudio;
+                    const isActive = i === activeMessageIdx && (playingAudio || ttsPlaying);
+                    const isTtsSpeaking = ttsPlaying === msg.content;
                     return (
                       <div key={i} className={`flex ${isChild ? "justify-start" : "justify-end"} transition-all duration-200`}>
                         <div className={`max-w-[85%] rounded-2xl px-3 py-2 transition-all duration-200 ${
@@ -1167,6 +1216,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                                 {emotionLabels[msg.detected_emotion]?.emoji} {emotionLabels[msg.detected_emotion]?.label || msg.detected_emotion}
                               </span>
                             )}
+                            <button onClick={() => speakMessage(msg.content)}
+                              className="ml-auto w-5 h-5 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors">
+                              {isTtsSpeaking ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                            </button>
                           </div>
                           <p className="text-[12px] text-foreground leading-relaxed">{msg.content}</p>
                         </div>
