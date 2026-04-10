@@ -7,7 +7,7 @@ import {
   Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X,
   SkipForward, SkipBack, Activity, Bell, ChevronDown, Star
 } from "lucide-react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import StoryLibrary from "@/components/StoryLibrary";
 import ContentCategories from "@/components/ContentCategories";
@@ -531,12 +531,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     }
     return days.map(d => ({
       name: d.label,
-      Joie: d.count > 0 ? Math.round(d.joy / d.count) : null,
-      Curiosité: d.count > 0 ? Math.round(d.curiosity / d.count) : null,
-      Excitation: d.count > 0 ? Math.round(d.excitement / d.count) : null,
-      Frustration: d.count > 0 ? Math.round(d.frustration / d.count) : null,
-      Peur: d.count > 0 ? Math.round(d.fear / d.count) : null,
-      Tristesse: d.count > 0 ? Math.round(d.sadness / d.count) : null,
+      Joie: d.count > 0 ? Math.round(d.joy / d.count) : 0,
+      Curiosité: d.count > 0 ? Math.round(d.curiosity / d.count) : 0,
+      Excitation: d.count > 0 ? Math.round(d.excitement / d.count) : 0,
+      Frustration: d.count > 0 ? Math.round(d.frustration / d.count) : 0,
+      Peur: d.count > 0 ? Math.round(d.fear / d.count) : 0,
+      Tristesse: d.count > 0 ? Math.round(d.sadness / d.count) : 0,
+      hasData: d.count > 0,
     }));
   }, [analyses]);
 
