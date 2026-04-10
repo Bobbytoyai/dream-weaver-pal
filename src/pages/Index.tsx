@@ -4,7 +4,7 @@ import StoryMode from "@/components/StoryMode";
 import ParentMode, { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/ParentMode";
 import { useChildMemory } from "@/hooks/useChildMemory";
 
-const CHILD_NAME = "Buddy";
+const CHILD_NAME = "Bobby";
 const CHILD_AGE = 7;
 
 const Index = () => {

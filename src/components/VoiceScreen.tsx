@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Mic, MicOff, BookOpen } from "lucide-react";
+import { BookOpen, Settings } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
+import { useWakeWord } from "@/hooks/useWakeWord";
 import { ParentSettings } from "@/components/ParentMode";
 import { HologramFace } from "@/components/hologram/HologramFace";
 import { setSfxVolume, initSfxEventBus } from "@/lib/sfx";
@@ -15,10 +16,11 @@ const FALLBACK_FR: Record<string, string> = {
   not_heard: "Hmm… j'ai pas bien entendu… tu peux répéter ?",
   thinking: "hmm… attends…",
   error: "Oh… un petit souci… réessaie !",
-  reengage: "Tu es encore là ?",
-  session_end: "Je suis là quand tu veux revenir",
-  welcome: "Salut ! Appuie sur le micro pour me parler !",
+  reengage: "Tu es encore là ? Dis Bobby si tu veux me parler !",
+  session_end: "Je suis là quand tu veux revenir… dis juste Bobby !",
+  welcome: "Salut ! Dis Bobby pour me parler !",
   interrupted: "Ah oui, pardon ! Dis-moi",
+  wake_greeting: "Oui ? Je suis là !",
 };
 
 function detectEmotion(text: string): string | undefined {
@@ -30,6 +32,18 @@ function detectEmotion(text: string): string | undefined {
   if (lower.match(/pourquoi|comment|c'est quoi|sais pas/)) return "curious";
   if (lower.match(/wow|waouh|incroyable|fou|dingue/)) return "excited";
   return undefined;
+}
+
+/** Strip wake word from transcript to get the actual command */
+function stripWakeWord(text: string): string {
+  return text.replace(/\b(bobby|boby|bobbie)\b/gi, "").replace(/\s+/g, " ").trim();
+}
+
+/** Check if transcript is just the wake word with no real command */
+function isJustWakeWord(text: string): boolean {
+  const stripped = stripWakeWord(text);
+  // If after removing bobby, there's barely anything left
+  return stripped.length < 3 || /^[?,!.\s]*$/.test(stripped);
 }
 
 interface VoiceScreenProps {
@@ -44,8 +58,8 @@ interface VoiceScreenProps {
 const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onParentMode, parentSettings }: VoiceScreenProps) => {
   const [state, setState] = useState<VoiceState>("idle");
   const [conversationHistory, setConversationHistory] = useState<AiMsg[]>([]);
+  const [partialText, setPartialText] = useState("");
 
-  const recognitionRef = useRef<any>(null);
   const abortRef = useRef<AbortController | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reengageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -57,6 +71,9 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const audioQueue = useAudioQueue();
   const session = useSessionTracker(childName, childAge);
   const { memory, addFavoriteTheme } = useChildMemory(childName);
+
+  // Wake word is active when Bobby is idle or session_end
+  const wakeWordEnabled = state === "idle" || state === "session_end";
 
   // Initialize SFX event bus listener (once)
   useEffect(() => {
@@ -81,8 +98,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
   useEffect(() => {
     return () => {
-      recognitionRef.current?.abort?.();
-      recognitionRef.current?.stop?.();
       abortRef.current?.abort();
       audioQueue.stopAll();
       clearTimers();
@@ -102,7 +117,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     clearTimers();
     reengageTimerRef.current = setTimeout(() => {
       if (stateRef.current === "idle") speakFallback("reengage");
-    }, 8000);
+    }, 15000);
     silenceTimerRef.current = setTimeout(() => {
       if (stateRef.current === "idle" || stateRef.current === "speaking") {
         setState("session_end");
@@ -111,7 +126,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         eventBus.emit({ type: "SESSION_END" });
         sessionStartedRef.current = false;
       }
-    }, 40000);
+    }, 60000);
   }, []);
 
   const speakFallback = useCallback(async (key: string) => {
@@ -137,7 +152,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const interrupt = useCallback(() => {
     abortRef.current?.abort();
     audioQueue.stopAll();
-    recognitionRef.current?.stop?.();
     clearTimers();
     setState("interrupted");
     eventBus.emit({ type: "SPEECH_STOP" });
@@ -168,6 +182,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const getAIResponse = useCallback(async (userText: string) => {
     setState("processing");
     clearTimers();
+    setPartialText("");
 
     const emotion = detectEmotion(userText);
     session.addMessage("user", userText, emotion);
@@ -227,9 +242,11 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     });
   }, [conversationHistory, childName, childAge, audioQueue, clearTimers, processSentenceForTTS, speakFallback, startSilenceTimers, session]);
 
-  const startListening = useCallback(() => {
-    if (stateRef.current === "speaking" || stateRef.current === "processing") interrupt();
-    clearTimers();
+  // Handle wake word detection
+  const handleWake = useCallback((transcript: string) => {
+    if (stateRef.current === "speaking" || stateRef.current === "processing") {
+      interrupt();
+    }
 
     if (!sessionStartedRef.current) {
       session.startSession();
@@ -237,52 +254,25 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       eventBus.emit({ type: "SESSION_START" });
     }
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      speakFallback("error");
+    eventBus.emit({ type: "WAKE_TRIGGERED" });
+
+    // If just "Bobby" with no command, greet and wait
+    if (isJustWakeWord(transcript)) {
+      speakFallback("wake_greeting");
       return;
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = "fr-FR";
-    recognition.maxAlternatives = 1;
-    recognitionRef.current = recognition;
-    setState("listening");
+    // Otherwise process the full phrase (minus wake word)
+    const command = stripWakeWord(transcript);
+    getAIResponse(command);
+  }, [interrupt, session, speakFallback, getAIResponse]);
 
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0]?.[0]?.transcript?.trim();
-      if (transcript) getAIResponse(transcript);
-      else speakFallback("not_heard");
-    };
-
-    recognition.onend = () => {
-      if (stateRef.current === "listening") speakFallback("not_heard");
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error("STT error:", event.error);
-      if (event.error === "no-speech") {
-        setState("idle");
-        startSilenceTimers();
-      } else if (event.error !== "aborted") {
-        speakFallback("not_heard");
-      }
-    };
-
-    recognition.start();
-  }, [interrupt, clearTimers, getAIResponse, speakFallback, startSilenceTimers, session]);
-
-  const handleMicPress = useCallback(() => {
-    if (state === "session_end") setState("idle");
-    if (state === "listening") {
-      recognitionRef.current?.stop();
-      return;
-    }
-    eventBus.emit({ type: "TAP_TRIGGERED" });
-    startListening();
-  }, [state, startListening]);
+  // Wake word listener
+  useWakeWord({
+    enabled: wakeWordEnabled,
+    onWake: handleWake,
+    onPartial: setPartialText,
+  });
 
   const handleParentMode = useCallback(() => {
     if (sessionStartedRef.current) {
@@ -295,16 +285,34 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
   // State label
   const stateLabel = {
-    idle: "Appuie pour parler",
+    idle: partialText ? `"${partialText}"` : 'Dis "Bobby" pour me parler !',
     listening: "J'écoute…",
     processing: "Je réfléchis…",
     speaking: "Je parle…",
     interrupted: "Dis-moi !",
-    session_end: "À bientôt !",
+    session_end: 'Dis "Bobby" pour revenir !',
   }[state];
 
   return (
     <div className="flex flex-col items-center justify-between h-screen bg-background px-4 py-6 max-w-lg mx-auto select-none overflow-hidden">
+      {/* Top bar — parent mode + story */}
+      <div className="w-full flex items-center justify-between px-2">
+        <button
+          onClick={onSwitchToStory}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-foreground text-sm font-semibold hover:border-primary hover:scale-105 active:scale-95 transition-all"
+        >
+          <BookOpen className="w-4 h-4" />
+          Histoires
+        </button>
+        <button
+          onClick={handleParentMode}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-muted-foreground text-sm hover:border-primary hover:scale-105 active:scale-95 transition-all"
+        >
+          <Settings className="w-4 h-4" />
+          Parent
+        </button>
+      </div>
+
       {/* 3D Hologram Face — takes most of the screen */}
       <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0">
         <div className="relative w-80 h-80 md:w-96 md:h-96">
@@ -316,60 +324,21 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         </div>
 
         {/* State label */}
-        <p className="mt-4 text-sm font-semibold text-muted-foreground tracking-wide uppercase">
+        <p className="mt-4 text-sm font-semibold text-muted-foreground tracking-wide uppercase text-center px-4">
           {stateLabel}
         </p>
-      </div>
 
-      {/* Bottom controls */}
-      <div className="pb-8 pt-4 flex items-center gap-6">
-        {/* Story button */}
-        {onSwitchToStory && (
-          <button
-            onClick={onSwitchToStory}
-            disabled={state === "processing" || state === "speaking"}
-            className="w-14 h-14 rounded-full bg-card border-2 border-border flex items-center justify-center hover:border-primary hover:scale-110 active:scale-95 transition-all disabled:opacity-40"
-            aria-label="Mode histoire"
-          >
-            <BookOpen className="w-6 h-6 text-foreground" />
-          </button>
+        {/* Wake word indicator */}
+        {wakeWordEnabled && (
+          <div className="mt-2 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-xs text-muted-foreground/60">Écoute active</span>
+          </div>
         )}
-
-        {/* Mic Button */}
-        <div className="relative">
-          {state === "listening" && (
-            <>
-              <span className="absolute inset-0 rounded-full bg-primary/20 voice-pulse-ring" />
-              <span className="absolute inset-0 rounded-full bg-primary/10 voice-pulse-ring" style={{ animationDelay: "0.5s" }} />
-            </>
-          )}
-          <button
-            onClick={handleMicPress}
-            disabled={state === "processing"}
-            className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 shadow-2xl active:scale-90 disabled:opacity-40 ${
-              state === "listening"
-                ? "bg-destructive text-destructive-foreground scale-110"
-                : state === "session_end"
-                ? "bg-muted text-muted-foreground"
-                : "bg-primary text-primary-foreground hover:scale-110"
-            }`}
-            style={{
-              boxShadow: state === "listening"
-                ? "0 0 40px hsl(0 84% 60% / 0.4)"
-                : state === "idle"
-                ? "0 0 30px hsl(200 100% 60% / 0.3)"
-                : undefined,
-            }}
-            aria-label={state === "listening" ? "Arrêter l'écoute" : "Parler"}
-          >
-            {state === "listening" ? (
-              <MicOff className="w-8 h-8" />
-            ) : (
-              <Mic className="w-8 h-8" />
-            )}
-          </button>
-        </div>
       </div>
+
+      {/* Bottom spacer */}
+      <div className="pb-4" />
     </div>
   );
 };
