@@ -196,17 +196,17 @@ const StatPill = ({ emoji, value, label }: { emoji: string; value: string | numb
   </div>
 );
 
-// ─── Tab config (5 tabs) ────────────────────────────────────────
+// ─── Tab config (6 tabs) ────────────────────────────────────────
 
 type Tab = "dashboard" | "sessions" | "activites" | "profil" | "reglages" | "confidentialite";
 
-const tabs: { id: Tab; icon: any; label: string }[] = [
-  { id: "dashboard", icon: BarChart3, label: "Tableau" },
-  { id: "sessions", icon: MessageSquare, label: "Sessions" },
-  { id: "activites", icon: Gamepad2, label: "Activités" },
-  { id: "profil", icon: User, label: "Profil" },
-  { id: "reglages", icon: Settings, label: "Réglages" },
-  { id: "confidentialite", icon: Shield, label: "Privé" },
+const tabs: { id: Tab; icon: any; label: string; emoji?: string }[] = [
+  { id: "dashboard", icon: BarChart3, label: "Tableau", emoji: "📊" },
+  { id: "sessions", icon: MessageSquare, label: "Sessions", emoji: "💬" },
+  { id: "activites", icon: Gamepad2, label: "Activités", emoji: "🎮" },
+  { id: "profil", icon: User, label: "Profil", emoji: "👤" },
+  { id: "reglages", icon: Settings, label: "Réglages", emoji: "⚙️" },
+  { id: "confidentialite", icon: Shield, label: "Privé", emoji: "🔒" },
 ];
 
 // ─── Main Component ───────────────────────────────────────────────
@@ -2415,16 +2415,18 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         )}
       </div>
 
-      {/* Tab bar */}
+      {/* Tab bar — scrollable pill style */}
       {!selectedSession && (
-        <div className="flex border-b border-border bg-card">
+        <div className="flex gap-1.5 px-4 py-2.5 bg-card border-b border-border overflow-x-auto scrollbar-hide">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 min-w-0 flex flex-col items-center gap-0.5 py-2.5 px-1 text-[10px] font-medium transition-all duration-200 ${
-                activeTab === tab.id ? "text-primary border-b-2 border-primary" : "text-muted-foreground"
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-semibold whitespace-nowrap transition-all duration-200 shrink-0 ${
+                activeTab === tab.id
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}>
-              <tab.icon className={`w-4 h-4 transition-transform duration-200 ${activeTab === tab.id ? "scale-110" : ""}`} />
-              <span className="truncate">{tab.label}</span>
+              <tab.icon className="w-3.5 h-3.5" />
+              {tab.label}
             </button>
           ))}
         </div>
