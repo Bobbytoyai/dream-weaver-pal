@@ -10,7 +10,7 @@ import type { Emotion } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import { useSmartSTT } from "@/hooks/useSmartSTT";
 import { ParentSettings } from "@/components/parentSettings";
-import { setSfxVolume, initSfxEventBus, playThinkingShimmer } from "@/lib/sfx";
+import { setSfxVolume, initSfxEventBus } from "@/lib/sfx";
 import { useChildMemory } from "@/hooks/useChildMemory";
 import { useConversationRecorder } from "@/hooks/useConversationRecorder";
 import { eventBus } from "@/lib/eventBus";
