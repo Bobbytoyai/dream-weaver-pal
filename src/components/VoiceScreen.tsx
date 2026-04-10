@@ -296,73 +296,14 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
         </button>
       </div>
 
-      {/* Animated Character */}
-      <div className="flex-1 flex flex-col items-center justify-center">
-        <div className="relative">
-          {state === "listening" && (
-            <>
-              <div className="absolute inset-[-16px] rounded-full bg-primary/20 voice-pulse-ring" />
-              <div className="absolute inset-[-16px] rounded-full bg-primary/10 voice-pulse-ring" style={{ animationDelay: "0.5s" }} />
-              <div className="absolute inset-[-16px] rounded-full bg-primary/5 voice-pulse-ring" style={{ animationDelay: "1s" }} />
-            </>
-          )}
-          {state === "processing" && (
-            <div className="absolute inset-[-8px] rounded-full border-4 border-muted-foreground/30 border-t-muted-foreground animate-spin" />
-          )}
-          {state === "speaking" && (
-            <div className="absolute inset-[-12px] rounded-full bg-secondary/15 voice-pulse-ring" style={{ animationDuration: "2s" }} />
-          )}
-
-          {/* Avatar - triple tap for parent mode */}
-          <div
-            onClick={handleAvatarTap}
-            className={`relative w-56 h-56 rounded-full bg-card flex items-center justify-center overflow-hidden border-4 transition-all duration-300 cursor-pointer ${borderColor} ${avatarAnimation}`}
-          >
-            <img
-              src={companionAvatar}
-              alt="Buddy"
-              width={200}
-              height={200}
-              className={`transition-transform duration-300 ${
-                state === "speaking" ? "scale-110" :
-                state === "processing" ? "scale-95 opacity-80" :
-                state === "session_end" ? "scale-90 opacity-50" : ""
-              }`}
-            />
-          </div>
-        </div>
-
-        {/* State indicator dots */}
-        <div className="flex gap-2 mt-8 min-h-[1.5rem]">
-          {state === "listening" && (
-            <div className="flex gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-primary animate-pulse" />
-              <span className="w-3 h-3 rounded-full bg-primary animate-pulse" style={{ animationDelay: "0.3s" }} />
-              <span className="w-3 h-3 rounded-full bg-primary animate-pulse" style={{ animationDelay: "0.6s" }} />
-            </div>
-          )}
-          {state === "processing" && (
-            <div className="flex gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-muted-foreground typing-dot" />
-              <span className="w-2 h-2 rounded-full bg-muted-foreground typing-dot" style={{ animationDelay: "0.2s" }} />
-              <span className="w-2 h-2 rounded-full bg-muted-foreground typing-dot" style={{ animationDelay: "0.4s" }} />
-            </div>
-          )}
-          {state === "speaking" && (
-            <div className="flex gap-1 items-end">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <span
-                  key={i}
-                  className="w-1.5 rounded-full bg-secondary animate-pulse"
-                  style={{
-                    height: `${8 + Math.random() * 16}px`,
-                    animationDelay: `${i * 0.1}s`,
-                    animationDuration: "0.5s",
-                  }}
-                />
-              ))}
-            </div>
-          )}
+      {/* 3D Hologram Face */}
+      <div className="flex-1 flex flex-col items-center justify-center w-full">
+        <div className="relative w-72 h-72 md:w-80 md:h-80">
+          <HologramFace
+            voiceState={state}
+            enableCamera={false}
+            onTripleTap={handleParentMode}
+          />
         </div>
       </div>
 
