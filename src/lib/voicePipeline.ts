@@ -286,8 +286,8 @@ export function useAudioQueue() {
 
     const url = queueRef.current.shift()!;
 
-    if (url === "__browser_tts__") {
-      // Browser TTS already played inline, just move on
+    if (url === "__browser_tts__" || url === "__piper_silent__") {
+      // TTS already played inline or silent, just move on
       playNext();
       return;
     }
