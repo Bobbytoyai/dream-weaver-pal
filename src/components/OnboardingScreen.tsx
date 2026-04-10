@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { HologramFace } from "./hologram/HologramFace";
 import VoicePickerStep from "./onboarding/VoicePickerStep";
 import InterestsStep from "./onboarding/InterestsStep";
@@ -18,6 +18,9 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
   const [voice, setVoice] = useState<VoiceProfile>("female");
   const [interests, setInterests] = useState<string[]>([]);
   const [animClass, setAnimClass] = useState("animate-fadeInUp");
+  const [nameEmotion, setNameEmotion] = useState<"idle" | "happy" | "excited">("idle");
+  const [ageEmotion, setAgeEmotion] = useState<"idle" | "surprised" | "happy">("idle");
+  const ageEmotionTimer = useRef<number>(0);
 
   const goStep = (next: number) => {
     setAnimClass("animate-fadeOut");
@@ -142,14 +145,17 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
         {step === 1 && (
           <div className="flex flex-col items-center text-center w-full">
             <div className="w-20 h-20 mb-6 relative">
-              <HologramFace voiceState="listening" enableCamera={false} />
+              <HologramFace voiceState="listening" enableCamera={false} emotionOverride={nameEmotion === "idle" ? undefined : nameEmotion} />
             </div>
             <h2 className="text-3xl font-extrabold text-foreground mb-2">Comment tu t'appelles ?</h2>
             <p className="text-muted-foreground text-sm mb-8">Bobby veut connaître ton prénom !</p>
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                setNameEmotion(e.target.value.trim().length >= 2 ? "happy" : e.target.value.length > 0 ? "excited" : "idle");
+              }}
               placeholder="Ton prénom..."
               autoFocus
               className="w-full rounded-2xl border-2 border-border bg-[hsl(var(--muted))]/30 backdrop-blur-sm px-6 py-4 text-lg text-center font-bold text-foreground placeholder:text-muted-foreground/40 focus:border-[hsl(var(--primary))] focus:bg-[hsl(var(--muted))]/50 focus:outline-none focus:ring-2 focus:ring-[hsla(200,100%,60%,0.3)] transition-all"
@@ -169,7 +175,7 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
         {step === 2 && (
           <div className="flex flex-col items-center text-center w-full">
             <div className="w-20 h-20 mb-6 relative">
-              <HologramFace voiceState="idle" enableCamera={false} />
+              <HologramFace voiceState="idle" enableCamera={false} emotionOverride={ageEmotion === "idle" ? undefined : ageEmotion} />
             </div>
             <h2 className="text-3xl font-extrabold text-foreground mb-2">Tu as quel âge, {name.trim()} ?</h2>
             <p className="text-muted-foreground text-sm mb-6">Pour que Bobby s'adapte à toi !</p>
@@ -177,7 +183,12 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
               {ageGroups.map((a) => (
                 <button
                   key={a}
-                  onClick={() => setAge(a)}
+                  onClick={() => {
+                    setAge(a);
+                    setAgeEmotion("surprised");
+                    clearTimeout(ageEmotionTimer.current);
+                    ageEmotionTimer.current = window.setTimeout(() => setAgeEmotion("happy"), 800);
+                  }}
                   className={`relative rounded-2xl py-3.5 text-xl font-extrabold transition-all duration-200 ${
                     age === a
                       ? "bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] scale-110 shadow-lg shadow-[hsla(215,85%,58%,0.35)]"
