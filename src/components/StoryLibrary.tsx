@@ -98,6 +98,22 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
     }
   };
 
+  const downloadStory = useCallback(async (story: Story, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (downloadedIds.has(story.id) || downloadingId) return;
+    setDownloadingId(story.id);
+    try {
+      const text = personalizeText(story.full_text || story.template_text);
+      const data = { id: story.id, title: story.title, category: story.category, theme: story.theme, text, duration: story.duration, mood: story.mood, summary: story.summary };
+      localStorage.setItem(`bobby_story_${story.id}`, JSON.stringify(data));
+      const newSet = new Set(downloadedIds);
+      newSet.add(story.id);
+      setDownloadedIds(newSet);
+      localStorage.setItem("bobby_downloaded_stories", JSON.stringify([...newSet]));
+    } catch { /* storage full */ }
+    setDownloadingId(null);
+  }, [downloadedIds, downloadingId, childName]);
+
   const personalizeText = (text: string) => text.replace(/\{child_name\}/g, childName);
 
   const startNarration = useCallback(async (story: Story) => {
