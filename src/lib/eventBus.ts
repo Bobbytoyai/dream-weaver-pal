@@ -13,6 +13,7 @@ export type AppEvent =
   | { type: "FACE_LOST" }
   | { type: "TAP_TRIGGERED" }
   | { type: "TRIPLE_TAP" }
+  | { type: "WAKE_TRIGGERED" }
   | { type: "STORY_START"; theme: string; title: string }
   | { type: "STORY_END" }
   | { type: "STORY_CHOICE"; choice: string }

@@ -331,7 +331,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         {/* Wake word indicator */}
         {wakeWordEnabled && (
           <div className="mt-2 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             <span className="text-xs text-muted-foreground/60">Écoute active</span>
           </div>
         )}
