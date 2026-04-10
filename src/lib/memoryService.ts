@@ -1,8 +1,25 @@
 /**
- * Memory Service — persists child preferences between sessions.
+ * Bobby Hybrid Memory Service v5.0
+ * 
+ * Orchestrates 3-layer memory:
+ * 1. RAM cache (instant)
+ * 2. Local IndexedDB/localStorage (< 10ms)
+ * 3. Cloud Supabase (async sync)
+ * 
+ * RULE: Always read local first → cloud sync in background
+ * CONFLICT: latest timestamp wins
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { Json } from "@/integrations/supabase/types";
+import {
+  storeMemory,
+  getTopMemories,
+  getUnsyncedEntries,
+  markSynced,
+  runForgetCycle,
+  addToShortTerm,
+  loadLocalProfile,
+  type MemoryEntry,
+} from "./localMemoryStore";
 
 export interface ChildMemory {
   childName: string;
@@ -10,13 +27,11 @@ export interface ChildMemory {
   favoriteThemes: string[];
   lastStoryId: string | null;
   totalStoriesHeard: number;
-  // v3.0 cognitive fields
   progressionLevel: number;
   interactionCount: number;
   relationshipScore: number;
   lastEmotions: string[];
   emotionalHistory: Array<{ emotion: string; timestamp: string }>;
-  // v4.0 adaptive profile
   engagementTriggers: string[];
   behaviorPatterns: string[];
   learningSpeed: string;
@@ -25,42 +40,88 @@ export interface ChildMemory {
 }
 
 const memoryCache = new Map<string, ChildMemory>();
+let syncTimer: ReturnType<typeof setTimeout> | null = null;
+let forgetRan = false;
 
-/** Load or create memory for a child */
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// LOCAL-FIRST LOAD
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/** Load memory: RAM cache → local profile → cloud (async backfill) */
 export async function loadMemory(childName: string): Promise<ChildMemory> {
-  // Check cache first
+  // Layer 1: RAM cache
   if (memoryCache.has(childName)) return memoryCache.get(childName)!;
 
-  const { data, error } = await supabase
-    .from("child_memories")
-    .select("*")
-    .eq("child_name", childName)
-    .maybeSingle();
+  // Layer 2: Try local profile first (instant)
+  const localProfile = loadLocalProfile(childName);
+  
+  // Layer 3: Cloud (may be slow, but needed for full data)
+  let memory: ChildMemory;
+  
+  try {
+    const { data } = await supabase
+      .from("child_memories")
+      .select("*")
+      .eq("child_name", childName)
+      .maybeSingle();
 
-  if (data) {
-    const d = data as any;
-    const memory: ChildMemory = {
-      childName: d.child_name,
-      preferences: (d.preferences as Record<string, unknown>) || {},
-      favoriteThemes: d.favorite_themes || [],
-      lastStoryId: d.last_story_id,
-      totalStoriesHeard: d.total_stories_heard,
-      progressionLevel: d.progression_level ?? 1,
-      interactionCount: d.interaction_count ?? 0,
-      relationshipScore: d.relationship_score ?? 0,
-      lastEmotions: d.last_emotions ?? [],
-      emotionalHistory: (d.emotional_history as any[]) ?? [],
-      engagementTriggers: d.engagement_triggers ?? [],
-      behaviorPatterns: (d.behavior_patterns as string[]) ?? [],
-      learningSpeed: d.learning_speed ?? "normal",
-      interactionStyle: d.interaction_style ?? "balanced",
-      preferredTopics: (d.preferred_topics as Record<string, number>) ?? {},
-    };
-    memoryCache.set(childName, memory);
-    return memory;
+    if (data) {
+      const d = data as any;
+      memory = {
+        childName: d.child_name,
+        preferences: (d.preferences as Record<string, unknown>) || {},
+        favoriteThemes: d.favorite_themes || [],
+        lastStoryId: d.last_story_id,
+        totalStoriesHeard: d.total_stories_heard,
+        progressionLevel: d.progression_level ?? 1,
+        interactionCount: d.interaction_count ?? 0,
+        relationshipScore: d.relationship_score ?? 0,
+        lastEmotions: d.last_emotions ?? [],
+        emotionalHistory: (d.emotional_history as any[]) ?? [],
+        engagementTriggers: d.engagement_triggers ?? [],
+        behaviorPatterns: (d.behavior_patterns as string[]) ?? [],
+        learningSpeed: d.learning_speed ?? "normal",
+        interactionStyle: d.interaction_style ?? "balanced",
+        preferredTopics: (d.preferred_topics as Record<string, number>) ?? {},
+      };
+
+      // Merge local profile data if more recent
+      if (localProfile && localProfile.lastUpdated > new Date(d.updated_at).getTime()) {
+        if (Object.keys(localProfile.favoriteTopics).length) {
+          memory.preferredTopics = { ...memory.preferredTopics, ...localProfile.favoriteTopics };
+        }
+        if (localProfile.engagementTriggers.length) memory.engagementTriggers = localProfile.engagementTriggers;
+        if (localProfile.learningSpeed !== "normal") memory.learningSpeed = localProfile.learningSpeed;
+        if (localProfile.interactionStyle !== "balanced") memory.interactionStyle = localProfile.interactionStyle;
+        if (localProfile.behaviorPatterns.length) memory.behaviorPatterns = localProfile.behaviorPatterns;
+      }
+    } else {
+      // No cloud data — create from local or fresh
+      memory = buildFromLocal(childName, localProfile);
+      // Create in cloud (async)
+      supabase.from("child_memories").insert({
+        child_name: childName,
+        preferences: {},
+        favorite_themes: [],
+        total_stories_heard: 0,
+      }).then(() => {});
+    }
+  } catch {
+    // Cloud unavailable — use local only
+    memory = buildFromLocal(childName, localProfile);
   }
 
-  const newMemory: ChildMemory = {
+  memoryCache.set(childName, memory);
+  
+  // Schedule background tasks
+  scheduleBackgroundSync(childName);
+  if (!forgetRan) { forgetRan = true; runForgetCycle(childName).catch(() => {}); }
+
+  return memory;
+}
+
+function buildFromLocal(childName: string, localProfile: ReturnType<typeof loadLocalProfile>): ChildMemory {
+  return {
     childName,
     preferences: {},
     favoriteThemes: [],
@@ -71,25 +132,18 @@ export async function loadMemory(childName: string): Promise<ChildMemory> {
     relationshipScore: 0,
     lastEmotions: [],
     emotionalHistory: [],
-    engagementTriggers: [],
-    behaviorPatterns: [],
-    learningSpeed: "normal",
-    interactionStyle: "balanced",
-    preferredTopics: {},
+    engagementTriggers: localProfile?.engagementTriggers ?? [],
+    behaviorPatterns: localProfile?.behaviorPatterns ?? [],
+    learningSpeed: localProfile?.learningSpeed ?? "normal",
+    interactionStyle: localProfile?.interactionStyle ?? "balanced",
+    preferredTopics: localProfile?.favoriteTopics ?? {},
   };
-
-  await supabase.from("child_memories").insert({
-    child_name: childName,
-    preferences: {},
-    favorite_themes: [],
-    total_stories_heard: 0,
-  });
-
-  memoryCache.set(childName, newMemory);
-  return newMemory;
 }
 
-/** Update a memory field and persist */
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// UPDATE — local first, cloud async
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 export async function updateMemory(
   childName: string,
   updates: Partial<Omit<ChildMemory, "childName">>
@@ -98,8 +152,19 @@ export async function updateMemory(
   const updated = { ...current, ...updates };
   memoryCache.set(childName, updated);
 
-  const dbUpdates: any = { updated_at: new Date().toISOString() };
+  // Store important changes in IndexedDB structured memory
+  if (updates.favoriteThemes?.length) {
+    for (const theme of updates.favoriteThemes) {
+      storeMemory(childName, "preference", `theme_${theme}`, theme, 0.8, 6).catch(() => {});
+    }
+  }
+  if (updates.lastEmotions?.length) {
+    const emotion = updates.lastEmotions[updates.lastEmotions.length - 1];
+    storeMemory(childName, "emotion", `recent_${emotion}`, emotion, 0.6, 4).catch(() => {});
+  }
 
+  // Cloud sync (async, non-blocking)
+  const dbUpdates: any = { updated_at: new Date().toISOString() };
   if (updates.preferences !== undefined) dbUpdates.preferences = updates.preferences;
   if (updates.favoriteThemes !== undefined) dbUpdates.favorite_themes = updates.favoriteThemes;
   if (updates.lastStoryId !== undefined) dbUpdates.last_story_id = updates.lastStoryId;
@@ -115,11 +180,54 @@ export async function updateMemory(
   if (updates.interactionStyle !== undefined) dbUpdates.interaction_style = updates.interactionStyle;
   if (updates.preferredTopics !== undefined) dbUpdates.preferred_topics = updates.preferredTopics;
 
-  await supabase
+  // Non-blocking cloud push
+  supabase
     .from("child_memories")
     .update(dbUpdates)
-    .eq("child_name", childName);
+    .eq("child_name", childName)
+    .then(() => {});
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// BACKGROUND SYNC — push unsynced local entries to cloud
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function scheduleBackgroundSync(childName: string): void {
+  if (syncTimer) return;
+  syncTimer = setTimeout(async () => {
+    syncTimer = null;
+    if (!navigator.onLine) return;
+    try {
+      const unsynced = await getUnsyncedEntries(childName);
+      if (unsynced.length === 0) return;
+
+      // Batch sync: merge structured memories into cloud memory fields
+      const memory = memoryCache.get(childName);
+      if (memory) {
+        await supabase
+          .from("child_memories")
+          .update({
+            updated_at: new Date().toISOString(),
+            preferred_topics: memory.preferredTopics,
+            engagement_triggers: memory.engagementTriggers,
+            behavior_patterns: memory.behaviorPatterns,
+            learning_speed: memory.learningSpeed,
+            interaction_style: memory.interactionStyle,
+          })
+          .eq("child_name", childName);
+      }
+
+      await markSynced(unsynced.map(e => e.id));
+      console.log(`[Memory] ☁️ Synced ${unsynced.length} entries to cloud`);
+    } catch (err) {
+      console.warn("[Memory] Sync failed, will retry later", err);
+    }
+  }, 5000); // 5s delay — batch sync
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// CONVENIENCE HELPERS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /** Record that a story was heard */
 export async function recordStoryHeard(childName: string, storyId: string, theme: string) {
@@ -133,18 +241,34 @@ export async function recordStoryHeard(childName: string, storyId: string, theme
     totalStoriesHeard: memory.totalStoriesHeard + 1,
     favoriteThemes: themes,
   });
+  
+  // Also store as structured memory
+  storeMemory(childName, "event", `story_${storyId}`, `Listened to story: ${theme}`, 0.5, 3).catch(() => {});
 }
 
-/** Get a preference value */
 export async function getPreference(childName: string, key: string): Promise<unknown> {
   const memory = await loadMemory(childName);
   return memory.preferences[key];
 }
 
-/** Set a preference value */
 export async function setPreference(childName: string, key: string, value: unknown) {
   const memory = await loadMemory(childName);
   await updateMemory(childName, {
     preferences: { ...memory.preferences, [key]: value },
   });
+  // High-priority structured memory
+  storeMemory(childName, "preference", key, String(value), 0.9, 8).catch(() => {});
+}
+
+/** Get enrichment context from all memory layers for AI prompts */
+export async function getMemoryContext(childName: string): Promise<string> {
+  const topEntries = await getTopMemories(childName);
+  if (topEntries.length === 0) return "";
+
+  const lines = topEntries.map(e => {
+    const typeLabel = { preference: "🎯", emotion: "💛", behavior: "🧩", event: "📌" }[e.type] || "•";
+    return `${typeLabel} ${e.key}: ${e.value}`;
+  });
+
+  return `Mémoire enfant:\n${lines.join("\n")}`;
 }
