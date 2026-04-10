@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Settings, Camera, Mic, MicOff, Bug } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue, preloadVoiceProfile, detectEmotionForTTS } from "@/lib/voicePipeline";
+import { preloadVoice as preloadPiperVoice } from "@/lib/piperTTS";
 import type { Emotion } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import { useSmartSTT } from "@/hooks/useSmartSTT";
