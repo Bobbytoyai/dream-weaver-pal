@@ -174,7 +174,7 @@ export function useFaceAnimation(
   // Mouth idle animation refs
   const mouthIdlePhase = useRef(Math.random() * Math.PI * 2);
   const mouthQuirkTimer = useRef(0);
-  const nextMouthQuirk = useRef(3 + Math.random() * 4);
+  const nextMouthQuirk = useRef(1 + Math.random() * 2);
   const mouthQuirkPhase = useRef(0); // 0=none, 1=quirking, 2=returning
   const mouthQuirkTarget = useRef({ curve: 0, width: 0, open: 0 });
 
@@ -298,11 +298,11 @@ export function useFaceAnimation(
     }
 
     // --- IDLE MOUTH ANIMATION (natural, like breathing through mouth) ---
-    mouthIdlePhase.current += delta * 0.6;
-    // Gentle breathing-linked mouth movement
-    const mouthBreath = Math.sin(mouthIdlePhase.current) * 0.015 + Math.sin(mouthIdlePhase.current * 2.3) * 0.008;
-    const mouthBreathCurve = Math.sin(mouthIdlePhase.current * 0.7) * 0.02;
-    const mouthBreathWidth = Math.sin(mouthIdlePhase.current * 1.1) * 0.01;
+    mouthIdlePhase.current += delta * 1.2;
+    // Breathing-linked mouth movement (amplified)
+    const mouthBreath = Math.sin(mouthIdlePhase.current) * 0.035 + Math.sin(mouthIdlePhase.current * 2.3) * 0.02;
+    const mouthBreathCurve = Math.sin(mouthIdlePhase.current * 0.7) * 0.05;
+    const mouthBreathWidth = Math.sin(mouthIdlePhase.current * 1.1) * 0.025;
 
     // Occasional mouth quirks (like a small smile, lip purse, or twitch)
     let mouthQuirkCurveAdd = 0;
@@ -316,18 +316,21 @@ export function useFaceAnimation(
         mouthQuirkTimer.current = 0;
         // Random quirk type
         const quirkType = Math.random();
-        if (quirkType < 0.4) {
-          // Small smile
-          mouthQuirkTarget.current = { curve: 0.12 + Math.random() * 0.08, width: 0.04, open: 0 };
-        } else if (quirkType < 0.65) {
+        if (quirkType < 0.35) {
+          // Smile
+          mouthQuirkTarget.current = { curve: 0.25 + Math.random() * 0.15, width: 0.08, open: 0.02 };
+        } else if (quirkType < 0.55) {
           // Lip purse / thinking
-          mouthQuirkTarget.current = { curve: -0.03, width: -0.06, open: 0.02 };
-        } else if (quirkType < 0.85) {
+          mouthQuirkTarget.current = { curve: -0.08, width: -0.1, open: 0.05 };
+        } else if (quirkType < 0.75) {
           // Slight open (like about to speak)
-          mouthQuirkTarget.current = { curve: 0.02, width: 0, open: 0.04 + Math.random() * 0.03 };
+          mouthQuirkTarget.current = { curve: 0.05, width: 0.02, open: 0.08 + Math.random() * 0.05 };
+        } else if (quirkType < 0.9) {
+          // Smirk
+          mouthQuirkTarget.current = { curve: 0.15, width: 0.06, open: 0.02 };
         } else {
-          // Asymmetric smirk
-          mouthQuirkTarget.current = { curve: 0.06, width: 0.03, open: 0.01 };
+          // Big grin
+          mouthQuirkTarget.current = { curve: 0.35, width: 0.1, open: 0.04 };
         }
       }
 
@@ -336,7 +339,7 @@ export function useFaceAnimation(
         mouthQuirkCurveAdd = mouthQuirkTarget.current.curve * progress;
         mouthQuirkWidthAdd = mouthQuirkTarget.current.width * progress;
         mouthQuirkOpenAdd = mouthQuirkTarget.current.open * progress;
-        if (mouthQuirkTimer.current > 0.4 + Math.random() * 0.3) {
+        if (mouthQuirkTimer.current > 0.6 + Math.random() * 0.5) {
           mouthQuirkPhase.current = 2;
           mouthQuirkTimer.current = 0;
         }
@@ -348,7 +351,7 @@ export function useFaceAnimation(
         if (fadeOut <= 0.01) {
           mouthQuirkPhase.current = 0;
           mouthQuirkTimer.current = 0;
-          nextMouthQuirk.current = 3 + Math.random() * 5;
+          nextMouthQuirk.current = 1.5 + Math.random() * 2.5;
         }
       }
     }
