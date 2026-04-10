@@ -1897,8 +1897,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     }
   };
 
+  const [lightMode, setLightMode] = useState(() => localStorage.getItem("parent-light") === "true");
+
+  const toggleLight = () => {
+    setLightMode(v => {
+      localStorage.setItem("parent-light", String(!v));
+      return !v;
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-background max-w-lg mx-auto flex flex-col">
+    <div className={`min-h-screen bg-background max-w-lg mx-auto flex flex-col transition-colors duration-300 ${lightMode ? "parent-light" : ""}`}>
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-4 bg-card border-b border-border">
         <button
@@ -1913,9 +1922,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </p>
         </div>
         {!selectedSession && (
-          <button onClick={loadData} className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-            <RefreshCw className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={toggleLight}
+              className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all duration-200">
+              {lightMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            </button>
+            <button onClick={loadData} className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          </div>
         )}
       </div>
 

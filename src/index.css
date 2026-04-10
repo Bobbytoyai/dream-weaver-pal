@@ -54,6 +54,31 @@
   }
 }
 
+  /* ── Light theme for Parent Mode ── */
+  .parent-light {
+    --background: 0 0% 97%;
+    --foreground: 220 15% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 15%;
+    --primary: 210 90% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 260 50% 55%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 10% 92%;
+    --muted-foreground: 220 10% 45%;
+    --accent: 180 60% 45%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 80% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 10% 88%;
+    --input: 220 10% 88%;
+    --ring: 210 90% 50%;
+    --success: 145 60% 42%;
+    --success-foreground: 0 0% 100%;
+  }
+
 @layer base {
   * {
     @apply border-border;
