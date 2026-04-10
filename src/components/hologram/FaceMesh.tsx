@@ -69,14 +69,20 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   }), []);
 
   const irisMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color(`hsl(${colorHSL.h}, ${colorHSL.s}%, ${colorHSL.l - 15}%)`),
+    color: new THREE.Color(`hsl(25, 60%, 32%)`),
     transparent: true, opacity: 0.9,
-  }), [colorHSL]);
+  }), []);
 
   const irisInnerMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color(`hsl(${colorHSL.h}, ${colorHSL.s - 10}%, ${colorHSL.l}%)`),
+    color: new THREE.Color(`hsl(30, 50%, 42%)`),
     transparent: true, opacity: 0.8,
-  }), [colorHSL]);
+  }), []);
+
+  // Update iris colors when bobbyColor changes (no material recreation)
+  useEffect(() => {
+    irisMat.color.set(new THREE.Color(`hsl(${colorHSL.h}, ${colorHSL.s}%, ${colorHSL.l - 15}%)`));
+    irisInnerMat.color.set(new THREE.Color(`hsl(${colorHSL.h}, ${Math.max(0, colorHSL.s - 10)}%, ${colorHSL.l}%)`));
+  }, [colorHSL, irisMat, irisInnerMat]);
 
   const pupilMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("hsl(20, 50%, 8%)"),
