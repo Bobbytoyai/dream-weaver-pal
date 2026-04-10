@@ -1,4 +1,4 @@
-import { Suspense, useRef, useCallback, memo } from "react";
+import { Suspense, useRef, useCallback, useState, useEffect, memo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { FaceMesh } from "./FaceMesh";
 import { HologramParticles, ScanRing } from "./HologramEffects";
@@ -30,17 +30,23 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
   const tapCountRef = useRef(0);
   const tapTimerRef = useRef<number>(0);
 
+  // Wake animation: briefly show "attentive" face on wake
+  const [wakeFlash, setWakeFlash] = useState(false);
+  useEffect(() => {
+    const unsub = eventBus.on("WAKE_DETECTED", () => {
+      setWakeFlash(true);
+      setTimeout(() => setWakeFlash(false), 600);
+    });
+    return unsub;
+  }, []);
+
   const handleTap = useCallback(() => {
     const now = Date.now();
-    const lastTap = tapTimerRef.current as unknown as number || 0;
-    
-    // Reset if too much time between taps (must be fast deliberate taps)
-    if (now - lastTap > 400) {
+    if (now - tapTimerRef.current > 400) {
       tapCountRef.current = 0;
     }
-    
     tapCountRef.current++;
-    (tapTimerRef.current as unknown) = now;
+    tapTimerRef.current = now;
 
     eventBus.emit({ type: "TAP_TRIGGERED" });
 
@@ -51,7 +57,8 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
     }
   }, [onTripleTap]);
 
-  const faceState = mapToFaceState(voiceState);
+  // Map voice state → face state, with wake flash override
+  const faceState: FaceState = wakeFlash ? "attentive" : mapToFaceState(voiceState);
 
   return (
     <div
@@ -76,33 +83,21 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
         style={{ background: "transparent" }}
       >
         <Suspense fallback={null}>
-          {/* Dynamic lighting — shifts with state */}
           <ambientLight intensity={0.3} />
           <directionalLight
             position={[2, 3, 4]}
             intensity={voiceState === "speaking" ? 1.0 : 0.6}
             color={voiceState === "speaking" ? "#88ddff" : "#aaccee"}
           />
-          <directionalLight
-            position={[-2, 1, 3]}
-            intensity={0.3}
-            color="#8866cc"
-          />
+          <directionalLight position={[-2, 1, 3]} intensity={0.3} color="#8866cc" />
           <pointLight
             position={[0, 0, 3]}
             intensity={voiceState === "listening" ? 0.8 : 0.4}
             color="#66ccff"
             distance={8}
           />
-          {/* Rim light for holographic edge glow */}
-          <pointLight
-            position={[0, -2, 1]}
-            intensity={0.2}
-            color="#44ffcc"
-            distance={5}
-          />
+          <pointLight position={[0, -2, 1]} intensity={0.2} color="#44ffcc" distance={5} />
 
-          {/* KEY FIX: pass gazeRef (the ref itself) so it's read per-frame, not per-render */}
           <FaceScene faceState={faceState} gazeRef={gazeRef} getAmplitude={getAmplitude} />
           <HologramParticles intensity={voiceState === "speaking" ? 0.8 : voiceState === "listening" ? 0.5 : 0.25} />
           <ScanRing />
@@ -123,7 +118,6 @@ function FaceScene({ faceState, gazeRef, getAmplitude }: {
     amplitudeRef.current = getAmplitude();
   });
 
-  // Pass the REF itself to FaceMesh — it reads .current every frame inside useFrame
   return (
     <FaceMesh
       faceState={faceState}
