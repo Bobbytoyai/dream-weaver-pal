@@ -247,6 +247,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [piperDownloading, setPiperDownloading] = useState(false);
   const [piperProgress, setPiperProgress] = useState<Record<string, number>>({});
   const [piperDone, setPiperDone] = useState(false);
+  const [sessionSearch, setSessionSearch] = useState("");
+  const [sessionFavFilter, setSessionFavFilter] = useState(false);
+  const [editingNote, setEditingNote] = useState<string | null>(null);
+  const [noteText, setNoteText] = useState("");
 
   useEffect(() => { loadData(); }, []);
 
