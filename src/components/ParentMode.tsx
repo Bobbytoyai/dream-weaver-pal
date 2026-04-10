@@ -3,9 +3,9 @@ import {
   ArrowLeft, Clock, MessageSquare, Heart, Brain, Loader2, RefreshCw,
   Mic, BookOpen, Timer, Sparkles, Shield, Camera, Volume2, VolumeX,
   Play, Pause, AlertTriangle, TrendingUp, Trash2, ChevronRight, Gamepad2,
-  BarChart3, Calendar, User, Zap, Moon, Sun, Hand, Lock,
+  BarChart3, Calendar, User, Zap, Moon, Sun, Hand, Lock, Search,
   Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X,
-  SkipForward, SkipBack, Activity, Bell, ChevronDown, Star
+  SkipForward, SkipBack, Activity, Bell, ChevronDown, Star, Edit3
 } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
