@@ -199,6 +199,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
   const clearTimers = useCallback(() => {
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    if (utteranceFlushTimerRef.current) clearTimeout(utteranceFlushTimerRef.current);
   }, []);
 
   useEffect(() => {
