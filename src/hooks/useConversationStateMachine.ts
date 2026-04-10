@@ -543,6 +543,7 @@ export function useConversationStateMachine({
         // Soft reset: offline response, never silence
         const offlineResp = getOfflineResponse(userText, childName);
         speakAndListen(offlineResp.text || getFailsafeResponse());
+      }
     }
   }, [audioQueue, childAge, childName, clearAllTimers, conversationHistory, currentVoiceId, currentVoiceSpeed, goToListening, goToSpeaking, isCalmMode, memory, parentSettings, processSentenceForTTS, session, speakAndListen, startStuckTimer, transition]);
 
