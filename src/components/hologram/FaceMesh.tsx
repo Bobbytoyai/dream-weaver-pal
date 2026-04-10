@@ -103,14 +103,14 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   }), []);
 
   const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color(`hsl(${colorHSL.h}, 20%, 90%)`),
+    color: new THREE.Color("hsl(230, 25%, 90%)"),
     transparent: true, opacity: 0.92,
-  }), [colorHSL]);
+  }), []);
 
   const blushMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color(`hsl(${Math.min(colorHSL.h + 60, 360)}, 50%, 75%)`),
+    color: new THREE.Color("hsl(340, 60%, 75%)"),
     transparent: true, opacity: 0.25,
-  }), [colorHSL]);
+  }), []);
 
   // Manga eye shape geometry
   const mangaEyeGeo = useMemo(() => {
