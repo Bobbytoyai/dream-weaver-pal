@@ -884,6 +884,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
         </div>
       )}
+
+      {/* ═══ 2d. ANALYSE SEMAINE ═══ */}
+      {dailyInsights.length > 0 && (
         <div className="bg-card rounded-2xl p-4 border border-border/30">
           <div className="flex items-center gap-2 mb-3">
             <Star className="w-4 h-4 text-primary" />
