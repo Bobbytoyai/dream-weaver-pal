@@ -186,6 +186,12 @@ const PiperReadyToast = () => {
 // MAIN COMPONENT
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+interface PendingNarration {
+  storyId: string;
+  title: string;
+  text: string;
+}
+
 interface VoiceScreenProps {
   childName: string;
   childAge: number;
@@ -196,6 +202,8 @@ interface VoiceScreenProps {
   parentSettings?: ParentSettings;
   activeGameCategory?: string | null;
   onClearGame?: () => void;
+  pendingNarration?: PendingNarration | null;
+  onNarrationConsumed?: () => void;
 }
 
 const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onParentMode, onActivities, parentSettings, activeGameCategory, onClearGame }: VoiceScreenProps) => {
