@@ -3,7 +3,7 @@ import { BookOpen, Settings, Camera, Mic, MicOff } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import { useWakeWord } from "@/hooks/useWakeWord";
-import { ParentSettings } from "@/components/ParentMode";
+import { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
 import { setSfxVolume, initSfxEventBus } from "@/lib/sfx";
 import { useChildMemory } from "@/hooks/useChildMemory";
