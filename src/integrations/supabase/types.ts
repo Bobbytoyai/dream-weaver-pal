@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      child_memories: {
+        Row: {
+          child_name: string
+          created_at: string
+          favorite_themes: string[]
+          id: string
+          last_story_id: string | null
+          preferences: Json
+          total_stories_heard: number
+          updated_at: string
+        }
+        Insert: {
+          child_name: string
+          created_at?: string
+          favorite_themes?: string[]
+          id?: string
+          last_story_id?: string | null
+          preferences?: Json
+          total_stories_heard?: number
+          updated_at?: string
+        }
+        Update: {
+          child_name?: string
+          created_at?: string
+          favorite_themes?: string[]
+          id?: string
+          last_story_id?: string | null
+          preferences?: Json
+          total_stories_heard?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "child_memories_last_story_id_fkey"
+            columns: ["last_story_id"]
+            isOneToOne: false
+            referencedRelation: "story_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       child_sessions: {
         Row: {
           ai_summary: string | null
@@ -90,6 +131,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      story_templates: {
+        Row: {
+          age_max: number
+          age_min: number
+          created_at: string
+          duration: string
+          id: string
+          interactive: boolean
+          language: string
+          template_text: string
+          theme: string
+          title: string
+        }
+        Insert: {
+          age_max?: number
+          age_min?: number
+          created_at?: string
+          duration?: string
+          id?: string
+          interactive?: boolean
+          language?: string
+          template_text: string
+          theme: string
+          title: string
+        }
+        Update: {
+          age_max?: number
+          age_min?: number
+          created_at?: string
+          duration?: string
+          id?: string
+          interactive?: boolean
+          language?: string
+          template_text?: string
+          theme?: string
+          title?: string
+        }
+        Relationships: []
       }
     }
     Views: {
