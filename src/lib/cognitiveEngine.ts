@@ -610,6 +610,28 @@ function buildCognitivePromptContext(hints: Omit<CognitiveHints, "promptContext"
     parts.push(`Variation: ${hints.variationHint}`);
   }
 
+  // v4.0: Adaptive profile context
+  const profile = hints.adaptiveProfile;
+  if (profile.engagementTriggers.length > 0) {
+    parts.push(`Sujets favoris de l'enfant: ${profile.engagementTriggers.join(", ")}. Utilise-les pour personnaliser.`);
+  }
+  if (profile.behaviorPatterns.length > 0) {
+    parts.push(`Patterns observés: ${profile.behaviorPatterns.join(", ")}.`);
+  }
+  if (profile.learningSpeed === "fast") {
+    parts.push("L'enfant apprend vite. Tu peux augmenter la complexité plus rapidement.");
+  } else if (profile.learningSpeed === "slow") {
+    parts.push("L'enfant a besoin de temps. Répète, reformule, sois patient.");
+  }
+  if (profile.interactionStyle === "explorer") {
+    parts.push("L'enfant est un explorateur curieux. Propose des pistes de découverte, pose des questions ouvertes.");
+  } else if (profile.interactionStyle === "guided") {
+    parts.push("L'enfant préfère être guidé. Propose des choix simples plutôt que des questions ouvertes.");
+  }
+  if (profile.predictedNextIntent !== "unknown") {
+    parts.push(`L'enfant va probablement vouloir: ${profile.predictedNextIntent}. Tu peux anticiper.`);
+  }
+
   // Error handling (never say "wrong")
   parts.push("RÈGLE: Si l'enfant se trompe, ne dis JAMAIS 'faux' ou 'non'. Guide-le: 'Presque !', 'Bien essayé !', 'Regarde...'.");
 
@@ -705,13 +727,12 @@ export function recordUserTurn(userText: string, detectedEmotion?: string): Cogn
 }
 
 /** Get data to persist back to memory service */
-export function getPersistedCognitiveData(): {
-  progressionLevel: number;
-  interactionCount: number;
-  relationshipScore: number;
-  lastEmotions: string[];
-  emotionalHistory: Array<{ emotion: string; timestamp: string }>;
-} {
+export function getPersistedCognitiveData() {
+  const preferredTopics: Record<string, number> = {};
+  for (const [topic, entry] of Object.entries(state.engagementScores)) {
+    preferredTopics[topic] = entry.score;
+  }
+
   return {
     progressionLevel: state.progressionLevel,
     interactionCount: state.interactionCount,
@@ -721,5 +742,11 @@ export function getPersistedCognitiveData(): {
       emotion: e,
       timestamp: new Date().toISOString(),
     })),
+    // v4.0
+    engagementTriggers: state.engagementTriggers,
+    behaviorPatterns: state.behaviorPatterns,
+    learningSpeed: state.learningSpeed,
+    interactionStyle: state.interactionStyle,
+    preferredTopics,
   };
 }
