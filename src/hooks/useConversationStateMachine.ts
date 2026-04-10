@@ -22,7 +22,7 @@ import { isOffline, getOfflineResponse } from "@/lib/offlineEngine";
 import { useNetworkMode } from "@/hooks/useNetworkMode";
 import { orchestrate, refineExpression, getSilenceRelaunch } from "@/lib/orchestrator";
 import { getFailsafeResponse, getLatencyFiller, getSoftResetPhrase, reportModuleHealth, recordLatency, isHighLatency, isLowPower } from "@/lib/stabilityEngine";
-import { recordUserTurn, resetCognitiveState, getReengagePhrase, initFromMemory, getPersistedCognitiveData, type CognitiveHints } from "@/lib/cognitiveEngine";
+import { recordUserTurn, resetCognitiveState, getReengagePhrase, initFromMemory, getPersistedCognitiveData, recordIntent, type CognitiveHints } from "@/lib/cognitiveEngine";
 import { updateMemory } from "@/lib/memoryService";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -185,6 +185,11 @@ export function useConversationStateMachine({
         interactionCount: memory.interactionCount,
         relationshipScore: memory.relationshipScore,
         lastEmotions: memory.lastEmotions,
+        engagementTriggers: memory.engagementTriggers,
+        behaviorPatterns: memory.behaviorPatterns as string[],
+        learningSpeed: memory.learningSpeed,
+        interactionStyle: memory.interactionStyle,
+        preferredTopics: memory.preferredTopics,
       });
     }
   }, [memory]);
@@ -291,6 +296,11 @@ export function useConversationStateMachine({
         relationshipScore: cogData.relationshipScore,
         lastEmotions: cogData.lastEmotions,
         emotionalHistory: cogData.emotionalHistory,
+        engagementTriggers: cogData.engagementTriggers,
+        behaviorPatterns: cogData.behaviorPatterns,
+        learningSpeed: cogData.learningSpeed,
+        interactionStyle: cogData.interactionStyle,
+        preferredTopics: cogData.preferredTopics,
       }).catch(console.error);
 
       if (sessionId) {
@@ -506,6 +516,7 @@ export function useConversationStateMachine({
     }
 
     const detectedIntent = intent || detectIntent(userText);
+    recordIntent(detectedIntent);
     const mode = orchestratorHints?.aiMode || (detectedIntent === "story" ? "story" : detectedIntent === "game" ? "game" : "chat");
 
     // History already capped at MAX_HISTORY_LENGTH by setter; trim to last 10 for API speed

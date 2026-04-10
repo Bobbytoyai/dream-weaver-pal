@@ -16,50 +16,68 @@ export type Database = {
     Tables: {
       child_memories: {
         Row: {
+          behavior_patterns: Json
           child_name: string
           created_at: string
           emotional_history: Json
+          engagement_triggers: string[]
           favorite_themes: string[]
           id: string
           interaction_count: number
+          interaction_style: string
           last_emotions: string[]
           last_story_id: string | null
+          learning_speed: string
           preferences: Json
+          preferred_topics: Json
           privacy_mode: boolean | null
           progression_level: number
           relationship_score: number
+          session_patterns: Json
           total_stories_heard: number
           updated_at: string
         }
         Insert: {
+          behavior_patterns?: Json
           child_name: string
           created_at?: string
           emotional_history?: Json
+          engagement_triggers?: string[]
           favorite_themes?: string[]
           id?: string
           interaction_count?: number
+          interaction_style?: string
           last_emotions?: string[]
           last_story_id?: string | null
+          learning_speed?: string
           preferences?: Json
+          preferred_topics?: Json
           privacy_mode?: boolean | null
           progression_level?: number
           relationship_score?: number
+          session_patterns?: Json
           total_stories_heard?: number
           updated_at?: string
         }
         Update: {
+          behavior_patterns?: Json
           child_name?: string
           created_at?: string
           emotional_history?: Json
+          engagement_triggers?: string[]
           favorite_themes?: string[]
           id?: string
           interaction_count?: number
+          interaction_style?: string
           last_emotions?: string[]
           last_story_id?: string | null
+          learning_speed?: string
           preferences?: Json
+          preferred_topics?: Json
           privacy_mode?: boolean | null
           progression_level?: number
           relationship_score?: number
+          session_patterns?: Json
           total_stories_heard?: number
           updated_at?: string
         }

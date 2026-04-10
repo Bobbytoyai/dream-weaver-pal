@@ -16,6 +16,12 @@ export interface ChildMemory {
   relationshipScore: number;
   lastEmotions: string[];
   emotionalHistory: Array<{ emotion: string; timestamp: string }>;
+  // v4.0 adaptive profile
+  engagementTriggers: string[];
+  behaviorPatterns: string[];
+  learningSpeed: string;
+  interactionStyle: string;
+  preferredTopics: Record<string, number>;
 }
 
 const memoryCache = new Map<string, ChildMemory>();
@@ -32,23 +38,28 @@ export async function loadMemory(childName: string): Promise<ChildMemory> {
     .maybeSingle();
 
   if (data) {
+    const d = data as any;
     const memory: ChildMemory = {
-      childName: data.child_name,
-      preferences: (data.preferences as Record<string, unknown>) || {},
-      favoriteThemes: data.favorite_themes || [],
-      lastStoryId: data.last_story_id,
-      totalStoriesHeard: data.total_stories_heard,
-      progressionLevel: (data as any).progression_level ?? 1,
-      interactionCount: (data as any).interaction_count ?? 0,
-      relationshipScore: (data as any).relationship_score ?? 0,
-      lastEmotions: (data as any).last_emotions ?? [],
-      emotionalHistory: ((data as any).emotional_history as any[]) ?? [],
+      childName: d.child_name,
+      preferences: (d.preferences as Record<string, unknown>) || {},
+      favoriteThemes: d.favorite_themes || [],
+      lastStoryId: d.last_story_id,
+      totalStoriesHeard: d.total_stories_heard,
+      progressionLevel: d.progression_level ?? 1,
+      interactionCount: d.interaction_count ?? 0,
+      relationshipScore: d.relationship_score ?? 0,
+      lastEmotions: d.last_emotions ?? [],
+      emotionalHistory: (d.emotional_history as any[]) ?? [],
+      engagementTriggers: d.engagement_triggers ?? [],
+      behaviorPatterns: (d.behavior_patterns as string[]) ?? [],
+      learningSpeed: d.learning_speed ?? "normal",
+      interactionStyle: d.interaction_style ?? "balanced",
+      preferredTopics: (d.preferred_topics as Record<string, number>) ?? {},
     };
     memoryCache.set(childName, memory);
     return memory;
   }
 
-  // Create new memory
   const newMemory: ChildMemory = {
     childName,
     preferences: {},
@@ -60,6 +71,11 @@ export async function loadMemory(childName: string): Promise<ChildMemory> {
     relationshipScore: 0,
     lastEmotions: [],
     emotionalHistory: [],
+    engagementTriggers: [],
+    behaviorPatterns: [],
+    learningSpeed: "normal",
+    interactionStyle: "balanced",
+    preferredTopics: {},
   };
 
   await supabase.from("child_memories").insert({
@@ -76,7 +92,7 @@ export async function loadMemory(childName: string): Promise<ChildMemory> {
 /** Update a memory field and persist */
 export async function updateMemory(
   childName: string,
-  updates: Partial<Pick<ChildMemory, "preferences" | "favoriteThemes" | "lastStoryId" | "totalStoriesHeard" | "progressionLevel" | "interactionCount" | "relationshipScore" | "lastEmotions" | "emotionalHistory">>
+  updates: Partial<Omit<ChildMemory, "childName">>
 ) {
   const current = await loadMemory(childName);
   const updated = { ...current, ...updates };
@@ -93,6 +109,11 @@ export async function updateMemory(
   if (updates.relationshipScore !== undefined) dbUpdates.relationship_score = updates.relationshipScore;
   if (updates.lastEmotions !== undefined) dbUpdates.last_emotions = updates.lastEmotions;
   if (updates.emotionalHistory !== undefined) dbUpdates.emotional_history = updates.emotionalHistory;
+  if (updates.engagementTriggers !== undefined) dbUpdates.engagement_triggers = updates.engagementTriggers;
+  if (updates.behaviorPatterns !== undefined) dbUpdates.behavior_patterns = updates.behaviorPatterns;
+  if (updates.learningSpeed !== undefined) dbUpdates.learning_speed = updates.learningSpeed;
+  if (updates.interactionStyle !== undefined) dbUpdates.interaction_style = updates.interactionStyle;
+  if (updates.preferredTopics !== undefined) dbUpdates.preferred_topics = updates.preferredTopics;
 
   await supabase
     .from("child_memories")

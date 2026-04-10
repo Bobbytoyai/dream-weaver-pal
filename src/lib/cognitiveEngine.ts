@@ -1,8 +1,9 @@
 /**
- * Bobby Cognitive & Behavioral Intelligence Engine v3.0
+ * Bobby Adaptive Intelligence Core v4.0 — GOD MODE
  * 
  * Tracks: attention, fatigue, energy, progression, emotional memory,
- * meta-comprehension, motivation, and relationship depth.
+ * meta-comprehension, motivation, relationship depth, engagement patterns,
+ * prediction, learning speed, and behavioral adaptation.
  */
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -13,6 +14,25 @@ export type AttentionLevel = "high" | "medium" | "low" | "lost";
 export type FatigueLevel = "fresh" | "normal" | "tired" | "exhausted";
 export type ChildEnergy = "calm" | "balanced" | "energetic";
 export type SilenceType = "thinking" | "distracted" | "unknown";
+export type LearningSpeed = "slow" | "normal" | "fast";
+export type InteractionStyle = "explorer" | "guided" | "balanced";
+export type PredictedIntent = "story" | "game" | "question" | "chat" | "emotion" | "unknown";
+
+export interface EngagementEntry {
+  topic: string;
+  mode: string;
+  score: number; // 0-100
+  count: number;
+}
+
+export interface AdaptiveProfile {
+  learningSpeed: LearningSpeed;
+  interactionStyle: InteractionStyle;
+  engagementTriggers: string[];
+  behaviorPatterns: string[];
+  preferredTopics: Record<string, number>; // topic → engagement score
+  predictedNextIntent: PredictedIntent;
+}
 
 export interface CognitiveState {
   attention: AttentionLevel;
@@ -25,16 +45,24 @@ export interface CognitiveState {
   repetitionCount: number;
   lastUserMessageTime: number;
   sessionStartTime: number;
-  // v3.0 additions
-  progressionLevel: number; // 1-10
-  comprehensionSignals: number; // positive = understands, negative = confused
-  emotionHistory: string[]; // last N emotions this session
-  motivationScore: number; // 0-100
-  relationshipDepth: number; // 0-100, grows across sessions
-  interactionCount: number; // total across all sessions
+  progressionLevel: number;
+  comprehensionSignals: number;
+  emotionHistory: string[];
+  motivationScore: number;
+  relationshipDepth: number;
+  interactionCount: number;
   lastSilenceType: SilenceType;
-  consecutiveErrors: number; // child giving "wrong" answers in games
-  variationSeed: number; // changes each turn for behavioral variation
+  consecutiveErrors: number;
+  variationSeed: number;
+  // v4.0
+  engagementScores: Record<string, EngagementEntry>;
+  currentMode: string;
+  currentTopics: string[];
+  intentHistory: string[];
+  learningSpeed: LearningSpeed;
+  interactionStyle: InteractionStyle;
+  engagementTriggers: string[];
+  behaviorPatterns: string[];
 }
 
 export interface CognitiveHints {
@@ -45,7 +73,6 @@ export interface CognitiveHints {
   shouldReengage: boolean;
   reengageStrategy?: "game" | "question" | "break" | "story";
   promptContext: string;
-  // v3.0
   progressionLevel: number;
   shouldSimplify: boolean;
   shouldEncourage: boolean;
@@ -53,6 +80,9 @@ export interface CognitiveHints {
   emotionalTrend: "improving" | "stable" | "declining" | "unknown";
   relationshipPhase: "new" | "growing" | "established" | "deep";
   variationHint: string;
+  // v4.0
+  adaptiveProfile: AdaptiveProfile;
+  predictedIntent: PredictedIntent;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -82,6 +112,15 @@ function createFreshState(): CognitiveState {
     lastSilenceType: "unknown",
     consecutiveErrors: 0,
     variationSeed: 0,
+    // v4.0
+    engagementScores: {},
+    currentMode: "chat",
+    currentTopics: [],
+    intentHistory: [],
+    learningSpeed: "normal",
+    interactionStyle: "balanced",
+    engagementTriggers: [],
+    behaviorPatterns: [],
   };
 }
 
@@ -99,11 +138,25 @@ export function initFromMemory(data: {
   interactionCount?: number;
   relationshipScore?: number;
   lastEmotions?: string[];
+  engagementTriggers?: string[];
+  behaviorPatterns?: string[];
+  learningSpeed?: string;
+  interactionStyle?: string;
+  preferredTopics?: Record<string, number>;
 }): void {
   if (data.progressionLevel) state.progressionLevel = data.progressionLevel;
   if (data.interactionCount) state.interactionCount = data.interactionCount;
   if (data.relationshipScore) state.relationshipDepth = data.relationshipScore;
   if (data.lastEmotions?.length) state.emotionHistory = data.lastEmotions.slice(0, 5);
+  if (data.engagementTriggers?.length) state.engagementTriggers = data.engagementTriggers;
+  if (data.behaviorPatterns?.length) state.behaviorPatterns = data.behaviorPatterns;
+  if (data.learningSpeed) state.learningSpeed = data.learningSpeed as LearningSpeed;
+  if (data.interactionStyle) state.interactionStyle = data.interactionStyle as InteractionStyle;
+  if (data.preferredTopics) {
+    for (const [topic, score] of Object.entries(data.preferredTopics)) {
+      state.engagementScores[topic] = { topic, mode: "chat", score, count: 1 };
+    }
+  }
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -251,7 +304,159 @@ function getRelationshipPhase(): "new" | "growing" | "established" | "deep" {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// REPETITION
+// v4.0: ENGAGEMENT TRACKING
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const TOPIC_KEYWORDS: Record<string, string[]> = {
+  animaux: ["animal", "chien", "chat", "lion", "oiseau", "dinosaure", "dragon", "poisson"],
+  espace: ["étoile", "planète", "fusée", "lune", "soleil", "astronaute", "cosmos"],
+  pirates: ["pirate", "bateau", "trésor", "mer", "île", "capitaine"],
+  magie: ["magie", "sorcier", "fée", "baguette", "sort", "potion"],
+  science: ["robot", "science", "expérience", "invention", "code", "techno"],
+  nature: ["forêt", "montagne", "fleur", "arbre", "rivière", "jardin"],
+  musique: ["musique", "chanson", "instrument", "piano", "guitare", "danse"],
+};
+
+function detectTopics(text: string): string[] {
+  const lower = text.toLowerCase();
+  const found: string[] = [];
+  for (const [topic, keywords] of Object.entries(TOPIC_KEYWORDS)) {
+    if (keywords.some(kw => lower.includes(kw))) found.push(topic);
+  }
+  return found;
+}
+
+function updateEngagement(userText: string): void {
+  const topics = detectTopics(userText);
+  state.currentTopics = topics;
+  const msgLen = userText.trim().split(/\s+/).length;
+  const engagementScore = Math.min(100, msgLen * 8 + (state.attention === "high" ? 20 : 0));
+
+  for (const topic of topics) {
+    const existing = state.engagementScores[topic];
+    if (existing) {
+      existing.score = Math.round((existing.score * existing.count + engagementScore) / (existing.count + 1));
+      existing.count++;
+      existing.mode = state.currentMode;
+    } else {
+      state.engagementScores[topic] = { topic, mode: state.currentMode, score: engagementScore, count: 1 };
+    }
+  }
+
+  // Update triggers: topics with high engagement
+  state.engagementTriggers = Object.values(state.engagementScores)
+    .filter(e => e.score > 60 && e.count >= 2)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5)
+    .map(e => e.topic);
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// v4.0: LEARNING SPEED DETECTION
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function updateLearningSpeed(): void {
+  // Based on how fast comprehension signals improve
+  if (state.turnCount < 5) return;
+  const progressRate = state.progressionLevel / Math.max(1, state.interactionCount / 20);
+  if (progressRate > 1.5) state.learningSpeed = "fast";
+  else if (progressRate < 0.5) state.learningSpeed = "slow";
+  else state.learningSpeed = "normal";
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// v4.0: PREDICTION ENGINE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function predictNextIntent(): PredictedIntent {
+  const history = state.intentHistory.slice(-5);
+  if (history.length < 2) return "unknown";
+
+  // Count frequencies
+  const freq: Record<string, number> = {};
+  for (const intent of history) {
+    freq[intent] = (freq[intent] || 0) + 1;
+  }
+
+  // If child keeps asking for stories → predict story
+  const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);
+  if (sorted[0] && sorted[0][1] >= 2) return sorted[0][0] as PredictedIntent;
+
+  // Engagement-based prediction
+  if (state.engagementTriggers.length > 0) {
+    const topTrigger = state.engagementTriggers[0];
+    if (topTrigger === "animaux" || topTrigger === "pirates" || topTrigger === "magie") return "story";
+    if (topTrigger === "science") return "question";
+  }
+
+  return "unknown";
+}
+
+/** Record the detected intent for prediction */
+export function recordIntent(intent: string): void {
+  state.intentHistory.push(intent);
+  if (state.intentHistory.length > 20) state.intentHistory.shift();
+  state.currentMode = intent;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// v4.0: BEHAVIOR PATTERN DETECTION
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function detectBehaviorPatterns(): void {
+  const patterns: string[] = [];
+
+  // Time-based patterns
+  const hour = new Date().getHours();
+  if (hour >= 19 && state.energy === "calm") patterns.push("calme le soir");
+  if (hour < 10 && state.energy === "energetic") patterns.push("énergique le matin");
+
+  // Topic preferences
+  const topTopics = Object.values(state.engagementScores)
+    .filter(e => e.count >= 3 && e.score > 50)
+    .map(e => `aime ${e.topic}`);
+  patterns.push(...topTopics.slice(0, 3));
+
+  // Interaction style detection
+  if (state.recentMessageLengths.slice(-10).every(l => l > 10)) {
+    state.interactionStyle = "explorer";
+    patterns.push("explorateur curieux");
+  } else if (state.comprehensionSignals < -2) {
+    state.interactionStyle = "guided";
+    patterns.push("préfère être guidé");
+  }
+
+  // Emotional patterns
+  const sadCount = state.emotionHistory.filter(e => e === "sad").length;
+  const happyCount = state.emotionHistory.filter(e => e === "happy" || e === "excited").length;
+  if (sadCount > 3) patterns.push("tendance émotionnelle sensible");
+  if (happyCount > 5) patterns.push("globalement joyeux");
+
+  state.behaviorPatterns = [...new Set(patterns)].slice(0, 8);
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// v4.0: ADAPTIVE PROFILE BUILDER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function buildAdaptiveProfile(): AdaptiveProfile {
+  detectBehaviorPatterns();
+
+  const preferredTopics: Record<string, number> = {};
+  for (const [topic, entry] of Object.entries(state.engagementScores)) {
+    preferredTopics[topic] = entry.score;
+  }
+
+  return {
+    learningSpeed: state.learningSpeed,
+    interactionStyle: state.interactionStyle,
+    engagementTriggers: state.engagementTriggers,
+    behaviorPatterns: state.behaviorPatterns,
+    preferredTopics,
+    predictedNextIntent: predictNextIntent(),
+  };
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const recentUserTexts: string[] = [];
@@ -405,6 +610,28 @@ function buildCognitivePromptContext(hints: Omit<CognitiveHints, "promptContext"
     parts.push(`Variation: ${hints.variationHint}`);
   }
 
+  // v4.0: Adaptive profile context
+  const profile = hints.adaptiveProfile;
+  if (profile.engagementTriggers.length > 0) {
+    parts.push(`Sujets favoris de l'enfant: ${profile.engagementTriggers.join(", ")}. Utilise-les pour personnaliser.`);
+  }
+  if (profile.behaviorPatterns.length > 0) {
+    parts.push(`Patterns observés: ${profile.behaviorPatterns.join(", ")}.`);
+  }
+  if (profile.learningSpeed === "fast") {
+    parts.push("L'enfant apprend vite. Tu peux augmenter la complexité plus rapidement.");
+  } else if (profile.learningSpeed === "slow") {
+    parts.push("L'enfant a besoin de temps. Répète, reformule, sois patient.");
+  }
+  if (profile.interactionStyle === "explorer") {
+    parts.push("L'enfant est un explorateur curieux. Propose des pistes de découverte, pose des questions ouvertes.");
+  } else if (profile.interactionStyle === "guided") {
+    parts.push("L'enfant préfère être guidé. Propose des choix simples plutôt que des questions ouvertes.");
+  }
+  if (profile.predictedNextIntent !== "unknown") {
+    parts.push(`L'enfant va probablement vouloir: ${profile.predictedNextIntent}. Tu peux anticiper.`);
+  }
+
   // Error handling (never say "wrong")
   parts.push("RÈGLE: Si l'enfant se trompe, ne dis JAMAIS 'faux' ou 'non'. Guide-le: 'Presque !', 'Bien essayé !', 'Regarde...'.");
 
@@ -459,6 +686,8 @@ export function recordUserTurn(userText: string, detectedEmotion?: string): Cogn
   // Update derived metrics
   updateProgression();
   updateMotivation();
+  updateEngagement(userText);
+  updateLearningSpeed();
 
   // Relationship grows with each interaction
   state.relationshipDepth = Math.min(100, state.relationshipDepth + 0.5);
@@ -470,6 +699,8 @@ export function recordUserTurn(userText: string, detectedEmotion?: string): Cogn
   const emotionalTrend = detectEmotionalTrend();
   const relationshipPhase = getRelationshipPhase();
   const variationHint = getVariationHint();
+  const predictedIntent = predictNextIntent();
+  const adaptiveProfile = buildAdaptiveProfile();
 
   const partial: Omit<CognitiveHints, "promptContext"> = {
     attention,
@@ -485,6 +716,8 @@ export function recordUserTurn(userText: string, detectedEmotion?: string): Cogn
     emotionalTrend,
     relationshipPhase,
     variationHint,
+    adaptiveProfile,
+    predictedIntent,
   };
 
   return {
@@ -494,13 +727,12 @@ export function recordUserTurn(userText: string, detectedEmotion?: string): Cogn
 }
 
 /** Get data to persist back to memory service */
-export function getPersistedCognitiveData(): {
-  progressionLevel: number;
-  interactionCount: number;
-  relationshipScore: number;
-  lastEmotions: string[];
-  emotionalHistory: Array<{ emotion: string; timestamp: string }>;
-} {
+export function getPersistedCognitiveData() {
+  const preferredTopics: Record<string, number> = {};
+  for (const [topic, entry] of Object.entries(state.engagementScores)) {
+    preferredTopics[topic] = entry.score;
+  }
+
   return {
     progressionLevel: state.progressionLevel,
     interactionCount: state.interactionCount,
@@ -510,5 +742,11 @@ export function getPersistedCognitiveData(): {
       emotion: e,
       timestamp: new Date().toISOString(),
     })),
+    // v4.0
+    engagementTriggers: state.engagementTriggers,
+    behaviorPatterns: state.behaviorPatterns,
+    learningSpeed: state.learningSpeed,
+    interactionStyle: state.interactionStyle,
+    preferredTopics,
   };
 }
