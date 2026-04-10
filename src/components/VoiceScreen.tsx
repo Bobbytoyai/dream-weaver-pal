@@ -3,7 +3,6 @@ import { BookOpen, Settings, Camera, Mic, MicOff } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue, preloadVoiceProfile, detectEmotionForTTS } from "@/lib/voicePipeline";
 import type { Emotion } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
-import { useWakeWord } from "@/hooks/useWakeWord";
 import { useDeepgramSTT } from "@/hooks/useDeepgramSTT";
 import { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
@@ -59,6 +58,12 @@ function isJustWakeWord(text: string): boolean {
   return stripped.length < 3 || /^[?,!.\s]*$/.test(stripped);
 }
 
+const WAKE_RE = /\b(bobby|boby|bobbie|bobi|bob y|bo bi|babi|bobé|buby|bubby)\b/i;
+
+function hasWakeWord(text: string): boolean {
+  return WAKE_RE.test(text);
+}
+
 const recentBobbyTextsRef = { current: [] as string[] };
 
 function normalizeForComparison(text: string): string {
@@ -83,8 +88,6 @@ function isEcho(transcript: string): boolean {
 
   return false;
 }
-
-// Deepgram STT replaces useContinuousListening — see integration below
 
 interface VoiceScreenProps {
   childName: string;
@@ -138,10 +141,9 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const [state, setState] = useState<VoiceState>("idle");
   const [conversationHistory, setConversationHistory] = useState<AiMsg[]>([]);
   const [partialText, setPartialText] = useState("");
-  const [micStatus, setMicStatus] = useState<"ready" | "blocked" | "active">("ready");
+  const [micArmed, setMicArmed] = useState(false);
   const currentEmotionRef = useRef<Emotion | undefined>(undefined);
 
-  // Preload voice profile on mount and on switch for instant first response
   useEffect(() => {
     preloadVoiceProfile(currentVoiceId as any);
   }, [currentVoiceId]);
@@ -159,12 +161,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const { memory, loading, saveSettings } = useChildMemory(childName);
   const recorder = useConversationRecorder();
 
-  const wakeWordEnabled = (state === "idle" || state === "session_end") && !conversationActiveRef.current;
-  const [continuousListenEnabled, setContinuousListenEnabled] = useState(false);
-
-  useEffect(() => {
-    initSfxEventBus();
-  }, []);
+  useEffect(() => { initSfxEventBus(); }, []);
 
   const prevStateRef = useRef<VoiceState>("idle");
   useEffect(() => {
@@ -173,13 +170,8 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     prevStateRef.current = state;
   }, [state]);
 
-  useEffect(() => {
-    stateRef.current = state;
-  }, [state]);
-
-  useEffect(() => {
-    setSfxVolume(parentSettings?.sfxVolume ?? 0.7);
-  }, [parentSettings?.sfxVolume]);
+  useEffect(() => { stateRef.current = state; }, [state]);
+  useEffect(() => { setSfxVolume(parentSettings?.sfxVolume ?? 0.7); }, [parentSettings?.sfxVolume]);
 
   const clearTimers = useCallback(() => {
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
@@ -200,9 +192,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const endConversation = useCallback(async () => {
     clearTimers();
     conversationActiveRef.current = false;
-    setContinuousListenEnabled(false);
-    setMicStatus("ready");
-    setState("session_end");
+    setState("idle");
 
     if (sessionStartedRef.current) {
       const messageCount = session.messageCountRef?.current ?? 0;
@@ -230,14 +220,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
   const goToListening = useCallback(() => {
     setState("listening");
-    setMicStatus("active");
     setPartialText("");
-    // Shorter delay for snappier conversation feel
-    setTimeout(() => {
-      if (stateRef.current === "listening") {
-        setContinuousListenEnabled(true);
-      }
-    }, 400);
     startSilenceTimers();
   }, [startSilenceTimers]);
 
@@ -245,15 +228,14 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     const fallbackText = FALLBACK_FR[key] || FALLBACK_FR.error;
     if (!fallbackText) {
       if (key === "session_end") {
-        setState("session_end");
-        setContinuousListenEnabled(false);
+        setState("idle");
+        conversationActiveRef.current = false;
       }
       return;
     }
 
     try {
       setState("speaking");
-      setContinuousListenEnabled(false);
       eventBus.emit({ type: "SPEECH_START" });
       recentBobbyTextsRef.current = [fallbackText, ...recentBobbyTextsRef.current].slice(0, 5);
       const url = await fetchTTSAudio(fallbackText, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode);
@@ -261,9 +243,8 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       audioQueue.setOnAllDone(() => {
         eventBus.emit({ type: "SPEECH_STOP" });
         if (key === "session_end") {
-          setState("session_end");
+          setState("idle");
           conversationActiveRef.current = false;
-          setContinuousListenEnabled(false);
         } else {
           goToListening();
         }
@@ -271,7 +252,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     } catch {
       setState("idle");
     }
-  }, [audioQueue, goToListening]);
+  }, [audioQueue, goToListening, currentVoiceId, currentVoiceSpeed, isCalmMode]);
 
   const interrupt = useCallback(() => {
     abortRef.current?.abort();
@@ -284,19 +265,16 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const processSentenceForTTS = useCallback(async (sentence: string, signal?: AbortSignal) => {
     pendingSentencesRef.current++;
     recentBobbyTextsRef.current = [sentence, ...recentBobbyTextsRef.current].slice(0, 8);
-
-    // Detect emotion from Bobby's response for expressive TTS
     const responseEmotion = detectEmotionForTTS(sentence) || currentEmotionRef.current;
 
     try {
       const url = await fetchTTSAudio(sentence, signal, currentVoiceId, responseEmotion, currentVoiceSpeed, isCalmMode);
       if (!signal?.aborted) {
         setState("speaking");
-        setContinuousListenEnabled(false);
         audioQueue.enqueue(url);
       }
     } catch {
-      // ignore and continue
+      // ignore
     } finally {
       pendingSentencesRef.current--;
       if (pendingSentencesRef.current === 0 && allSentencesDoneRef.current) {
@@ -306,16 +284,14 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         });
       }
     }
-  }, [audioQueue, currentVoiceId, goToListening]);
+  }, [audioQueue, currentVoiceId, currentVoiceSpeed, isCalmMode, goToListening]);
 
   const getAIResponse = useCallback(async (userText: string, intent?: Intent) => {
     setState("processing");
     clearTimers();
-    setContinuousListenEnabled(false);
     setPartialText("");
 
     const emotion = detectEmotion(userText);
-    // Store emotion for TTS modulation
     currentEmotionRef.current = (emotion as Emotion) || detectEmotionForTTS(userText);
     session.addMessage("user", userText, emotion);
     eventBus.emit({ type: "VOICE_INPUT", transcript: userText });
@@ -333,7 +309,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     allSentencesDoneRef.current = false;
     pendingSentencesRef.current = 0;
 
-    // Build memory context for bobby-brain
     const memoryParts: string[] = [];
     if (memory) {
       if (memory.favoriteThemes.length > 0) memoryParts.push(`Thèmes favoris: ${memory.favoriteThemes.join(", ")}`);
@@ -346,7 +321,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     }
     const memoryContext = memoryParts.length > 0 ? memoryParts.join("\n") : undefined;
 
-    // Timeout safety: if no response in 12s, recover
     const recoveryTimer = setTimeout(() => {
       if (stateRef.current === "processing") {
         console.warn("[VoiceScreen] AI response timeout — recovering");
@@ -385,7 +359,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
               goToListening();
             });
           }
-          // If no sentences were produced (empty response), go back to listening
           if (!text || text.trim().length === 0) {
             goToListening();
           }
@@ -403,36 +376,92 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     }
   }, [audioQueue, childAge, childName, clearTimers, conversationHistory, goToListening, memory, parentSettings, processSentenceForTTS, session, speakFallback]);
 
-  const handleContinuousResult = useCallback((text: string) => {
-    console.log("[VoiceScreen] Continuous result:", text, "state:", stateRef.current);
-    clearTimers();
+  // ─── Unified Deepgram handler — wake word + conversation ───
 
-    // If Bobby is currently speaking or processing, interrupt
-    if (stateRef.current === "speaking" || stateRef.current === "processing") {
-      interrupt();
-    }
+  const handleTranscript = useCallback((text: string) => {
+    const trimmed = text.trim();
+    if (trimmed.length < 2) return;
+    console.log("[VoiceScreen] Transcript:", trimmed, "state:", stateRef.current);
 
-    // Echo detection — skip if Bobby just said this
-    if (isEcho(text)) {
-      console.log("[VoiceScreen] Echo detected, ignoring:", text);
-      startSilenceTimers();
+    // Skip echoes (Bobby hearing himself)
+    if (isEcho(trimmed)) {
+      console.log("[VoiceScreen] Echo — ignoring");
       return;
     }
 
-    const hasWake = /\b(bobby|boby|bobbie|bobi)\b/i.test(text);
-    const cleaned = hasWake ? stripWakeWord(text) : text;
+    const wake = hasWakeWord(trimmed);
+
+    // ─── IDLE / SESSION_END: wake word mode ───
+    if (stateRef.current === "idle" || stateRef.current === "session_end") {
+      if (!wake) {
+        // No wake word → show partial but ignore
+        return;
+      }
+
+      // Wake word detected!
+      console.log("[VoiceScreen] 🎤 Wake word detected!");
+      eventBus.emit({ type: "WAKE_DETECTED", confidence: 0.9 });
+
+      if (!sessionStartedRef.current) {
+        session.startSession();
+        sessionStartedRef.current = true;
+        recorder.startRecording();
+        eventBus.emit({ type: "SESSION_START" });
+      }
+      conversationActiveRef.current = true;
+      eventBus.emit({ type: "WAKE_TRIGGERED" });
+
+      // Just wake word alone → greet
+      if (isJustWakeWord(trimmed)) {
+        speakFallback("wake_greeting");
+        return;
+      }
+
+      // Wake word + message → respond directly
+      const command = stripWakeWord(trimmed);
+      console.log("[VoiceScreen] Command after wake:", command);
+
+      if (isSimpleGreeting(command)) {
+        const cached = getCachedResponse("greeting");
+        setState("speaking");
+        eventBus.emit({ type: "SPEECH_START" });
+        recentBobbyTextsRef.current = [cached, ...recentBobbyTextsRef.current].slice(0, 8);
+        fetchTTSAudio(cached, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode).then(url => {
+          audioQueue.enqueue(url);
+          audioQueue.setOnAllDone(() => {
+            eventBus.emit({ type: "SPEECH_STOP" });
+            goToListening();
+          });
+        }).catch(() => goToListening());
+        setConversationHistory(prev => [...prev, { role: "user", content: command }, { role: "assistant", content: cached }]);
+        session.addMessage("user", command);
+        session.addMessage("assistant", cached);
+        return;
+      }
+
+      getAIResponse(command);
+      return;
+    }
+
+    // ─── SPEAKING / PROCESSING: user interrupts ───
+    if (stateRef.current === "speaking" || stateRef.current === "processing") {
+      interrupt();
+      // Fall through to handle as conversation input
+    }
+
+    // ─── LISTENING / INTERRUPTED: conversation mode ───
+    clearTimers();
+    const cleaned = wake ? stripWakeWord(trimmed) : trimmed;
 
     if (cleaned.length < 3) {
-      if (hasWake) speakFallback("wake_greeting");
+      if (wake) speakFallback("wake_greeting");
       else startSilenceTimers();
       return;
     }
 
-    // Use cached response for simple greetings (instant, no LLM call)
     if (isSimpleGreeting(cleaned)) {
       const cached = getCachedResponse("greeting");
       setState("speaking");
-      setContinuousListenEnabled(false);
       eventBus.emit({ type: "SPEECH_START" });
       recentBobbyTextsRef.current = [cached, ...recentBobbyTextsRef.current].slice(0, 8);
       fetchTTSAudio(cached, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode).then(url => {
@@ -449,94 +478,67 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     }
 
     getAIResponse(cleaned);
-  }, [audioQueue, clearTimers, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, interrupt, isCalmMode, session, speakFallback, startSilenceTimers]);
+  }, [audioQueue, clearTimers, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, interrupt, isCalmMode, recorder, session, speakFallback, startSilenceTimers]);
 
-  // Deepgram STT for continuous listening (replaces Web Speech API)
+  // ─── Single Deepgram STT — always on when mic is armed ───
   const deepgramSTT = useDeepgramSTT({
     onPartial: useCallback((text: string) => {
-      if (continuousListenEnabled) {
-        setPartialText(text);
-      }
-    }, [continuousListenEnabled]),
+      setPartialText(text);
+    }, []),
     onFinal: useCallback((text: string) => {
-      if (continuousListenEnabled && text.trim().length > 2) {
+      if (text.trim().length > 2) {
         setPartialText("");
-        handleContinuousResult(text.trim());
+        handleTranscript(text.trim());
       }
-    }, [continuousListenEnabled, handleContinuousResult]),
+    }, [handleTranscript]),
     onError: useCallback(() => {
-      console.warn("[Deepgram] STT error, will retry on next listen cycle");
+      console.warn("[Deepgram] STT error — will retry");
     }, []),
     language: "fr",
   });
 
+  // Start/stop Deepgram based on micArmed AND not speaking
+  const shouldListen = micArmed && state !== "speaking" && state !== "processing";
+  const shouldListenRef = useRef(shouldListen);
+  shouldListenRef.current = shouldListen;
+
   useEffect(() => {
-    if (continuousListenEnabled) {
+    if (shouldListen) {
       deepgramSTT.start();
     } else {
       deepgramSTT.stop();
     }
-  }, [continuousListenEnabled, deepgramSTT]);
+  }, [shouldListen, deepgramSTT]);
 
-  const handleWake = useCallback((transcript: string) => {
-    console.log("[VoiceScreen] Wake detected:", transcript);
-    
-    if (stateRef.current === "speaking" || stateRef.current === "processing") {
-      interrupt();
-    }
+  // ─── Tap to arm microphone (browser policy) ───
+  const armMic = useCallback(() => {
+    if (micArmed) return;
+    console.log("[VoiceScreen] 🎙️ Mic armed by user gesture");
+    setMicArmed(true);
+  }, [micArmed]);
 
-    if (!sessionStartedRef.current) {
-      session.startSession();
-      sessionStartedRef.current = true;
-      recorder.startRecording();
-      eventBus.emit({ type: "SESSION_START" });
-    }
+  const handleTapBobby = useCallback(() => {
+    if (stateRef.current === "speaking" || stateRef.current === "processing") return;
 
-    conversationActiveRef.current = true;
-    eventBus.emit({ type: "WAKE_TRIGGERED" });
+    // First tap ever: arm the microphone
+    armMic();
 
-    // If user just said "Bobby" alone → greet and listen
-    if (isJustWakeWord(transcript)) {
+    // If idle/session_end → start conversation immediately
+    if (stateRef.current === "idle" || stateRef.current === "session_end") {
+      if (!sessionStartedRef.current) {
+        session.startSession();
+        sessionStartedRef.current = true;
+        recorder.startRecording();
+        eventBus.emit({ type: "SESSION_START" });
+      }
+      conversationActiveRef.current = true;
+      eventBus.emit({ type: "WAKE_TRIGGERED" });
+      eventBus.emit({ type: "WAKE_DETECTED", confidence: 1.0 });
       speakFallback("wake_greeting");
-      return;
     }
-
-    // User said "Bobby + message" → respond directly to the message
-    const command = stripWakeWord(transcript);
-    console.log("[VoiceScreen] Processing command:", command);
-    
-    // Check if it's a simple greeting for instant response
-    if (isSimpleGreeting(command)) {
-      const cached = getCachedResponse("greeting");
-      setState("speaking");
-      setContinuousListenEnabled(false);
-      eventBus.emit({ type: "SPEECH_START" });
-      recentBobbyTextsRef.current = [cached, ...recentBobbyTextsRef.current].slice(0, 8);
-      fetchTTSAudio(cached, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode).then(url => {
-        audioQueue.enqueue(url);
-        audioQueue.setOnAllDone(() => {
-          eventBus.emit({ type: "SPEECH_STOP" });
-          goToListening();
-        });
-      }).catch(() => goToListening());
-      setConversationHistory(prev => [...prev, { role: "user", content: command }, { role: "assistant", content: cached }]);
-      session.addMessage("user", command);
-      session.addMessage("assistant", cached);
-      return;
-    }
-    
-    getAIResponse(command);
-  }, [audioQueue, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, interrupt, isCalmMode, recorder, session, speakFallback]);
-
-  const { startListening } = useWakeWord({
-    enabled: wakeWordEnabled,
-    onWake: handleWake,
-    onPartial: setPartialText,
-    sensitivity: parentSettings?.wakeSensitivity || "high",
-  });
+  }, [armMic, recorder, session, speakFallback]);
 
   const handleParentMode = useCallback(() => {
-    setContinuousListenEnabled(false);
     conversationActiveRef.current = false;
     if (sessionStartedRef.current) {
       session.endSession();
@@ -547,32 +549,23 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   }, [onParentMode, session]);
 
   const stateLabel = {
-    idle: partialText ? `"${partialText}"` : 'Dis "Bobby" pour me parler !',
-    listening: "J'écoute…",
+    idle: partialText ? `"${partialText}"` : (micArmed ? 'Dis "Bobby" pour me parler !' : 'Touche Bobby pour commencer !'),
+    listening: partialText ? `"${partialText}"` : "J'écoute…",
     processing: "Je réfléchis…",
     speaking: "Je parle…",
     interrupted: "Dis-moi !",
     session_end: 'Dis "Bobby" pour revenir !',
   }[state];
 
-  // Background gradient based on state
-  const bgGradient = state === "speaking"
-    ? "from-blue-50 via-violet-50/40 to-pink-50/30"
-    : state === "listening"
-    ? "from-sky-50 via-blue-50/40 to-indigo-50/20"
-    : "from-blue-50/80 via-violet-50/30 to-rose-50/20";
-
   return (
     <div className="child-light flex flex-col items-center justify-between h-screen px-4 py-6 max-w-lg mx-auto select-none overflow-hidden relative"
       style={{ background: `linear-gradient(180deg, hsl(220, 60%, 97%) 0%, hsl(235, 50%, 96%) 40%, hsl(270, 40%, 96%) 70%, hsl(320, 35%, 96%) 100%)` }}>
 
-      {/* Floating particles */}
       <FloatingParticles />
 
       {/* Top bar */}
       <div className="w-full flex items-center justify-end px-2 relative z-10">
         <div className="flex items-center gap-2" />
-
         <div className="flex items-center gap-2">
           {parentSettings?.enableCamera && (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 backdrop-blur-sm border border-primary/20 text-primary">
@@ -580,7 +573,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             </div>
           )}
-
           <button onClick={handleParentMode}
             className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/50 text-muted-foreground text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300">
             <Settings className="w-4 h-4" />
@@ -591,7 +583,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
       {/* Hologram area */}
       <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 relative z-10">
-        {/* Soft glow behind face */}
         <div className="absolute w-96 h-96 rounded-full glow-pulse pointer-events-none"
           style={{
             background: `radial-gradient(circle, 
@@ -604,23 +595,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
         <div
           className="relative w-80 h-80 md:w-96 md:h-96"
-          onPointerDownCapture={() => {
-            if (stateRef.current === "speaking" || stateRef.current === "processing") return;
-            startListening({ fromUserGesture: true });
-
-            if (stateRef.current === "idle" || stateRef.current === "session_end") {
-              if (!sessionStartedRef.current) {
-                session.startSession();
-                sessionStartedRef.current = true;
-                recorder.startRecording();
-                eventBus.emit({ type: "SESSION_START" });
-              }
-              conversationActiveRef.current = true;
-              eventBus.emit({ type: "WAKE_TRIGGERED" });
-              eventBus.emit({ type: "WAKE_DETECTED", confidence: 1.0 });
-              speakFallback("wake_greeting");
-            }
-          }}
+          onPointerDownCapture={handleTapBobby}
         >
           <HologramFace
             voiceState={state}
@@ -641,18 +616,16 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
               <Mic className="w-4 h-4 text-primary animate-pulse" />
               <span className="text-xs text-primary font-bold">Écoute active</span>
             </div>
-          ) : wakeWordEnabled ? (
+          ) : state === "idle" && micArmed ? (
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 backdrop-blur-sm">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <Mic className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="text-xs text-muted-foreground font-medium">En attente de "Bobby"</span>
             </div>
+          ) : state === "idle" && !micArmed ? (
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 backdrop-blur-sm animate-pulse">
+              <span className="text-xs text-primary font-bold">👆 Touche Bobby pour activer le micro</span>
+            </div>
           ) : null}
-
-          {wakeWordEnabled && (
-            <span className="text-[11px] text-muted-foreground/60 text-center">
-              Touche Bobby si le micro ne s'active pas
-            </span>
-          )}
         </div>
       </div>
 
