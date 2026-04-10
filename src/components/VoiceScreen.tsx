@@ -920,23 +920,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         </div>
       )}
 
-      {/* Piper download progress */}
-      {piperProgress >= 0 && piperProgress < 1 && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-4 py-2 rounded-full bg-card/90 backdrop-blur-sm border border-border shadow-lg">
-          <div className="w-24 h-2 rounded-full bg-muted overflow-hidden">
-            <div
-              className="h-full rounded-full bg-primary transition-all duration-300"
-              style={{ width: `${Math.round(piperProgress * 100)}%` }}
-            />
-          </div>
-          <span className="text-[10px] font-bold text-muted-foreground whitespace-nowrap">
-            ⬇️ Voix offline {Math.round(piperProgress * 100)}%
-          </span>
-        </div>
-      )}
-      {piperProgress === 1 && (
-        <PiperReadyToast />
-      )}
+      {/* Piper preload runs silently in background — no UI */}
 
       <FloatingParticles />
 

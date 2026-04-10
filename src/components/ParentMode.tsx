@@ -1701,62 +1701,130 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             </div>
           </Card>
 
-          <Card title="Mode offline" icon={Download}>
-            <p className="text-[11px] text-muted-foreground mb-3">
-              Télécharge toutes les voix Piper pour garantir le fonctionnement sans internet (~200 Mo).
+          <Card title="Stockage Cloud & Offline" icon={Download}>
+            <p className="text-[11px] text-muted-foreground mb-3 leading-tight">
+              Téléchargez du contenu pour l'utiliser sans internet. Chaque contenu est stocké dans votre cloud personnel.
             </p>
-            {piperDone ? (
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-green-500/10 border border-green-500/20">
-                <span className="text-lg">✅</span>
-                <span className="text-[12px] font-semibold text-foreground">Toutes les voix sont prêtes !</span>
+
+            {/* Storage gauge */}
+            <div className="p-3 rounded-xl bg-muted/40 mb-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[11px] font-semibold text-foreground">Espace utilisé</span>
+                <span className="text-[10px] text-muted-foreground font-mono">0 Mo / 2 Go</span>
               </div>
-            ) : piperDownloading ? (
-              <div className="space-y-2">
+              <div className="w-full h-2.5 rounded-full bg-muted overflow-hidden">
+                <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: "0%" }} />
+              </div>
+              <p className="text-[9px] text-muted-foreground mt-1.5">🎁 2 Go offerts</p>
+            </div>
+
+            {/* Downloadable content categories */}
+            <div className="space-y-2 mb-3">
+              {[
+                { emoji: "🎤", label: "Voix Bobby", desc: "Toutes les voix (Maman, Papa, Frère…)", size: "~200 Mo", available: true },
+                { emoji: "📚", label: "Bibliothèque d'histoires", desc: "Contes, aventures, éducatif", size: "~150 Mo", available: true },
+                { emoji: "🎮", label: "Jeux & Quiz", desc: "Quiz animaux, devinettes, vrai/faux", size: "~50 Mo", available: true },
+                { emoji: "🧠", label: "Cerveau offline", desc: "Réponses intelligentes sans internet", size: "~30 Mo", available: true },
+                { emoji: "🎵", label: "Effets sonores", desc: "Sons, musiques, ambiances", size: "~80 Mo", available: false },
+              ].map((item) => (
+                <div key={item.label} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                  item.available ? "bg-card border-border/30" : "bg-muted/20 border-border/10 opacity-50"
+                }`}>
+                  <span className="text-xl shrink-0">{item.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-[12px] font-semibold text-foreground">{item.label}</h4>
+                    <p className="text-[9px] text-muted-foreground leading-tight">{item.desc}</p>
+                    <span className="text-[9px] text-muted-foreground/60">{item.size}</span>
+                  </div>
+                  {item.available ? (
+                    <button
+                      onClick={async () => {
+                        if (item.label === "Voix Bobby") {
+                          setPiperDownloading(true);
+                          setPiperDone(false);
+                          const profiles = ["female", "male", "child", "sister", "brother"] as const;
+                          for (const profile of profiles) {
+                            try {
+                              await preloadPiperVoice(profile, (p) => {
+                                setPiperProgress((prev) => ({ ...prev, [profile]: p }));
+                              });
+                              setPiperProgress((prev) => ({ ...prev, [profile]: 1 }));
+                            } catch {
+                              console.warn(`[ParentMode] Failed to download Piper voice: ${profile}`);
+                            }
+                          }
+                          setPiperDownloading(false);
+                          setPiperDone(true);
+                        }
+                      }}
+                      className="shrink-0 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[10px] font-semibold hover:bg-primary/20 transition-all">
+                      {item.label === "Voix Bobby" && piperDone ? "✅" : "⬇️ Télécharger"}
+                    </button>
+                  ) : (
+                    <span className="shrink-0 text-[9px] px-2 py-1 rounded-full bg-muted text-muted-foreground font-medium">Bientôt</span>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Piper download progress */}
+            {piperDownloading && (
+              <div className="p-3 rounded-xl bg-primary/5 border border-primary/10 space-y-2 mb-3">
                 {(["female", "male", "child", "sister", "brother"] as const).map((profile) => {
                   const pct = piperProgress[profile] ?? 0;
-                  const labels: Record<string, string> = { female: "Féminine", male: "Masculine", child: "Enfant", sister: "Grande sœur", brother: "Grand frère" };
+                  const labels: Record<string, string> = { female: "Maman", male: "Papa", child: "Enfant", sister: "Sœur", brother: "Frère" };
                   return (
                     <div key={profile} className="flex items-center gap-2">
-                      <span className="text-[11px] font-medium text-foreground w-20 shrink-0">{labels[profile]}</span>
-                      <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                      <span className="text-[10px] font-medium text-foreground w-14 shrink-0">{labels[profile]}</span>
+                      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
                         <div className="h-full rounded-full bg-primary transition-all duration-300"
                           style={{ width: `${Math.round(pct * 100)}%` }} />
                       </div>
-                      <span className="text-[10px] text-muted-foreground w-10 text-right">
+                      <span className="text-[9px] text-muted-foreground w-8 text-right">
                         {pct >= 1 ? "✅" : `${Math.round(pct * 100)}%`}
                       </span>
                     </div>
                   );
                 })}
-                <div className="flex items-center gap-2 mt-1">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
-                  <span className="text-[11px] text-muted-foreground">Téléchargement en cours…</span>
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                  <span className="text-[10px] text-muted-foreground">Téléchargement…</span>
                 </div>
               </div>
-            ) : (
-              <button
-                onClick={async () => {
-                  setPiperDownloading(true);
-                  setPiperDone(false);
-                  const profiles = ["female", "male", "child", "sister", "brother"] as const;
-                  for (const profile of profiles) {
-                    try {
-                      await preloadPiperVoice(profile, (p) => {
-                        setPiperProgress((prev) => ({ ...prev, [profile]: p }));
-                      });
-                      setPiperProgress((prev) => ({ ...prev, [profile]: 1 }));
-                    } catch {
-                      console.warn(`[ParentMode] Failed to download Piper voice: ${profile}`);
-                    }
-                  }
-                  setPiperDownloading(false);
-                  setPiperDone(true);
-                }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-all active:scale-95">
-                <Download className="w-4 h-4" />
-                Télécharger toutes les voix
-              </button>
             )}
+
+            {/* Upgrade storage */}
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/15">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">☁️</span>
+                <h4 className="text-[13px] font-bold text-foreground">Augmenter le stockage</h4>
+              </div>
+              <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
+                Passez à un plan supérieur pour stocker plus de contenu offline.
+              </p>
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                {[
+                  { size: "5 Go", price: "1,99€/mois", popular: false },
+                  { size: "20 Go", price: "4,99€/mois", popular: true },
+                  { size: "100 Go", price: "9,99€/mois", popular: false },
+                ].map((plan) => (
+                  <div key={plan.size} className={`relative p-3 rounded-xl text-center border transition-all ${
+                    plan.popular ? "border-primary/40 bg-primary/5" : "border-border/30 bg-card"
+                  }`}>
+                    {plan.popular && (
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[8px] px-2 py-0.5 rounded-full bg-primary text-primary-foreground font-bold">
+                        Populaire
+                      </span>
+                    )}
+                    <span className="text-[14px] font-bold text-foreground block">{plan.size}</span>
+                    <span className="text-[9px] text-muted-foreground block mt-0.5">{plan.price}</span>
+                  </div>
+                ))}
+              </div>
+              <button className="w-full py-2.5 rounded-xl bg-muted/50 text-muted-foreground text-[11px] font-semibold cursor-not-allowed">
+                🔒 Bientôt disponible
+              </button>
+            </div>
           </Card>
         </>
       )}
