@@ -119,26 +119,30 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     const state = animation.update(delta);
     if (!rootRef.current) return;
 
-    rootRef.current.rotation.z = state.headTiltZ * 0.5;
-    rootRef.current.rotation.y = state.headTiltY * 0.6;
-    rootRef.current.rotation.x = state.headTiltX * 0.3;
+    // Head — very subtle follow for alignment
+    rootRef.current.rotation.z = state.headTiltZ * 0.3;
+    rootRef.current.rotation.y = state.headTiltY * 0.15;
+    rootRef.current.rotation.x = state.headTiltX * 0.08;
 
-    // Pupils — deeply follow cursor, subtle wander layered on top
+    // Pupils (black) — strong cursor tracking, the main gaze driver
     const t = performance.now() * 0.001;
-    const wanderX = Math.sin(t * 0.4) * 0.015 + Math.sin(t * 1.1) * 0.008;
-    const wanderY = Math.cos(t * 0.3) * 0.01 + Math.sin(t * 0.8) * 0.006;
-    const gazeX = state.pupilX * 0.35 + wanderX;
-    const gazeY = state.pupilY * 0.28 + wanderY;
+    const wanderX = Math.sin(t * 0.4) * 0.008 + Math.sin(t * 1.1) * 0.004;
+    const wanderY = Math.cos(t * 0.3) * 0.006 + Math.sin(t * 0.8) * 0.003;
+    const pupilGazeX = state.pupilX * 0.55 + wanderX;
+    const pupilGazeY = state.pupilY * 0.42 + wanderY;
     [leftPupilRef, rightPupilRef].forEach(ref => {
       if (ref.current) {
-        ref.current.position.x = gazeX;
-        ref.current.position.y = gazeY;
+        ref.current.position.x = pupilGazeX;
+        ref.current.position.y = pupilGazeY;
       }
     });
+    // Iris — follows less than pupil for depth parallax
+    const irisGazeX = state.pupilX * 0.25 + wanderX * 0.5;
+    const irisGazeY = state.pupilY * 0.18 + wanderY * 0.5;
     [leftIrisRef, rightIrisRef].forEach(ref => {
       if (ref.current) {
-        ref.current.position.x = gazeX * 0.75;
-        ref.current.position.y = gazeY * 0.75;
+        ref.current.position.x = irisGazeX;
+        ref.current.position.y = irisGazeY;
       }
     });
 
