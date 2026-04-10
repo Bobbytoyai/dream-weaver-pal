@@ -354,8 +354,8 @@ export function useFaceAnimation(
     // --- LERP ALL VALUES ---
     const mouthSpeed = faceState === "speaking" ? baseSpeed * 5 : baseSpeed * 3;
 
-    c.eyeOpenness = lerp(c.eyeOpenness, ((targets.eyeOpenness ?? 1) + sleepyEyeWobble) * blinkMult, delta * baseSpeed * 2.5);
-    c.eyebrowHeight = lerp(c.eyebrowHeight, (targets.eyebrowHeight ?? 0) + microOffset.current.eyebrow, delta * baseSpeed);
+    c.eyeOpenness = lerp(c.eyeOpenness, ((targets.eyeOpenness ?? 1) + sleepyEyeWobble + speechEyeWiden) * blinkMult, delta * baseSpeed * 2.5);
+    c.eyebrowHeight = lerp(c.eyebrowHeight, (targets.eyebrowHeight ?? 0) + microOffset.current.eyebrow + speechEyebrowLift, delta * (faceState === "speaking" ? baseSpeed * 3 : baseSpeed));
     c.eyebrowTilt = lerp(c.eyebrowTilt, targets.eyebrowTilt ?? 0, delta * baseSpeed);
 
     c.mouthOpenness = lerp(c.mouthOpenness, mouthOpenTarget, delta * mouthSpeed);
@@ -368,7 +368,7 @@ export function useFaceAnimation(
 
     c.headTiltX = lerp(
       c.headTiltX,
-      (targets.headTiltX ?? 0) - gazeY * 0.18 + breathX + microOffset.current.headX,
+      (targets.headTiltX ?? 0) - gazeY * 0.18 + breathX + microOffset.current.headX + speechHeadNod,
       delta * gazeSpeed * 0.7
     );
     c.headTiltY = lerp(c.headTiltY, gazeX * 0.45, delta * gazeSpeed * 0.8);
@@ -390,7 +390,7 @@ export function useFaceAnimation(
     );
 
     c.glowIntensity = lerp(c.glowIntensity, targets.glowIntensity ?? 0.3, delta * baseSpeed * 0.6);
-    c.cheekGlow = lerp(c.cheekGlow, targets.cheekGlow ?? 0.1, delta * baseSpeed * 0.8);
+    c.cheekGlow = lerp(c.cheekGlow, (targets.cheekGlow ?? 0.1) + speechCheekBoost, delta * baseSpeed * 0.8);
     c.irisGlow = lerp(c.irisGlow, (targets.irisGlow ?? 0.4) * sparkleWave, delta * baseSpeed * 1.2);
     c.eyeSparkle = lerp(c.eyeSparkle, (targets.eyeSparkle ?? 0.5) * (0.7 + sparkleWave * 0.3), delta * baseSpeed);
 
