@@ -380,13 +380,13 @@ export function useFaceAnimation(
 
     c.pupilX = lerp(
       c.pupilX,
-      gazeX * 0.08 + thinkingPupilX + microOffset.current.pupilDrift + eyeDriftX,
-      delta * pupilSpeed
+      gazeX * 0.22 + thinkingPupilX + microOffset.current.pupilDrift + eyeDriftX,
+      delta * pupilSpeed * 1.4
     );
     c.pupilY = lerp(
       c.pupilY,
-      gazeY * 0.06 + thinkingPupilY + breathY + eyeDriftY,
-      delta * pupilSpeed
+      gazeY * 0.16 + thinkingPupilY + breathY + eyeDriftY,
+      delta * pupilSpeed * 1.4
     );
 
     c.glowIntensity = lerp(c.glowIntensity, targets.glowIntensity ?? 0.3, delta * baseSpeed * 0.6);
