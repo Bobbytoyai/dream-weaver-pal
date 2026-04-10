@@ -2365,11 +2365,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           childName={childName}
           onSelectCategory={() => {}}
           onBack={() => setActiveTab("dashboard")}
+          voiceProfile={settings.voiceType || "female"}
         />
       );
       case "profil": return renderProfil();
       case "reglages": return renderReglages();
-      case "histoires": return <StoryLibrary childName={childName} voiceProfile={settings.voiceType || "female"} />;
       case "confidentialite": return renderConfidentialite();
       default: return renderDashboard();
     }
