@@ -10,6 +10,7 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import StoryLibrary from "@/components/StoryLibrary";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 import { ParentSettings, DEFAULT_PARENT_SETTINGS, BOBBY_COLORS } from "./parentSettings";
 export type { ParentSettings };
@@ -232,6 +233,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [newBlockedTopic, setNewBlockedTopic] = useState("");
   const [activeMessageIdx, setActiveMessageIdx] = useState<number>(-1);
   const [reglagesSection, setReglagesSection] = useState<"voix" | "contenu" | "limites">("voix");
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string; description: string; confirmLabel?: string;
+    variant?: "danger" | "warning"; onConfirm: () => void;
+  } | null>(null);
+  const [settingsSaved, setSettingsSaved] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressInterval = useRef<number | null>(null);
 
@@ -1245,9 +1251,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         )}
 
         <button
-          onClick={() => {
-            if (confirm("Supprimer cette session et toutes ses données ?")) deleteSession(selectedSession!.id);
-          }}
+          onClick={() => setConfirmDialog({
+            title: "Supprimer cette session ?",
+            description: "Toutes les données de cette session (messages, analyse, audio) seront supprimées définitivement.",
+            confirmLabel: "Supprimer",
+            variant: "danger",
+            onConfirm: () => { deleteSession(selectedSession!.id); setConfirmDialog(null); },
+          })}
           className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-destructive/5 text-destructive text-[13px] font-medium hover:bg-destructive/10 transition-all">
           <Trash2 className="w-4 h-4" /> Supprimer cette session
         </button>
@@ -1419,6 +1429,23 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             className="w-full px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
         </div>
       </Card>
+
+      {/* Save confirmation button */}
+      <div className="sticky bottom-0 p-4 bg-gradient-to-t from-card via-card to-transparent">
+        <button
+          onClick={() => {
+            onSettingsChange?.(settings);
+            setSettingsSaved(true);
+            setTimeout(() => setSettingsSaved(false), 2000);
+          }}
+          className={`w-full py-3.5 rounded-2xl text-[14px] font-bold transition-all active:scale-95 ${
+            settingsSaved
+              ? "bg-success text-success-foreground"
+              : "bg-primary text-primary-foreground hover:opacity-90"
+          }`}>
+          {settingsSaved ? "✅ Préférences enregistrées !" : "💾 Enregistrer les préférences"}
+        </button>
+      </div>
     </div>
   );
 
@@ -1716,6 +1743,22 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </Card>
         </>
       )}
+      {/* Save confirmation button */}
+      <div className="sticky bottom-0 p-4 bg-gradient-to-t from-card via-card to-transparent">
+        <button
+          onClick={() => {
+            onSettingsChange?.(settings);
+            setSettingsSaved(true);
+            setTimeout(() => setSettingsSaved(false), 2000);
+          }}
+          className={`w-full py-3.5 rounded-2xl text-[14px] font-bold transition-all active:scale-95 ${
+            settingsSaved
+              ? "bg-success text-success-foreground"
+              : "bg-primary text-primary-foreground hover:opacity-90"
+          }`}>
+          {settingsSaved ? "✅ Réglages enregistrés !" : "💾 Enregistrer les réglages"}
+        </button>
+      </div>
     </div>
   );
 
@@ -2035,14 +2078,21 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     a.click(); URL.revokeObjectURL(url);
                   } else if (id === "access") { setActiveTab("sessions"); }
                   else if (id === "delete") {
-                    if (confirm("⚠️ Supprimer TOUTES les données ?\n\nCette action est IRRÉVERSIBLE.")) {
-                      Promise.all([
-                        supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
-                        supabase.from("session_messages").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
-                        supabase.from("child_sessions").delete().eq("child_name", childName),
-                        supabase.from("child_memories").delete().eq("child_name", childName),
-                      ]).then(() => loadData());
-                    }
+                    setConfirmDialog({
+                      title: "Supprimer TOUTES les données ?",
+                      description: "Cette action est IRRÉVERSIBLE. Toutes les sessions, analyses, messages et mémoires de Bobby seront effacés.",
+                      confirmLabel: "Tout supprimer",
+                      variant: "danger",
+                      onConfirm: () => {
+                        Promise.all([
+                          supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
+                          supabase.from("session_messages").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
+                          supabase.from("child_sessions").delete().eq("child_name", childName),
+                          supabase.from("child_memories").delete().eq("child_name", childName),
+                        ]).then(() => loadData());
+                        setConfirmDialog(null);
+                      },
+                    });
                   } else if (id === "rectify") { setActiveTab("profil"); }
                 }}
                 className="p-3 rounded-xl text-left transition-all bg-muted/50 hover:bg-muted active:scale-95">
@@ -2059,21 +2109,42 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           <div className="space-y-2">
             {[
               { emoji: "🎙️", label: "Supprimer les audio", desc: "Garde les analyses", action: () => {
-                if (confirm("Supprimer tous les enregistrements audio ?")) {
-                  supabase.storage.from("conversation-audio").list().then(({ data }) => {
-                    if (data?.length) supabase.storage.from("conversation-audio").remove(data.map(f => f.name));
-                  });
-                }
+                setConfirmDialog({
+                  title: "Supprimer les enregistrements ?",
+                  description: "Tous les fichiers audio seront supprimés. Les analyses textuelles seront conservées.",
+                  confirmLabel: "Supprimer",
+                  variant: "danger",
+                  onConfirm: () => {
+                    supabase.storage.from("conversation-audio").list().then(({ data }) => {
+                      if (data?.length) supabase.storage.from("conversation-audio").remove(data.map(f => f.name));
+                    });
+                    setConfirmDialog(null);
+                  },
+                });
               }},
               { emoji: "📊", label: "Supprimer les analyses", desc: "Garde les sessions", action: () => {
-                if (confirm("Supprimer toutes les analyses IA ?")) {
-                  supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000").then(() => loadData());
-                }
+                setConfirmDialog({
+                  title: "Supprimer les analyses ?",
+                  description: "Toutes les analyses IA seront supprimées. Les sessions et messages seront conservés.",
+                  confirmLabel: "Supprimer",
+                  variant: "danger",
+                  onConfirm: () => {
+                    supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000").then(() => loadData());
+                    setConfirmDialog(null);
+                  },
+                });
               }},
               { emoji: "🧠", label: "Réinitialiser la mémoire", desc: "Bobby oublie les préférences", action: () => {
-                if (confirm("Réinitialiser la mémoire ?")) {
-                  supabase.from("child_memories").delete().eq("child_name", childName).then(() => loadData());
-                }
+                setConfirmDialog({
+                  title: "Réinitialiser la mémoire ?",
+                  description: "Bobby oubliera toutes les préférences et intérêts de l'enfant qu'il a appris.",
+                  confirmLabel: "Réinitialiser",
+                  variant: "warning",
+                  onConfirm: () => {
+                    supabase.from("child_memories").delete().eq("child_name", childName).then(() => loadData());
+                    setConfirmDialog(null);
+                  },
+                });
               }},
             ].map(item => (
               <button key={item.label} onClick={item.action}
@@ -2195,6 +2266,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           {renderTabContent()}
         </div>
       </div>
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        open={!!confirmDialog}
+        title={confirmDialog?.title || ""}
+        description={confirmDialog?.description || ""}
+        confirmLabel={confirmDialog?.confirmLabel}
+        variant={confirmDialog?.variant}
+        onConfirm={() => confirmDialog?.onConfirm()}
+        onCancel={() => setConfirmDialog(null)}
+      />
     </div>
   );
 };
