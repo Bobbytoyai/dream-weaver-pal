@@ -37,7 +37,7 @@ export function useAudioAmplitude() {
 
   const getAmplitude = useCallback((): number => {
     if (!analyserRef.current || !dataRef.current) return 0;
-    analyserRef.current.getByteFrequencyData(dataRef.current);
+    analyserRef.current.getByteFrequencyData(dataRef.current as any);
     let sum = 0;
     const len = dataRef.current.length;
     for (let i = 0; i < len; i++) sum += dataRef.current[i];
