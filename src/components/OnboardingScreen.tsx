@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import companionAvatar from "@/assets/companion-avatar.png";
+import { HologramFace } from "./hologram/HologramFace";
 import VoicePickerStep from "./onboarding/VoicePickerStep";
 import InterestsStep from "./onboarding/InterestsStep";
 import type { VoiceProfile } from "@/lib/voicePipeline";
