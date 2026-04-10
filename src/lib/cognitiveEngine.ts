@@ -304,7 +304,159 @@ function getRelationshipPhase(): "new" | "growing" | "established" | "deep" {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// REPETITION
+// v4.0: ENGAGEMENT TRACKING
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const TOPIC_KEYWORDS: Record<string, string[]> = {
+  animaux: ["animal", "chien", "chat", "lion", "oiseau", "dinosaure", "dragon", "poisson"],
+  espace: ["étoile", "planète", "fusée", "lune", "soleil", "astronaute", "cosmos"],
+  pirates: ["pirate", "bateau", "trésor", "mer", "île", "capitaine"],
+  magie: ["magie", "sorcier", "fée", "baguette", "sort", "potion"],
+  science: ["robot", "science", "expérience", "invention", "code", "techno"],
+  nature: ["forêt", "montagne", "fleur", "arbre", "rivière", "jardin"],
+  musique: ["musique", "chanson", "instrument", "piano", "guitare", "danse"],
+};
+
+function detectTopics(text: string): string[] {
+  const lower = text.toLowerCase();
+  const found: string[] = [];
+  for (const [topic, keywords] of Object.entries(TOPIC_KEYWORDS)) {
+    if (keywords.some(kw => lower.includes(kw))) found.push(topic);
+  }
+  return found;
+}
+
+function updateEngagement(userText: string): void {
+  const topics = detectTopics(userText);
+  state.currentTopics = topics;
+  const msgLen = userText.trim().split(/\s+/).length;
+  const engagementScore = Math.min(100, msgLen * 8 + (state.attention === "high" ? 20 : 0));
+
+  for (const topic of topics) {
+    const existing = state.engagementScores[topic];
+    if (existing) {
+      existing.score = Math.round((existing.score * existing.count + engagementScore) / (existing.count + 1));
+      existing.count++;
+      existing.mode = state.currentMode;
+    } else {
+      state.engagementScores[topic] = { topic, mode: state.currentMode, score: engagementScore, count: 1 };
+    }
+  }
+
+  // Update triggers: topics with high engagement
+  state.engagementTriggers = Object.values(state.engagementScores)
+    .filter(e => e.score > 60 && e.count >= 2)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5)
+    .map(e => e.topic);
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// v4.0: LEARNING SPEED DETECTION
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function updateLearningSpeed(): void {
+  // Based on how fast comprehension signals improve
+  if (state.turnCount < 5) return;
+  const progressRate = state.progressionLevel / Math.max(1, state.interactionCount / 20);
+  if (progressRate > 1.5) state.learningSpeed = "fast";
+  else if (progressRate < 0.5) state.learningSpeed = "slow";
+  else state.learningSpeed = "normal";
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// v4.0: PREDICTION ENGINE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function predictNextIntent(): PredictedIntent {
+  const history = state.intentHistory.slice(-5);
+  if (history.length < 2) return "unknown";
+
+  // Count frequencies
+  const freq: Record<string, number> = {};
+  for (const intent of history) {
+    freq[intent] = (freq[intent] || 0) + 1;
+  }
+
+  // If child keeps asking for stories → predict story
+  const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);
+  if (sorted[0] && sorted[0][1] >= 2) return sorted[0][0] as PredictedIntent;
+
+  // Engagement-based prediction
+  if (state.engagementTriggers.length > 0) {
+    const topTrigger = state.engagementTriggers[0];
+    if (topTrigger === "animaux" || topTrigger === "pirates" || topTrigger === "magie") return "story";
+    if (topTrigger === "science") return "question";
+  }
+
+  return "unknown";
+}
+
+/** Record the detected intent for prediction */
+export function recordIntent(intent: string): void {
+  state.intentHistory.push(intent);
+  if (state.intentHistory.length > 20) state.intentHistory.shift();
+  state.currentMode = intent;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// v4.0: BEHAVIOR PATTERN DETECTION
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function detectBehaviorPatterns(): void {
+  const patterns: string[] = [];
+
+  // Time-based patterns
+  const hour = new Date().getHours();
+  if (hour >= 19 && state.energy === "calm") patterns.push("calme le soir");
+  if (hour < 10 && state.energy === "energetic") patterns.push("énergique le matin");
+
+  // Topic preferences
+  const topTopics = Object.values(state.engagementScores)
+    .filter(e => e.count >= 3 && e.score > 50)
+    .map(e => `aime ${e.topic}`);
+  patterns.push(...topTopics.slice(0, 3));
+
+  // Interaction style detection
+  if (state.recentMessageLengths.slice(-10).every(l => l > 10)) {
+    state.interactionStyle = "explorer";
+    patterns.push("explorateur curieux");
+  } else if (state.comprehensionSignals < -2) {
+    state.interactionStyle = "guided";
+    patterns.push("préfère être guidé");
+  }
+
+  // Emotional patterns
+  const sadCount = state.emotionHistory.filter(e => e === "sad").length;
+  const happyCount = state.emotionHistory.filter(e => e === "happy" || e === "excited").length;
+  if (sadCount > 3) patterns.push("tendance émotionnelle sensible");
+  if (happyCount > 5) patterns.push("globalement joyeux");
+
+  state.behaviorPatterns = [...new Set(patterns)].slice(0, 8);
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// v4.0: ADAPTIVE PROFILE BUILDER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function buildAdaptiveProfile(): AdaptiveProfile {
+  detectBehaviorPatterns();
+
+  const preferredTopics: Record<string, number> = {};
+  for (const [topic, entry] of Object.entries(state.engagementScores)) {
+    preferredTopics[topic] = entry.score;
+  }
+
+  return {
+    learningSpeed: state.learningSpeed,
+    interactionStyle: state.interactionStyle,
+    engagementTriggers: state.engagementTriggers,
+    behaviorPatterns: state.behaviorPatterns,
+    preferredTopics,
+    predictedNextIntent: predictNextIntent(),
+  };
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const recentUserTexts: string[] = [];
