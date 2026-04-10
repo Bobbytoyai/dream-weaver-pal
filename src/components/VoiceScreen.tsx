@@ -83,75 +83,7 @@ function isEcho(transcript: string): boolean {
   return false;
 }
 
-function useContinuousListening(onResult: (text: string) => void, enabled: boolean) {
-  const recognitionRef = useRef<any>(null);
-  const enabledRef = useRef(enabled);
-  const isRunningRef = useRef(false);
-
-  useEffect(() => {
-    enabledRef.current = enabled;
-  }, [enabled]);
-
-  const start = useCallback(() => {
-    if (isRunningRef.current) return;
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) return;
-
-    const rec = new SR();
-    rec.continuous = false;
-    rec.interimResults = false;
-    rec.lang = "fr-FR";
-    rec.maxAlternatives = 3;
-    recognitionRef.current = rec;
-    isRunningRef.current = true;
-
-    rec.onresult = (event: any) => {
-      let best = "";
-      for (let i = 0; i < event.results.length; i++) {
-        const transcript = String(event.results[i][0].transcript || "").trim();
-        if (transcript.length > best.length) best = transcript;
-      }
-
-      if (best.length > 2) {
-        if (isEcho(best)) return;
-        onResult(best);
-      }
-    };
-
-    rec.onend = () => {
-      isRunningRef.current = false;
-      recognitionRef.current = null;
-      if (enabledRef.current) {
-        setTimeout(() => start(), 200);
-      }
-    };
-
-    rec.onerror = (e: any) => {
-      isRunningRef.current = false;
-      recognitionRef.current = null;
-      if (e.error === "no-speech" && enabledRef.current) {
-        setTimeout(() => start(), 200);
-      }
-    };
-
-    try {
-      rec.start();
-    } catch {
-      isRunningRef.current = false;
-    }
-  }, [onResult]);
-
-  const stop = useCallback(() => {
-    enabledRef.current = false;
-    isRunningRef.current = false;
-    try {
-      recognitionRef.current?.abort();
-    } catch {}
-    recognitionRef.current = null;
-  }, []);
-
-  return { start, stop };
-}
+// Deepgram STT replaces useContinuousListening — see integration below
 
 interface VoiceScreenProps {
   childName: string;
