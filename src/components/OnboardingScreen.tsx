@@ -105,8 +105,8 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
         {/* STEP 1: Name */}
         {step === 1 && (
           <div className="flex flex-col items-center text-center w-full">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--secondary))] flex items-center justify-center mb-6 shadow-lg shadow-[hsla(215,85%,58%,0.25)]">
-              <span className="text-4xl">😊</span>
+            <div className="w-20 h-20 mb-6 relative">
+              <HologramFace voiceState="listening" enableCamera={false} />
             </div>
             <h2 className="text-3xl font-extrabold text-foreground mb-2">Comment tu t'appelles ?</h2>
             <p className="text-muted-foreground text-sm mb-8">Bobby veut connaître ton prénom !</p>
@@ -132,8 +132,8 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
         {/* STEP 2: Age */}
         {step === 2 && (
           <div className="flex flex-col items-center text-center w-full">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[hsl(270,55%,62%)] to-[hsl(320,55%,65%)] flex items-center justify-center mb-6 shadow-lg shadow-[hsla(270,55%,62%,0.25)]">
-              <span className="text-4xl">🎂</span>
+            <div className="w-20 h-20 mb-6 relative">
+              <HologramFace voiceState="idle" enableCamera={false} />
             </div>
             <h2 className="text-3xl font-extrabold text-foreground mb-2">Tu as quel âge, {name.trim()} ?</h2>
             <p className="text-muted-foreground text-sm mb-6">Pour que Bobby s'adapte à toi !</p>
