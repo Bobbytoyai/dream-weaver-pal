@@ -4,7 +4,7 @@ import {
   Mic, BookOpen, Timer, Sparkles, Shield, Camera, Volume2, VolumeX,
   Play, Pause, AlertTriangle, TrendingUp, Trash2, ChevronRight,
   BarChart3, Calendar, User, Zap, Moon, Sun, Hand, Lock,
-  Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag
+  Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
@@ -116,8 +116,8 @@ const formatDate = (date: string): string => {
 
 const Toggle = ({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) => (
   <button onClick={() => onChange(!value)}
-    className={`w-12 h-7 rounded-full transition-all ${value ? "bg-primary" : "bg-muted"}`}>
-    <div className={`w-5 h-5 rounded-full bg-card shadow transition-transform ${value ? "translate-x-6" : "translate-x-1"}`} />
+    className={`relative w-14 h-8 rounded-full transition-all duration-300 ${value ? "bg-primary shadow-[0_0_12px_hsl(var(--primary)/0.4)]" : "bg-muted"}`}>
+    <div className={`w-6 h-6 rounded-full bg-card shadow-md transition-all duration-300 ${value ? "translate-x-7" : "translate-x-1"}`} />
   </button>
 );
 
@@ -126,12 +126,14 @@ const Toggle = ({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
 const SettingRow = ({ icon: Icon, title, desc, children }: {
   icon: any; title: string; desc?: string; children: React.ReactNode;
 }) => (
-  <div className="flex items-center justify-between py-3">
+  <div className="flex items-center justify-between py-3 px-1">
     <div className="flex items-center gap-3 flex-1 min-w-0">
-      <Icon className="w-5 h-5 text-primary shrink-0" />
+      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+        <Icon className="w-4.5 h-4.5 text-primary" />
+      </div>
       <div className="min-w-0">
         <h4 className="text-sm font-bold text-foreground">{title}</h4>
-        {desc && <p className="text-xs text-muted-foreground truncate">{desc}</p>}
+        {desc && <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{desc}</p>}
       </div>
     </div>
     <div className="shrink-0 ml-3">{children}</div>
@@ -140,15 +142,19 @@ const SettingRow = ({ icon: Icon, title, desc, children }: {
 
 // ─── Section Card ─────────────────────────────────────────────────
 
-const Card = ({ title, icon: Icon, children }: { title?: string; icon?: any; children: React.ReactNode }) => (
-  <div className="bg-card rounded-2xl p-4 border border-border">
+const Card = ({ title, icon: Icon, children, noPad }: { title?: string; icon?: any; children: React.ReactNode; noPad?: boolean }) => (
+  <div className="bg-card rounded-2xl border border-border overflow-hidden">
     {title && (
-      <div className="flex items-center gap-2 mb-3">
-        {Icon && <Icon className="w-5 h-5 text-primary" />}
-        <h3 className="text-sm font-bold text-foreground">{title}</h3>
+      <div className="flex items-center gap-2.5 px-5 pt-4 pb-2">
+        {Icon && (
+          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Icon className="w-4 h-4 text-primary" />
+          </div>
+        )}
+        <h3 className="text-sm font-extrabold text-foreground tracking-tight">{title}</h3>
       </div>
     )}
-    {children}
+    <div className={noPad ? "" : "px-5 pb-4"}>{children}</div>
   </div>
 );
 
@@ -978,17 +984,22 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       </Card>
 
       <Card title="Personnalité de Bobby" icon={Sparkles}>
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-2">
           {([
-            ["balanced", "⚖️ Équilibré", "Mode par défaut, chaleureux"],
-            ["calm", "😌 Plus calme", "Doux, réconfortant, lent"],
-            ["energetic", "⚡ Plus énergique", "Fun, rapide, enthousiaste"],
-            ["educational", "📚 Éducatif", "Intègre des faits amusants"],
-          ] as const).map(([val, label, desc]) => (
+            ["balanced", "⚖️", "Équilibré", "Chaleureux, par défaut"],
+            ["calm", "😌", "Plus calme", "Doux, réconfortant"],
+            ["energetic", "⚡", "Énergique", "Fun, enthousiaste"],
+            ["educational", "📚", "Éducatif", "Faits amusants"],
+          ] as const).map(([val, emoji, label, desc]) => (
             <button key={val} onClick={() => updateSetting("personality", val)}
-              className={`w-full text-left p-3 rounded-xl transition-all ${settings.personality === val ? "bg-primary/10 border border-primary/30" : "bg-muted"}`}>
-              <span className="text-sm font-bold text-foreground">{label}</span>
-              <p className="text-xs text-muted-foreground">{desc}</p>
+              className={`p-4 rounded-2xl text-left transition-all duration-200 border-2 ${
+                settings.personality === val
+                  ? "bg-primary/10 border-primary/40 shadow-[0_0_16px_hsl(var(--primary)/0.15)]"
+                  : "bg-muted/50 border-transparent hover:bg-muted"
+              }`}>
+              <span className="text-2xl block mb-1">{emoji}</span>
+              <h4 className="text-sm font-extrabold text-foreground">{label}</h4>
+              <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{desc}</p>
             </button>
           ))}
         </div>
@@ -1064,33 +1075,33 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const renderVoix = () => (
     <div className="p-4 space-y-4">
       <Card title="Type de voix" icon={Mic}>
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-2">
           {(["child", "female", "male", "custom"] as const).map((type) => {
             const info = VOICE_MAP[type];
             const isCustom = type === "custom";
+            const selected = settings.voiceType === type;
             return (
               <button key={type}
                 onClick={() => !isCustom && updateSetting("voiceType", type)}
                 disabled={isCustom}
-                className={`w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 ${
-                  isCustom ? "opacity-50 cursor-not-allowed bg-muted" :
-                  settings.voiceType === type ? "bg-primary/10 border border-primary/30" : "bg-muted hover:bg-muted/80"
+                className={`relative p-4 rounded-2xl text-left transition-all duration-200 border-2 ${
+                  isCustom ? "opacity-40 cursor-not-allowed bg-muted/30 border-transparent" :
+                  selected
+                    ? "bg-primary/10 border-primary/40 shadow-[0_0_16px_hsl(var(--primary)/0.15)]"
+                    : "bg-muted/50 border-transparent hover:bg-muted"
                 }`}>
-                <span className="text-2xl">{info.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-bold text-foreground">{info.label}</span>
-                  <p className="text-xs text-muted-foreground">{info.desc}</p>
-                </div>
-                {!isCustom && settings.voiceType === type && (
+                <div className="text-2xl mb-2">{info.emoji}</div>
+                <h4 className="text-sm font-extrabold text-foreground">{info.label}</h4>
+                <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{info.desc}</p>
+                {!isCustom && selected && (
                   <button
                     onClick={(e) => { e.stopPropagation(); previewVoice(type); }}
                     disabled={previewPlaying}
-                    className="px-3 py-1.5 rounded-lg bg-primary/20 text-primary text-xs font-bold hover:bg-primary/30 transition-all flex items-center gap-1">
-                    {previewPlaying ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
-                    Test
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-all">
+                    {previewPlaying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
                   </button>
                 )}
-                {isCustom && <Lock className="w-4 h-4 text-muted-foreground" />}
+                {isCustom && <Lock className="absolute top-3 right-3 w-4 h-4 text-muted-foreground" />}
               </button>
             );
           })}
@@ -1098,11 +1109,16 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       </Card>
 
       <Card title="Vitesse de la voix" icon={Zap}>
-        <div className="flex gap-2">
-          {([["slow", "🐢 Lent"], ["normal", "🔊 Normal"], ["fast", "⚡ Rapide"]] as const).map(([val, label]) => (
+        <div className="grid grid-cols-3 gap-2">
+          {([["slow", "🐢", "Lent"], ["normal", "🔊", "Normal"], ["fast", "⚡", "Rapide"]] as const).map(([val, emoji, label]) => (
             <button key={val} onClick={() => updateSetting("voiceSpeed", val)}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${settings.voiceSpeed === val ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-              {label}
+              className={`p-3 rounded-2xl text-center transition-all duration-200 border-2 ${
+                settings.voiceSpeed === val
+                  ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
+                  : "bg-muted/50 border-transparent hover:bg-muted"
+              }`}>
+              <span className="text-lg block">{emoji}</span>
+              <span className={`text-xs font-bold block ${settings.voiceSpeed === val ? "text-primary" : "text-foreground"}`}>{label}</span>
             </button>
           ))}
         </div>
@@ -1142,49 +1158,74 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const renderContenu = () => (
     <div className="p-4 space-y-4">
       <Card title="Modes de contenu" icon={BookOpen}>
-        <div className="space-y-1">
+        <div className="grid grid-cols-2 gap-2">
           {([
-            ["freeChat", "💬 Discussion libre", "Bobby bavarde librement"],
-            ["educational", "📚 Éducatif", "Apprentissage ludique"],
-            ["games", "🎮 Jeux", "Devinettes, quiz, défis"],
-            ["stories", "📖 Histoires", "Contes et aventures"],
-          ] as const).map(([key, label, desc]) => (
-            <div key={key} className="flex items-center justify-between py-2.5">
-              <div>
-                <span className="text-sm font-bold text-foreground">{label}</span>
-                <p className="text-xs text-muted-foreground">{desc}</p>
-              </div>
-              <Toggle
-                value={settings.contentModes[key as keyof typeof settings.contentModes]}
-                onChange={(v) => updateNested("contentModes", key, v)}
-              />
-            </div>
-          ))}
+            ["freeChat", "💬", "Discussion libre", "Bobby bavarde librement"],
+            ["educational", "📚", "Éducatif", "Apprentissage ludique"],
+            ["games", "🎮", "Jeux", "Quiz, devinettes, défis"],
+            ["stories", "📖", "Histoires", "Contes et aventures"],
+          ] as const).map(([key, emoji, label, desc]) => {
+            const active = settings.contentModes[key as keyof typeof settings.contentModes];
+            return (
+              <button key={key}
+                onClick={() => updateNested("contentModes", key, !active)}
+                className={`relative p-4 rounded-2xl text-left transition-all duration-200 border-2 ${
+                  active
+                    ? "bg-primary/10 border-primary/40 shadow-[0_0_16px_hsl(var(--primary)/0.15)]"
+                    : "bg-muted/50 border-transparent hover:bg-muted"
+                }`}>
+                <div className="text-2xl mb-2">{emoji}</div>
+                <h4 className="text-sm font-extrabold text-foreground">{label}</h4>
+                <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{desc}</p>
+                <div className={`absolute top-3 right-3 w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                  active ? "bg-primary text-primary-foreground" : "bg-muted-foreground/20"
+                }`}>
+                  {active && <span className="text-[10px] font-bold">✓</span>}
+                </div>
+              </button>
+            );
+          })}
         </div>
       </Card>
+
       <Card title="Thèmes d'histoires" icon={Sparkles}>
-        <div className="space-y-2">
-          {ALL_THEMES.map(theme => (
-            <button key={theme.id} onClick={() => toggleTheme(theme.id)}
-              className={`w-full flex items-center justify-between p-3 rounded-xl text-sm font-bold transition-all ${
-                settings.enabledThemes.includes(theme.id) ? "bg-primary/10 text-primary border border-primary/30" : "bg-muted text-muted-foreground"
-              }`}>
-              <span>{theme.label}</span>
-              <span className="text-xs">{settings.enabledThemes.includes(theme.id) ? "✓" : "—"}</span>
-            </button>
-          ))}
+        <div className="grid grid-cols-3 gap-2">
+          {ALL_THEMES.map(theme => {
+            const active = settings.enabledThemes.includes(theme.id);
+            return (
+              <button key={theme.id} onClick={() => toggleTheme(theme.id)}
+                className={`p-3 rounded-2xl text-center transition-all duration-200 border-2 ${
+                  active
+                    ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
+                    : "bg-muted/50 border-transparent hover:bg-muted"
+                }`}>
+                <span className="text-xl block mb-1">{theme.label.split(" ")[0]}</span>
+                <span className={`text-[11px] font-bold ${active ? "text-primary" : "text-muted-foreground"}`}>
+                  {theme.label.split(" ").slice(1).join(" ") || theme.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </Card>
-      <Card title="Durée des histoires">
-        <div className="flex gap-2">
-          {([["courte", "⚡ Courte"], ["moyenne", "📖 Moyenne"], ["longue", "📚 Longue"]] as const).map(([val, label]) => (
+
+      <Card title="Durée des histoires" icon={Clock}>
+        <div className="grid grid-cols-3 gap-2">
+          {([["courte", "⚡", "Courte", "~3 min"], ["moyenne", "📖", "Moyenne", "~7 min"], ["longue", "📚", "Longue", "~12 min"]] as const).map(([val, emoji, label, sub]) => (
             <button key={val} onClick={() => updateSetting("storyDuration", val)}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${settings.storyDuration === val ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-              {label}
+              className={`p-3 rounded-2xl text-center transition-all duration-200 border-2 ${
+                settings.storyDuration === val
+                  ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
+                  : "bg-muted/50 border-transparent hover:bg-muted"
+              }`}>
+              <span className="text-lg block">{emoji}</span>
+              <span className={`text-xs font-bold block ${settings.storyDuration === val ? "text-primary" : "text-foreground"}`}>{label}</span>
+              <span className="text-[10px] text-muted-foreground">{sub}</span>
             </button>
           ))}
         </div>
       </Card>
+
       <Card>
         <SettingRow icon={Sparkles} title="Histoires interactives" desc="L'enfant fait des choix dans l'histoire">
           <Toggle value={settings.storyInteractive} onChange={(v) => updateSetting("storyInteractive", v)} />
@@ -1200,15 +1241,20 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const renderSecurite = () => (
     <div className="p-4 space-y-4">
       <Card title="Niveau de filtrage" icon={Shield}>
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-2">
           {([
-            ["standard", "🟢 Standard", "Contenu adapté aux enfants"],
-            ["strict", "🔒 Strict", "Filtre renforcé, exclusivement positif"],
-          ] as const).map(([val, label, desc]) => (
+            ["standard", "🟢", "Standard", "Contenu adapté aux enfants"],
+            ["strict", "🔒", "Strict", "Filtre renforcé, positif"],
+          ] as const).map(([val, emoji, label, desc]) => (
             <button key={val} onClick={() => updateSetting("contentFilter", val)}
-              className={`w-full text-left p-3 rounded-xl transition-all ${settings.contentFilter === val ? "bg-primary/10 border border-primary/30" : "bg-muted"}`}>
-              <span className="text-sm font-bold text-foreground">{label}</span>
-              <p className="text-xs text-muted-foreground">{desc}</p>
+              className={`p-4 rounded-2xl text-left transition-all duration-200 border-2 ${
+                settings.contentFilter === val
+                  ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
+                  : "bg-muted/50 border-transparent hover:bg-muted"
+              }`}>
+              <span className="text-2xl block mb-1">{emoji}</span>
+              <h4 className="text-sm font-extrabold text-foreground">{label}</h4>
+              <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{desc}</p>
             </button>
           ))}
         </div>
@@ -1224,8 +1270,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             <div className="flex flex-wrap gap-2">
               {settings.blockedTopics.map(topic => (
                 <button key={topic} onClick={() => updateSetting("blockedTopics", settings.blockedTopics.filter(t => t !== topic))}
-                  className="flex items-center gap-1 px-3 py-1 rounded-full bg-destructive/10 text-destructive text-xs font-bold hover:bg-destructive/20 transition-all">
-                  {topic} ✕
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-destructive/10 text-destructive text-xs font-bold hover:bg-destructive/20 transition-all">
+                  {topic} <X className="w-3 h-3" />
                 </button>
               ))}
             </div>
@@ -1240,7 +1286,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 }
               }}
               placeholder="Ajouter un sujet…"
-              className="flex-1 px-3 py-2 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
+              className="flex-1 px-4 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             />
             <button onClick={() => {
                 if (newBlockedTopic.trim()) {
@@ -1248,7 +1294,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   setNewBlockedTopic("");
                 }
               }}
-              className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-all">
+              className="w-11 h-11 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg hover:opacity-90 transition-all">
               +
             </button>
           </div>
@@ -1264,11 +1310,18 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const renderLimites = () => (
     <div className="p-4 space-y-4">
       <Card title="Limite de temps journalier" icon={Timer}>
-        <div className="flex gap-2 flex-wrap">
+        <div className="grid grid-cols-5 gap-2">
           {([null, 10, 20, 30, 60] as const).map(val => (
             <button key={String(val)} onClick={() => updateSetting("timeLimitMinutes", val)}
-              className={`py-2 px-4 rounded-xl text-sm font-bold transition-all ${settings.timeLimitMinutes === val ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-              {val === null ? "∞ Illimité" : `${val} min`}
+              className={`py-3 rounded-2xl text-center transition-all duration-200 border-2 ${
+                settings.timeLimitMinutes === val
+                  ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
+                  : "bg-muted/50 border-transparent hover:bg-muted"
+              }`}>
+              <span className={`text-sm font-bold block ${settings.timeLimitMinutes === val ? "text-primary" : "text-foreground"}`}>
+                {val === null ? "∞" : val}
+              </span>
+              <span className="text-[9px] text-muted-foreground">{val === null ? "Illimité" : "min"}</span>
             </button>
           ))}
         </div>
@@ -1284,41 +1337,37 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             <Toggle value={settings.nightMode.active} onChange={(v) => updateNested("nightMode", "active", v)} />
           </SettingRow>
           {settings.nightMode.active && (
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex items-center gap-3 pt-1 px-1">
               <div className="flex-1">
-                <p className="text-xs text-muted-foreground mb-1">Début</p>
+                <p className="text-[10px] text-muted-foreground mb-1 font-bold">Début</p>
                 <input type="time" value={settings.nightMode.startHour}
                   onChange={(e) => updateNested("nightMode", "startHour", e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-muted border border-border text-sm text-foreground outline-none focus:border-primary" />
+                  className="w-full px-3 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" />
               </div>
               <Sun className="w-4 h-4 text-muted-foreground mt-4" />
               <div className="flex-1">
-                <p className="text-xs text-muted-foreground mb-1">Fin</p>
+                <p className="text-[10px] text-muted-foreground mb-1 font-bold">Fin</p>
                 <input type="time" value={settings.nightMode.endHour}
                   onChange={(e) => updateNested("nightMode", "endHour", e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-muted border border-border text-sm text-foreground outline-none focus:border-primary" />
+                  className="w-full px-3 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" />
               </div>
             </div>
           )}
         </div>
       </Card>
       <Card title="Interactions" icon={Hand}>
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {([
-            ["wakeWord", "🎤 Mot de réveil", "Dire \"Bobby\" pour activer"],
-            ["tap", "👆 Toucher", "Toucher l'écran pour activer"],
-            ["interruption", "✋ Interruption", "L'enfant peut interrompre Bobby"],
-          ] as const).map(([key, label, desc]) => (
-            <div key={key} className="flex items-center justify-between py-2.5">
-              <div>
-                <span className="text-sm font-bold text-foreground">{label}</span>
-                <p className="text-xs text-muted-foreground">{desc}</p>
-              </div>
+            ["wakeWord", Mic, "Mot de réveil", "Dire \"Bobby\" pour activer"],
+            ["tap", Hand, "Toucher", "Toucher l'écran pour activer"],
+            ["interruption", AlertTriangle, "Interruption", "L'enfant peut interrompre Bobby"],
+          ] as const).map(([key, IconComp, label, desc]) => (
+            <SettingRow key={key} icon={IconComp} title={label} desc={desc}>
               <Toggle
                 value={settings.interactions[key as keyof typeof settings.interactions]}
                 onChange={(v) => updateNested("interactions", key, v)}
               />
-            </div>
+            </SettingRow>
           ))}
         </div>
       </Card>
