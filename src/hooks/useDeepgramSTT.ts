@@ -105,21 +105,21 @@ export function useDeepgramSTT({ onPartial, onFinal, onError, language = "fr" }:
     try {
       const key = await getToken();
 
-      // Deepgram params optimized for conversational speed:
-      // - endpointing=300: faster end-of-speech detection (300ms silence = done)
-      // - utterance_end_ms=800: shorter utterance timeout
-      // - interim_results=true: streaming partial results
-      // - smart_format=true: better punctuation
+      // Deepgram params — nova-3 for best accuracy + low latency:
+      // - endpointing=250: ultra-fast end-of-speech (250ms silence)
+      // - utterance_end_ms=600: shorter utterance timeout for snappy turns
+      // - interim_results=true: streaming partials
+      // - smart_format=true: punctuation
       // - vad_events=true: voice activity detection
-      const wsUrl = `${DEEPGRAM_WS_URL}?language=${language}&model=nova-2&smart_format=true&interim_results=true&endpointing=300&utterance_end_ms=800&vad_events=true&encoding=linear16&sample_rate=16000&channels=1`;
+      const wsUrl = `${DEEPGRAM_WS_URL}?language=${language}&model=nova-3&smart_format=true&interim_results=true&endpointing=250&utterance_end_ms=600&vad_events=true&encoding=linear16&sample_rate=48000&channels=1`;
 
       const ws = new WebSocket(wsUrl, ["token", key]);
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log("[DeepgramSTT] Connected");
+        console.log("[DeepgramSTT] Connected (nova-3, 48kHz)");
         
-        const audioContext = new AudioContext({ sampleRate: 16000 });
+        const audioContext = new AudioContext({ sampleRate: 48000 });
         contextRef.current = audioContext;
         const source = audioContext.createMediaStreamSource(stream);
 
@@ -226,7 +226,7 @@ export function useDeepgramSTT({ onPartial, onFinal, onError, language = "fr" }:
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 16000,
+          sampleRate: 48000,
         },
       });
       streamRef.current = stream;
