@@ -1231,15 +1231,20 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const renderSecurite = () => (
     <div className="p-4 space-y-4">
       <Card title="Niveau de filtrage" icon={Shield}>
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-2">
           {([
-            ["standard", "🟢 Standard", "Contenu adapté aux enfants"],
-            ["strict", "🔒 Strict", "Filtre renforcé, exclusivement positif"],
-          ] as const).map(([val, label, desc]) => (
+            ["standard", "🟢", "Standard", "Contenu adapté aux enfants"],
+            ["strict", "🔒", "Strict", "Filtre renforcé, positif"],
+          ] as const).map(([val, emoji, label, desc]) => (
             <button key={val} onClick={() => updateSetting("contentFilter", val)}
-              className={`w-full text-left p-3 rounded-xl transition-all ${settings.contentFilter === val ? "bg-primary/10 border border-primary/30" : "bg-muted"}`}>
-              <span className="text-sm font-bold text-foreground">{label}</span>
-              <p className="text-xs text-muted-foreground">{desc}</p>
+              className={`p-4 rounded-2xl text-left transition-all duration-200 border-2 ${
+                settings.contentFilter === val
+                  ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
+                  : "bg-muted/50 border-transparent hover:bg-muted"
+              }`}>
+              <span className="text-2xl block mb-1">{emoji}</span>
+              <h4 className="text-sm font-extrabold text-foreground">{label}</h4>
+              <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{desc}</p>
             </button>
           ))}
         </div>
@@ -1255,8 +1260,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             <div className="flex flex-wrap gap-2">
               {settings.blockedTopics.map(topic => (
                 <button key={topic} onClick={() => updateSetting("blockedTopics", settings.blockedTopics.filter(t => t !== topic))}
-                  className="flex items-center gap-1 px-3 py-1 rounded-full bg-destructive/10 text-destructive text-xs font-bold hover:bg-destructive/20 transition-all">
-                  {topic} ✕
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-destructive/10 text-destructive text-xs font-bold hover:bg-destructive/20 transition-all">
+                  {topic} <X className="w-3 h-3" />
                 </button>
               ))}
             </div>
@@ -1271,7 +1276,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 }
               }}
               placeholder="Ajouter un sujet…"
-              className="flex-1 px-3 py-2 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition-colors"
+              className="flex-1 px-4 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             />
             <button onClick={() => {
                 if (newBlockedTopic.trim()) {
@@ -1279,7 +1284,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   setNewBlockedTopic("");
                 }
               }}
-              className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-all">
+              className="w-11 h-11 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg hover:opacity-90 transition-all">
               +
             </button>
           </div>
@@ -1295,11 +1300,18 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const renderLimites = () => (
     <div className="p-4 space-y-4">
       <Card title="Limite de temps journalier" icon={Timer}>
-        <div className="flex gap-2 flex-wrap">
+        <div className="grid grid-cols-5 gap-2">
           {([null, 10, 20, 30, 60] as const).map(val => (
             <button key={String(val)} onClick={() => updateSetting("timeLimitMinutes", val)}
-              className={`py-2 px-4 rounded-xl text-sm font-bold transition-all ${settings.timeLimitMinutes === val ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-              {val === null ? "∞ Illimité" : `${val} min`}
+              className={`py-3 rounded-2xl text-center transition-all duration-200 border-2 ${
+                settings.timeLimitMinutes === val
+                  ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
+                  : "bg-muted/50 border-transparent hover:bg-muted"
+              }`}>
+              <span className={`text-sm font-bold block ${settings.timeLimitMinutes === val ? "text-primary" : "text-foreground"}`}>
+                {val === null ? "∞" : val}
+              </span>
+              <span className="text-[9px] text-muted-foreground">{val === null ? "Illimité" : "min"}</span>
             </button>
           ))}
         </div>
@@ -1315,41 +1327,37 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             <Toggle value={settings.nightMode.active} onChange={(v) => updateNested("nightMode", "active", v)} />
           </SettingRow>
           {settings.nightMode.active && (
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex items-center gap-3 pt-1 px-1">
               <div className="flex-1">
-                <p className="text-xs text-muted-foreground mb-1">Début</p>
+                <p className="text-[10px] text-muted-foreground mb-1 font-bold">Début</p>
                 <input type="time" value={settings.nightMode.startHour}
                   onChange={(e) => updateNested("nightMode", "startHour", e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-muted border border-border text-sm text-foreground outline-none focus:border-primary" />
+                  className="w-full px-3 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" />
               </div>
               <Sun className="w-4 h-4 text-muted-foreground mt-4" />
               <div className="flex-1">
-                <p className="text-xs text-muted-foreground mb-1">Fin</p>
+                <p className="text-[10px] text-muted-foreground mb-1 font-bold">Fin</p>
                 <input type="time" value={settings.nightMode.endHour}
                   onChange={(e) => updateNested("nightMode", "endHour", e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-muted border border-border text-sm text-foreground outline-none focus:border-primary" />
+                  className="w-full px-3 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" />
               </div>
             </div>
           )}
         </div>
       </Card>
       <Card title="Interactions" icon={Hand}>
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {([
-            ["wakeWord", "🎤 Mot de réveil", "Dire \"Bobby\" pour activer"],
-            ["tap", "👆 Toucher", "Toucher l'écran pour activer"],
-            ["interruption", "✋ Interruption", "L'enfant peut interrompre Bobby"],
-          ] as const).map(([key, label, desc]) => (
-            <div key={key} className="flex items-center justify-between py-2.5">
-              <div>
-                <span className="text-sm font-bold text-foreground">{label}</span>
-                <p className="text-xs text-muted-foreground">{desc}</p>
-              </div>
+            ["wakeWord", Mic, "Mot de réveil", "Dire \"Bobby\" pour activer"],
+            ["tap", Hand, "Toucher", "Toucher l'écran pour activer"],
+            ["interruption", AlertTriangle, "Interruption", "L'enfant peut interrompre Bobby"],
+          ] as const).map(([key, IconComp, label, desc]) => (
+            <SettingRow key={key} icon={IconComp} title={label} desc={desc}>
               <Toggle
                 value={settings.interactions[key as keyof typeof settings.interactions]}
                 onChange={(v) => updateNested("interactions", key, v)}
               />
-            </div>
+            </SettingRow>
           ))}
         </div>
       </Card>
