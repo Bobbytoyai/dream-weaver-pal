@@ -69,14 +69,14 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   }), []);
 
   const irisMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(25, 60%, 32%)"),
+    color: new THREE.Color(`hsl(${colorHSL.h}, ${colorHSL.s}%, ${colorHSL.l - 15}%)`),
     transparent: true, opacity: 0.9,
-  }), []);
+  }), [colorHSL]);
 
   const irisInnerMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(30, 50%, 42%)"),
+    color: new THREE.Color(`hsl(${colorHSL.h}, ${colorHSL.s - 10}%, ${colorHSL.l}%)`),
     transparent: true, opacity: 0.8,
-  }), []);
+  }), [colorHSL]);
 
   const pupilMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("hsl(20, 50%, 8%)"),
@@ -88,14 +88,14 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   }), []);
 
   const eyebrowMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color(`hsl(${colorHSL.h}, 70%, 55%)`),
+    color: new THREE.Color("hsl(25, 40%, 38%)"),
     transparent: true, opacity: 0.8,
-  }), [colorHSL]);
+  }), []);
 
   const mouthMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color(`hsl(${colorHSL.h}, 75%, 65%)`),
+    color: new THREE.Color("hsl(350, 50%, 60%)"),
     transparent: true, opacity: 0.85,
-  }), [colorHSL]);
+  }), []);
 
   const tongueMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("hsl(350, 55%, 68%)"),
