@@ -1,7 +1,6 @@
 import { useCallback, useRef } from "react";
 
 const VOICE_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-chat`;
-const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts`;
 
 type AiMsg = { role: "user" | "assistant"; content: string };
 
@@ -29,7 +28,64 @@ function filterSentence(text: string): string | null {
   return cleaned;
 }
 
-function speakWithBrowserTTS(text: string): Promise<string> {
+// ─── Voice profiles ──────────────────────────────────────────────
+// Each profile tweaks pitch/rate to create 3 distinct French voices
+// using the browser's built-in Web Speech API (100% free, no API key).
+
+export type VoiceProfile = "child" | "female" | "male";
+
+interface VoiceConfig {
+  pitch: number;
+  rate: number;
+  preferFemale: boolean; // prefer a female synth voice
+}
+
+const VOICE_PROFILES: Record<VoiceProfile, VoiceConfig> = {
+  child:  { pitch: 1.5, rate: 1.05, preferFemale: true },   // aigu, cartoon mignon
+  female: { pitch: 1.05, rate: 0.95, preferFemale: true },  // doux, maman
+  male:   { pitch: 0.7, rate: 0.92, preferFemale: false },  // grave, rassurant
+};
+
+/** Cache resolved voices so we don't search every time */
+let cachedVoices: SpeechSynthesisVoice[] = [];
+
+function getFrenchVoices(): SpeechSynthesisVoice[] {
+  if (cachedVoices.length > 0) return cachedVoices;
+  const all = speechSynthesis.getVoices();
+  cachedVoices = all.filter(v => v.lang.startsWith("fr"));
+  return cachedVoices;
+}
+
+function pickVoice(preferFemale: boolean): SpeechSynthesisVoice | null {
+  const fr = getFrenchVoices();
+  if (fr.length === 0) return null;
+
+  if (preferFemale) {
+    // Try to find a female voice
+    const female = fr.find(v =>
+      /female|femme|amelie|audrey|marie|thomas/i.test(v.name) === false &&
+      !/\bmale\b/i.test(v.name)
+    ) || fr[0];
+    return female;
+  } else {
+    // Try to find a male voice
+    const male = fr.find(v =>
+      /\bmale\b|homme|thomas|daniel/i.test(v.name)
+    ) || fr[fr.length > 1 ? 1 : 0];
+    return male;
+  }
+}
+
+// Ensure voices are loaded (some browsers load them async)
+if ("speechSynthesis" in window) {
+  speechSynthesis.getVoices(); // trigger load
+  speechSynthesis.onvoiceschanged = () => {
+    cachedVoices = [];
+    getFrenchVoices();
+  };
+}
+
+function speakWithBrowserTTS(text: string, profile: VoiceProfile = "female"): Promise<string> {
   const spokenText = sanitizeSpokenText(text);
   if (!spokenText) return Promise.resolve("__browser_tts__");
 
@@ -39,17 +95,14 @@ function speakWithBrowserTTS(text: string): Promise<string> {
       return;
     }
 
+    const config = VOICE_PROFILES[profile];
     const utterance = new SpeechSynthesisUtterance(spokenText);
     utterance.lang = "fr-FR";
-    utterance.rate = 1.02;
-    utterance.pitch = 1.18;
+    utterance.rate = config.rate;
+    utterance.pitch = config.pitch;
 
-    const voices = speechSynthesis.getVoices();
-    const frVoice =
-      voices.find((voice) => voice.lang.startsWith("fr") && voice.name.toLowerCase().includes("female")) ||
-      voices.find((voice) => voice.lang.startsWith("fr"));
-
-    if (frVoice) utterance.voice = frVoice;
+    const voice = pickVoice(config.preferFemale);
+    if (voice) utterance.voice = voice;
 
     utterance.onend = () => resolve("__browser_tts__");
     utterance.onerror = () => reject(new Error("Browser TTS error"));
@@ -57,37 +110,7 @@ function speakWithBrowserTTS(text: string): Promise<string> {
   });
 }
 
-async function requestEdgeTTS(text: string, signal?: AbortSignal, voiceId?: string): Promise<string> {
-  const response = await fetch(TTS_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-    },
-    body: JSON.stringify({ text, ...(voiceId ? { voiceId } : {}) }),
-    signal,
-  });
-
-  if (!response.ok) {
-    throw new Error(`TTS endpoint error (${response.status})`);
-  }
-
-  const contentType = response.headers.get("Content-Type") || "";
-  if (contentType.includes("application/json")) {
-    const data = await response.json();
-    if (data?.fallback) {
-      throw new Error(data.error || "TTS fallback");
-    }
-    throw new Error(data?.error || "Unexpected JSON response");
-  }
-
-  const audioBlob = await response.blob();
-  if (audioBlob.size < 100) {
-    throw new Error("TTS returned tiny audio");
-  }
-
-  return URL.createObjectURL(audioBlob);
-}
+// ─── Public API ──────────────────────────────────────────────────
 
 export async function streamVoiceChat({
   messages,
@@ -189,23 +212,28 @@ export async function streamVoiceChat({
   }
 }
 
+/**
+ * Fetch (speak) TTS audio using the browser's Web Speech API.
+ * voiceId maps to a VoiceProfile: "child" | "female" | "male"
+ */
 export async function fetchTTSAudio(text: string, signal?: AbortSignal, voiceId?: string): Promise<string> {
   const spokenText = sanitizeSpokenText(text);
   if (!spokenText) return "__browser_tts__";
 
-  try {
-    return await requestEdgeTTS(spokenText, signal, voiceId);
-  } catch (firstError: any) {
-    if (firstError.name === "AbortError") throw firstError;
+  if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
-    try {
-      return await requestEdgeTTS(spokenText, signal, voiceId);
-    } catch (secondError: any) {
-      if (secondError.name === "AbortError") throw secondError;
-      console.warn("TTS fetch error, using browser fallback for this sentence only:", secondError.message);
-      return speakWithBrowserTTS(spokenText);
-    }
-  }
+  const profile = (voiceId as VoiceProfile) || "female";
+  return speakWithBrowserTTS(spokenText, profile);
+}
+
+/**
+ * Preview a voice profile (for settings screen)
+ */
+export function previewVoiceProfile(profile: VoiceProfile): Promise<void> {
+  return speakWithBrowserTTS(
+    "Salut ! Je suis Bobby, ton compagnon préféré ! On va bien s'amuser ensemble !",
+    profile
+  ).then(() => {});
 }
 
 export function useAudioQueue() {
@@ -224,6 +252,7 @@ export function useAudioQueue() {
     const url = queueRef.current.shift()!;
 
     if (url === "__browser_tts__") {
+      // Browser TTS already played inline, just move on
       playNext();
       return;
     }
