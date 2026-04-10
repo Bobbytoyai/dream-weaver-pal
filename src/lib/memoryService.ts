@@ -10,6 +10,12 @@ export interface ChildMemory {
   favoriteThemes: string[];
   lastStoryId: string | null;
   totalStoriesHeard: number;
+  // v3.0 cognitive fields
+  progressionLevel: number;
+  interactionCount: number;
+  relationshipScore: number;
+  lastEmotions: string[];
+  emotionalHistory: Array<{ emotion: string; timestamp: string }>;
 }
 
 const memoryCache = new Map<string, ChildMemory>();
