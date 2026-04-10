@@ -52,24 +52,23 @@ export function useWakeWord({
     isRunningRef.current = true;
 
     recognition.onresult = (event: any) => {
-      // Check all results for wake word
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
-        // Check all alternatives
         for (let j = 0; j < result.length; j++) {
           const transcript = result[j].transcript.trim();
           const lower = transcript.toLowerCase();
 
-          // Show partial text
+          console.log(`[WakeWord] transcript: "${transcript}" (isFinal: ${result.isFinal}, alt: ${j})`);
+
           if (!result.isFinal && onPartial) {
             onPartial(transcript);
           }
 
-          // Check for wake word in any alternative
           const hasWakeWord = WAKE_WORDS.some(w => lower.includes(w));
+          console.log(`[WakeWord] hasWakeWord: ${hasWakeWord}, lower: "${lower}"`);
 
           if (hasWakeWord && result.isFinal) {
-            // Stop continuous listening, pass full transcript
+            console.log("[WakeWord] ✅ WAKE WORD DETECTED! Stopping listener, calling onWake");
             stopListening();
             onWake(transcript);
             return;
