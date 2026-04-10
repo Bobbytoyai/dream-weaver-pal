@@ -294,6 +294,7 @@ export async function streamVoiceChat({
         if (safe) {
           onSentence(safe);
           fullText += (fullText ? " " : "") + safe;
+          isFirstSentence = false;
         }
       }
       sentenceBuffer = "";
@@ -324,10 +325,12 @@ export async function streamVoiceChat({
             sentenceBuffer += content;
             // Flush on sentence-ending punctuation
             if (SENTENCE_RE.test(sentenceBuffer)) flushSentence();
-            // Flush on comma/semicolon if buffer is getting long enough (faster first audio)
+            // Flush on comma/semicolon early (faster first audio)
             else if (sentenceBuffer.length > COMMA_MIN_LENGTH && /[,;:]\s*$/.test(sentenceBuffer)) flushSentence();
+            // Ultra-aggressive first flush — send anything >20 chars for <700ms perception
+            else if (isFirstSentence && sentenceBuffer.length > FIRST_FLUSH_LEN) flushSentence();
             // Also flush if buffer is very long without any punctuation
-            else if (sentenceBuffer.length > 40) flushSentence();
+            else if (sentenceBuffer.length > 35) flushSentence();
           }
         } catch {
           textBuffer = line + "\n" + textBuffer;
