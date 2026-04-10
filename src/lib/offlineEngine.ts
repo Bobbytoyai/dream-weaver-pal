@@ -30,6 +30,13 @@ import {
   handleMemoryGameInput,
 } from "./memoryGame";
 
+import {
+  isLearningActive,
+  isLearningTrigger,
+  startLearning,
+  handleLearningInput,
+} from "./learningEngine";
+
 // ─── Network State ──────────────────────────────────────────
 export type NetworkMode = "ONLINE" | "OFFLINE" | "HYBRID";
 
@@ -1888,11 +1895,11 @@ const TONGUE_TWISTERS = [
   "Essaie de dire vite : Tonton, ton thé t'a-t-il ôté ta toux ? 🍵",
 ];
 
-export type MiniGameType = "riddle" | "true_false" | "animal_quiz" | "would_you_rather" | "tongue_twister" | "animal_guess" | "memory_game";
+export type MiniGameType = "riddle" | "true_false" | "animal_quiz" | "would_you_rather" | "tongue_twister" | "animal_guess" | "memory_game" | "learning";
 
 function pickMiniGame(): { type: MiniGameType; text: string } {
   const gameType = pickRandom(
-    ["riddle", "true_false", "animal_quiz", "would_you_rather", "tongue_twister", "animal_guess", "memory_game"],
+    ["riddle", "true_false", "animal_quiz", "would_you_rather", "tongue_twister", "animal_guess", "memory_game", "learning"],
     "game_type"
   ) as MiniGameType;
 
@@ -1904,6 +1911,10 @@ function pickMiniGame(): { type: MiniGameType; text: string } {
     case "memory_game": {
       const intro = startMemoryGame(undefined, 7);
       return { type: "memory_game", text: intro };
+    }
+    case "learning": {
+      const intro = startLearning(undefined, 7);
+      return { type: "learning", text: intro };
     }
     case "riddle": {
       const r = RIDDLES[Math.floor(Math.random() * RIDDLES.length)];
@@ -1984,6 +1995,21 @@ export function getOfflineResponse(
     updateContext("PLAY_REQUEST", text, gameResp);
     return { text: gameResp, intent: "PLAY_REQUEST", isOffline: true, gameType: "memory_game" as MiniGameType };
   }
+
+  // 1f. Learning Engine — if active, route ALL input
+  if (isLearningActive()) {
+    const gameResp = handleLearningInput(text, childName);
+    updateContext("EDUCATION", text, gameResp);
+    return { text: gameResp, intent: "EDUCATION", isOffline: true, gameType: "learning" as MiniGameType };
+  }
+
+  // 1g. Detect "Apprends avec moi" trigger
+  if (isLearningTrigger(text)) {
+    const gameResp = startLearning(childName, 7);
+    updateContext("EDUCATION", text, gameResp);
+    return { text: gameResp, intent: "EDUCATION", isOffline: true, gameType: "learning" as MiniGameType };
+  }
+
   // 2. Multi-turn follow-up: handle answers to Bobby's previous questions
   const followUpAnswer = handleFollowUpAnswer(text, childName);
   if (followUpAnswer) return followUpAnswer;
