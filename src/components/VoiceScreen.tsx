@@ -3,7 +3,7 @@ import { BookOpen, Settings, Camera, Mic, MicOff } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue, preloadVoiceProfile, detectEmotionForTTS } from "@/lib/voicePipeline";
 import type { Emotion } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
-import { useDeepgramSTT } from "@/hooks/useDeepgramSTT";
+import { useNativeSTT } from "@/hooks/useNativeSTT";
 import { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
 import { setSfxVolume, initSfxEventBus } from "@/lib/sfx";
@@ -480,8 +480,8 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     getAIResponse(cleaned);
   }, [audioQueue, clearTimers, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, interrupt, isCalmMode, recorder, session, speakFallback, startSilenceTimers]);
 
-  // ─── Single Deepgram STT — always on when mic is armed ───
-  const deepgramSTT = useDeepgramSTT({
+  // ─── Native Speech Recognition — always on when mic is armed ───
+  const nativeSTT = useNativeSTT({
     onPartial: useCallback((text: string) => {
       setPartialText(text);
     }, []),
@@ -491,24 +491,24 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         handleTranscript(text.trim());
       }
     }, [handleTranscript]),
-    onError: useCallback(() => {
-      console.warn("[Deepgram] STT error — will retry");
+    onError: useCallback((err: string) => {
+      console.warn("[NativeSTT] Error:", err);
     }, []),
-    language: "fr",
+    language: "fr-FR",
   });
 
-  // Start/stop Deepgram based on micArmed AND not speaking
+  // Start/stop STT based on micArmed AND not speaking
   const shouldListen = micArmed && state !== "speaking" && state !== "processing";
   const shouldListenRef = useRef(shouldListen);
   shouldListenRef.current = shouldListen;
 
   useEffect(() => {
     if (shouldListen) {
-      deepgramSTT.start();
+      nativeSTT.start();
     } else {
-      deepgramSTT.stop();
+      nativeSTT.stop();
     }
-  }, [shouldListen, deepgramSTT]);
+  }, [shouldListen, nativeSTT]);
 
   // ─── Tap to arm microphone (browser policy) ───
   const armMic = useCallback(() => {
