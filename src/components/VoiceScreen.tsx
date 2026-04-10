@@ -95,12 +95,13 @@ function isEcho(transcript: string): boolean {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const SILENCE_IDLE_TIMEOUT = 40000;       // 40s silence → IDLE
 const SLEEP_TIMEOUT = 120000;             // 2min inactivity → SLEEP
-const UTTERANCE_FLUSH_DELAY = 1200;       // ms after utterance end before flushing
-const SHORT_UTTERANCE_FLUSH = 800;        // faster flush for short text
+const UTTERANCE_FLUSH_DELAY = 600;        // ms after utterance end before flushing (was 1200)
+const SHORT_UTTERANCE_FLUSH = 350;        // faster flush for short text (was 800)
 const STUCK_TIMEOUT = 3500;               // 3.5s stuck in any state → auto-recover
 const AI_RESPONSE_TIMEOUT = 5000;         // 5s max for AI response
 const MAX_AI_RETRIES = 1;                 // retry once on failure
 const LOW_CONFIDENCE_THRESHOLD = 0.45;    // below this → ask to repeat
+const FIRST_SENTENCE_MAX = 25;            // flush LLM sentence buffer early for first chunk
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // UI COMPONENTS
@@ -637,19 +638,23 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       }
     }, [handleTranscript]),
     onUtteranceEnd: useCallback(() => {
-      console.log("[VoiceScreen] 📢 UtteranceEnd");
+      console.log("[VoiceScreen] 📢 UtteranceEnd — immediate flush");
       isSpeakingRef.current = false;
-      if (accumulatedTextRef.current.trim().length > 2) scheduleFlush();
-    }, [scheduleFlush]),
+      // Flush immediately on UtteranceEnd for lowest latency
+      if (accumulatedTextRef.current.trim().length > 2) {
+        if (utteranceFlushTimerRef.current) { clearTimeout(utteranceFlushTimerRef.current); utteranceFlushTimerRef.current = null; }
+        flushAccumulatedText();
+      }
+    }, [flushAccumulatedText]),
     onSpeechStarted: useCallback(() => {
       isSpeakingRef.current = true;
-      // Extend flush timer while user speaks — max 2.5s safety
+      // Extend flush timer while user speaks — max 1.8s safety (was 2.5s)
       if (utteranceFlushTimerRef.current) {
         clearTimeout(utteranceFlushTimerRef.current);
         utteranceFlushTimerRef.current = setTimeout(() => {
           isSpeakingRef.current = false;
           flushAccumulatedText();
-        }, 2500);
+        }, 1800);
       }
     }, [flushAccumulatedText]),
     onError: useCallback((err: string) => { console.warn("[STT] Error:", err); }, []),

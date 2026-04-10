@@ -283,7 +283,9 @@ export async function streamVoiceChat({
     let sentenceBuffer = "";
 
     const SENTENCE_RE = /[.!?…]\s*/;
-    const COMMA_MIN_LENGTH = 12; // Flush on comma very early for ultra-fast first audio
+    const COMMA_MIN_LENGTH = 8;  // Flush on comma very early for ultra-fast first audio (was 12)
+    let isFirstSentence = true;
+    const FIRST_FLUSH_LEN = 20; // Very aggressive first flush for <700ms perception
 
     const flushSentence = () => {
       const trimmed = sentenceBuffer.trim();
@@ -292,6 +294,7 @@ export async function streamVoiceChat({
         if (safe) {
           onSentence(safe);
           fullText += (fullText ? " " : "") + safe;
+          isFirstSentence = false;
         }
       }
       sentenceBuffer = "";
@@ -322,10 +325,12 @@ export async function streamVoiceChat({
             sentenceBuffer += content;
             // Flush on sentence-ending punctuation
             if (SENTENCE_RE.test(sentenceBuffer)) flushSentence();
-            // Flush on comma/semicolon if buffer is getting long enough (faster first audio)
+            // Flush on comma/semicolon early (faster first audio)
             else if (sentenceBuffer.length > COMMA_MIN_LENGTH && /[,;:]\s*$/.test(sentenceBuffer)) flushSentence();
+            // Ultra-aggressive first flush — send anything >20 chars for <700ms perception
+            else if (isFirstSentence && sentenceBuffer.length > FIRST_FLUSH_LEN) flushSentence();
             // Also flush if buffer is very long without any punctuation
-            else if (sentenceBuffer.length > 40) flushSentence();
+            else if (sentenceBuffer.length > 35) flushSentence();
           }
         } catch {
           textBuffer = line + "\n" + textBuffer;
