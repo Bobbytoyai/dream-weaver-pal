@@ -856,8 +856,34 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         ))}
       </div>
 
-      {/* ═══ 2. INSIGHTS INTELLIGENTS ═══ */}
-      {dailyInsights.length > 0 && (
+      {/* ═══ 2b. RÉSUMÉ DU JOUR ═══ */}
+      {dailySummary && (
+        <div className="bg-card rounded-2xl p-4 border border-border/30">
+          <div className="flex items-center gap-2 mb-2">
+            <Calendar className="w-4 h-4 text-primary" />
+            <h3 className="text-[13px] font-bold text-foreground">Résumé du jour</h3>
+          </div>
+          <p className="text-[12px] text-foreground/80 leading-relaxed">{dailySummary}</p>
+        </div>
+      )}
+
+      {/* ═══ 2c. RECOMMANDATIONS PARENT ═══ */}
+      {parentRecommendations.length > 0 && (
+        <div className="bg-card rounded-2xl p-4 border border-primary/15">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <h3 className="text-[13px] font-bold text-foreground">Recommandations</h3>
+          </div>
+          <div className="space-y-2">
+            {parentRecommendations.map((rec, i) => (
+              <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-xl bg-primary/5">
+                <span className="text-sm mt-0.5">{rec.emoji}</span>
+                <p className="text-[12px] text-foreground/80 leading-relaxed">{rec.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
         <div className="bg-card rounded-2xl p-4 border border-border/30">
           <div className="flex items-center gap-2 mb-3">
             <Star className="w-4 h-4 text-primary" />
