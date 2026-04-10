@@ -2,7 +2,7 @@
  * Bobby Holographic Face — Flat 2D hologram style
  * Manga-shaped eyes, curved smile mouth, tongue on open
  */
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { FaceState, useFaceAnimation } from "./useFaceAnimation";
@@ -14,6 +14,7 @@ interface FaceMeshProps {
   audioAmplitude: number;
   viseme?: VisemeState;
   emotionIntensity?: number;
+  bobbyColor?: string;
 }
 
 // Create a manga eye shape — tall oval, slightly pointed at corners
@@ -28,7 +29,7 @@ function createMangaEyeShape(w: number, h: number): THREE.Shape {
   return shape;
 }
 
-export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIntensity = 0.7 }: FaceMeshProps) {
+export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIntensity = 0.7, bobbyColor }: FaceMeshProps) {
   const rootRef = useRef<THREE.Group>(null);
   const leftEyeRef = useRef<THREE.Group>(null);
   const rightEyeRef = useRef<THREE.Group>(null);
