@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { HologramFace } from "../hologram/HologramFace";
 
 interface InterestsStepProps {
   selectedInterests: string[];
@@ -29,8 +30,8 @@ export default function InterestsStep({ selectedInterests, onSelect, onNext, chi
 
   return (
     <div className="flex flex-col items-center text-center w-full">
-      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--secondary))] flex items-center justify-center mb-6 shadow-lg shadow-[hsla(180,70%,50%,0.25)]">
-        <span className="text-4xl">💡</span>
+      <div className="w-20 h-20 mb-6 relative">
+        <HologramFace voiceState="idle" enableCamera={false} emotionOverride={selectedInterests.length >= 2 ? "excited" : selectedInterests.length > 0 ? "happy" : undefined} />
       </div>
       <h2 className="text-3xl font-extrabold text-foreground mb-2">
         Qu'est-ce que tu adores, {childName} ?

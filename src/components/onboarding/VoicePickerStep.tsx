@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Volume2, Loader2 } from "lucide-react";
 import { fetchTTSAudio, type VoiceProfile } from "@/lib/voicePipeline";
+import { HologramFace } from "../hologram/HologramFace";
 
 interface VoicePickerStepProps {
   childName: string;
@@ -48,8 +49,8 @@ export default function VoicePickerStep({ childName, selectedVoice, onSelect, on
 
   return (
     <div className="flex flex-col items-center text-center w-full">
-      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] flex items-center justify-center mb-6 shadow-lg shadow-[hsla(200,100%,60%,0.25)]">
-        <span className="text-4xl">🎙️</span>
+      <div className="w-20 h-20 mb-6 relative">
+        <HologramFace voiceState={playing ? "speaking" : "idle"} enableCamera={false} emotionOverride={playing ? "happy" : undefined} />
       </div>
       <h2 className="text-3xl font-extrabold text-foreground mb-2">
         Quelle voix pour Bobby ?
