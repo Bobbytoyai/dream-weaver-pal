@@ -16,6 +16,12 @@ export interface ChildMemory {
   relationshipScore: number;
   lastEmotions: string[];
   emotionalHistory: Array<{ emotion: string; timestamp: string }>;
+  // v4.0 adaptive profile
+  engagementTriggers: string[];
+  behaviorPatterns: string[];
+  learningSpeed: string;
+  interactionStyle: string;
+  preferredTopics: Record<string, number>;
 }
 
 const memoryCache = new Map<string, ChildMemory>();
