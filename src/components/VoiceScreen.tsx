@@ -151,7 +151,7 @@ const DebugOverlay = ({ state, micArmed, micRunning, partialText, lastRecognized
 }) => (
   <div className="fixed top-0 left-0 right-0 z-50 bg-black/85 text-white p-3 text-[10px] font-mono space-y-1 pointer-events-none max-h-48 overflow-y-auto">
     <div className="flex gap-3 flex-wrap">
-      <span>State: <span className={`font-bold ${state === "ERROR" ? "text-red-400" : state === "LISTENING" ? "text-green-400" : state === "SPEAKING" ? "text-blue-400" : state === "PROCESSING" ? "text-yellow-400" : "text-gray-400"}`}>{state}</span></span>
+      <span>State: <span className={`font-bold ${state === "ERROR" ? "text-red-400" : state === "LISTENING" ? "text-green-400" : state === "SPEAKING" ? "text-blue-400" : state === "PROCESSING" ? "text-yellow-400" : state === "SLEEP" ? "text-indigo-400" : "text-gray-400"}`}>{state}</span></span>
       <span>Mic: {micArmed ? (micRunning ? "🟢 ON" : "🟡 ARMED") : "🔴 OFF"}</span>
       <span>STT: {sttBackend}</span>
     </div>
