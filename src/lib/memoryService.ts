@@ -38,6 +38,11 @@ export async function loadMemory(childName: string): Promise<ChildMemory> {
       favoriteThemes: data.favorite_themes || [],
       lastStoryId: data.last_story_id,
       totalStoriesHeard: data.total_stories_heard,
+      progressionLevel: (data as any).progression_level ?? 1,
+      interactionCount: (data as any).interaction_count ?? 0,
+      relationshipScore: (data as any).relationship_score ?? 0,
+      lastEmotions: (data as any).last_emotions ?? [],
+      emotionalHistory: ((data as any).emotional_history as any[]) ?? [],
     };
     memoryCache.set(childName, memory);
     return memory;
@@ -50,6 +55,11 @@ export async function loadMemory(childName: string): Promise<ChildMemory> {
     favoriteThemes: [],
     lastStoryId: null,
     totalStoriesHeard: 0,
+    progressionLevel: 1,
+    interactionCount: 0,
+    relationshipScore: 0,
+    lastEmotions: [],
+    emotionalHistory: [],
   };
 
   await supabase.from("child_memories").insert({
