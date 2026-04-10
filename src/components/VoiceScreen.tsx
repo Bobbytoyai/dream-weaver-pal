@@ -315,12 +315,26 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     allSentencesDoneRef.current = false;
     pendingSentencesRef.current = 0;
 
+    // Build memory context for bobby-brain
+    const memoryParts: string[] = [];
+    if (memory) {
+      if (memory.favoriteThemes.length > 0) memoryParts.push(`Thèmes favoris: ${memory.favoriteThemes.join(", ")}`);
+      if (memory.totalStoriesHeard > 0) memoryParts.push(`Histoires écoutées: ${memory.totalStoriesHeard}`);
+      const prefs = memory.preferences as Record<string, unknown>;
+      if (prefs && Object.keys(prefs).length > 0) {
+        const prefStr = Object.entries(prefs).map(([k, v]) => `${k}: ${v}`).join(", ");
+        memoryParts.push(`Préférences: ${prefStr}`);
+      }
+    }
+    const memoryContext = memoryParts.length > 0 ? memoryParts.join("\n") : undefined;
+
     await streamVoiceChat({
       messages: newHistory,
       childName,
       childAge,
       mode,
       parentSettings,
+      memoryContext,
       signal: abortController.signal,
       onSentence: (sentence) => {
         if (!abortController.signal.aborted) {
@@ -346,7 +360,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         if (!abortController.signal.aborted) speakFallback("error");
       },
     });
-  }, [audioQueue, childAge, childName, clearTimers, conversationHistory, goToListening, parentSettings, processSentenceForTTS, session, speakFallback]);
+  }, [audioQueue, childAge, childName, clearTimers, conversationHistory, goToListening, memory, parentSettings, processSentenceForTTS, session, speakFallback]);
 
   const handleContinuousResult = useCallback((text: string) => {
     clearTimers();
