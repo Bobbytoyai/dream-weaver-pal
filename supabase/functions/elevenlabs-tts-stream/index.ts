@@ -1,12 +1,12 @@
 /**
- * ElevenLabs TTS Streaming — Emotional Voice System
+ * ElevenLabs TTS Streaming — Emotional Voice Engine V2
  * 
- * 3 voice profiles with emotion-aware settings:
- * 🎭 Enfant (Lily) — cartoon, animated, playful
- * 👩 Maman (Matilda) — warm, maternal, funny
- * 👨 Papa (George) — deep, calm, protective
+ * 3 voice profiles optimized for emotional connection with children:
+ * 🎭 Enfant (Lily) — cartoon authentique, joyeux, magique
+ * 👩 Maman (Matilda) — ultra apaisante, enveloppante, maternelle
+ * 👨 Papa (George) — calme, protecteur, rassurant
  * 
- * Emotion modifiers adjust stability/style/speed per detected mood.
+ * Emotion modifiers + calm mode for bedtime/stress situations.
  */
 
 const corsHeaders = {
@@ -14,7 +14,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// ─── Voice Profiles ─────────────────────────────────────────
+// ─── Voice Profiles (V2 — Emotional Comfort) ───────────────
 interface VoiceSettings {
   voiceId: string;
   stability: number;
@@ -24,31 +24,40 @@ interface VoiceSettings {
 }
 
 const VOICE_PROFILES: Record<string, VoiceSettings> = {
+  // 🎭 Enfant — cartoon authentique, pas caricature
+  // Stability basse = variations naturelles, micro-rires, expressivité
+  // Style élevé = personnalité cartoon vivante
   child: {
-    voiceId: "pFZP5JQG7iQjIQuC4Bku",   // Lily — bright, cartoon-like, expressive
-    stability: 0.38,
-    similarity_boost: 0.82,
-    style: 0.65,
-    speed: 1.08,
+    voiceId: "pFZP5JQG7iQjIQuC4Bku",   // Lily
+    stability: 0.40,
+    similarity_boost: 0.80,
+    style: 0.70,
+    speed: 1.02,
   },
+  // 👩 Maman — ultra apaisante, enveloppante
+  // Stability très haute = voix régulière, calmante
+  // Style bas = naturel, pas théâtral
+  // Speed réduit = rythme lent, sécurisant
   female: {
-    voiceId: "XrExE9yKIg1WjnnlVkGX",   // Matilda — warm, maternal, slightly fun
-    stability: 0.52,
+    voiceId: "XrExE9yKIg1WjnnlVkGX",   // Matilda
+    stability: 0.85,
     similarity_boost: 0.78,
-    style: 0.40,
-    speed: 0.98,
+    style: 0.20,
+    speed: 0.88,
   },
+  // 👨 Papa — calme, protecteur, confiant
+  // Stability très haute = voix posée, stable
+  // Speed légèrement lent = rythme rassurant
   male: {
-    voiceId: "JBFqnCBsd6RMkjVDRZzb",   // George — deep, reassuring, protective
-    stability: 0.68,
+    voiceId: "JBFqnCBsd6RMkjVDRZzb",   // George
+    stability: 0.90,
     similarity_boost: 0.72,
-    style: 0.22,
-    speed: 0.93,
+    style: 0.15,
+    speed: 0.90,
   },
 };
 
-// ─── Emotion Modifiers ──────────────────────────────────────
-// Adjust voice settings based on detected emotion for natural delivery
+// ─── Emotion Modifiers (V2 — Comfort-First) ────────────────
 type Emotion = "happy" | "sad" | "scared" | "excited" | "calm" | "curious" | "angry" | "bored";
 
 interface EmotionModifier {
@@ -58,24 +67,28 @@ interface EmotionModifier {
 }
 
 const EMOTION_MODIFIERS: Record<Emotion, EmotionModifier> = {
-  happy:   { stabilityDelta: -0.08, styleDelta: +0.15, speedDelta: +0.05 },
-  excited: { stabilityDelta: -0.12, styleDelta: +0.20, speedDelta: +0.08 },
-  sad:     { stabilityDelta: +0.15, styleDelta: -0.10, speedDelta: -0.08 },
-  scared:  { stabilityDelta: +0.10, styleDelta: +0.05, speedDelta: -0.05 },
-  calm:    { stabilityDelta: +0.20, styleDelta: -0.15, speedDelta: -0.10 },
-  curious: { stabilityDelta: -0.05, styleDelta: +0.10, speedDelta: +0.03 },
-  angry:   { stabilityDelta: +0.05, styleDelta: +0.10, speedDelta: +0.05 },
-  bored:   { stabilityDelta: +0.10, styleDelta: -0.05, speedDelta: -0.03 },
+  happy:   { stabilityDelta: -0.10, styleDelta: +0.15, speedDelta: +0.04 },
+  excited: { stabilityDelta: -0.15, styleDelta: +0.20, speedDelta: +0.06 },
+  sad:     { stabilityDelta: +0.15, styleDelta: -0.10, speedDelta: -0.10 },
+  scared:  { stabilityDelta: +0.20, styleDelta: -0.05, speedDelta: -0.08 },
+  calm:    { stabilityDelta: +0.10, styleDelta: -0.15, speedDelta: -0.12 },
+  curious: { stabilityDelta: -0.05, styleDelta: +0.10, speedDelta: +0.02 },
+  angry:   { stabilityDelta: +0.05, styleDelta: +0.08, speedDelta: +0.03 },
+  bored:   { stabilityDelta: +0.10, styleDelta: -0.05, speedDelta: -0.04 },
 };
+
+function clamp(v: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, v));
+}
 
 function applyEmotion(base: VoiceSettings, emotion?: string): VoiceSettings {
   if (!emotion || !(emotion in EMOTION_MODIFIERS)) return base;
   const mod = EMOTION_MODIFIERS[emotion as Emotion];
   return {
     ...base,
-    stability: Math.max(0.1, Math.min(1, base.stability + mod.stabilityDelta)),
-    style: Math.max(0, Math.min(1, base.style + mod.styleDelta)),
-    speed: Math.max(0.7, Math.min(1.2, base.speed + mod.speedDelta)),
+    stability: clamp(base.stability + mod.stabilityDelta, 0.10, 0.98),
+    style: clamp(base.style + mod.styleDelta, 0.0, 0.90),
+    speed: clamp(base.speed + mod.speedDelta, 0.70, 1.20),
   };
 }
 
@@ -84,7 +97,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { text, voiceProfile, emotion, speedOverride } = await req.json();
+    const { text, voiceProfile, emotion, speedOverride, calmMode } = await req.json();
     
     if (!text || text.trim().length === 0) {
       return new Response(new ArrayBuffer(0), {
@@ -100,10 +113,22 @@ Deno.serve(async (req) => {
 
     // Apply speed override from parent settings
     if (speedOverride === "slow") {
-      profile = { ...profile, speed: Math.max(0.7, profile.speed - 0.15) };
+      profile = { ...profile, speed: clamp(profile.speed - 0.12, 0.70, 1.20) };
     } else if (speedOverride === "fast") {
-      profile = { ...profile, speed: Math.min(1.2, profile.speed + 0.12) };
+      profile = { ...profile, speed: clamp(profile.speed + 0.10, 0.70, 1.20) };
     }
+
+    // Calm/night mode — override to ultra-soothing
+    if (calmMode) {
+      profile = {
+        ...profile,
+        stability: clamp(profile.stability + 0.15, 0.10, 0.98),
+        style: clamp(profile.style - 0.15, 0.0, 0.90),
+        speed: clamp(profile.speed - 0.10, 0.70, 1.20),
+      };
+    }
+
+    console.log(`[TTS V2] profile=${voiceProfile} emotion=${emotion || "none"} speed=${profile.speed.toFixed(2)} stability=${profile.stability.toFixed(2)} style=${profile.style.toFixed(2)} calm=${!!calmMode}`);
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${profile.voiceId}/stream?output_format=mp3_22050_32`,

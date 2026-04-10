@@ -134,6 +134,7 @@ const FloatingParticles = () => {
 const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onParentMode, parentSettings }: VoiceScreenProps) => {
   const currentVoiceId = parentSettings?.voiceType || "female";
   const currentVoiceSpeed = parentSettings?.voiceSpeed || "normal";
+  const isCalmMode = parentSettings?.nightMode?.active || parentSettings?.personality === "calm";
   const [state, setState] = useState<VoiceState>("idle");
   const [conversationHistory, setConversationHistory] = useState<AiMsg[]>([]);
   const [partialText, setPartialText] = useState("");
@@ -251,7 +252,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       setContinuousListenEnabled(false);
       eventBus.emit({ type: "SPEECH_START" });
       recentBobbyTextsRef.current = [fallbackText, ...recentBobbyTextsRef.current].slice(0, 5);
-      const url = await fetchTTSAudio(fallbackText, undefined, currentVoiceId, undefined, currentVoiceSpeed);
+      const url = await fetchTTSAudio(fallbackText, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode);
       audioQueue.enqueue(url);
       audioQueue.setOnAllDone(() => {
         eventBus.emit({ type: "SPEECH_STOP" });
@@ -284,7 +285,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     const responseEmotion = detectEmotionForTTS(sentence) || currentEmotionRef.current;
 
     try {
-      const url = await fetchTTSAudio(sentence, signal, currentVoiceId, responseEmotion, currentVoiceSpeed);
+      const url = await fetchTTSAudio(sentence, signal, currentVoiceId, responseEmotion, currentVoiceSpeed, isCalmMode);
       if (!signal?.aborted) {
         setState("speaking");
         setContinuousListenEnabled(false);
@@ -397,7 +398,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       setContinuousListenEnabled(false);
       eventBus.emit({ type: "SPEECH_START" });
       recentBobbyTextsRef.current = [cached, ...recentBobbyTextsRef.current].slice(0, 8);
-      fetchTTSAudio(cached, undefined, currentVoiceId, undefined, currentVoiceSpeed).then(url => {
+      fetchTTSAudio(cached, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode).then(url => {
         audioQueue.enqueue(url);
         audioQueue.setOnAllDone(() => {
           eventBus.emit({ type: "SPEECH_STOP" });
