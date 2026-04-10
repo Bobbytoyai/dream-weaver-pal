@@ -1,4 +1,4 @@
-/* v2 — SmartSTT */
+/* v3 — SmartSTT + Wake Word Engine */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { BookOpen, Settings, Camera, Mic, MicOff } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue, preloadVoiceProfile, detectEmotionForTTS } from "@/lib/voicePipeline";
@@ -12,6 +12,7 @@ import { useChildMemory } from "@/hooks/useChildMemory";
 import { useConversationRecorder } from "@/hooks/useConversationRecorder";
 import { eventBus } from "@/lib/eventBus";
 import { getCachedResponse, isSimpleGreeting } from "@/lib/responseCache";
+import { hasWakeWord, stripWakeWord, isJustWakeWord, computeWakeConfidence } from "@/lib/wakeWordEngine";
 
 type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
 type AiMsg = { role: "user" | "assistant"; content: string };
