@@ -38,23 +38,28 @@ export async function loadMemory(childName: string): Promise<ChildMemory> {
     .maybeSingle();
 
   if (data) {
+    const d = data as any;
     const memory: ChildMemory = {
-      childName: data.child_name,
-      preferences: (data.preferences as Record<string, unknown>) || {},
-      favoriteThemes: data.favorite_themes || [],
-      lastStoryId: data.last_story_id,
-      totalStoriesHeard: data.total_stories_heard,
-      progressionLevel: (data as any).progression_level ?? 1,
-      interactionCount: (data as any).interaction_count ?? 0,
-      relationshipScore: (data as any).relationship_score ?? 0,
-      lastEmotions: (data as any).last_emotions ?? [],
-      emotionalHistory: ((data as any).emotional_history as any[]) ?? [],
+      childName: d.child_name,
+      preferences: (d.preferences as Record<string, unknown>) || {},
+      favoriteThemes: d.favorite_themes || [],
+      lastStoryId: d.last_story_id,
+      totalStoriesHeard: d.total_stories_heard,
+      progressionLevel: d.progression_level ?? 1,
+      interactionCount: d.interaction_count ?? 0,
+      relationshipScore: d.relationship_score ?? 0,
+      lastEmotions: d.last_emotions ?? [],
+      emotionalHistory: (d.emotional_history as any[]) ?? [],
+      engagementTriggers: d.engagement_triggers ?? [],
+      behaviorPatterns: (d.behavior_patterns as string[]) ?? [],
+      learningSpeed: d.learning_speed ?? "normal",
+      interactionStyle: d.interaction_style ?? "balanced",
+      preferredTopics: (d.preferred_topics as Record<string, number>) ?? {},
     };
     memoryCache.set(childName, memory);
     return memory;
   }
 
-  // Create new memory
   const newMemory: ChildMemory = {
     childName,
     preferences: {},
@@ -66,6 +71,11 @@ export async function loadMemory(childName: string): Promise<ChildMemory> {
     relationshipScore: 0,
     lastEmotions: [],
     emotionalHistory: [],
+    engagementTriggers: [],
+    behaviorPatterns: [],
+    learningSpeed: "normal",
+    interactionStyle: "balanced",
+    preferredTopics: {},
   };
 
   await supabase.from("child_memories").insert({
