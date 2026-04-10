@@ -729,6 +729,14 @@ export function useConversationStateMachine({
         ensureSession();
         eventBus.emit({ type: "WAKE_TRIGGERED" });
       }
+      // v3.9: Emotion anticipation from partials — react WHILE child speaks
+      if (machineStateRef.current === "LISTENING" && text.length > 5) {
+        const anticipatedEmotion = detectBobbyEmotion(text);
+        if (anticipatedEmotion) {
+          setBobbyFaceEmotion(anticipatedEmotion);
+          setBobbyEmotionIntensity(0.4); // subtle, not full intensity yet
+        }
+      }
     }, [ensureSession]),
     onFinal: useCallback((text: string) => {
       wakeTriggeredFromPartialRef.current = false;
