@@ -1354,7 +1354,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center justify-center gap-3">
+              <button onClick={() => skipAudio(-10)}
+                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors text-[10px] font-bold">
+                -10
+              </button>
               <button onClick={() => skipMessage(-1)}
                 className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
                 <SkipBack className="w-4 h-4" />
@@ -1368,6 +1372,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               <button onClick={() => skipMessage(1)}
                 className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
                 <SkipForward className="w-4 h-4" />
+              </button>
+              <button onClick={() => skipAudio(10)}
+                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors text-[10px] font-bold">
+                +10
               </button>
             </div>
 
