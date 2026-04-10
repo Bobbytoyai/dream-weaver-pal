@@ -13,6 +13,8 @@ import { useConversationRecorder } from "@/hooks/useConversationRecorder";
 import { eventBus } from "@/lib/eventBus";
 import { getCachedResponse, isSimpleGreeting } from "@/lib/responseCache";
 import { hasWakeWord, stripWakeWord, isJustWakeWord, computeWakeConfidence } from "@/lib/wakeWordEngine";
+import { isOffline, canHandleOffline, getOfflineResponse, detectOfflineIntent } from "@/lib/offlineEngine";
+import { useNetworkMode } from "@/hooks/useNetworkMode";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 1. STATE MACHINE TYPES
