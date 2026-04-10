@@ -445,15 +445,33 @@ export function useConversationStateMachine({
       return memoryParts.length > 0 ? memoryParts.join("\n") : undefined;
     })();
 
+    const aiStartTime = Date.now();
+
+    // Latency filler: if AI takes >2s, show a micro-reaction
+    const latencyFillerTimer = setTimeout(() => {
+      if (machineStateRef.current === "PROCESSING") {
+        const filler = getLatencyFiller();
+        setBobbyFaceEmotion("thinking");
+        setBobbyEmotionIntensity(0.5);
+        // Speak the filler but don't reset the AI call
+        fetchTTSAudio(filler, abortController.signal, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode)
+          .then(url => { if (!abortController.signal.aborted) { goToSpeaking(); audioQueue.enqueue(url); } })
+          .catch(() => {});
+      }
+    }, 2000);
+
     const recoveryTimer = setTimeout(() => {
       if (machineStateRef.current === "PROCESSING") {
         abortController.abort();
         if (retryCountRef.current < MAX_AI_RETRIES) {
           retryCountRef.current++;
-          getAIResponse(userText, intent);
+          getAIResponse(userText, intent, orchestratorHints);
         } else {
           retryCountRef.current = 0;
-          speakAndListen(FALLBACK_FR.not_heard);
+          // Failsafe: use offline engine or generic response
+          reportModuleHealth("ai", false);
+          const offlineResp = getOfflineResponse(userText, childName);
+          speakAndListen(offlineResp.text || getFailsafeResponse());
         }
       }
     }, AI_RESPONSE_TIMEOUT);
@@ -466,7 +484,12 @@ export function useConversationStateMachine({
         signal: abortController.signal,
         onSentence: (sentence) => {
           clearTimeout(recoveryTimer);
+          clearTimeout(latencyFillerTimer);
           if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current);
+          if (!gotFirstSentence) {
+            recordLatency(Date.now() - aiStartTime);
+            reportModuleHealth("ai", true);
+          }
           gotFirstSentence = true;
           if (!abortController.signal.aborted) {
             eventBus.emit({ type: "SPEECH_START" });
@@ -475,6 +498,7 @@ export function useConversationStateMachine({
         },
         onDone: (text) => {
           clearTimeout(recoveryTimer);
+          clearTimeout(latencyFillerTimer);
           if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current);
           allSentencesDoneRef.current = true;
           setLastAiResponse(text || "");
@@ -493,26 +517,34 @@ export function useConversationStateMachine({
         },
         onError: (error) => {
           clearTimeout(recoveryTimer);
+          clearTimeout(latencyFillerTimer);
           console.error("AI error:", error);
           if (!abortController.signal.aborted) {
             if (retryCountRef.current < MAX_AI_RETRIES) {
               retryCountRef.current++;
-              getAIResponse(userText, intent);
+              getAIResponse(userText, intent, orchestratorHints);
             } else {
               retryCountRef.current = 0;
-              speakAndListen(FALLBACK_FR.not_heard);
+              reportModuleHealth("ai", false);
+              // Graceful fallback to offline engine
+              const offlineResp = getOfflineResponse(userText, childName);
+              speakAndListen(offlineResp.text || getFailsafeResponse());
             }
           }
         },
       });
     } catch (e) {
       clearTimeout(recoveryTimer);
+      clearTimeout(latencyFillerTimer);
       console.error("AI call exception:", e);
       if (!abortController.signal.aborted) {
         retryCountRef.current = 0;
+        reportModuleHealth("ai", false);
+        // Soft reset: offline response, never silence
         const offlineResp = getOfflineResponse(userText, childName);
-        speakAndListen(offlineResp.text);
+        speakAndListen(offlineResp.text || getFailsafeResponse());
       }
+    }
     }
   }, [audioQueue, childAge, childName, clearAllTimers, conversationHistory, goToListening, goToSpeaking, memory, parentSettings, processSentenceForTTS, session, speakAndListen, startStuckTimer, transition]);
 
