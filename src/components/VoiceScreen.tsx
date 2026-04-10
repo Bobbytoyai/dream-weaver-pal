@@ -769,11 +769,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
               <Mic className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="text-xs text-muted-foreground font-medium">En attente de "Bobby"</span>
             </div>
-          ) : machineState === "IDLE" && !micArmed ? (
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 backdrop-blur-sm animate-pulse">
-              <span className="text-xs text-primary font-bold">👆 Touche Bobby pour activer le micro</span>
-            </div>
-          ) : machineState === "SPEAKING" ? (
+          ) : machineState === "IDLE" && !micArmed ? null : machineState === "SPEAKING" ? (
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100/60 backdrop-blur-sm">
               <span className="text-xs text-blue-600 font-bold">👆 Touche pour interrompre</span>
             </div>
