@@ -246,8 +246,8 @@ ${personalizedText}`;
           ...recentMessages,
         ],
         stream: true,
-        temperature: intent === "emotion_support" ? 0.25 : intent === "story" ? 0.4 : 0.35,
-        max_tokens: intent === "story" ? 800 : 80,
+        temperature: intent === "emotion_support" ? 0.25 : intent === "story" ? 0.4 : 0.3,
+        max_tokens: intent === "story" ? 800 : intent === "game" ? 120 : 60,
       }),
     });
 

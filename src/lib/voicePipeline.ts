@@ -281,7 +281,7 @@ export async function streamVoiceChat({
     let sentenceBuffer = "";
 
     const SENTENCE_RE = /[.!?…]\s*/;
-    const COMMA_MIN_LENGTH = 40; // Flush on comma if buffer is long enough
+    const COMMA_MIN_LENGTH = 20; // Flush on comma early for faster first audio
 
     const flushSentence = () => {
       const trimmed = sentenceBuffer.trim();
@@ -320,8 +320,10 @@ export async function streamVoiceChat({
             sentenceBuffer += content;
             // Flush on sentence-ending punctuation
             if (SENTENCE_RE.test(sentenceBuffer)) flushSentence();
-            // Also flush on comma if buffer is getting long (for faster first audio)
-            else if (sentenceBuffer.length > COMMA_MIN_LENGTH && /,\s*$/.test(sentenceBuffer)) flushSentence();
+            // Flush on comma/semicolon if buffer is getting long enough (faster first audio)
+            else if (sentenceBuffer.length > COMMA_MIN_LENGTH && /[,;:]\s*$/.test(sentenceBuffer)) flushSentence();
+            // Also flush if buffer is very long without any punctuation
+            else if (sentenceBuffer.length > 60) flushSentence();
           }
         } catch {
           textBuffer = line + "\n" + textBuffer;
