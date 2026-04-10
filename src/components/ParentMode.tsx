@@ -1559,6 +1559,64 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </Card>
             )}
 
+            {/* v4.2: Emotion Timeline */}
+            {sessionMessages.filter(m => m.detected_emotion && m.role === "user").length > 0 && (
+              <Card title="Timeline émotionnelle" icon={Activity}>
+                <div className="flex items-center gap-0.5 overflow-x-auto pb-1">
+                  {sessionMessages.map((msg, i) => {
+                    if (msg.role !== "user" || !msg.detected_emotion) return null;
+                    const emo = emotionLabels[msg.detected_emotion] || { emoji: "💬", color: "bg-muted text-muted-foreground" };
+                    const totalUserMsgs = sessionMessages.filter(m => m.role === "user").length;
+                    const userIdx = sessionMessages.filter((m, j) => j < i && m.role === "user").length;
+                    const timeStr = totalUserMsgs > 0 && selectedSession?.duration_seconds
+                      ? `${Math.floor((userIdx / totalUserMsgs) * (selectedSession.duration_seconds / 60))}:${String(Math.floor((userIdx / totalUserMsgs) * selectedSession.duration_seconds % 60)).padStart(2, "0")}`
+                      : "";
+                    return (
+                      <button key={i} onClick={() => jumpToMoment(i)}
+                        className="flex flex-col items-center px-1 py-1 rounded-lg hover:bg-primary/5 transition-all min-w-[32px]">
+                        <span className="text-sm">{emo.emoji}</span>
+                        <span className="text-[8px] text-muted-foreground font-mono">{timeStr}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
+
+            {/* v4.2: Parent Note */}
+            <Card title="Note du parent" icon={Edit3}>
+              {editingNote === selectedSession!.id ? (
+                <div className="space-y-2">
+                  <textarea
+                    value={noteText}
+                    onChange={e => setNoteText(e.target.value)}
+                    placeholder="Ajoutez une note sur cette session…"
+                    className="w-full bg-muted rounded-xl px-3 py-2 text-[12px] text-foreground outline-none focus:ring-2 focus:ring-primary/30 resize-none h-20"
+                  />
+                  <div className="flex gap-2">
+                    <button onClick={() => saveParentNote(selectedSession!.id, noteText)}
+                      className="flex-1 py-2 rounded-xl bg-primary text-primary-foreground text-[12px] font-medium">
+                      💾 Enregistrer
+                    </button>
+                    <button onClick={() => setEditingNote(null)}
+                      className="px-4 py-2 rounded-xl bg-muted text-muted-foreground text-[12px] font-medium">
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => { setEditingNote(selectedSession!.id); setNoteText(selectedSession!.parent_note || ""); }}
+                  className="w-full text-left p-2 rounded-xl hover:bg-muted/50 transition-all">
+                  {selectedSession!.parent_note ? (
+                    <p className="text-[12px] text-foreground leading-relaxed">{selectedSession!.parent_note}</p>
+                  ) : (
+                    <p className="text-[12px] text-muted-foreground italic">Appuyez pour ajouter une note…</p>
+                  )}
+                </button>
+              )}
+            </Card>
+
             <button
               onClick={() => exportSessionPDF(selectedSession!, analysis)}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-card text-primary text-[13px] font-semibold hover:bg-primary/8 transition-all">
