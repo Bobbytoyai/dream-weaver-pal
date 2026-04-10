@@ -41,9 +41,9 @@ interface VoiceConfig {
 }
 
 const VOICE_PROFILES: Record<VoiceProfile, VoiceConfig> = {
-  child:  { pitch: 1.5, rate: 1.05, preferFemale: true },   // aigu, cartoon mignon
-  female: { pitch: 1.05, rate: 0.95, preferFemale: true },  // doux, maman
-  male:   { pitch: 0.7, rate: 0.92, preferFemale: false },  // grave, rassurant
+  child:  { pitch: 1.25, rate: 1.0, preferFemale: true },   // légèrement aigu, pas robotique
+  female: { pitch: 1.1, rate: 0.93, preferFemale: true },   // doux, maman chaleureuse
+  male:   { pitch: 0.75, rate: 0.9, preferFemale: false },  // grave, rassurant
 };
 
 /** Cache resolved voices so we don't search every time */
@@ -61,16 +61,17 @@ function pickVoice(preferFemale: boolean): SpeechSynthesisVoice | null {
   if (fr.length === 0) return null;
 
   if (preferFemale) {
-    // Try to find a female voice
+    // Chercher une voix féminine française (exclure les noms masculins)
     const female = fr.find(v =>
-      /female|femme|amelie|audrey|marie|thomas/i.test(v.name) === false &&
-      !/\bmale\b/i.test(v.name)
+      /amelie|audrey|marie|sophie|virginie|lea/i.test(v.name)
+    ) || fr.find(v =>
+      !/thomas|daniel|nicolas|male|homme/i.test(v.name)
     ) || fr[0];
     return female;
   } else {
-    // Try to find a male voice
+    // Chercher une voix masculine française
     const male = fr.find(v =>
-      /\bmale\b|homme|thomas|daniel/i.test(v.name)
+      /thomas|daniel|nicolas|male|homme/i.test(v.name)
     ) || fr[fr.length > 1 ? 1 : 0];
     return male;
   }
