@@ -1458,7 +1458,11 @@ export function getOfflineResponse(
     return { text: resp, intent: "BLOCKED", isOffline: true };
   }
 
-  // 2. Context-aware continuation ("encore", "continue" based on last intent)
+  // 2. Multi-turn follow-up: handle answers to Bobby's previous questions
+  const followUpAnswer = handleFollowUpAnswer(text, childName);
+  if (followUpAnswer) return followUpAnswer;
+
+  // 3. Context-aware continuation ("encore", "continue" based on last intent)
   const continuation = handleContextualContinuation(text, childName);
   if (continuation) {
     updateContext(continuation.intent, context.lastTopic, continuation.text);
