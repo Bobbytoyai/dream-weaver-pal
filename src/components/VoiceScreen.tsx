@@ -363,18 +363,55 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       return;
     }
 
-    getAIResponse(cleaned);
-  }, [clearTimers, getAIResponse, interrupt, speakFallback]);
+    // Use cached response for simple greetings (instant, no LLM call)
+    if (isSimpleGreeting(cleaned)) {
+      const cached = getCachedResponse("greeting");
+      setState("speaking");
+      setContinuousListenEnabled(false);
+      eventBus.emit({ type: "SPEECH_START" });
+      recentBobbyTextsRef.current = [cached, ...recentBobbyTextsRef.current].slice(0, 8);
+      fetchTTSAudio(cached, undefined, currentVoiceId).then(url => {
+        audioQueue.enqueue(url);
+        audioQueue.setOnAllDone(() => {
+          eventBus.emit({ type: "SPEECH_STOP" });
+          goToListening();
+        });
+      }).catch(() => goToListening());
+      setConversationHistory(prev => [...prev, { role: "user", content: cleaned }, { role: "assistant", content: cached }]);
+      session.addMessage("user", cleaned);
+      session.addMessage("assistant", cached);
+      return;
+    }
 
-  const continuousListening = useContinuousListening(handleContinuousResult, continuousListenEnabled);
+    getAIResponse(cleaned);
+  }, [audioQueue, clearTimers, currentVoiceId, getAIResponse, goToListening, interrupt, session, speakFallback]);
+
+  // Deepgram STT for continuous listening (replaces Web Speech API)
+  const deepgramSTT = useDeepgramSTT({
+    onPartial: useCallback((text: string) => {
+      if (continuousListenEnabled) {
+        setPartialText(text);
+      }
+    }, [continuousListenEnabled]),
+    onFinal: useCallback((text: string) => {
+      if (continuousListenEnabled && text.trim().length > 2) {
+        setPartialText("");
+        handleContinuousResult(text.trim());
+      }
+    }, [continuousListenEnabled, handleContinuousResult]),
+    onError: useCallback(() => {
+      console.warn("[Deepgram] STT error, will retry on next listen cycle");
+    }, []),
+    language: "fr",
+  });
 
   useEffect(() => {
     if (continuousListenEnabled) {
-      continuousListening.start();
+      deepgramSTT.start();
     } else {
-      continuousListening.stop();
+      deepgramSTT.stop();
     }
-  }, [continuousListenEnabled, continuousListening]);
+  }, [continuousListenEnabled, deepgramSTT]);
 
   const handleWake = useCallback((transcript: string) => {
     if (stateRef.current === "speaking" || stateRef.current === "processing") {
