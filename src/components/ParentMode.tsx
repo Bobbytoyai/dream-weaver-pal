@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import {
   ArrowLeft, Clock, MessageSquare, Heart, Brain, Loader2, RefreshCw,
   Mic, BookOpen, Timer, Sparkles, Shield, Camera, Volume2, VolumeX,
@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
+import StoryLibrary from "@/components/StoryLibrary";
 
 import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "./parentSettings";
 export type { ParentSettings };
@@ -2109,7 +2110,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       case "sessions": return renderSessionsList();
       case "profil": return renderProfil();
       case "reglages": return renderReglages();
-      case "nouveautes": return renderNouveautes();
+      case "histoires": return <StoryLibrary childName={childName} voiceProfile={settings.voiceType || "female"} />;
       case "confidentialite": return renderConfidentialite();
       default: return renderDashboard();
     }
