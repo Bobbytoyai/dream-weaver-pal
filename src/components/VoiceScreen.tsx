@@ -498,11 +498,37 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   }, [audioQueue, clearTimers, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, interrupt, isCalmMode, recorder, session, speakFallback, startSilenceTimers]);
 
   // ─── Smart STT with Deepgram → Native fallback ───
+  // Wake word detection on PARTIALS for instant reaction (<200ms)
+  const wakeTriggeredFromPartialRef = useRef(false);
+
   const deepgramSTT = useSmartSTT({
     onPartial: useCallback((text: string) => {
       setPartialText(text);
-    }, []),
+
+      // Detect wake word on partial transcripts when idle — instant reaction!
+      if (
+        (stateRef.current === "idle" || stateRef.current === "session_end") &&
+        !wakeTriggeredFromPartialRef.current &&
+        hasWakeWord(text, true) // true = partial mode, slightly higher threshold
+      ) {
+        console.log("[VoiceScreen] ⚡ Wake word on PARTIAL — instant activation!");
+        wakeTriggeredFromPartialRef.current = true;
+        // Don't process yet — wait for final transcript to get full sentence
+        // But start visual feedback immediately
+        eventBus.emit({ type: "WAKE_DETECTED", confidence: computeWakeConfidence(text) });
+
+        if (!sessionStartedRef.current) {
+          session.startSession();
+          sessionStartedRef.current = true;
+          recorder.startRecording();
+          eventBus.emit({ type: "SESSION_START" });
+        }
+        conversationActiveRef.current = true;
+        eventBus.emit({ type: "WAKE_TRIGGERED" });
+      }
+    }, [session, recorder]),
     onFinal: useCallback((text: string) => {
+      wakeTriggeredFromPartialRef.current = false; // reset for next utterance
       if (text.trim().length > 2) {
         setPartialText("");
         handleTranscript(text.trim());
