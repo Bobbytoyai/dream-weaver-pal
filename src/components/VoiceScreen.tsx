@@ -497,8 +497,8 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     language: "fr",
   });
 
-  // Start/stop STT based on micArmed AND not speaking
-  const shouldListen = micArmed && state !== "speaking" && state !== "processing";
+  // Start/stop STT — keep running during speaking for interruption detection
+  const shouldListen = micArmed;
   const shouldListenRef = useRef(shouldListen);
   shouldListenRef.current = shouldListen;
 
