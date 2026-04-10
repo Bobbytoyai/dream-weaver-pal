@@ -174,6 +174,48 @@ export type Database = {
           },
         ]
       }
+      knowledge_base: {
+        Row: {
+          age_max: number
+          age_min: number
+          answer: string
+          category: string
+          created_at: string
+          id: string
+          is_active: boolean
+          keywords: string[]
+          priority: number
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          age_max?: number
+          age_min?: number
+          answer: string
+          category?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          keywords?: string[]
+          priority?: number
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          age_max?: number
+          age_min?: number
+          answer?: string
+          category?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          keywords?: string[]
+          priority?: number
+          question?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       session_messages: {
         Row: {
           content: string

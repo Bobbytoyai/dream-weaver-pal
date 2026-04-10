@@ -145,6 +145,53 @@ L'enfant exprime une émotion difficile.
   }
 }
 
+// ─── Knowledge base lookup ─────────────────────────────────
+
+async function findKnowledgeMatch(userText: string, childAge: number): Promise<string | null> {
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
+
+  try {
+    // Fetch all active entries for this age range
+    const resp = await fetch(
+      `${SUPABASE_URL}/rest/v1/knowledge_base?is_active=eq.true&age_min=lte.${childAge}&age_max=gte.${childAge}&select=question,keywords,answer,priority&order=priority.desc`,
+      {
+        headers: {
+          apikey: SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+      }
+    );
+    if (!resp.ok) return null;
+    const entries = await resp.json();
+    if (!entries?.length) return null;
+
+    const lower = userText.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const words = lower.split(/\s+/);
+
+    // Pass 1: exact keyword match
+    for (const entry of entries) {
+      for (const kw of (entry.keywords || [])) {
+        const kwNorm = kw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        if (lower.includes(kwNorm)) return entry.answer;
+      }
+    }
+
+    // Pass 2: fuzzy — check if 2+ words from the question appear in input
+    for (const entry of entries) {
+      const qWords = entry.question.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").split(/\s+/).filter((w: string) => w.length > 3);
+      const matchCount = qWords.filter((qw: string) => words.some(w => w.includes(qw) || qw.includes(w)));
+      if (matchCount.length >= 2) return entry.answer;
+    }
+
+    return null;
+  } catch (e) {
+    console.warn("Knowledge base lookup failed:", e);
+    return null;
+  }
+}
+
 // ─── Main handler ───────────────────────────────────────────
 
 Deno.serve(async (req) => {
@@ -167,6 +214,16 @@ Deno.serve(async (req) => {
     }
 
     const userText = lastUserMsg?.content || "";
+
+    // ─── Knowledge base check (curated answers first) ────
+    const kbAnswer = await findKnowledgeMatch(userText, childAge);
+    if (kbAnswer) {
+      const answer = kbAnswer.replace(/\{child_name\}/g, childName);
+      const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content: answer } }] })}\n\ndata: [DONE]\n\n`;
+      return new Response(sseData, {
+        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      });
+    }
     const intent = detectIntent(userText, mode);
     
     // Fetch pre-written story if story intent
