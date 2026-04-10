@@ -133,6 +133,9 @@ ${contentFilter === "strict" ? "\n⚠️ FILTRE STRICT: TOUT exclusivement posit
 Tu es Bobby. Vivant, attachant, imparfait, émotionnellement réel.
 Réponse: instantanée, chaleureuse, naturelle. L'enfant parle à un VRAI ami.`;
 
+    // Limit conversation history to last 10 messages to prevent confusion
+    const recentMessages = messages.length > 10 ? messages.slice(-10) : messages;
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -140,12 +143,14 @@ Réponse: instantanée, chaleureuse, naturelle. L'enfant parle à un VRAI ami.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          ...messages,
+          ...recentMessages,
         ],
         stream: true,
+        temperature: 0.7,
+        max_tokens: 300,
       }),
     });
 

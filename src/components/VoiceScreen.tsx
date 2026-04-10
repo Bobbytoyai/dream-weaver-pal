@@ -58,6 +58,33 @@ function isJustWakeWord(text: string): boolean {
   return stripped.length < 3 || /^[?,!.\s]*$/.test(stripped);
 }
 
+// --- ECHO DETECTION ---
+// Tracks what Bobby said so we can filter it from mic input
+const recentBobbyTextsRef = { current: [] as string[] };
+
+function normalizeForComparison(text: string): string {
+  return text.toLowerCase().replace(/[^a-zàâäéèêëïîôùûüÿç0-9 ]/g, "").replace(/\s+/g, " ").trim();
+}
+
+function isEcho(transcript: string): boolean {
+  const normalized = normalizeForComparison(transcript);
+  if (normalized.length < 5) return false;
+  
+  for (const bobbyText of recentBobbyTextsRef.current) {
+    const bobbyNorm = normalizeForComparison(bobbyText);
+    // Check if the transcript is a substantial substring of what Bobby said
+    if (bobbyNorm.includes(normalized)) return true;
+    if (normalized.includes(bobbyNorm) && bobbyNorm.length > 10) return true;
+    
+    // Check word overlap (>60% means likely echo)
+    const transcriptWords = normalized.split(" ");
+    const bobbyWords = new Set(bobbyNorm.split(" "));
+    const overlap = transcriptWords.filter(w => bobbyWords.has(w)).length;
+    if (transcriptWords.length > 3 && overlap / transcriptWords.length > 0.6) return true;
+  }
+  return false;
+}
+
 // --- CONTINUOUS LISTENING (after Bobby speaks, listen for follow-up) ---
 function useContinuousListening(onResult: (text: string) => void, enabled: boolean) {
   const recognitionRef = useRef<any>(null);
@@ -86,6 +113,11 @@ function useContinuousListening(onResult: (text: string) => void, enabled: boole
         if (transcript.length > best.length) best = transcript;
       }
       if (best.length > 2) {
+        // ECHO FILTER: skip if this sounds like Bobby's own speech
+        if (isEcho(best)) {
+          console.log("[Echo] Filtered Bobby's own speech:", best.slice(0, 50));
+          return;
+        }
         onResult(best);
       }
     };
@@ -93,9 +125,8 @@ function useContinuousListening(onResult: (text: string) => void, enabled: boole
     rec.onend = () => {
       isRunningRef.current = false;
       recognitionRef.current = null;
-      // Auto-restart if still in listening mode
       if (enabledRef.current) {
-        setTimeout(() => start(), 100);
+        setTimeout(() => start(), 200);
       }
     };
 
@@ -103,7 +134,7 @@ function useContinuousListening(onResult: (text: string) => void, enabled: boole
       isRunningRef.current = false;
       recognitionRef.current = null;
       if (e.error === "no-speech" && enabledRef.current) {
-        setTimeout(() => start(), 100);
+        setTimeout(() => start(), 200);
       }
     };
 
