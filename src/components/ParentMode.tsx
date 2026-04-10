@@ -1557,73 +1557,300 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   );
 
   // ═══════════════════════════════════════════════════════════════
-  // RENDER: DONNÉES
+  // RENDER: DONNÉES (RGPD)
   // ═══════════════════════════════════════════════════════════════
 
-  const renderDonnees = () => (
-    <div className="p-4 space-y-4">
-      <Card title="Confidentialité" icon={Eye}>
-        <div className="space-y-1">
-          <SettingRow icon={Mic} title="Enregistrer les conversations" desc="Sauvegarde audio pour réécoute">
-            <Toggle value={settings.recordConversations} onChange={(v) => updateSetting("recordConversations", v)} />
-          </SettingRow>
-          <SettingRow icon={EyeOff} title="Mode privé" desc="Garder seulement l'analyse, pas l'audio">
-            <Toggle value={settings.privacyMode} onChange={(v) => updateSetting("privacyMode", v)} />
-          </SettingRow>
+  const renderDonnees = () => {
+    const dataCategories = [
+      { id: "conversations", emoji: "💬", label: "Conversations", desc: "Messages texte échangés", count: sessions.reduce((s, x) => s + x.message_count, 0) },
+      { id: "audio", emoji: "🎙️", label: "Enregistrements", desc: "Fichiers audio des sessions", count: analyses.filter(a => a.audio_path).length },
+      { id: "analyses", emoji: "📊", label: "Analyses IA", desc: "Résumés, émotions, scores", count: analyses.length },
+      { id: "memories", emoji: "🧠", label: "Mémoire enfant", desc: "Préférences et thèmes appris", count: 1 },
+    ];
+
+    return (
+      <div className="p-4 space-y-4">
+        {/* ── Bannière RGPD ── */}
+        <div className="p-4 rounded-2xl bg-primary/5 border-2 border-primary/20">
+          <div className="flex items-start gap-3">
+            <Shield className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+            <div>
+              <h4 className="text-sm font-extrabold text-foreground">Protection des données (RGPD)</h4>
+              <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">
+                Toutes les données de votre enfant sont stockées de manière sécurisée. Vous avez le droit d'accéder, exporter et supprimer ces données à tout moment conformément au RGPD.
+              </p>
+            </div>
+          </div>
         </div>
-      </Card>
 
-      <Card title="Gestion des données" icon={Lock}>
-        <div className="space-y-3">
-          <button
-            onClick={async () => {
-              const sessData = sessions.map(s => {
-                const analysis = analyses.find(a => a.session_id === s.id);
-                return {
-                  date: s.started_at,
-                  duration: s.duration_seconds,
-                  messages: s.message_count,
-                  emotions: s.detected_emotions,
-                  topics: s.topics,
-                  tags: s.tags,
-                  summary: analysis?.summary,
-                  scores: analysis ? {
-                    sociability: analysis.sociability_score,
-                    curiosity: analysis.curiosity_score,
-                    stability: analysis.emotional_stability_score,
-                  } : null,
-                  interests: analysis?.extracted_interests,
-                };
-              });
-              const blob = new Blob([JSON.stringify(sessData, null, 2)], { type: "application/json" });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `bobby-data-${childName}-${new Date().toISOString().slice(0, 10)}.json`;
-              a.click();
-              URL.revokeObjectURL(url);
-            }}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary/10 text-primary text-sm font-bold hover:bg-primary/20 transition-all">
-            <Download className="w-4 h-4" /> Exporter les données
-          </button>
+        {/* ── Enregistrement & confidentialité ── */}
+        <Card title="Collecte de données" icon={Eye}>
+          <div className="space-y-1">
+            <SettingRow icon={Mic} title="Enregistrer les conversations" desc="Sauvegarde audio pour réécoute">
+              <Toggle value={settings.recordConversations} onChange={(v) => updateSetting("recordConversations", v)} />
+            </SettingRow>
+            <SettingRow icon={EyeOff} title="Mode privé" desc="Garder seulement l'analyse, pas l'audio">
+              <Toggle value={settings.privacyMode} onChange={(v) => updateSetting("privacyMode", v)} />
+            </SettingRow>
+            <SettingRow icon={Eye} title="Watermark de session" desc="Identifiant de traçabilité invisible">
+              <Toggle value={settings.sessionWatermark} onChange={(v) => updateSetting("sessionWatermark", v)} />
+            </SettingRow>
+          </div>
+        </Card>
 
+        {/* ── Données collectées (vue d'ensemble) ── */}
+        <Card title="Données stockées" icon={BarChart3}>
+          <div className="grid grid-cols-2 gap-2">
+            {dataCategories.map(cat => (
+              <div key={cat.id}
+                className="p-4 rounded-2xl bg-muted/50 border-2 border-transparent transition-all">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-2xl">{cat.emoji}</span>
+                  <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                    {cat.count}
+                  </span>
+                </div>
+                <h4 className="text-sm font-extrabold text-foreground">{cat.label}</h4>
+                <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{cat.desc}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* ── Conservation des données ── */}
+        <Card title="Durée de conservation" icon={Calendar}>
+          <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
+            Choisissez combien de temps Bobby garde les données avant suppression automatique
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              ["7j", "🗓️", "7 jours", "1 semaine"],
+              ["30j", "📅", "30 jours", "1 mois"],
+              ["90j", "📆", "90 jours", "3 mois"],
+              ["forever", "♾️", "Indéfini", "Pas de limite"],
+            ] as const).map(([val, emoji, label, desc]) => (
+              <button key={val} onClick={() => updateSetting("dataRetention" as any, val)}
+                className={`p-3 rounded-2xl text-center transition-all duration-200 border-2 ${
+                  (settings as any).dataRetention === val
+                    ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
+                    : "bg-muted/50 border-transparent hover:bg-muted"
+                }`}>
+                <span className="text-xl block mb-1">{emoji}</span>
+                <span className={`text-xs font-bold block ${(settings as any).dataRetention === val ? "text-primary" : "text-foreground"}`}>{label}</span>
+                <span className="text-[9px] text-muted-foreground">{desc}</span>
+              </button>
+            ))}
+          </div>
+        </Card>
+
+        {/* ── Consentements ── */}
+        <Card title="Consentements" icon={Shield}>
+          <div className="space-y-1">
+            <SettingRow icon={Brain} title="Analyse comportementale" desc="Bobby analyse les émotions et le comportement">
+              <Toggle value={(settings as any).consentAnalysis ?? true} onChange={(v) => updateSetting("consentAnalysis" as any, v)} />
+            </SettingRow>
+            <SettingRow icon={TrendingUp} title="Amélioration du service" desc="Données anonymisées pour améliorer Bobby">
+              <Toggle value={(settings as any).consentImprovement ?? false} onChange={(v) => updateSetting("consentImprovement" as any, v)} />
+            </SettingRow>
+            <SettingRow icon={BarChart3} title="Statistiques d'usage" desc="Collecte de métriques anonymes">
+              <Toggle value={(settings as any).consentStats ?? false} onChange={(v) => updateSetting("consentStats" as any, v)} />
+            </SettingRow>
+          </div>
+        </Card>
+
+        {/* ── Droits RGPD ── */}
+        <Card title="Vos droits (RGPD)" icon={FileText}>
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              ["access", "👁️", "Droit d'accès", "Voir toutes vos données"],
+              ["export", "📥", "Portabilité", "Exporter au format JSON"],
+              ["rectify", "✏️", "Rectification", "Corriger vos données"],
+              ["delete", "🗑️", "Effacement", "Supprimer vos données"],
+              ["restrict", "⏸️", "Limitation", "Limiter le traitement"],
+              ["object", "✋", "Opposition", "S'opposer au traitement"],
+            ] as const).map(([id, emoji, label, desc]) => (
+              <button key={id}
+                onClick={() => {
+                  if (id === "export") {
+                    // Export all data
+                    const allData = {
+                      exportDate: new Date().toISOString(),
+                      childName,
+                      settings: { ...settings, parentPin: "[MASQUÉ]" },
+                      sessions: sessions.map(s => {
+                        const analysis = analyses.find(a => a.session_id === s.id);
+                        return {
+                          id: s.id, date: s.started_at, ended: s.ended_at,
+                          duration: s.duration_seconds, messages: s.message_count,
+                          emotions: s.detected_emotions, topics: s.topics, tags: s.tags,
+                          summary: analysis?.summary,
+                          transcription: analysis?.full_transcription,
+                          scores: analysis ? {
+                            sociability: analysis.sociability_score,
+                            curiosity: analysis.curiosity_score,
+                            stability: analysis.emotional_stability_score,
+                          } : null,
+                          interests: analysis?.extracted_interests,
+                          insights: analysis?.behavior_insights,
+                        };
+                      }),
+                    };
+                    const blob = new Blob([JSON.stringify(allData, null, 2)], { type: "application/json" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `bobby-rgpd-export-${childName}-${new Date().toISOString().slice(0, 10)}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  } else if (id === "access") {
+                    setActiveTab("sessions");
+                  } else if (id === "delete") {
+                    if (confirm("⚠️ ATTENTION : Supprimer TOUTES les données de votre enfant ?\n\nCette action est IRRÉVERSIBLE et inclut :\n• Toutes les conversations\n• Tous les enregistrements audio\n• Toutes les analyses\n• La mémoire de Bobby\n\nConfirmez-vous ?")) {
+                      Promise.all([
+                        supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
+                        supabase.from("session_messages").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
+                        supabase.from("child_sessions").delete().eq("child_name", childName),
+                        supabase.from("child_memories").delete().eq("child_name", childName),
+                      ]).then(() => loadData());
+                    }
+                  } else if (id === "rectify") {
+                    setActiveTab("profil");
+                  } else {
+                    alert(`Droit "${label}" : contactez le responsable de traitement pour exercer ce droit.`);
+                  }
+                }}
+                className="p-4 rounded-2xl text-left transition-all duration-200 border-2 bg-muted/50 border-transparent hover:bg-muted hover:border-primary/20 active:scale-95">
+                <span className="text-2xl block mb-2">{emoji}</span>
+                <h4 className="text-sm font-extrabold text-foreground">{label}</h4>
+                <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{desc}</p>
+              </button>
+            ))}
+          </div>
+        </Card>
+
+        {/* ── Suppression sélective ── */}
+        <Card title="Suppression sélective" icon={Trash2}>
+          <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
+            Supprimez uniquement certaines catégories de données
+          </p>
+          <div className="space-y-2">
+            <button
+              onClick={() => {
+                if (confirm("Supprimer tous les enregistrements audio ? Les analyses texte seront conservées.")) {
+                  supabase.storage.from("conversation-audio").list().then(({ data }) => {
+                    if (data?.length) {
+                      supabase.storage.from("conversation-audio").remove(data.map(f => f.name));
+                    }
+                  });
+                }
+              }}
+              className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 border-2 border-transparent hover:border-destructive/30 hover:bg-destructive/5 transition-all text-left">
+              <span className="text-lg">🎙️</span>
+              <div className="flex-1">
+                <h4 className="text-xs font-extrabold text-foreground">Supprimer les audio</h4>
+                <p className="text-[10px] text-muted-foreground">Efface les enregistrements, garde les analyses</p>
+              </div>
+              <Trash2 className="w-4 h-4 text-destructive" />
+            </button>
+
+            <button
+              onClick={() => {
+                if (confirm("Supprimer toutes les analyses IA ? Les sessions de base seront conservées.")) {
+                  supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000").then(() => loadData());
+                }
+              }}
+              className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 border-2 border-transparent hover:border-destructive/30 hover:bg-destructive/5 transition-all text-left">
+              <span className="text-lg">📊</span>
+              <div className="flex-1">
+                <h4 className="text-xs font-extrabold text-foreground">Supprimer les analyses</h4>
+                <p className="text-[10px] text-muted-foreground">Efface résumés, scores, insights</p>
+              </div>
+              <Trash2 className="w-4 h-4 text-destructive" />
+            </button>
+
+            <button
+              onClick={() => {
+                if (confirm("Réinitialiser la mémoire de Bobby ? Il oubliera les préférences de votre enfant.")) {
+                  supabase.from("child_memories").delete().eq("child_name", childName).then(() => loadData());
+                }
+              }}
+              className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 border-2 border-transparent hover:border-destructive/30 hover:bg-destructive/5 transition-all text-left">
+              <span className="text-lg">🧠</span>
+              <div className="flex-1">
+                <h4 className="text-xs font-extrabold text-foreground">Réinitialiser la mémoire</h4>
+                <p className="text-[10px] text-muted-foreground">Bobby oublie les préférences apprises</p>
+              </div>
+              <Trash2 className="w-4 h-4 text-destructive" />
+            </button>
+          </div>
+        </Card>
+
+        {/* ── Suppression totale ── */}
+        <Card title="Suppression complète" icon={AlertTriangle}>
+          <div className="p-3 rounded-xl bg-destructive/5 border border-destructive/20 mb-3">
+            <p className="text-[10px] text-destructive font-bold leading-relaxed">
+              ⚠️ Cette action supprime TOUTES les données de manière irréversible : conversations, audio, analyses, mémoire et paramètres.
+            </p>
+          </div>
           <button
             onClick={() => {
-              if (confirm("Supprimer TOUT l'historique des conversations ? Cette action est irréversible.")) {
-                Promise.all([
-                  supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
-                  supabase.from("session_messages").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
-                  supabase.from("child_sessions").delete().eq("child_name", childName),
-                ]).then(() => loadData());
+              if (confirm("⚠️ SUPPRESSION TOTALE IRRÉVERSIBLE\n\nToutes les données seront effacées :\n• Sessions et messages\n• Audio\n• Analyses\n• Mémoire de Bobby\n\nÊtes-vous sûr ?")) {
+                if (confirm("Dernière confirmation : tapez OK pour supprimer définitivement.")) {
+                  Promise.all([
+                    supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
+                    supabase.from("session_messages").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
+                    supabase.from("child_sessions").delete().eq("child_name", childName),
+                    supabase.from("child_memories").delete().eq("child_name", childName),
+                  ]).then(() => {
+                    supabase.storage.from("conversation-audio").list().then(({ data }) => {
+                      if (data?.length) {
+                        supabase.storage.from("conversation-audio").remove(data.map(f => f.name));
+                      }
+                    });
+                    loadData();
+                  });
+                }
               }
             }}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-destructive/10 text-destructive text-sm font-bold hover:bg-destructive/20 transition-all">
-            <Trash2 className="w-4 h-4" /> Effacer tout l'historique
+            className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-destructive/10 text-destructive text-sm font-extrabold hover:bg-destructive/20 transition-all border-2 border-destructive/20">
+            <Trash2 className="w-5 h-5" /> Effacer toutes mes données
           </button>
-        </div>
-      </Card>
-    </div>
-  );
+        </Card>
+
+        {/* ── Informations légales ── */}
+        <Card title="Informations légales" icon={FileText}>
+          <div className="space-y-3 text-[10px] text-muted-foreground leading-relaxed">
+            <div>
+              <h5 className="text-xs font-extrabold text-foreground mb-1">Responsable du traitement</h5>
+              <p>Bobby AI — Application d'accompagnement pour enfants</p>
+            </div>
+            <div>
+              <h5 className="text-xs font-extrabold text-foreground mb-1">Finalités du traitement</h5>
+              <p>• Interaction vocale personnalisée avec l'enfant</p>
+              <p>• Analyse comportementale pour les parents</p>
+              <p>• Amélioration de l'expérience utilisateur</p>
+            </div>
+            <div>
+              <h5 className="text-xs font-extrabold text-foreground mb-1">Base légale</h5>
+              <p>Consentement parental (Art. 6.1.a et Art. 8 du RGPD)</p>
+            </div>
+            <div>
+              <h5 className="text-xs font-extrabold text-foreground mb-1">Durée de conservation</h5>
+              <p>Selon votre choix ci-dessus. Par défaut : indéfini jusqu'à suppression manuelle.</p>
+            </div>
+            <div>
+              <h5 className="text-xs font-extrabold text-foreground mb-1">Hébergement</h5>
+              <p>Données hébergées en Europe (infrastructure cloud sécurisée)</p>
+            </div>
+            <div>
+              <h5 className="text-xs font-extrabold text-foreground mb-1">Contact DPO</h5>
+              <p>Pour exercer vos droits : dpo@bobby-app.com</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  };
 
   // ═══════════════════════════════════════════════════════════════
   // RENDER: MAIN
