@@ -10,6 +10,7 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import StoryLibrary from "@/components/StoryLibrary";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 import { ParentSettings, DEFAULT_PARENT_SETTINGS, BOBBY_COLORS } from "./parentSettings";
 export type { ParentSettings };
@@ -232,6 +233,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [newBlockedTopic, setNewBlockedTopic] = useState("");
   const [activeMessageIdx, setActiveMessageIdx] = useState<number>(-1);
   const [reglagesSection, setReglagesSection] = useState<"voix" | "contenu" | "limites">("voix");
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string; description: string; confirmLabel?: string;
+    variant?: "danger" | "warning"; onConfirm: () => void;
+  } | null>(null);
+  const [settingsSaved, setSettingsSaved] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressInterval = useRef<number | null>(null);
 
