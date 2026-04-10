@@ -15,12 +15,14 @@ interface UseSmartSTTOptions {
   onPartial: (text: string) => void;
   onFinal: (text: string) => void;
   onError?: (error: string) => void;
+  onUtteranceEnd?: () => void;
+  onSpeechStarted?: () => void;
   language?: string;
 }
 
 const MAX_DEEPGRAM_FAILURES = 2;
 
-export function useSmartSTT({ onPartial, onFinal, onError, language = "fr" }: UseSmartSTTOptions) {
+export function useSmartSTT({ onPartial, onFinal, onError, onUtteranceEnd, onSpeechStarted, language = "fr" }: UseSmartSTTOptions) {
   const [backend, setBackend] = useState<STTBackend>("deepgram");
   const deepgramFailCountRef = useRef(0);
   const activeBackendRef = useRef<STTBackend>("deepgram");
@@ -29,9 +31,13 @@ export function useSmartSTT({ onPartial, onFinal, onError, language = "fr" }: Us
   const onPartialRef = useRef(onPartial);
   const onFinalRef = useRef(onFinal);
   const onErrorRef = useRef(onError);
+  const onUtteranceEndRef = useRef(onUtteranceEnd);
+  const onSpeechStartedRef = useRef(onSpeechStarted);
   useEffect(() => { onPartialRef.current = onPartial; }, [onPartial]);
   useEffect(() => { onFinalRef.current = onFinal; }, [onFinal]);
   useEffect(() => { onErrorRef.current = onError; }, [onError]);
+  useEffect(() => { onUtteranceEndRef.current = onUtteranceEnd; }, [onUtteranceEnd]);
+  useEffect(() => { onSpeechStartedRef.current = onSpeechStarted; }, [onSpeechStarted]);
 
   // Reset failure count on successful transcription
   const handleDeepgramFinal = useCallback((text: string) => {
@@ -55,6 +61,8 @@ export function useSmartSTT({ onPartial, onFinal, onError, language = "fr" }: Us
     onPartial: useCallback((text: string) => onPartialRef.current(text), []),
     onFinal: handleDeepgramFinal,
     onError: handleDeepgramError,
+    onUtteranceEnd: useCallback(() => onUtteranceEndRef.current?.(), []),
+    onSpeechStarted: useCallback(() => onSpeechStartedRef.current?.(), []),
     language,
   });
 
