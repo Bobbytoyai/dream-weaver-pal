@@ -356,7 +356,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       {/* ===== MOUTH ===== */}
       <group ref={mouthGroupRef} position={[0, -0.42, mouthZ]}>
         {/* Simple mouth bar — capsule shape, closed by default */}
-        <mesh ref={upperLipRef} position={[0, 0, 0]} material={upperLipMat}>
+        <mesh ref={upperLipRef} position={[0, 0, 0]} material={upperLipMat} rotation={[0, 0, Math.PI / 2]}>
           <capsuleGeometry args={[0.035, 0.3, 8, 16]} />
         </mesh>
         {/* Hidden parts kept for refs */}
