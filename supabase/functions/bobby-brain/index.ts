@@ -182,6 +182,11 @@ Deno.serve(async (req) => {
     // Keep only recent messages for speed
     const recentMessages = messages.length > 8 ? messages.slice(-8) : messages;
 
+    // Use faster model for simple chat, standard for complex intents
+    const model = (intent === "story" || intent === "game") 
+      ? "google/gemini-2.5-flash" 
+      : "google/gemini-2.5-flash-lite";
+
     const response = await fetch(LOVABLE_API_URL, {
       method: "POST",
       headers: {
@@ -189,14 +194,14 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model,
         messages: [
           { role: "system", content: systemPrompt },
           ...recentMessages,
         ],
         stream: true,
         temperature: intent === "emotion_support" ? 0.25 : intent === "story" ? 0.6 : 0.35,
-        max_tokens: intent === "story" ? 250 : 120,
+        max_tokens: intent === "story" ? 200 : 80,
       }),
     });
 
