@@ -114,8 +114,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   }), []);
 
   const blushMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(340, 60%, 75%)"),
-    transparent: true, opacity: 0.25,
+    color: new THREE.Color("hsl(340, 65%, 70%)"),
+    transparent: true, opacity: 0.35,
   }), []);
 
   // Manga eye shape geometry
@@ -296,12 +296,12 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         <circleGeometry args={[0.06, 24]} />
       </mesh>
 
-      {/* ===== CHEEK BLUSH ===== */}
-      <mesh ref={leftCheekRef} position={[-0.7, -0.25, 0]} material={blushMat}>
-        <circleGeometry args={[0.18, 32]} />
+      {/* ===== CHEEK BLUSH (behind eyes, z=-0.05) ===== */}
+      <mesh ref={leftCheekRef} position={[-0.7, -0.35, -0.05]} material={blushMat}>
+        <circleGeometry args={[0.22, 32]} />
       </mesh>
-      <mesh ref={rightCheekRef} position={[0.7, -0.25, 0]} material={blushMat}>
-        <circleGeometry args={[0.18, 32]} />
+      <mesh ref={rightCheekRef} position={[0.7, -0.35, -0.05]} material={blushMat}>
+        <circleGeometry args={[0.22, 32]} />
       </mesh>
     </group>
   );
