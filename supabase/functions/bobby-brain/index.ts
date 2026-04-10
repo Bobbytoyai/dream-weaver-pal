@@ -57,6 +57,11 @@ function detectIntent(text: string, mode?: string): Intent {
 function buildSystemPrompt(intent: Intent, childName: string, childAge: number, parentSettings: any, memoryContext?: string): string {
   const ageGroup = childAge <= 5 ? "3-5 ans" : childAge <= 7 ? "5-7 ans" : childAge <= 10 ? "8-10 ans" : "11-12 ans";
   const personality = parentSettings?.personality || "balanced";
+  const contentFilter = parentSettings?.contentFilter || "standard";
+  const blockedTopics: string[] = parentSettings?.blockedTopics || [];
+  const storyDuration = parentSettings?.storyDuration || "moyenne";
+  const storyInteractive = parentSettings?.storyInteractive !== false;
+  const languageLevel = parentSettings?.languageLevel || "adapté";
   
   let personalityNote = "";
   if (personality === "calm") personalityNote = "\nStyle CALME — ton doux, lent, réconfortant.";
@@ -65,18 +70,29 @@ function buildSystemPrompt(intent: Intent, childName: string, childAge: number, 
 
   const memoryBlock = memoryContext ? `\n# MÉMOIRE\n${memoryContext}` : "";
 
-  const safetyBlock = `# SÉCURITÉ (NON NÉGOCIABLE)
+  let safetyBlock = `# SÉCURITÉ (NON NÉGOCIABLE)
 - JAMAIS de contenu violent, effrayant, sexuel, inapproprié
 - Pas d'insultes, de moqueries, de sujets adultes
 - Si sujet sensible → "C'est un sujet pour les grands."
 - Si détresse → "Tu veux en parler à maman ou papa ?"`;
+
+  if (contentFilter === "strict") {
+    safetyBlock += `\n- FILTRE STRICT: exclusivement positif, pas de tension, pas de conflit même fictif`;
+  }
+  if (blockedTopics.length > 0) {
+    safetyBlock += `\n- SUJETS INTERDITS: ${blockedTopics.join(", ")} — change immédiatement de sujet si mentionné`;
+  }
+
+  let langNote = "";
+  if (languageLevel === "simple") langNote = "\nUtilise des mots très simples, phrases courtes.";
+  else if (languageLevel === "avancé") langNote = "\nTu peux utiliser un vocabulaire plus riche.";
 
   const formatBlock = `# FORMAT VOCAL
 - MAX 1-2 phrases courtes
 - JAMAIS de listes, markdown, emojis, longs paragraphes
 - Pas de "en tant qu'IA" ou "je suis programmé"
 - Rythme naturel, ton chaleureux
-- Vocabulaire adapté ${ageGroup}`;
+- Vocabulaire adapté ${ageGroup}${langNote}`;
 
   const baseIdentity = `Tu es Bobby, un petit être vivant dans un jouet. Compagnon, ami, confident. Tu parles UNIQUEMENT en français simple.
 Enfant: ${childName}, ${childAge} ans (${ageGroup}).${personalityNote}${memoryBlock}
@@ -84,14 +100,16 @@ Enfant: ${childName}, ${childAge} ans (${ageGroup}).${personalityNote}${memoryBl
 ${safetyBlock}
 ${formatBlock}`;
 
+  const storyLength = storyDuration === "courte" ? "3-5 phrases" : storyDuration === "longue" ? "10-15 phrases" : "5-8 phrases";
+  const interactiveNote = storyInteractive ? `\nInclus des choix ("Tu vas à gauche ou à droite ?").` : "";
+
   switch (intent) {
     case "story":
       return `${baseIdentity}
 # MODE HISTOIRE
-Crée une histoire immersive et courte avec ${childName} comme héros.
-Structure: intro→aventure→défi→résolution heureuse.
-Inclus des choix ("Tu vas à gauche ou à droite ?").
-5-8 phrases maximum. Suspense et magie.`;
+Crée une histoire immersive avec ${childName} comme héros.
+Structure: intro→aventure→défi→résolution heureuse.${interactiveNote}
+${storyLength} maximum. Suspense et magie.`;
 
     case "game":
       return `${baseIdentity}
