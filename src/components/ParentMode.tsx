@@ -606,7 +606,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
                 <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                 <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} domain={[0, 100]} />
-                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: "12px" }} />
+                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", color: "hsl(var(--card-foreground))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: "12px" }} />
                 <Line type="monotone" dataKey="😊 Joie" stroke="#22c55e" strokeWidth={2} dot={{ r: 3 }} connectNulls />
                 <Line type="monotone" dataKey="🧐 Curiosité" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} connectNulls />
                 <Line type="monotone" dataKey="🤩 Excitation" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} connectNulls />
