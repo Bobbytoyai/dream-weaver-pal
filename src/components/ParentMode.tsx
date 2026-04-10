@@ -5,7 +5,7 @@ import {
   Play, Pause, AlertTriangle, TrendingUp, Trash2, ChevronRight,
   BarChart3, Calendar, User, Zap, Moon, Sun, Hand, Lock,
   Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X,
-  SkipForward, SkipBack, Activity, Bell, ChevronDown
+  SkipForward, SkipBack, Activity, Bell, ChevronDown, Star
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
@@ -118,6 +118,16 @@ const formatDateShort = (date: string): string => {
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 };
 
+const formatDayHeader = (date: string): string => {
+  const d = new Date(date);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return "Aujourd'hui";
+  if (d.toDateString() === yesterday.toDateString()) return "Hier";
+  return d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+};
+
 // ─── Reusable UI Components ──────────────────────────────────────────
 
 const Toggle = ({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) => (
@@ -174,8 +184,6 @@ const ScoreGauge = ({ label, score, emoji, color }: { label: string; score: numb
   </div>
 );
 
-// ─── Stat Pill ───────────────────────────────────────────────────────
-
 const StatPill = ({ emoji, value, label }: { emoji: string; value: string | number; label: string }) => (
   <div className="flex flex-col items-center gap-0.5">
     <span className="text-xl">{emoji}</span>
@@ -184,19 +192,16 @@ const StatPill = ({ emoji, value, label }: { emoji: string; value: string | numb
   </div>
 );
 
-// ─── Tab config ───────────────────────────────────────────────────
+// ─── Tab config (5 tabs) ────────────────────────────────────────
 
-type Tab = "dashboard" | "sessions" | "profil" | "voix" | "contenu" | "securite" | "limites" | "donnees";
+type Tab = "dashboard" | "sessions" | "profil" | "reglages" | "confidentialite";
 
 const tabs: { id: Tab; icon: any; label: string }[] = [
   { id: "dashboard", icon: BarChart3, label: "Tableau" },
   { id: "sessions", icon: MessageSquare, label: "Sessions" },
   { id: "profil", icon: User, label: "Profil" },
-  { id: "voix", icon: Mic, label: "Voix" },
-  { id: "contenu", icon: BookOpen, label: "Contenu" },
-  { id: "securite", icon: Shield, label: "Sécurité" },
-  { id: "limites", icon: Timer, label: "Limites" },
-  { id: "donnees", icon: Lock, label: "Données" },
+  { id: "reglages", icon: Settings, label: "Réglages" },
+  { id: "confidentialite", icon: Shield, label: "Privé" },
 ];
 
 // ─── Main Component ───────────────────────────────────────────────
@@ -224,6 +229,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [audioDuration, setAudioDuration] = useState(0);
   const [newBlockedTopic, setNewBlockedTopic] = useState("");
   const [activeMessageIdx, setActiveMessageIdx] = useState<number>(-1);
+  const [reglagesSection, setReglagesSection] = useState<"voix" | "contenu" | "limites">("voix");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressInterval = useRef<number | null>(null);
 
@@ -317,11 +323,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       };
       audio.play();
       setPlayingAudio(audioPath);
-      // Track progress
       progressInterval.current = window.setInterval(() => {
         if (audio.duration > 0) {
           setAudioProgress((audio.currentTime / audio.duration) * 100);
-          // Estimate which message is being played based on time proportion
           if (sessionMessages.length > 0) {
             const msgIdx = Math.min(
               Math.floor((audio.currentTime / audio.duration) * sessionMessages.length),
@@ -436,33 +440,23 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     ...alert, date: a.created_at, sessionId: a.session_id,
   })));
 
-  // Smart alert patterns
   const smartAlerts = useMemo(() => {
     const alerts: Array<{ type: string; message: string; severity: "info" | "warning" | "critical" }> = [];
-    
-    // Check for repeated sadness
     const recentSadness = recentAnalyses.filter(a => ((a.emotions as any)?.sadness || 0) > 40);
     if (recentSadness.length >= 3) {
       alerts.push({ type: "sadness", message: "Tristesse répétée détectée sur plusieurs sessions", severity: "warning" });
     }
-    
-    // Check for frustration pattern
     const recentFrustration = recentAnalyses.filter(a => ((a.emotions as any)?.frustration || 0) > 50);
     if (recentFrustration.length >= 2) {
       alerts.push({ type: "frustration", message: "Pattern de frustration observé récemment", severity: "warning" });
     }
-    
-    // Low engagement
     const lowEngagement = recentAnalyses.filter(a => a.engagement_level === "low");
     if (lowEngagement.length >= 3) {
       alerts.push({ type: "engagement", message: "Engagement faible sur les dernières sessions", severity: "info" });
     }
-    
-    // Add raw alerts
     allAlerts.slice(0, 3).forEach(a => {
       alerts.push({ type: a.type, message: a.message, severity: "warning" });
     });
-    
     return alerts;
   }, [recentAnalyses, allAlerts]);
 
@@ -540,7 +534,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     return sessions.filter(s => s.tags?.includes(tagFilter));
   }, [sessions, tagFilter]);
 
-  // Engagement level description
   const engagementDescription = useMemo(() => {
     const highCount = recentAnalyses.filter(a => a.engagement_level === "high").length;
     const total = recentAnalyses.length;
@@ -550,6 +543,82 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     if (ratio >= 0.3) return { label: "Moyen", level: "medium" };
     return { label: "Faible", level: "low" };
   }, [recentAnalyses]);
+
+  // ─── Insight du jour ──────────────────────────────────────────
+  const dailyInsight = useMemo(() => {
+    if (recentAnalyses.length === 0) return null;
+
+    const insights: string[] = [];
+
+    // Topic trend
+    if (topTopics.length > 0) {
+      const top = topTopics[0];
+      insights.push(`${childName} s'intéresse beaucoup à "${top[0]}" cette semaine (mentionné ${top[1]} fois).`);
+    }
+
+    // Emotion trend
+    const joyAvg = recentAnalyses.reduce((s, a) => s + ((a.emotions as any)?.joy || 0), 0) / recentAnalyses.length;
+    const curiosityAvg = recentAnalyses.reduce((s, a) => s + ((a.emotions as any)?.curiosity || 0), 0) / recentAnalyses.length;
+    if (joyAvg > 60) {
+      insights.push(`${childName} est globalement très joyeux dans ses échanges avec Bobby ! 🌟`);
+    } else if (curiosityAvg > 50) {
+      insights.push(`${childName} montre une belle curiosité — Bobby stimule son envie d'apprendre !`);
+    }
+
+    // Engagement trend
+    const highEngCount = recentAnalyses.filter(a => a.engagement_level === "high").length;
+    if (highEngCount >= Math.ceil(recentAnalyses.length * 0.6)) {
+      insights.push(`L'engagement de ${childName} est excellent : ${highEngCount} sessions très engagées sur ${recentAnalyses.length}.`);
+    }
+
+    // Score evolution
+    if (avgScores) {
+      if (avgScores.sociability > 70) {
+        insights.push(`${childName} développe de belles compétences sociales (score : ${avgScores.sociability}/100).`);
+      }
+      if (avgScores.curiosity > 70) {
+        insights.push(`La curiosité de ${childName} est remarquable (score : ${avgScores.curiosity}/100) !`);
+      }
+    }
+
+    // Session frequency
+    if (todaySessions.length > 0) {
+      insights.push(`${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} aujourd'hui, pour ${formatDuration(todayDuration)} d'échanges.`);
+    }
+
+    return insights.length > 0 ? insights[Math.floor(Date.now() / 86400000) % insights.length] : null;
+  }, [recentAnalyses, topTopics, avgScores, childName, todaySessions, todayDuration]);
+
+  // ─── Key moments (emotional highlights) ───────────────────────
+  const keyMoments = useMemo(() => {
+    if (sessionMessages.length === 0) return [];
+    return sessionMessages
+      .map((msg, idx) => ({ ...msg, idx }))
+      .filter(msg => msg.detected_emotion && msg.detected_emotion !== "neutral" && msg.role === "user")
+      .slice(0, 5);
+  }, [sessionMessages]);
+
+  const jumpToMoment = (msgIdx: number) => {
+    if (!audioRef.current || !audioDuration || sessionMessages.length === 0) return;
+    const pct = (msgIdx / sessionMessages.length) * 100;
+    seekAudio(pct);
+    setActiveMessageIdx(msgIdx);
+  };
+
+  // ─── Sessions grouped by day ──────────────────────────────────
+  const groupedSessions = useMemo(() => {
+    const groups: { day: string; sessions: Session[] }[] = [];
+    for (const session of filteredSessions) {
+      const dayKey = new Date(session.started_at).toDateString();
+      const existing = groups.find(g => g.day === dayKey);
+      if (existing) {
+        existing.sessions.push(session);
+      } else {
+        groups.push({ day: dayKey, sessions: [session] });
+      }
+    }
+    return groups;
+  }, [filteredSessions]);
 
   // ─── Presets ──────────────────────────────────────────────────
 
@@ -578,11 +647,22 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   };
 
   // ═══════════════════════════════════════════════════════════════
-  // RENDER: DASHBOARD (Apple-style)
+  // RENDER: DASHBOARD
   // ═══════════════════════════════════════════════════════════════
 
   const renderDashboard = () => (
     <div className="p-4 space-y-3">
+      {/* ── Insight du jour ── */}
+      {dailyInsight && (
+        <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Star className="w-4 h-4 text-primary" />
+            <h3 className="text-[13px] font-semibold text-foreground">💡 Insight du jour</h3>
+          </div>
+          <p className="text-[13px] text-foreground leading-relaxed">{dailyInsight}</p>
+        </div>
+      )}
+
       {/* ── Daily Summary Card ── */}
       <div className="bg-card rounded-2xl p-5">
         <div className="flex items-center justify-between mb-4">
@@ -759,44 +839,33 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             <p className="text-[10px] text-muted-foreground">Messages</p>
           </div>
           <div className="text-center">
-            <p className="text-xl font-bold text-foreground">{formatDuration(totalDuration)}</p>
+            <p className="text-xl font-bold text-primary">{formatDuration(totalDuration)}</p>
             <p className="text-[10px] text-muted-foreground">Temps total</p>
           </div>
         </div>
       </Card>
-
-      {totalSessions === 0 && !loading && (
-        <div className="text-center py-8 text-muted-foreground">
-          <Brain className="w-12 h-12 mx-auto mb-3 opacity-20" />
-          <p className="text-sm font-medium">Aucune donnée disponible</p>
-          <p className="text-xs mt-1 opacity-70">Les analyses apparaîtront après les premières conversations.</p>
-        </div>
-      )}
     </div>
   );
 
   // ═══════════════════════════════════════════════════════════════
-  // RENDER: SESSION DETAIL (Enhanced Audio Player + Transcription)
+  // RENDER: SESSION DETAIL
   // ═══════════════════════════════════════════════════════════════
 
   const renderSessionDetail = () => {
-    const analysis = selectedAnalysis || analyses.find(a => a.session_id === selectedSession?.id);
+    const analysis = selectedAnalysis || analyses.find(a => a.session_id === selectedSession?.id) || null;
     const moodInfo = moodLabels[(analysis?.mood_score || "neutral")] || moodLabels.neutral;
 
     return (
       <div className="p-4 space-y-3">
-        {/* Session header */}
+        {/* Header */}
         <div className="bg-card rounded-2xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-[11px] text-muted-foreground font-medium">Session</p>
-              <h3 className="text-[15px] font-bold text-foreground">{formatDate(selectedSession!.started_at)}</h3>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <MessageSquare className="w-5 h-5 text-primary" />
             </div>
-            <div className="flex items-center gap-1.5">
-              {selectedSession?.tags?.map(tag => {
-                const info = tagLabels[tag] || { label: tag, emoji: "🏷️", color: "bg-muted text-muted-foreground" };
-                return <span key={tag} className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${info.color}`}>{info.emoji} {info.label}</span>;
-              })}
+            <div>
+              <h3 className="text-base font-bold text-foreground">{formatDate(selectedSession!.started_at)}</h3>
+              <p className="text-[11px] text-muted-foreground">{selectedSession!.child_name}, {selectedSession!.child_age} ans</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
@@ -826,7 +895,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               <h3 className="text-[13px] font-semibold text-foreground">Réécouter</h3>
             </div>
             
-            {/* Progress bar */}
             <div className="mb-3">
               <div className="w-full h-1.5 bg-muted rounded-full cursor-pointer overflow-hidden"
                 onClick={(e) => {
@@ -846,7 +914,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </div>
             </div>
 
-            {/* Controls */}
             <div className="flex items-center justify-center gap-4">
               <button onClick={() => skipMessage(-1)}
                 className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
@@ -864,7 +931,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </button>
             </div>
 
-            {/* Speed selector */}
             <div className="flex items-center justify-center gap-1.5 mt-3">
               {[0.75, 1, 1.25, 1.5, 2].map(speed => (
                 <button key={speed} onClick={() => setAudioSpeed(speed)}
@@ -878,6 +944,30 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
         )}
 
+        {/* ── Moments clés ── */}
+        {keyMoments.length > 0 && (
+          <Card title="⭐ Moments clés" icon={Star}>
+            <div className="space-y-2">
+              {keyMoments.map((moment, i) => {
+                const emo = emotionLabels[moment.detected_emotion!] || { emoji: "💬", label: moment.detected_emotion, color: "bg-muted text-muted-foreground" };
+                return (
+                  <button key={i} onClick={() => jumpToMoment(moment.idx)}
+                    className="w-full flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-primary/8 transition-all text-left">
+                    <span className="text-lg mt-0.5">{emo.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] text-foreground line-clamp-2 leading-relaxed">{moment.content}</p>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium mt-1 inline-block ${emo.color}`}>
+                        {emo.label}
+                      </span>
+                    </div>
+                    <Play className="w-3 h-3 text-primary mt-1 shrink-0" />
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
+        )}
+
         {analyzing ? (
           <div className="bg-card rounded-2xl p-6 flex items-center justify-center gap-3">
             <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -885,14 +975,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
         ) : analysis ? (
           <>
-            {/* Summary */}
             {analysis.summary && (
               <Card title="Résumé" icon={Brain}>
                 <p className="text-[13px] text-foreground leading-relaxed">{analysis.summary}</p>
               </Card>
             )}
 
-            {/* Behavioral scores */}
             {analysis.sociability_score != null && (
               <Card title="Comportement" icon={Activity}>
                 <div className="flex justify-around py-2">
@@ -903,7 +991,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </Card>
             )}
 
-            {/* Emotions */}
             {analysis.emotions && Object.keys(analysis.emotions).length > 0 && (
               <Card title="Émotions" icon={Heart}>
                 <div className="space-y-2">
@@ -924,7 +1011,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </Card>
             )}
 
-            {/* Interests */}
             {analysis.extracted_interests && analysis.extracted_interests.length > 0 && (
               <Card title="Intérêts détectés" icon={Sparkles}>
                 <div className="flex flex-wrap gap-2">
@@ -937,7 +1023,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </Card>
             )}
 
-            {/* Topics */}
             {analysis.topics_detected?.length > 0 && (
               <Card title="Sujets abordés">
                 <div className="flex flex-wrap gap-2">
@@ -948,7 +1033,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </Card>
             )}
 
-            {/* Insights */}
             {analysis.behavior_insights?.length > 0 && (
               <Card title="Observations">
                 <ul className="space-y-2">
@@ -961,7 +1045,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </Card>
             )}
 
-            {/* Engagement */}
             <Card title="Engagement">
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -977,7 +1060,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </div>
             </Card>
 
-            {/* Alerts */}
             {analysis.alerts?.length > 0 && (
               <div className="bg-destructive/5 rounded-2xl p-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -990,7 +1072,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </div>
             )}
 
-            {/* ── Transcription with audio sync ── */}
             {sessionMessages.length > 0 && (
               <Card title="Transcription" icon={FileText}>
                 <div className="max-h-80 overflow-y-auto space-y-2">
@@ -1002,9 +1083,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                         <div className={`max-w-[85%] rounded-2xl px-3 py-2 transition-all duration-200 ${
                           isActive ? "ring-2 ring-primary/40 shadow-sm" : ""
                         } ${
-                          isChild
-                            ? "bg-muted/70"
-                            : "bg-primary/8"
+                          isChild ? "bg-muted/70" : "bg-primary/8"
                         }`}>
                           <div className="flex items-center gap-1.5 mb-0.5">
                             <span className="text-[10px] font-medium text-muted-foreground">
@@ -1027,7 +1106,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </Card>
             )}
 
-            {/* Export */}
             <button
               onClick={() => exportSessionPDF(selectedSession!, analysis)}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-card text-primary text-[13px] font-semibold hover:bg-primary/8 transition-all">
@@ -1053,7 +1131,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   };
 
   // ═══════════════════════════════════════════════════════════════
-  // RENDER: SESSIONS LIST
+  // RENDER: SESSIONS LIST (grouped by day)
   // ═══════════════════════════════════════════════════════════════
 
   const renderSessionsList = () => (
@@ -1071,44 +1149,59 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         ))}
       </div>
 
-      <h3 className="text-[13px] font-semibold text-foreground mb-3">
-        {tagFilter ? `Sessions "${tagLabels[tagFilter]?.label}"` : "Toutes les sessions"} ({filteredSessions.length})
-      </h3>
       {loading ? (
         <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-      ) : filteredSessions.length === 0 ? (
+      ) : groupedSessions.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground"><p className="text-sm">Aucune session{tagFilter ? " avec ce tag" : " enregistrée"}.</p></div>
       ) : (
-        <div className="space-y-2">
-          {filteredSessions.map(session => {
-            const hasAnalysis = analyses.some(a => a.session_id === session.id);
-            const analysis = analyses.find(a => a.session_id === session.id);
-            const mood = moodLabels[(analysis?.mood_score || "neutral")] || moodLabels.neutral;
-            return (
-              <button key={session.id} onClick={() => analyzeSession(session)}
-                className="w-full bg-card rounded-2xl p-4 hover:bg-muted/50 transition-all text-left">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[13px] font-semibold text-foreground">{formatDate(session.started_at)}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-muted-foreground">{formatDuration(session.duration_seconds)}</span>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[11px] text-muted-foreground">{session.message_count} msg</span>
-                  {hasAnalysis && <span className="text-sm">{mood.emoji}</span>}
-                  {session.tags?.map(tag => {
-                    const info = tagLabels[tag];
-                    return info ? (
-                      <span key={tag} className={`px-1.5 py-0.5 rounded-full text-[9px] font-medium ${info.color}`}>{info.emoji}</span>
-                    ) : null;
-                  })}
-                  {hasAnalysis && <Brain className="w-3 h-3 text-primary ml-auto" />}
-                </div>
-                {analysis?.summary && <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2">{analysis.summary}</p>}
-              </button>
-            );
-          })}
+        <div className="space-y-4">
+          {groupedSessions.map(group => (
+            <div key={group.day}>
+              {/* Day header */}
+              <div className="flex items-center gap-2 mb-2">
+                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                <h4 className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  {formatDayHeader(group.sessions[0].started_at)}
+                </h4>
+                <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                  {group.sessions.length}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {group.sessions.map(session => {
+                  const hasAnalysis = analyses.some(a => a.session_id === session.id);
+                  const analysis = analyses.find(a => a.session_id === session.id);
+                  const mood = moodLabels[(analysis?.mood_score || "neutral")] || moodLabels.neutral;
+                  return (
+                    <button key={session.id} onClick={() => analyzeSession(session)}
+                      className="w-full bg-card rounded-2xl p-4 hover:bg-muted/50 transition-all text-left">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[13px] font-semibold text-foreground">
+                          {new Date(session.started_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-muted-foreground">{formatDuration(session.duration_seconds)}</span>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] text-muted-foreground">{session.message_count} msg</span>
+                        {hasAnalysis && <span className="text-sm">{mood.emoji}</span>}
+                        {session.tags?.map(tag => {
+                          const info = tagLabels[tag];
+                          return info ? (
+                            <span key={tag} className={`px-1.5 py-0.5 rounded-full text-[9px] font-medium ${info.color}`}>{info.emoji}</span>
+                          ) : null;
+                        })}
+                        {hasAnalysis && <Brain className="w-3 h-3 text-primary ml-auto" />}
+                      </div>
+                      {analysis?.summary && <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2">{analysis.summary}</p>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -1134,9 +1227,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             <div className="flex gap-2">
               {[5, 6, 7, 8, 9, 10, 11, 12].map(age => (
                 <button key={age} onClick={() => updateSetting("childAge", age)}
-                  className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all ${settings.childAge === age ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                  {age}
-                </button>
+                  className={`w-9 h-9 rounded-xl text-[13px] font-bold transition-all ${
+                    settings.childAge === age ? "bg-primary text-primary-foreground" : "bg-muted text-foreground hover:bg-primary/10"
+                  }`}>{age}</button>
               ))}
             </div>
           </div>
@@ -1144,59 +1237,80 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       </Card>
 
       <Card title="Personnalité de Bobby" icon={Sparkles}>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {([
-            ["balanced", "⚖️", "Équilibré", "Chaleureux, par défaut"],
-            ["calm", "😌", "Plus calme", "Doux, réconfortant"],
-            ["energetic", "⚡", "Énergique", "Fun, enthousiaste"],
-            ["educational", "📚", "Éducatif", "Faits amusants"],
+            ["calm", "😌", "Calme", "Doux et rassurant"],
+            ["energetic", "⚡", "Énergique", "Vif et enthousiaste"],
+            ["educational", "📚", "Éducatif", "Curieux et pédagogue"],
           ] as const).map(([val, emoji, label, desc]) => (
             <button key={val} onClick={() => updateSetting("personality", val)}
-              className={`p-3 rounded-xl text-left transition-all duration-200 ${
-                settings.personality === val
-                  ? "bg-primary/10 ring-1 ring-primary/30"
-                  : "bg-muted/50 hover:bg-muted"
+              className={`p-3 rounded-xl text-center transition-all ${
+                settings.personality === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
               }`}>
-              <span className="text-xl block mb-1">{emoji}</span>
-              <h4 className="text-[12px] font-semibold text-foreground">{label}</h4>
-              <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{desc}</p>
+              <span className="text-lg block">{emoji}</span>
+              <span className={`text-[11px] font-semibold block ${settings.personality === val ? "text-primary" : "text-foreground"}`}>{label}</span>
+              <span className="text-[9px] text-muted-foreground">{desc}</span>
             </button>
           ))}
         </div>
       </Card>
 
-      {allInterests.length > 0 && (
-        <Card title="Centres d'intérêt détectés" icon={Sparkles}>
+      <Card title="Centres d'intérêt" icon={Heart}>
+        <div className="space-y-2">
           <div className="flex flex-wrap gap-2">
-            {allInterests.map(([interest, count]) => (
-              <span key={interest} className="px-3 py-1 rounded-full bg-accent/15 text-accent-foreground text-[11px] font-medium">
-                {interest} <span className="opacity-40">×{count}</span>
-              </span>
+            {settings.interests.map(i => (
+              <button key={i} onClick={() => updateSetting("interests", settings.interests.filter(x => x !== i))}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[11px] font-medium hover:bg-destructive/10 hover:text-destructive transition-all">
+                {i} <X className="w-3 h-3" />
+              </button>
             ))}
           </div>
-        </Card>
-      )}
+          <input type="text" placeholder="Ajouter un intérêt…"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) {
+                const val = (e.target as HTMLInputElement).value.trim();
+                if (!settings.interests.includes(val)) { updateSetting("interests", [...settings.interests, val]); }
+                (e.target as HTMLInputElement).value = "";
+              }
+            }}
+            className="w-full px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
+        </div>
+      </Card>
 
-      {settings.enabledThemes.length > 0 && (
-        <Card title="Thèmes favoris">
+      <Card title="Sujets à éviter" icon={Shield}>
+        <div className="space-y-2">
           <div className="flex flex-wrap gap-2">
-            {settings.enabledThemes.map(t => {
-              const theme = ALL_THEMES.find(th => th.id === t);
-              return <span key={t} className="px-3 py-1 rounded-full bg-primary/8 text-primary text-[11px] font-medium">{theme?.label || t}</span>;
-            })}
+            {settings.blockedTopics.map(t => (
+              <button key={t} onClick={() => updateSetting("blockedTopics", settings.blockedTopics.filter(x => x !== t))}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-destructive/10 text-destructive text-[11px] font-medium hover:bg-destructive/20 transition-all">
+                🚫 {t} <X className="w-3 h-3" />
+              </button>
+            ))}
           </div>
-        </Card>
-      )}
+          <input type="text" value={newBlockedTopic}
+            onChange={(e) => setNewBlockedTopic(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && newBlockedTopic.trim()) {
+                if (!settings.blockedTopics.includes(newBlockedTopic.trim())) {
+                  updateSetting("blockedTopics", [...settings.blockedTopics, newBlockedTopic.trim()]);
+                }
+                setNewBlockedTopic("");
+              }
+            }}
+            placeholder="Ex: violence, mort…"
+            className="w-full px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
+        </div>
+      </Card>
     </div>
   );
 
   // ═══════════════════════════════════════════════════════════════
-  // RENDER: VOIX
+  // RENDER: RÉGLAGES (merged: Voix + Contenu + Limites)
   // ═══════════════════════════════════════════════════════════════
 
   const VOICE_MAP: Record<string, { label: string; emoji: string; desc: string }> = {
-    child: { label: "Enfant", emoji: "👦", desc: "Voix mignonne type dessin animé" },
-    female: { label: "Femme", emoji: "👩", desc: "Voix douce, type maman" },
+    child: { label: "Enfant", emoji: "🧒", desc: "Voix douce d'enfant" },
+    female: { label: "Femme", emoji: "👩", desc: "Voix féminine chaleureuse" },
     male: { label: "Homme", emoji: "👨", desc: "Voix grave et rassurante" },
     custom: { label: "Personnaliser", emoji: "🎨", desc: "Bientôt disponible" },
   };
@@ -1213,441 +1327,259 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     finally { setPreviewPlaying(false); }
   };
 
-  const renderVoix = () => (
+  const renderReglages = () => (
     <div className="p-4 space-y-3">
-      <Card title="Type de voix" icon={Mic}>
-        <div className="grid grid-cols-2 gap-2">
-          {(["child", "female", "male", "custom"] as const).map((type) => {
-            const info = VOICE_MAP[type];
-            const isCustom = type === "custom";
-            const selected = settings.voiceType === type;
-            return (
-              <button key={type}
-                onClick={() => !isCustom && updateSetting("voiceType", type)}
-                disabled={isCustom}
-                className={`relative p-3 rounded-xl text-left transition-all duration-200 ${
-                  isCustom ? "opacity-40 cursor-not-allowed bg-muted/30" :
-                  selected ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
-                }`}>
-                <div className="text-xl mb-1">{info.emoji}</div>
-                <h4 className="text-[12px] font-semibold text-foreground">{info.label}</h4>
-                <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{info.desc}</p>
-                {!isCustom && selected && (
-                  <button onClick={(e) => { e.stopPropagation(); previewVoice(type); }}
-                    disabled={previewPlaying}
-                    className="absolute top-3 right-3 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                    {previewPlaying ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
+      {/* Section selector */}
+      <div className="flex gap-2 bg-card rounded-2xl p-1.5">
+        {([
+          ["voix", "🎤", "Voix"],
+          ["contenu", "📚", "Contenu"],
+          ["limites", "⏱️", "Limites"],
+        ] as const).map(([key, emoji, label]) => (
+          <button key={key} onClick={() => setReglagesSection(key)}
+            className={`flex-1 py-2 rounded-xl text-[12px] font-semibold transition-all ${
+              reglagesSection === key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}>
+            {emoji} {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Voix section */}
+      {reglagesSection === "voix" && (
+        <>
+          <Card title="Type de voix" icon={Mic}>
+            <div className="grid grid-cols-2 gap-2">
+              {(["child", "female", "male", "custom"] as const).map((type) => {
+                const info = VOICE_MAP[type];
+                const isCustom = type === "custom";
+                const selected = settings.voiceType === type;
+                return (
+                  <button key={type}
+                    onClick={() => !isCustom && updateSetting("voiceType", type)}
+                    disabled={isCustom}
+                    className={`relative p-3 rounded-xl text-left transition-all duration-200 ${
+                      isCustom ? "opacity-40 cursor-not-allowed bg-muted/30" :
+                      selected ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
+                    }`}>
+                    <div className="text-xl mb-1">{info.emoji}</div>
+                    <h4 className="text-[12px] font-semibold text-foreground">{info.label}</h4>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{info.desc}</p>
+                    {!isCustom && selected && (
+                      <button onClick={(e) => { e.stopPropagation(); previewVoice(type); }}
+                        disabled={previewPlaying}
+                        className="absolute top-3 right-3 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                        {previewPlaying ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
+                      </button>
+                    )}
+                    {isCustom && <Lock className="absolute top-3 right-3 w-4 h-4 text-muted-foreground" />}
                   </button>
-                )}
-                {isCustom && <Lock className="absolute top-3 right-3 w-4 h-4 text-muted-foreground" />}
-              </button>
-            );
-          })}
-        </div>
-      </Card>
+                );
+              })}
+            </div>
+          </Card>
 
-      <Card title="Vitesse de la voix" icon={Zap}>
-        <div className="grid grid-cols-3 gap-2">
-          {([["slow", "🐢", "Lent"], ["normal", "🔊", "Normal"], ["fast", "⚡", "Rapide"]] as const).map(([val, emoji, label]) => (
-            <button key={val} onClick={() => updateSetting("voiceSpeed", val)}
-              className={`p-3 rounded-xl text-center transition-all ${
-                settings.voiceSpeed === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
-              }`}>
-              <span className="text-lg block">{emoji}</span>
-              <span className={`text-[11px] font-semibold block ${settings.voiceSpeed === val ? "text-primary" : "text-foreground"}`}>{label}</span>
-            </button>
-          ))}
-        </div>
-      </Card>
-      <Card>
-        <SettingRow icon={Camera} title="Suivi du visage" desc="Bobby suit le visage de l'enfant">
-          <Toggle value={settings.enableCamera} onChange={async (v) => {
-            if (v) {
-              try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 320, height: 240 } });
-                stream.getTracks().forEach(t => t.stop());
-                updateSetting("enableCamera", true);
-              } catch { alert("Impossible d'accéder à la caméra."); }
-            } else { updateSetting("enableCamera", false); }
-          }} />
-        </SettingRow>
-      </Card>
-      <Card title="Effets sonores" icon={settings.sfxVolume === 0 ? VolumeX : Volume2}>
-        <div className="flex items-center gap-3">
-          <button onClick={() => updateSetting("sfxVolume", settings.sfxVolume === 0 ? 0.7 : 0)}
-            className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${settings.sfxVolume === 0 ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
-            {settings.sfxVolume === 0 ? "Off" : "On"}
-          </button>
-          <input type="range" min="0" max="100" value={Math.round(settings.sfxVolume * 100)}
-            onChange={(e) => updateSetting("sfxVolume", Number(e.target.value) / 100)}
-            className="flex-1 h-1.5 rounded-full appearance-none bg-muted accent-primary" />
-          <span className="text-[11px] text-muted-foreground w-10 text-right">{Math.round(settings.sfxVolume * 100)}%</span>
-        </div>
-      </Card>
-    </div>
-  );
-
-  // ═══════════════════════════════════════════════════════════════
-  // RENDER: CONTENU
-  // ═══════════════════════════════════════════════════════════════
-
-  const renderContenu = () => (
-    <div className="p-4 space-y-3">
-      <Card title="Modes de contenu" icon={BookOpen}>
-        <div className="grid grid-cols-2 gap-2">
-          {([
-            ["freeChat", "💬", "Discussion libre", "Bobby bavarde librement"],
-            ["educational", "📚", "Éducatif", "Apprentissage ludique"],
-            ["games", "🎮", "Jeux", "Quiz, devinettes, défis"],
-            ["stories", "📖", "Histoires", "Contes et aventures"],
-          ] as const).map(([key, emoji, label, desc]) => {
-            const active = settings.contentModes[key as keyof typeof settings.contentModes];
-            return (
-              <button key={key}
-                onClick={() => updateNested("contentModes", key, !active)}
-                className={`relative p-3 rounded-xl text-left transition-all duration-200 ${
-                  active ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
-                }`}>
-                <div className="text-xl mb-1">{emoji}</div>
-                <h4 className="text-[12px] font-semibold text-foreground">{label}</h4>
-                <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{desc}</p>
-                <div className={`absolute top-3 right-3 w-5 h-5 rounded-full flex items-center justify-center transition-all ${
-                  active ? "bg-primary text-primary-foreground" : "bg-muted-foreground/20"
-                }`}>
-                  {active && <span className="text-[10px] font-bold">✓</span>}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </Card>
-
-      <Card title="Thèmes d'histoires" icon={Sparkles}>
-        <div className="grid grid-cols-3 gap-2">
-          {ALL_THEMES.map(theme => {
-            const active = settings.enabledThemes.includes(theme.id);
-            return (
-              <button key={theme.id} onClick={() => toggleTheme(theme.id)}
-                className={`p-3 rounded-xl text-center transition-all ${
-                  active ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
-                }`}>
-                <span className="text-xl block mb-1">{theme.label.split(" ")[0]}</span>
-                <span className={`text-[10px] font-medium ${active ? "text-primary" : "text-muted-foreground"}`}>
-                  {theme.label.split(" ").slice(1).join(" ") || theme.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </Card>
-
-      <Card title="Durée des histoires" icon={Clock}>
-        <div className="grid grid-cols-3 gap-2">
-          {([["courte", "⚡", "Courte", "~3 min"], ["moyenne", "📖", "Moyenne", "~7 min"], ["longue", "📚", "Longue", "~12 min"]] as const).map(([val, emoji, label, sub]) => (
-            <button key={val} onClick={() => updateSetting("storyDuration", val)}
-              className={`p-3 rounded-xl text-center transition-all ${
-                settings.storyDuration === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
-              }`}>
-              <span className="text-lg block">{emoji}</span>
-              <span className={`text-[11px] font-semibold block ${settings.storyDuration === val ? "text-primary" : "text-foreground"}`}>{label}</span>
-              <span className="text-[9px] text-muted-foreground">{sub}</span>
-            </button>
-          ))}
-        </div>
-      </Card>
-
-      <Card>
-        <SettingRow icon={Sparkles} title="Histoires interactives" desc="L'enfant fait des choix dans l'histoire">
-          <Toggle value={settings.storyInteractive} onChange={(v) => updateSetting("storyInteractive", v)} />
-        </SettingRow>
-      </Card>
-    </div>
-  );
-
-  // ═══════════════════════════════════════════════════════════════
-  // RENDER: SÉCURITÉ
-  // ═══════════════════════════════════════════════════════════════
-
-  const renderSecurite = () => (
-    <div className="p-4 space-y-3">
-      <Card title="Code PIN parental" icon={Lock}>
-        <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
-          Protège l'accès au Mode Parent avec un code à 4 chiffres
-        </p>
-        <div className="flex gap-2 items-center">
-          <input type="password" maxLength={4} inputMode="numeric" pattern="[0-9]*"
-            value={settings.parentPin}
-            onChange={(e) => { const val = e.target.value.replace(/\D/g, "").slice(0, 4); updateSetting("parentPin", val); }}
-            placeholder="● ● ● ●"
-            className="flex-1 px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground text-center tracking-[0.5em] placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all font-mono" />
-          {settings.parentPin.length === 4 && (
-            <span className="text-[11px] text-primary font-medium flex items-center gap-1"><Shield className="w-3.5 h-3.5" /> Actif</span>
-          )}
-          {settings.parentPin.length > 0 && settings.parentPin.length < 4 && (
-            <span className="text-[11px] text-muted-foreground font-medium">{4 - settings.parentPin.length} restants</span>
-          )}
-        </div>
-        {settings.parentPin.length === 4 && (
-          <button onClick={() => updateSetting("parentPin", "")} className="mt-2 text-[11px] text-destructive hover:underline">
-            Supprimer le code PIN
-          </button>
-        )}
-      </Card>
-
-      <Card title="Niveau de filtrage" icon={Shield}>
-        <div className="space-y-2">
-          {([
-            ["standard", "🟢", "Standard", "Contenu adapté aux enfants"],
-            ["strict", "🔒", "Strict", "Filtre renforcé, exclusivement positif"],
-          ] as const).map(([val, emoji, label, desc]) => (
-            <button key={val} onClick={() => updateSetting("contentFilter", val)}
-              className={`w-full p-3 rounded-xl text-left transition-all ${
-                settings.contentFilter === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
-              }`}>
-              <div className="flex items-center gap-3">
-                <span className="text-xl">{emoji}</span>
-                <div>
-                  <h4 className="text-[12px] font-semibold text-foreground">{label}</h4>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{desc}</p>
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
-      </Card>
-
-      <Card title="Protections automatiques" icon={Shield}>
-        <div className="space-y-1">
-          <SettingRow icon={Shield} title="Mode ultra-safe" desc="Protection maximale activée">
-            <Toggle value={settings.ultraSafe} onChange={(v) => updateSetting("ultraSafe", v)} />
-          </SettingRow>
-          <SettingRow icon={Lock} title="Bloquer infos personnelles" desc="Empêche le partage de données personnelles">
-            <Toggle value={settings.blockPersonalInfo} onChange={(v) => updateSetting("blockPersonalInfo", v)} />
-          </SettingRow>
-          <SettingRow icon={Shield} title="Bloquer les liens externes" desc="Bobby ne mentionne aucun site web">
-            <Toggle value={settings.blockExternalLinks} onChange={(v) => updateSetting("blockExternalLinks", v)} />
-          </SettingRow>
-        </div>
-      </Card>
-
-      <Card title="Niveau de langage" icon={BookOpen}>
-        <div className="grid grid-cols-3 gap-2">
-          {([
-            ["simple", "🧒", "Simple", "Mots faciles"],
-            ["adapté", "📖", "Adapté", "Selon l'âge"],
-            ["avancé", "🎓", "Avancé", "Vocabulaire riche"],
-          ] as const).map(([val, emoji, label, sub]) => (
-            <button key={val} onClick={() => updateSetting("languageLevel", val)}
-              className={`p-3 rounded-xl text-center transition-all ${
-                settings.languageLevel === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
-              }`}>
-              <span className="text-lg block">{emoji}</span>
-              <span className={`text-[11px] font-semibold block ${settings.languageLevel === val ? "text-primary" : "text-foreground"}`}>{label}</span>
-              <span className="text-[9px] text-muted-foreground">{sub}</span>
-            </button>
-          ))}
-        </div>
-      </Card>
-
-      <Card title="Mot de sécurité" icon={AlertTriangle}>
-        <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
-          Si l'enfant dit ce mot, Bobby réagit immédiatement
-        </p>
-        <input type="text" value={settings.safeWord}
-          onChange={(e) => updateSetting("safeWord", e.target.value.slice(0, 30))}
-          placeholder="Ex: 'au secours', 'aide-moi'…"
-          className="w-full px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all mb-3" />
-        {settings.safeWord.trim() && (
-          <div className="grid grid-cols-3 gap-2">
-            {([
-              ["pause", "⏸️", "Pause"],
-              ["alert", "🔔", "Alerte"],
-              ["stop", "🛑", "Stop"],
-            ] as const).map(([val, emoji, label]) => (
-              <button key={val} onClick={() => updateSetting("safeWordAction", val)}
-                className={`p-3 rounded-xl text-center transition-all ${
-                  settings.safeWordAction === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
-                }`}>
-                <span className="text-lg block">{emoji}</span>
-                <span className={`text-[10px] font-semibold ${settings.safeWordAction === val ? "text-primary" : "text-foreground"}`}>{label}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </Card>
-
-      <Card title="Alertes de contenu sensible" icon={AlertTriangle}>
-        <SettingRow icon={AlertTriangle} title="Alertes activées" desc="Notifier si un sujet sensible est détecté">
-          <Toggle value={settings.alertOnSensitive} onChange={(v) => updateSetting("alertOnSensitive", v)} />
-        </SettingRow>
-        {settings.alertOnSensitive && (
-          <div className="mt-3 space-y-3">
-            <div className="flex flex-wrap gap-2">
-              {settings.alertTopics.map(topic => (
-                <button key={topic} onClick={() => updateSetting("alertTopics", settings.alertTopics.filter(t => t !== topic))}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-destructive/8 text-destructive text-[11px] font-medium hover:bg-destructive/15 transition-all">
-                  ⚠️ {topic} <X className="w-3 h-3" />
+          <Card title="Vitesse de la voix" icon={Zap}>
+            <div className="grid grid-cols-3 gap-2">
+              {([["slow", "🐢", "Lent"], ["normal", "🔊", "Normal"], ["fast", "⚡", "Rapide"]] as const).map(([val, emoji, label]) => (
+                <button key={val} onClick={() => updateSetting("voiceSpeed", val)}
+                  className={`p-3 rounded-xl text-center transition-all ${
+                    settings.voiceSpeed === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
+                  }`}>
+                  <span className="text-lg block">{emoji}</span>
+                  <span className={`text-[11px] font-semibold block ${settings.voiceSpeed === val ? "text-primary" : "text-foreground"}`}>{label}</span>
                 </button>
               ))}
             </div>
-            <div className="flex gap-2">
-              <input type="text" placeholder="Ajouter un sujet…"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) {
-                    const val = (e.target as HTMLInputElement).value.trim();
-                    if (!settings.alertTopics.includes(val)) { updateSetting("alertTopics", [...settings.alertTopics, val]); }
-                    (e.target as HTMLInputElement).value = "";
-                  }
-                }}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
-            </div>
-          </div>
-        )}
-      </Card>
+          </Card>
 
-      <Card title="Contact d'urgence" icon={User}>
-        <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
-          Reçoit une notification si Bobby détecte une situation préoccupante
-        </p>
-        <div className="space-y-2">
-          <input type="text" value={settings.emergencyContact.name}
-            onChange={(e) => updateNested("emergencyContact", "name", e.target.value.slice(0, 50))}
-            placeholder="Nom du contact"
-            className="w-full px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
-          <input type="email" value={settings.emergencyContact.email}
-            onChange={(e) => updateNested("emergencyContact", "email", e.target.value.slice(0, 100))}
-            placeholder="Email du contact"
-            className="w-full px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
-        </div>
-      </Card>
-
-      <Card title="Sujets bloqués" icon={EyeOff}>
-        <div className="space-y-3">
-          {settings.blockedTopics.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {settings.blockedTopics.map(topic => (
-                <button key={topic} onClick={() => updateSetting("blockedTopics", settings.blockedTopics.filter(t => t !== topic))}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-destructive/8 text-destructive text-[11px] font-medium hover:bg-destructive/15 transition-all">
-                  {topic} <X className="w-3 h-3" />
-                </button>
-              ))}
-            </div>
-          )}
-          <div className="flex gap-2">
-            <input type="text" value={newBlockedTopic}
-              onChange={(e) => setNewBlockedTopic(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && newBlockedTopic.trim()) {
-                  updateSetting("blockedTopics", [...settings.blockedTopics, newBlockedTopic.trim()]);
-                  setNewBlockedTopic("");
-                }
-              }}
-              placeholder="Ajouter un sujet…"
-              className="flex-1 px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
-            <button onClick={() => {
-                if (newBlockedTopic.trim()) { updateSetting("blockedTopics", [...settings.blockedTopics, newBlockedTopic.trim()]); setNewBlockedTopic(""); }
-              }}
-              className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">+</button>
-          </div>
-        </div>
-      </Card>
-
-      <Card title="Longueur max des réponses" icon={FileText}>
-        <div className="grid grid-cols-4 gap-2">
-          {([200, 500, 1000, 2000] as const).map(val => (
-            <button key={val} onClick={() => updateSetting("maxMessageLength", val)}
-              className={`py-3 rounded-xl text-center transition-all ${
-                settings.maxMessageLength === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
-              }`}>
-              <span className={`text-sm font-semibold block ${settings.maxMessageLength === val ? "text-primary" : "text-foreground"}`}>{val}</span>
-              <span className="text-[9px] text-muted-foreground">car.</span>
-            </button>
-          ))}
-        </div>
-      </Card>
-
-      <Card>
-        <SettingRow icon={Eye} title="Watermark de session" desc="Identifiant invisible pour traçabilité">
-          <Toggle value={settings.sessionWatermark} onChange={(v) => updateSetting("sessionWatermark", v)} />
-        </SettingRow>
-      </Card>
-    </div>
-  );
-
-  // ═══════════════════════════════════════════════════════════════
-  // RENDER: LIMITES
-  // ═══════════════════════════════════════════════════════════════
-
-  const renderLimites = () => (
-    <div className="p-4 space-y-3">
-      <Card title="Limite de temps journalier" icon={Timer}>
-        <div className="grid grid-cols-5 gap-2">
-          {([null, 10, 20, 30, 60] as const).map(val => (
-            <button key={String(val)} onClick={() => updateSetting("timeLimitMinutes", val)}
-              className={`py-3 rounded-xl text-center transition-all ${
-                settings.timeLimitMinutes === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
-              }`}>
-              <span className={`text-sm font-semibold block ${settings.timeLimitMinutes === val ? "text-primary" : "text-foreground"}`}>
-                {val === null ? "∞" : val}
-              </span>
-              <span className="text-[9px] text-muted-foreground">{val === null ? "Illimité" : "min"}</span>
-            </button>
-          ))}
-        </div>
-      </Card>
-      <Card>
-        <SettingRow icon={Clock} title="Arrêt automatique" desc="Arrêt après 40s de silence">
-          <Toggle value={settings.autoStop} onChange={(v) => updateSetting("autoStop", v)} />
-        </SettingRow>
-      </Card>
-      <Card title="Mode nuit" icon={Moon}>
-        <div className="space-y-3">
-          <SettingRow icon={Moon} title="Activer le mode nuit" desc="Bobby ne répond plus pendant la nuit">
-            <Toggle value={settings.nightMode.active} onChange={(v) => updateNested("nightMode", "active", v)} />
-          </SettingRow>
-          {settings.nightMode.active && (
-            <div className="flex items-center gap-3 pt-1 px-1">
-              <div className="flex-1">
-                <p className="text-[10px] text-muted-foreground mb-1 font-medium">Début</p>
-                <input type="time" value={settings.nightMode.startHour}
-                  onChange={(e) => updateNested("nightMode", "startHour", e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-muted text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
-              </div>
-              <Sun className="w-4 h-4 text-muted-foreground mt-4" />
-              <div className="flex-1">
-                <p className="text-[10px] text-muted-foreground mb-1 font-medium">Fin</p>
-                <input type="time" value={settings.nightMode.endHour}
-                  onChange={(e) => updateNested("nightMode", "endHour", e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-muted text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
-              </div>
-            </div>
-          )}
-        </div>
-      </Card>
-      <Card title="Interactions" icon={Hand}>
-        <div className="space-y-0.5">
-          {([
-            ["wakeWord", Mic, "Mot de réveil", "Dire \"Bobby\" pour activer"],
-            ["tap", Hand, "Toucher", "Toucher l'écran pour activer"],
-            ["interruption", AlertTriangle, "Interruption", "L'enfant peut interrompre Bobby"],
-          ] as const).map(([key, IconComp, label, desc]) => (
-            <SettingRow key={key} icon={IconComp} title={label} desc={desc}>
-              <Toggle
-                value={settings.interactions[key as keyof typeof settings.interactions]}
-                onChange={(v) => updateNested("interactions", key, v)}
-              />
+          <Card>
+            <SettingRow icon={Camera} title="Suivi du visage" desc="Bobby suit le visage de l'enfant">
+              <Toggle value={settings.enableCamera} onChange={async (v) => {
+                if (v) {
+                  try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 320, height: 240 } });
+                    stream.getTracks().forEach(t => t.stop());
+                    updateSetting("enableCamera", true);
+                  } catch { alert("Impossible d'accéder à la caméra."); }
+                } else { updateSetting("enableCamera", false); }
+              }} />
             </SettingRow>
-          ))}
-        </div>
-      </Card>
+          </Card>
+
+          <Card title="Effets sonores" icon={settings.sfxVolume === 0 ? VolumeX : Volume2}>
+            <div className="flex items-center gap-3">
+              <button onClick={() => updateSetting("sfxVolume", settings.sfxVolume === 0 ? 0.7 : 0)}
+                className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${settings.sfxVolume === 0 ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
+                {settings.sfxVolume === 0 ? "Off" : "On"}
+              </button>
+              <input type="range" min="0" max="100" value={Math.round(settings.sfxVolume * 100)}
+                onChange={(e) => updateSetting("sfxVolume", Number(e.target.value) / 100)}
+                className="flex-1 h-1.5 rounded-full appearance-none bg-muted accent-primary" />
+              <span className="text-[11px] text-muted-foreground w-10 text-right">{Math.round(settings.sfxVolume * 100)}%</span>
+            </div>
+          </Card>
+        </>
+      )}
+
+      {/* Contenu section */}
+      {reglagesSection === "contenu" && (
+        <>
+          <Card title="Modes de contenu" icon={BookOpen}>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                ["freeChat", "💬", "Discussion libre", "Bobby bavarde librement"],
+                ["educational", "📚", "Éducatif", "Apprentissage ludique"],
+                ["games", "🎮", "Jeux", "Quiz, devinettes, défis"],
+                ["stories", "📖", "Histoires", "Contes et aventures"],
+              ] as const).map(([key, emoji, label, desc]) => {
+                const active = settings.contentModes[key as keyof typeof settings.contentModes];
+                return (
+                  <button key={key}
+                    onClick={() => updateNested("contentModes", key, !active)}
+                    className={`relative p-3 rounded-xl text-left transition-all duration-200 ${
+                      active ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
+                    }`}>
+                    <div className="text-xl mb-1">{emoji}</div>
+                    <h4 className="text-[12px] font-semibold text-foreground">{label}</h4>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{desc}</p>
+                    <div className={`absolute top-3 right-3 w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                      active ? "bg-primary text-primary-foreground" : "bg-muted-foreground/20"
+                    }`}>
+                      {active && <span className="text-[10px] font-bold">✓</span>}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
+
+          <Card title="Thèmes d'histoires" icon={Sparkles}>
+            <div className="grid grid-cols-3 gap-2">
+              {ALL_THEMES.map(theme => {
+                const active = settings.enabledThemes.includes(theme.id);
+                return (
+                  <button key={theme.id} onClick={() => toggleTheme(theme.id)}
+                    className={`p-3 rounded-xl text-center transition-all ${
+                      active ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
+                    }`}>
+                    <span className="text-xl block mb-1">{theme.label.split(" ")[0]}</span>
+                    <span className={`text-[10px] font-medium ${active ? "text-primary" : "text-muted-foreground"}`}>
+                      {theme.label.split(" ").slice(1).join(" ") || theme.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
+
+          <Card title="Durée des histoires" icon={Clock}>
+            <div className="grid grid-cols-3 gap-2">
+              {([["courte", "⚡", "Courte", "~3 min"], ["moyenne", "📖", "Moyenne", "~7 min"], ["longue", "📚", "Longue", "~12 min"]] as const).map(([val, emoji, label, sub]) => (
+                <button key={val} onClick={() => updateSetting("storyDuration", val)}
+                  className={`p-3 rounded-xl text-center transition-all ${
+                    settings.storyDuration === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
+                  }`}>
+                  <span className="text-lg block">{emoji}</span>
+                  <span className={`text-[11px] font-semibold block ${settings.storyDuration === val ? "text-primary" : "text-foreground"}`}>{label}</span>
+                  <span className="text-[9px] text-muted-foreground">{sub}</span>
+                </button>
+              ))}
+            </div>
+          </Card>
+
+          <Card>
+            <SettingRow icon={Sparkles} title="Histoires interactives" desc="L'enfant fait des choix dans l'histoire">
+              <Toggle value={settings.storyInteractive} onChange={(v) => updateSetting("storyInteractive", v)} />
+            </SettingRow>
+          </Card>
+        </>
+      )}
+
+      {/* Limites section */}
+      {reglagesSection === "limites" && (
+        <>
+          <Card title="Limite journalière" icon={Timer}>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] text-foreground font-medium">Durée max par jour</span>
+                <span className="text-lg font-bold text-primary">{settings.dailyLimit} min</span>
+              </div>
+              <input type="range" min="10" max="120" step="5" value={settings.dailyLimit}
+                onChange={(e) => updateSetting("dailyLimit", Number(e.target.value))}
+                className="w-full h-2 rounded-full appearance-none bg-muted accent-primary" />
+              <div className="flex justify-between text-[9px] text-muted-foreground">
+                <span>10 min</span><span>60 min</span><span>120 min</span>
+              </div>
+              {todayDuration > 0 && (
+                <div className="mt-2 pt-2 border-t border-border">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] text-muted-foreground">Aujourd'hui</span>
+                    <span className="text-[10px] font-mono text-foreground">{formatDuration(todayDuration)} / {settings.dailyLimit} min</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all ${todayDuration / 60 > settings.dailyLimit ? "bg-destructive" : "bg-primary"}`}
+                      style={{ width: `${Math.min(100, (todayDuration / 60 / settings.dailyLimit) * 100)}%` }} />
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+          <Card>
+            <SettingRow icon={Timer} title="Arrêt automatique" desc="Bobby s'arrête quand la limite est atteinte">
+              <Toggle value={settings.autoStop} onChange={(v) => updateSetting("autoStop", v)} />
+            </SettingRow>
+          </Card>
+          <Card title="Mode nuit" icon={Moon}>
+            <div className="space-y-3">
+              <SettingRow icon={Moon} title="Activer le mode nuit" desc="Bobby ne répond plus pendant la nuit">
+                <Toggle value={settings.nightMode.active} onChange={(v) => updateNested("nightMode", "active", v)} />
+              </SettingRow>
+              {settings.nightMode.active && (
+                <div className="flex items-center gap-3 pt-1 px-1">
+                  <div className="flex-1">
+                    <p className="text-[10px] text-muted-foreground mb-1 font-medium">Début</p>
+                    <input type="time" value={settings.nightMode.startHour}
+                      onChange={(e) => updateNested("nightMode", "startHour", e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-muted text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
+                  </div>
+                  <Sun className="w-4 h-4 text-muted-foreground mt-4" />
+                  <div className="flex-1">
+                    <p className="text-[10px] text-muted-foreground mb-1 font-medium">Fin</p>
+                    <input type="time" value={settings.nightMode.endHour}
+                      onChange={(e) => updateNested("nightMode", "endHour", e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-muted text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+          <Card title="Interactions" icon={Hand}>
+            <div className="space-y-0.5">
+              {([
+                ["wakeWord", Mic, "Mot de réveil", "Dire \"Bobby\" pour activer"],
+                ["tap", Hand, "Toucher", "Toucher l'écran pour activer"],
+                ["interruption", AlertTriangle, "Interruption", "L'enfant peut interrompre Bobby"],
+              ] as const).map(([key, IconComp, label, desc]) => (
+                <SettingRow key={key} icon={IconComp} title={label} desc={desc}>
+                  <Toggle
+                    value={settings.interactions[key as keyof typeof settings.interactions]}
+                    onChange={(v) => updateNested("interactions", key, v)}
+                  />
+                </SettingRow>
+              ))}
+            </div>
+          </Card>
+        </>
+      )}
     </div>
   );
 
   // ═══════════════════════════════════════════════════════════════
-  // RENDER: DONNÉES (RGPD)
+  // RENDER: CONFIDENTIALITÉ (merged: Sécurité + Données)
   // ═══════════════════════════════════════════════════════════════
 
-  const renderDonnees = () => {
+  const renderConfidentialite = () => {
     const dataCategories = [
       { id: "conversations", emoji: "💬", label: "Conversations", desc: "Messages texte", count: sessions.reduce((s, x) => s + x.message_count, 0) },
       { id: "audio", emoji: "🎙️", label: "Enregistrements", desc: "Fichiers audio", count: analyses.filter(a => a.audio_path).length },
@@ -1657,19 +1589,96 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
     return (
       <div className="p-4 space-y-3">
-        <div className="p-4 rounded-2xl bg-primary/5">
-          <div className="flex items-start gap-3">
-            <Shield className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-            <div>
-              <h4 className="text-[13px] font-semibold text-foreground">Protection des données (RGPD)</h4>
-              <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">
-                Vos données sont sécurisées. Accédez, exportez ou supprimez à tout moment.
-              </p>
-            </div>
+        {/* ── PIN ── */}
+        <Card title="Code PIN parental" icon={Lock}>
+          <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
+            Protège l'accès au Mode Parent avec un code à 4 chiffres
+          </p>
+          <div className="flex gap-2 items-center">
+            <input type="password" maxLength={4} inputMode="numeric" pattern="[0-9]*"
+              value={settings.parentPin}
+              onChange={(e) => { const val = e.target.value.replace(/\D/g, "").slice(0, 4); updateSetting("parentPin", val); }}
+              placeholder="● ● ● ●"
+              className="flex-1 px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground text-center tracking-[0.5em] placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all font-mono" />
+            {settings.parentPin.length === 4 && (
+              <span className="text-[11px] text-primary font-medium flex items-center gap-1"><Shield className="w-3.5 h-3.5" /> Actif</span>
+            )}
           </div>
-        </div>
+          {settings.parentPin.length === 4 && (
+            <button onClick={() => updateSetting("parentPin", "")} className="mt-2 text-[11px] text-destructive hover:underline">
+              Supprimer le code PIN
+            </button>
+          )}
+        </Card>
 
-        <Card title="Collecte" icon={Eye}>
+        {/* ── Filtrage ── */}
+        <Card title="Niveau de filtrage" icon={Shield}>
+          <div className="space-y-2">
+            {([
+              ["standard", "🟢", "Standard", "Contenu adapté aux enfants"],
+              ["strict", "🔒", "Strict", "Filtre renforcé, exclusivement positif"],
+            ] as const).map(([val, emoji, label, desc]) => (
+              <button key={val} onClick={() => updateSetting("contentFilter", val)}
+                className={`w-full p-3 rounded-xl text-left transition-all ${
+                  settings.contentFilter === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
+                }`}>
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{emoji}</span>
+                  <div>
+                    <h4 className="text-[12px] font-semibold text-foreground">{label}</h4>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{desc}</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </Card>
+
+        {/* ── Protections ── */}
+        <Card title="Protections" icon={Shield}>
+          <div className="space-y-1">
+            <SettingRow icon={Shield} title="Mode ultra-safe" desc="Protection maximale activée">
+              <Toggle value={settings.ultraSafe} onChange={(v) => updateSetting("ultraSafe", v)} />
+            </SettingRow>
+            <SettingRow icon={Lock} title="Bloquer infos personnelles" desc="Empêche le partage de données personnelles">
+              <Toggle value={settings.blockPersonalInfo} onChange={(v) => updateSetting("blockPersonalInfo", v)} />
+            </SettingRow>
+            <SettingRow icon={Shield} title="Bloquer les liens externes" desc="Bobby ne mentionne aucun site web">
+              <Toggle value={settings.blockExternalLinks} onChange={(v) => updateSetting("blockExternalLinks", v)} />
+            </SettingRow>
+          </div>
+        </Card>
+
+        {/* ── Mot de sécurité ── */}
+        <Card title="Mot de sécurité" icon={AlertTriangle}>
+          <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
+            Si l'enfant dit ce mot, Bobby réagit immédiatement
+          </p>
+          <input type="text" value={settings.safeWord}
+            onChange={(e) => updateSetting("safeWord", e.target.value.slice(0, 30))}
+            placeholder="Ex: 'au secours', 'aide-moi'…"
+            className="w-full px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all mb-3" />
+          {settings.safeWord.trim() && (
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                ["pause", "⏸️", "Pause"],
+                ["alert", "🔔", "Alerte"],
+                ["stop", "🛑", "Stop"],
+              ] as const).map(([val, emoji, label]) => (
+                <button key={val} onClick={() => updateSetting("safeWordAction", val)}
+                  className={`p-3 rounded-xl text-center transition-all ${
+                    settings.safeWordAction === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
+                  }`}>
+                  <span className="text-lg block">{emoji}</span>
+                  <span className={`text-[10px] font-semibold ${settings.safeWordAction === val ? "text-primary" : "text-foreground"}`}>{label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* ── Collecte ── */}
+        <Card title="Collecte de données" icon={Eye}>
           <div className="space-y-1">
             <SettingRow icon={Mic} title="Enregistrer les conversations" desc="Sauvegarde audio pour réécoute">
               <Toggle value={settings.recordConversations} onChange={(v) => updateSetting("recordConversations", v)} />
@@ -1680,6 +1689,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
         </Card>
 
+        {/* ── Données stockées ── */}
         <Card title="Données stockées" icon={BarChart3}>
           <div className="grid grid-cols-2 gap-2">
             {dataCategories.map(cat => (
@@ -1695,6 +1705,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
         </Card>
 
+        {/* ── Conservation ── */}
         <Card title="Conservation" icon={Calendar}>
           <div className="grid grid-cols-2 gap-2">
             {([
@@ -1714,20 +1725,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
         </Card>
 
-        <Card title="Consentements" icon={Shield}>
-          <div className="space-y-1">
-            <SettingRow icon={Brain} title="Analyse comportementale" desc="Analyse des émotions et du comportement">
-              <Toggle value={settings.consentAnalysis} onChange={(v) => updateSetting("consentAnalysis", v)} />
-            </SettingRow>
-            <SettingRow icon={TrendingUp} title="Amélioration du service" desc="Données anonymisées">
-              <Toggle value={settings.consentImprovement} onChange={(v) => updateSetting("consentImprovement", v)} />
-            </SettingRow>
-            <SettingRow icon={BarChart3} title="Statistiques d'usage" desc="Métriques anonymes">
-              <Toggle value={settings.consentStats} onChange={(v) => updateSetting("consentStats", v)} />
-            </SettingRow>
-          </div>
-        </Card>
-
+        {/* ── Droits RGPD ── */}
         <Card title="Vos droits (RGPD)" icon={FileText}>
           <div className="grid grid-cols-2 gap-2">
             {([
@@ -1778,6 +1776,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
         </Card>
 
+        {/* ── Suppression sélective ── */}
         <Card title="Suppression sélective" icon={Trash2}>
           <div className="space-y-2">
             {[
@@ -1809,32 +1808,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 <Trash2 className="w-4 h-4 text-destructive" />
               </button>
             ))}
-          </div>
-        </Card>
-
-        <Card title="Informations légales" icon={FileText}>
-          <div className="space-y-3 text-[10px] text-muted-foreground leading-relaxed">
-            <div>
-              <h5 className="text-[11px] font-semibold text-foreground mb-1">Responsable du traitement</h5>
-              <p>Bobby AI — Application d'accompagnement pour enfants</p>
-            </div>
-            <div>
-              <h5 className="text-[11px] font-semibold text-foreground mb-1">Finalités</h5>
-              <p>• Interaction vocale personnalisée</p>
-              <p>• Analyse comportementale pour les parents</p>
-            </div>
-            <div>
-              <h5 className="text-[11px] font-semibold text-foreground mb-1">Base légale</h5>
-              <p>Consentement parental (Art. 6.1.a et Art. 8 RGPD)</p>
-            </div>
-            <div>
-              <h5 className="text-[11px] font-semibold text-foreground mb-1">Hébergement</h5>
-              <p>Infrastructure cloud sécurisée en Europe</p>
-            </div>
-            <div>
-              <h5 className="text-[11px] font-semibold text-foreground mb-1">Contact DPO</h5>
-              <p>dpo@bobby-app.com</p>
-            </div>
           </div>
         </Card>
       </div>
@@ -1876,16 +1849,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       case "dashboard": return renderDashboard();
       case "sessions": return renderSessionsList();
       case "profil": return renderProfil();
-      case "voix": return renderVoix();
-      case "contenu": return renderContenu();
-      case "securite": return renderSecurite();
-      case "limites": return renderLimites();
-      case "donnees": return renderDonnees();
+      case "reglages": return renderReglages();
+      case "confidentialite": return renderConfidentialite();
       default: return renderDashboard();
     }
   };
 
-  // Default to light mode
   const [lightMode, setLightMode] = useState(() => {
     const stored = localStorage.getItem("parent-light");
     return stored === null ? true : stored === "true";
@@ -1928,7 +1897,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* Tab bar */}
       {!selectedSession && (
-        <div className="flex border-b border-border bg-card overflow-x-auto">
+        <div className="flex border-b border-border bg-card">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={`flex-1 min-w-0 flex flex-col items-center gap-0.5 py-2.5 px-1 text-[10px] font-medium transition-all duration-200 ${
