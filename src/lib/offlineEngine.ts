@@ -244,6 +244,180 @@ export function resetConversationContext() {
   context.mood = "neutral";
   context.interactionCount = 0;
   context.lastResponses = [];
+  context.history = [];
+  context.mentionedTopics.clear();
+  context.childPreferences = {};
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 4b. MULTI-TURN CONTEXTUAL RESPONSES
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function getRecentUserMessages(n = 3): string[] {
+  return context.history
+    .filter(t => t.role === "user")
+    .slice(-n)
+    .map(t => t.text);
+}
+
+function getFavoriteTopics(): string[] {
+  return Object.entries(context.childPreferences)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([topic]) => topic);
+}
+
+// Contextual references to previous exchanges
+function buildContextualPrefix(childName?: string): string | null {
+  if (context.history.length < 4) return null; // Need at least 2 exchanges
+
+  const recent = getRecentUserMessages(2);
+  const favTopics = getFavoriteTopics();
+  const name = childName || "";
+
+  // If child keeps talking about the same topic, acknowledge it
+  if (favTopics.length > 0 && context.childPreferences[favTopics[0]] >= 3) {
+    const topicPhrases: Record<string, string[]> = {
+      pirate: [`Tu adores les pirates ${name} !`, `Encore des pirates ? Trop bien !`],
+      princesse: [`Toi tu adores les princesses !`, `Encore une histoire de princesse !`],
+      espace: [`L'espace te passionne ${name} !`, `Toi t'es un vrai astronaute !`],
+      animaux: [`Toi tu adores les animaux !`, `Les animaux c'est ta passion !`],
+      nature: [`Tu aimes la nature ${name} !`],
+      nourriture: [`Tu as faim ou tu adores parler de nourriture ? 😄`],
+      famille: [`Ta famille a l'air super !`],
+      école: [`Tu me racontes l'école ?`],
+      sport: [`Tu es sportif ${name} !`],
+    };
+    const phrases = topicPhrases[favTopics[0]];
+    if (phrases && Math.random() > 0.6) {
+      return pickRandom(phrases, `ctx_topic_${favTopics[0]}`);
+    }
+  }
+
+  // Reference something said earlier
+  if (recent.length >= 2 && Math.random() > 0.7) {
+    const referenceBack = [
+      `Tout à l'heure tu parlais de ça, j'ai bien aimé ! `,
+      `On s'amuse bien aujourd'hui ! `,
+      `Ça fait ${context.interactionCount} fois qu'on parle, c'est chouette ! `,
+    ];
+    return pickRandom(referenceBack, "ctx_ref");
+  }
+
+  // Mood-aware opening
+  if (context.mood === "happy" && Math.random() > 0.7) {
+    return pickRandom(["Tu as l'air super content ! ", "Quelle bonne humeur ! "], "ctx_mood_happy");
+  }
+  if (context.mood === "sad" && Math.random() > 0.5) {
+    return pickRandom(["Je suis toujours là pour toi. ", "On reste ensemble. "], "ctx_mood_sad");
+  }
+
+  return null;
+}
+
+// Handle follow-up answers to Bobby's questions
+function handleFollowUpAnswer(text: string, childName?: string): OfflineResponse | null {
+  const normalized = normalizeInput(text);
+  const lastBobbyTurn = [...context.history].reverse().find(t => t.role === "bobby");
+  if (!lastBobbyTurn) return null;
+
+  const lastBobbyText = lastBobbyTurn.text.toLowerCase();
+
+  // Bobby asked "pirate, princesse ou espace ?"
+  if (lastBobbyText.includes("pirate") && lastBobbyText.includes("princesse") && lastBobbyText.includes("espace")) {
+    const theme = detectStoryTheme(text) || "aventure" as StoryTheme;
+    if (theme !== "aventure" || /pirate|princesse|espace|animal/.test(normalized)) {
+      const story = pickRandom(LOCAL_STORIES[theme], `story_followup_${theme}`);
+      const finalText = personalize(story, childName);
+      updateContext("STORY_REQUEST", text, finalText);
+      return { text: finalText, intent: "STORY_REQUEST", isOffline: true, theme };
+    }
+  }
+
+  // Bobby asked "devinette ou quiz ?" or "tu choisis"
+  if (lastBobbyText.includes("devinette") || lastBobbyText.includes("quiz") || lastBobbyText.includes("tu choisis")) {
+    if (/devinette|devine/.test(normalized)) {
+      const r = RIDDLES[Math.floor(Math.random() * RIDDLES.length)];
+      const resp = `Devinette ! ${r.question} 🤔`;
+      updateContext("PLAY_REQUEST", text, resp);
+      return { text: resp, intent: "PLAY_REQUEST", isOffline: true, gameType: "riddle" };
+    }
+    if (/quiz|vrai|faux/.test(normalized)) {
+      const tf = TRUE_FALSE[Math.floor(Math.random() * TRUE_FALSE.length)];
+      const resp = `Vrai ou Faux ? ${tf.statement} 🤔`;
+      updateContext("PLAY_REQUEST", text, resp);
+      return { text: resp, intent: "PLAY_REQUEST", isOffline: true, gameType: "true_false" };
+    }
+  }
+
+  // Bobby asked a riddle → child tries to answer
+  if (lastBobbyText.includes("qui suis-je") || lastBobbyText.includes("devinette")) {
+    const matchedRiddle = RIDDLES.find(r => lastBobbyText.includes(normalizeInput(r.question)));
+    if (matchedRiddle) {
+      const isCorrect = normalized.includes(normalizeInput(matchedRiddle.answer));
+      if (isCorrect) {
+        const resp = personalize(pickRandom([
+          "Bravo {name} ! C'est ça ! 🎉",
+          "Oui ! Bien joué ! Tu es trop fort ! 🌟",
+          "Exact ! Tu es un champion ! 💪",
+        ], "riddle_correct"), childName);
+        updateContext("EMOTION_POSITIVE", text, resp);
+        return { text: resp, intent: "EMOTION_POSITIVE", isOffline: true };
+      } else {
+        const resp = personalize(pickRandom([
+          `Presque ! La réponse c'était ${matchedRiddle.answer} ! On en fait une autre ? 😊`,
+          `Non c'est ${matchedRiddle.answer} ! Mais c'était dur ! Encore une ? 🤔`,
+          `C'était ${matchedRiddle.answer} ! Tu veux réessayer avec une autre ? 😊`,
+        ], "riddle_wrong"), childName);
+        updateContext("PLAY_REQUEST", text, resp);
+        return { text: resp, intent: "PLAY_REQUEST", isOffline: true };
+      }
+    }
+  }
+
+  // Bobby asked vrai ou faux → child answers
+  if (lastBobbyText.includes("vrai ou faux")) {
+    const matchedTF = TRUE_FALSE.find(tf => lastBobbyText.includes(normalizeInput(tf.statement)));
+    if (matchedTF) {
+      const saidTrue = /vrai|oui|yes/.test(normalized);
+      const saidFalse = /faux|non|nan/.test(normalized);
+      if (saidTrue || saidFalse) {
+        const isCorrect = (saidTrue && matchedTF.answer) || (saidFalse && !matchedTF.answer);
+        const resp = isCorrect
+          ? personalize(`Bravo {name} ! ${matchedTF.explanation}`, childName)
+          : personalize(`Eh non ! ${matchedTF.explanation}`, childName);
+        updateContext(isCorrect ? "EMOTION_POSITIVE" : "PLAY_REQUEST", text, resp);
+        return { text: resp, intent: isCorrect ? "EMOTION_POSITIVE" : "PLAY_REQUEST", isOffline: true };
+      }
+    }
+  }
+
+  // Bobby asked animal quiz → child answers
+  if (lastBobbyText.includes("quiz animaux")) {
+    const matchedAQ = ANIMAL_QUIZ.find(aq => lastBobbyText.includes(normalizeInput(aq.question)));
+    if (matchedAQ) {
+      const isCorrect = normalized.includes(normalizeInput(matchedAQ.answer));
+      const resp = isCorrect
+        ? personalize(pickRandom(["Bravo {name} ! C'est ça ! 🎉", "Oui ! Bien joué ! 🌟"], "aq_correct"), childName)
+        : personalize(`C'est ${matchedAQ.answer} ! Bien essayé ! On continue ? 😊`, childName);
+      updateContext(isCorrect ? "EMOTION_POSITIVE" : "PLAY_REQUEST", text, resp);
+      return { text: resp, intent: isCorrect ? "EMOTION_POSITIVE" : "PLAY_REQUEST", isOffline: true };
+    }
+  }
+
+  // Bobby asked "would you rather" → acknowledge the choice
+  if (lastBobbyText.includes("tu préfères")) {
+    const resp = personalize(pickRandom([
+      "Bonne réponse ! Moi aussi j'aurais peut-être choisi pareil ! 😊",
+      "Intéressant ! Tu as bien choisi {name} ! 😄",
+      "Oh cool ! Moi je sais pas ce que j'aurais choisi ! 🤔",
+      "Super choix ! On fait autre chose ? 😊",
+    ], "wyr_response"), childName);
+    updateContext("EMOTION_POSITIVE", text, resp);
+    return { text: resp, intent: "EMOTION_POSITIVE", isOffline: true };
+  }
+
+  return null;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
