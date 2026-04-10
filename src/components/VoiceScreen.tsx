@@ -51,9 +51,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
   const allSentencesDoneRef = useRef(false);
   const sessionStartedRef = useRef(false);
 
-  // Triple-tap detection for parent mode
-  const tapCountRef = useRef(0);
-  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
 
   const audioQueue = useAudioQueue();
   const session = useSessionTracker(childName, childAge);
