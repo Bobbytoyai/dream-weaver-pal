@@ -268,6 +268,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const sessionStartedRef = useRef(false);
   const conversationActiveRef = useRef(false);
   const accumulatedTextRef = useRef("");
+  const sttStreamRef = useRef<MediaStream | null>(null);
   const utteranceFlushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSpeakingRef = useRef(false);
   const retryCountRef = useRef(0);
@@ -759,11 +760,11 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       session.startSession();
       sessionStartedRef.current = true;
       // Share the STT MediaStream with the recorder to avoid duplicate getUserMedia
-      recorder.startRecording(deepgramSTT.streamRef?.current ?? undefined);
+      recorder.startRecording(sttStreamRef.current ?? undefined);
       eventBus.emit({ type: "SESSION_START" });
     }
     conversationActiveRef.current = true;
-  }, [recorder, session, deepgramSTT.streamRef]);
+  }, [recorder, session]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 8. STT SETUP
