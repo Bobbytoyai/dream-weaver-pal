@@ -752,5 +752,7 @@ export function useConversationStateMachine({
     deepgramSTT,
     handleTapBobby,
     handleParentMode,
+    bobbyFaceEmotion,
+    bobbyEmotionIntensity,
   };
 }
