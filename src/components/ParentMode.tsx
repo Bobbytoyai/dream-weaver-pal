@@ -39,6 +39,8 @@ interface Session {
   ai_summary: string | null;
   duration_seconds: number | null;
   tags: string[] | null;
+  is_favorite: boolean;
+  parent_note: string | null;
 }
 
 interface Analysis {
