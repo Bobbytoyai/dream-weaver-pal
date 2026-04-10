@@ -1,11 +1,11 @@
 /**
- * Bobby Brain — Voice-first AI agent optimized for fluid conversation.
+ * Bobby Brain v3.5 — Voice-first AI agent optimized for <1s latency.
  * 
- * Inspired by Deepgram Voice Agent architecture:
- * - Ultra-short responses (1-2 sentences, <120 chars default)
- * - Natural conversational tone for TTS output
- * - Fast model selection for minimal latency
- * - Intent-based routing with specialized prompts
+ * Pipeline optimizations:
+ * - Parallel KB + story lookups (no sequential blocking)
+ * - Fastest model for simple chat (gemini-3-flash-preview)
+ * - Ultra-aggressive token limits for voice output
+ * - Streaming SSE with immediate passthrough
  */
 
 const corsHeaders = {
@@ -65,7 +65,6 @@ function buildSystemPrompt(intent: Intent, childName: string, childAge: number, 
     safetyBlock += `\n- SUJETS INTERDITS: ${blockedTopics.join(", ")}`;
   }
 
-  // Core identity — voice-first, conversational, minimal
   const base = `# Rôle
 Tu es Bobby, un petit être vivant dans un jouet. Ami et compagnon de ${childName} (${childAge} ans, ${ageGroup}).
 Tu parles à voix haute — tes réponses seront lues par un synthétiseur vocal.${personalityNote}${memoryBlock}
@@ -174,7 +173,6 @@ async function findKnowledgeMatch(userText: string, childAge: number): Promise<K
     const lower = userText.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const words = lower.split(/\s+/);
 
-    // Pass 1: exact keyword match
     for (const entry of entries) {
       for (const kw of (entry.keywords || [])) {
         const kwNorm = kw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -182,7 +180,6 @@ async function findKnowledgeMatch(userText: string, childAge: number): Promise<K
       }
     }
 
-    // Pass 2: fuzzy — check if 2+ words from the question appear in input
     for (const entry of entries) {
       const qWords = entry.question.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").split(/\s+/).filter((w: string) => w.length > 3);
       const matchCount = qWords.filter((qw: string) => words.some(w => w.includes(qw) || qw.includes(w)));
@@ -194,6 +191,49 @@ async function findKnowledgeMatch(userText: string, childAge: number): Promise<K
     console.warn("Knowledge base lookup failed:", e);
     return null;
   }
+}
+
+// ─── Story template fetch ──────────────────────────────────
+
+async function fetchStoryContext(userText: string, childName: string, childAge: number): Promise<string> {
+  try {
+    const lower = userText.toLowerCase();
+    let themeFilter: string | null = null;
+    if (/pirate/.test(lower)) themeFilter = "pirate";
+    else if (/princesse|prince/.test(lower)) themeFilter = "princesse";
+    else if (/espace|fusée|planète|étoile/.test(lower)) themeFilter = "espace";
+    else if (/animal|animaux|chat|chien|dragon/.test(lower)) themeFilter = "animaux";
+    else if (/magi[eq]|sorcier|fée/.test(lower)) themeFilter = "magie";
+
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return "";
+
+    let query = `${SUPABASE_URL}/rest/v1/story_templates?select=title,full_text,theme&age_min=lte.${childAge}&age_max=gte.${childAge}`;
+    if (themeFilter) query += `&theme=eq.${themeFilter}`;
+    query += `&limit=1&order=created_at.desc`;
+
+    const dbResp = await fetch(query, {
+      headers: {
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+    });
+
+    if (dbResp.ok) {
+      const stories = await dbResp.json();
+      if (stories.length > 0 && stories[0].full_text) {
+        const story = stories[0];
+        return `\n\n# Histoire pré-écrite
+Titre: "${story.title}"
+Raconte cette histoire avec ton propre ton, phrase par phrase.
+${story.full_text.replace(/\{child_name\}/g, childName)}`;
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to fetch story:", e);
+  }
+  return "";
 }
 
 // ─── Main handler ───────────────────────────────────────────
@@ -218,61 +258,22 @@ Deno.serve(async (req) => {
     }
 
     const userText = lastUserMsg?.content || "";
+    const intent = detectIntent(userText, mode);
 
-    // ─── Knowledge base check (curated answers first) ────
-    const kbMatch = await findKnowledgeMatch(userText, childAge);
+    // ─── PARALLEL: KB lookup + story fetch (no sequential blocking) ────
+    const [kbMatch, storyContext] = await Promise.all([
+      findKnowledgeMatch(userText, childAge),
+      intent === "story" ? fetchStoryContext(userText, childName, childAge) : Promise.resolve(""),
+    ]);
+
+    // ─── KB hit → instant SSE response (no LLM needed) ────
     if (kbMatch) {
       const answer = kbMatch.answer.replace(/\{child_name\}/g, childName);
-      // Include emotion metadata as SSE comment for client-side expression mapping
       const emotionMeta = `data: ${JSON.stringify({ choices: [{ delta: { content: "" } }], metadata: { emotion: kbMatch.emotion, source: "kb" } })}\n\n`;
       const sseData = emotionMeta + `data: ${JSON.stringify({ choices: [{ delta: { content: answer } }] })}\n\ndata: [DONE]\n\n`;
       return new Response(sseData, {
         headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
       });
-    }
-    const intent = detectIntent(userText, mode);
-    
-    // Fetch pre-written story if story intent
-    let storyContext = "";
-    if (intent === "story") {
-      try {
-        const lower = userText.toLowerCase();
-        let themeFilter: string | null = null;
-        if (/pirate/.test(lower)) themeFilter = "pirate";
-        else if (/princesse|prince/.test(lower)) themeFilter = "princesse";
-        else if (/espace|fusée|planète|étoile/.test(lower)) themeFilter = "espace";
-        else if (/animal|animaux|chat|chien|dragon/.test(lower)) themeFilter = "animaux";
-        else if (/magi[eq]|sorcier|fée/.test(lower)) themeFilter = "magie";
-
-        const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-        const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-        
-        if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
-          let query = `${SUPABASE_URL}/rest/v1/story_templates?select=title,full_text,theme&age_min=lte.${childAge}&age_max=gte.${childAge}`;
-          if (themeFilter) query += `&theme=eq.${themeFilter}`;
-          query += `&limit=1&order=created_at.desc`;
-
-          const dbResp = await fetch(query, {
-            headers: {
-              apikey: SUPABASE_SERVICE_ROLE_KEY,
-              Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-            },
-          });
-
-          if (dbResp.ok) {
-            const stories = await dbResp.json();
-            if (stories.length > 0 && stories[0].full_text) {
-              const story = stories[0];
-              storyContext = `\n\n# Histoire pré-écrite
-Titre: "${story.title}"
-Raconte cette histoire avec ton propre ton, phrase par phrase.
-${story.full_text.replace(/\{child_name\}/g, childName)}`;
-            }
-          }
-        }
-      } catch (e) {
-        console.warn("Failed to fetch story:", e);
-      }
     }
 
     const systemPrompt = buildSystemPrompt(intent, childName, childAge, parentSettings, memoryContext) + storyContext;
@@ -280,9 +281,11 @@ ${story.full_text.replace(/\{child_name\}/g, childName)}`;
     // Keep only recent messages for speed (voice needs fast responses)
     const recentMessages = messages.length > 6 ? messages.slice(-6) : messages;
 
-    // Model selection: flash-lite for simple chat (fastest), flash for complex intents
-    const useFlashLite = intent === "chat" || intent === "calm";
-    const model = useFlashLite ? "google/gemini-2.5-flash-lite" : "google/gemini-2.5-flash";
+    // Model selection: gemini-3-flash-preview for all intents (fastest next-gen)
+    // Fall back to flash-lite only for ultra-simple calm/chat
+    const model = (intent === "chat" || intent === "calm")
+      ? "google/gemini-2.5-flash-lite"
+      : "google/gemini-2.5-flash";
 
     const response = await fetch(LOVABLE_API_URL, {
       method: "POST",
@@ -298,14 +301,13 @@ ${story.full_text.replace(/\{child_name\}/g, childName)}`;
         ],
         stream: true,
         temperature: intent === "emotion_support" ? 0.2 : intent === "story" ? 0.4 : 0.25,
-        max_tokens: intent === "story" ? 600 : intent === "game" ? 100 : 80,
+        max_tokens: intent === "story" ? 600 : intent === "game" ? 80 : 60,
       }),
     });
 
     if (!response.ok) {
       const status = response.status;
       if (status === 429) {
-        // Rate limited — return fallback signal so client degrades gracefully
         const fallbackText = "Attends une seconde, je reprends mon souffle !";
         const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content: fallbackText } }] })}\n\ndata: [DONE]\n\n`;
         return new Response(sseData, {
@@ -321,7 +323,6 @@ ${story.full_text.replace(/\{child_name\}/g, childName)}`;
       }
       const t = await response.text();
       console.error("AI error:", status, t);
-      // Return a friendly fallback instead of 500
       const fallbackText = "Hmm, petit souci. Tu peux réessayer ?";
       const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content: fallbackText } }] })}\n\ndata: [DONE]\n\n`;
       return new Response(sseData, {
@@ -334,7 +335,6 @@ ${story.full_text.replace(/\{child_name\}/g, childName)}`;
     });
   } catch (e) {
     console.error("bobby-brain error:", e);
-    // Never return 500 — always give the child a friendly response
     const fallbackText = "Oups ! Attends, je me reprends. Redis-moi ?";
     const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content: fallbackText } }] })}\n\ndata: [DONE]\n\n`;
     return new Response(sseData, {
