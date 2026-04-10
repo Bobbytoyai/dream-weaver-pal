@@ -19,7 +19,7 @@ function mapToFaceState(voiceState: HologramFaceProps["voiceState"]): FaceState 
     case "processing": return "thinking";
     case "speaking": return "speaking";
     case "interrupted": return "confused";
-    case "session_end": return "idle";
+    case "session_end": return "calm";
     default: return "idle";
   }
 }
@@ -35,7 +35,7 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
   useEffect(() => {
     const unsub = eventBus.on("WAKE_DETECTED", () => {
       setWakeFlash(true);
-      setTimeout(() => setWakeFlash(false), 600);
+      setTimeout(() => setWakeFlash(false), 700);
     });
     return unsub;
   }, []);
@@ -66,14 +66,15 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
       onClick={handleTap}
       style={{ touchAction: "manipulation" }}
     >
-      {/* Ambient holographic glow */}
+      {/* Ambient holographic glow — warm */}
       <div className="absolute inset-0 rounded-full pointer-events-none"
         style={{
           background: `radial-gradient(circle, 
-            hsla(200, 100%, 60%, ${voiceState === "speaking" ? 0.2 : voiceState === "listening" ? 0.15 : 0.08}) 0%, 
-            hsla(260, 60%, 55%, ${voiceState === "speaking" ? 0.08 : 0.03}) 40%,
-            transparent 70%)`,
-          transition: "background 0.8s ease",
+            hsla(200, 100%, 65%, ${voiceState === "speaking" ? 0.22 : voiceState === "listening" ? 0.16 : 0.1}) 0%, 
+            hsla(280, 50%, 55%, ${voiceState === "speaking" ? 0.1 : 0.04}) 35%,
+            hsla(330, 40%, 50%, ${voiceState === "speaking" ? 0.05 : 0.02}) 55%,
+            transparent 75%)`,
+          transition: "background 0.6s ease",
         }}
       />
 
@@ -83,20 +84,24 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
         style={{ background: "transparent" }}
       >
         <Suspense fallback={null}>
-          <ambientLight intensity={0.3} />
+          {/* Warm, soft lighting */}
+          <ambientLight intensity={0.4} color="#e8f4ff" />
           <directionalLight
             position={[2, 3, 4]}
-            intensity={voiceState === "speaking" ? 1.0 : 0.6}
-            color={voiceState === "speaking" ? "#88ddff" : "#aaccee"}
+            intensity={voiceState === "speaking" ? 1.1 : 0.7}
+            color={voiceState === "speaking" ? "#99ddff" : "#bbddee"}
           />
-          <directionalLight position={[-2, 1, 3]} intensity={0.3} color="#8866cc" />
+          <directionalLight position={[-2, 1, 3]} intensity={0.35} color="#cc99ff" />
+          {/* Key light — warm front glow */}
           <pointLight
-            position={[0, 0, 3]}
-            intensity={voiceState === "listening" ? 0.8 : 0.4}
-            color="#66ccff"
+            position={[0, 0.5, 3]}
+            intensity={voiceState === "listening" ? 0.9 : 0.5}
+            color="#77ddff"
             distance={8}
           />
-          <pointLight position={[0, -2, 1]} intensity={0.2} color="#44ffcc" distance={5} />
+          {/* Rim light — subtle warmth */}
+          <pointLight position={[0, -1.5, 1]} intensity={0.25} color="#ffccdd" distance={5} />
+          <pointLight position={[0, 2, 1]} intensity={0.15} color="#aaeeff" distance={5} />
 
           <FaceScene faceState={faceState} gazeRef={gazeRef} getAmplitude={getAmplitude} />
           <HologramParticles intensity={voiceState === "speaking" ? 0.8 : voiceState === "listening" ? 0.5 : 0.25} />
