@@ -758,11 +758,12 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     if (!sessionStartedRef.current) {
       session.startSession();
       sessionStartedRef.current = true;
-      recorder.startRecording();
+      // Share the STT MediaStream with the recorder to avoid duplicate getUserMedia
+      recorder.startRecording(deepgramSTT.streamRef?.current ?? undefined);
       eventBus.emit({ type: "SESSION_START" });
     }
     conversationActiveRef.current = true;
-  }, [recorder, session]);
+  }, [recorder, session, deepgramSTT.streamRef]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 8. STT SETUP
