@@ -251,43 +251,52 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
             <span className="text-4xl">{meta.emoji}</span>
             <div>
               <h3 className="text-lg font-bold text-foreground">{selectedCategory}</h3>
-              <p className="text-[11px] text-muted-foreground">{catStories.length} histoire{catStories.length > 1 ? "s" : ""}</p>
+              <p className="text-[11px] text-muted-foreground">
+                {catStories.length > 0 ? `${catStories.length} histoire${catStories.length > 1 ? "s" : ""}` : "Bientôt disponible"}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Story cards grid */}
-        <div className="grid grid-cols-2 gap-3">
-          {catStories.map(story => (
-            <button
-              key={story.id}
-              onClick={() => setSelectedStory(story)}
-              className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-4 text-left border ${meta.accent} hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 relative group aspect-square flex flex-col justify-between`}
-            >
-              <div>
-                <span className="text-2xl block mb-2">{meta.emoji}</span>
-                <h4 className="text-[12px] font-bold text-foreground leading-tight line-clamp-2">{story.title}</h4>
-                {story.mood && (
-                  <p className="text-[9px] text-muted-foreground mt-1 line-clamp-1">{story.mood}</p>
-                )}
-              </div>
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
-                  <Clock className="w-2.5 h-2.5" />
-                  {DURATION_LABELS[story.duration] || story.duration}
-                </span>
-                <button
-                  onClick={(e) => { e.stopPropagation(); toggleFavorite(story.id); }}
-                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
-                    story.is_favorite ? "text-red-500" : "text-muted-foreground/30 group-hover:text-red-300"
-                  }`}
-                >
-                  <Heart className={`w-3.5 h-3.5 ${story.is_favorite ? "fill-current" : ""}`} />
-                </button>
-              </div>
-            </button>
-          ))}
-        </div>
+        {catStories.length === 0 ? (
+          <div className="text-center py-12">
+            <span className="text-5xl block mb-4">{meta.emoji}</span>
+            <p className="text-sm font-semibold text-foreground">Bientôt disponible !</p>
+            <p className="text-xs text-muted-foreground mt-1">De nouvelles histoires arrivent très bientôt dans cette catégorie ✨</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {catStories.map(story => (
+              <button
+                key={story.id}
+                onClick={() => setSelectedStory(story)}
+                className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-4 text-left border ${meta.accent} hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 relative group aspect-square flex flex-col justify-between`}
+              >
+                <div>
+                  <span className="text-2xl block mb-2">{meta.emoji}</span>
+                  <h4 className="text-[12px] font-bold text-foreground leading-tight line-clamp-2">{story.title}</h4>
+                  {story.mood && (
+                    <p className="text-[9px] text-muted-foreground mt-1 line-clamp-1">{story.mood}</p>
+                  )}
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
+                    <Clock className="w-2.5 h-2.5" />
+                    {DURATION_LABELS[story.duration] || story.duration}
+                  </span>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleFavorite(story.id); }}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                      story.is_favorite ? "text-red-500" : "text-muted-foreground/30 group-hover:text-red-300"
+                    }`}
+                  >
+                    <Heart className={`w-3.5 h-3.5 ${story.is_favorite ? "fill-current" : ""}`} />
+                  </button>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
