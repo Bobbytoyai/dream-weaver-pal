@@ -1,4 +1,4 @@
-import { Suspense, useRef, useCallback } from "react";
+import { Suspense, useRef, useCallback, memo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { FaceMesh } from "./FaceMesh";
 import { HologramParticles, ScanRing } from "./HologramEffects";
@@ -125,5 +125,5 @@ function FaceScene({ faceState, gazeRef, getAmplitude }: {
   );
 }
 
-export default HologramFace;
+export default memo(HologramFace);
 export type { HologramFaceProps };
