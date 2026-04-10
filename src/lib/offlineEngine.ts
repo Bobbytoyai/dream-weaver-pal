@@ -799,6 +799,7 @@ export type OfflineIntent =
   | "ADVENTURE"
   | "HELP"
   | "CONTROL"
+  | "EDUCATION"
   | "BLOCKED"
   | "UNKNOWN";
 
