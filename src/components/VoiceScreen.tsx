@@ -271,15 +271,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
     onParentMode();
   }, [onParentMode, session]);
 
-  const avatarAnimation = {
-    idle: "", listening: "voice-listening", processing: "voice-thinking",
-    speaking: "voice-talking", interrupted: "", session_end: "",
-  }[state];
 
-  const borderColor = {
-    idle: "border-border", listening: "border-primary", processing: "border-muted-foreground",
-    speaking: "border-secondary", interrupted: "border-primary", session_end: "border-border opacity-60",
-  }[state];
 
   return (
     <div className="flex flex-col items-center justify-between h-screen bg-background px-6 py-8 max-w-lg mx-auto select-none">
