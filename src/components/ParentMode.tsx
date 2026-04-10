@@ -3,9 +3,9 @@ import {
   ArrowLeft, Clock, MessageSquare, Heart, Brain, Loader2, RefreshCw,
   Mic, BookOpen, Timer, Sparkles, Shield, Camera, Volume2, VolumeX,
   Play, Pause, AlertTriangle, TrendingUp, Trash2, ChevronRight, Gamepad2,
-  BarChart3, Calendar, User, Zap, Moon, Sun, Hand, Lock,
+  BarChart3, Calendar, User, Zap, Moon, Sun, Hand, Lock, Search,
   Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X,
-  SkipForward, SkipBack, Activity, Bell, ChevronDown, Star
+  SkipForward, SkipBack, Activity, Bell, ChevronDown, Star, Edit3
 } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +39,8 @@ interface Session {
   ai_summary: string | null;
   duration_seconds: number | null;
   tags: string[] | null;
+  is_favorite: boolean;
+  parent_note: string | null;
 }
 
 interface Analysis {
@@ -245,6 +247,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [piperDownloading, setPiperDownloading] = useState(false);
   const [piperProgress, setPiperProgress] = useState<Record<string, number>>({});
   const [piperDone, setPiperDone] = useState(false);
+  const [sessionSearch, setSessionSearch] = useState("");
+  const [sessionFavFilter, setSessionFavFilter] = useState(false);
+  const [editingNote, setEditingNote] = useState<string | null>(null);
+  const [noteText, setNoteText] = useState("");
 
   useEffect(() => { loadData(); }, []);
 
@@ -380,6 +386,31 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     loadData();
     setSelectedSession(null);
     setSelectedAnalysis(null);
+  };
+
+  // v4.2: Skip audio ±10 seconds
+  const skipAudio = (seconds: number) => {
+    if (!audioRef.current || !audioDuration) return;
+    const newTime = Math.max(0, Math.min(audioDuration, audioRef.current.currentTime + seconds));
+    audioRef.current.currentTime = newTime;
+    setAudioProgress((newTime / audioDuration) * 100);
+  };
+
+  // v4.2: Toggle favorite
+  const toggleFavorite = async (session: Session) => {
+    const newVal = !session.is_favorite;
+    await supabase.from("child_sessions").update({ is_favorite: newVal }).eq("id", session.id);
+    setSessions(prev => prev.map(s => s.id === session.id ? { ...s, is_favorite: newVal } : s));
+    if (selectedSession?.id === session.id) setSelectedSession({ ...selectedSession, is_favorite: newVal });
+  };
+
+  // v4.2: Save parent note
+  const saveParentNote = async (sessionId: string, note: string) => {
+    const trimmed = note.trim() || null;
+    await supabase.from("child_sessions").update({ parent_note: trimmed }).eq("id", sessionId);
+    setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, parent_note: trimmed } : s));
+    if (selectedSession?.id === sessionId) setSelectedSession({ ...selectedSession, parent_note: trimmed });
+    setEditingNote(null);
   };
 
   const exportSessionPDF = (session: Session, analysis: Analysis | null) => {
@@ -618,9 +649,25 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const lastAnalysis = lastSession ? analyses.find(a => a.session_id === lastSession.id) : null;
 
   const filteredSessions = useMemo(() => {
-    if (!tagFilter) return sessions;
-    return sessions.filter(s => s.tags?.includes(tagFilter));
-  }, [sessions, tagFilter]);
+    let list = sessions;
+    if (tagFilter) list = list.filter(s => s.tags?.includes(tagFilter));
+    if (sessionFavFilter) list = list.filter(s => s.is_favorite);
+    if (sessionSearch.trim()) {
+      const q = sessionSearch.toLowerCase();
+      list = list.filter(s => {
+        const analysis = analyses.find(a => a.session_id === s.id);
+        return (
+          s.ai_summary?.toLowerCase().includes(q) ||
+          s.tags?.some(t => t.toLowerCase().includes(q)) ||
+          s.topics?.some(t => t.toLowerCase().includes(q)) ||
+          analysis?.summary?.toLowerCase().includes(q) ||
+          analysis?.topics_detected?.some(t => t.toLowerCase().includes(q)) ||
+          analysis?.extracted_interests?.some(i => i.toLowerCase().includes(q))
+        );
+      });
+    }
+    return list;
+  }, [sessions, tagFilter, sessionFavFilter, sessionSearch, analyses]);
 
   // Smart daily insights — picks one relevant insight
   const dailyInsights = useMemo(() => {
@@ -1249,10 +1296,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <MessageSquare className="w-5 h-5 text-primary" />
             </div>
-            <div>
+            <div className="flex-1">
               <h3 className="text-base font-bold text-foreground">{formatDate(selectedSession!.started_at)}</h3>
               <p className="text-[11px] text-muted-foreground">{selectedSession!.child_name}, {selectedSession!.child_age} ans</p>
             </div>
+            {/* v4.2: Favorite button */}
+            <button onClick={() => toggleFavorite(selectedSession!)}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                selectedSession!.is_favorite ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground hover:text-primary"
+              }`}>
+              <Star className={`w-4 h-4 ${selectedSession!.is_favorite ? "fill-primary" : ""}`} />
+            </button>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="text-center py-2 bg-muted/50 rounded-xl">
@@ -1300,7 +1354,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center justify-center gap-3">
+              <button onClick={() => skipAudio(-10)}
+                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors text-[10px] font-bold">
+                -10
+              </button>
               <button onClick={() => skipMessage(-1)}
                 className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
                 <SkipBack className="w-4 h-4" />
@@ -1314,6 +1372,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               <button onClick={() => skipMessage(1)}
                 className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
                 <SkipForward className="w-4 h-4" />
+              </button>
+              <button onClick={() => skipAudio(10)}
+                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors text-[10px] font-bold">
+                +10
               </button>
             </div>
 
@@ -1497,6 +1559,64 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </Card>
             )}
 
+            {/* v4.2: Emotion Timeline */}
+            {sessionMessages.filter(m => m.detected_emotion && m.role === "user").length > 0 && (
+              <Card title="Timeline émotionnelle" icon={Activity}>
+                <div className="flex items-center gap-0.5 overflow-x-auto pb-1">
+                  {sessionMessages.map((msg, i) => {
+                    if (msg.role !== "user" || !msg.detected_emotion) return null;
+                    const emo = emotionLabels[msg.detected_emotion] || { emoji: "💬", color: "bg-muted text-muted-foreground" };
+                    const totalUserMsgs = sessionMessages.filter(m => m.role === "user").length;
+                    const userIdx = sessionMessages.filter((m, j) => j < i && m.role === "user").length;
+                    const timeStr = totalUserMsgs > 0 && selectedSession?.duration_seconds
+                      ? `${Math.floor((userIdx / totalUserMsgs) * (selectedSession.duration_seconds / 60))}:${String(Math.floor((userIdx / totalUserMsgs) * selectedSession.duration_seconds % 60)).padStart(2, "0")}`
+                      : "";
+                    return (
+                      <button key={i} onClick={() => jumpToMoment(i)}
+                        className="flex flex-col items-center px-1 py-1 rounded-lg hover:bg-primary/5 transition-all min-w-[32px]">
+                        <span className="text-sm">{emo.emoji}</span>
+                        <span className="text-[8px] text-muted-foreground font-mono">{timeStr}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
+
+            {/* v4.2: Parent Note */}
+            <Card title="Note du parent" icon={Edit3}>
+              {editingNote === selectedSession!.id ? (
+                <div className="space-y-2">
+                  <textarea
+                    value={noteText}
+                    onChange={e => setNoteText(e.target.value)}
+                    placeholder="Ajoutez une note sur cette session…"
+                    className="w-full bg-muted rounded-xl px-3 py-2 text-[12px] text-foreground outline-none focus:ring-2 focus:ring-primary/30 resize-none h-20"
+                  />
+                  <div className="flex gap-2">
+                    <button onClick={() => saveParentNote(selectedSession!.id, noteText)}
+                      className="flex-1 py-2 rounded-xl bg-primary text-primary-foreground text-[12px] font-medium">
+                      💾 Enregistrer
+                    </button>
+                    <button onClick={() => setEditingNote(null)}
+                      className="px-4 py-2 rounded-xl bg-muted text-muted-foreground text-[12px] font-medium">
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => { setEditingNote(selectedSession!.id); setNoteText(selectedSession!.parent_note || ""); }}
+                  className="w-full text-left p-2 rounded-xl hover:bg-muted/50 transition-all">
+                  {selectedSession!.parent_note ? (
+                    <p className="text-[12px] text-foreground leading-relaxed">{selectedSession!.parent_note}</p>
+                  ) : (
+                    <p className="text-[12px] text-muted-foreground italic">Appuyez pour ajouter une note…</p>
+                  )}
+                </button>
+              )}
+            </Card>
+
             <button
               onClick={() => exportSessionPDF(selectedSession!, analysis)}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-card text-primary text-[13px] font-semibold hover:bg-primary/8 transition-all">
@@ -1530,11 +1650,28 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   // ═══════════════════════════════════════════════════════════════
 
   const renderSessionsList = () => (
-    <div className="p-4">
-      <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
-        <button onClick={() => setTagFilter(null)}
-          className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${!tagFilter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+    <div className="p-4 space-y-3">
+      {/* v4.2: Search bar */}
+      <div className="relative">
+        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <input
+          type="text"
+          value={sessionSearch}
+          onChange={e => setSessionSearch(e.target.value)}
+          placeholder="Rechercher par sujet, mot-clé…"
+          className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-muted text-[13px] text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+        />
+      </div>
+
+      {/* Filters row */}
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        <button onClick={() => { setTagFilter(null); setSessionFavFilter(false); }}
+          className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${!tagFilter && !sessionFavFilter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
           Tous
+        </button>
+        <button onClick={() => setSessionFavFilter(!sessionFavFilter)}
+          className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${sessionFavFilter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+          ⭐ Favoris
         </button>
         {Object.entries(tagLabels).map(([key, info]) => (
           <button key={key} onClick={() => setTagFilter(tagFilter === key ? null : key)}
@@ -1547,12 +1684,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       {loading ? (
         <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
       ) : groupedSessions.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground"><p className="text-sm">Aucune session{tagFilter ? " avec ce tag" : " enregistrée"}.</p></div>
+        <div className="text-center py-8 text-muted-foreground"><p className="text-sm">Aucune session{tagFilter || sessionSearch || sessionFavFilter ? " trouvée" : " enregistrée"}.</p></div>
       ) : (
         <div className="space-y-4">
           {groupedSessions.map(group => (
             <div key={group.day}>
-              {/* Day header */}
               <div className="flex items-center gap-2 mb-2">
                 <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
                 <h4 className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -1568,30 +1704,35 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   const analysis = analyses.find(a => a.session_id === session.id);
                   const mood = moodLabels[(analysis?.mood_score || "neutral")] || moodLabels.neutral;
                   return (
-                    <button key={session.id} onClick={() => analyzeSession(session)}
-                      className="w-full bg-card rounded-2xl p-4 hover:bg-muted/50 transition-all text-left">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[13px] font-semibold text-foreground">
-                          {new Date(session.started_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[11px] text-muted-foreground">{formatDuration(session.duration_seconds)}</span>
-                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    <div key={session.id} className="bg-card rounded-2xl p-4 hover:bg-muted/50 transition-all text-left relative">
+                      <button onClick={() => analyzeSession(session)} className="w-full text-left">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2">
+                            {session.is_favorite && <span className="text-xs">⭐</span>}
+                            <span className="text-[13px] font-semibold text-foreground">
+                              {new Date(session.started_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-muted-foreground">{formatDuration(session.duration_seconds)}</span>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[11px] text-muted-foreground">{session.message_count} msg</span>
-                        {hasAnalysis && <span className="text-sm">{mood.emoji}</span>}
-                        {session.tags?.map(tag => {
-                          const info = tagLabels[tag];
-                          return info ? (
-                            <span key={tag} className={`px-1.5 py-0.5 rounded-full text-[9px] font-medium ${info.color}`}>{info.emoji}</span>
-                          ) : null;
-                        })}
-                        {hasAnalysis && <Brain className="w-3 h-3 text-primary ml-auto" />}
-                      </div>
-                      {analysis?.summary && <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2">{analysis.summary}</p>}
-                    </button>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[11px] text-muted-foreground">{session.message_count} msg</span>
+                          {hasAnalysis && <span className="text-sm">{mood.emoji}</span>}
+                          {session.tags?.map(tag => {
+                            const info = tagLabels[tag];
+                            return info ? (
+                              <span key={tag} className={`px-1.5 py-0.5 rounded-full text-[9px] font-medium ${info.color}`}>{info.emoji}</span>
+                            ) : null;
+                          })}
+                          {hasAnalysis && <Brain className="w-3 h-3 text-primary ml-auto" />}
+                        </div>
+                        {analysis?.summary && <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2">{analysis.summary}</p>}
+                        {session.parent_note && <p className="text-[10px] text-primary/70 mt-1 italic">📝 {session.parent_note}</p>}
+                      </button>
+                    </div>
                   );
                 })}
               </div>
