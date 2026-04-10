@@ -1,12 +1,15 @@
-import { useRef, useEffect, useCallback, useState } from "react";
+import { useRef, useEffect, useState } from "react";
+import { eventBus } from "@/lib/eventBus";
 
 /**
  * Tracks mouse/touch position normalized to [-1, 1] range.
- * Optionally uses MediaPipe face detection for camera-based tracking.
+ * Optionally uses camera-based face tracking.
+ * Emits FACE_DETECTED / FACE_LOST via event bus.
  */
 export function useGazeTracker(enableCamera: boolean = false) {
   const gazeRef = useRef({ x: 0, y: 0 });
   const [cameraActive, setCameraActive] = useState(false);
+  const faceDetectedRef = useRef(false);
 
   // Mouse/touch tracking
   useEffect(() => {
@@ -29,7 +32,7 @@ export function useGazeTracker(enableCamera: boolean = false) {
     };
   }, []);
 
-  // Camera-based face tracking (simplified - uses getUserMedia + face position)
+  // Camera-based face tracking
   useEffect(() => {
     if (!enableCamera) return;
     let animId: number;
@@ -44,7 +47,6 @@ export function useGazeTracker(enableCamera: boolean = false) {
         video.play();
         setCameraActive(true);
 
-        // Simple brightness-based face position estimation
         const canvas = document.createElement("canvas");
         canvas.width = 320;
         canvas.height = 240;
@@ -56,15 +58,15 @@ export function useGazeTracker(enableCamera: boolean = false) {
           const imageData = ctx.getImageData(0, 0, 320, 240);
           const data = imageData.data;
 
-          // Find center of brightness (rough face position)
           let totalWeight = 0, weightedX = 0, weightedY = 0;
+          let skinPixels = 0;
           for (let y = 0; y < 240; y += 4) {
             for (let x = 0; x < 320; x += 4) {
               const i = (y * 320 + x) * 4;
               const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
-              // Skin-tone detection (rough)
               const r = data[i], g = data[i + 1], b = data[i + 2];
               const isSkinLike = r > 100 && g > 60 && b > 40 && r > g && r > b;
+              if (isSkinLike) skinPixels++;
               const w = isSkinLike ? brightness * 2 : brightness * 0.1;
               totalWeight += w;
               weightedX += x * w;
@@ -72,14 +74,23 @@ export function useGazeTracker(enableCamera: boolean = false) {
             }
           }
 
-          if (totalWeight > 0) {
+          const hasFace = skinPixels > 50;
+
+          if (hasFace && totalWeight > 0) {
             const cx = weightedX / totalWeight / 320 * 2 - 1;
             const cy = -(weightedY / totalWeight / 240 * 2 - 1);
-            // Blend camera with existing gaze
             gazeRef.current = {
               x: gazeRef.current.x * 0.3 + cx * 0.7,
               y: gazeRef.current.y * 0.3 + cy * 0.7,
             };
+
+            if (!faceDetectedRef.current) {
+              faceDetectedRef.current = true;
+              eventBus.emit({ type: "FACE_DETECTED", position: { x: cx, y: cy, z: 0 } });
+            }
+          } else if (faceDetectedRef.current) {
+            faceDetectedRef.current = false;
+            eventBus.emit({ type: "FACE_LOST" });
           }
 
           animId = requestAnimationFrame(track);
@@ -96,6 +107,10 @@ export function useGazeTracker(enableCamera: boolean = false) {
       cancelAnimationFrame(animId);
       stream?.getTracks().forEach(t => t.stop());
       setCameraActive(false);
+      if (faceDetectedRef.current) {
+        faceDetectedRef.current = false;
+        eventBus.emit({ type: "FACE_LOST" });
+      }
     };
   }, [enableCamera]);
 

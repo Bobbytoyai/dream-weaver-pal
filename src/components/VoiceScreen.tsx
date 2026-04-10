@@ -4,10 +4,7 @@ import { streamVoiceChat, fetchTTSAudio, useAudioQueue } from "@/lib/voicePipeli
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import { ParentSettings } from "@/components/ParentMode";
 import { HologramFace } from "@/components/hologram/HologramFace";
-import {
-  playListeningPling, playStopBip, playThinkingShimmer,
-  playSpeakingChime, playSessionEnd, playInterrupted, setSfxVolume
-} from "@/lib/sfx";
+import { setSfxVolume, initSfxEventBus } from "@/lib/sfx";
 import { useChildMemory } from "@/hooks/useChildMemory";
 import { eventBus } from "@/lib/eventBus";
 
@@ -60,27 +57,26 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
   const session = useSessionTracker(childName, childAge);
   const { memory, addFavoriteTheme } = useChildMemory(childName);
 
+  // Initialize SFX event bus listener (once)
+  useEffect(() => {
+    const cleanup = initSfxEventBus();
+    return cleanup;
+  }, []);
+
+  // Emit STATE_CHANGED on every state transition
+  const prevStateRef = useRef<VoiceState>("idle");
+  useEffect(() => {
+    if (state === prevStateRef.current) return;
+    eventBus.emit({ type: "STATE_CHANGED", state, prev: prevStateRef.current });
+    prevStateRef.current = state;
+  }, [state]);
+
   useEffect(() => { stateRef.current = state; }, [state]);
 
   // Sync SFX volume from parent settings
   useEffect(() => {
     setSfxVolume(parentSettings?.sfxVolume ?? 0.7);
   }, [parentSettings?.sfxVolume]);
-
-  // Play SFX on state transitions
-  const prevStateRef = useRef<VoiceState>("idle");
-  useEffect(() => {
-    if (state === prevStateRef.current) return;
-    switch (state) {
-      case "listening": playListeningPling(); break;
-      case "processing": playThinkingShimmer(); break;
-      case "speaking": if (prevStateRef.current !== "processing") playSpeakingChime(); break;
-      case "interrupted": playInterrupted(); break;
-      case "session_end": playSessionEnd(); break;
-      case "idle": if (prevStateRef.current === "listening") playStopBip(); break;
-    }
-    prevStateRef.current = state;
-  }, [state]);
 
   useEffect(() => {
     return () => {
@@ -91,6 +87,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
       clearTimers();
       if (sessionStartedRef.current) {
         session.endSession();
+        eventBus.emit({ type: "SESSION_END" });
       }
     };
   }, []);
@@ -110,6 +107,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
         setState("session_end");
         speakFallback("session_end");
         session.endSession();
+        eventBus.emit({ type: "SESSION_END" });
         sessionStartedRef.current = false;
       }
     }, 40000);
@@ -118,9 +116,11 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
   const speakFallback = useCallback(async (key: string) => {
     try {
       setState("speaking");
+      eventBus.emit({ type: "SPEECH_START" });
       const url = await fetchTTSAudio(FALLBACK_FR[key] || FALLBACK_FR.error);
       audioQueue.enqueue(url);
       audioQueue.setOnAllDone(() => {
+        eventBus.emit({ type: "SPEECH_STOP" });
         if (key === "session_end") {
           setState("session_end");
         } else {
@@ -139,6 +139,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
     recognitionRef.current?.stop?.();
     clearTimers();
     setState("interrupted");
+    eventBus.emit({ type: "SPEECH_STOP" });
   }, [audioQueue, clearTimers]);
 
   const processSentenceForTTS = useCallback(async (sentence: string, signal?: AbortSignal) => {
@@ -155,6 +156,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
       pendingSentencesRef.current--;
       if (pendingSentencesRef.current === 0 && allSentencesDoneRef.current) {
         audioQueue.setOnAllDone(() => {
+          eventBus.emit({ type: "SPEECH_STOP" });
           setState("idle");
           startSilenceTimers();
         });
@@ -169,6 +171,9 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
     const emotion = detectEmotion(userText);
     session.addMessage("user", userText, emotion);
     eventBus.emit({ type: "VOICE_INPUT", transcript: userText });
+    if (emotion) {
+      eventBus.emit({ type: "EMOTION_DETECTED", emotion });
+    }
 
     const newHistory: AiMsg[] = [...conversationHistory, { role: "user", content: userText }];
     const abortController = new AbortController();
@@ -179,6 +184,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
     fetchTTSAudio("hmm…", abortController.signal).then(url => {
       if (!abortController.signal.aborted && stateRef.current === "processing") {
         setState("speaking");
+        eventBus.emit({ type: "SPEECH_START" });
         audioQueue.enqueue(url);
       }
     }).catch(() => {});
@@ -203,9 +209,11 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
         if (text) {
           setConversationHistory([...newHistory, { role: "assistant", content: text }]);
           session.addMessage("assistant", text);
+          eventBus.emit({ type: "RESPONSE_READY", text });
         }
         if (pendingSentencesRef.current === 0) {
           audioQueue.setOnAllDone(() => {
+            eventBus.emit({ type: "SPEECH_STOP" });
             setState("idle");
             startSilenceTimers();
           });
@@ -225,6 +233,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
     if (!sessionStartedRef.current) {
       session.startSession();
       sessionStartedRef.current = true;
+      eventBus.emit({ type: "SESSION_START" });
     }
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -270,12 +279,14 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
       recognitionRef.current?.stop();
       return;
     }
+    eventBus.emit({ type: "TAP_TRIGGERED" });
     startListening();
   }, [state, startListening]);
 
   const handleParentMode = useCallback(() => {
     if (sessionStartedRef.current) {
       session.endSession();
+      eventBus.emit({ type: "SESSION_END" });
       sessionStartedRef.current = false;
     }
     onParentMode();
