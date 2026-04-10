@@ -1,6 +1,6 @@
 /* v4 — Robust State Machine + Click Toggle + Auto-Recovery + Debug Overlay */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Settings, Camera, Mic, MicOff, Bug } from "lucide-react";
+import { Settings, Camera, Mic, MicOff, Bug, Gamepad2 } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue, preloadVoiceProfile, detectEmotionForTTS } from "@/lib/voicePipeline";
 import { preloadVoice as preloadPiperVoice } from "@/lib/piperTTS";
 import { preloadOfflineTTSCache } from "@/lib/ttsCache";
@@ -177,10 +177,13 @@ interface VoiceScreenProps {
   onSwitchToChat: () => void;
   onSwitchToStory?: () => void;
   onParentMode: () => void;
+  onActivities?: () => void;
   parentSettings?: ParentSettings;
+  activeGameCategory?: string | null;
+  onClearGame?: () => void;
 }
 
-const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onParentMode, parentSettings }: VoiceScreenProps) => {
+const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onParentMode, onActivities, parentSettings, activeGameCategory, onClearGame }: VoiceScreenProps) => {
   const currentVoiceId = parentSettings?.voiceType || "female";
   const currentVoiceSpeed = parentSettings?.voiceSpeed || "normal";
   const isCalmMode = parentSettings?.nightMode?.active || parentSettings?.personality === "calm";
