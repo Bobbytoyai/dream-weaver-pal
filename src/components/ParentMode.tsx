@@ -627,10 +627,58 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   }, [sessionMessages]);
 
   const jumpToMoment = (msgIdx: number) => {
-    if (!audioRef.current || !audioDuration || sessionMessages.length === 0) return;
+    if (!audioRef.current || !audioDuration || sessionMessages.length === 0) {
+      // No audio recording — use TTS to read the moment
+      speakMessage(sessionMessages[msgIdx]?.content || "");
+      return;
+    }
     const pct = (msgIdx / sessionMessages.length) * 100;
     seekAudio(pct);
     setActiveMessageIdx(msgIdx);
+  };
+
+  const [ttsPlaying, setTtsPlaying] = useState<string | null>(null);
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const speakMessage = async (text: string) => {
+    if (!text) return;
+    
+    // Toggle off if same text
+    if (ttsPlaying === text) {
+      ttsAudioRef.current?.pause();
+      setTtsPlaying(null);
+      return;
+    }
+
+    // Stop previous
+    ttsAudioRef.current?.pause();
+    setTtsPlaying(text);
+
+    try {
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ text: text.slice(0, 500), voiceProfile: "female" }),
+        }
+      );
+      if (!resp.ok) throw new Error("TTS failed");
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      ttsAudioRef.current = audio;
+      audio.onended = () => {
+        setTtsPlaying(null);
+        URL.revokeObjectURL(url);
+      };
+      audio.play();
+    } catch {
+      setTtsPlaying(null);
+    }
   };
 
   // ─── Sessions grouped by day ──────────────────────────────────
