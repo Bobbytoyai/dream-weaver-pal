@@ -124,7 +124,7 @@ function speakWithBrowserTTS(text: string, profile: VoiceProfile = "female"): Pr
     utterance.rate = config.rate;
     utterance.pitch = config.pitch;
 
-    const voice = pickVoice(config.preferFemale);
+    const voice = pickVoiceForProfile(profile);
     if (voice) utterance.voice = voice;
 
     utterance.onend = () => resolve("__browser_tts__");
