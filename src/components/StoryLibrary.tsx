@@ -207,11 +207,29 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
             <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
               <span>👤 {selectedStory.age_min}-{selectedStory.age_max} ans</span>
               {selectedStory.interactive && <span>🎮 Interactive</span>}
+              {downloadedIds.has(selectedStory.id) && (
+                <span className="flex items-center gap-0.5 text-success">
+                  <CheckCircle className="w-3 h-3" /> Hors-ligne
+                </span>
+              )}
             </div>
           </div>
 
           {/* Actions */}
           <div className="bg-card px-5 pb-5 space-y-2">
+            {!downloadedIds.has(selectedStory.id) && (
+              <button
+                onClick={() => downloadStory(selectedStory)}
+                disabled={downloadingId === selectedStory.id}
+                className="w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-success/10 text-success border border-success/20 hover:bg-success/20 disabled:opacity-50"
+              >
+                {downloadingId === selectedStory.id ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Téléchargement…</>
+                ) : (
+                  <><Download className="w-4 h-4" /> 📥 Télécharger hors-ligne</>
+                )}
+              </button>
+            )}
             <button
               onClick={() => setShowFullText(!showFullText)}
               className={`w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-gradient-to-r ${meta.gradient} border ${meta.accent} hover:shadow-md`}
