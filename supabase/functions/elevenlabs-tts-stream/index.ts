@@ -51,10 +51,10 @@ Deno.serve(async (req) => {
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     if (!ELEVENLABS_API_KEY) throw new Error("ELEVENLABS_API_KEY not configured");
 
-    const voiceId = VOICE_MAP[voiceProfile || "female"] || VOICE_MAP.female;
+    const profile = VOICE_PROFILES[voiceProfile || "female"] || VOICE_PROFILES.female;
 
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_22050_32`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${profile.voiceId}/stream?output_format=mp3_22050_32`,
       {
         method: "POST",
         headers: {
@@ -65,11 +65,11 @@ Deno.serve(async (req) => {
           text: text.trim(),
           model_id: "eleven_turbo_v2_5",
           voice_settings: {
-            stability: 0.6,
-            similarity_boost: 0.75,
-            style: 0.3,
+            stability: profile.stability,
+            similarity_boost: profile.similarity_boost,
+            style: profile.style,
             use_speaker_boost: true,
-            speed: 1.0,
+            speed: profile.speed,
           },
         }),
       }
