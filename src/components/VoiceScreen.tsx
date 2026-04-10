@@ -1,6 +1,6 @@
-/* v3 — SmartSTT + Wake Word Engine */
+/* v4 — Robust State Machine + Click Toggle + Auto-Recovery + Debug Overlay */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { BookOpen, Settings, Camera, Mic, MicOff } from "lucide-react";
+import { Settings, Camera, Mic, MicOff, Bug } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue, preloadVoiceProfile, detectEmotionForTTS } from "@/lib/voicePipeline";
 import type { Emotion } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
@@ -14,21 +14,34 @@ import { eventBus } from "@/lib/eventBus";
 import { getCachedResponse, isSimpleGreeting } from "@/lib/responseCache";
 import { hasWakeWord, stripWakeWord, isJustWakeWord, computeWakeConfidence } from "@/lib/wakeWordEngine";
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 1. STATE MACHINE TYPES
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+type ConversationState = "IDLE" | "LISTENING" | "PROCESSING" | "SPEAKING" | "ERROR";
 type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
 type AiMsg = { role: "user" | "assistant"; content: string };
+type Intent = "story" | "game" | "emotion_support" | "question" | "chat";
+
+// Map internal state machine to hologram display state
+function toVoiceState(s: ConversationState): VoiceState {
+  switch (s) {
+    case "IDLE": return "idle";
+    case "LISTENING": return "listening";
+    case "PROCESSING": return "processing";
+    case "SPEAKING": return "speaking";
+    case "ERROR": return "interrupted";
+  }
+}
 
 const FALLBACK_FR: Record<string, string> = {
   not_heard: "Je n'ai pas bien entendu. Tu peux répéter ?",
   thinking: "Une seconde.",
   error: "Petit souci. Réessaie !",
-  reengage: "",
   session_end: "",
   welcome: "Salut ! Dis Bobby pour me parler !",
-  interrupted: "Pardon. Je t'écoute.",
-  wake_greeting: "Oui ? Je t'écoute.",
+  wake_greeting: "Oui? Je t'écoute.",
+  recovery: "Je t'écoute 😊",
 };
-
-type Intent = "story" | "game" | "emotion_support" | "question" | "chat";
 
 function detectIntent(text: string): Intent {
   const lower = text.toLowerCase();
@@ -50,8 +63,8 @@ function detectEmotion(text: string): string | undefined {
   if (lower.match(/colère|énervé|fâché|énerve|rage|grrr/)) return "angry";
   return undefined;
 }
-// Wake word functions imported from @/lib/wakeWordEngine
 
+// ─── Echo detection ───
 const recentBobbyTextsRef = { current: [] as string[] };
 
 function normalizeForComparison(text: string): string {
@@ -61,21 +74,91 @@ function normalizeForComparison(text: string): string {
 function isEcho(transcript: string): boolean {
   const normalized = normalizeForComparison(transcript);
   if (normalized.length < 5) return false;
-
   for (const bobbyText of recentBobbyTextsRef.current) {
     const bobbyNorm = normalizeForComparison(bobbyText);
     if (!bobbyNorm) continue;
     if (bobbyNorm.includes(normalized)) return true;
     if (normalized.includes(bobbyNorm) && bobbyNorm.length > 10) return true;
-
     const transcriptWords = normalized.split(" ");
     const bobbyWords = new Set(bobbyNorm.split(" "));
     const overlap = transcriptWords.filter((word) => bobbyWords.has(word)).length;
     if (transcriptWords.length > 3 && overlap / transcriptWords.length > 0.6) return true;
   }
-
   return false;
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// CONSTANTS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const SILENCE_IDLE_TIMEOUT = 40000;       // 40s silence → IDLE
+const UTTERANCE_FLUSH_DELAY = 1200;       // ms after utterance end before flushing
+const SHORT_UTTERANCE_FLUSH = 800;        // faster flush for short text
+const STUCK_TIMEOUT = 3500;               // 3.5s stuck in any state → auto-recover
+const AI_RESPONSE_TIMEOUT = 5000;         // 5s max for AI response
+const MAX_AI_RETRIES = 1;                 // retry once on failure
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// UI COMPONENTS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const SoundWave = ({ active }: { active: boolean }) => {
+  const bars = 5;
+  return (
+    <div className="flex items-center gap-[3px] h-5">
+      {Array.from({ length: bars }, (_, i) => (
+        <div key={i} className="w-[3px] rounded-full transition-all duration-150"
+          style={{
+            backgroundColor: "hsl(var(--primary))",
+            height: active ? `${8 + Math.sin(Date.now() / 200 + i * 1.2) * 6 + Math.random() * 4}px` : "4px",
+            opacity: active ? 0.9 : 0.3,
+            animation: active ? `soundbar-${i} 0.4s ease-in-out infinite alternate` : "none",
+          }} />
+      ))}
+      <style>{`${Array.from({ length: bars }, (_, i) => `
+        @keyframes soundbar-${i} { 0% { height: ${4 + i * 2}px; } 100% { height: ${12 + ((i + 2) % bars) * 3}px; } }
+      `).join("")}`}</style>
+    </div>
+  );
+};
+
+const FloatingParticles = () => {
+  const particles = Array.from({ length: 12 }, (_, i) => ({
+    id: i, size: 4 + Math.random() * 8, left: Math.random() * 100,
+    delay: Math.random() * 8, duration: 10 + Math.random() * 15,
+    color: ["hsla(215, 85%, 58%, 0.25)", "hsla(270, 55%, 62%, 0.2)", "hsla(320, 55%, 65%, 0.18)", "hsla(180, 60%, 55%, 0.2)", "hsla(45, 80%, 65%, 0.15)"][i % 5],
+  }));
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map(p => (
+        <div key={p.id} className="floating-particle"
+          style={{ width: p.size, height: p.size, left: `${p.left}%`, bottom: "-10px", backgroundColor: p.color, animationDuration: `${p.duration}s`, animationDelay: `${p.delay}s` }} />
+      ))}
+    </div>
+  );
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DEBUG OVERLAY
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const DebugOverlay = ({ state, micArmed, micRunning, partialText, lastRecognized, lastAiResponse, sttBackend }: {
+  state: ConversationState; micArmed: boolean; micRunning: boolean;
+  partialText: string; lastRecognized: string; lastAiResponse: string; sttBackend: string;
+}) => (
+  <div className="fixed top-0 left-0 right-0 z-50 bg-black/85 text-white p-3 text-[10px] font-mono space-y-1 pointer-events-none max-h-48 overflow-y-auto">
+    <div className="flex gap-3 flex-wrap">
+      <span>State: <span className={`font-bold ${state === "ERROR" ? "text-red-400" : state === "LISTENING" ? "text-green-400" : state === "SPEAKING" ? "text-blue-400" : state === "PROCESSING" ? "text-yellow-400" : "text-gray-400"}`}>{state}</span></span>
+      <span>Mic: {micArmed ? (micRunning ? "🟢 ON" : "🟡 ARMED") : "🔴 OFF"}</span>
+      <span>STT: {sttBackend}</span>
+    </div>
+    {partialText && <div className="text-green-300 truncate">📝 Partial: "{partialText}"</div>}
+    {lastRecognized && <div className="text-cyan-300 truncate">✅ Recognized: "{lastRecognized}"</div>}
+    {lastAiResponse && <div className="text-purple-300 truncate">🤖 AI: "{lastAiResponse.slice(0, 100)}"</div>}
+  </div>
+);
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MAIN COMPONENT
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 interface VoiceScreenProps {
   childName: string;
@@ -86,221 +169,183 @@ interface VoiceScreenProps {
   parentSettings?: ParentSettings;
 }
 
-const SILENCE_TIMEOUT = 40000;
-const UTTERANCE_FLUSH_DELAY = 1200; // ms after UtteranceEnd before flushing accumulated text
-const SHORT_UTTERANCE_FLUSH = 800; // faster flush for short utterances (< 15 chars)
-
-/* ── Sound Wave Visualizer ── */
-const SoundWave = ({ active }: { active: boolean }) => {
-  const bars = 5;
-  return (
-    <div className="flex items-center gap-[3px] h-5">
-      {Array.from({ length: bars }, (_, i) => (
-        <div
-          key={i}
-          className="w-[3px] rounded-full transition-all duration-150"
-          style={{
-            backgroundColor: "hsl(var(--primary))",
-            height: active ? `${8 + Math.sin(Date.now() / 200 + i * 1.2) * 6 + Math.random() * 4}px` : "4px",
-            opacity: active ? 0.9 : 0.3,
-            animation: active ? `soundbar-${i} 0.4s ease-in-out infinite alternate` : "none",
-          }}
-        />
-      ))}
-      <style>{`
-        ${Array.from({ length: bars }, (_, i) => `
-          @keyframes soundbar-${i} {
-            0% { height: ${4 + i * 2}px; }
-            100% { height: ${12 + ((i + 2) % bars) * 3}px; }
-          }
-        `).join("")}
-      `}</style>
-    </div>
-  );
-};
-
-/* ── Floating Particles Component ── */
-const FloatingParticles = () => {
-  const particles = Array.from({ length: 12 }, (_, i) => ({
-    id: i,
-    size: 4 + Math.random() * 8,
-    left: Math.random() * 100,
-    delay: Math.random() * 8,
-    duration: 10 + Math.random() * 15,
-    color: [
-      "hsla(215, 85%, 58%, 0.25)",
-      "hsla(270, 55%, 62%, 0.2)",
-      "hsla(320, 55%, 65%, 0.18)",
-      "hsla(180, 60%, 55%, 0.2)",
-      "hsla(45, 80%, 65%, 0.15)",
-    ][i % 5],
-  }));
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map(p => (
-        <div key={p.id} className="floating-particle"
-          style={{
-            width: p.size, height: p.size,
-            left: `${p.left}%`, bottom: "-10px",
-            backgroundColor: p.color,
-            animationDuration: `${p.duration}s`,
-            animationDelay: `${p.delay}s`,
-          }}
-        />
-      ))}
-    </div>
-  );
-};
-
 const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onParentMode, parentSettings }: VoiceScreenProps) => {
   const currentVoiceId = parentSettings?.voiceType || "female";
   const currentVoiceSpeed = parentSettings?.voiceSpeed || "normal";
   const isCalmMode = parentSettings?.nightMode?.active || parentSettings?.personality === "calm";
-  const [state, setState] = useState<VoiceState>("idle");
+
+  // ─── STATE MACHINE ───
+  const [machineState, setMachineState] = useState<ConversationState>("IDLE");
+  const machineStateRef = useRef<ConversationState>("IDLE");
   const [conversationHistory, setConversationHistory] = useState<AiMsg[]>([]);
   const [partialText, setPartialText] = useState("");
   const [micArmed, setMicArmed] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
+  const [lastRecognized, setLastRecognized] = useState("");
+  const [lastAiResponse, setLastAiResponse] = useState("");
   const currentEmotionRef = useRef<Emotion | undefined>(undefined);
 
-  useEffect(() => {
-    preloadVoiceProfile(currentVoiceId as any);
-  }, [currentVoiceId]);
+  // Transition helper — ensures ref stays in sync + emits events
+  const transition = useCallback((to: ConversationState) => {
+    const from = machineStateRef.current;
+    if (from === to) return;
+    console.log(`[StateMachine] ${from} → ${to}`);
+    machineStateRef.current = to;
+    setMachineState(to);
+    eventBus.emit({ type: "STATE_CHANGED", state: toVoiceState(to), prev: toVoiceState(from) });
+  }, []);
+
+  useEffect(() => { preloadVoiceProfile(currentVoiceId as any); }, [currentVoiceId]);
 
   const abortRef = useRef<AbortController | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const stateRef = useRef<VoiceState>("idle");
+  const stuckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSentencesRef = useRef(0);
   const allSentencesDoneRef = useRef(false);
   const sessionStartedRef = useRef(false);
   const conversationActiveRef = useRef(false);
-  
-  // Continuous listening: accumulate transcript chunks
   const accumulatedTextRef = useRef("");
   const utteranceFlushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isSpeakingRef = useRef(false); // VAD: user is currently speaking
+  const isSpeakingRef = useRef(false);
+  const retryCountRef = useRef(0);
 
   const audioQueue = useAudioQueue();
   const session = useSessionTracker(childName, childAge);
-  const { memory, loading, saveSettings } = useChildMemory(childName);
+  const { memory } = useChildMemory(childName);
   const recorder = useConversationRecorder();
 
   useEffect(() => { initSfxEventBus(); }, []);
-
-  const prevStateRef = useRef<VoiceState>("idle");
-  useEffect(() => {
-    if (state === prevStateRef.current) return;
-    eventBus.emit({ type: "STATE_CHANGED", state, prev: prevStateRef.current });
-    prevStateRef.current = state;
-  }, [state]);
-
-  useEffect(() => { stateRef.current = state; }, [state]);
   useEffect(() => { setSfxVolume(parentSettings?.sfxVolume ?? 0.7); }, [parentSettings?.sfxVolume]);
 
-  const clearTimers = useCallback(() => {
-    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-    if (utteranceFlushTimerRef.current) clearTimeout(utteranceFlushTimerRef.current);
+  // ─── TIMER MANAGEMENT ───
+  const clearAllTimers = useCallback(() => {
+    if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
+    if (utteranceFlushTimerRef.current) { clearTimeout(utteranceFlushTimerRef.current); utteranceFlushTimerRef.current = null; }
+    if (stuckTimerRef.current) { clearTimeout(stuckTimerRef.current); stuckTimerRef.current = null; }
   }, []);
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       abortRef.current?.abort();
       audioQueue.stopAll();
-      clearTimers();
+      clearAllTimers();
       if (sessionStartedRef.current) {
         session.endSession();
         eventBus.emit({ type: "SESSION_END" });
       }
     };
-  }, [audioQueue, clearTimers, session]);
+  }, [audioQueue, clearAllTimers, session]);
 
-  const endConversation = useCallback(async () => {
-    clearTimers();
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 2. STUCK DETECTION — auto-recover if stuck >3.5s
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const startStuckTimer = useCallback((forState: ConversationState) => {
+    if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current);
+    stuckTimerRef.current = setTimeout(() => {
+      if (machineStateRef.current === forState && forState !== "IDLE" && forState !== "LISTENING") {
+        console.warn(`[StateMachine] ⚠️ Stuck in ${forState} for ${STUCK_TIMEOUT}ms — auto-recovering`);
+        abortRef.current?.abort();
+        audioQueue.stopAll();
+        eventBus.emit({ type: "SPEECH_STOP" });
+        transition("LISTENING");
+      }
+    }, STUCK_TIMEOUT);
+  }, [audioQueue, transition]);
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // TRANSITIONS
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  // → IDLE (end conversation)
+  const goToIdle = useCallback(async () => {
+    clearAllTimers();
     conversationActiveRef.current = false;
-    setState("idle");
-
+    transition("IDLE");
     if (sessionStartedRef.current) {
       const messageCount = session.messageCountRef?.current ?? 0;
       const sessionId = await session.endSession();
       eventBus.emit({ type: "SESSION_END" });
       sessionStartedRef.current = false;
-
       if (sessionId) {
         recorder.stopRecording(sessionId).then(() => undefined);
-        if (messageCount > 0) {
-          recorder.triggerAnalysis(sessionId).then(() => undefined);
-        }
+        if (messageCount > 0) recorder.triggerAnalysis(sessionId).then(() => undefined);
       }
     }
-  }, [clearTimers, recorder, session]);
+  }, [clearAllTimers, recorder, session, transition]);
 
-  const startSilenceTimers = useCallback(() => {
-    clearTimers();
-    silenceTimerRef.current = setTimeout(() => {
-      if (stateRef.current === "listening" || stateRef.current === "idle") {
-        endConversation();
-      }
-    }, SILENCE_TIMEOUT);
-  }, [clearTimers, endConversation]);
-
+  // → LISTENING (ready for input)
   const goToListening = useCallback(() => {
-    setState("listening");
+    clearAllTimers();
+    accumulatedTextRef.current = "";
+    isSpeakingRef.current = false;
+    retryCountRef.current = 0;
+    transition("LISTENING");
     setPartialText("");
-    startSilenceTimers();
-  }, [startSilenceTimers]);
+    // Start silence timeout → IDLE after 40s
+    silenceTimerRef.current = setTimeout(() => {
+      if (machineStateRef.current === "LISTENING") goToIdle();
+    }, SILENCE_IDLE_TIMEOUT);
+  }, [clearAllTimers, goToIdle, transition]);
 
-  const speakFallback = useCallback(async (key: string) => {
-    const fallbackText = FALLBACK_FR[key] || FALLBACK_FR.error;
-    if (!fallbackText) {
-      if (key === "session_end") {
-        setState("idle");
-        conversationActiveRef.current = false;
+  // → SPEAKING (play audio)
+  const goToSpeaking = useCallback(() => {
+    clearAllTimers();
+    transition("SPEAKING");
+    // Stuck timer for speaking — if audio never finishes in 30s
+    if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current);
+    stuckTimerRef.current = setTimeout(() => {
+      if (machineStateRef.current === "SPEAKING") {
+        console.warn("[StateMachine] Speaking stuck — forcing listening");
+        audioQueue.stopAll();
+        eventBus.emit({ type: "SPEECH_STOP" });
+        goToListening();
       }
-      return;
-    }
+    }, 30000);
+  }, [audioQueue, clearAllTimers, goToListening, transition]);
 
+  // Speak a fallback phrase then → LISTENING
+  const speakAndListen = useCallback(async (text: string) => {
+    if (!text) { goToListening(); return; }
     try {
-      setState("speaking");
+      goToSpeaking();
       eventBus.emit({ type: "SPEECH_START" });
-      recentBobbyTextsRef.current = [fallbackText, ...recentBobbyTextsRef.current].slice(0, 5);
-      const url = await fetchTTSAudio(fallbackText, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode);
+      recentBobbyTextsRef.current = [text, ...recentBobbyTextsRef.current].slice(0, 5);
+      const url = await fetchTTSAudio(text, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode);
       audioQueue.enqueue(url);
       audioQueue.setOnAllDone(() => {
         eventBus.emit({ type: "SPEECH_STOP" });
-        if (key === "session_end") {
-          setState("idle");
-          conversationActiveRef.current = false;
-        } else {
-          goToListening();
-        }
+        goToListening();
       });
     } catch {
-      setState("idle");
+      goToListening();
     }
-  }, [audioQueue, goToListening, currentVoiceId, currentVoiceSpeed, isCalmMode]);
+  }, [audioQueue, currentVoiceId, currentVoiceSpeed, goToListening, goToSpeaking, isCalmMode]);
 
+  // Interrupt current speech
   const interrupt = useCallback(() => {
     abortRef.current?.abort();
     audioQueue.stopAll();
-    clearTimers();
-    setState("interrupted");
+    clearAllTimers();
     eventBus.emit({ type: "SPEECH_STOP" });
-  }, [audioQueue, clearTimers]);
+    transition("LISTENING");
+  }, [audioQueue, clearAllTimers, transition]);
 
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 3. TTS SENTENCE PROCESSING
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const processSentenceForTTS = useCallback(async (sentence: string, signal?: AbortSignal) => {
     pendingSentencesRef.current++;
     recentBobbyTextsRef.current = [sentence, ...recentBobbyTextsRef.current].slice(0, 8);
     const responseEmotion = detectEmotionForTTS(sentence) || currentEmotionRef.current;
-
     try {
       const url = await fetchTTSAudio(sentence, signal, currentVoiceId, responseEmotion, currentVoiceSpeed, isCalmMode);
       if (!signal?.aborted) {
-        setState("speaking");
+        goToSpeaking();
         audioQueue.enqueue(url);
       }
-    } catch {
-      // ignore
-    } finally {
+    } catch { /* ignore */ }
+    finally {
       pendingSentencesRef.current--;
       if (pendingSentencesRef.current === 0 && allSentencesDoneRef.current) {
         audioQueue.setOnAllDone(() => {
@@ -309,11 +354,15 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         });
       }
     }
-  }, [audioQueue, currentVoiceId, currentVoiceSpeed, isCalmMode, goToListening]);
+  }, [audioQueue, currentVoiceId, currentVoiceSpeed, goToListening, goToSpeaking, isCalmMode]);
 
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 4. AI RESPONSE with RETRY
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const getAIResponse = useCallback(async (userText: string, intent?: Intent) => {
-    setState("processing");
-    clearTimers();
+    transition("PROCESSING");
+    clearAllTimers();
+    startStuckTimer("PROCESSING");
     setPartialText("");
 
     const emotion = detectEmotion(userText);
@@ -321,6 +370,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     session.addMessage("user", userText, emotion);
     eventBus.emit({ type: "VOICE_INPUT", transcript: userText });
     if (emotion) eventBus.emit({ type: "EMOTION_DETECTED", emotion });
+    setLastRecognized(userText);
 
     const detectedIntent = intent || detectIntent(userText);
     let mode = "chat";
@@ -340,31 +390,37 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       if (memory.totalStoriesHeard > 0) memoryParts.push(`Histoires écoutées: ${memory.totalStoriesHeard}`);
       const prefs = memory.preferences as Record<string, unknown>;
       if (prefs && Object.keys(prefs).length > 0) {
-        const prefStr = Object.entries(prefs).map(([k, v]) => `${k}: ${v}`).join(", ");
-        memoryParts.push(`Préférences: ${prefStr}`);
+        memoryParts.push(`Préférences: ${Object.entries(prefs).map(([k, v]) => `${k}: ${v}`).join(", ")}`);
       }
     }
     const memoryContext = memoryParts.length > 0 ? memoryParts.join("\n") : undefined;
 
+    // ─── Timeout auto-recovery ───
     const recoveryTimer = setTimeout(() => {
-      if (stateRef.current === "processing") {
+      if (machineStateRef.current === "PROCESSING") {
         console.warn("[VoiceScreen] AI response timeout — recovering");
         abortController.abort();
-        speakFallback("error");
+        if (retryCountRef.current < MAX_AI_RETRIES) {
+          retryCountRef.current++;
+          console.log(`[VoiceScreen] Retrying AI request (attempt ${retryCountRef.current})`);
+          getAIResponse(userText, intent);
+        } else {
+          retryCountRef.current = 0;
+          speakAndListen(FALLBACK_FR.not_heard);
+        }
       }
-    }, 4500);
+    }, AI_RESPONSE_TIMEOUT);
 
     try {
+      let gotFirstSentence = false;
       await streamVoiceChat({
         messages: newHistory,
-        childName,
-        childAge,
-        mode,
-        parentSettings,
-        memoryContext,
+        childName, childAge, mode, parentSettings, memoryContext,
         signal: abortController.signal,
         onSentence: (sentence) => {
           clearTimeout(recoveryTimer);
+          if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current);
+          gotFirstSentence = true;
           if (!abortController.signal.aborted) {
             eventBus.emit({ type: "SPEECH_START" });
             processSentenceForTTS(sentence, abortController.signal);
@@ -372,7 +428,9 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         },
         onDone: (text) => {
           clearTimeout(recoveryTimer);
+          if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current);
           allSentencesDoneRef.current = true;
+          setLastAiResponse(text || "");
           if (text) {
             setConversationHistory([...newHistory, { role: "assistant", content: text }]);
             session.addMessage("assistant", text);
@@ -384,61 +442,63 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
               goToListening();
             });
           }
-          if (!text || text.trim().length === 0) {
+          // If no sentences were produced, go back to listening
+          if (!gotFirstSentence || !text || text.trim().length === 0) {
             goToListening();
           }
         },
         onError: (error) => {
           clearTimeout(recoveryTimer);
           console.error("AI error:", error);
-          if (!abortController.signal.aborted) speakFallback("error");
+          if (!abortController.signal.aborted) {
+            if (retryCountRef.current < MAX_AI_RETRIES) {
+              retryCountRef.current++;
+              console.log(`[VoiceScreen] Retrying after error (attempt ${retryCountRef.current})`);
+              getAIResponse(userText, intent);
+            } else {
+              retryCountRef.current = 0;
+              speakAndListen(FALLBACK_FR.not_heard);
+            }
+          }
         },
       });
     } catch (e) {
       clearTimeout(recoveryTimer);
       console.error("AI call exception:", e);
-      if (!abortController.signal.aborted) speakFallback("error");
+      if (!abortController.signal.aborted) {
+        retryCountRef.current = 0;
+        speakAndListen(FALLBACK_FR.error);
+      }
     }
-  }, [audioQueue, childAge, childName, clearTimers, conversationHistory, goToListening, memory, parentSettings, processSentenceForTTS, session, speakFallback]);
+  }, [audioQueue, childAge, childName, clearAllTimers, conversationHistory, goToListening, goToSpeaking, memory, parentSettings, processSentenceForTTS, session, speakAndListen, startStuckTimer, transition]);
 
-  // ─── Continuous Listening: flush accumulated text ───
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 5. FLUSH ACCUMULATED TEXT → AI
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const flushAccumulatedText = useCallback(() => {
-    if (utteranceFlushTimerRef.current) clearTimeout(utteranceFlushTimerRef.current);
+    if (utteranceFlushTimerRef.current) { clearTimeout(utteranceFlushTimerRef.current); utteranceFlushTimerRef.current = null; }
     const text = accumulatedTextRef.current.trim();
     accumulatedTextRef.current = "";
-    if (text.length < 3) {
-      startSilenceTimers();
-      return;
-    }
-    console.log("[VoiceScreen] 🔄 Flushing accumulated:", text);
+    if (text.length < 3) return;
+    console.log("[VoiceScreen] 🔄 Flushing:", text);
 
-    // Skip echoes
-    if (isEcho(text)) {
-      console.log("[VoiceScreen] Echo — ignoring accumulated");
-      startSilenceTimers();
-      return;
-    }
+    if (isEcho(text)) { console.log("[VoiceScreen] Echo — ignoring"); return; }
 
     const wake = hasWakeWord(text);
     const cleaned = wake ? stripWakeWord(text) : text;
-
     if (cleaned.length < 3) {
-      if (wake) speakFallback("wake_greeting");
-      else startSilenceTimers();
+      if (wake) speakAndListen(FALLBACK_FR.wake_greeting);
       return;
     }
 
     if (isSimpleGreeting(cleaned)) {
       const cached = getCachedResponse("greeting");
-      setState("speaking");
+      goToSpeaking();
       eventBus.emit({ type: "SPEECH_START" });
       recentBobbyTextsRef.current = [cached, ...recentBobbyTextsRef.current].slice(0, 8);
       fetchTTSAudio(cached, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode).then(url => {
         audioQueue.enqueue(url);
-        audioQueue.setOnAllDone(() => {
-          eventBus.emit({ type: "SPEECH_STOP" });
-          goToListening();
-        });
+        audioQueue.setOnAllDone(() => { eventBus.emit({ type: "SPEECH_STOP" }); goToListening(); });
       }).catch(() => goToListening());
       setConversationHistory(prev => [...prev, { role: "user", content: cleaned }, { role: "assistant", content: cached }]);
       session.addMessage("user", cleaned);
@@ -447,50 +507,33 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     }
 
     getAIResponse(cleaned);
-  }, [audioQueue, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, isCalmMode, session, speakFallback, startSilenceTimers]);
+  }, [audioQueue, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, goToSpeaking, isCalmMode, session, speakAndListen]);
 
-  // Schedule a flush after adaptive delay
   const scheduleFlush = useCallback(() => {
     if (utteranceFlushTimerRef.current) clearTimeout(utteranceFlushTimerRef.current);
     const text = accumulatedTextRef.current.trim();
     const delay = text.length < 15 ? SHORT_UTTERANCE_FLUSH : UTTERANCE_FLUSH_DELAY;
-    console.log("[VoiceScreen] Scheduling flush in", delay, "ms for:", text);
     utteranceFlushTimerRef.current = setTimeout(() => {
-      // Always flush on safety timeout — don't let isSpeakingRef block forever
       isSpeakingRef.current = false;
       flushAccumulatedText();
     }, delay);
   }, [flushAccumulatedText]);
 
-  // ─── Unified Deepgram handler — wake word + conversation ───
-
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 6. TRANSCRIPT HANDLER
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const handleTranscript = useCallback((text: string) => {
     const trimmed = text.trim();
     if (trimmed.length < 2) return;
-    console.log("[VoiceScreen] Final chunk:", trimmed, "state:", stateRef.current);
+    console.log("[VoiceScreen] Final:", trimmed, "state:", machineStateRef.current);
 
-    // ─── IDLE / SESSION_END: wake word required ───
-    if (stateRef.current === "idle" || stateRef.current === "session_end") {
+    // ─── IDLE: wake word or click required ───
+    if (machineStateRef.current === "IDLE") {
       if (!hasWakeWord(trimmed)) return;
-
       console.log("[VoiceScreen] 🎤 Wake word detected!");
       eventBus.emit({ type: "WAKE_DETECTED", confidence: 0.9 });
-
-      if (!sessionStartedRef.current) {
-        session.startSession();
-        sessionStartedRef.current = true;
-        recorder.startRecording();
-        eventBus.emit({ type: "SESSION_START" });
-      }
-      conversationActiveRef.current = true;
-      eventBus.emit({ type: "WAKE_TRIGGERED" });
-
-      if (isJustWakeWord(trimmed)) {
-        speakFallback("wake_greeting");
-        return;
-      }
-
-      // Wake word + message → accumulate and schedule flush
+      ensureSession();
+      if (isJustWakeWord(trimmed)) { speakAndListen(FALLBACK_FR.wake_greeting); return; }
       const command = stripWakeWord(trimmed);
       accumulatedTextRef.current = command;
       scheduleFlush();
@@ -498,52 +541,49 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     }
 
     // ─── SPEAKING / PROCESSING: user interrupts ───
-    if (stateRef.current === "speaking" || stateRef.current === "processing") {
+    if (machineStateRef.current === "SPEAKING" || machineStateRef.current === "PROCESSING") {
       interrupt();
     }
 
-    // ─── LISTENING / INTERRUPTED: accumulate transcript chunks ───
-    clearTimers();
+    // ─── LISTENING / ERROR: accumulate ───
+    if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
     const wake = hasWakeWord(trimmed);
     const cleaned = wake ? stripWakeWord(trimmed) : trimmed;
-
     if (cleaned.length < 2) return;
-
-    // Accumulate — don't send yet, wait for UtteranceEnd
     accumulatedTextRef.current += (accumulatedTextRef.current ? " " : "") + cleaned;
-    console.log("[VoiceScreen] Accumulated so far:", accumulatedTextRef.current);
-
-    // Schedule a safety flush in case UtteranceEnd never fires
     scheduleFlush();
-  }, [clearTimers, interrupt, recorder, scheduleFlush, session, speakFallback]);
+  }, [interrupt, scheduleFlush, speakAndListen]);
 
-  // ─── Smart STT with continuous listening ───
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 7. SESSION MANAGEMENT
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const ensureSession = useCallback(() => {
+    if (!sessionStartedRef.current) {
+      session.startSession();
+      sessionStartedRef.current = true;
+      recorder.startRecording();
+      eventBus.emit({ type: "SESSION_START" });
+    }
+    conversationActiveRef.current = true;
+  }, [recorder, session]);
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 8. STT SETUP
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const wakeTriggeredFromPartialRef = useRef(false);
 
   const deepgramSTT = useSmartSTT({
     onPartial: useCallback((text: string) => {
       setPartialText(text);
-
-      // Detect wake word on partial transcripts when idle — instant reaction!
-      if (
-        (stateRef.current === "idle" || stateRef.current === "session_end") &&
-        !wakeTriggeredFromPartialRef.current &&
-        hasWakeWord(text, true)
-      ) {
-        console.log("[VoiceScreen] ⚡ Wake word on PARTIAL — instant activation!");
+      // Wake word on partial — instant activation
+      if (machineStateRef.current === "IDLE" && !wakeTriggeredFromPartialRef.current && hasWakeWord(text, true)) {
+        console.log("[VoiceScreen] ⚡ Wake on PARTIAL!");
         wakeTriggeredFromPartialRef.current = true;
         eventBus.emit({ type: "WAKE_DETECTED", confidence: computeWakeConfidence(text) });
-
-        if (!sessionStartedRef.current) {
-          session.startSession();
-          sessionStartedRef.current = true;
-          recorder.startRecording();
-          eventBus.emit({ type: "SESSION_START" });
-        }
-        conversationActiveRef.current = true;
+        ensureSession();
         eventBus.emit({ type: "WAKE_TRIGGERED" });
       }
-    }, [session, recorder]),
+    }, [ensureSession]),
     onFinal: useCallback((text: string) => {
       wakeTriggeredFromPartialRef.current = false;
       if (text.trim().length > 2) {
@@ -551,103 +591,129 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         handleTranscript(text.trim());
       }
     }, [handleTranscript]),
-    // ─── Continuous listening: UtteranceEnd triggers flush ───
     onUtteranceEnd: useCallback(() => {
-      console.log("[VoiceScreen] 📢 UtteranceEnd — child stopped speaking");
+      console.log("[VoiceScreen] 📢 UtteranceEnd");
       isSpeakingRef.current = false;
-      if (accumulatedTextRef.current.trim().length > 2) {
-        // Short delay to catch any trailing finals
-        scheduleFlush();
-      }
+      if (accumulatedTextRef.current.trim().length > 2) scheduleFlush();
     }, [scheduleFlush]),
     onSpeechStarted: useCallback(() => {
-      console.log("[VoiceScreen] 🎙️ SpeechStarted — child is speaking");
       isSpeakingRef.current = true;
-      // Reschedule flush with longer delay — child is still talking
-      // But don't cancel entirely (safety net if UtteranceEnd never fires)
+      // Extend flush timer while user speaks — max 2.5s safety
       if (utteranceFlushTimerRef.current) {
         clearTimeout(utteranceFlushTimerRef.current);
         utteranceFlushTimerRef.current = setTimeout(() => {
           isSpeakingRef.current = false;
           flushAccumulatedText();
-        }, 2500); // Hard safety: flush after 2.5s even if still "speaking"
+        }, 2500);
       }
     }, [flushAccumulatedText]),
-    onError: useCallback((err: string) => {
-      console.warn("[STT] Error:", err);
-    }, []),
+    onError: useCallback((err: string) => { console.warn("[STT] Error:", err); }, []),
     language: "fr",
   });
 
-  // Start/stop STT — keep running during speaking for interruption detection
-  const shouldListen = micArmed;
-  const shouldListenRef = useRef(shouldListen);
-  shouldListenRef.current = shouldListen;
-
+  // Start/stop STT — keep mic open for interruption detection
   useEffect(() => {
-    if (shouldListen) {
-      deepgramSTT.start();
-    } else {
-      deepgramSTT.stop();
-    }
-  }, [shouldListen, deepgramSTT]);
+    if (micArmed) deepgramSTT.start();
+    else deepgramSTT.stop();
+  }, [micArmed, deepgramSTT]);
 
-  // ─── Tap to arm microphone (browser policy) ───
-  const armMic = useCallback(() => {
-    if (micArmed) return;
-    console.log("[VoiceScreen] 🎙️ Mic armed by user gesture");
-    setMicArmed(true);
-  }, [micArmed]);
-
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 9. CLICK INTERACTIONS
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const handleTapBobby = useCallback(() => {
-    if (stateRef.current === "speaking" || stateRef.current === "processing") return;
+    const s = machineStateRef.current;
 
-    // First tap ever: arm the microphone
-    armMic();
-
-    // If idle/session_end → start conversation immediately
-    if (stateRef.current === "idle" || stateRef.current === "session_end") {
-      if (!sessionStartedRef.current) {
-        session.startSession();
-        sessionStartedRef.current = true;
-        recorder.startRecording();
-        eventBus.emit({ type: "SESSION_START" });
-      }
-      conversationActiveRef.current = true;
-      eventBus.emit({ type: "WAKE_TRIGGERED" });
-      eventBus.emit({ type: "WAKE_DETECTED", confidence: 1.0 });
-      speakFallback("wake_greeting");
+    // First tap: arm microphone
+    if (!micArmed) {
+      console.log("[VoiceScreen] 🎙️ Mic armed by tap");
+      setMicArmed(true);
     }
-  }, [armMic, recorder, session, speakFallback]);
 
+    if (s === "LISTENING") {
+      // Toggle OFF → IDLE (child can stop listening by tapping)
+      console.log("[VoiceScreen] 👆 Tap → stopping listening");
+      goToIdle();
+      return;
+    }
+
+    if (s === "SPEAKING" || s === "PROCESSING") {
+      // Interrupt → LISTENING
+      interrupt();
+      return;
+    }
+
+    // IDLE or ERROR → start conversation
+    ensureSession();
+    eventBus.emit({ type: "WAKE_TRIGGERED" });
+    eventBus.emit({ type: "WAKE_DETECTED", confidence: 1.0 });
+    speakAndListen(FALLBACK_FR.wake_greeting);
+  }, [micArmed, ensureSession, goToIdle, interrupt, speakAndListen]);
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 10. PARENT MODE
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const handleParentMode = useCallback(() => {
     conversationActiveRef.current = false;
+    audioQueue.stopAll();
+    clearAllTimers();
     if (sessionStartedRef.current) {
       session.endSession();
       eventBus.emit({ type: "SESSION_END" });
       sessionStartedRef.current = false;
     }
+    transition("IDLE");
     onParentMode();
-  }, [onParentMode, session]);
+  }, [audioQueue, clearAllTimers, onParentMode, session, transition]);
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 11. DEBUG TOGGLE (7 taps on parent button)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const debugTapCountRef = useRef(0);
+  const debugTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleDebugToggle = useCallback(() => {
+    debugTapCountRef.current++;
+    if (debugTapTimerRef.current) clearTimeout(debugTapTimerRef.current);
+    debugTapTimerRef.current = setTimeout(() => { debugTapCountRef.current = 0; }, 1500);
+    if (debugTapCountRef.current >= 5) {
+      debugTapCountRef.current = 0;
+      setShowDebug(prev => !prev);
+    }
+  }, []);
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // RENDER
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const displayState = toVoiceState(machineState);
 
   const stateLabel = {
-    idle: partialText ? `"${partialText}"` : (micArmed ? 'Dis "Bobby" pour me parler !' : 'Touche Bobby pour commencer !'),
-    listening: partialText ? `"${partialText}"` : "J'écoute…",
-    processing: "Je réfléchis…",
-    speaking: "Je parle…",
-    interrupted: "Dis-moi !",
-    session_end: 'Dis "Bobby" pour revenir !',
-  }[state];
+    IDLE: partialText ? `"${partialText}"` : (micArmed ? 'Dis "Bobby" pour me parler !' : 'Touche Bobby pour commencer !'),
+    LISTENING: partialText ? `"${partialText}"` : "J'écoute…",
+    PROCESSING: "Je réfléchis…",
+    SPEAKING: "Je parle…",
+    ERROR: "Dis-moi !",
+  }[machineState];
 
   return (
     <div className="child-light flex flex-col items-center justify-between h-screen px-4 py-6 max-w-lg mx-auto select-none overflow-hidden relative"
       style={{ background: `linear-gradient(180deg, hsl(220, 60%, 97%) 0%, hsl(235, 50%, 96%) 40%, hsl(270, 40%, 96%) 70%, hsl(320, 35%, 96%) 100%)` }}>
 
+      {/* Debug overlay */}
+      {showDebug && (
+        <DebugOverlay
+          state={machineState}
+          micArmed={micArmed}
+          micRunning={deepgramSTT.isRunning.current}
+          partialText={partialText}
+          lastRecognized={lastRecognized}
+          lastAiResponse={lastAiResponse}
+          sttBackend={deepgramSTT.backend}
+        />
+      )}
+
       <FloatingParticles />
 
       {/* Top bar */}
       <div className="w-full flex items-center justify-end px-2 relative z-10">
-        <div className="flex items-center gap-2" />
         <div className="flex items-center gap-2">
           {parentSettings?.enableCamera && (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 backdrop-blur-sm border border-primary/20 text-primary">
@@ -655,7 +721,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             </div>
           )}
-          <button onClick={handleParentMode}
+          <button onClick={() => { handleParentMode(); handleDebugToggle(); }}
             className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/50 text-muted-foreground text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300">
             <Settings className="w-4 h-4" />
             Parent
@@ -667,27 +733,16 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 relative z-10">
         <div className="absolute w-96 h-96 rounded-full pointer-events-none transition-all duration-500"
           style={{
-            background: partialText && state === "listening"
-              ? `radial-gradient(circle, 
-                  hsla(210, 100%, 65%, 0.35) 0%, 
-                  hsla(210, 90%, 60%, 0.2) 30%,
-                  hsla(230, 70%, 65%, 0.08) 55%,
-                  transparent 75%)`
-              : `radial-gradient(circle, 
-                  hsla(215, 85%, 70%, ${state === "speaking" ? 0.2 : 0.12}) 0%, 
-                  hsla(270, 50%, 70%, ${state === "speaking" ? 0.12 : 0.06}) 35%,
-                  hsla(320, 40%, 70%, 0.03) 55%,
-                  transparent 75%)`,
-            animation: partialText && state === "listening" ? "glow-voice 1.2s ease-in-out infinite alternate" : undefined,
+            background: partialText && machineState === "LISTENING"
+              ? `radial-gradient(circle, hsla(210, 100%, 65%, 0.35) 0%, hsla(210, 90%, 60%, 0.2) 30%, hsla(230, 70%, 65%, 0.08) 55%, transparent 75%)`
+              : `radial-gradient(circle, hsla(215, 85%, 70%, ${displayState === "speaking" ? 0.2 : 0.12}) 0%, hsla(270, 50%, 70%, ${displayState === "speaking" ? 0.12 : 0.06}) 35%, hsla(320, 40%, 70%, 0.03) 55%, transparent 75%)`,
+            animation: partialText && machineState === "LISTENING" ? "glow-voice 1.2s ease-in-out infinite alternate" : undefined,
           }}
         />
 
-        <div
-          className="relative w-80 h-80 md:w-96 md:h-96"
-          onPointerDownCapture={handleTapBobby}
-        >
+        <div className="relative w-80 h-80 md:w-96 md:h-96" onPointerDownCapture={handleTapBobby}>
           <HologramFace
-            voiceState={state}
+            voiceState={displayState}
             enableCamera={parentSettings?.enableCamera ?? false}
             onTripleTap={handleParentMode}
             bobbyColor={parentSettings?.bobbyColor}
@@ -699,9 +754,9 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
           {stateLabel}
         </p>
 
-        {/* Mic status with sound wave */}
+        {/* Mic status */}
         <div className="mt-2 flex flex-col items-center gap-1.5">
-          {state === "listening" ? (
+          {machineState === "LISTENING" ? (
             <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-primary/10 backdrop-blur-sm">
               <SoundWave active={partialText.length > 0} />
               <span className="text-xs text-primary font-bold">
@@ -709,14 +764,18 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
               </span>
               <SoundWave active={partialText.length > 0} />
             </div>
-          ) : state === "idle" && micArmed ? (
+          ) : machineState === "IDLE" && micArmed ? (
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 backdrop-blur-sm">
               <Mic className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="text-xs text-muted-foreground font-medium">En attente de "Bobby"</span>
             </div>
-          ) : state === "idle" && !micArmed ? (
+          ) : machineState === "IDLE" && !micArmed ? (
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 backdrop-blur-sm animate-pulse">
               <span className="text-xs text-primary font-bold">👆 Touche Bobby pour activer le micro</span>
+            </div>
+          ) : machineState === "SPEAKING" ? (
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100/60 backdrop-blur-sm">
+              <span className="text-xs text-blue-600 font-bold">👆 Touche pour interrompre</span>
             </div>
           ) : null}
         </div>
