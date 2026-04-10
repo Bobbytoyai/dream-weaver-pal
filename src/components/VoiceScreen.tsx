@@ -456,10 +456,9 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     const delay = text.length < 15 ? SHORT_UTTERANCE_FLUSH : UTTERANCE_FLUSH_DELAY;
     console.log("[VoiceScreen] Scheduling flush in", delay, "ms for:", text);
     utteranceFlushTimerRef.current = setTimeout(() => {
-      // Only flush if user is not actively speaking
-      if (!isSpeakingRef.current) {
-        flushAccumulatedText();
-      }
+      // Always flush on safety timeout — don't let isSpeakingRef block forever
+      isSpeakingRef.current = false;
+      flushAccumulatedText();
     }, delay);
   }, [flushAccumulatedText]);
 
@@ -564,12 +563,16 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     onSpeechStarted: useCallback(() => {
       console.log("[VoiceScreen] 🎙️ SpeechStarted — child is speaking");
       isSpeakingRef.current = true;
-      // Cancel any pending flush — child is still talking
+      // Reschedule flush with longer delay — child is still talking
+      // But don't cancel entirely (safety net if UtteranceEnd never fires)
       if (utteranceFlushTimerRef.current) {
         clearTimeout(utteranceFlushTimerRef.current);
-        utteranceFlushTimerRef.current = null;
+        utteranceFlushTimerRef.current = setTimeout(() => {
+          isSpeakingRef.current = false;
+          flushAccumulatedText();
+        }, 2500); // Hard safety: flush after 2.5s even if still "speaking"
       }
-    }, []),
+    }, [flushAccumulatedText]),
     onError: useCallback((err: string) => {
       console.warn("[STT] Error:", err);
     }, []),
