@@ -100,6 +100,35 @@ interface VoiceScreenProps {
 
 const SILENCE_TIMEOUT = 40000;
 
+/* ── Sound Wave Visualizer ── */
+const SoundWave = ({ active }: { active: boolean }) => {
+  const bars = 5;
+  return (
+    <div className="flex items-center gap-[3px] h-5">
+      {Array.from({ length: bars }, (_, i) => (
+        <div
+          key={i}
+          className="w-[3px] rounded-full transition-all duration-150"
+          style={{
+            backgroundColor: "hsl(var(--primary))",
+            height: active ? `${8 + Math.sin(Date.now() / 200 + i * 1.2) * 6 + Math.random() * 4}px` : "4px",
+            opacity: active ? 0.9 : 0.3,
+            animation: active ? `soundbar-${i} 0.4s ease-in-out infinite alternate` : "none",
+          }}
+        />
+      ))}
+      <style>{`
+        ${Array.from({ length: bars }, (_, i) => `
+          @keyframes soundbar-${i} {
+            0% { height: ${4 + i * 2}px; }
+            100% { height: ${12 + ((i + 2) % bars) * 3}px; }
+          }
+        `).join("")}
+      `}</style>
+    </div>
+  );
+};
+
 /* ── Floating Particles Component ── */
 const FloatingParticles = () => {
   const particles = Array.from({ length: 12 }, (_, i) => ({
@@ -609,12 +638,15 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
           {stateLabel}
         </p>
 
-        {/* Mic status */}
+        {/* Mic status with sound wave */}
         <div className="mt-2 flex flex-col items-center gap-1.5">
           {state === "listening" ? (
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 backdrop-blur-sm">
-              <Mic className="w-4 h-4 text-primary animate-pulse" />
-              <span className="text-xs text-primary font-bold">Écoute active</span>
+            <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-primary/10 backdrop-blur-sm">
+              <SoundWave active={partialText.length > 0} />
+              <span className="text-xs text-primary font-bold">
+                {partialText ? "Bobby t'entend…" : "J'écoute…"}
+              </span>
+              <SoundWave active={partialText.length > 0} />
             </div>
           ) : state === "idle" && micArmed ? (
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 backdrop-blur-sm">
