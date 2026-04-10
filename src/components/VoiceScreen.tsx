@@ -456,10 +456,9 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     const delay = text.length < 15 ? SHORT_UTTERANCE_FLUSH : UTTERANCE_FLUSH_DELAY;
     console.log("[VoiceScreen] Scheduling flush in", delay, "ms for:", text);
     utteranceFlushTimerRef.current = setTimeout(() => {
-      // Only flush if user is not actively speaking
-      if (!isSpeakingRef.current) {
-        flushAccumulatedText();
-      }
+      // Always flush on safety timeout — don't let isSpeakingRef block forever
+      isSpeakingRef.current = false;
+      flushAccumulatedText();
     }, delay);
   }, [flushAccumulatedText]);
 
