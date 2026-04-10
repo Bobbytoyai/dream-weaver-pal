@@ -38,33 +38,33 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   // --- Materials: kawaii pastel style ---
 
-  // Eye whites — bright, clean white with subtle blue tint
+  // Eye whites — bright, sparkling white with warm undertone
   const eyeWhiteMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("#f0f5ff"),
-    emissive: new THREE.Color("hsl(220, 60%, 92%)"),
-    emissiveIntensity: 0.3, roughness: 0.05, metalness: 0,
+    color: new THREE.Color("#f5f8ff"),
+    emissive: new THREE.Color("hsl(225, 50%, 94%)"),
+    emissiveIntensity: 0.35, roughness: 0.03, metalness: 0,
   }), []);
 
-  // Iris — deep blue-purple with strong glow (main color identity)
+  // Iris — vibrant blue-violet gradient anime style
   const irisMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("hsl(225, 75%, 40%)"),
-    emissive: new THREE.Color("hsl(210, 90%, 45%)"),
-    emissiveIntensity: 0.7, roughness: 0.05, metalness: 0.15,
+    color: new THREE.Color("hsl(225, 70%, 48%)"),
+    emissive: new THREE.Color("hsl(215, 85%, 52%)"),
+    emissiveIntensity: 0.65, roughness: 0.04, metalness: 0.12,
   }), []);
 
-  // Iris inner ring — lighter blue for depth gradient effect
+  // Iris inner ring — cyan/sky blue for anime sparkle depth
   const irisInnerMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("hsl(200, 100%, 55%)"),
-    emissive: new THREE.Color("hsl(200, 100%, 50%)"),
-    emissiveIntensity: 0.8, roughness: 0.05, metalness: 0.1,
-    transparent: true, opacity: 0.85,
+    color: new THREE.Color("hsl(195, 100%, 58%)"),
+    emissive: new THREE.Color("hsl(200, 95%, 55%)"),
+    emissiveIntensity: 0.75, roughness: 0.04, metalness: 0.08,
+    transparent: true, opacity: 0.88,
   }), []);
 
-  // Pupil — very dark with subtle blue glow
+  // Pupil — deep dark with subtle violet glow
   const pupilMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("hsl(230, 60%, 8%)"),
-    emissive: new THREE.Color("hsl(220, 80%, 20%)"),
-    emissiveIntensity: 0.2, roughness: 0.02, metalness: 0.1,
+    color: new THREE.Color("hsl(240, 55%, 10%)"),
+    emissive: new THREE.Color("hsl(230, 70%, 22%)"),
+    emissiveIntensity: 0.22, roughness: 0.02, metalness: 0.08,
   }), []);
 
   // Eye highlights — bright white sparkles
@@ -79,47 +79,47 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     transparent: true, opacity: 0.7,
   }), []);
 
-  // Eyelash — dark, like the reference image
+  // Eyelash — soft dark with slight warmth
   const lashMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("hsl(230, 30%, 18%)"),
-    emissive: new THREE.Color("hsl(230, 40%, 12%)"),
-    emissiveIntensity: 0.1, roughness: 0.6,
+    color: new THREE.Color("hsl(235, 28%, 20%)"),
+    emissive: new THREE.Color("hsl(240, 30%, 14%)"),
+    emissiveIntensity: 0.1, roughness: 0.55,
   }), []);
 
-  // Eyebrow — thin, dark, curved
+  // Eyebrow — warm dark, rounded feel
   const eyebrowMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("hsl(230, 25%, 22%)"),
-    emissive: new THREE.Color("hsl(230, 30%, 15%)"),
-    emissiveIntensity: 0.1, roughness: 0.5,
+    color: new THREE.Color("hsl(235, 22%, 24%)"),
+    emissive: new THREE.Color("hsl(240, 25%, 16%)"),
+    emissiveIntensity: 0.1, roughness: 0.45,
   }), []);
 
-  // Mouth — vibrant pink-red, small and cute
+  // Mouth — soft coral-pink, cute and expressive
   const mouthMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("hsl(345, 70%, 50%)"),
-    emissive: new THREE.Color("hsl(345, 80%, 35%)"),
-    emissiveIntensity: 0.4, roughness: 0.3,
+    color: new THREE.Color("hsl(350, 65%, 55%)"),
+    emissive: new THREE.Color("hsl(345, 70%, 40%)"),
+    emissiveIntensity: 0.38, roughness: 0.28,
   }), []);
 
-  // Mouth tongue/inner — brighter pink
+  // Mouth inner — warm pink
   const mouthInnerMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("hsl(350, 75%, 60%)"),
-    emissive: new THREE.Color("hsl(350, 80%, 45%)"),
-    emissiveIntensity: 0.35, roughness: 0.3,
+    color: new THREE.Color("hsl(355, 70%, 62%)"),
+    emissive: new THREE.Color("hsl(350, 75%, 48%)"),
+    emissiveIntensity: 0.32, roughness: 0.28,
   }), []);
 
-  // Cheek blush — soft pink, transparent
+  // Cheek blush — warm peachy-pink, anime style
   const blushMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("hsl(330, 60%, 72%)"),
-    emissive: new THREE.Color("hsl(330, 70%, 55%)"),
-    emissiveIntensity: 0.5, roughness: 0.6,
-    transparent: true, opacity: 0.35,
+    color: new THREE.Color("hsl(340, 55%, 74%)"),
+    emissive: new THREE.Color("hsl(335, 65%, 58%)"),
+    emissiveIntensity: 0.45, roughness: 0.5,
+    transparent: true, opacity: 0.4,
   }), []);
 
-  // Eyelid — matches a soft skin/lavender tone
+  // Eyelid — soft lavender/skin tone
   const eyelidMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: new THREE.Color("hsl(240, 20%, 80%)"),
-    emissive: new THREE.Color("hsl(240, 15%, 60%)"),
-    emissiveIntensity: 0.15, roughness: 0.5,
+    color: new THREE.Color("hsl(245, 18%, 82%)"),
+    emissive: new THREE.Color("hsl(245, 14%, 62%)"),
+    emissiveIntensity: 0.13, roughness: 0.45,
   }), []);
 
   useFrame((_, delta) => {

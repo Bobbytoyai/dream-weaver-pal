@@ -54,6 +54,31 @@
   }
 }
 
+  /* ── Light Cartoon / Anime theme for Child screens ── */
+  .child-light {
+    --background: 220 60% 97%;
+    --foreground: 230 25% 18%;
+    --card: 230 40% 95%;
+    --card-foreground: 230 25% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 230 25% 18%;
+    --primary: 215 85% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 270 55% 62%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 225 30% 91%;
+    --muted-foreground: 225 15% 48%;
+    --accent: 320 55% 65%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 225 25% 88%;
+    --input: 225 25% 88%;
+    --ring: 215 85% 58%;
+    --success: 155 60% 45%;
+    --success-foreground: 0 0% 100%;
+  }
+
   /* ── Apple-style Light theme for Parent Mode ── */
   .parent-light {
     --background: 0 0% 100%;
@@ -144,3 +169,49 @@
 .tab-exit-right { animation: tabExitRight 0.15s ease-in forwards; }
 .tab-enter-right { animation: tabEnterRight 0.28s ease-out forwards; }
 .tab-enter-left { animation: tabEnterLeft 0.28s ease-out forwards; }
+
+/* ── Floating particles for child screens ── */
+@keyframes floatParticle {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  10% { opacity: 0.6; }
+  50% { transform: translateY(-40vh) translateX(20px) scale(0.8); opacity: 0.4; }
+  100% { transform: translateY(-80vh) translateX(-10px) scale(0.3); opacity: 0; }
+}
+
+.floating-particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: floatParticle linear infinite;
+}
+
+/* ── Soft glow pulse behind hologram ── */
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.05); }
+}
+
+.glow-pulse {
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+/* ── Gentle bounce for interactive elements ── */
+@keyframes gentleBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.gentle-bounce {
+  animation: gentleBounce 2s ease-in-out infinite;
+}
+
+/* ── Shimmer effect for sparkle ── */
+@keyframes shimmer {
+  0% { opacity: 0.4; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.shimmer {
+  animation: shimmer 2.5s ease-in-out infinite;
+}

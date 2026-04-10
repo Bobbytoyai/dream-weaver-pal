@@ -162,6 +162,40 @@ interface VoiceScreenProps {
 
 const SILENCE_TIMEOUT = 40000;
 
+/* ── Floating Particles Component ── */
+const FloatingParticles = () => {
+  const particles = Array.from({ length: 12 }, (_, i) => ({
+    id: i,
+    size: 4 + Math.random() * 8,
+    left: Math.random() * 100,
+    delay: Math.random() * 8,
+    duration: 10 + Math.random() * 15,
+    color: [
+      "hsla(215, 85%, 58%, 0.25)",
+      "hsla(270, 55%, 62%, 0.2)",
+      "hsla(320, 55%, 65%, 0.18)",
+      "hsla(180, 60%, 55%, 0.2)",
+      "hsla(45, 80%, 65%, 0.15)",
+    ][i % 5],
+  }));
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map(p => (
+        <div key={p.id} className="floating-particle"
+          style={{
+            width: p.size, height: p.size,
+            left: `${p.left}%`, bottom: "-10px",
+            backgroundColor: p.color,
+            animationDuration: `${p.duration}s`,
+            animationDelay: `${p.delay}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
 const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onParentMode, parentSettings }: VoiceScreenProps) => {
   const currentVoiceId = parentSettings?.voiceType || "female";
   const [state, setState] = useState<VoiceState>("idle");
@@ -235,7 +269,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
       if (sessionId) {
         recorder.stopRecording(sessionId).then(() => undefined);
-        // Only analyze if there were actual messages exchanged
         if (messageCount > 0) {
           recorder.triggerAnalysis(sessionId).then(() => undefined);
         }
@@ -459,28 +492,61 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     session_end: 'Dis "Bobby" pour revenir !',
   }[state];
 
+  // Background gradient based on state
+  const bgGradient = state === "speaking"
+    ? "from-blue-50 via-violet-50/40 to-pink-50/30"
+    : state === "listening"
+    ? "from-sky-50 via-blue-50/40 to-indigo-50/20"
+    : "from-blue-50/80 via-violet-50/30 to-rose-50/20";
+
   return (
-    <div className="flex flex-col items-center justify-between h-screen bg-background px-4 py-6 max-w-lg mx-auto select-none overflow-hidden">
-      <div className="w-full flex items-center justify-end px-2">
-        <div />
+    <div className="child-light flex flex-col items-center justify-between h-screen px-4 py-6 max-w-lg mx-auto select-none overflow-hidden relative"
+      style={{ background: `linear-gradient(180deg, hsl(220, 60%, 97%) 0%, hsl(235, 50%, 96%) 40%, hsl(270, 40%, 96%) 70%, hsl(320, 35%, 96%) 100%)` }}>
 
-        {parentSettings?.enableCamera && (
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-primary">
-            <Camera className="w-3.5 h-3.5" />
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          </div>
-        )}
+      {/* Floating particles */}
+      <FloatingParticles />
 
-        <button
-          onClick={handleParentMode}
-          className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-muted-foreground text-sm hover:border-primary hover:scale-105 active:scale-95 transition-all"
-        >
-          <Settings className="w-4 h-4" />
-          Parent
-        </button>
+      {/* Top bar */}
+      <div className="w-full flex items-center justify-between px-2 relative z-10">
+        <div className="flex items-center gap-2">
+          {onSwitchToStory && (
+            <button onClick={onSwitchToStory}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/50 text-foreground text-sm font-bold shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300">
+              <BookOpen className="w-4 h-4 text-secondary" />
+              <span>Histoires</span>
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {parentSettings?.enableCamera && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 backdrop-blur-sm border border-primary/20 text-primary">
+              <Camera className="w-3.5 h-3.5" />
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            </div>
+          )}
+
+          <button onClick={handleParentMode}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/50 text-muted-foreground text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300">
+            <Settings className="w-4 h-4" />
+            Parent
+          </button>
+        </div>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0">
+      {/* Hologram area */}
+      <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 relative z-10">
+        {/* Soft glow behind face */}
+        <div className="absolute w-96 h-96 rounded-full glow-pulse pointer-events-none"
+          style={{
+            background: `radial-gradient(circle, 
+              hsla(215, 85%, 70%, ${state === "speaking" ? 0.2 : 0.12}) 0%, 
+              hsla(270, 50%, 70%, ${state === "speaking" ? 0.12 : 0.06}) 35%,
+              hsla(320, 40%, 70%, 0.03) 55%,
+              transparent 75%)`,
+          }}
+        />
+
         <div
           className="relative w-80 h-80 md:w-96 md:h-96"
           onPointerDownCapture={() => {
@@ -508,25 +574,27 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
           />
         </div>
 
-        <p className="mt-4 text-sm font-semibold text-muted-foreground tracking-wide uppercase text-center px-4">
+        {/* State label */}
+        <p className="mt-4 text-sm font-bold text-foreground/70 tracking-wide text-center px-4">
           {stateLabel}
         </p>
 
+        {/* Mic status */}
         <div className="mt-2 flex flex-col items-center gap-1.5">
           {state === "listening" ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 backdrop-blur-sm">
               <Mic className="w-4 h-4 text-primary animate-pulse" />
-              <span className="text-xs text-primary font-medium">Écoute active</span>
+              <span className="text-xs text-primary font-bold">Écoute active</span>
             </div>
           ) : wakeWordEnabled ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 backdrop-blur-sm">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-xs text-muted-foreground/60">En attente de "Bobby"</span>
+              <span className="text-xs text-muted-foreground font-medium">En attente de "Bobby"</span>
             </div>
           ) : null}
 
           {wakeWordEnabled && (
-            <span className="text-[11px] text-muted-foreground/50 text-center">
+            <span className="text-[11px] text-muted-foreground/60 text-center">
               Touche Bobby si le micro ne s'active pas
             </span>
           )}
