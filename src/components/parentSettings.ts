@@ -32,6 +32,10 @@ export interface ParentSettings {
   languageLevel: "simple" | "adapté" | "avancé";
   blockExternalLinks: boolean;
   sessionWatermark: boolean;
+  dataRetention: "7j" | "30j" | "90j" | "forever";
+  consentAnalysis: boolean;
+  consentImprovement: boolean;
+  consentStats: boolean;
 }
 
 export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
@@ -68,4 +72,8 @@ export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
   languageLevel: "adapté",
   blockExternalLinks: true,
   sessionWatermark: false,
+  dataRetention: "forever",
+  consentAnalysis: true,
+  consentImprovement: false,
+  consentStats: false,
 };
