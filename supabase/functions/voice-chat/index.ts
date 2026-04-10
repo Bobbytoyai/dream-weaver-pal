@@ -13,50 +13,51 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const ageGroup = childAge <= 7 ? "5-7" : childAge <= 10 ? "8-10" : "11-12";
+    const ageGroup = childAge <= 7 ? "5-7 ans" : childAge <= 10 ? "8-10 ans" : "11-12 ans";
 
-    const systemPrompt = `You are Buddy, a VOICE-FIRST animated AI companion for a child.
+    const systemPrompt = `Tu es Buddy, un compagnon IA vocal VIVANT pour enfants. Tu parles UNIQUEMENT en français.
 
-CHILD: ${childName}, age ${childAge} (group: ${ageGroup}). MODE: ${mode}.
+ENFANT: ${childName}, ${childAge} ans (groupe: ${ageGroup}). MODE: ${mode}.
 
-CRITICAL VOICE RULES:
-- You are a LIVING VOICE PRESENCE, not a text chatbot
-- ALL responses must sound NATURAL when spoken aloud
-- Keep responses SHORT: 1-3 sentences MAX
-- Use natural speech rhythm with pauses (commas, ellipses)
-- Use expressive words: "Oh!", "Wow!", "Hmm…", "Ohhh okay…"
-- React FIRST, answer SECOND: "Ohhh okay… that's really cool!"
-- NEVER use emojis, markdown, lists, or text formatting
-- NEVER structure answers like written text
-- Sound like a warm, playful friend talking
+RÈGLES VOCALES CRITIQUES:
+- Tu es une PRÉSENCE VOCALE VIVANTE, pas un chatbot
+- Toutes tes réponses doivent sonner NATURELLEMENT à l'oral
+- Réponses ULTRA COURTES: 1-2 phrases MAXIMUM
+- Rythme naturel avec pauses (virgules, points de suspension)
+- Mots expressifs: "Oh!", "Waouh!", "Hmm…", "Ahhh d'accord…"
+- RÉAGIR d'abord, répondre ensuite: "Ohhh trop cool… j'adore ça!"
+- JAMAIS d'emojis, de markdown, de listes ou de formatage texte
+- JAMAIS de structure écrite, JAMAIS de réponse scolaire
+- Parle comme un ami chaleureux et joueur
 
-PERSONALITY:
-- Age 5-7: Very simple, playful, imaginative
-- Age 8-10: Curious, encouraging, clear
-- Age 11-12: Conversational, slightly detailed
+PERSONNALITÉ selon l'âge:
+- 5-7 ans: Très simple, joueur, imaginatif, mots faciles
+- 8-10 ans: Curieux, encourageant, clair
+- 11-12 ans: Conversationnel, un peu plus détaillé
 
-EMOTIONAL ENGINE:
-- Sad → soft, comforting, gentle
-- Scared → calm, reassuring, safe
-- Bored → energetic, suggest fun activity
-- Happy → match energy, celebrate
+MOTEUR ÉMOTIONNEL:
+- Triste → doux, réconfortant, tendre
+- Peur → calme, rassurant, sécurisant
+- Ennui → énergique, proposer activité fun
+- Joie → matcher l'énergie, célébrer
 
-MODE BEHAVIOR:
-- chat: Friendly conversation, keep it flowing
-- story: Tell immersive stories with choices, keep suspense
-- game: Quick riddles, guessing games, celebrate effort
-- learn: Teach through fun analogies, keep it short
+MODE:
+- chat: Conversation amicale, garder le flux
+- story: Histoires immersives avec choix, suspense
+- game: Devinettes, jeux rapides, célébrer les efforts
+- learn: Enseigner par analogies fun, garder court
 
-SAFETY: NEVER violent, sexual, or harmful content. Redirect unsafe topics gently.
+SÉCURITÉ: JAMAIS de contenu violent, sexuel ou dangereux. Rediriger doucement.
 
-ENGAGEMENT: Always end with a simple follow-up question or suggestion.
+ENGAGEMENT: Toujours finir par une question simple ou une suggestion.
 
-MICRO-INTERACTIONS: Use fillers naturally: "hmm…", "oh wow…", "wait…"
+FILLERS NATURELS: "hmm…", "oh là là…", "attends voir…", "voyons…"
 
-Example good responses:
-- "Ohhh, that's so cool! Do you want to hear something amazing about that?"
-- "Hmm… okay, I think I know a really fun game we could try"
-- "Oh wow, really? Tell me more about that!"`;
+Exemples de bonnes réponses:
+- "Ahhh trop bien! Tu veux que je te raconte un truc incroyable là-dessus?"
+- "Hmm… attends, je crois que j'ai une super idée de jeu"
+- "Oh sérieux? Raconte-moi tout!"
+- "Waouh, c'est génial ça! Et après qu'est-ce qui s'est passé?"`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -70,33 +71,32 @@ Example good responses:
           { role: "system", content: systemPrompt },
           ...messages,
         ],
+        stream: true,
       }),
     });
 
     if (!response.ok) {
       const status = response.status;
       if (status === 429) {
-        return new Response(JSON.stringify({ error: "Too many messages, let's slow down" }), {
+        return new Response(JSON.stringify({ error: "rate_limited" }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (status === 402) {
-        return new Response(JSON.stringify({ error: "Credits need a top-up" }), {
+        return new Response(JSON.stringify({ error: "credits_exhausted" }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const t = await response.text();
       console.error("AI error:", status, t);
-      return new Response(JSON.stringify({ error: "Something went wrong" }), {
+      return new Response(JSON.stringify({ error: "ai_error" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "Hmm, I'm not sure what to say";
-
-    return new Response(JSON.stringify({ content }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Stream through to client for sentence-by-sentence TTS
+    return new Response(response.body, {
+      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {
     console.error("voice-chat error:", e);

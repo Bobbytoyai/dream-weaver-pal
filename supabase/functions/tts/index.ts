@@ -23,11 +23,11 @@ serve(async (req) => {
       throw new Error("ELEVENLABS_API_KEY is not configured");
     }
 
-    // Use Alice voice by default - friendly, warm, great for kids
+    // Alice - warm, friendly, great for kids, supports French via multilingual model
     const selectedVoice = voiceId || "Xb7hH8MSUJpSbSDYk0k2";
 
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoice}?output_format=mp3_44100_128`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoice}/stream?output_format=mp3_44100_128`,
       {
         method: "POST",
         headers: {
@@ -38,11 +38,11 @@ serve(async (req) => {
           text,
           model_id: "eleven_turbo_v2_5",
           voice_settings: {
-            stability: 0.4,
-            similarity_boost: 0.75,
-            style: 0.5,
+            stability: 0.35,
+            similarity_boost: 0.8,
+            style: 0.6,
             use_speaker_boost: true,
-            speed: 1.0,
+            speed: 1.05,
           },
         }),
       }
@@ -57,12 +57,12 @@ serve(async (req) => {
       });
     }
 
-    const audioBuffer = await response.arrayBuffer();
-
-    return new Response(audioBuffer, {
+    // Stream audio back directly for minimum latency
+    return new Response(response.body, {
       headers: {
         ...corsHeaders,
         "Content-Type": "audio/mpeg",
+        "Transfer-Encoding": "chunked",
       },
     });
   } catch (e) {
