@@ -238,21 +238,6 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         <mesh position={[-0.06, -0.08, 0.03]} material={highlightMat} scale={0.45}>
           <circleGeometry args={[0.045, 12]} />
         </mesh>
-        {/* Eyelashes — curved lines on top of eye */}
-        {[...Array(5)].map((_, i) => {
-          const angle = -0.45 + i * 0.22;
-          const lx = Math.sin(angle) * 0.38;
-          const ly = Math.cos(angle) * 0.28 + 0.04;
-          const tipX = Math.sin(angle) * 0.48;
-          const tipY = Math.cos(angle) * 0.38 + 0.06;
-          const rot = angle * 0.6;
-          return (
-            <mesh key={i} position={[(lx + tipX) / 2, (ly + tipY) / 2, 0.02]} rotation={[0, 0, rot]}>
-              <planeGeometry args={[0.015, 0.12]} />
-              <meshBasicMaterial color="hsl(220, 50%, 25%)" transparent opacity={0.8} />
-            </mesh>
-          );
-        })}
         {/* Eyelid — thin, for blink */}
         <mesh ref={eyelidRef} position={[0, 0.22, 0.04]} material={eyelidMat}>
           <planeGeometry args={[0.88, 0.14]} />
@@ -268,11 +253,11 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       {renderEye("right", rightEyeRef, rightPupilRef, rightIrisRef, rightEyelidRef)}
 
       {/* ===== EYEBROWS ===== */}
-      <mesh ref={leftEyebrowRef} position={[-eyeSpacing, 0.68, 0.01]} material={eyebrowMat} rotation={[0, 0, 0.1]}>
-        <planeGeometry args={[0.35, 0.045]} />
+      <mesh ref={leftEyebrowRef} position={[-eyeSpacing, 0.58, 0.01]} material={eyebrowMat} rotation={[0, 0, 0.15]}>
+        <planeGeometry args={[0.38, 0.055]} />
       </mesh>
-      <mesh ref={rightEyebrowRef} position={[eyeSpacing, 0.68, 0.01]} material={eyebrowMat} rotation={[0, 0, -0.1]}>
-        <planeGeometry args={[0.35, 0.045]} />
+      <mesh ref={rightEyebrowRef} position={[eyeSpacing, 0.58, 0.01]} material={eyebrowMat} rotation={[0, 0, -0.15]}>
+        <planeGeometry args={[0.38, 0.055]} />
       </mesh>
 
       {/* ===== MOUTH — curved smile ===== */}
