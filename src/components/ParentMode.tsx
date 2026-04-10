@@ -4,7 +4,8 @@ import {
   Mic, BookOpen, Timer, Sparkles, Shield, Camera, Volume2, VolumeX,
   Play, Pause, AlertTriangle, TrendingUp, Trash2, ChevronRight,
   BarChart3, Calendar, User, Zap, Moon, Sun, Hand, Lock,
-  Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X
+  Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X,
+  SkipForward, SkipBack, Activity, Bell, ChevronDown
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,8 +22,6 @@ interface ParentModeProps {
   parentSettings?: ParentSettings;
   onSettingsChange?: (settings: ParentSettings) => void;
 }
-
-// ─── Helpers ─────────────────────────────────────────────────────────
 
 interface Session {
   id: string;
@@ -58,6 +57,8 @@ interface Analysis {
   extracted_interests: string[] | null;
 }
 
+// ─── Helpers ─────────────────────────────────────────────────────────
+
 const emotionLabels: Record<string, { label: string; color: string; emoji: string }> = {
   happy: { label: "Joyeux", color: "bg-secondary text-secondary-foreground", emoji: "😊" },
   sad: { label: "Triste", color: "bg-accent text-accent-foreground", emoji: "😢" },
@@ -78,9 +79,9 @@ const emotionScoreLabels: Record<string, { label: string; emoji: string }> = {
 };
 
 const moodLabels: Record<string, { label: string; color: string; emoji: string }> = {
-  positive: { label: "Positif", color: "text-green-500", emoji: "🟢" },
-  neutral: { label: "Neutre", color: "text-yellow-500", emoji: "🟡" },
-  low: { label: "Bas", color: "text-red-400", emoji: "🔴" },
+  positive: { label: "Positif", color: "text-success", emoji: "🟢" },
+  neutral: { label: "Neutre", color: "text-muted-foreground", emoji: "🟡" },
+  low: { label: "Bas", color: "text-destructive", emoji: "🔴" },
 };
 
 const tagLabels: Record<string, { label: string; emoji: string; color: string }> = {
@@ -112,27 +113,30 @@ const formatDate = (date: string): string => {
   return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 };
 
-// ─── Toggle Component ─────────────────────────────────────────────
+const formatDateShort = (date: string): string => {
+  const d = new Date(date);
+  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+};
+
+// ─── Reusable UI Components ──────────────────────────────────────────
 
 const Toggle = ({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) => (
   <button onClick={() => onChange(!value)}
-    className={`relative w-14 h-8 rounded-full transition-all duration-300 ${value ? "bg-primary shadow-[0_0_12px_hsl(var(--primary)/0.4)]" : "bg-muted"}`}>
-    <div className={`w-6 h-6 rounded-full bg-card shadow-md transition-all duration-300 ${value ? "translate-x-7" : "translate-x-1"}`} />
+    className={`relative w-12 h-7 rounded-full transition-all duration-300 ${value ? "bg-primary" : "bg-muted"}`}>
+    <div className={`w-5 h-5 rounded-full bg-card shadow-md transition-all duration-300 ${value ? "translate-x-6" : "translate-x-1"}`} />
   </button>
 );
-
-// ─── Setting Row ──────────────────────────────────────────────────
 
 const SettingRow = ({ icon: Icon, title, desc, children }: {
   icon: any; title: string; desc?: string; children: React.ReactNode;
 }) => (
   <div className="flex items-center justify-between py-3 px-1">
     <div className="flex items-center gap-3 flex-1 min-w-0">
-      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-        <Icon className="w-4.5 h-4.5 text-primary" />
+      <div className="w-8 h-8 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">
+        <Icon className="w-4 h-4 text-primary" />
       </div>
       <div className="min-w-0">
-        <h4 className="text-sm font-bold text-foreground">{title}</h4>
+        <h4 className="text-[13px] font-semibold text-foreground">{title}</h4>
         {desc && <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{desc}</p>}
       </div>
     </div>
@@ -140,29 +144,21 @@ const SettingRow = ({ icon: Icon, title, desc, children }: {
   </div>
 );
 
-// ─── Section Card ─────────────────────────────────────────────────
-
-const Card = ({ title, icon: Icon, children, noPad }: { title?: string; icon?: any; children: React.ReactNode; noPad?: boolean }) => (
-  <div className="bg-card rounded-2xl border border-border overflow-hidden">
+const Card = ({ title, icon: Icon, children, noPad, className: cx }: { title?: string; icon?: any; children: React.ReactNode; noPad?: boolean; className?: string }) => (
+  <div className={`bg-card rounded-2xl overflow-hidden ${cx || ""}`}>
     {title && (
       <div className="flex items-center gap-2.5 px-5 pt-4 pb-2">
-        {Icon && (
-          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Icon className="w-4 h-4 text-primary" />
-          </div>
-        )}
-        <h3 className="text-sm font-extrabold text-foreground tracking-tight">{title}</h3>
+        {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
+        <h3 className="text-[13px] font-semibold text-foreground tracking-tight">{title}</h3>
       </div>
     )}
     <div className={noPad ? "" : "px-5 pb-4"}>{children}</div>
   </div>
 );
 
-// ─── Score Gauge ──────────────────────────────────────────────────
-
 const ScoreGauge = ({ label, score, emoji, color }: { label: string; score: number; emoji: string; color: string }) => (
   <div className="flex flex-col items-center gap-1">
-    <div className="relative w-16 h-16">
+    <div className="relative w-14 h-14">
       <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
         <path d="M18 2.0845a15.9155 15.9155 0 010 31.831 15.9155 15.9155 0 010-31.831"
           fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
@@ -171,10 +167,20 @@ const ScoreGauge = ({ label, score, emoji, color }: { label: string; score: numb
           strokeDasharray={`${score}, 100`}
           strokeLinecap="round" />
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-lg">{emoji}</span>
+      <span className="absolute inset-0 flex items-center justify-center text-base">{emoji}</span>
     </div>
-    <span className="text-[10px] text-muted-foreground font-bold text-center">{label}</span>
-    <span className="text-sm font-extrabold text-foreground">{score}</span>
+    <span className="text-[10px] text-muted-foreground font-medium text-center">{label}</span>
+    <span className="text-sm font-bold text-foreground">{score}</span>
+  </div>
+);
+
+// ─── Stat Pill ───────────────────────────────────────────────────────
+
+const StatPill = ({ emoji, value, label }: { emoji: string; value: string | number; label: string }) => (
+  <div className="flex flex-col items-center gap-0.5">
+    <span className="text-xl">{emoji}</span>
+    <span className="text-lg font-bold text-foreground">{value}</span>
+    <span className="text-[10px] text-muted-foreground">{label}</span>
   </div>
 );
 
@@ -213,8 +219,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     interactions: { ...DEFAULT_PARENT_SETTINGS.interactions, ...(parentSettings?.interactions || {}) },
   }));
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
+  const [audioSpeed, setAudioSpeed] = useState<number>(1);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
   const [newBlockedTopic, setNewBlockedTopic] = useState("");
+  const [activeMessageIdx, setActiveMessageIdx] = useState<number>(-1);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const progressInterval = useRef<number | null>(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -251,7 +262,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const analyzeSession = async (session: Session) => {
     setSelectedSession(session);
-    // Load messages for transcription view
     const { data: msgs } = await supabase
       .from("session_messages")
       .select("role, content, created_at, detected_emotion")
@@ -282,18 +292,68 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     } catch { /* ignore */ } finally { setAnalyzing(false); }
   };
 
+  // ─── Audio Player ──────────────────────────────────────────────
+
   const playAudio = async (audioPath: string) => {
-    if (playingAudio === audioPath) { audioRef.current?.pause(); setPlayingAudio(null); return; }
+    if (playingAudio === audioPath) {
+      audioRef.current?.pause();
+      setPlayingAudio(null);
+      if (progressInterval.current) clearInterval(progressInterval.current);
+      return;
+    }
     const { data } = await supabase.storage.from("conversation-audio").createSignedUrl(audioPath, 3600);
     if (data?.signedUrl) {
-      if (audioRef.current) audioRef.current.pause();
+      if (audioRef.current) { audioRef.current.pause(); }
+      if (progressInterval.current) clearInterval(progressInterval.current);
       const audio = new Audio(data.signedUrl);
       audioRef.current = audio;
-      audio.onended = () => setPlayingAudio(null);
+      audio.playbackRate = audioSpeed;
+      audio.onloadedmetadata = () => setAudioDuration(audio.duration);
+      audio.onended = () => {
+        setPlayingAudio(null);
+        setAudioProgress(0);
+        setActiveMessageIdx(-1);
+        if (progressInterval.current) clearInterval(progressInterval.current);
+      };
       audio.play();
       setPlayingAudio(audioPath);
+      // Track progress
+      progressInterval.current = window.setInterval(() => {
+        if (audio.duration > 0) {
+          setAudioProgress((audio.currentTime / audio.duration) * 100);
+          // Estimate which message is being played based on time proportion
+          if (sessionMessages.length > 0) {
+            const msgIdx = Math.min(
+              Math.floor((audio.currentTime / audio.duration) * sessionMessages.length),
+              sessionMessages.length - 1
+            );
+            setActiveMessageIdx(msgIdx);
+          }
+        }
+      }, 200);
     }
   };
+
+  const seekAudio = (pct: number) => {
+    if (audioRef.current && audioDuration > 0) {
+      audioRef.current.currentTime = (pct / 100) * audioDuration;
+      setAudioProgress(pct);
+    }
+  };
+
+  const skipMessage = (direction: 1 | -1) => {
+    if (!audioRef.current || !audioDuration || sessionMessages.length === 0) return;
+    const nextIdx = Math.max(0, Math.min(sessionMessages.length - 1, activeMessageIdx + direction));
+    const pct = (nextIdx / sessionMessages.length) * 100;
+    seekAudio(pct);
+    setActiveMessageIdx(nextIdx);
+  };
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = audioSpeed;
+    }
+  }, [audioSpeed]);
 
   const deleteSession = async (sessionId: string) => {
     await supabase.from("conversation_analyses").delete().eq("session_id", sessionId);
@@ -314,10 +374,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       `Messages : ${session.message_count}`,
       ``,
     ];
-
     if (analysis) {
       lines.push(`RÉSUMÉ`, `───────`, analysis.summary || "Aucun résumé", ``);
-
       if (analysis.emotions && Object.keys(analysis.emotions).length > 0) {
         lines.push(`ÉMOTIONS`, `───────`);
         Object.entries(analysis.emotions).filter(([, v]) => v > 0).forEach(([k, v]) => {
@@ -326,34 +384,28 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         });
         lines.push(``);
       }
-
       if (analysis.sociability_score != null) {
-        lines.push(`SCORES COMPORTEMENTAUX`, `───────`);
+        lines.push(`SCORES`, `───────`);
         lines.push(`  🤝 Sociabilité : ${analysis.sociability_score}/100`);
         lines.push(`  🔍 Curiosité : ${analysis.curiosity_score}/100`);
         lines.push(`  ⚖️ Stabilité : ${analysis.emotional_stability_score}/100`);
         lines.push(``);
       }
-
       if (analysis.extracted_interests?.length) {
-        lines.push(`CENTRES D'INTÉRÊT`, `───────`, `  ${analysis.extracted_interests.join(", ")}`, ``);
+        lines.push(`INTÉRÊTS`, `───────`, `  ${analysis.extracted_interests.join(", ")}`, ``);
       }
-
       if (analysis.topics_detected?.length) {
-        lines.push(`SUJETS ABORDÉS`, `───────`, `  ${analysis.topics_detected.join(", ")}`, ``);
+        lines.push(`SUJETS`, `───────`, `  ${analysis.topics_detected.join(", ")}`, ``);
       }
-
       if (analysis.behavior_insights?.length) {
         lines.push(`OBSERVATIONS`, `───────`);
         analysis.behavior_insights.forEach(i => lines.push(`  • ${i}`));
         lines.push(``);
       }
-
       if (analysis.full_transcription) {
         lines.push(`TRANSCRIPTION`, `───────`, analysis.full_transcription);
       }
     }
-
     const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -384,6 +436,36 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     ...alert, date: a.created_at, sessionId: a.session_id,
   })));
 
+  // Smart alert patterns
+  const smartAlerts = useMemo(() => {
+    const alerts: Array<{ type: string; message: string; severity: "info" | "warning" | "critical" }> = [];
+    
+    // Check for repeated sadness
+    const recentSadness = recentAnalyses.filter(a => ((a.emotions as any)?.sadness || 0) > 40);
+    if (recentSadness.length >= 3) {
+      alerts.push({ type: "sadness", message: "Tristesse répétée détectée sur plusieurs sessions", severity: "warning" });
+    }
+    
+    // Check for frustration pattern
+    const recentFrustration = recentAnalyses.filter(a => ((a.emotions as any)?.frustration || 0) > 50);
+    if (recentFrustration.length >= 2) {
+      alerts.push({ type: "frustration", message: "Pattern de frustration observé récemment", severity: "warning" });
+    }
+    
+    // Low engagement
+    const lowEngagement = recentAnalyses.filter(a => a.engagement_level === "low");
+    if (lowEngagement.length >= 3) {
+      alerts.push({ type: "engagement", message: "Engagement faible sur les dernières sessions", severity: "info" });
+    }
+    
+    // Add raw alerts
+    allAlerts.slice(0, 3).forEach(a => {
+      alerts.push({ type: a.type, message: a.message, severity: "warning" });
+    });
+    
+    return alerts;
+  }, [recentAnalyses, allAlerts]);
+
   const allTopics = analyses.flatMap(a => a.topics_detected || []);
   const topicCounts = allTopics.reduce((acc, t) => { acc[t] = (acc[t] || 0) + 1; return acc; }, {} as Record<string, number>);
   const topTopics = Object.entries(topicCounts).sort(([, a], [, b]) => b - a).slice(0, 8);
@@ -393,7 +475,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const todayDuration = todaySessions.reduce((acc, s) => acc + (s.duration_seconds || 0), 0);
   const dominantMood = Object.entries(emotionCounts).sort(([, a], [, b]) => b - a)[0];
 
-  // Avg behavioral scores
   const avgScores = useMemo(() => {
     const scored = analyses.filter(a => a.sociability_score != null);
     if (scored.length === 0) return null;
@@ -404,7 +485,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     };
   }, [analyses]);
 
-  // All interests aggregated
   const allInterests = useMemo(() => {
     const counts: Record<string, number> = {};
     analyses.forEach(a => {
@@ -413,7 +493,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     return Object.entries(counts).sort(([, a], [, b]) => b - a).slice(0, 12);
   }, [analyses]);
 
-  // 7-day emotion evolution
   const emotionChartData = useMemo(() => {
     const days: { date: string; label: string; joy: number; curiosity: number; frustration: number; fear: number; sadness: number; excitement: number; count: number }[] = [];
     for (let i = 6; i >= 0; i--) {
@@ -447,7 +526,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     }));
   }, [analyses]);
 
-  // Radar chart data for behavioral scores
   const radarData = useMemo(() => {
     if (!avgScores) return [];
     return [
@@ -457,11 +535,21 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     ];
   }, [avgScores]);
 
-  // Filtered sessions
   const filteredSessions = useMemo(() => {
     if (!tagFilter) return sessions;
     return sessions.filter(s => s.tags?.includes(tagFilter));
   }, [sessions, tagFilter]);
+
+  // Engagement level description
+  const engagementDescription = useMemo(() => {
+    const highCount = recentAnalyses.filter(a => a.engagement_level === "high").length;
+    const total = recentAnalyses.length;
+    if (total === 0) return { label: "—", level: "neutral" };
+    const ratio = highCount / total;
+    if (ratio >= 0.6) return { label: "Élevé", level: "high" };
+    if (ratio >= 0.3) return { label: "Moyen", level: "medium" };
+    return { label: "Faible", level: "low" };
+  }, [recentAnalyses]);
 
   // ─── Presets ──────────────────────────────────────────────────
 
@@ -490,106 +578,117 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   };
 
   // ═══════════════════════════════════════════════════════════════
-  // RENDER: DASHBOARD
+  // RENDER: DASHBOARD (Apple-style)
   // ═══════════════════════════════════════════════════════════════
 
   const renderDashboard = () => (
-    <div className="p-4 space-y-4">
-      {/* Quick summary */}
-      <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-4 border border-primary/20">
-        <div className="flex items-center gap-2 mb-3">
-          <Calendar className="w-5 h-5 text-primary" />
-          <h3 className="text-sm font-bold text-foreground">Aujourd'hui</h3>
-        </div>
-        <div className="grid grid-cols-3 gap-3 mb-3">
-          <div className="text-center">
-            <p className="text-2xl font-extrabold text-primary">{todaySessions.length}</p>
-            <p className="text-[10px] text-muted-foreground">Sessions</p>
+    <div className="p-4 space-y-3">
+      {/* ── Daily Summary Card ── */}
+      <div className="bg-card rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Résumé du jour</p>
+            <h3 className="text-lg font-bold text-foreground mt-0.5">{new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}</h3>
           </div>
-          <div className="text-center">
-            <p className="text-2xl font-extrabold text-primary">{formatDuration(todayDuration)}</p>
-            <p className="text-[10px] text-muted-foreground">Temps</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-extrabold text-foreground">
-              {dominantMood ? emotionLabels[dominantMood[0]]?.emoji || "—" : "—"}
-            </p>
-            <p className="text-[10px] text-muted-foreground">Humeur</p>
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <Calendar className="w-5 h-5 text-primary" />
           </div>
         </div>
+        
+        <div className="grid grid-cols-3 gap-4">
+          <StatPill emoji={dominantMood ? emotionLabels[dominantMood[0]]?.emoji || "🙂" : "🙂"} 
+            value={dominantMood ? emotionLabels[dominantMood[0]]?.label || "Calme" : "Calme"} label="Humeur" />
+          <StatPill emoji={engagementDescription.level === "high" ? "🔥" : engagementDescription.level === "medium" ? "👍" : "💤"} 
+            value={engagementDescription.label} label="Engagement" />
+          <StatPill emoji="💬" value={todaySessions.length} label="Sessions" />
+        </div>
+
         {topTopics.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {topTopics.slice(0, 4).map(([topic]) => (
-              <span key={topic} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">{topic}</span>
-            ))}
+          <div className="mt-4 pt-3 border-t border-border">
+            <p className="text-[10px] text-muted-foreground font-medium mb-2">🎯 Intérêts principaux</p>
+            <div className="flex flex-wrap gap-1.5">
+              {topTopics.slice(0, 4).map(([topic]) => (
+                <span key={topic} className="px-2.5 py-1 rounded-full bg-primary/8 text-primary text-[11px] font-medium">{topic}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {smartAlerts.length === 0 && (
+          <div className="mt-4 pt-3 border-t border-border flex items-center gap-2">
+            <span className="text-success text-sm">✓</span>
+            <p className="text-[11px] text-muted-foreground">Rien à signaler</p>
           </div>
         )}
       </div>
 
-      {/* Quick presets */}
-      <Card title="Modes rapides" icon={Zap}>
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            { id: "calm", label: "😌 Mode calme", desc: "Voix douce, rythme lent" },
-            { id: "game", label: "🎮 Mode jeu", desc: "Énergique, fun" },
-            { id: "night", label: "🌙 Mode nuit", desc: "Ultra doux, apaisant" },
-            { id: "education", label: "📚 Mode éducatif", desc: "Apprentissage ludique" },
-          ].map(preset => (
-            <button key={preset.id} onClick={() => applyPreset(preset.id)}
-              className="text-left p-3 rounded-xl bg-muted hover:bg-primary/10 hover:border-primary/30 border border-transparent transition-all">
-              <span className="text-sm font-bold text-foreground block">{preset.label}</span>
-              <span className="text-[10px] text-muted-foreground">{preset.desc}</span>
-            </button>
-          ))}
-        </div>
-      </Card>
-
-      {/* Alerts */}
-      {allAlerts.length > 0 && (
-        <div className="bg-destructive/5 rounded-2xl p-4 border border-destructive/20">
+      {/* ── Smart Alerts ── */}
+      {smartAlerts.length > 0 && (
+        <div className="bg-card rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="w-5 h-5 text-destructive" />
-            <h3 className="text-sm font-bold text-destructive">Alertes</h3>
+            <Bell className="w-4 h-4 text-destructive" />
+            <h3 className="text-[13px] font-semibold text-foreground">Alertes</h3>
           </div>
           <div className="space-y-2">
-            {allAlerts.slice(0, 5).map((alert, i) => (
-              <div key={i} className="flex items-start gap-2 text-sm">
-                <span className="text-destructive mt-0.5">⚠️</span>
-                <div>
-                  <p className="text-foreground">{alert.message}</p>
-                  <p className="text-[10px] text-muted-foreground">{formatDate(alert.date)}</p>
-                </div>
+            {smartAlerts.map((alert, i) => (
+              <div key={i} className={`flex items-start gap-2.5 p-2.5 rounded-xl ${
+                alert.severity === "critical" ? "bg-destructive/8" :
+                alert.severity === "warning" ? "bg-destructive/5" : "bg-muted/50"
+              }`}>
+                <span className="text-sm mt-0.5">{
+                  alert.severity === "critical" ? "🔴" :
+                  alert.severity === "warning" ? "🟡" : "🔵"
+                }</span>
+                <p className="text-[12px] text-foreground leading-relaxed">{alert.message}</p>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Behavioral scores */}
+      {/* ── Quick Presets ── */}
+      <Card title="Modes rapides" icon={Zap}>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { id: "calm", label: "😌 Calme", desc: "Voix douce, rythme lent" },
+            { id: "game", label: "🎮 Jeu", desc: "Énergique, fun" },
+            { id: "night", label: "🌙 Nuit", desc: "Ultra doux, apaisant" },
+            { id: "education", label: "📚 Éducatif", desc: "Apprentissage ludique" },
+          ].map(preset => (
+            <button key={preset.id} onClick={() => applyPreset(preset.id)}
+              className="text-left p-3 rounded-xl bg-muted/50 hover:bg-primary/8 transition-all">
+              <span className="text-[13px] font-semibold text-foreground block">{preset.label}</span>
+              <span className="text-[10px] text-muted-foreground">{preset.desc}</span>
+            </button>
+          ))}
+        </div>
+      </Card>
+
+      {/* ── Behavioral Scores ── */}
       {avgScores && (
-        <Card title="Score comportemental" icon={Brain}>
+        <Card title="Comportement" icon={Brain}>
           <div className="flex justify-around py-2">
             <ScoreGauge label="Sociabilité" score={avgScores.sociability} emoji="🤝" color="hsl(var(--primary))" />
-            <ScoreGauge label="Curiosité" score={avgScores.curiosity} emoji="🔍" color="#f59e0b" />
-            <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="#22c55e" />
+            <ScoreGauge label="Curiosité" score={avgScores.curiosity} emoji="🔍" color="hsl(36, 90%, 50%)" />
+            <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="hsl(var(--success))" />
           </div>
         </Card>
       )}
 
-      {/* Emotion averages */}
+      {/* ── Emotion Bars ── */}
       {Object.keys(avgEmotions).length > 0 && (
         <Card title="Émotions moyennes" icon={Heart}>
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {Object.entries(avgEmotions).filter(([, v]) => v > 0).sort(([, a], [, b]) => b - a).map(([key, value]) => {
               const info = emotionScoreLabels[key] || { label: key, emoji: "❓" };
               return (
                 <div key={key} className="flex items-center gap-2">
-                  <span className="w-6 text-center">{info.emoji}</span>
-                  <span className="text-xs text-foreground w-20">{info.label}</span>
+                  <span className="w-5 text-center text-sm">{info.emoji}</span>
+                  <span className="text-[12px] text-foreground w-20 font-medium">{info.label}</span>
                   <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${value}%` }} />
+                    <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${value}%` }} />
                   </div>
-                  <span className="text-xs text-muted-foreground w-8 text-right">{value}%</span>
+                  <span className="text-[11px] text-muted-foreground w-8 text-right font-medium">{value}%</span>
                 </div>
               );
             })}
@@ -597,30 +696,33 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </Card>
       )}
 
-      {/* 7-day emotion chart */}
+      {/* ── 7-day Chart ── */}
       {emotionChartData.some(d => d["😊 Joie"] !== null) && (
-        <Card title="Évolution émotionnelle (7 jours)" icon={TrendingUp}>
-          <div className="w-full h-52 -ml-2">
+        <Card title="Évolution (7 jours)" icon={TrendingUp}>
+          <div className="w-full h-48 -ml-2">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={emotionChartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
                 <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                 <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} domain={[0, 100]} />
                 <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", color: "hsl(var(--card-foreground))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: "12px" }} />
-                <Line type="monotone" dataKey="😊 Joie" stroke="#22c55e" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-                <Line type="monotone" dataKey="🧐 Curiosité" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-                <Line type="monotone" dataKey="🤩 Excitation" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-                <Line type="monotone" dataKey="😤 Frustration" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-                <Line type="monotone" dataKey="😰 Peur" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-                <Line type="monotone" dataKey="😢 Tristesse" stroke="#64748b" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="😊 Joie" stroke="hsl(145, 65%, 42%)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="🧐 Curiosité" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="🤩 Excitation" stroke="hsl(36, 90%, 50%)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="😤 Frustration" stroke="hsl(var(--destructive))" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="😰 Peur" stroke="hsl(260, 45%, 58%)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="😢 Tristesse" stroke="hsl(var(--muted-foreground))" strokeWidth={2} dot={{ r: 3 }} connectNulls />
               </LineChart>
             </ResponsiveContainer>
           </div>
           <div className="flex flex-wrap gap-2 mt-2">
             {[
-              { label: "Joie", color: "#22c55e" }, { label: "Curiosité", color: "#3b82f6" },
-              { label: "Excitation", color: "#f59e0b" }, { label: "Frustration", color: "#ef4444" },
-              { label: "Peur", color: "#8b5cf6" }, { label: "Tristesse", color: "#64748b" },
+              { label: "Joie", color: "hsl(145, 65%, 42%)" },
+              { label: "Curiosité", color: "hsl(var(--primary))" },
+              { label: "Excitation", color: "hsl(36, 90%, 50%)" },
+              { label: "Frustration", color: "hsl(var(--destructive))" },
+              { label: "Peur", color: "hsl(260, 45%, 58%)" },
+              { label: "Tristesse", color: "hsl(var(--muted-foreground))" },
             ].map(e => (
               <span key={e.label} className="flex items-center gap-1 text-[10px] text-muted-foreground">
                 <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: e.color }} />
@@ -631,33 +733,33 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </Card>
       )}
 
-      {/* Interests cloud */}
+      {/* ── Interests ── */}
       {allInterests.length > 0 && (
         <Card title="Centres d'intérêt" icon={Sparkles}>
           <div className="flex flex-wrap gap-2">
             {allInterests.map(([interest, count]) => (
-              <span key={interest} className="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold"
-                style={{ fontSize: `${Math.min(14, 10 + count * 1.5)}px` }}>
-                {interest} <span className="opacity-50">×{count}</span>
+              <span key={interest} className="px-3 py-1.5 rounded-full bg-primary/8 text-primary text-[11px] font-medium"
+                style={{ fontSize: `${Math.min(13, 10 + count * 1)}px` }}>
+                {interest} <span className="opacity-40">×{count}</span>
               </span>
             ))}
           </div>
         </Card>
       )}
 
-      {/* All-time stats */}
-      <Card title="Statistiques globales" icon={TrendingUp}>
+      {/* ── Global Stats ── */}
+      <Card title="Statistiques" icon={BarChart3}>
         <div className="grid grid-cols-3 gap-3">
           <div className="text-center">
-            <p className="text-xl font-extrabold text-primary">{totalSessions}</p>
+            <p className="text-xl font-bold text-primary">{totalSessions}</p>
             <p className="text-[10px] text-muted-foreground">Sessions</p>
           </div>
           <div className="text-center">
-            <p className="text-xl font-extrabold text-primary">{totalMessages}</p>
+            <p className="text-xl font-bold text-primary">{totalMessages}</p>
             <p className="text-[10px] text-muted-foreground">Messages</p>
           </div>
           <div className="text-center">
-            <p className="text-xl font-extrabold text-foreground">{formatDuration(totalDuration)}</p>
+            <p className="text-xl font-bold text-foreground">{formatDuration(totalDuration)}</p>
             <p className="text-[10px] text-muted-foreground">Temps total</p>
           </div>
         </div>
@@ -665,16 +767,16 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {totalSessions === 0 && !loading && (
         <div className="text-center py-8 text-muted-foreground">
-          <Brain className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">Aucune donnée disponible.</p>
-          <p className="text-xs mt-1">Les analyses apparaîtront après les premières conversations.</p>
+          <Brain className="w-12 h-12 mx-auto mb-3 opacity-20" />
+          <p className="text-sm font-medium">Aucune donnée disponible</p>
+          <p className="text-xs mt-1 opacity-70">Les analyses apparaîtront après les premières conversations.</p>
         </div>
       )}
     </div>
   );
 
   // ═══════════════════════════════════════════════════════════════
-  // RENDER: SESSION DETAIL
+  // RENDER: SESSION DETAIL (Enhanced Audio Player + Transcription)
   // ═══════════════════════════════════════════════════════════════
 
   const renderSessionDetail = () => {
@@ -682,71 +784,126 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     const moodInfo = moodLabels[(analysis?.mood_score || "neutral")] || moodLabels.neutral;
 
     return (
-      <div className="p-4 space-y-4">
-        {/* Session tags */}
-        {selectedSession?.tags && selectedSession.tags.length > 0 && (
-          <div className="flex gap-2">
-            {selectedSession.tags.map(tag => {
-              const info = tagLabels[tag] || { label: tag, emoji: "🏷️", color: "bg-muted text-muted-foreground" };
-              return (
-                <span key={tag} className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${info.color}`}>
-                  {info.emoji} {info.label}
-                </span>
-              );
-            })}
+      <div className="p-4 space-y-3">
+        {/* Session header */}
+        <div className="bg-card rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-[11px] text-muted-foreground font-medium">Session</p>
+              <h3 className="text-[15px] font-bold text-foreground">{formatDate(selectedSession!.started_at)}</h3>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {selectedSession?.tags?.map(tag => {
+                const info = tagLabels[tag] || { label: tag, emoji: "🏷️", color: "bg-muted text-muted-foreground" };
+                return <span key={tag} className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${info.color}`}>{info.emoji} {info.label}</span>;
+              })}
+            </div>
           </div>
-        )}
-
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-card rounded-2xl p-3 text-center border border-border">
-            <Clock className="w-5 h-5 mx-auto mb-1 text-primary" />
-            <p className="text-xs text-muted-foreground">Durée</p>
-            <p className="text-sm font-bold text-foreground">{formatDuration(selectedSession!.duration_seconds)}</p>
-          </div>
-          <div className="bg-card rounded-2xl p-3 text-center border border-border">
-            <MessageSquare className="w-5 h-5 mx-auto mb-1 text-primary" />
-            <p className="text-xs text-muted-foreground">Messages</p>
-            <p className="text-sm font-bold text-foreground">{selectedSession!.message_count}</p>
-          </div>
-          <div className="bg-card rounded-2xl p-3 text-center border border-border">
-            <span className="text-lg">{moodInfo.emoji}</span>
-            <p className="text-xs text-muted-foreground">Humeur</p>
-            <p className={`text-sm font-bold ${moodInfo.color}`}>{moodInfo.label}</p>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="text-center py-2 bg-muted/50 rounded-xl">
+              <Clock className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
+              <p className="text-[13px] font-bold text-foreground">{formatDuration(selectedSession!.duration_seconds)}</p>
+              <p className="text-[9px] text-muted-foreground">Durée</p>
+            </div>
+            <div className="text-center py-2 bg-muted/50 rounded-xl">
+              <MessageSquare className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
+              <p className="text-[13px] font-bold text-foreground">{selectedSession!.message_count}</p>
+              <p className="text-[9px] text-muted-foreground">Messages</p>
+            </div>
+            <div className="text-center py-2 bg-muted/50 rounded-xl">
+              <span className="text-base">{moodInfo.emoji}</span>
+              <p className={`text-[13px] font-bold ${moodInfo.color}`}>{moodInfo.label}</p>
+              <p className="text-[9px] text-muted-foreground">Humeur</p>
+            </div>
           </div>
         </div>
 
+        {/* ── Audio Player ── */}
         {analysis?.audio_path && (
-          <Card title="Réécouter" icon={Mic}>
-            <button onClick={() => playAudio(analysis.audio_path!)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition-all">
-              {playingAudio === analysis.audio_path
-                ? <><Pause className="w-4 h-4" /> Pause</>
-                : <><Play className="w-4 h-4" /> Écouter</>}
-            </button>
-          </Card>
+          <div className="bg-card rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Mic className="w-4 h-4 text-muted-foreground" />
+              <h3 className="text-[13px] font-semibold text-foreground">Réécouter</h3>
+            </div>
+            
+            {/* Progress bar */}
+            <div className="mb-3">
+              <div className="w-full h-1.5 bg-muted rounded-full cursor-pointer overflow-hidden"
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const pct = ((e.clientX - rect.left) / rect.width) * 100;
+                  seekAudio(pct);
+                }}>
+                <div className="h-full bg-primary rounded-full transition-all duration-200" style={{ width: `${audioProgress}%` }} />
+              </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-[9px] text-muted-foreground font-mono">
+                  {audioDuration > 0 ? `${Math.floor((audioProgress / 100) * audioDuration / 60)}:${String(Math.floor((audioProgress / 100) * audioDuration % 60)).padStart(2, "0")}` : "0:00"}
+                </span>
+                <span className="text-[9px] text-muted-foreground font-mono">
+                  {audioDuration > 0 ? `${Math.floor(audioDuration / 60)}:${String(Math.floor(audioDuration % 60)).padStart(2, "0")}` : "—"}
+                </span>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="flex items-center justify-center gap-4">
+              <button onClick={() => skipMessage(-1)}
+                className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                <SkipBack className="w-4 h-4" />
+              </button>
+              <button onClick={() => playAudio(analysis.audio_path!)}
+                className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-all shadow-sm">
+                {playingAudio === analysis.audio_path
+                  ? <Pause className="w-5 h-5" />
+                  : <Play className="w-5 h-5 ml-0.5" />}
+              </button>
+              <button onClick={() => skipMessage(1)}
+                className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                <SkipForward className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Speed selector */}
+            <div className="flex items-center justify-center gap-1.5 mt-3">
+              {[0.75, 1, 1.25, 1.5, 2].map(speed => (
+                <button key={speed} onClick={() => setAudioSpeed(speed)}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
+                    audioSpeed === speed ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  }`}>
+                  {speed}×
+                </button>
+              ))}
+            </div>
+          </div>
         )}
 
         {analyzing ? (
-          <Card><div className="flex items-center gap-3"><Loader2 className="w-5 h-5 animate-spin text-primary" /><span className="text-sm text-muted-foreground">Analyse en cours…</span></div></Card>
+          <div className="bg-card rounded-2xl p-6 flex items-center justify-center gap-3">
+            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+            <span className="text-[13px] text-muted-foreground font-medium">Analyse en cours…</span>
+          </div>
         ) : analysis ? (
           <>
+            {/* Summary */}
             {analysis.summary && (
               <Card title="Résumé" icon={Brain}>
-                <p className="text-sm text-foreground leading-relaxed">{analysis.summary}</p>
+                <p className="text-[13px] text-foreground leading-relaxed">{analysis.summary}</p>
               </Card>
             )}
 
-            {/* Behavioral scores for this session */}
+            {/* Behavioral scores */}
             {analysis.sociability_score != null && (
-              <Card title="Score comportemental" icon={Brain}>
+              <Card title="Comportement" icon={Activity}>
                 <div className="flex justify-around py-2">
                   <ScoreGauge label="Sociabilité" score={analysis.sociability_score || 0} emoji="🤝" color="hsl(var(--primary))" />
-                  <ScoreGauge label="Curiosité" score={analysis.curiosity_score || 0} emoji="🔍" color="#f59e0b" />
-                  <ScoreGauge label="Stabilité" score={analysis.emotional_stability_score || 0} emoji="⚖️" color="#22c55e" />
+                  <ScoreGauge label="Curiosité" score={analysis.curiosity_score || 0} emoji="🔍" color="hsl(36, 90%, 50%)" />
+                  <ScoreGauge label="Stabilité" score={analysis.emotional_stability_score || 0} emoji="⚖️" color="hsl(var(--success))" />
                 </div>
               </Card>
             )}
 
+            {/* Emotions */}
             {analysis.emotions && Object.keys(analysis.emotions).length > 0 && (
               <Card title="Émotions" icon={Heart}>
                 <div className="space-y-2">
@@ -755,11 +912,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     return (
                       <div key={key} className="flex items-center gap-2">
                         <span className="w-5 text-center text-sm">{info.emoji}</span>
-                        <span className="text-xs text-foreground w-20">{info.label}</span>
+                        <span className="text-[12px] text-foreground w-20 font-medium">{info.label}</span>
                         <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                           <div className="h-full bg-primary rounded-full" style={{ width: `${value}%` }} />
                         </div>
-                        <span className="text-xs text-muted-foreground w-8 text-right">{value as number}%</span>
+                        <span className="text-[11px] text-muted-foreground w-8 text-right">{value as number}%</span>
                       </div>
                     );
                   })}
@@ -767,12 +924,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </Card>
             )}
 
-            {/* Extracted interests */}
+            {/* Interests */}
             {analysis.extracted_interests && analysis.extracted_interests.length > 0 && (
-              <Card title="Centres d'intérêt détectés" icon={Sparkles}>
+              <Card title="Intérêts détectés" icon={Sparkles}>
                 <div className="flex flex-wrap gap-2">
                   {analysis.extracted_interests.map((interest, i) => (
-                    <span key={i} className="px-3 py-1 rounded-full bg-accent/30 text-accent-foreground text-xs font-bold">
+                    <span key={i} className="px-3 py-1 rounded-full bg-accent/15 text-accent-foreground text-[11px] font-medium">
                       ✨ {interest}
                     </span>
                   ))}
@@ -780,79 +937,88 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </Card>
             )}
 
+            {/* Topics */}
             {analysis.topics_detected?.length > 0 && (
               <Card title="Sujets abordés">
                 <div className="flex flex-wrap gap-2">
                   {analysis.topics_detected.map((t, i) => (
-                    <span key={i} className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold">{t}</span>
+                    <span key={i} className="px-3 py-1 rounded-full bg-primary/8 text-primary text-[11px] font-medium">{t}</span>
                   ))}
                 </div>
               </Card>
             )}
 
+            {/* Insights */}
             {analysis.behavior_insights?.length > 0 && (
               <Card title="Observations">
-                <ul className="space-y-1.5">
+                <ul className="space-y-2">
                   {analysis.behavior_insights.map((insight, i) => (
-                    <li key={i} className="text-sm text-foreground flex items-start gap-2">
-                      <span className="text-primary mt-0.5">•</span>{insight}
+                    <li key={i} className="text-[12px] text-foreground flex items-start gap-2 leading-relaxed">
+                      <span className="text-primary mt-0.5 text-xs">•</span>{insight}
                     </li>
                   ))}
                 </ul>
               </Card>
             )}
 
+            {/* Engagement */}
             <Card title="Engagement">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-[10px] text-muted-foreground">Niveau</p>
-                  <p className="text-sm font-bold text-foreground capitalize">{analysis.engagement_level}</p>
+                  <p className="text-[13px] font-bold text-foreground capitalize">{analysis.engagement_level}</p>
                 </div>
                 {analysis.attention_span && (
                   <div>
                     <p className="text-[10px] text-muted-foreground">Attention</p>
-                    <p className="text-sm font-bold text-foreground">{analysis.attention_span}</p>
+                    <p className="text-[13px] font-bold text-foreground">{analysis.attention_span}</p>
                   </div>
                 )}
               </div>
             </Card>
 
+            {/* Alerts */}
             {analysis.alerts?.length > 0 && (
-              <div className="bg-destructive/5 rounded-2xl p-4 border border-destructive/20">
+              <div className="bg-destructive/5 rounded-2xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <AlertTriangle className="w-4 h-4 text-destructive" />
-                  <h3 className="text-sm font-bold text-destructive">Alertes</h3>
+                  <h3 className="text-[13px] font-semibold text-destructive">Alertes</h3>
                 </div>
                 {analysis.alerts.map((alert, i) => (
-                  <p key={i} className="text-sm text-foreground">⚠️ {alert.message}</p>
+                  <p key={i} className="text-[12px] text-foreground mb-1">⚠️ {alert.message}</p>
                 ))}
               </div>
             )}
 
-            {/* Speaker-highlighted transcription */}
+            {/* ── Transcription with audio sync ── */}
             {sessionMessages.length > 0 && (
               <Card title="Transcription" icon={FileText}>
-                <div className="max-h-72 overflow-y-auto space-y-2">
+                <div className="max-h-80 overflow-y-auto space-y-2">
                   {sessionMessages.map((msg, i) => {
                     const isChild = msg.role === "user";
+                    const isActive = i === activeMessageIdx && playingAudio;
                     return (
-                      <div key={i} className={`flex ${isChild ? "justify-start" : "justify-end"}`}>
-                        <div className={`max-w-[85%] rounded-2xl px-3 py-2 ${
+                      <div key={i} className={`flex ${isChild ? "justify-start" : "justify-end"} transition-all duration-200`}>
+                        <div className={`max-w-[85%] rounded-2xl px-3 py-2 transition-all duration-200 ${
+                          isActive ? "ring-2 ring-primary/40 shadow-sm" : ""
+                        } ${
                           isChild
-                            ? "bg-accent/20 border border-accent/30"
-                            : "bg-primary/10 border border-primary/20"
+                            ? "bg-muted/70"
+                            : "bg-primary/8"
                         }`}>
                           <div className="flex items-center gap-1.5 mb-0.5">
-                            <span className="text-[10px] font-bold text-muted-foreground">
+                            <span className="text-[10px] font-medium text-muted-foreground">
                               {isChild ? `👦 ${settings.childName || childName}` : "🤖 Bobby"}
                             </span>
                             {msg.detected_emotion && (
-                              <span className="text-[10px]">
-                                {emotionLabels[msg.detected_emotion]?.emoji || ""}
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${
+                                emotionLabels[msg.detected_emotion]?.color || "bg-muted text-muted-foreground"
+                              }`}>
+                                {emotionLabels[msg.detected_emotion]?.emoji} {emotionLabels[msg.detected_emotion]?.label || msg.detected_emotion}
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-foreground leading-relaxed">{msg.content}</p>
+                          <p className="text-[12px] text-foreground leading-relaxed">{msg.content}</p>
                         </div>
                       </div>
                     );
@@ -861,16 +1027,16 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </Card>
             )}
 
-            {/* Export button */}
+            {/* Export */}
             <button
               onClick={() => exportSessionPDF(selectedSession!, analysis)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-primary/10 text-primary text-sm font-bold hover:bg-primary/20 transition-all">
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-card text-primary text-[13px] font-semibold hover:bg-primary/8 transition-all">
               <Download className="w-4 h-4" /> Exporter le rapport
             </button>
           </>
         ) : (
           <button onClick={() => analyzeSession(selectedSession!)}
-            className="w-full bg-primary text-primary-foreground rounded-2xl p-4 font-bold text-sm hover:opacity-90 transition-all">
+            className="w-full bg-primary text-primary-foreground rounded-2xl p-4 font-semibold text-[13px] hover:opacity-90 transition-all">
             🧠 Lancer l'analyse IA
           </button>
         )}
@@ -879,7 +1045,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           onClick={() => {
             if (confirm("Supprimer cette session et toutes ses données ?")) deleteSession(selectedSession!.id);
           }}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-destructive/10 text-destructive text-sm font-bold hover:bg-destructive/20 transition-all">
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-destructive/5 text-destructive text-[13px] font-medium hover:bg-destructive/10 transition-all">
           <Trash2 className="w-4 h-4" /> Supprimer cette session
         </button>
       </div>
@@ -892,21 +1058,20 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const renderSessionsList = () => (
     <div className="p-4">
-      {/* Tag filter */}
       <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
         <button onClick={() => setTagFilter(null)}
-          className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${!tagFilter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+          className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${!tagFilter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
           Tous
         </button>
         {Object.entries(tagLabels).map(([key, info]) => (
           <button key={key} onClick={() => setTagFilter(tagFilter === key ? null : key)}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${tagFilter === key ? "bg-primary text-primary-foreground" : info.color}`}>
+            className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${tagFilter === key ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
             {info.emoji} {info.label}
           </button>
         ))}
       </div>
 
-      <h3 className="text-sm font-bold text-foreground mb-3">
+      <h3 className="text-[13px] font-semibold text-foreground mb-3">
         {tagFilter ? `Sessions "${tagLabels[tagFilter]?.label}"` : "Toutes les sessions"} ({filteredSessions.length})
       </h3>
       {loading ? (
@@ -921,28 +1086,26 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             const mood = moodLabels[(analysis?.mood_score || "neutral")] || moodLabels.neutral;
             return (
               <button key={session.id} onClick={() => analyzeSession(session)}
-                className="w-full bg-card rounded-2xl p-4 border border-border hover:border-primary transition-all text-left">
+                className="w-full bg-card rounded-2xl p-4 hover:bg-muted/50 transition-all text-left">
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-sm font-bold text-foreground">{formatDate(session.started_at)}</span>
+                  <span className="text-[13px] font-semibold text-foreground">{formatDate(session.started_at)}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{formatDuration(session.duration_seconds)}</span>
+                    <span className="text-[11px] text-muted-foreground">{formatDuration(session.duration_seconds)}</span>
                     <ChevronRight className="w-4 h-4 text-muted-foreground" />
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs text-muted-foreground">{session.message_count} msg</span>
+                  <span className="text-[11px] text-muted-foreground">{session.message_count} msg</span>
                   {hasAnalysis && <span className="text-sm">{mood.emoji}</span>}
                   {session.tags?.map(tag => {
                     const info = tagLabels[tag];
                     return info ? (
-                      <span key={tag} className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${info.color}`}>
-                        {info.emoji}
-                      </span>
+                      <span key={tag} className={`px-1.5 py-0.5 rounded-full text-[9px] font-medium ${info.color}`}>{info.emoji}</span>
                     ) : null;
                   })}
                   {hasAnalysis && <Brain className="w-3 h-3 text-primary ml-auto" />}
                 </div>
-                {analysis?.summary && <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{analysis.summary}</p>}
+                {analysis?.summary && <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2">{analysis.summary}</p>}
               </button>
             );
           })}
@@ -956,25 +1119,22 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   // ═══════════════════════════════════════════════════════════════
 
   const renderProfil = () => (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-3">
       <Card title="Profil de l'enfant" icon={User}>
         <div className="space-y-3">
           <div>
-            <p className="text-xs text-muted-foreground mb-1">Prénom</p>
-            <input
-              type="text"
-              value={settings.childName}
+            <p className="text-[11px] text-muted-foreground mb-1">Prénom</p>
+            <input type="text" value={settings.childName}
               onChange={(e) => updateSetting("childName", e.target.value)}
               placeholder="Prénom de l'enfant"
-              className="w-full bg-muted rounded-xl px-4 py-2.5 text-lg font-extrabold text-foreground outline-none focus:ring-2 focus:ring-primary transition-all"
-            />
+              className="w-full bg-muted rounded-xl px-4 py-2.5 text-base font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
           </div>
           <div>
-            <p className="text-xs text-muted-foreground mb-1">Âge</p>
+            <p className="text-[11px] text-muted-foreground mb-1">Âge</p>
             <div className="flex gap-2">
               {[5, 6, 7, 8, 9, 10, 11, 12].map(age => (
                 <button key={age} onClick={() => updateSetting("childAge", age)}
-                  className={`w-10 h-10 rounded-xl text-sm font-bold transition-all ${settings.childAge === age ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                  className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all ${settings.childAge === age ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
                   {age}
                 </button>
               ))}
@@ -992,26 +1152,25 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             ["educational", "📚", "Éducatif", "Faits amusants"],
           ] as const).map(([val, emoji, label, desc]) => (
             <button key={val} onClick={() => updateSetting("personality", val)}
-              className={`p-4 rounded-2xl text-left transition-all duration-200 border-2 ${
+              className={`p-3 rounded-xl text-left transition-all duration-200 ${
                 settings.personality === val
-                  ? "bg-primary/10 border-primary/40 shadow-[0_0_16px_hsl(var(--primary)/0.15)]"
-                  : "bg-muted/50 border-transparent hover:bg-muted"
+                  ? "bg-primary/10 ring-1 ring-primary/30"
+                  : "bg-muted/50 hover:bg-muted"
               }`}>
-              <span className="text-2xl block mb-1">{emoji}</span>
-              <h4 className="text-sm font-extrabold text-foreground">{label}</h4>
+              <span className="text-xl block mb-1">{emoji}</span>
+              <h4 className="text-[12px] font-semibold text-foreground">{label}</h4>
               <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{desc}</p>
             </button>
           ))}
         </div>
       </Card>
 
-      {/* Interests from analyses */}
       {allInterests.length > 0 && (
         <Card title="Centres d'intérêt détectés" icon={Sparkles}>
           <div className="flex flex-wrap gap-2">
             {allInterests.map(([interest, count]) => (
-              <span key={interest} className="px-3 py-1 rounded-full bg-accent/20 text-accent-foreground text-xs font-bold">
-                {interest} <span className="opacity-50">×{count}</span>
+              <span key={interest} className="px-3 py-1 rounded-full bg-accent/15 text-accent-foreground text-[11px] font-medium">
+                {interest} <span className="opacity-40">×{count}</span>
               </span>
             ))}
           </div>
@@ -1023,7 +1182,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           <div className="flex flex-wrap gap-2">
             {settings.enabledThemes.map(t => {
               const theme = ALL_THEMES.find(th => th.id === t);
-              return <span key={t} className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold">{theme?.label || t}</span>;
+              return <span key={t} className="px-3 py-1 rounded-full bg-primary/8 text-primary text-[11px] font-medium">{theme?.label || t}</span>;
             })}
           </div>
         </Card>
@@ -1050,15 +1209,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     try {
       const { previewVoiceProfile } = await import("@/lib/voicePipeline");
       await previewVoiceProfile(voiceType as any);
-    } catch (e) {
-      console.warn("Preview error:", e);
-    } finally {
-      setPreviewPlaying(false);
-    }
+    } catch (e) { console.warn("Preview error:", e); }
+    finally { setPreviewPlaying(false); }
   };
 
   const renderVoix = () => (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-3">
       <Card title="Type de voix" icon={Mic}>
         <div className="grid grid-cols-2 gap-2">
           {(["child", "female", "male", "custom"] as const).map((type) => {
@@ -1069,21 +1225,18 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               <button key={type}
                 onClick={() => !isCustom && updateSetting("voiceType", type)}
                 disabled={isCustom}
-                className={`relative p-4 rounded-2xl text-left transition-all duration-200 border-2 ${
-                  isCustom ? "opacity-40 cursor-not-allowed bg-muted/30 border-transparent" :
-                  selected
-                    ? "bg-primary/10 border-primary/40 shadow-[0_0_16px_hsl(var(--primary)/0.15)]"
-                    : "bg-muted/50 border-transparent hover:bg-muted"
+                className={`relative p-3 rounded-xl text-left transition-all duration-200 ${
+                  isCustom ? "opacity-40 cursor-not-allowed bg-muted/30" :
+                  selected ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
                 }`}>
-                <div className="text-2xl mb-2">{info.emoji}</div>
-                <h4 className="text-sm font-extrabold text-foreground">{info.label}</h4>
+                <div className="text-xl mb-1">{info.emoji}</div>
+                <h4 className="text-[12px] font-semibold text-foreground">{info.label}</h4>
                 <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{info.desc}</p>
                 {!isCustom && selected && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); previewVoice(type); }}
+                  <button onClick={(e) => { e.stopPropagation(); previewVoice(type); }}
                     disabled={previewPlaying}
-                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-all">
-                    {previewPlaying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+                    className="absolute top-3 right-3 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                    {previewPlaying ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
                   </button>
                 )}
                 {isCustom && <Lock className="absolute top-3 right-3 w-4 h-4 text-muted-foreground" />}
@@ -1097,13 +1250,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         <div className="grid grid-cols-3 gap-2">
           {([["slow", "🐢", "Lent"], ["normal", "🔊", "Normal"], ["fast", "⚡", "Rapide"]] as const).map(([val, emoji, label]) => (
             <button key={val} onClick={() => updateSetting("voiceSpeed", val)}
-              className={`p-3 rounded-2xl text-center transition-all duration-200 border-2 ${
-                settings.voiceSpeed === val
-                  ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
-                  : "bg-muted/50 border-transparent hover:bg-muted"
+              className={`p-3 rounded-xl text-center transition-all ${
+                settings.voiceSpeed === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
               }`}>
               <span className="text-lg block">{emoji}</span>
-              <span className={`text-xs font-bold block ${settings.voiceSpeed === val ? "text-primary" : "text-foreground"}`}>{label}</span>
+              <span className={`text-[11px] font-semibold block ${settings.voiceSpeed === val ? "text-primary" : "text-foreground"}`}>{label}</span>
             </button>
           ))}
         </div>
@@ -1124,13 +1275,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       <Card title="Effets sonores" icon={settings.sfxVolume === 0 ? VolumeX : Volume2}>
         <div className="flex items-center gap-3">
           <button onClick={() => updateSetting("sfxVolume", settings.sfxVolume === 0 ? 0.7 : 0)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${settings.sfxVolume === 0 ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
+            className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${settings.sfxVolume === 0 ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
             {settings.sfxVolume === 0 ? "Off" : "On"}
           </button>
           <input type="range" min="0" max="100" value={Math.round(settings.sfxVolume * 100)}
             onChange={(e) => updateSetting("sfxVolume", Number(e.target.value) / 100)}
-            className="flex-1 h-2 rounded-full appearance-none bg-muted accent-primary" />
-          <span className="text-xs text-muted-foreground w-10 text-right">{Math.round(settings.sfxVolume * 100)}%</span>
+            className="flex-1 h-1.5 rounded-full appearance-none bg-muted accent-primary" />
+          <span className="text-[11px] text-muted-foreground w-10 text-right">{Math.round(settings.sfxVolume * 100)}%</span>
         </div>
       </Card>
     </div>
@@ -1141,7 +1292,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   // ═══════════════════════════════════════════════════════════════
 
   const renderContenu = () => (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-3">
       <Card title="Modes de contenu" icon={BookOpen}>
         <div className="grid grid-cols-2 gap-2">
           {([
@@ -1154,13 +1305,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             return (
               <button key={key}
                 onClick={() => updateNested("contentModes", key, !active)}
-                className={`relative p-4 rounded-2xl text-left transition-all duration-200 border-2 ${
-                  active
-                    ? "bg-primary/10 border-primary/40 shadow-[0_0_16px_hsl(var(--primary)/0.15)]"
-                    : "bg-muted/50 border-transparent hover:bg-muted"
+                className={`relative p-3 rounded-xl text-left transition-all duration-200 ${
+                  active ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
                 }`}>
-                <div className="text-2xl mb-2">{emoji}</div>
-                <h4 className="text-sm font-extrabold text-foreground">{label}</h4>
+                <div className="text-xl mb-1">{emoji}</div>
+                <h4 className="text-[12px] font-semibold text-foreground">{label}</h4>
                 <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{desc}</p>
                 <div className={`absolute top-3 right-3 w-5 h-5 rounded-full flex items-center justify-center transition-all ${
                   active ? "bg-primary text-primary-foreground" : "bg-muted-foreground/20"
@@ -1179,13 +1328,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             const active = settings.enabledThemes.includes(theme.id);
             return (
               <button key={theme.id} onClick={() => toggleTheme(theme.id)}
-                className={`p-3 rounded-2xl text-center transition-all duration-200 border-2 ${
-                  active
-                    ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
-                    : "bg-muted/50 border-transparent hover:bg-muted"
+                className={`p-3 rounded-xl text-center transition-all ${
+                  active ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
                 }`}>
                 <span className="text-xl block mb-1">{theme.label.split(" ")[0]}</span>
-                <span className={`text-[11px] font-bold ${active ? "text-primary" : "text-muted-foreground"}`}>
+                <span className={`text-[10px] font-medium ${active ? "text-primary" : "text-muted-foreground"}`}>
                   {theme.label.split(" ").slice(1).join(" ") || theme.label}
                 </span>
               </button>
@@ -1198,14 +1345,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         <div className="grid grid-cols-3 gap-2">
           {([["courte", "⚡", "Courte", "~3 min"], ["moyenne", "📖", "Moyenne", "~7 min"], ["longue", "📚", "Longue", "~12 min"]] as const).map(([val, emoji, label, sub]) => (
             <button key={val} onClick={() => updateSetting("storyDuration", val)}
-              className={`p-3 rounded-2xl text-center transition-all duration-200 border-2 ${
-                settings.storyDuration === val
-                  ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
-                  : "bg-muted/50 border-transparent hover:bg-muted"
+              className={`p-3 rounded-xl text-center transition-all ${
+                settings.storyDuration === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
               }`}>
               <span className="text-lg block">{emoji}</span>
-              <span className={`text-xs font-bold block ${settings.storyDuration === val ? "text-primary" : "text-foreground"}`}>{label}</span>
-              <span className="text-[10px] text-muted-foreground">{sub}</span>
+              <span className={`text-[11px] font-semibold block ${settings.storyDuration === val ? "text-primary" : "text-foreground"}`}>{label}</span>
+              <span className="text-[9px] text-muted-foreground">{sub}</span>
             </button>
           ))}
         </div>
@@ -1224,46 +1369,31 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   // ═══════════════════════════════════════════════════════════════
 
   const renderSecurite = () => (
-    <div className="p-4 space-y-4">
-      {/* ── Code PIN parental ── */}
+    <div className="p-4 space-y-3">
       <Card title="Code PIN parental" icon={Lock}>
         <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
           Protège l'accès au Mode Parent avec un code à 4 chiffres
         </p>
         <div className="flex gap-2 items-center">
-          <input
-            type="password"
-            maxLength={4}
-            inputMode="numeric"
-            pattern="[0-9]*"
+          <input type="password" maxLength={4} inputMode="numeric" pattern="[0-9]*"
             value={settings.parentPin}
-            onChange={(e) => {
-              const val = e.target.value.replace(/\D/g, "").slice(0, 4);
-              updateSetting("parentPin", val);
-            }}
+            onChange={(e) => { const val = e.target.value.replace(/\D/g, "").slice(0, 4); updateSetting("parentPin", val); }}
             placeholder="● ● ● ●"
-            className="flex-1 px-4 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground text-center tracking-[0.5em] placeholder:text-muted-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-mono"
-          />
+            className="flex-1 px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground text-center tracking-[0.5em] placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all font-mono" />
           {settings.parentPin.length === 4 && (
-            <span className="text-xs text-primary font-bold flex items-center gap-1">
-              <Shield className="w-3.5 h-3.5" /> Actif
-            </span>
+            <span className="text-[11px] text-primary font-medium flex items-center gap-1"><Shield className="w-3.5 h-3.5" /> Actif</span>
           )}
           {settings.parentPin.length > 0 && settings.parentPin.length < 4 && (
-            <span className="text-xs text-amber-400 font-bold">{4 - settings.parentPin.length} chiffres manquants</span>
+            <span className="text-[11px] text-muted-foreground font-medium">{4 - settings.parentPin.length} restants</span>
           )}
         </div>
         {settings.parentPin.length === 4 && (
-          <button
-            onClick={() => updateSetting("parentPin", "")}
-            className="mt-2 text-xs text-destructive hover:underline"
-          >
+          <button onClick={() => updateSetting("parentPin", "")} className="mt-2 text-[11px] text-destructive hover:underline">
             Supprimer le code PIN
           </button>
         )}
       </Card>
 
-      {/* ── Niveau de filtrage ── */}
       <Card title="Niveau de filtrage" icon={Shield}>
         <div className="space-y-2">
           {([
@@ -1271,16 +1401,14 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             ["strict", "🔒", "Strict", "Filtre renforcé, exclusivement positif"],
           ] as const).map(([val, emoji, label, desc]) => (
             <button key={val} onClick={() => updateSetting("contentFilter", val)}
-              className={`w-full p-4 rounded-2xl text-left transition-all duration-200 border-2 ${
-                settings.contentFilter === val
-                  ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
-                  : "bg-muted/50 border-transparent hover:bg-muted"
+              className={`w-full p-3 rounded-xl text-left transition-all ${
+                settings.contentFilter === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
               }`}>
               <div className="flex items-center gap-3">
-                <span className="text-2xl">{emoji}</span>
+                <span className="text-xl">{emoji}</span>
                 <div>
-                  <h4 className="text-sm font-extrabold text-foreground">{label}</h4>
-                  <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{desc}</p>
+                  <h4 className="text-[12px] font-semibold text-foreground">{label}</h4>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{desc}</p>
                 </div>
               </div>
             </button>
@@ -1288,22 +1416,20 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </div>
       </Card>
 
-      {/* ── Protections automatiques ── */}
       <Card title="Protections automatiques" icon={Shield}>
         <div className="space-y-1">
           <SettingRow icon={Shield} title="Mode ultra-safe" desc="Protection maximale activée">
             <Toggle value={settings.ultraSafe} onChange={(v) => updateSetting("ultraSafe", v)} />
           </SettingRow>
-          <SettingRow icon={Lock} title="Bloquer infos personnelles" desc="Empêche l'enfant de partager nom, adresse, téléphone">
+          <SettingRow icon={Lock} title="Bloquer infos personnelles" desc="Empêche le partage de données personnelles">
             <Toggle value={settings.blockPersonalInfo} onChange={(v) => updateSetting("blockPersonalInfo", v)} />
           </SettingRow>
-          <SettingRow icon={Shield} title="Bloquer les liens externes" desc="Bobby ne mentionne aucun site web ou URL">
+          <SettingRow icon={Shield} title="Bloquer les liens externes" desc="Bobby ne mentionne aucun site web">
             <Toggle value={settings.blockExternalLinks} onChange={(v) => updateSetting("blockExternalLinks", v)} />
           </SettingRow>
         </div>
       </Card>
 
-      {/* ── Niveau de langage ── */}
       <Card title="Niveau de langage" icon={BookOpen}>
         <div className="grid grid-cols-3 gap-2">
           {([
@@ -1312,54 +1438,44 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             ["avancé", "🎓", "Avancé", "Vocabulaire riche"],
           ] as const).map(([val, emoji, label, sub]) => (
             <button key={val} onClick={() => updateSetting("languageLevel", val)}
-              className={`p-3 rounded-2xl text-center transition-all duration-200 border-2 ${
-                settings.languageLevel === val
-                  ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
-                  : "bg-muted/50 border-transparent hover:bg-muted"
+              className={`p-3 rounded-xl text-center transition-all ${
+                settings.languageLevel === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
               }`}>
               <span className="text-lg block">{emoji}</span>
-              <span className={`text-xs font-bold block ${settings.languageLevel === val ? "text-primary" : "text-foreground"}`}>{label}</span>
-              <span className="text-[10px] text-muted-foreground">{sub}</span>
+              <span className={`text-[11px] font-semibold block ${settings.languageLevel === val ? "text-primary" : "text-foreground"}`}>{label}</span>
+              <span className="text-[9px] text-muted-foreground">{sub}</span>
             </button>
           ))}
         </div>
       </Card>
 
-      {/* ── Mot de sécurité ── */}
       <Card title="Mot de sécurité" icon={AlertTriangle}>
         <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
-          Si l'enfant dit ce mot, Bobby réagit immédiatement selon l'action choisie
+          Si l'enfant dit ce mot, Bobby réagit immédiatement
         </p>
-        <input
-          type="text"
-          value={settings.safeWord}
+        <input type="text" value={settings.safeWord}
           onChange={(e) => updateSetting("safeWord", e.target.value.slice(0, 30))}
           placeholder="Ex: 'au secours', 'aide-moi'…"
-          className="w-full px-4 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all mb-3"
-        />
+          className="w-full px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all mb-3" />
         {settings.safeWord.trim() && (
           <div className="grid grid-cols-3 gap-2">
             {([
-              ["pause", "⏸️", "Pause", "Met en pause"],
-              ["alert", "🔔", "Alerte", "Notifie le parent"],
-              ["stop", "🛑", "Stop", "Arrête Bobby"],
-            ] as const).map(([val, emoji, label, desc]) => (
+              ["pause", "⏸️", "Pause"],
+              ["alert", "🔔", "Alerte"],
+              ["stop", "🛑", "Stop"],
+            ] as const).map(([val, emoji, label]) => (
               <button key={val} onClick={() => updateSetting("safeWordAction", val)}
-                className={`p-3 rounded-2xl text-center transition-all duration-200 border-2 ${
-                  settings.safeWordAction === val
-                    ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
-                    : "bg-muted/50 border-transparent hover:bg-muted"
+                className={`p-3 rounded-xl text-center transition-all ${
+                  settings.safeWordAction === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
                 }`}>
                 <span className="text-lg block">{emoji}</span>
-                <span className={`text-[10px] font-bold ${settings.safeWordAction === val ? "text-primary" : "text-foreground"}`}>{label}</span>
-                <p className="text-[9px] text-muted-foreground">{desc}</p>
+                <span className={`text-[10px] font-semibold ${settings.safeWordAction === val ? "text-primary" : "text-foreground"}`}>{label}</span>
               </button>
             ))}
           </div>
         )}
       </Card>
 
-      {/* ── Alertes sensibles ── */}
       <Card title="Alertes de contenu sensible" icon={AlertTriangle}>
         <SettingRow icon={AlertTriangle} title="Alertes activées" desc="Notifier si un sujet sensible est détecté">
           <Toggle value={settings.alertOnSensitive} onChange={(v) => updateSetting("alertOnSensitive", v)} />
@@ -1369,61 +1485,49 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             <div className="flex flex-wrap gap-2">
               {settings.alertTopics.map(topic => (
                 <button key={topic} onClick={() => updateSetting("alertTopics", settings.alertTopics.filter(t => t !== topic))}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold hover:bg-amber-500/20 transition-all">
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-destructive/8 text-destructive text-[11px] font-medium hover:bg-destructive/15 transition-all">
                   ⚠️ {topic} <X className="w-3 h-3" />
                 </button>
               ))}
             </div>
             <div className="flex gap-2">
-              <input type="text"
-                placeholder="Ajouter un sujet d'alerte…"
+              <input type="text" placeholder="Ajouter un sujet…"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) {
                     const val = (e.target as HTMLInputElement).value.trim();
-                    if (!settings.alertTopics.includes(val)) {
-                      updateSetting("alertTopics", [...settings.alertTopics, val]);
-                    }
+                    if (!settings.alertTopics.includes(val)) { updateSetting("alertTopics", [...settings.alertTopics, val]); }
                     (e.target as HTMLInputElement).value = "";
                   }
                 }}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-              />
+                className="flex-1 px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
             </div>
           </div>
         )}
       </Card>
 
-      {/* ── Contact d'urgence ── */}
       <Card title="Contact d'urgence" icon={User}>
         <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
           Reçoit une notification si Bobby détecte une situation préoccupante
         </p>
         <div className="space-y-2">
-          <input
-            type="text"
-            value={settings.emergencyContact.name}
+          <input type="text" value={settings.emergencyContact.name}
             onChange={(e) => updateNested("emergencyContact", "name", e.target.value.slice(0, 50))}
             placeholder="Nom du contact"
-            className="w-full px-4 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-          />
-          <input
-            type="email"
-            value={settings.emergencyContact.email}
+            className="w-full px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
+          <input type="email" value={settings.emergencyContact.email}
             onChange={(e) => updateNested("emergencyContact", "email", e.target.value.slice(0, 100))}
             placeholder="Email du contact"
-            className="w-full px-4 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-          />
+            className="w-full px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
         </div>
       </Card>
 
-      {/* ── Sujets bloqués ── */}
       <Card title="Sujets bloqués" icon={EyeOff}>
         <div className="space-y-3">
           {settings.blockedTopics.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {settings.blockedTopics.map(topic => (
                 <button key={topic} onClick={() => updateSetting("blockedTopics", settings.blockedTopics.filter(t => t !== topic))}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-destructive/10 text-destructive text-xs font-bold hover:bg-destructive/20 transition-all">
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-destructive/8 text-destructive text-[11px] font-medium hover:bg-destructive/15 transition-all">
                   {topic} <X className="w-3 h-3" />
                 </button>
               ))}
@@ -1439,46 +1543,31 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 }
               }}
               placeholder="Ajouter un sujet…"
-              className="flex-1 px-4 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-            />
+              className="flex-1 px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
             <button onClick={() => {
-                if (newBlockedTopic.trim()) {
-                  updateSetting("blockedTopics", [...settings.blockedTopics, newBlockedTopic.trim()]);
-                  setNewBlockedTopic("");
-                }
+                if (newBlockedTopic.trim()) { updateSetting("blockedTopics", [...settings.blockedTopics, newBlockedTopic.trim()]); setNewBlockedTopic(""); }
               }}
-              className="w-11 h-11 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg hover:opacity-90 transition-all">
-              +
-            </button>
+              className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">+</button>
           </div>
         </div>
       </Card>
 
-      {/* ── Longueur max des messages ── */}
       <Card title="Longueur max des réponses" icon={FileText}>
-        <p className="text-[10px] text-muted-foreground mb-2 leading-tight">
-          Limite la longueur des réponses de Bobby (en caractères)
-        </p>
         <div className="grid grid-cols-4 gap-2">
           {([200, 500, 1000, 2000] as const).map(val => (
             <button key={val} onClick={() => updateSetting("maxMessageLength", val)}
-              className={`py-3 rounded-2xl text-center transition-all duration-200 border-2 ${
-                settings.maxMessageLength === val
-                  ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
-                  : "bg-muted/50 border-transparent hover:bg-muted"
+              className={`py-3 rounded-xl text-center transition-all ${
+                settings.maxMessageLength === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
               }`}>
-              <span className={`text-sm font-bold block ${settings.maxMessageLength === val ? "text-primary" : "text-foreground"}`}>
-                {val}
-              </span>
+              <span className={`text-sm font-semibold block ${settings.maxMessageLength === val ? "text-primary" : "text-foreground"}`}>{val}</span>
               <span className="text-[9px] text-muted-foreground">car.</span>
             </button>
           ))}
         </div>
       </Card>
 
-      {/* ── Watermark de session ── */}
       <Card>
-        <SettingRow icon={Eye} title="Watermark de session" desc="Ajoute un identifiant invisible à chaque session pour traçabilité">
+        <SettingRow icon={Eye} title="Watermark de session" desc="Identifiant invisible pour traçabilité">
           <Toggle value={settings.sessionWatermark} onChange={(v) => updateSetting("sessionWatermark", v)} />
         </SettingRow>
       </Card>
@@ -1490,17 +1579,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   // ═══════════════════════════════════════════════════════════════
 
   const renderLimites = () => (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-3">
       <Card title="Limite de temps journalier" icon={Timer}>
         <div className="grid grid-cols-5 gap-2">
           {([null, 10, 20, 30, 60] as const).map(val => (
             <button key={String(val)} onClick={() => updateSetting("timeLimitMinutes", val)}
-              className={`py-3 rounded-2xl text-center transition-all duration-200 border-2 ${
-                settings.timeLimitMinutes === val
-                  ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
-                  : "bg-muted/50 border-transparent hover:bg-muted"
+              className={`py-3 rounded-xl text-center transition-all ${
+                settings.timeLimitMinutes === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
               }`}>
-              <span className={`text-sm font-bold block ${settings.timeLimitMinutes === val ? "text-primary" : "text-foreground"}`}>
+              <span className={`text-sm font-semibold block ${settings.timeLimitMinutes === val ? "text-primary" : "text-foreground"}`}>
                 {val === null ? "∞" : val}
               </span>
               <span className="text-[9px] text-muted-foreground">{val === null ? "Illimité" : "min"}</span>
@@ -1521,17 +1608,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           {settings.nightMode.active && (
             <div className="flex items-center gap-3 pt-1 px-1">
               <div className="flex-1">
-                <p className="text-[10px] text-muted-foreground mb-1 font-bold">Début</p>
+                <p className="text-[10px] text-muted-foreground mb-1 font-medium">Début</p>
                 <input type="time" value={settings.nightMode.startHour}
                   onChange={(e) => updateNested("nightMode", "startHour", e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" />
+                  className="w-full px-3 py-2 rounded-xl bg-muted text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
               </div>
               <Sun className="w-4 h-4 text-muted-foreground mt-4" />
               <div className="flex-1">
-                <p className="text-[10px] text-muted-foreground mb-1 font-bold">Fin</p>
+                <p className="text-[10px] text-muted-foreground mb-1 font-medium">Fin</p>
                 <input type="time" value={settings.nightMode.endHour}
                   onChange={(e) => updateNested("nightMode", "endHour", e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-muted border border-border text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" />
+                  className="w-full px-3 py-2 rounded-xl bg-muted text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
               </div>
             </div>
           )}
@@ -1562,150 +1649,117 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const renderDonnees = () => {
     const dataCategories = [
-      { id: "conversations", emoji: "💬", label: "Conversations", desc: "Messages texte échangés", count: sessions.reduce((s, x) => s + x.message_count, 0) },
-      { id: "audio", emoji: "🎙️", label: "Enregistrements", desc: "Fichiers audio des sessions", count: analyses.filter(a => a.audio_path).length },
-      { id: "analyses", emoji: "📊", label: "Analyses IA", desc: "Résumés, émotions, scores", count: analyses.length },
-      { id: "memories", emoji: "🧠", label: "Mémoire enfant", desc: "Préférences et thèmes appris", count: 1 },
+      { id: "conversations", emoji: "💬", label: "Conversations", desc: "Messages texte", count: sessions.reduce((s, x) => s + x.message_count, 0) },
+      { id: "audio", emoji: "🎙️", label: "Enregistrements", desc: "Fichiers audio", count: analyses.filter(a => a.audio_path).length },
+      { id: "analyses", emoji: "📊", label: "Analyses IA", desc: "Résumés, scores", count: analyses.length },
+      { id: "memories", emoji: "🧠", label: "Mémoire", desc: "Préférences", count: 1 },
     ];
 
     return (
-      <div className="p-4 space-y-4">
-        {/* ── Bannière RGPD ── */}
-        <div className="p-4 rounded-2xl bg-primary/5 border-2 border-primary/20">
+      <div className="p-4 space-y-3">
+        <div className="p-4 rounded-2xl bg-primary/5">
           <div className="flex items-start gap-3">
             <Shield className="w-5 h-5 text-primary mt-0.5 shrink-0" />
             <div>
-              <h4 className="text-sm font-extrabold text-foreground">Protection des données (RGPD)</h4>
+              <h4 className="text-[13px] font-semibold text-foreground">Protection des données (RGPD)</h4>
               <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">
-                Toutes les données de votre enfant sont stockées de manière sécurisée. Vous avez le droit d'accéder, exporter et supprimer ces données à tout moment conformément au RGPD.
+                Vos données sont sécurisées. Accédez, exportez ou supprimez à tout moment.
               </p>
             </div>
           </div>
         </div>
 
-        {/* ── Enregistrement & confidentialité ── */}
-        <Card title="Collecte de données" icon={Eye}>
+        <Card title="Collecte" icon={Eye}>
           <div className="space-y-1">
             <SettingRow icon={Mic} title="Enregistrer les conversations" desc="Sauvegarde audio pour réécoute">
               <Toggle value={settings.recordConversations} onChange={(v) => updateSetting("recordConversations", v)} />
             </SettingRow>
-            <SettingRow icon={EyeOff} title="Mode privé" desc="Garder seulement l'analyse, pas l'audio">
+            <SettingRow icon={EyeOff} title="Mode privé" desc="Analyse seule, sans audio">
               <Toggle value={settings.privacyMode} onChange={(v) => updateSetting("privacyMode", v)} />
-            </SettingRow>
-            <SettingRow icon={Eye} title="Watermark de session" desc="Identifiant de traçabilité invisible">
-              <Toggle value={settings.sessionWatermark} onChange={(v) => updateSetting("sessionWatermark", v)} />
             </SettingRow>
           </div>
         </Card>
 
-        {/* ── Données collectées (vue d'ensemble) ── */}
         <Card title="Données stockées" icon={BarChart3}>
           <div className="grid grid-cols-2 gap-2">
             {dataCategories.map(cat => (
-              <div key={cat.id}
-                className="p-4 rounded-2xl bg-muted/50 border-2 border-transparent transition-all">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-2xl">{cat.emoji}</span>
-                  <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                    {cat.count}
-                  </span>
+              <div key={cat.id} className="p-3 rounded-xl bg-muted/50">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-lg">{cat.emoji}</span>
+                  <span className="text-[11px] font-mono font-bold text-primary bg-primary/8 px-2 py-0.5 rounded-full">{cat.count}</span>
                 </div>
-                <h4 className="text-sm font-extrabold text-foreground">{cat.label}</h4>
-                <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{cat.desc}</p>
+                <h4 className="text-[12px] font-semibold text-foreground">{cat.label}</h4>
+                <p className="text-[9px] text-muted-foreground">{cat.desc}</p>
               </div>
             ))}
           </div>
         </Card>
 
-        {/* ── Conservation des données ── */}
-        <Card title="Durée de conservation" icon={Calendar}>
-          <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
-            Choisissez combien de temps Bobby garde les données avant suppression automatique
-          </p>
+        <Card title="Conservation" icon={Calendar}>
           <div className="grid grid-cols-2 gap-2">
             {([
-              ["7j", "🗓️", "7 jours", "1 semaine"],
-              ["30j", "📅", "30 jours", "1 mois"],
-              ["90j", "📆", "90 jours", "3 mois"],
-              ["forever", "♾️", "Indéfini", "Pas de limite"],
-            ] as const).map(([val, emoji, label, desc]) => (
-              <button key={val} onClick={() => updateSetting("dataRetention" as any, val)}
-                className={`p-3 rounded-2xl text-center transition-all duration-200 border-2 ${
-                  (settings as any).dataRetention === val
-                    ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
-                    : "bg-muted/50 border-transparent hover:bg-muted"
+              ["7j", "🗓️", "7 jours"],
+              ["30j", "📅", "30 jours"],
+              ["90j", "📆", "90 jours"],
+              ["forever", "♾️", "Indéfini"],
+            ] as const).map(([val, emoji, label]) => (
+              <button key={val} onClick={() => updateSetting("dataRetention", val)}
+                className={`p-3 rounded-xl text-center transition-all ${
+                  settings.dataRetention === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
                 }`}>
                 <span className="text-xl block mb-1">{emoji}</span>
-                <span className={`text-xs font-bold block ${(settings as any).dataRetention === val ? "text-primary" : "text-foreground"}`}>{label}</span>
-                <span className="text-[9px] text-muted-foreground">{desc}</span>
+                <span className={`text-[11px] font-semibold ${settings.dataRetention === val ? "text-primary" : "text-foreground"}`}>{label}</span>
               </button>
             ))}
           </div>
         </Card>
 
-        {/* ── Consentements ── */}
         <Card title="Consentements" icon={Shield}>
           <div className="space-y-1">
-            <SettingRow icon={Brain} title="Analyse comportementale" desc="Bobby analyse les émotions et le comportement">
-              <Toggle value={(settings as any).consentAnalysis ?? true} onChange={(v) => updateSetting("consentAnalysis" as any, v)} />
+            <SettingRow icon={Brain} title="Analyse comportementale" desc="Analyse des émotions et du comportement">
+              <Toggle value={settings.consentAnalysis} onChange={(v) => updateSetting("consentAnalysis", v)} />
             </SettingRow>
-            <SettingRow icon={TrendingUp} title="Amélioration du service" desc="Données anonymisées pour améliorer Bobby">
-              <Toggle value={(settings as any).consentImprovement ?? false} onChange={(v) => updateSetting("consentImprovement" as any, v)} />
+            <SettingRow icon={TrendingUp} title="Amélioration du service" desc="Données anonymisées">
+              <Toggle value={settings.consentImprovement} onChange={(v) => updateSetting("consentImprovement", v)} />
             </SettingRow>
-            <SettingRow icon={BarChart3} title="Statistiques d'usage" desc="Collecte de métriques anonymes">
-              <Toggle value={(settings as any).consentStats ?? false} onChange={(v) => updateSetting("consentStats" as any, v)} />
+            <SettingRow icon={BarChart3} title="Statistiques d'usage" desc="Métriques anonymes">
+              <Toggle value={settings.consentStats} onChange={(v) => updateSetting("consentStats", v)} />
             </SettingRow>
           </div>
         </Card>
 
-        {/* ── Droits RGPD ── */}
         <Card title="Vos droits (RGPD)" icon={FileText}>
           <div className="grid grid-cols-2 gap-2">
             {([
-              ["access", "👁️", "Droit d'accès", "Voir toutes vos données"],
-              ["export", "📥", "Portabilité", "Exporter au format JSON"],
-              ["rectify", "✏️", "Rectification", "Corriger vos données"],
-              ["delete", "🗑️", "Effacement", "Supprimer vos données"],
-              ["restrict", "⏸️", "Limitation", "Limiter le traitement"],
-              ["object", "✋", "Opposition", "S'opposer au traitement"],
+              ["access", "👁️", "Accès", "Voir vos données"],
+              ["export", "📥", "Portabilité", "Export JSON"],
+              ["rectify", "✏️", "Rectification", "Corriger"],
+              ["delete", "🗑️", "Effacement", "Supprimer"],
             ] as const).map(([id, emoji, label, desc]) => (
               <button key={id}
                 onClick={() => {
                   if (id === "export") {
-                    // Export all data
                     const allData = {
-                      exportDate: new Date().toISOString(),
-                      childName,
+                      exportDate: new Date().toISOString(), childName,
                       settings: { ...settings, parentPin: "[MASQUÉ]" },
                       sessions: sessions.map(s => {
                         const analysis = analyses.find(a => a.session_id === s.id);
-                        return {
-                          id: s.id, date: s.started_at, ended: s.ended_at,
-                          duration: s.duration_seconds, messages: s.message_count,
-                          emotions: s.detected_emotions, topics: s.topics, tags: s.tags,
-                          summary: analysis?.summary,
+                        return { id: s.id, date: s.started_at, ended: s.ended_at, duration: s.duration_seconds, messages: s.message_count,
+                          emotions: s.detected_emotions, topics: s.topics, tags: s.tags, summary: analysis?.summary,
                           transcription: analysis?.full_transcription,
-                          scores: analysis ? {
-                            sociability: analysis.sociability_score,
-                            curiosity: analysis.curiosity_score,
-                            stability: analysis.emotional_stability_score,
-                          } : null,
-                          interests: analysis?.extracted_interests,
-                          insights: analysis?.behavior_insights,
+                          scores: analysis ? { sociability: analysis.sociability_score, curiosity: analysis.curiosity_score, stability: analysis.emotional_stability_score } : null,
+                          interests: analysis?.extracted_interests, insights: analysis?.behavior_insights,
                         };
                       }),
                     };
                     const blob = new Blob([JSON.stringify(allData, null, 2)], { type: "application/json" });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `bobby-rgpd-export-${childName}-${new Date().toISOString().slice(0, 10)}.json`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                  } else if (id === "access") {
-                    setActiveTab("sessions");
-                  } else if (id === "delete") {
-                    if (confirm("⚠️ ATTENTION : Supprimer TOUTES les données de votre enfant ?\n\nCette action est IRRÉVERSIBLE et inclut :\n• Toutes les conversations\n• Tous les enregistrements audio\n• Toutes les analyses\n• La mémoire de Bobby\n\nConfirmez-vous ?")) {
+                    a.href = url; a.download = `bobby-rgpd-export-${childName}-${new Date().toISOString().slice(0, 10)}.json`;
+                    a.click(); URL.revokeObjectURL(url);
+                  } else if (id === "access") { setActiveTab("sessions"); }
+                  else if (id === "delete") {
+                    if (confirm("⚠️ Supprimer TOUTES les données ?\n\nCette action est IRRÉVERSIBLE.")) {
                       Promise.all([
                         supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
                         supabase.from("session_messages").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
@@ -1713,138 +1767,73 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                         supabase.from("child_memories").delete().eq("child_name", childName),
                       ]).then(() => loadData());
                     }
-                  } else if (id === "rectify") {
-                    setActiveTab("profil");
-                  } else {
-                    alert(`Droit "${label}" : contactez le responsable de traitement pour exercer ce droit.`);
-                  }
+                  } else if (id === "rectify") { setActiveTab("profil"); }
                 }}
-                className="p-4 rounded-2xl text-left transition-all duration-200 border-2 bg-muted/50 border-transparent hover:bg-muted hover:border-primary/20 active:scale-95">
-                <span className="text-2xl block mb-2">{emoji}</span>
-                <h4 className="text-sm font-extrabold text-foreground">{label}</h4>
-                <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{desc}</p>
+                className="p-3 rounded-xl text-left transition-all bg-muted/50 hover:bg-muted active:scale-95">
+                <span className="text-xl block mb-1">{emoji}</span>
+                <h4 className="text-[12px] font-semibold text-foreground">{label}</h4>
+                <p className="text-[9px] text-muted-foreground">{desc}</p>
               </button>
             ))}
           </div>
         </Card>
 
-        {/* ── Suppression sélective ── */}
         <Card title="Suppression sélective" icon={Trash2}>
-          <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
-            Supprimez uniquement certaines catégories de données
-          </p>
           <div className="space-y-2">
-            <button
-              onClick={() => {
-                if (confirm("Supprimer tous les enregistrements audio ? Les analyses texte seront conservées.")) {
+            {[
+              { emoji: "🎙️", label: "Supprimer les audio", desc: "Garde les analyses", action: () => {
+                if (confirm("Supprimer tous les enregistrements audio ?")) {
                   supabase.storage.from("conversation-audio").list().then(({ data }) => {
-                    if (data?.length) {
-                      supabase.storage.from("conversation-audio").remove(data.map(f => f.name));
-                    }
+                    if (data?.length) supabase.storage.from("conversation-audio").remove(data.map(f => f.name));
                   });
                 }
-              }}
-              className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 border-2 border-transparent hover:border-destructive/30 hover:bg-destructive/5 transition-all text-left">
-              <span className="text-lg">🎙️</span>
-              <div className="flex-1">
-                <h4 className="text-xs font-extrabold text-foreground">Supprimer les audio</h4>
-                <p className="text-[10px] text-muted-foreground">Efface les enregistrements, garde les analyses</p>
-              </div>
-              <Trash2 className="w-4 h-4 text-destructive" />
-            </button>
-
-            <button
-              onClick={() => {
-                if (confirm("Supprimer toutes les analyses IA ? Les sessions de base seront conservées.")) {
+              }},
+              { emoji: "📊", label: "Supprimer les analyses", desc: "Garde les sessions", action: () => {
+                if (confirm("Supprimer toutes les analyses IA ?")) {
                   supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000").then(() => loadData());
                 }
-              }}
-              className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 border-2 border-transparent hover:border-destructive/30 hover:bg-destructive/5 transition-all text-left">
-              <span className="text-lg">📊</span>
-              <div className="flex-1">
-                <h4 className="text-xs font-extrabold text-foreground">Supprimer les analyses</h4>
-                <p className="text-[10px] text-muted-foreground">Efface résumés, scores, insights</p>
-              </div>
-              <Trash2 className="w-4 h-4 text-destructive" />
-            </button>
-
-            <button
-              onClick={() => {
-                if (confirm("Réinitialiser la mémoire de Bobby ? Il oubliera les préférences de votre enfant.")) {
+              }},
+              { emoji: "🧠", label: "Réinitialiser la mémoire", desc: "Bobby oublie les préférences", action: () => {
+                if (confirm("Réinitialiser la mémoire ?")) {
                   supabase.from("child_memories").delete().eq("child_name", childName).then(() => loadData());
                 }
-              }}
-              className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 border-2 border-transparent hover:border-destructive/30 hover:bg-destructive/5 transition-all text-left">
-              <span className="text-lg">🧠</span>
-              <div className="flex-1">
-                <h4 className="text-xs font-extrabold text-foreground">Réinitialiser la mémoire</h4>
-                <p className="text-[10px] text-muted-foreground">Bobby oublie les préférences apprises</p>
-              </div>
-              <Trash2 className="w-4 h-4 text-destructive" />
-            </button>
+              }},
+            ].map(item => (
+              <button key={item.label} onClick={item.action}
+                className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-destructive/5 transition-all text-left">
+                <span className="text-lg">{item.emoji}</span>
+                <div className="flex-1">
+                  <h4 className="text-[12px] font-semibold text-foreground">{item.label}</h4>
+                  <p className="text-[9px] text-muted-foreground">{item.desc}</p>
+                </div>
+                <Trash2 className="w-4 h-4 text-destructive" />
+              </button>
+            ))}
           </div>
         </Card>
 
-        {/* ── Suppression totale ── */}
-        <Card title="Suppression complète" icon={AlertTriangle}>
-          <div className="p-3 rounded-xl bg-destructive/5 border border-destructive/20 mb-3">
-            <p className="text-[10px] text-destructive font-bold leading-relaxed">
-              ⚠️ Cette action supprime TOUTES les données de manière irréversible : conversations, audio, analyses, mémoire et paramètres.
-            </p>
-          </div>
-          <button
-            onClick={() => {
-              if (confirm("⚠️ SUPPRESSION TOTALE IRRÉVERSIBLE\n\nToutes les données seront effacées :\n• Sessions et messages\n• Audio\n• Analyses\n• Mémoire de Bobby\n\nÊtes-vous sûr ?")) {
-                if (confirm("Dernière confirmation : tapez OK pour supprimer définitivement.")) {
-                  Promise.all([
-                    supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
-                    supabase.from("session_messages").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
-                    supabase.from("child_sessions").delete().eq("child_name", childName),
-                    supabase.from("child_memories").delete().eq("child_name", childName),
-                  ]).then(() => {
-                    supabase.storage.from("conversation-audio").list().then(({ data }) => {
-                      if (data?.length) {
-                        supabase.storage.from("conversation-audio").remove(data.map(f => f.name));
-                      }
-                    });
-                    loadData();
-                  });
-                }
-              }
-            }}
-            className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-destructive/10 text-destructive text-sm font-extrabold hover:bg-destructive/20 transition-all border-2 border-destructive/20">
-            <Trash2 className="w-5 h-5" /> Effacer toutes mes données
-          </button>
-        </Card>
-
-        {/* ── Informations légales ── */}
         <Card title="Informations légales" icon={FileText}>
           <div className="space-y-3 text-[10px] text-muted-foreground leading-relaxed">
             <div>
-              <h5 className="text-xs font-extrabold text-foreground mb-1">Responsable du traitement</h5>
+              <h5 className="text-[11px] font-semibold text-foreground mb-1">Responsable du traitement</h5>
               <p>Bobby AI — Application d'accompagnement pour enfants</p>
             </div>
             <div>
-              <h5 className="text-xs font-extrabold text-foreground mb-1">Finalités du traitement</h5>
-              <p>• Interaction vocale personnalisée avec l'enfant</p>
+              <h5 className="text-[11px] font-semibold text-foreground mb-1">Finalités</h5>
+              <p>• Interaction vocale personnalisée</p>
               <p>• Analyse comportementale pour les parents</p>
-              <p>• Amélioration de l'expérience utilisateur</p>
             </div>
             <div>
-              <h5 className="text-xs font-extrabold text-foreground mb-1">Base légale</h5>
-              <p>Consentement parental (Art. 6.1.a et Art. 8 du RGPD)</p>
+              <h5 className="text-[11px] font-semibold text-foreground mb-1">Base légale</h5>
+              <p>Consentement parental (Art. 6.1.a et Art. 8 RGPD)</p>
             </div>
             <div>
-              <h5 className="text-xs font-extrabold text-foreground mb-1">Durée de conservation</h5>
-              <p>Selon votre choix ci-dessus. Par défaut : indéfini jusqu'à suppression manuelle.</p>
+              <h5 className="text-[11px] font-semibold text-foreground mb-1">Hébergement</h5>
+              <p>Infrastructure cloud sécurisée en Europe</p>
             </div>
             <div>
-              <h5 className="text-xs font-extrabold text-foreground mb-1">Hébergement</h5>
-              <p>Données hébergées en Europe (infrastructure cloud sécurisée)</p>
-            </div>
-            <div>
-              <h5 className="text-xs font-extrabold text-foreground mb-1">Contact DPO</h5>
-              <p>Pour exercer vos droits : dpo@bobby-app.com</p>
+              <h5 className="text-[11px] font-semibold text-foreground mb-1">Contact DPO</h5>
+              <p>dpo@bobby-app.com</p>
             </div>
           </div>
         </Card>
@@ -1866,7 +1855,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     const prevIdx = tabIds.indexOf(prevTabRef.current);
     const nextIdx = tabIds.indexOf(activeTab);
     const direction = nextIdx > prevIdx ? "right" : "left";
-    // exit
     setAnimClass(direction === "right" ? "tab-exit-left" : "tab-exit-right");
     const t = setTimeout(() => {
       setDisplayedTab(activeTab);
@@ -1897,7 +1885,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     }
   };
 
-  const [lightMode, setLightMode] = useState(() => localStorage.getItem("parent-light") === "true");
+  // Default to light mode
+  const [lightMode, setLightMode] = useState(() => {
+    const stored = localStorage.getItem("parent-light");
+    return stored === null ? true : stored === "true";
+  });
 
   const toggleLight = () => {
     setLightMode(v => {
@@ -1909,25 +1901,25 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   return (
     <div className={`min-h-screen bg-background max-w-lg mx-auto flex flex-col transition-colors duration-300 ${lightMode ? "parent-light" : ""}`}>
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-4 bg-card border-b border-border">
+      <div className="flex items-center gap-3 px-4 py-3 bg-card border-b border-border">
         <button
-          onClick={selectedSession ? () => { setSelectedSession(null); setSelectedAnalysis(null); setSessionMessages([]); } : onClose}
-          className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-5 h-5" />
+          onClick={selectedSession ? () => { setSelectedSession(null); setSelectedAnalysis(null); setSessionMessages([]); setPlayingAudio(null); setAudioProgress(0); setActiveMessageIdx(-1); if (audioRef.current) audioRef.current.pause(); if (progressInterval.current) clearInterval(progressInterval.current); } : onClose}
+          className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="w-4.5 h-4.5" />
         </button>
         <div className="flex-1">
-          <h2 className="text-lg font-extrabold text-foreground">Mode Parent</h2>
-          <p className="text-xs text-muted-foreground">
-            {selectedSession ? formatDate(selectedSession.started_at) : `Contrôle de ${childName}`}
+          <h2 className="text-base font-bold text-foreground">Mode Parent</h2>
+          <p className="text-[11px] text-muted-foreground">
+            {selectedSession ? formatDate(selectedSession.started_at) : `${childName}`}
           </p>
         </div>
         {!selectedSession && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button onClick={toggleLight}
-              className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all duration-200">
+              className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
               {lightMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </button>
-            <button onClick={loadData} className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+            <button onClick={loadData} className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
               <RefreshCw className="w-4 h-4" />
             </button>
           </div>
@@ -1939,7 +1931,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         <div className="flex border-b border-border bg-card overflow-x-auto">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 min-w-0 flex flex-col items-center gap-1 py-3 px-1 text-[10px] font-bold transition-all duration-200 ${
+              className={`flex-1 min-w-0 flex flex-col items-center gap-0.5 py-2.5 px-1 text-[10px] font-medium transition-all duration-200 ${
                 activeTab === tab.id ? "text-primary border-b-2 border-primary" : "text-muted-foreground"
               }`}>
               <tab.icon className={`w-4 h-4 transition-transform duration-200 ${activeTab === tab.id ? "scale-110" : ""}`} />
@@ -1949,7 +1941,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </div>
       )}
 
-      {/* Content with animation */}
+      {/* Content */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
         <div className={`tab-content-wrapper ${animClass}`}>
           {renderTabContent()}
