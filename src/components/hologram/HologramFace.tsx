@@ -28,7 +28,7 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
   const { gazeRef, cameraActive } = useGazeTracker(enableCamera);
   const { connectAudio, getAmplitude } = useAudioAmplitude();
   const tapCountRef = useRef(0);
-  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tapTimerRef = useRef<number>(0);
 
   const handleTap = useCallback(() => {
     const now = Date.now();
