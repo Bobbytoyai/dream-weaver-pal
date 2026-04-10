@@ -467,14 +467,8 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
   return (
     <div className="flex flex-col items-center justify-between h-screen bg-background px-4 py-6 max-w-lg mx-auto select-none overflow-hidden">
-      <div className="w-full flex items-center justify-between px-2">
-        <button
-          onClick={onSwitchToStory}
-          className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-foreground text-sm font-semibold hover:border-primary hover:scale-105 active:scale-95 transition-all"
-        >
-          <BookOpen className="w-4 h-4" />
-          Histoires
-        </button>
+      <div className="w-full flex items-center justify-end px-2">
+        <div />
 
         {parentSettings?.enableCamera && (
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-primary">
