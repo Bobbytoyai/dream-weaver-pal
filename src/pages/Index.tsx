@@ -47,10 +47,11 @@ const Index = () => {
     } catch { /* ignore */ }
   }, [memory]);
 
-  const handleOnboardingComplete = (name: string, age: number) => {
+  const handleOnboardingComplete = (name: string, age: number, voice?: string) => {
     saveProfile(name, age);
     setProfile({ name, age });
-    setParentSettings((prev) => ({ ...prev, childName: name, childAge: age }));
+    const voiceType = (voice === "child" ? "child" : voice === "male" ? "male" : "female") as ParentSettings["voiceType"];
+    setParentSettings((prev) => ({ ...prev, childName: name, childAge: age, voiceType }));
   };
 
   const handleSettingsChange = (settings: ParentSettings) => {
