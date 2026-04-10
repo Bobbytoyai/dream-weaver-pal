@@ -167,6 +167,21 @@ const DebugOverlay = ({ state, micArmed, micRunning, partialText, lastRecognized
   </div>
 );
 
+/** Brief toast shown when Piper model finishes downloading */
+const PiperReadyToast = () => {
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(false), 4000);
+    return () => clearTimeout(t);
+  }, []);
+  if (!visible) return null;
+  return (
+    <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 px-4 py-2 rounded-full bg-green-500/90 text-white text-xs font-bold shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-300">
+      ✅ Mode offline prêt !
+    </div>
+  );
+};
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // MAIN COMPONENT
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
