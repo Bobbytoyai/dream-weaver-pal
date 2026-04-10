@@ -264,25 +264,13 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
     startListening();
   }, [state, startListening]);
 
-  // Triple-tap on avatar for parent mode
-  const handleAvatarTap = useCallback(() => {
-    tapCountRef.current++;
-    if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
-
-    if (tapCountRef.current >= 3) {
-      tapCountRef.current = 0;
-      // End session before switching
-      if (sessionStartedRef.current) {
-        session.endSession();
-        sessionStartedRef.current = false;
-      }
-      onParentMode();
-      return;
+  // Parent mode handler (moved from triple-tap on avatar to HologramFace)
+  const handleParentMode = useCallback(() => {
+    if (sessionStartedRef.current) {
+      session.endSession();
+      sessionStartedRef.current = false;
     }
-
-    tapTimerRef.current = setTimeout(() => {
-      tapCountRef.current = 0;
-    }, 600);
+    onParentMode();
   }, [onParentMode, session]);
 
   const avatarAnimation = {
