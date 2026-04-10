@@ -33,14 +33,16 @@ export function useWakeWord({
   }, []);
 
   const startListening = useCallback(() => {
+    console.log("[WakeWord] startListening called, isRunning:", isRunningRef.current);
     if (isRunningRef.current) return;
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      console.warn("SpeechRecognition not supported");
+      console.warn("[WakeWord] SpeechRecognition NOT supported in this browser");
       return;
     }
 
+    console.log("[WakeWord] Creating SpeechRecognition instance...");
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
