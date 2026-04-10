@@ -10,6 +10,7 @@
 
 import { useCallback, useRef } from "react";
 import { piperSpeak, piperPreview } from "./piperTTS";
+import { isOffline } from "./offlineEngine";
 
 const BOBBY_BRAIN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bobby-brain`;
 const ELEVENLABS_TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`;
@@ -152,12 +153,18 @@ export async function fetchTTSAudio(
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
   const profile = (voiceId as VoiceProfile) || "female";
+  const offline = isOffline();
 
-  try {
-    return await fetchElevenLabsTTS(spokenText, profile, signal, emotion, speedOverride, calmMode);
-  } catch (e: any) {
-    if (e.name === "AbortError") throw e;
-    console.warn("[TTS] ElevenLabs failed, trying Piper:", e.message);
+  // ─── OFFLINE: Skip ElevenLabs entirely → Piper → Browser TTS ───
+  if (!offline) {
+    try {
+      return await fetchElevenLabsTTS(spokenText, profile, signal, emotion, speedOverride, calmMode);
+    } catch (e: any) {
+      if (e.name === "AbortError") throw e;
+      console.warn("[TTS] ElevenLabs failed, trying Piper:", e.message);
+    }
+  } else {
+    console.log("[TTS] ⚡ Offline mode — using Piper TTS directly");
   }
 
   try {
