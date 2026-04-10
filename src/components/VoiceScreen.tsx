@@ -520,6 +520,23 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       return;
     }
 
+    // ─── OFFLINE ENGINE: instant response when offline or simple intent ───
+    if (isOffline()) {
+      console.log("[VoiceScreen] ⚡ OFFLINE response for:", cleaned);
+      const offlineResp = getOfflineResponse(cleaned, childName);
+      goToSpeaking();
+      eventBus.emit({ type: "SPEECH_START" });
+      recentBobbyTextsRef.current = [offlineResp.text, ...recentBobbyTextsRef.current].slice(0, 8);
+      fetchTTSAudio(offlineResp.text, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode).then(url => {
+        audioQueue.enqueue(url);
+        audioQueue.setOnAllDone(() => { eventBus.emit({ type: "SPEECH_STOP" }); goToListening(); });
+      }).catch(() => goToListening());
+      setConversationHistory(prev => [...prev, { role: "user", content: cleaned }, { role: "assistant", content: offlineResp.text }]);
+      session.addMessage("user", cleaned);
+      session.addMessage("assistant", offlineResp.text);
+      return;
+    }
+
     if (isSimpleGreeting(cleaned)) {
       const cached = getCachedResponse("greeting");
       goToSpeaking();
@@ -536,7 +553,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     }
 
     getAIResponse(cleaned);
-  }, [audioQueue, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, goToSpeaking, isCalmMode, session, speakAndListen]);
+  }, [audioQueue, childName, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, goToSpeaking, isCalmMode, session, speakAndListen]);
 
   const scheduleFlush = useCallback(() => {
     if (utteranceFlushTimerRef.current) clearTimeout(utteranceFlushTimerRef.current);
