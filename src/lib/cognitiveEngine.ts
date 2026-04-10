@@ -138,11 +138,25 @@ export function initFromMemory(data: {
   interactionCount?: number;
   relationshipScore?: number;
   lastEmotions?: string[];
+  engagementTriggers?: string[];
+  behaviorPatterns?: string[];
+  learningSpeed?: string;
+  interactionStyle?: string;
+  preferredTopics?: Record<string, number>;
 }): void {
   if (data.progressionLevel) state.progressionLevel = data.progressionLevel;
   if (data.interactionCount) state.interactionCount = data.interactionCount;
   if (data.relationshipScore) state.relationshipDepth = data.relationshipScore;
   if (data.lastEmotions?.length) state.emotionHistory = data.lastEmotions.slice(0, 5);
+  if (data.engagementTriggers?.length) state.engagementTriggers = data.engagementTriggers;
+  if (data.behaviorPatterns?.length) state.behaviorPatterns = data.behaviorPatterns;
+  if (data.learningSpeed) state.learningSpeed = data.learningSpeed as LearningSpeed;
+  if (data.interactionStyle) state.interactionStyle = data.interactionStyle as InteractionStyle;
+  if (data.preferredTopics) {
+    for (const [topic, score] of Object.entries(data.preferredTopics)) {
+      state.engagementScores[topic] = { topic, mode: "chat", score, count: 1 };
+    }
+  }
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
