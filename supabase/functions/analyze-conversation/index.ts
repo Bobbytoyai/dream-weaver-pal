@@ -24,7 +24,6 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get session info
     const { data: session, error: sessionError } = await supabase
       .from("child_sessions")
       .select("*")
@@ -38,7 +37,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get all messages
     const { data: messages, error: msgError } = await supabase
       .from("session_messages")
       .select("*")
@@ -52,12 +50,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Build full transcription
     const fullTranscription = messages
       .map((m: any) => `${m.role === "user" ? "Enfant" : "Bobby"}: ${m.content}`)
       .join("\n");
 
-    // AI analysis prompt
     const analysisPrompt = `Tu es un analyste comportemental spécialisé dans les enfants de 5 à 12 ans.
 Analyse cette conversation entre un enfant et son compagnon IA "Bobby".
 
@@ -87,14 +83,23 @@ Réponds UNIQUEMENT en JSON valide avec cette structure exacte:
   "attention_span": "description courte de l'attention",
   "interaction_frequency": "description de la fréquence d'interaction",
   "mood_score": "positive|neutral|low",
-  "alerts": [{"type": "emotion", "message": "message d'alerte si nécessaire"}]
+  "alerts": [{"type": "emotion", "message": "message d'alerte si nécessaire"}],
+  "sociability_score": 50,
+  "curiosity_score": 50,
+  "emotional_stability_score": 50,
+  "extracted_interests": ["centres d'intérêt détectés"],
+  "session_tags": ["fun", "learning", "emotion", "story"]
 }
 
 RÈGLES:
 - Scores d'émotions entre 0 et 100
+- sociability_score: 0-100 (interactions sociales, expressivité, ouverture)
+- curiosity_score: 0-100 (questions posées, exploration de sujets)
+- emotional_stability_score: 0-100 (équilibre émotionnel, pas de changements brusques)
+- extracted_interests: mots-clés des centres d'intérêt (ex: "dinosaures", "espace", "animaux")
+- session_tags: choisir parmi ["fun", "learning", "emotion", "story"] selon le contenu
 - Ne jamais juger l'enfant
 - Rester factuel et neutre
-- Ne pas sur-interpréter
 - Alertes UNIQUEMENT si peur ou tristesse fréquente/forte`;
 
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
@@ -111,7 +116,7 @@ RÈGLES:
           { role: "user", content: analysisPrompt },
         ],
         temperature: 0.3,
-        max_tokens: 1500,
+        max_tokens: 2000,
       }),
     });
 
@@ -127,7 +132,6 @@ RÈGLES:
     const aiData = await aiResp.json();
     const rawContent = aiData.choices?.[0]?.message?.content || "{}";
     
-    // Extract JSON from potential markdown code blocks
     let jsonStr = rawContent;
     const jsonMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) jsonStr = jsonMatch[1];
@@ -146,10 +150,15 @@ RÈGLES:
         interaction_frequency: "Normal",
         mood_score: "neutral",
         alerts: [],
+        sociability_score: 50,
+        curiosity_score: 50,
+        emotional_stability_score: 50,
+        extracted_interests: [],
+        session_tags: [],
       };
     }
 
-    // Save analysis to DB
+    // Save analysis with new fields
     const { data: savedAnalysis, error: saveError } = await supabase
       .from("conversation_analyses")
       .insert({
@@ -164,6 +173,10 @@ RÈGLES:
         interaction_frequency: analysis.interaction_frequency || null,
         mood_score: analysis.mood_score || "neutral",
         alerts: analysis.alerts || [],
+        sociability_score: analysis.sociability_score ?? 50,
+        curiosity_score: analysis.curiosity_score ?? 50,
+        emotional_stability_score: analysis.emotional_stability_score ?? 50,
+        extracted_interests: analysis.extracted_interests || [],
       })
       .select()
       .single();
@@ -172,10 +185,13 @@ RÈGLES:
       console.error("Save error:", saveError);
     }
 
-    // Also update the session with summary
+    // Update session with summary and tags
     await supabase
       .from("child_sessions")
-      .update({ ai_summary: analysis.summary })
+      .update({
+        ai_summary: analysis.summary,
+        tags: analysis.session_tags || [],
+      })
       .eq("id", sessionId);
 
     return new Response(JSON.stringify({ analysis: savedAnalysis || analysis }), {
