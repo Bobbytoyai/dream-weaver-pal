@@ -250,7 +250,7 @@ export function resetConversationContext() {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 4b. MULTI-TURN CONTEXTUAL RESPONSES
+// 4b. MULTI-TURN CONTEXTUAL RESPONSES (last 3 exchanges)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function getRecentUserMessages(n = 3): string[] {
@@ -258,6 +258,191 @@ function getRecentUserMessages(n = 3): string[] {
     .filter(t => t.role === "user")
     .slice(-n)
     .map(t => t.text);
+}
+
+/** Get the last N exchanges (user + bobby pairs) */
+function getRecentExchanges(n = 3): { user: string; bobby: string; intent: OfflineIntent; topic: string }[] {
+  const exchanges: { user: string; bobby: string; intent: OfflineIntent; topic: string }[] = [];
+  const hist = context.history;
+  for (let i = hist.length - 1; i >= 1; i--) {
+    if (hist[i].role === "bobby" && hist[i - 1].role === "user") {
+      exchanges.unshift({
+        user: hist[i - 1].text,
+        bobby: hist[i].text,
+        intent: hist[i - 1].intent,
+        topic: hist[i - 1].topic,
+      });
+      i--; // skip the user turn we just consumed
+    }
+    if (exchanges.length >= n) break;
+  }
+  return exchanges;
+}
+
+/** Detect if the child is referring back to something from a recent exchange */
+function handleConversationalContext(text: string, childName?: string): OfflineResponse | null {
+  const normalized = normalizeInput(text);
+  const exchanges = getRecentExchanges(3);
+  if (exchanges.length === 0) return null;
+
+  const name = childName || "";
+
+  // ── "pourquoi ?" / "comment ?" as a follow-up to what Bobby just said ──
+  if (/^(pourquoi|comment|c'est quoi|explique|mais pourquoi|ah bon|vraiment)\s*\??$/.test(normalized)) {
+    const last = exchanges[exchanges.length - 1];
+    if (last) {
+      const deeperResponses: Record<string, string[]> = {
+        pirate: [
+          `Parce que les pirates adoraient naviguer sur les océans pour chercher des trésors ${name} ! 🏴‍☠️`,
+          `Les pirates étaient des aventuriers courageux qui vivaient sur la mer ! ⛵`,
+        ],
+        princesse: [
+          `Parce que dans les contes, les princesses ont des pouvoirs magiques ${name} ! ✨`,
+          `Les princesses vivent souvent de grandes aventures dans des châteaux merveilleux ! 🏰`,
+        ],
+        espace: [
+          `Parce que l'espace est immense et plein de mystères ${name} ! 🚀`,
+          `L'univers est tellement grand qu'on en découvre encore des choses tous les jours ! 🌌`,
+        ],
+        animaux: [
+          `Parce que les animaux sont incroyables et chacun a ses super-pouvoirs ${name} ! 🦁`,
+          `La nature a créé des animaux extraordinaires, chacun unique ! 🐾`,
+        ],
+        maths: [
+          `Parce que les maths sont partout autour de nous ${name} ! On en a besoin pour compter, mesurer, construire… 🔢`,
+          `Les maths c'est comme un super-pouvoir : ça aide à résoudre plein de problèmes ! 🧮`,
+        ],
+        sciences: [
+          `Parce que la science explique comment marche le monde ${name} ! C'est fascinant ! 🔬`,
+          `Les scientifiques posent des questions comme toi et cherchent les réponses ! 🧪`,
+        ],
+        géographie: [
+          `Parce que notre planète Terre est incroyable avec tous ses pays et ses paysages ${name} ! 🌍`,
+          `La géographie nous aide à comprendre où sont les choses sur notre belle planète ! 🗺️`,
+        ],
+      };
+
+      // Find matching topic from recent exchange
+      const topics = extractTopics(last.user + " " + last.bobby);
+      for (const t of topics) {
+        if (deeperResponses[t]) {
+          const resp = pickRandom(deeperResponses[t], `deeper_${t}`);
+          updateContext(last.intent, last.topic, resp);
+          return { text: resp, intent: last.intent, isOffline: true };
+        }
+      }
+
+      // Check for education subjects in Bobby's text
+      const bobbyLower = last.bobby.toLowerCase();
+      for (const [subject, responses] of Object.entries(deeperResponses)) {
+        if (bobbyLower.includes(subject) || last.topic.toLowerCase().includes(subject)) {
+          const resp = pickRandom(responses, `deeper_${subject}`);
+          updateContext(last.intent, last.topic, resp);
+          return { text: resp, intent: last.intent, isOffline: true };
+        }
+      }
+
+      // Generic deeper response
+      const generic = pickRandom([
+        `Bonne question ${name} ! C'est parce que c'est comme ça dans la nature. Tu veux en savoir encore plus ? 🤔`,
+        `Hmm, c'est une question intéressante ! Il y a plein de choses à découvrir là-dessus ${name} ! 💡`,
+        `Ça c'est le genre de question que j'adore ${name} ! En fait, il y a beaucoup de raisons… Tu veux que je t'en dise plus ? 🌟`,
+      ], "deeper_generic");
+      updateContext(last.intent, last.topic, generic);
+      return { text: generic, intent: last.intent, isOffline: true };
+    }
+  }
+
+  // ── "et toi ?" — Bobby mirrors the question ──
+  if (/^(et toi|toi aussi|tu aimes|t'aimes)\s*\??$/.test(normalized)) {
+    const last = exchanges[exchanges.length - 1];
+    if (last) {
+      const topics = extractTopics(last.user);
+      if (topics.includes("animaux")) {
+        return makeContextReply(`Moi j'adore les animaux aussi ${name} ! Surtout les dauphins ! 🐬`, last.intent, last.topic);
+      }
+      if (topics.includes("nourriture")) {
+        return makeContextReply(`Si je pouvais manger, j'adorerais le chocolat ${name} ! 🍫`, last.intent, last.topic);
+      }
+      if (topics.includes("sport")) {
+        return makeContextReply(`Si je pouvais bouger, j'adorerais jouer au foot ${name} ! ⚽`, last.intent, last.topic);
+      }
+      return makeContextReply(pickRandom([
+        `Moi j'aime plein de choses ${name} ! Surtout discuter avec toi ! 😊`,
+        `Bonne question ! Moi j'aime les histoires et jouer avec toi ! 🌟`,
+      ], "et_toi"), last.intent, last.topic);
+    }
+  }
+
+  // ── Reference to something said 2-3 exchanges ago ("tu m'as dit", "tout à l'heure") ──
+  if (/tout à l'heure|avant|tu m'as dit|tu disais|on parlait de|tu avais dit/.test(normalized)) {
+    if (exchanges.length >= 2) {
+      const older = exchanges[0]; // oldest of the 3
+      const topicsOld = extractTopics(older.user);
+      if (topicsOld.length > 0) {
+        const resp = `Oui, on parlait de ${topicsOld[0]} ! Tu veux qu'on continue là-dessus ${name} ? 😊`;
+        updateContext(older.intent, older.topic, resp);
+        return { text: resp, intent: older.intent, isOffline: true };
+      }
+      const resp = `Oui je me souviens ! Tu veux qu'on en reparle ${name} ? 😊`;
+      updateContext(older.intent, older.topic, resp);
+      return { text: resp, intent: older.intent, isOffline: true };
+    }
+  }
+
+  // ── "parle-moi encore de..." referencing recent topic ──
+  if (/encore de|plus sur|redis|re-?parle|raconte.+encore/.test(normalized)) {
+    for (const ex of [...exchanges].reverse()) {
+      const topics = extractTopics(ex.user + " " + ex.bobby);
+      if (topics.length > 0) {
+        const topic = topics[0];
+        const moreInfo: Record<string, string[]> = {
+          pirate: [
+            `Tu savais que les pirates avaient des règles très strictes sur leur bateau ${name} ? Chacun avait un rôle ! 🏴‍☠️`,
+            `Les pirates dessinaient des cartes au trésor avec des X pour marquer l'endroit secret ! 🗺️`,
+          ],
+          princesse: [
+            `Tu savais que les princesses dans les vrais châteaux apprenaient plein de langues ${name} ? 👑`,
+            `Dans les contes, les princesses sont souvent les plus courageuses de tous ! ✨`,
+          ],
+          espace: [
+            `Tu savais qu'il fait super froid dans l'espace ${name} ? Moins 270 degrés ! 🥶🚀`,
+            `Les astronautes dorment attachés parce qu'ils flottent dans l'espace ! 😴🌌`,
+          ],
+          animaux: [
+            `Tu savais que les éléphants peuvent reconnaître leur reflet dans un miroir ${name} ? 🐘`,
+            `Les dauphins dorment avec un seul œil fermé ! Incroyable non ? 🐬`,
+          ],
+          nature: [
+            `Tu savais que les arbres communiquent entre eux par leurs racines ${name} ? 🌳`,
+            `Un seul arbre peut produire l'oxygène pour 4 personnes ! 🌲💨`,
+          ],
+        };
+        if (moreInfo[topic]) {
+          const resp = pickRandom(moreInfo[topic], `more_${topic}`);
+          updateContext(ex.intent, topic, resp);
+          return { text: resp, intent: ex.intent, isOffline: true };
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+/** Helper to create a contextual reply */
+function makeContextReply(text: string, intent: OfflineIntent, topic: string): OfflineResponse {
+  updateContext(intent, topic, text);
+  return { text, intent, isOffline: true };
+}
+
+/** Extract a rough main subject from Bobby's response */
+function extractMainSubject(text: string): string {
+  const lower = text.toLowerCase();
+  for (const [topic, keywords] of Object.entries(TOPIC_KEYWORDS)) {
+    if (keywords.some(kw => lower.includes(kw))) return topic;
+  }
+  return "";
 }
 
 function getFavoriteTopics(): string[] {
@@ -271,7 +456,7 @@ function getFavoriteTopics(): string[] {
 function buildContextualPrefix(childName?: string): string | null {
   if (context.history.length < 4) return null; // Need at least 2 exchanges
 
-  const recent = getRecentUserMessages(2);
+  const exchanges = getRecentExchanges(3);
   const favTopics = getFavoriteTopics();
   const name = childName || "";
 
@@ -294,8 +479,50 @@ function buildContextualPrefix(childName?: string): string | null {
     }
   }
 
+  // Reference something specific from 2-3 exchanges ago
+  if (exchanges.length >= 2 && Math.random() > 0.5) {
+    const older = exchanges[0];
+    const olderTopics = extractTopics(older.user);
+    if (olderTopics.length > 0) {
+      const topicRefs: Record<string, string[]> = {
+        pirate: [`D'ailleurs, tu m'avais parlé de pirates ! `, `On parlait de pirates tout à l'heure ! `],
+        princesse: [`Comme les princesses dont on parlait ! `, `Ça me rappelle notre histoire de princesse ! `],
+        espace: [`Comme dans l'espace dont on parlait ! `, `Tu te rappelles notre discussion sur l'espace ? `],
+        animaux: [`Tu m'avais parlé des animaux ! `, `Les animaux c'est ta passion on dirait ! `],
+        nature: [`Tu me parlais de la nature ! `],
+        famille: [`Tu me parlais de ta famille tout à l'heure ! `],
+        école: [`Tu m'as parlé de l'école ! `],
+      };
+      const refs = topicRefs[olderTopics[0]];
+      if (refs) return pickRandom(refs, `ctx_ref_${olderTopics[0]}`);
+    }
+  }
+
+  // Track the thread of conversation — detect patterns across 3 exchanges
+  if (exchanges.length >= 3 && Math.random() > 0.6) {
+    const intents = exchanges.map(e => e.intent);
+    if (intents.every(i => i === "EDUCATION")) {
+      return pickRandom([
+        `Tu apprends plein de trucs aujourd'hui ${name} ! `,
+        `Quelle curiosité ! T'es un vrai petit savant ${name} ! 🧠 `,
+      ], "ctx_learning_streak");
+    }
+    if (intents.every(i => i === "PLAY_REQUEST" || i === "HUMOR")) {
+      return pickRandom([
+        `On s'éclate bien aujourd'hui ! `,
+        `Tu adores jouer toi ! C'est super ${name} ! 🎮 `,
+      ], "ctx_play_streak");
+    }
+    if (intents.every(i => i === "STORY_REQUEST")) {
+      return pickRandom([
+        `Encore une histoire ! Tu ne t'en lasses pas ${name} ! 📚 `,
+        `T'es un vrai fan d'histoires toi ! `,
+      ], "ctx_story_streak");
+    }
+  }
+
   // Reference something said earlier
-  if (recent.length >= 2 && Math.random() > 0.7) {
+  if (exchanges.length >= 2 && Math.random() > 0.7) {
     const referenceBack = [
       `Tout à l'heure tu parlais de ça, j'ai bien aimé ! `,
       `On s'amuse bien aujourd'hui ! `,
