@@ -1296,10 +1296,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <MessageSquare className="w-5 h-5 text-primary" />
             </div>
-            <div>
+            <div className="flex-1">
               <h3 className="text-base font-bold text-foreground">{formatDate(selectedSession!.started_at)}</h3>
               <p className="text-[11px] text-muted-foreground">{selectedSession!.child_name}, {selectedSession!.child_age} ans</p>
             </div>
+            {/* v4.2: Favorite button */}
+            <button onClick={() => toggleFavorite(selectedSession!)}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                selectedSession!.is_favorite ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground hover:text-primary"
+              }`}>
+              <Star className={`w-4 h-4 ${selectedSession!.is_favorite ? "fill-primary" : ""}`} />
+            </button>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="text-center py-2 bg-muted/50 rounded-xl">
