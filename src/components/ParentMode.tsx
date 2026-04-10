@@ -756,18 +756,18 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     return (
     <div className="p-4 space-y-3">
 
-      {/* ═══ 1. KPI HERO ROW ═══ */}
-      <div className="grid grid-cols-4 gap-2">
+      {/* ═══ 1. KPI HERO CARDS ═══ */}
+      <div className="grid grid-cols-2 gap-3">
         {[
-          { value: totalSessions, label: "Sessions", emoji: "💬", accent: "from-blue-500/15 to-blue-600/5" },
-          { value: totalMessages, label: "Messages", emoji: "📝", accent: "from-green-500/15 to-green-600/5" },
-          { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", accent: "from-purple-500/15 to-purple-600/5" },
-          { value: todaySessions.length, label: "Aujourd'hui", emoji: "📅", accent: "from-orange-500/15 to-orange-600/5" },
+          { value: totalSessions, label: "Sessions", emoji: "💬", gradient: "from-blue-500/15 to-blue-600/5" },
+          { value: totalMessages, label: "Messages", emoji: "📝", gradient: "from-emerald-500/15 to-emerald-600/5" },
+          { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", gradient: "from-purple-500/15 to-purple-600/5" },
+          { value: todaySessions.length, label: "Aujourd'hui", emoji: "📅", gradient: "from-orange-500/15 to-orange-600/5" },
         ].map((kpi) => (
-          <div key={kpi.label} className={`bg-gradient-to-br ${kpi.accent} rounded-2xl p-3 text-center border border-border/30`}>
-            <span className="text-lg block">{kpi.emoji}</span>
-            <p className="text-base font-extrabold text-foreground mt-1">{kpi.value}</p>
-            <p className="text-[9px] text-muted-foreground font-medium mt-0.5">{kpi.label}</p>
+          <div key={kpi.label} className={`bg-gradient-to-br ${kpi.gradient} rounded-2xl p-4 border border-border/30 aspect-square flex flex-col items-center justify-center`}>
+            <span className="text-2xl block mb-2">{kpi.emoji}</span>
+            <p className="text-xl font-extrabold text-foreground">{kpi.value}</p>
+            <p className="text-[10px] text-muted-foreground font-medium mt-1">{kpi.label}</p>
           </div>
         ))}
       </div>
