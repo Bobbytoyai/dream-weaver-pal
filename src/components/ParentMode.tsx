@@ -1378,11 +1378,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     custom: { label: "Personnaliser", emoji: "🎨", desc: "Bientôt disponible" },
   };
 
-  const [previewPlaying, setPreviewPlaying] = useState(false);
+  const [previewPlaying, setPreviewPlaying] = useState<string | false>(false);
 
   const previewVoice = async (voiceType: string) => {
     if (previewPlaying || voiceType === "custom") return;
-    setPreviewPlaying(true);
+    setPreviewPlaying(voiceType);
     try {
       const { previewVoiceProfile } = await import("@/lib/voicePipeline");
       await previewVoiceProfile(voiceType as any);
@@ -1417,26 +1417,34 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 const info = VOICE_MAP[type];
                 const isCustom = type === "custom";
                 const selected = settings.voiceType === type;
+                const isThisPlaying = previewPlaying === type;
                 return (
-                  <button key={type}
-                    onClick={() => !isCustom && updateSetting("voiceType", type)}
-                    disabled={isCustom}
-                    className={`relative p-3 rounded-xl text-left transition-all duration-200 ${
-                      isCustom ? "opacity-40 cursor-not-allowed bg-muted/30" :
-                      selected ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
-                    }`}>
-                    <div className="text-xl mb-1">{info.emoji}</div>
-                    <h4 className="text-[12px] font-semibold text-foreground">{info.label}</h4>
-                    <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{info.desc}</p>
-                    {!isCustom && selected && (
-                      <button onClick={(e) => { e.stopPropagation(); previewVoice(type); }}
-                        disabled={previewPlaying}
-                        className="absolute top-3 right-3 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                        {previewPlaying ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
+                  <div key={type} className={`relative rounded-xl transition-all duration-200 ${
+                    isCustom ? "opacity-40 cursor-not-allowed bg-muted/30" :
+                    selected ? "bg-primary/10 ring-2 ring-primary/40" : "bg-muted/50 hover:bg-muted"
+                  }`}>
+                    <button
+                      onClick={() => !isCustom && updateSetting("voiceType", type)}
+                      disabled={isCustom}
+                      className="w-full p-3 text-left">
+                      <div className="text-xl mb-1">{info.emoji}</div>
+                      <h4 className="text-[12px] font-semibold text-foreground">{info.label}</h4>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{info.desc}</p>
+                    </button>
+                    {!isCustom && (
+                      <button
+                        onClick={() => previewVoice(type)}
+                        disabled={!!previewPlaying}
+                        className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                          isThisPlaying
+                            ? "bg-primary text-primary-foreground animate-pulse"
+                            : "bg-primary/15 text-primary hover:bg-primary hover:text-primary-foreground"
+                        } disabled:opacity-40`}>
+                        {isThisPlaying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
                       </button>
                     )}
                     {isCustom && <Lock className="absolute top-3 right-3 w-4 h-4 text-muted-foreground" />}
-                  </button>
+                  </div>
                 );
               })}
             </div>
