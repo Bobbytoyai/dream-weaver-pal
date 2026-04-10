@@ -1942,6 +1942,20 @@ export function getOfflineResponse(
     return { text: resp, intent: "BLOCKED", isOffline: true };
   }
 
+  // 1b. Devine l'Animal game — if active, route ALL input to the game
+  if (isAnimalGameActive()) {
+    const gameResp = handleAnimalGameInput(text, childName);
+    updateContext("PLAY_REQUEST", text, gameResp);
+    return { text: gameResp, intent: "PLAY_REQUEST", isOffline: true, gameType: "animal_guess" as MiniGameType };
+  }
+
+  // 1c. Detect "Devine l'Animal" trigger
+  if (isAnimalGameTrigger(text)) {
+    const gameResp = startAnimalGame(childName, 7);
+    updateContext("PLAY_REQUEST", text, gameResp);
+    return { text: gameResp, intent: "PLAY_REQUEST", isOffline: true, gameType: "animal_guess" as MiniGameType };
+  }
+
   // 2. Multi-turn follow-up: handle answers to Bobby's previous questions
   const followUpAnswer = handleFollowUpAnswer(text, childName);
   if (followUpAnswer) return followUpAnswer;
