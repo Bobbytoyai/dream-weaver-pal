@@ -194,13 +194,14 @@ const StatPill = ({ emoji, value, label }: { emoji: string; value: string | numb
 
 // ─── Tab config (5 tabs) ────────────────────────────────────────
 
-type Tab = "dashboard" | "sessions" | "profil" | "reglages" | "confidentialite";
+type Tab = "dashboard" | "sessions" | "profil" | "reglages" | "nouveautes" | "confidentialite";
 
 const tabs: { id: Tab; icon: any; label: string }[] = [
   { id: "dashboard", icon: BarChart3, label: "Tableau" },
   { id: "sessions", icon: MessageSquare, label: "Sessions" },
   { id: "profil", icon: User, label: "Profil" },
   { id: "reglages", icon: Settings, label: "Réglages" },
+  { id: "nouveautes", icon: Sparkles, label: "Nouveau" },
   { id: "confidentialite", icon: Shield, label: "Privé" },
 ];
 
@@ -1647,6 +1648,140 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   );
 
   // ═══════════════════════════════════════════════════════════════
+  // RENDER: NOUVEAUTÉS (Mises à jour + Suggestions)
+  // ═══════════════════════════════════════════════════════════════
+
+  const [suggestionText, setSuggestionText] = useState("");
+  const [suggestionSent, setSuggestionSent] = useState(false);
+
+  const handleSuggestionSubmit = () => {
+    if (!suggestionText.trim()) return;
+    // Store suggestion in console for now (could be saved to DB later)
+    console.log("[Suggestion utilisateur]", suggestionText.trim());
+    setSuggestionText("");
+    setSuggestionSent(true);
+    setTimeout(() => setSuggestionSent(false), 3000);
+  };
+
+  const renderNouveautes = () => (
+    <div className="p-4 space-y-3">
+      {/* Version banner */}
+      <div className="bg-gradient-to-br from-primary/15 to-primary/5 rounded-2xl p-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Sparkles className="w-4 h-4 text-primary" />
+          <h3 className="text-[13px] font-bold text-foreground">Bobby v2.0</h3>
+          <span className="text-[9px] px-2 py-0.5 bg-primary/20 text-primary rounded-full font-semibold">Dernière mise à jour</span>
+        </div>
+        <p className="text-[11px] text-muted-foreground">10 avril 2026</p>
+      </div>
+
+      {/* 🎤 Voix */}
+      <Card title="🎤 Voix émotionnelles V2" icon={Mic}>
+        <div className="space-y-2">
+          {[
+            { emoji: "🧒", name: "Enfant (Lily)", desc: "Cartoon authentique, expressif, joyeux — stability 40%, style 70%" },
+            { emoji: "👩", name: "Maman (Matilda)", desc: "Ultra apaisante, maternelle, lente — stability 85%, speed -12%" },
+            { emoji: "👨", name: "Papa (George)", desc: "Calme, protecteur, posé — stability 90%, style minimal" },
+          ].map((v) => (
+            <div key={v.name} className="flex items-start gap-3 p-2.5 rounded-xl bg-muted/40">
+              <span className="text-xl">{v.emoji}</span>
+              <div>
+                <h4 className="text-[12px] font-semibold text-foreground">{v.name}</h4>
+                <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{v.desc}</p>
+              </div>
+            </div>
+          ))}
+          <div className="flex items-start gap-3 p-2.5 rounded-xl bg-primary/5 border border-primary/10">
+            <span className="text-xl">🎭</span>
+            <div>
+              <h4 className="text-[12px] font-semibold text-primary">8 émotions dynamiques</h4>
+              <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                Joyeux, triste, effrayé, excité, calme, curieux, en colère, ennuyé — la voix s'adapte automatiquement
+              </p>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* 📖 Histoires */}
+      <Card title="📖 Histoires & Personnages" icon={BookOpen}>
+        <div className="space-y-2">
+          {[
+            { emoji: "👑", label: "Princesse", tag: "Conte" },
+            { emoji: "🏴‍☠️", label: "Pirate", tag: "Aventure" },
+            { emoji: "🚀", label: "Espace", tag: "Sci-Fi" },
+            { emoji: "🐉", label: "Animaux", tag: "Nature" },
+            { emoji: "✨", label: "Magie", tag: "Fantaisie" },
+            { emoji: "🧠", label: "Éducatif", tag: "Apprentissage" },
+          ].map((t) => (
+            <div key={t.label} className="flex items-center gap-3 py-1.5">
+              <span className="text-lg">{t.emoji}</span>
+              <span className="text-[12px] font-medium text-foreground flex-1">{t.label}</span>
+              <span className="text-[9px] px-2 py-0.5 bg-muted rounded-full text-muted-foreground font-medium">{t.tag}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 p-2.5 rounded-xl bg-muted/40">
+          <p className="text-[10px] text-muted-foreground">
+            🧒 <strong className="text-foreground">Bobby</strong> — personnage principal, ami imaginaire vivant dans un jouet
+          </p>
+          <p className="text-[10px] text-muted-foreground mt-1">
+            🎵 <strong className="text-foreground">Zik</strong> — ami imaginaire de Bobby, un peu coquin
+          </p>
+        </div>
+      </Card>
+
+      {/* ⚡ Nouvelles fonctionnalités */}
+      <Card title="⚡ Nouvelles fonctionnalités" icon={Zap}>
+        <div className="space-y-2.5">
+          {[
+            { emoji: "🌙", title: "Mode calme automatique", desc: "Voix plus douce quand le mode nuit ou personnalité calme est activé" },
+            { emoji: "⚡", title: "Vitesse de voix réelle", desc: "Le réglage Lent/Normal/Rapide modifie la vitesse ElevenLabs en temps réel" },
+            { emoji: "🧠", title: "Mémoire enfant", desc: "Bobby se souvient des thèmes favoris et préférences entre les sessions" },
+            { emoji: "🎙️", title: "Deepgram STT", desc: "Reconnaissance vocale en temps réel pour une écoute fluide" },
+            { emoji: "📊", title: "Analyses émotionnelles", desc: "Scores de sociabilité, curiosité et stabilité émotionnelle par session" },
+            { emoji: "🔒", title: "Sécurité renforcée", desc: "Filtrage contenu, code PIN, mot safe, sujets bloqués" },
+          ].map((f) => (
+            <div key={f.title} className="flex items-start gap-3">
+              <span className="text-lg mt-0.5">{f.emoji}</span>
+              <div>
+                <h4 className="text-[12px] font-semibold text-foreground">{f.title}</h4>
+                <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{f.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* 💡 Suggérer une idée */}
+      <Card title="💡 Suggérer une idée" icon={Heart}>
+        <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
+          Vous avez une idée pour améliorer Bobby ? Partagez-la avec nous !
+        </p>
+        <textarea
+          value={suggestionText}
+          onChange={(e) => setSuggestionText(e.target.value)}
+          placeholder="Ex: Ajouter une voix en anglais, un mode comptine..."
+          rows={3}
+          className="w-full px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all resize-none"
+        />
+        <button
+          onClick={handleSuggestionSubmit}
+          disabled={!suggestionText.trim() || suggestionSent}
+          className={`mt-2 w-full py-2.5 rounded-xl text-[12px] font-semibold transition-all ${
+            suggestionSent
+              ? "bg-green-500/20 text-green-600"
+              : suggestionText.trim()
+                ? "bg-primary text-primary-foreground hover:opacity-90"
+                : "bg-muted text-muted-foreground cursor-not-allowed"
+          }`}>
+          {suggestionSent ? "✅ Merci pour votre idée !" : "Envoyer ma suggestion"}
+        </button>
+      </Card>
+    </div>
+  );
+
+  // ═══════════════════════════════════════════════════════════════
   // RENDER: CONFIDENTIALITÉ (merged: Sécurité + Données)
   // ═══════════════════════════════════════════════════════════════
 
@@ -1921,6 +2056,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       case "sessions": return renderSessionsList();
       case "profil": return renderProfil();
       case "reglages": return renderReglages();
+      case "nouveautes": return renderNouveautes();
       case "confidentialite": return renderConfidentialite();
       default: return renderDashboard();
     }
