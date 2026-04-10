@@ -1,9 +1,21 @@
+/**
+ * Voice Pipeline v2 — Optimized for ultra-low latency
+ * 
+ * TTS: ElevenLabs streaming (premium) with Piper fallback (offline)
+ * LLM: bobby-brain unified agent
+ * 
+ * Pipeline: STT → bobby-brain → sentence split → ElevenLabs TTS → audio queue
+ */
+
 import { useCallback, useRef } from "react";
 import { piperSpeak, piperPreview } from "./piperTTS";
-const VOICE_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-chat`;
+
+const BOBBY_BRAIN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bobby-brain`;
+const ELEVENLABS_TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`;
 
 type AiMsg = { role: "user" | "assistant"; content: string };
 
+// ─── Safety filters ─────────────────────────────────────────
 const UNSAFE_PATTERNS = [
   /\b(mourir|mort|tuer|sang|arme|fusil|couteau|drogue|alcool|sexe)\b/i,
 ];
@@ -28,87 +40,34 @@ function filterSentence(text: string): string | null {
   return cleaned;
 }
 
-// ─── Voice profiles ──────────────────────────────────────────────
-// Each profile uses a DIFFERENT underlying system voice + pitch/rate tweaks
-// to create 3 distinct French voices using the Web Speech API.
-
+// ─── Voice profiles ─────────────────────────────────────────
 export type VoiceProfile = "child" | "female" | "male";
 
-interface VoiceConfig {
-  pitch: number;
-  rate: number;
-  /** Keywords to PREFER when picking a system voice */
-  preferKeywords: RegExp;
-  /** Keywords to AVOID */
-  avoidKeywords: RegExp;
-  /** Fallback index in the French voice list (0 = first, -1 = last) */
-  fallbackIndex: "first" | "last" | "middle";
+// ─── ElevenLabs TTS (primary) ───────────────────────────────
+async function fetchElevenLabsTTS(text: string, voiceProfile: VoiceProfile, signal?: AbortSignal): Promise<string> {
+  const spokenText = sanitizeSpokenText(text);
+  if (!spokenText) return "__silent__";
+
+  const response = await fetch(ELEVENLABS_TTS_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    },
+    body: JSON.stringify({ text: spokenText, voiceProfile }),
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error(`ElevenLabs TTS error: ${response.status}`);
+  }
+
+  const audioBlob = await response.blob();
+  return URL.createObjectURL(audioBlob);
 }
 
-const VOICE_PROFILES: Record<VoiceProfile, VoiceConfig> = {
-  child: {
-    pitch: 1.3,
-    rate: 1.02,
-    preferKeywords: /amelie|sophie|audrey|lea|marie|virginie|female|femme/i,
-    avoidKeywords: /thomas|daniel|nicolas|male|homme/i,
-    fallbackIndex: "first",
-  },
-  female: {
-    pitch: 1.0,
-    rate: 0.92,
-    preferKeywords: /amelie|sophie|audrey|lea|marie|virginie|female|femme/i,
-    avoidKeywords: /thomas|daniel|nicolas|male|homme/i,
-    fallbackIndex: "first",
-  },
-  male: {
-    pitch: 0.75,
-    rate: 0.88,
-    preferKeywords: /thomas|daniel|nicolas|male|homme/i,
-    avoidKeywords: /amelie|sophie|audrey|lea|marie|virginie|female|femme/i,
-    fallbackIndex: "last",
-  },
-};
-
-/** Cache resolved voices so we don't search every time */
-let cachedVoices: SpeechSynthesisVoice[] = [];
-
-function getFrenchVoices(): SpeechSynthesisVoice[] {
-  if (cachedVoices.length > 0) return cachedVoices;
-  const all = speechSynthesis.getVoices();
-  cachedVoices = all.filter(v => v.lang.startsWith("fr"));
-  return cachedVoices;
-}
-
-function pickVoiceForProfile(profile: VoiceProfile): SpeechSynthesisVoice | null {
-  const fr = getFrenchVoices();
-  if (fr.length === 0) return null;
-
-  const config = VOICE_PROFILES[profile];
-
-  // 1. Try to find a voice matching preferred keywords
-  const preferred = fr.find(v => config.preferKeywords.test(v.name) && !config.avoidKeywords.test(v.name));
-  if (preferred) return preferred;
-
-  // 2. Try to find any voice NOT matching avoid keywords
-  const acceptable = fr.find(v => !config.avoidKeywords.test(v.name));
-  if (acceptable) return acceptable;
-
-  // 3. Fallback by index
-  if (config.fallbackIndex === "last") return fr[fr.length - 1];
-  if (config.fallbackIndex === "middle") return fr[Math.floor(fr.length / 2)];
-  return fr[0];
-}
-
-// Ensure voices are loaded (some browsers load them async)
-if (typeof window !== "undefined" && "speechSynthesis" in window) {
-  speechSynthesis.getVoices(); // trigger load
-  speechSynthesis.onvoiceschanged = () => {
-    cachedVoices = [];
-    getFrenchVoices();
-  };
-}
-
-function speakWithBrowserTTS(text: string, profile: VoiceProfile = "female"): Promise<string> {
+// ─── Browser TTS (last resort fallback) ─────────────────────
+function speakWithBrowserTTS(text: string): Promise<string> {
   const spokenText = sanitizeSpokenText(text);
   if (!spokenText) return Promise.resolve("__browser_tts__");
 
@@ -117,30 +76,79 @@ function speakWithBrowserTTS(text: string, profile: VoiceProfile = "female"): Pr
       reject(new Error("Browser TTS not supported"));
       return;
     }
-
-    const config = VOICE_PROFILES[profile];
     const utterance = new SpeechSynthesisUtterance(spokenText);
     utterance.lang = "fr-FR";
-    utterance.rate = config.rate;
-    utterance.pitch = config.pitch;
-
-    const voice = pickVoiceForProfile(profile);
-    if (voice) utterance.voice = voice;
-
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
     utterance.onend = () => resolve("__browser_tts__");
     utterance.onerror = () => reject(new Error("Browser TTS error"));
     speechSynthesis.speak(utterance);
   });
 }
 
-// ─── Public API ──────────────────────────────────────────────────
+// ─── Public TTS API ─────────────────────────────────────────
+/**
+ * Fetch TTS audio. Tries: ElevenLabs → Piper → Browser TTS
+ */
+export async function fetchTTSAudio(text: string, signal?: AbortSignal, voiceId?: string): Promise<string> {
+  const spokenText = sanitizeSpokenText(text);
+  if (!spokenText) return "__silent__";
+  if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
+  const profile = (voiceId as VoiceProfile) || "female";
+
+  // Try ElevenLabs first (premium, natural)
+  try {
+    return await fetchElevenLabsTTS(spokenText, profile, signal);
+  } catch (e: any) {
+    if (e.name === "AbortError") throw e;
+    console.warn("[TTS] ElevenLabs failed, trying Piper:", e.message);
+  }
+
+  // Try Piper (local, free)
+  try {
+    return await piperSpeak(spokenText, profile, signal);
+  } catch (e: any) {
+    if (e.name === "AbortError") throw e;
+    console.warn("[TTS] Piper failed, falling back to browser TTS:", e.message);
+  }
+
+  // Last resort: browser TTS
+  return speakWithBrowserTTS(spokenText);
+}
+
+/**
+ * Preview a voice profile (for settings screen)
+ */
+export async function previewVoiceProfile(profile: VoiceProfile): Promise<void> {
+  const previewText = "Salut ! Je suis Bobby, ton compagnon préféré ! On va bien s'amuser ensemble !";
+  try {
+    const url = await fetchElevenLabsTTS(previewText, profile);
+    if (url === "__silent__") return;
+    return new Promise((resolve, reject) => {
+      const audio = new Audio(url);
+      audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
+      audio.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Playback error")); };
+      audio.play().catch(reject);
+    });
+  } catch {
+    // Fallback to Piper preview
+    try {
+      await piperPreview(profile);
+    } catch {
+      await speakWithBrowserTTS(previewText);
+    }
+  }
+}
+
+// ─── Stream voice chat (bobby-brain) ────────────────────────
 export async function streamVoiceChat({
   messages,
   childName,
   childAge,
   mode,
   parentSettings,
+  memoryContext,
   onSentence,
   onDone,
   onError,
@@ -151,19 +159,20 @@ export async function streamVoiceChat({
   childAge: number;
   mode: string;
   parentSettings?: any;
+  memoryContext?: string;
   onSentence: (sentence: string) => void;
   onDone: (fullText: string) => void;
   onError: (error: string) => void;
   signal?: AbortSignal;
 }) {
   try {
-    const resp = await fetch(VOICE_CHAT_URL, {
+    const resp = await fetch(BOBBY_BRAIN_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
-      body: JSON.stringify({ messages, childName, childAge, mode, parentSettings }),
+      body: JSON.stringify({ messages, childName, childAge, mode, parentSettings, memoryContext }),
       signal,
     });
 
@@ -235,42 +244,7 @@ export async function streamVoiceChat({
   }
 }
 
-/**
- * Fetch TTS audio using Piper TTS (neural, natural French voices).
- * Falls back to browser TTS if Piper fails.
- */
-export async function fetchTTSAudio(text: string, signal?: AbortSignal, voiceId?: string): Promise<string> {
-  const spokenText = sanitizeSpokenText(text);
-  if (!spokenText) return "__piper_silent__";
-
-  if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-
-  const profile = (voiceId as VoiceProfile) || "female";
-
-  try {
-    return await piperSpeak(spokenText, profile, signal);
-  } catch (e: any) {
-    if (e.name === "AbortError") throw e;
-    console.warn("Piper TTS failed, falling back to browser TTS:", e);
-    return speakWithBrowserTTS(spokenText, profile);
-  }
-}
-
-/**
- * Preview a voice profile (for settings screen)
- */
-export async function previewVoiceProfile(profile: VoiceProfile): Promise<void> {
-  try {
-    await piperPreview(profile);
-  } catch (e) {
-    console.warn("Piper preview failed, using browser TTS:", e);
-    await speakWithBrowserTTS(
-      "Salut ! Je suis Bobby, ton compagnon préféré ! On va bien s'amuser ensemble !",
-      profile,
-    );
-  }
-}
-
+// ─── Audio Queue ────────────────────────────────────────────
 export function useAudioQueue() {
   const queueRef = useRef<string[]>([]);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -286,8 +260,7 @@ export function useAudioQueue() {
 
     const url = queueRef.current.shift()!;
 
-    if (url === "__browser_tts__" || url === "__piper_silent__") {
-      // TTS already played inline or silent, just move on
+    if (url === "__browser_tts__" || url === "__silent__" || url === "__piper_silent__") {
       playNext();
       return;
     }
@@ -325,7 +298,7 @@ export function useAudioQueue() {
   const stopAll = useCallback(() => {
     if ("speechSynthesis" in window) speechSynthesis.cancel();
     queueRef.current.forEach(url => {
-      if (url !== "__browser_tts__" && url !== "__piper_silent__") URL.revokeObjectURL(url);
+      if (url !== "__browser_tts__" && url !== "__silent__" && url !== "__piper_silent__") URL.revokeObjectURL(url);
     });
     queueRef.current = [];
     if (currentAudioRef.current) {
