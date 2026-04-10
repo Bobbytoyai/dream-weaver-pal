@@ -215,25 +215,41 @@ export function useFaceAnimation(
     const gazeSpeed = 7 * speedMult;
     const pupilSpeed = 9;
 
-    // --- BLINK ENGINE (natural, with double-blink) ---
+    // --- BLINK ENGINE (natural, smooth ease-in/ease-out) ---
     blinkTimer.current += delta;
     if (blinkPhase.current === 0 && blinkTimer.current >= nextBlink.current) {
-      blinkPhase.current = 1;
+      blinkPhase.current = 1; // closing
       blinkTimer.current = 0;
       doubleBlinkChance.current = Math.random();
     }
 
     let blinkMult = 1;
+    const closeDuration = 0.08; // 80ms to close (fast snap)
+    const holdDuration = 0.04;  // 40ms held shut
+    const openDuration = 0.14;  // 140ms to open (slower, natural)
+
     if (blinkPhase.current === 1) {
-      blinkMult = Math.max(0, 1 - blinkTimer.current * 12);
-      if (blinkMult <= 0.03) {
-        blinkPhase.current = 2;
+      // Closing — ease-in (accelerate)
+      const t = Math.min(1, blinkTimer.current / closeDuration);
+      blinkMult = 1 - t * t; // quadratic ease-in
+      if (t >= 1) {
+        blinkPhase.current = 3; // hold
+        blinkTimer.current = 0;
+      }
+    } else if (blinkPhase.current === 3) {
+      // Hold closed
+      blinkMult = 0;
+      if (blinkTimer.current >= holdDuration) {
+        blinkPhase.current = 2; // opening
         blinkTimer.current = 0;
       }
     } else if (blinkPhase.current === 2) {
-      blinkMult = Math.min(1, blinkTimer.current * 6);
-      if (blinkMult >= 0.95) {
-        if (doubleBlinkChance.current > 0.75 && doubleBlinkChance.current < 0.95) {
+      // Opening — ease-out (decelerate)
+      const t = Math.min(1, blinkTimer.current / openDuration);
+      blinkMult = t * (2 - t); // quadratic ease-out
+      if (t >= 1) {
+        if (doubleBlinkChance.current > 0.7 && doubleBlinkChance.current < 0.9) {
+          // Double blink
           blinkPhase.current = 1;
           blinkTimer.current = 0;
           doubleBlinkChance.current = 1;
@@ -242,8 +258,8 @@ export function useFaceAnimation(
           blinkTimer.current = 0;
           const exciteMod = faceState === "excited" || faceState === "attentive" || faceState === "curious" ? 0.6 : 1;
           const calmMod = isCalm ? 1.4 : 1;
-          const sleepyMod = faceState === "sleepy" ? 0.5 : 1; // blink more when sleepy
-          nextBlink.current = (2 + Math.random() * 2.5) * exciteMod * calmMod * sleepyMod;
+          const sleepyMod = faceState === "sleepy" ? 0.5 : 1;
+          nextBlink.current = (2.5 + Math.random() * 3) * exciteMod * calmMod * sleepyMod;
         }
       }
     }
