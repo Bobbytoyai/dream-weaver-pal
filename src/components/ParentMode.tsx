@@ -116,8 +116,8 @@ const formatDate = (date: string): string => {
 
 const Toggle = ({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) => (
   <button onClick={() => onChange(!value)}
-    className={`w-12 h-7 rounded-full transition-all ${value ? "bg-primary" : "bg-muted"}`}>
-    <div className={`w-5 h-5 rounded-full bg-card shadow transition-transform ${value ? "translate-x-6" : "translate-x-1"}`} />
+    className={`relative w-14 h-8 rounded-full transition-all duration-300 ${value ? "bg-primary shadow-[0_0_12px_hsl(var(--primary)/0.4)]" : "bg-muted"}`}>
+    <div className={`w-6 h-6 rounded-full bg-card shadow-md transition-all duration-300 ${value ? "translate-x-7" : "translate-x-1"}`} />
   </button>
 );
 
@@ -126,12 +126,14 @@ const Toggle = ({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
 const SettingRow = ({ icon: Icon, title, desc, children }: {
   icon: any; title: string; desc?: string; children: React.ReactNode;
 }) => (
-  <div className="flex items-center justify-between py-3">
+  <div className="flex items-center justify-between py-3 px-1">
     <div className="flex items-center gap-3 flex-1 min-w-0">
-      <Icon className="w-5 h-5 text-primary shrink-0" />
+      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+        <Icon className="w-4.5 h-4.5 text-primary" />
+      </div>
       <div className="min-w-0">
         <h4 className="text-sm font-bold text-foreground">{title}</h4>
-        {desc && <p className="text-xs text-muted-foreground truncate">{desc}</p>}
+        {desc && <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{desc}</p>}
       </div>
     </div>
     <div className="shrink-0 ml-3">{children}</div>
@@ -140,15 +142,19 @@ const SettingRow = ({ icon: Icon, title, desc, children }: {
 
 // ─── Section Card ─────────────────────────────────────────────────
 
-const Card = ({ title, icon: Icon, children }: { title?: string; icon?: any; children: React.ReactNode }) => (
-  <div className="bg-card rounded-2xl p-4 border border-border">
+const Card = ({ title, icon: Icon, children, noPad }: { title?: string; icon?: any; children: React.ReactNode; noPad?: boolean }) => (
+  <div className="bg-card rounded-2xl border border-border overflow-hidden">
     {title && (
-      <div className="flex items-center gap-2 mb-3">
-        {Icon && <Icon className="w-5 h-5 text-primary" />}
-        <h3 className="text-sm font-bold text-foreground">{title}</h3>
+      <div className="flex items-center gap-2.5 px-5 pt-4 pb-2">
+        {Icon && (
+          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Icon className="w-4 h-4 text-primary" />
+          </div>
+        )}
+        <h3 className="text-sm font-extrabold text-foreground tracking-tight">{title}</h3>
       </div>
     )}
-    {children}
+    <div className={noPad ? "" : "px-5 pb-4"}>{children}</div>
   </div>
 );
 
