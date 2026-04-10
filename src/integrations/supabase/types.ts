@@ -97,6 +97,65 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_analyses: {
+        Row: {
+          alerts: Json
+          attention_span: string | null
+          audio_path: string | null
+          behavior_insights: string[]
+          created_at: string
+          emotions: Json
+          engagement_level: string
+          full_transcription: string | null
+          id: string
+          interaction_frequency: string | null
+          mood_score: string | null
+          session_id: string
+          summary: string | null
+          topics_detected: string[]
+        }
+        Insert: {
+          alerts?: Json
+          attention_span?: string | null
+          audio_path?: string | null
+          behavior_insights?: string[]
+          created_at?: string
+          emotions?: Json
+          engagement_level?: string
+          full_transcription?: string | null
+          id?: string
+          interaction_frequency?: string | null
+          mood_score?: string | null
+          session_id: string
+          summary?: string | null
+          topics_detected?: string[]
+        }
+        Update: {
+          alerts?: Json
+          attention_span?: string | null
+          audio_path?: string | null
+          behavior_insights?: string[]
+          created_at?: string
+          emotions?: Json
+          engagement_level?: string
+          full_transcription?: string | null
+          id?: string
+          interaction_frequency?: string | null
+          mood_score?: string | null
+          session_id?: string
+          summary?: string | null
+          topics_detected?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_analyses_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "child_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_messages: {
         Row: {
           content: string

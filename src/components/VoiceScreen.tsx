@@ -7,6 +7,7 @@ import { ParentSettings } from "@/components/ParentMode";
 import { HologramFace } from "@/components/hologram/HologramFace";
 import { setSfxVolume, initSfxEventBus } from "@/lib/sfx";
 import { useChildMemory } from "@/hooks/useChildMemory";
+import { useConversationRecorder } from "@/hooks/useConversationRecorder";
 import { eventBus } from "@/lib/eventBus";
 
 type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
@@ -149,6 +150,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const audioQueue = useAudioQueue();
   const session = useSessionTracker(childName, childAge);
   const { memory, loading, saveSettings } = useChildMemory(childName);
+  const recorder = useConversationRecorder();
 
   // Wake word only when NOT in active conversation
   const wakeWordEnabled = (state === "idle" || state === "session_end") && !conversationActiveRef.current;
@@ -185,15 +187,24 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     if (reengageTimerRef.current) clearTimeout(reengageTimerRef.current);
   }, []);
 
-  const endConversation = useCallback(() => {
+  const endConversation = useCallback(async () => {
     conversationActiveRef.current = false;
     setContinuousListenEnabled(false);
     setState("session_end");
     speakFallback("session_end");
     if (sessionStartedRef.current) {
-      session.endSession();
+      const sessionId = await session.endSession();
       eventBus.emit({ type: "SESSION_END" });
       sessionStartedRef.current = false;
+      // Stop recording and trigger analysis in background
+      if (sessionId) {
+        recorder.stopRecording(sessionId).then((audioPath) => {
+          if (audioPath) console.log("[Recorder] Audio saved:", audioPath);
+        });
+        recorder.triggerAnalysis(sessionId).then((analysis) => {
+          if (analysis) console.log("[Recorder] Analysis complete");
+        });
+      }
     }
   }, []);
 
@@ -380,6 +391,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     if (!sessionStartedRef.current) {
       session.startSession();
       sessionStartedRef.current = true;
+      recorder.startRecording(); // Start audio recording
       eventBus.emit({ type: "SESSION_START" });
     }
 
@@ -463,6 +475,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
               if (!sessionStartedRef.current) {
                 session.startSession();
                 sessionStartedRef.current = true;
+                recorder.startRecording();
                 eventBus.emit({ type: "SESSION_START" });
               }
               conversationActiveRef.current = true;
