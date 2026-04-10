@@ -128,8 +128,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     const t = performance.now() * 0.001;
     const wanderX = Math.sin(t * 0.4) * 0.008 + Math.sin(t * 1.1) * 0.004;
     const wanderY = Math.cos(t * 0.3) * 0.006 + Math.sin(t * 0.8) * 0.003;
-    const pupilGazeX = state.pupilX * 0.55 + wanderX;
-    const pupilGazeY = state.pupilY * 0.42 + wanderY;
+    const pupilGazeX = state.pupilX * 0.85 + wanderX;
+    const pupilGazeY = state.pupilY * 0.7 + wanderY;
     [leftPupilRef, rightPupilRef].forEach(ref => {
       if (ref.current) {
         ref.current.position.x = pupilGazeX;
@@ -137,8 +137,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       }
     });
     // Iris — follows less than pupil for depth parallax
-    const irisGazeX = state.pupilX * 0.25 + wanderX * 0.5;
-    const irisGazeY = state.pupilY * 0.18 + wanderY * 0.5;
+    const irisGazeX = state.pupilX * 0.4 + wanderX * 0.5;
+    const irisGazeY = state.pupilY * 0.3 + wanderY * 0.5;
     [leftIrisRef, rightIrisRef].forEach(ref => {
       if (ref.current) {
         ref.current.position.x = irisGazeX;
