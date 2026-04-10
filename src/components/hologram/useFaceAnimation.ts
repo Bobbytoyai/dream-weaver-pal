@@ -171,6 +171,12 @@ export function useFaceAnimation(
   const doubleBlinkChance = useRef(0);
   const sparklePhase = useRef(Math.random() * Math.PI * 2);
   const eyeDriftPhase = useRef(Math.random() * Math.PI * 2);
+  // Mouth idle animation refs
+  const mouthIdlePhase = useRef(Math.random() * Math.PI * 2);
+  const mouthQuirkTimer = useRef(0);
+  const nextMouthQuirk = useRef(3 + Math.random() * 4);
+  const mouthQuirkPhase = useRef(0); // 0=none, 1=quirking, 2=returning
+  const mouthQuirkTarget = useRef({ curve: 0, width: 0, open: 0 });
 
   const update = useCallback((delta: number) => {
     const c = current.current;
@@ -291,6 +297,62 @@ export function useFaceAnimation(
       sleepyEyeWobble = Math.sin(breathPhase.current * 0.5) * 0.08;
     }
 
+    // --- IDLE MOUTH ANIMATION (natural, like breathing through mouth) ---
+    mouthIdlePhase.current += delta * 0.6;
+    // Gentle breathing-linked mouth movement
+    const mouthBreath = Math.sin(mouthIdlePhase.current) * 0.015 + Math.sin(mouthIdlePhase.current * 2.3) * 0.008;
+    const mouthBreathCurve = Math.sin(mouthIdlePhase.current * 0.7) * 0.02;
+    const mouthBreathWidth = Math.sin(mouthIdlePhase.current * 1.1) * 0.01;
+
+    // Occasional mouth quirks (like a small smile, lip purse, or twitch)
+    let mouthQuirkCurveAdd = 0;
+    let mouthQuirkWidthAdd = 0;
+    let mouthQuirkOpenAdd = 0;
+
+    if (faceState !== "speaking") {
+      mouthQuirkTimer.current += delta;
+      if (mouthQuirkPhase.current === 0 && mouthQuirkTimer.current >= nextMouthQuirk.current) {
+        mouthQuirkPhase.current = 1;
+        mouthQuirkTimer.current = 0;
+        // Random quirk type
+        const quirkType = Math.random();
+        if (quirkType < 0.4) {
+          // Small smile
+          mouthQuirkTarget.current = { curve: 0.12 + Math.random() * 0.08, width: 0.04, open: 0 };
+        } else if (quirkType < 0.65) {
+          // Lip purse / thinking
+          mouthQuirkTarget.current = { curve: -0.03, width: -0.06, open: 0.02 };
+        } else if (quirkType < 0.85) {
+          // Slight open (like about to speak)
+          mouthQuirkTarget.current = { curve: 0.02, width: 0, open: 0.04 + Math.random() * 0.03 };
+        } else {
+          // Asymmetric smirk
+          mouthQuirkTarget.current = { curve: 0.06, width: 0.03, open: 0.01 };
+        }
+      }
+
+      if (mouthQuirkPhase.current === 1) {
+        const progress = Math.min(1, mouthQuirkTimer.current * 3);
+        mouthQuirkCurveAdd = mouthQuirkTarget.current.curve * progress;
+        mouthQuirkWidthAdd = mouthQuirkTarget.current.width * progress;
+        mouthQuirkOpenAdd = mouthQuirkTarget.current.open * progress;
+        if (mouthQuirkTimer.current > 0.4 + Math.random() * 0.3) {
+          mouthQuirkPhase.current = 2;
+          mouthQuirkTimer.current = 0;
+        }
+      } else if (mouthQuirkPhase.current === 2) {
+        const fadeOut = Math.max(0, 1 - mouthQuirkTimer.current * 2);
+        mouthQuirkCurveAdd = mouthQuirkTarget.current.curve * fadeOut;
+        mouthQuirkWidthAdd = mouthQuirkTarget.current.width * fadeOut;
+        mouthQuirkOpenAdd = mouthQuirkTarget.current.open * fadeOut;
+        if (fadeOut <= 0.01) {
+          mouthQuirkPhase.current = 0;
+          mouthQuirkTimer.current = 0;
+          nextMouthQuirk.current = 3 + Math.random() * 5;
+        }
+      }
+    }
+
     // --- LIP SYNC + EXPRESSIVE FACE (cartoon-exaggerated viseme mapping) ---
     let mouthOpenTarget: number;
     let mouthWidthTarget: number;
@@ -345,10 +407,10 @@ export function useFaceAnimation(
       speechHeadNod = Math.sin(breathPhase.current * 6) * audioAmplitude * 0.03;
       speechCheekBoost = audioAmplitude > 0.2 ? audioAmplitude * 0.15 : 0;
     } else {
-      mouthOpenTarget = targets.mouthOpenness ?? 0;
-      mouthWidthTarget = targets.mouthWidth ?? 0.5;
+      mouthOpenTarget = (targets.mouthOpenness ?? 0) + mouthBreath + mouthQuirkOpenAdd;
+      mouthWidthTarget = (targets.mouthWidth ?? 0.5) + mouthBreathWidth + mouthQuirkWidthAdd;
       mouthRoundTarget = targets.mouthRound ?? 0;
-      jawDropTarget = targets.jawDrop ?? 0;
+      jawDropTarget = (targets.jawDrop ?? 0) + mouthBreath * 0.3;
     }
 
     // --- LERP ALL VALUES ---
@@ -362,7 +424,7 @@ export function useFaceAnimation(
     c.mouthWidth = lerp(c.mouthWidth, mouthWidthTarget + microOffset.current.mouthQuirk, delta * mouthSpeed * 0.8);
     c.mouthRound = lerp(c.mouthRound, mouthRoundTarget, delta * mouthSpeed * 0.7);
     c.jawDrop = lerp(c.jawDrop, jawDropTarget, delta * mouthSpeed);
-    c.mouthCurve = lerp(c.mouthCurve, targets.mouthCurve ?? 0, delta * baseSpeed * 1.5);
+    c.mouthCurve = lerp(c.mouthCurve, (targets.mouthCurve ?? 0) + mouthBreathCurve + mouthQuirkCurveAdd, delta * baseSpeed * 1.5);
 
     c.pupilSize = lerp(c.pupilSize, (targets.pupilSize ?? 1) + breathScale, delta * baseSpeed);
 
