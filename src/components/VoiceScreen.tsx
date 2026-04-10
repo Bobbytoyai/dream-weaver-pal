@@ -452,8 +452,24 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         <div
           className="relative w-80 h-80 md:w-96 md:h-96"
           onPointerDownCapture={() => {
-            if (!wakeWordEnabled) return;
+            // Single tap on Bobby = activate mic and start conversation
+            if (stateRef.current === "speaking" || stateRef.current === "processing") return;
+            
+            // Arm the wake word listener (browser gesture requirement)
             startListening({ fromUserGesture: true });
+            
+            // If idle/session_end, directly start the conversation
+            if (stateRef.current === "idle" || stateRef.current === "session_end") {
+              if (!sessionStartedRef.current) {
+                session.startSession();
+                sessionStartedRef.current = true;
+                eventBus.emit({ type: "SESSION_START" });
+              }
+              conversationActiveRef.current = true;
+              eventBus.emit({ type: "WAKE_TRIGGERED" });
+              eventBus.emit({ type: "WAKE_DETECTED", confidence: 1.0 });
+              speakFallback("wake_greeting");
+            }
           }}
         >
           <HologramFace
