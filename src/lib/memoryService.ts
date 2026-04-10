@@ -76,24 +76,23 @@ export async function loadMemory(childName: string): Promise<ChildMemory> {
 /** Update a memory field and persist */
 export async function updateMemory(
   childName: string,
-  updates: Partial<Pick<ChildMemory, "preferences" | "favoriteThemes" | "lastStoryId" | "totalStoriesHeard">>
+  updates: Partial<Pick<ChildMemory, "preferences" | "favoriteThemes" | "lastStoryId" | "totalStoriesHeard" | "progressionLevel" | "interactionCount" | "relationshipScore" | "lastEmotions" | "emotionalHistory">>
 ) {
   const current = await loadMemory(childName);
   const updated = { ...current, ...updates };
   memoryCache.set(childName, updated);
 
-  const dbUpdates: {
-    updated_at: string;
-    preferences?: Json;
-    favorite_themes?: string[];
-    last_story_id?: string | null;
-    total_stories_heard?: number;
-  } = { updated_at: new Date().toISOString() };
+  const dbUpdates: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
   if (updates.preferences !== undefined) dbUpdates.preferences = updates.preferences as Json;
   if (updates.favoriteThemes !== undefined) dbUpdates.favorite_themes = updates.favoriteThemes;
   if (updates.lastStoryId !== undefined) dbUpdates.last_story_id = updates.lastStoryId;
   if (updates.totalStoriesHeard !== undefined) dbUpdates.total_stories_heard = updates.totalStoriesHeard;
+  if (updates.progressionLevel !== undefined) dbUpdates.progression_level = updates.progressionLevel;
+  if (updates.interactionCount !== undefined) dbUpdates.interaction_count = updates.interactionCount;
+  if (updates.relationshipScore !== undefined) dbUpdates.relationship_score = updates.relationshipScore;
+  if (updates.lastEmotions !== undefined) dbUpdates.last_emotions = updates.lastEmotions;
+  if (updates.emotionalHistory !== undefined) dbUpdates.emotional_history = updates.emotionalHistory as Json;
 
   await supabase
     .from("child_memories")
