@@ -1132,6 +1132,18 @@ const INTENT_RULES: IntentRule[] = [
     ],
   },
   {
+    intent: "EDUCATION",
+    patterns: [
+      /\b(combien|pourquoi|c'est quoi|qu'est-ce que?|comment (?:marche|fonctionne|fait))\b/i,
+      /\b(apprends|enseigne|explique|dis[- ]moi)\b.*\b(math|science|géograph|histoire|nature|animal|planète|corps|terre)\b/i,
+      /\b(addition|soustraction|multiplication|division|nombre|chiffre|calculer|compter)\b/i,
+      /\b(continent|océan|pays|capitale|montagne|fleuve|désert|île|volcan)\b/i,
+      /\b(planète|étoile|soleil|lune|espace|gravité|atome|électricité)\b/i,
+      /\b(cœur|cerveau|os|muscle|sang|poumon|respir)\b/i,
+      /\b(dinosaure|fossile|mammifère|photosynthèse|recyclage)\b/i,
+    ],
+  },
+  {
     intent: "ADVENTURE",
     patterns: [
       /\b(on explore|on voyage|aventure|découvr|explorer)\b/i,
