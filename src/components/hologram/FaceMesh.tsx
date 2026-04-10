@@ -212,39 +212,21 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       mouthGroupRef.current.position.y = -0.42 + state.mouthCurve * 0.08 - state.jawDrop * 0.05;
     }
 
+    // MOUTH — simple bar that stretches width when speaking
     if (upperLipRef.current) {
-      upperLipRef.current.scale.x = 1.0 * sq.scaleX;
-      upperLipRef.current.scale.y = 0.22 + state.mouthOpenness * 0.25;
-      upperLipRef.current.position.y = state.mouthOpenness * 0.12 + state.mouthCurve * 0.06;
-      upperLipRef.current.rotation.z = state.mouthCurve * 0.12;
+      // Width stretches with speech, height stays thin
+      const barWidth = 0.3 + state.mouthOpenness * 0.25 + state.mouthWidth * 0.1;
+      upperLipRef.current.scale.x = barWidth;
+      upperLipRef.current.scale.y = 1;
+      upperLipRef.current.scale.z = 1;
+      upperLipRef.current.position.y = state.mouthCurve * 0.03;
+      upperLipRef.current.rotation.z = state.mouthCurve * 0.08;
     }
-    if (lowerLipRef.current) {
-      lowerLipRef.current.scale.x = 0.95 * sq.scaleX;
-      lowerLipRef.current.scale.y = 0.2 + state.mouthOpenness * 0.22;
-      lowerLipRef.current.position.y = -state.mouthOpenness * 0.35 - state.jawDrop * 0.18;
-      lowerLipRef.current.rotation.z = -state.mouthCurve * 0.08;
-    }
-
-    const mouthOpen = state.mouthOpenness > 0.06;
-    if (mouthInteriorRef.current) {
-      mouthInteriorRef.current.visible = mouthOpen;
-      mouthInteriorRef.current.scale.x = 0.7 * sq.scaleX;
-      mouthInteriorRef.current.scale.y = 0.15 + state.mouthOpenness * 2.0;
-    }
-    if (teethRef.current) {
-      teethRef.current.visible = state.mouthOpenness > 0.1;
-      teethRef.current.scale.x = 0.6 * sq.scaleX;
-      teethRef.current.position.y = state.mouthOpenness * 0.06;
-    }
-    if (tongueRef.current) {
-      const show = state.mouthOpenness > 0.25;
-      tongueRef.current.visible = show;
-      if (show) {
-        tongueRef.current.scale.x = 0.3 * sq.scaleX;
-        tongueRef.current.position.y = -state.mouthOpenness * 0.12 - 0.02;
-        tongueRef.current.position.x = Math.sin(performance.now() * 0.008) * 0.008;
-      }
-    }
+    // Hide all other mouth parts — just the bar
+    if (lowerLipRef.current) lowerLipRef.current.visible = false;
+    if (mouthInteriorRef.current) mouthInteriorRef.current.visible = false;
+    if (teethRef.current) teethRef.current.visible = false;
+    if (tongueRef.current) tongueRef.current.visible = false;
 
     // Cheeks
     const smile = Math.max(0, state.mouthCurve * 2);
@@ -373,26 +355,15 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
       {/* ===== MOUTH ===== */}
       <group ref={mouthGroupRef} position={[0, -0.42, mouthZ]}>
-        {/* Upper lip — wide ellipse, flat like a real lip */}
-        <mesh ref={upperLipRef} position={[0, 0.04, 0]} material={upperLipMat} scale={[1, 0.35, 0.5]}>
-          <sphereGeometry args={[0.22, 32, 16]} />
+        {/* Simple mouth bar — capsule shape, closed by default */}
+        <mesh ref={upperLipRef} position={[0, 0, 0]} material={upperLipMat}>
+          <capsuleGeometry args={[0.035, 0.3, 8, 16]} />
         </mesh>
-        {/* Lower lip — slightly fuller */}
-        <mesh ref={lowerLipRef} position={[0, -0.04, 0.008]} material={lowerLipMat} scale={[1, 0.4, 0.55]}>
-          <sphereGeometry args={[0.2, 32, 16]} />
-        </mesh>
-        {/* Mouth interior — dark cavity */}
-        <mesh ref={mouthInteriorRef} position={[0, -0.005, -0.02]} material={mouthInteriorMat} scale={[1, 1, 0.6]}>
-          <sphereGeometry args={[0.14, 24, 16]} />
-        </mesh>
-        {/* Teeth */}
-        <mesh ref={teethRef} position={[0, 0.02, 0.01]} material={teethMat}>
-          <boxGeometry args={[0.28, 0.04, 0.025]} />
-        </mesh>
-        {/* Tongue */}
-        <mesh ref={tongueRef} position={[0, -0.04, -0.005]} material={tongueMat} scale={[1, 0.6, 0.7]}>
-          <sphereGeometry args={[0.08, 16, 12]} />
-        </mesh>
+        {/* Hidden parts kept for refs */}
+        <mesh ref={lowerLipRef} visible={false}><boxGeometry args={[0.01, 0.01, 0.01]} /></mesh>
+        <mesh ref={mouthInteriorRef} visible={false}><boxGeometry args={[0.01, 0.01, 0.01]} /></mesh>
+        <mesh ref={teethRef} visible={false}><boxGeometry args={[0.01, 0.01, 0.01]} /></mesh>
+        <mesh ref={tongueRef} visible={false}><boxGeometry args={[0.01, 0.01, 0.01]} /></mesh>
       </group>
 
       {/* ===== CHEEK BLUSH ===== */}
