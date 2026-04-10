@@ -165,12 +165,15 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(ps);
     if (rightPupilRef.current) rightPupilRef.current.scale.setScalar(ps);
 
-    // Eyelids (blink)
-    const eyelidScale = 1 - state.eyeOpenness;
+    // Eyelids (blink) — sweep down from top to fully cover eye
+    const blinkClose = 1 - state.eyeOpenness; // 0 = open, 1 = fully closed
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
       if (ref.current) {
-        ref.current.scale.y = Math.max(0.01, eyelidScale * 1.1);
-        ref.current.visible = eyelidScale > 0.04;
+        // Scale Y to cover entire eye height when closed
+        ref.current.scale.y = Math.max(0.01, blinkClose * 5);
+        // Move eyelid down as it closes (from above eye to center)
+        ref.current.position.y = 0.32 - blinkClose * 0.18;
+        ref.current.visible = blinkClose > 0.02;
       }
     });
 
@@ -263,9 +266,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         <mesh position={[-0.06, -0.08, 0.03]} material={highlightMat} scale={0.45}>
           <circleGeometry args={[0.045, 12]} />
         </mesh>
-        {/* Eyelid — thin, for blink */}
-        <mesh ref={eyelidRef} position={[0, 0.22, 0.04]} material={eyelidMat}>
-          <planeGeometry args={[0.88, 0.14]} />
+        {/* Eyelid — full coverage for natural blink */}
+        <mesh ref={eyelidRef} position={[0, 0.32, 0.04]} material={eyelidMat}>
+          <planeGeometry args={[0.92, 0.18]} />
         </mesh>
       </group>
     );
