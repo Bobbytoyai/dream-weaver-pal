@@ -1,21 +1,54 @@
 import { useRef, useCallback, useEffect } from "react";
+import { eventBus } from "@/lib/eventBus";
 
 const WAKE_WORDS = ["bobby", "boby", "bobbie", "bob y", "bo bi", "bobi"];
 
-function normalizeTranscript(text: string) {
+function normalizeText(text: string): string {
   return text
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "");
+    .replace(/[^a-z0-9 ]/g, "")
+    .trim();
 }
 
-const NORMALIZED_WAKE_WORDS = WAKE_WORDS.map(normalizeTranscript);
+/**
+ * Computes a simple phonetic similarity score for wake word matching.
+ * Returns a confidence 0-1 for the best matching wake word.
+ */
+function computeWakeConfidence(transcript: string): number {
+  const normalized = normalizeText(transcript).replace(/\s+/g, "");
+  let best = 0;
+  for (const wake of WAKE_WORDS) {
+    const wakeNorm = wake.replace(/\s+/g, "");
+    if (normalized.includes(wakeNorm)) {
+      // Exact substring match → high confidence
+      best = Math.max(best, 0.95);
+    } else {
+      // Check for close matches (1 char difference)
+      for (let i = 0; i <= normalized.length - wakeNorm.length; i++) {
+        const slice = normalized.slice(i, i + wakeNorm.length);
+        let diff = 0;
+        for (let j = 0; j < wakeNorm.length; j++) {
+          if (slice[j] !== wakeNorm[j]) diff++;
+        }
+        if (diff <= 1 && wakeNorm.length >= 4) {
+          best = Math.max(best, 0.7);
+        }
+      }
+    }
+  }
+  return best;
+}
+
+const CONFIDENCE_THRESHOLD = 0.65;
 
 /**
- * Continuous speech recognition that listens for the wake word "Bobby".
- * IMPORTANT: the first activation must come from a direct user gesture.
- * After that, it can auto-restart while the screen stays mounted.
+ * Wake word detection engine.
+ * - Anti-false-positive: phonetic confidence threshold
+ * - First activation requires user gesture (browser policy)
+ * - Auto-restarts continuously while enabled
+ * - Emits WAKE_DETECTED with confidence score
  */
 export function useWakeWord({
   enabled,
@@ -39,9 +72,7 @@ export function useWakeWord({
     isRunningRef.current = false;
     if (restartTimerRef.current) clearTimeout(restartTimerRef.current);
     restartTimerRef.current = null;
-    try {
-      recognitionRef.current?.abort();
-    } catch {}
+    try { recognitionRef.current?.abort(); } catch {}
     recognitionRef.current = null;
   }, []);
 
@@ -50,17 +81,12 @@ export function useWakeWord({
       enabledRef.current.armed = true;
     }
 
-    if (!enabledRef.current.enabled || !enabledRef.current.armed) {
-      return false;
-    }
-
-    if (isRunningRef.current) {
-      return true;
-    }
+    if (!enabledRef.current.enabled || !enabledRef.current.armed) return false;
+    if (isRunningRef.current) return true;
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      console.warn("SpeechRecognition not supported");
+      console.warn("[WakeWord] SpeechRecognition not supported");
       return false;
     }
 
@@ -79,22 +105,41 @@ export function useWakeWord({
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
 
+        // Check ALL alternatives for wake word
+        let bestConfidence = 0;
+        let bestTranscript = "";
+
         for (let j = 0; j < result.length; j++) {
           const transcript = String(result[j].transcript || "").trim();
           if (!transcript) continue;
 
-          if (!result.isFinal && onPartial) {
+          // Show partial text from first alternative
+          if (j === 0 && !result.isFinal && onPartial) {
             onPartial(transcript);
           }
 
-          const normalized = normalizeTranscript(transcript);
-          const hasWakeWord = NORMALIZED_WAKE_WORDS.some((wakeWord) => normalized.includes(wakeWord));
-
-          if (hasWakeWord && result.isFinal) {
-            stopListening();
-            onWake(transcript);
-            return;
+          const confidence = computeWakeConfidence(transcript);
+          if (confidence > bestConfidence) {
+            bestConfidence = confidence;
+            bestTranscript = transcript;
           }
+        }
+
+        // React on final result with sufficient confidence
+        if (bestConfidence >= CONFIDENCE_THRESHOLD && result.isFinal) {
+          // Emit event immediately for < 300ms reaction
+          eventBus.emit({ type: "WAKE_DETECTED", confidence: bestConfidence });
+          stopListening();
+          onWake(bestTranscript);
+          return;
+        }
+
+        // Also react on interim results with very high confidence for speed
+        if (bestConfidence >= 0.9 && !result.isFinal) {
+          eventBus.emit({ type: "WAKE_DETECTED", confidence: bestConfidence });
+          stopListening();
+          onWake(bestTranscript);
+          return;
         }
       }
     };
@@ -104,19 +149,16 @@ export function useWakeWord({
       isRunningRef.current = false;
       recognitionRef.current = null;
 
-      if (!shouldRestart || !enabledRef.current.enabled || !enabledRef.current.armed) {
-        return;
-      }
+      if (!shouldRestart || !enabledRef.current.enabled || !enabledRef.current.armed) return;
 
+      // Fast restart for < 300ms gap
       restartTimerRef.current = setTimeout(() => {
         startListening();
-      }, 250);
+      }, 150);
     };
 
     recognition.onerror = (event: any) => {
-      if (event.error === "aborted") {
-        return;
-      }
+      if (event.error === "aborted") return;
 
       isRunningRef.current = false;
       recognitionRef.current = null;
@@ -126,13 +168,11 @@ export function useWakeWord({
         return;
       }
 
-      if (!enabledRef.current.enabled || !enabledRef.current.armed) {
-        return;
-      }
+      if (!enabledRef.current.enabled || !enabledRef.current.armed) return;
 
       restartTimerRef.current = setTimeout(() => {
         startListening();
-      }, event.error === "no-speech" ? 200 : 1200);
+      }, event.error === "no-speech" ? 150 : 1000);
     };
 
     try {
@@ -141,11 +181,9 @@ export function useWakeWord({
     } catch (error: any) {
       isRunningRef.current = false;
       recognitionRef.current = null;
-
       if (error?.name === "NotAllowedError") {
         enabledRef.current.armed = false;
       }
-
       return false;
     }
   }, [onPartial, onWake, stopListening]);
@@ -156,10 +194,7 @@ export function useWakeWord({
     } else if (!enabled) {
       stopListening();
     }
-
-    return () => {
-      stopListening();
-    };
+    return () => { stopListening(); };
   }, [enabled, startListening, stopListening]);
 
   return { stopListening, startListening };
