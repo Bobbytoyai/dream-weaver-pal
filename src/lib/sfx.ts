@@ -141,6 +141,23 @@ export function playInterrupted() {
   osc.stop(ctx.currentTime + 0.15);
 }
 
+/** Gentle wake chime — soft "boop" when wake word detected */
+export function playWakeChime() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(880, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(1100, ctx.currentTime + 0.08);
+  osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+  gain.gain.setValueAtTime(vol(0.1), ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.2);
+}
+
 /**
  * Initialize event-bus-driven SFX.
  * Call once at app startup. SFX will auto-play on STATE_CHANGED events.
@@ -157,6 +174,7 @@ export function initSfxEventBus(): () => void {
     speaking_chime: playSpeakingChime,
     session_end: playSessionEnd,
     interrupted: playInterrupted,
+    wake_chime: playWakeChime,
   };
 
   const unsubState = eventBus.on("STATE_CHANGED", (event) => {
@@ -172,6 +190,10 @@ export function initSfxEventBus(): () => void {
     }
   });
 
+  const unsubWake = eventBus.on("WAKE_DETECTED", () => {
+    playWakeChime();
+  });
+
   const unsubSfx = eventBus.on("SFX_PLAY", (event) => {
     if (event.type !== "SFX_PLAY") return;
     sfxMap[event.sound]?.();
@@ -179,6 +201,7 @@ export function initSfxEventBus(): () => void {
 
   return () => {
     unsubState();
+    unsubWake();
     unsubSfx();
     busSubscribed = false;
   };
