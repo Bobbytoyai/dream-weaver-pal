@@ -42,6 +42,8 @@ const FALLBACK_FR: Record<string, string> = {
   welcome: "Salut ! Dis Bobby pour me parler !",
   wake_greeting: "Oui? Je t'écoute.",
   recovery: "Je t'écoute 😊",
+  low_confidence: "Je n'ai pas bien compris, tu peux répéter plus fort ?",
+  sleep_wake: "Oh ! Me revoilà ! Qu'est-ce que tu veux ?",
 };
 
 function detectIntent(text: string): Intent {
