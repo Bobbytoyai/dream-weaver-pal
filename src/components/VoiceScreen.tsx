@@ -74,6 +74,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
     prevStateRef.current = state;
   }, [state]);
 
+  useEffect(() => {
     return () => {
       recognitionRef.current?.abort?.();
       recognitionRef.current?.stop?.();
