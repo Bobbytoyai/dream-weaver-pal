@@ -1,13 +1,20 @@
 /**
  * Lightweight synth sound effects for hologram state transitions.
  * Uses Web Audio API — no external dependencies.
+ * 
+ * Now reactive: call initSfxEventBus() once to have SFX auto-play
+ * in response to STATE_CHANGED events from the event bus.
  */
+
+import { eventBus, type AppEvent } from "./eventBus";
 
 let audioCtx: AudioContext | null = null;
 let masterVolume = 0.7; // 0 = muted, 1 = max
+let busSubscribed = false;
 
 export function setSfxVolume(v: number) {
   masterVolume = Math.max(0, Math.min(1, v));
+  eventBus.emit({ type: "CONFIG_CHANGED", key: "sfxVolume", value: v });
 }
 
 function getCtx(): AudioContext | null {
@@ -119,4 +126,47 @@ export function playInterrupted() {
   osc.connect(gain).connect(ctx.destination);
   osc.start();
   osc.stop(ctx.currentTime + 0.15);
+}
+
+/**
+ * Initialize event-bus-driven SFX.
+ * Call once at app startup. SFX will auto-play on STATE_CHANGED events.
+ * Also responds to SFX_PLAY events for ad-hoc sounds.
+ */
+export function initSfxEventBus(): () => void {
+  if (busSubscribed) return () => {};
+  busSubscribed = true;
+
+  const sfxMap: Record<string, () => void> = {
+    listening_pling: playListeningPling,
+    stop_bip: playStopBip,
+    thinking_shimmer: playThinkingShimmer,
+    speaking_chime: playSpeakingChime,
+    session_end: playSessionEnd,
+    interrupted: playInterrupted,
+  };
+
+  const unsubState = eventBus.on("STATE_CHANGED", (event) => {
+    if (event.type !== "STATE_CHANGED") return;
+    const { state, prev } = event;
+    switch (state) {
+      case "listening": playListeningPling(); break;
+      case "processing": playThinkingShimmer(); break;
+      case "speaking": if (prev !== "processing") playSpeakingChime(); break;
+      case "interrupted": playInterrupted(); break;
+      case "session_end": playSessionEnd(); break;
+      case "idle": if (prev === "listening") playStopBip(); break;
+    }
+  });
+
+  const unsubSfx = eventBus.on("SFX_PLAY", (event) => {
+    if (event.type !== "SFX_PLAY") return;
+    sfxMap[event.sound]?.();
+  });
+
+  return () => {
+    unsubState();
+    unsubSfx();
+    busSubscribed = false;
+  };
 }

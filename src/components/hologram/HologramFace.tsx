@@ -5,6 +5,7 @@ import { HologramParticles, ScanRing } from "./HologramEffects";
 import { useGazeTracker } from "./useGazeTracker";
 import { useAudioAmplitude } from "./useAudioAmplitude";
 import { FaceState } from "./useFaceAnimation";
+import { eventBus } from "@/lib/eventBus";
 
 interface HologramFaceProps {
   voiceState: "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
@@ -32,8 +33,12 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
   const handleTap = useCallback(() => {
     tapCountRef.current++;
     if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+
+    eventBus.emit({ type: "TAP_TRIGGERED" });
+
     if (tapCountRef.current >= 3) {
       tapCountRef.current = 0;
+      eventBus.emit({ type: "TRIPLE_TAP" });
       onTripleTap?.();
       return;
     }
