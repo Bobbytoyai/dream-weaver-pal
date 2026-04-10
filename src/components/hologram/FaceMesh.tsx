@@ -110,7 +110,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     const eyelidScale = 1 - state.eyeOpenness;
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
       if (ref.current) {
-        ref.current.scale.y = Math.max(0.01, eyelidScale * 2.2);
+        ref.current.scale.y = Math.max(0.01, eyelidScale * 1.2);
         ref.current.visible = eyelidScale > 0.04;
       }
     });
@@ -195,9 +195,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         <mesh position={[-0.05, -0.06, 0.04]} material={highlightMat} scale={0.5}>
           <circleGeometry args={[0.04, 12]} />
         </mesh>
-        {/* Eyelid — flat rectangle that covers from top */}
-        <mesh ref={eyelidRef} position={[0, 0.25, 0.05]} material={eyelidMat}>
-          <planeGeometry args={[0.9, 0.45]} />
+        {/* Eyelid — thin bar, natural blink */}
+        <mesh ref={eyelidRef} position={[0, 0.22, 0.05]} material={eyelidMat}>
+          <planeGeometry args={[0.85, 0.18]} />
         </mesh>
       </group>
     );
@@ -217,9 +217,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         <planeGeometry args={[0.35, 0.045]} />
       </mesh>
 
-      {/* ===== MOUTH — horizontal bar ===== */}
+      {/* ===== MOUTH — curved smile arc ===== */}
       <mesh ref={mouthRef} position={[0, -0.55, 0.01]} material={mouthMat}>
-        <planeGeometry args={[0.4, 0.04]} />
+        <torusGeometry args={[0.22, 0.02, 8, 32, Math.PI * 0.55]} />
       </mesh>
 
       {/* ===== CHEEK BLUSH — subtle flat circles ===== */}
