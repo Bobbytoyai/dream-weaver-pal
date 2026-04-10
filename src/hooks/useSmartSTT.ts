@@ -3,11 +3,13 @@
  * 
  * Priority: Deepgram (streaming, high quality) → Native browser STT (fallback)
  * Auto-switches if Deepgram fails 2+ times consecutively.
+ * Auto-switches to native when OFFLINE (no internet).
  * Can be forced back to Deepgram via retry.
  */
 import { useRef, useCallback, useEffect, useState } from "react";
 import { useDeepgramSTT } from "./useDeepgramSTT";
 import { useNativeSTT } from "./useNativeSTT";
+import { isOffline, onNetworkChange } from "@/lib/offlineEngine";
 
 type STTBackend = "deepgram" | "native";
 
@@ -23,10 +25,11 @@ interface UseSmartSTTOptions {
 const MAX_DEEPGRAM_FAILURES = 2;
 
 export function useSmartSTT({ onPartial, onFinal, onError, onUtteranceEnd, onSpeechStarted, language = "fr" }: UseSmartSTTOptions) {
-  const [backend, setBackend] = useState<STTBackend>("deepgram");
+  const [backend, setBackend] = useState<STTBackend>(isOffline() ? "native" : "deepgram");
   const deepgramFailCountRef = useRef(0);
-  const activeBackendRef = useRef<STTBackend>("deepgram");
+  const activeBackendRef = useRef<STTBackend>(isOffline() ? "native" : "deepgram");
   const isRunningRef = useRef(false);
+  const preferredBackendRef = useRef<STTBackend>("deepgram"); // what user wants when online
 
   const onPartialRef = useRef(onPartial);
   const onFinalRef = useRef(onFinal);
@@ -38,6 +41,23 @@ export function useSmartSTT({ onPartial, onFinal, onError, onUtteranceEnd, onSpe
   useEffect(() => { onErrorRef.current = onError; }, [onError]);
   useEffect(() => { onUtteranceEndRef.current = onUtteranceEnd; }, [onUtteranceEnd]);
   useEffect(() => { onSpeechStartedRef.current = onSpeechStarted; }, [onSpeechStarted]);
+
+  // ─── Auto-switch on network change ───
+  useEffect(() => {
+    return onNetworkChange((mode) => {
+      if (mode === "OFFLINE") {
+        console.log("[SmartSTT] 🔌 Network offline → switching to native STT");
+        activeBackendRef.current = "native";
+        setBackend("native");
+      } else {
+        // Restore preferred backend when back online
+        console.log("[SmartSTT] 🌐 Network online → restoring Deepgram");
+        deepgramFailCountRef.current = 0;
+        activeBackendRef.current = preferredBackendRef.current;
+        setBackend(preferredBackendRef.current);
+      }
+    });
+  }, []);
 
   // Reset failure count on successful transcription
   const handleDeepgramFinal = useCallback((text: string) => {
@@ -80,6 +100,14 @@ export function useSmartSTT({ onPartial, onFinal, onError, onUtteranceEnd, onSpe
     if (isRunningRef.current) return;
     isRunningRef.current = true;
 
+    // Force native if offline
+    if (isOffline()) {
+      activeBackendRef.current = "native";
+      setBackend("native");
+      await native.start();
+      return;
+    }
+
     if (activeBackendRef.current === "deepgram") {
       try {
         await deepgram.start();
@@ -115,8 +143,10 @@ export function useSmartSTT({ onPartial, onFinal, onError, onUtteranceEnd, onSpe
   }, [backend, deepgram, native]);
 
   const retryDeepgram = useCallback(() => {
+    if (isOffline()) return; // Don't retry when offline
     deepgramFailCountRef.current = 0;
     activeBackendRef.current = "deepgram";
+    preferredBackendRef.current = "deepgram";
     setBackend("deepgram");
     console.log("[SmartSTT] 🔄 Retrying Deepgram");
   }, []);
