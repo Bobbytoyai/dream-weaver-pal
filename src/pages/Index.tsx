@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import VoiceScreen from "@/components/VoiceScreen";
 import StoryMode from "@/components/StoryMode";
 import ParentMode from "@/components/ParentMode";
@@ -6,6 +6,7 @@ import OnboardingScreen from "@/components/OnboardingScreen";
 
 import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/parentSettings";
 import { useChildMemory } from "@/hooks/useChildMemory";
+import { eventBus } from "@/lib/eventBus";
 
 const PROFILE_KEY = "bobby_child_profile";
 
@@ -23,9 +24,16 @@ function saveProfile(name: string, age: number) {
   localStorage.setItem(PROFILE_KEY, JSON.stringify({ name, age }));
 }
 
+interface PendingNarration {
+  storyId: string;
+  title: string;
+  text: string;
+}
+
 const Index = () => {
   const [profile, setProfile] = useState<{ name: string; age: number } | null>(loadProfile);
   const [mode, setMode] = useState<"voice" | "story" | "parent">("voice");
+  const [pendingNarration, setPendingNarration] = useState<PendingNarration | null>(null);
   const [parentSettings, setParentSettings] = useState<ParentSettings>(() => {
     const saved = loadProfile();
     return {
@@ -38,6 +46,22 @@ const Index = () => {
   const childAge = parentSettings.childAge;
 
   const { memory, loading, saveSettings } = useChildMemory(childName);
+
+  // Listen for NARRATE_STORY events from StoryLibrary
+  useEffect(() => {
+    const unsub = eventBus.on("NARRATE_STORY", (event) => {
+      if (event.type === "NARRATE_STORY") {
+        setPendingNarration({
+          storyId: event.storyId,
+          title: event.title,
+          text: event.text,
+        });
+        // Switch to voice mode (home screen)
+        setMode("voice");
+      }
+    });
+    return unsub;
+  }, []);
 
   // Restore parent settings from memory on load
   useEffect(() => {
@@ -63,7 +87,6 @@ const Index = () => {
 
   const handleSettingsChange = (settings: ParentSettings) => {
     setParentSettings(settings);
-    // Also update persisted profile when parent changes name/age
     saveProfile(settings.childName, settings.childAge);
     saveSettings({ parentSettings: settings });
   };
@@ -96,7 +119,6 @@ const Index = () => {
     );
   }
 
-
   return (
     <VoiceScreen
       childName={childName}
@@ -104,8 +126,9 @@ const Index = () => {
       onSwitchToChat={() => {}}
       onSwitchToStory={() => setMode("story")}
       onParentMode={() => setMode("parent")}
-
       parentSettings={parentSettings}
+      pendingNarration={pendingNarration}
+      onNarrationConsumed={() => setPendingNarration(null)}
     />
   );
 };

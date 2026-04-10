@@ -198,13 +198,12 @@ const StatPill = ({ emoji, value, label }: { emoji: string; value: string | numb
 
 // ─── Tab config (5 tabs) ────────────────────────────────────────
 
-type Tab = "dashboard" | "sessions" | "activites" | "histoires" | "profil" | "reglages" | "confidentialite";
+type Tab = "dashboard" | "sessions" | "activites" | "profil" | "reglages" | "confidentialite";
 
 const tabs: { id: Tab; icon: any; label: string }[] = [
   { id: "dashboard", icon: BarChart3, label: "Tableau" },
   { id: "sessions", icon: MessageSquare, label: "Sessions" },
   { id: "activites", icon: Gamepad2, label: "Activités" },
-  { id: "histoires", icon: BookOpen, label: "Histoires" },
   { id: "profil", icon: User, label: "Profil" },
   { id: "reglages", icon: Settings, label: "Réglages" },
   { id: "confidentialite", icon: Shield, label: "Privé" },
@@ -2366,11 +2365,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           childName={childName}
           onSelectCategory={() => {}}
           onBack={() => setActiveTab("dashboard")}
+          voiceProfile={settings.voiceType || "female"}
         />
       );
       case "profil": return renderProfil();
       case "reglages": return renderReglages();
-      case "histoires": return <StoryLibrary childName={childName} voiceProfile={settings.voiceType || "female"} />;
       case "confidentialite": return renderConfidentialite();
       default: return renderDashboard();
     }

@@ -24,7 +24,8 @@ export type AppEvent =
   | { type: "SESSION_START" }
   | { type: "SESSION_END" }
   | { type: "SFX_PLAY"; sound: string }
-  | { type: "CONFIG_CHANGED"; key: string; value: unknown };
+  | { type: "CONFIG_CHANGED"; key: string; value: unknown }
+  | { type: "NARRATE_STORY"; storyId: string; title: string; text: string };
 
 type Listener = (event: AppEvent) => void;
 type Unsubscribe = () => void;
