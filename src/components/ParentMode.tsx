@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Clock, MessageSquare, Heart, Brain, Loader2, RefreshCw, Mic, BookOpen, Timer, Sparkles, Shield, User, Camera } from "lucide-react";
+import { ArrowLeft, Clock, MessageSquare, Heart, Brain, Loader2, RefreshCw, Mic, BookOpen, Timer, Sparkles, Shield, User, Camera, Volume2, VolumeX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ParentModeProps {
@@ -17,6 +17,7 @@ export interface ParentSettings {
   autoStop: boolean;
   voiceSpeed: "normal" | "slow" | "fast";
   enableCamera: boolean;
+  sfxVolume: number; // 0 = off, 0.5 = medium, 1 = max
 }
 
 export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
@@ -27,6 +28,7 @@ export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
   autoStop: true,
   voiceSpeed: "normal",
   enableCamera: false,
+  sfxVolume: 0.7,
 };
 
 interface Session {
@@ -295,6 +297,40 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             className={`w-12 h-7 rounded-full transition-all ${settings.enableCamera ? "bg-primary" : "bg-muted"}`}>
             <div className={`w-5 h-5 rounded-full bg-card shadow transition-transform ${settings.enableCamera ? "translate-x-6" : "translate-x-1"}`} />
           </button>
+        </div>
+      </div>
+      {/* SFX Volume */}
+      <div className="bg-card rounded-2xl p-4 border border-border">
+        <div className="flex items-center gap-3 mb-3">
+          {settings.sfxVolume === 0 ? (
+            <VolumeX className="w-5 h-5 text-muted-foreground" />
+          ) : (
+            <Volume2 className="w-5 h-5 text-primary" />
+          )}
+          <div>
+            <h3 className="text-sm font-bold text-foreground">Effets sonores</h3>
+            <p className="text-xs text-muted-foreground">
+              {settings.sfxVolume === 0 ? "Désactivés" : `Volume : ${Math.round(settings.sfxVolume * 100)}%`}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => updateSetting("sfxVolume", settings.sfxVolume === 0 ? 0.7 : 0)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              settings.sfxVolume === 0 ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
+            }`}
+          >
+            {settings.sfxVolume === 0 ? "Off" : "On"}
+          </button>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={Math.round(settings.sfxVolume * 100)}
+            onChange={(e) => updateSetting("sfxVolume", Number(e.target.value) / 100)}
+            className="flex-1 h-2 rounded-full appearance-none bg-muted accent-primary"
+          />
         </div>
       </div>
     </div>
