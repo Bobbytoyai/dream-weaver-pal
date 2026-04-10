@@ -984,17 +984,22 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       </Card>
 
       <Card title="Personnalité de Bobby" icon={Sparkles}>
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-2">
           {([
-            ["balanced", "⚖️ Équilibré", "Mode par défaut, chaleureux"],
-            ["calm", "😌 Plus calme", "Doux, réconfortant, lent"],
-            ["energetic", "⚡ Plus énergique", "Fun, rapide, enthousiaste"],
-            ["educational", "📚 Éducatif", "Intègre des faits amusants"],
-          ] as const).map(([val, label, desc]) => (
+            ["balanced", "⚖️", "Équilibré", "Chaleureux, par défaut"],
+            ["calm", "😌", "Plus calme", "Doux, réconfortant"],
+            ["energetic", "⚡", "Énergique", "Fun, enthousiaste"],
+            ["educational", "📚", "Éducatif", "Faits amusants"],
+          ] as const).map(([val, emoji, label, desc]) => (
             <button key={val} onClick={() => updateSetting("personality", val)}
-              className={`w-full text-left p-3 rounded-xl transition-all ${settings.personality === val ? "bg-primary/10 border border-primary/30" : "bg-muted"}`}>
-              <span className="text-sm font-bold text-foreground">{label}</span>
-              <p className="text-xs text-muted-foreground">{desc}</p>
+              className={`p-4 rounded-2xl text-left transition-all duration-200 border-2 ${
+                settings.personality === val
+                  ? "bg-primary/10 border-primary/40 shadow-[0_0_16px_hsl(var(--primary)/0.15)]"
+                  : "bg-muted/50 border-transparent hover:bg-muted"
+              }`}>
+              <span className="text-2xl block mb-1">{emoji}</span>
+              <h4 className="text-sm font-extrabold text-foreground">{label}</h4>
+              <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{desc}</p>
             </button>
           ))}
         </div>
