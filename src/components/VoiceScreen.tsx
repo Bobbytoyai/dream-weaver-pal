@@ -228,6 +228,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
     if (utteranceFlushTimerRef.current) { clearTimeout(utteranceFlushTimerRef.current); utteranceFlushTimerRef.current = null; }
     if (stuckTimerRef.current) { clearTimeout(stuckTimerRef.current); stuckTimerRef.current = null; }
+    if (sleepTimerRef.current) { clearTimeout(sleepTimerRef.current); sleepTimerRef.current = null; }
   }, []);
 
   // Cleanup on unmount
