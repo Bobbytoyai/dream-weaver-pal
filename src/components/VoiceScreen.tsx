@@ -87,6 +87,8 @@ interface VoiceScreenProps {
 }
 
 const SILENCE_TIMEOUT = 40000;
+const UTTERANCE_FLUSH_DELAY = 1200; // ms after UtteranceEnd before flushing accumulated text
+const SHORT_UTTERANCE_FLUSH = 800; // faster flush for short utterances (< 15 chars)
 
 /* ── Sound Wave Visualizer ── */
 const SoundWave = ({ active }: { active: boolean }) => {
