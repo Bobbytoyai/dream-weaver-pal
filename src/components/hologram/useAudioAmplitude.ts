@@ -29,6 +29,16 @@ const VISEME_REST: VisemeState = {
   mouthOpenness: 0, mouthWidth: 0.5, mouthRound: 0, jawDrop: 0,
 };
 
+/** Intonation data for expression changes mid-sentence */
+export interface IntonationState {
+  /** Current pitch trend: rising (question), falling (statement), flat */
+  pitchTrend: "rising" | "falling" | "flat";
+  /** Emphasis level 0-1 (loud syllable = high emphasis) */
+  emphasis: number;
+  /** Speaking energy 0-1 (overall energy level) */
+  energy: number;
+}
+
 export function useAudioAmplitude() {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const contextRef = useRef<AudioContext | null>(null);
@@ -38,6 +48,10 @@ export function useAudioAmplitude() {
   const visemeRef = useRef<VisemeState>({ ...VISEME_REST });
   const connectedElements = useRef<Set<HTMLAudioElement>>(new Set());
   const smoothedBands = useRef({ low: 0, mid: 0, high: 0, veryHigh: 0 });
+  // v3.0: Intonation tracking
+  const intonationRef = useRef<IntonationState>({ pitchTrend: "flat", emphasis: 0, energy: 0 });
+  const prevAmplitudes = useRef<number[]>([]);
+  const prevLowEnergy = useRef(0);
 
   const getContext = useCallback(() => {
     if (!contextRef.current) {
