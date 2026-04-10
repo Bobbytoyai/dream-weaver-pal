@@ -231,9 +231,13 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const goToListening = useCallback(() => {
     setState("listening");
     setMicStatus("active");
+    setPartialText("");
+    // Shorter delay for snappier conversation feel
     setTimeout(() => {
-      setContinuousListenEnabled(true);
-    }, 600);
+      if (stateRef.current === "listening") {
+        setContinuousListenEnabled(true);
+      }
+    }, 400);
     startSilenceTimers();
   }, [startSilenceTimers]);
 
@@ -342,45 +346,77 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     }
     const memoryContext = memoryParts.length > 0 ? memoryParts.join("\n") : undefined;
 
-    await streamVoiceChat({
-      messages: newHistory,
-      childName,
-      childAge,
-      mode,
-      parentSettings,
-      memoryContext,
-      signal: abortController.signal,
-      onSentence: (sentence) => {
-        if (!abortController.signal.aborted) {
-          processSentenceForTTS(sentence, abortController.signal);
-        }
-      },
-      onDone: (text) => {
-        allSentencesDoneRef.current = true;
-        if (text) {
-          setConversationHistory([...newHistory, { role: "assistant", content: text }]);
-          session.addMessage("assistant", text);
-          eventBus.emit({ type: "RESPONSE_READY", text });
-        }
-        if (pendingSentencesRef.current === 0) {
-          audioQueue.setOnAllDone(() => {
-            eventBus.emit({ type: "SPEECH_STOP" });
+    // Timeout safety: if no response in 12s, recover
+    const recoveryTimer = setTimeout(() => {
+      if (stateRef.current === "processing") {
+        console.warn("[VoiceScreen] AI response timeout — recovering");
+        abortController.abort();
+        speakFallback("error");
+      }
+    }, 12000);
+
+    try {
+      await streamVoiceChat({
+        messages: newHistory,
+        childName,
+        childAge,
+        mode,
+        parentSettings,
+        memoryContext,
+        signal: abortController.signal,
+        onSentence: (sentence) => {
+          clearTimeout(recoveryTimer);
+          if (!abortController.signal.aborted) {
+            eventBus.emit({ type: "SPEECH_START" });
+            processSentenceForTTS(sentence, abortController.signal);
+          }
+        },
+        onDone: (text) => {
+          clearTimeout(recoveryTimer);
+          allSentencesDoneRef.current = true;
+          if (text) {
+            setConversationHistory([...newHistory, { role: "assistant", content: text }]);
+            session.addMessage("assistant", text);
+            eventBus.emit({ type: "RESPONSE_READY", text });
+          }
+          if (pendingSentencesRef.current === 0) {
+            audioQueue.setOnAllDone(() => {
+              eventBus.emit({ type: "SPEECH_STOP" });
+              goToListening();
+            });
+          }
+          // If no sentences were produced (empty response), go back to listening
+          if (!text || text.trim().length === 0) {
             goToListening();
-          });
-        }
-      },
-      onError: (error) => {
-        console.error("AI error:", error);
-        if (!abortController.signal.aborted) speakFallback("error");
-      },
-    });
+          }
+        },
+        onError: (error) => {
+          clearTimeout(recoveryTimer);
+          console.error("AI error:", error);
+          if (!abortController.signal.aborted) speakFallback("error");
+        },
+      });
+    } catch (e) {
+      clearTimeout(recoveryTimer);
+      console.error("AI call exception:", e);
+      if (!abortController.signal.aborted) speakFallback("error");
+    }
   }, [audioQueue, childAge, childName, clearTimers, conversationHistory, goToListening, memory, parentSettings, processSentenceForTTS, session, speakFallback]);
 
   const handleContinuousResult = useCallback((text: string) => {
+    console.log("[VoiceScreen] Continuous result:", text, "state:", stateRef.current);
     clearTimers();
 
+    // If Bobby is currently speaking or processing, interrupt
     if (stateRef.current === "speaking" || stateRef.current === "processing") {
       interrupt();
+    }
+
+    // Echo detection — skip if Bobby just said this
+    if (isEcho(text)) {
+      console.log("[VoiceScreen] Echo detected, ignoring:", text);
+      startSilenceTimers();
+      return;
     }
 
     const hasWake = /\b(bobby|boby|bobbie|bobi)\b/i.test(text);
@@ -388,6 +424,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
     if (cleaned.length < 3) {
       if (hasWake) speakFallback("wake_greeting");
+      else startSilenceTimers();
       return;
     }
 
@@ -412,7 +449,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     }
 
     getAIResponse(cleaned);
-  }, [audioQueue, clearTimers, currentVoiceId, getAIResponse, goToListening, interrupt, session, speakFallback]);
+  }, [audioQueue, clearTimers, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, interrupt, isCalmMode, session, speakFallback, startSilenceTimers]);
 
   // Deepgram STT for continuous listening (replaces Web Speech API)
   const deepgramSTT = useDeepgramSTT({
@@ -442,6 +479,8 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   }, [continuousListenEnabled, deepgramSTT]);
 
   const handleWake = useCallback((transcript: string) => {
+    console.log("[VoiceScreen] Wake detected:", transcript);
+    
     if (stateRef.current === "speaking" || stateRef.current === "processing") {
       interrupt();
     }
@@ -456,14 +495,38 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     conversationActiveRef.current = true;
     eventBus.emit({ type: "WAKE_TRIGGERED" });
 
+    // If user just said "Bobby" alone → greet and listen
     if (isJustWakeWord(transcript)) {
       speakFallback("wake_greeting");
       return;
     }
 
+    // User said "Bobby + message" → respond directly to the message
     const command = stripWakeWord(transcript);
+    console.log("[VoiceScreen] Processing command:", command);
+    
+    // Check if it's a simple greeting for instant response
+    if (isSimpleGreeting(command)) {
+      const cached = getCachedResponse("greeting");
+      setState("speaking");
+      setContinuousListenEnabled(false);
+      eventBus.emit({ type: "SPEECH_START" });
+      recentBobbyTextsRef.current = [cached, ...recentBobbyTextsRef.current].slice(0, 8);
+      fetchTTSAudio(cached, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode).then(url => {
+        audioQueue.enqueue(url);
+        audioQueue.setOnAllDone(() => {
+          eventBus.emit({ type: "SPEECH_STOP" });
+          goToListening();
+        });
+      }).catch(() => goToListening());
+      setConversationHistory(prev => [...prev, { role: "user", content: command }, { role: "assistant", content: cached }]);
+      session.addMessage("user", command);
+      session.addMessage("assistant", cached);
+      return;
+    }
+    
     getAIResponse(command);
-  }, [getAIResponse, interrupt, recorder, session, speakFallback]);
+  }, [audioQueue, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, interrupt, isCalmMode, recorder, session, speakFallback]);
 
   const { startListening } = useWakeWord({
     enabled: wakeWordEnabled,
