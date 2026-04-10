@@ -1516,6 +1516,16 @@ const RESPONSES: Record<string, string[]> = {
     "Bien reçu !",
     "Je fais ça 😊",
   ],
+  EDUCATION: [
+    "Bonne question {name} ! Tu es très curieux ! 🧠",
+    "Waouh, tu apprends vite ! Tu veux savoir autre chose ? 📚",
+    "C'est super d'être curieux comme ça ! Pose-moi une autre question ! 🌟",
+    "Tu es vraiment malin {name} ! On continue à apprendre ? 🧪",
+    "J'adore quand tu poses des questions ! Tu veux en savoir plus ? 🔬",
+    "Le savoir c'est un super-pouvoir ! Tu en veux encore ? ✨",
+    "Trop bien de discuter de ça ! Tu as d'autres questions ? 🌍",
+    "Tu es un petit génie {name} ! Prochaine question ? 💡",
+  ],
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
