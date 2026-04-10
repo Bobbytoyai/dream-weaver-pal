@@ -68,7 +68,9 @@ export type Database = {
           duration_seconds: number | null
           ended_at: string | null
           id: string
+          is_favorite: boolean
           message_count: number
+          parent_note: string | null
           started_at: string
           tags: string[] | null
           topics: string[] | null
@@ -82,7 +84,9 @@ export type Database = {
           duration_seconds?: number | null
           ended_at?: string | null
           id?: string
+          is_favorite?: boolean
           message_count?: number
+          parent_note?: string | null
           started_at?: string
           tags?: string[] | null
           topics?: string[] | null
@@ -96,7 +100,9 @@ export type Database = {
           duration_seconds?: number | null
           ended_at?: string | null
           id?: string
+          is_favorite?: boolean
           message_count?: number
+          parent_note?: string | null
           started_at?: string
           tags?: string[] | null
           topics?: string[] | null
