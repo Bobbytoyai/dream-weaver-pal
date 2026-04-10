@@ -40,7 +40,7 @@ function detectIntent(text: string, mode?: string): Intent {
 
 // ─── Prompt builder — voice-optimized, conversational ──────
 
-function buildSystemPrompt(intent: Intent, childName: string, childAge: number, parentSettings: any, memoryContext?: string): string {
+function buildSystemPrompt(intent: Intent, childName: string, childAge: number, parentSettings: any, memoryContext?: string, cognitiveContext?: string): string {
   const ageGroup = childAge <= 5 ? "3-5 ans" : childAge <= 7 ? "5-7 ans" : childAge <= 10 ? "8-10 ans" : "11-12 ans";
   const personality = parentSettings?.personality || "balanced";
   const contentFilter = parentSettings?.contentFilter || "standard";
