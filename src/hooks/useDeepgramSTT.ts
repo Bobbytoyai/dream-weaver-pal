@@ -111,13 +111,13 @@ export function useDeepgramSTT({ onPartial, onFinal, onError, onUtteranceEnd, on
     try {
       const key = await getToken();
 
-      // Deepgram params — nova-3 for best accuracy + low latency:
-      // - endpointing=250: ultra-fast end-of-speech (250ms silence)
-      // - utterance_end_ms=600: shorter utterance timeout for snappy turns
+      // Deepgram params — nova-3 for best accuracy + ultra-low latency:
+      // - endpointing=200: ultra-fast end-of-speech (200ms silence, was 250)
+      // - utterance_end_ms=400: shorter utterance timeout for snappy turns (was 600)
       // - interim_results=true: streaming partials
       // - smart_format=true: punctuation
       // - vad_events=true: voice activity detection
-      const wsUrl = `${DEEPGRAM_WS_URL}?language=${language}&model=nova-3&smart_format=true&interim_results=true&endpointing=250&utterance_end_ms=600&vad_events=true&encoding=linear16&sample_rate=48000&channels=1`;
+      const wsUrl = `${DEEPGRAM_WS_URL}?language=${language}&model=nova-3&smart_format=true&interim_results=true&endpointing=200&utterance_end_ms=400&vad_events=true&encoding=linear16&sample_rate=48000&channels=1`;
 
       const ws = new WebSocket(wsUrl, ["token", key]);
       wsRef.current = ws;
