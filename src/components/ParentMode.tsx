@@ -2367,6 +2367,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     switch (displayedTab) {
       case "dashboard": return renderDashboard();
       case "sessions": return renderSessionsList();
+      case "activites": return (
+        <ContentCategories
+          childName={childName}
+          onSelectCategory={() => {}}
+          onBack={() => setActiveTab("dashboard")}
+        />
+      );
       case "profil": return renderProfil();
       case "reglages": return renderReglages();
       case "histoires": return <StoryLibrary childName={childName} voiceProfile={settings.voiceType || "female"} />;
