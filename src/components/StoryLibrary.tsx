@@ -25,7 +25,7 @@ interface Story {
   is_favorite: boolean;
 }
 
-const CATEGORY_META: Record<string, { emoji: string; gradient: string; accent: string }> = {
+const CATEGORY_META: Record<string, { emoji: string; gradient: string; accent: string; label?: string }> = {
   Pirate:    { emoji: "🏴‍☠️", gradient: "from-amber-500/20 to-orange-500/10", accent: "border-amber-500/25" },
   Princesse: { emoji: "👑", gradient: "from-pink-500/20 to-rose-500/10", accent: "border-pink-500/25" },
   Espace:    { emoji: "🚀", gradient: "from-indigo-500/20 to-blue-500/10", accent: "border-indigo-500/25" },
@@ -34,7 +34,14 @@ const CATEGORY_META: Record<string, { emoji: string; gradient: string; accent: s
   Éducatif:  { emoji: "🧠", gradient: "from-teal-500/20 to-cyan-500/10", accent: "border-teal-500/25" },
   Aventure:  { emoji: "⚔️", gradient: "from-red-500/20 to-orange-500/10", accent: "border-red-500/25" },
   Nature:    { emoji: "🌿", gradient: "from-lime-500/20 to-green-500/10", accent: "border-lime-500/25" },
+  Mythologie:  { emoji: "🏛️", gradient: "from-yellow-500/20 to-amber-500/10", accent: "border-yellow-500/25", label: "Mythologie" },
+  Musique:     { emoji: "🎵", gradient: "from-fuchsia-500/20 to-pink-500/10", accent: "border-fuchsia-500/25", label: "Musique" },
+  Frissons:    { emoji: "👻", gradient: "from-slate-500/20 to-zinc-500/10", accent: "border-slate-500/25", label: "Frissons" },
+  Voyages:     { emoji: "🌍", gradient: "from-sky-500/20 to-blue-500/10", accent: "border-sky-500/25", label: "Voyages" },
 };
+
+// All categories to show in the grid (including empty ones)
+const ALL_CATEGORIES = ["Pirate", "Princesse", "Espace", "Animaux", "Magie", "Éducatif", "Aventure", "Nature", "Mythologie", "Musique", "Frissons", "Voyages"];
 
 const DEFAULT_META = { emoji: "📖", gradient: "from-slate-500/20 to-gray-500/10", accent: "border-slate-500/25" };
 
