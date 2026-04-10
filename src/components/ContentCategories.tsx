@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Gamepad2, BookOpen, GraduationCap, Laugh, Trophy, ArrowLeft, RotateCcw, Library, ChevronRight } from "lucide-react";
 import { loadScore, resetScores, getScoreSummary, type GameScore } from "@/lib/gameEngine";
 import StoryLibrary from "@/components/StoryLibrary";
@@ -69,6 +69,20 @@ const ContentCategories = ({ childName, onSelectCategory, onBack, voiceProfile =
   const [selectedCat, setSelectedCat] = useState<ContentCategory | null>(null);
   const [score, setScore] = useState<GameScore>(loadScore);
   const [showStoryLibrary, setShowStoryLibrary] = useState(false);
+  const [animatingOut, setAnimatingOut] = useState(false);
+  const [animatingIn, setAnimatingIn] = useState(false);
+  const pendingAction = useRef<(() => void) | null>(null);
+
+  const animateTransition = useCallback((action: () => void) => {
+    setAnimatingOut(true);
+    pendingAction.current = action;
+    setTimeout(() => {
+      action();
+      setAnimatingOut(false);
+      setAnimatingIn(true);
+      setTimeout(() => setAnimatingIn(false), 300);
+    }, 200);
+  }, []);
 
   const handleReset = () => {
     const s = resetScores();
@@ -109,10 +123,10 @@ const ContentCategories = ({ childName, onSelectCategory, onBack, voiceProfile =
   // ─── Subcategory view ───
   if (activeCat) {
     return (
-      <div className="p-4 space-y-4">
+      <div className={`p-4 space-y-4 transition-all duration-300 ${animatingIn ? 'animate-fadeInUp' : ''} ${animatingOut ? 'opacity-0 scale-95 transition-all duration-200' : ''}`}>
         {/* Back */}
         <button
-          onClick={() => setSelectedCat(null)}
+          onClick={() => animateTransition(() => setSelectedCat(null))}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -132,13 +146,14 @@ const ContentCategories = ({ childName, onSelectCategory, onBack, voiceProfile =
 
         {/* Subcategory grid */}
         <div className="grid grid-cols-2 gap-3">
-          {activeCat.subs.map((sub) => {
+          {activeCat.subs.map((sub, idx) => {
             const subScore = score.byCategory[sub.id];
             return (
               <button
                 key={sub.id}
                 onClick={() => handleSelectCategory(sub.id)}
                 className="bg-card rounded-2xl p-4 text-left hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border border-border/30 group"
+                style={{ animationDelay: animatingIn ? `${idx * 80}ms` : undefined }}
               >
                 <span className="text-3xl block mb-2">{sub.emoji}</span>
                 <h4 className="text-[13px] font-bold text-foreground leading-tight">{sub.label}</h4>
@@ -162,7 +177,7 @@ const ContentCategories = ({ childName, onSelectCategory, onBack, voiceProfile =
 
   // ─── Main category grid view ───
   return (
-    <div className="p-4 space-y-4">
+    <div className={`p-4 space-y-4 transition-all duration-300 ${animatingIn ? 'animate-fadeInUp' : ''} ${animatingOut ? 'opacity-0 scale-95 transition-all duration-200' : ''}`}>
       {/* Score banner */}
       {score.totalPlayed > 0 && (
         <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl p-4 border border-primary/15">
@@ -188,11 +203,11 @@ const ContentCategories = ({ childName, onSelectCategory, onBack, voiceProfile =
             key={cat.id}
             onClick={() => {
               if (cat.id === "histoires") {
-                setShowStoryLibrary(true);
+                animateTransition(() => setShowStoryLibrary(true));
               } else if (cat.subs.length === 1) {
                 handleSelectCategory(cat.subs[0].id);
               } else {
-                setSelectedCat(cat.id);
+                animateTransition(() => setSelectedCat(cat.id));
               }
             }}
             className={`bg-gradient-to-br ${cat.gradient} rounded-2xl p-5 text-left hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border border-border/30 relative overflow-hidden group`}
