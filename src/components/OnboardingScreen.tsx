@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import companionAvatar from "@/assets/companion-avatar.png";
+import { HologramFace } from "./hologram/HologramFace";
 import VoicePickerStep from "./onboarding/VoicePickerStep";
 import InterestsStep from "./onboarding/InterestsStep";
 import type { VoiceProfile } from "@/lib/voicePipeline";
@@ -79,9 +79,9 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
         {/* STEP 0: Welcome */}
         {step === 0 && (
           <div className="flex flex-col items-center text-center">
-            <div className="relative mb-6">
+            <div className="relative mb-6 w-40 h-40">
               <div className="absolute inset-0 rounded-full bg-[hsla(215,85%,58%,0.2)] blur-2xl scale-150 glow-pulse" />
-              <img src={companionAvatar} alt="Bobby" className="relative w-40 h-40 drop-shadow-2xl float" />
+              <HologramFace voiceState="idle" enableCamera={false} />
             </div>
             <h1 className="text-4xl font-extrabold text-foreground mb-2 tracking-tight">
               Salut ! <span className="inline-block animate-wave">👋</span>
@@ -185,9 +185,9 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
         {/* STEP 5: Ready */}
         {step === 5 && (
           <div className="flex flex-col items-center text-center">
-            <div className="relative mb-8">
+            <div className="relative mb-8 w-32 h-32">
               <div className="absolute inset-0 rounded-full bg-[hsla(145,65%,50%,0.15)] blur-3xl scale-[2] animate-pulse" />
-              <img src={companionAvatar} alt="Bobby" className="relative w-32 h-32 drop-shadow-2xl animate-bounce-slow" />
+              <HologramFace voiceState="speaking" enableCamera={false} />
             </div>
             <h2 className="text-3xl font-extrabold text-foreground mb-3">Super, {name.trim()} ! 🌟</h2>
             <p className="text-muted-foreground text-base mb-6">Bobby est prêt à jouer avec toi !</p>
