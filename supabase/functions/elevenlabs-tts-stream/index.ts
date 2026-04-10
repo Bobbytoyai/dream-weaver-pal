@@ -29,10 +29,10 @@ const VOICE_PROFILES: Record<string, VoiceSettings> = {
   // Style élevé = personnalité cartoon vivante
   child: {
     voiceId: "pFZP5JQG7iQjIQuC4Bku",   // Lily
-    stability: 0.40,
-    similarity_boost: 0.80,
-    style: 0.70,
-    speed: 1.02,
+    stability: 0.28,
+    similarity_boost: 0.85,
+    style: 0.85,
+    speed: 1.10,
   },
   // 👩 Maman — ultra apaisante, enveloppante
   // Stability très haute = voix régulière, calmante
