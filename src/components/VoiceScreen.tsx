@@ -208,6 +208,13 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
   useEffect(() => { preloadVoiceProfile(currentVoiceId as any); }, [currentVoiceId]);
 
+  // Preload Piper voice model in background for offline readiness
+  useEffect(() => {
+    preloadPiperVoice(currentVoiceId as any).catch(() => {
+      console.warn("[VoiceScreen] Piper voice preload failed (non-critical)");
+    });
+  }, [currentVoiceId]);
+
   const abortRef = useRef<AbortController | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stuckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
