@@ -31,18 +31,24 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleTap = useCallback(() => {
+    const now = Date.now();
+    const lastTap = tapTimerRef.current as unknown as number || 0;
+    
+    // Reset if too much time between taps (must be fast deliberate taps)
+    if (now - lastTap > 400) {
+      tapCountRef.current = 0;
+    }
+    
     tapCountRef.current++;
-    if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+    (tapTimerRef.current as unknown) = now;
 
     eventBus.emit({ type: "TAP_TRIGGERED" });
 
-    if (tapCountRef.current >= 3) {
+    if (tapCountRef.current >= 5) {
       tapCountRef.current = 0;
       eventBus.emit({ type: "TRIPLE_TAP" });
       onTripleTap?.();
-      return;
     }
-    tapTimerRef.current = setTimeout(() => { tapCountRef.current = 0; }, 600);
   }, [onTripleTap]);
 
   const faceState = mapToFaceState(voiceState);
