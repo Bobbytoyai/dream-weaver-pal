@@ -5,21 +5,41 @@ const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts`;
 
 type AiMsg = { role: "user" | "assistant"; content: string };
 
+// Track whether ElevenLabs is available; fall back for the session if not
+let useBrowserTTS = false;
+
 /**
- * Streams AI response and splits into sentences for TTS pipeline.
- * Calls onSentence for each complete sentence as it arrives.
- * Calls onDone with full text when complete.
+ * Browser-based TTS fallback using Speech Synthesis API.
+ * Returns a blob URL so it integrates with the existing audio queue.
  */
+function speakWithBrowserTTS(text: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!("speechSynthesis" in window)) {
+      reject(new Error("Browser TTS not supported"));
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "fr-FR";
+    utterance.rate = 1.0;
+    utterance.pitch = 1.1;
+
+    // Try to find a French voice
+    const voices = speechSynthesis.getVoices();
+    const frVoice = voices.find(v => v.lang.startsWith("fr"));
+    if (frVoice) utterance.voice = frVoice;
+
+    // We can't get a blob from speechSynthesis, so we use a MediaStream workaround
+    // For simplicity, we'll play directly and return a sentinel URL
+    utterance.onend = () => resolve("__browser_tts__");
+    utterance.onerror = () => reject(new Error("Browser TTS error"));
+    speechSynthesis.speak(utterance);
+  });
+}
+
 export async function streamVoiceChat({
-  messages,
-  childName,
-  childAge,
-  mode,
-  parentSettings,
-  onSentence,
-  onDone,
-  onError,
-  signal,
+  messages, childName, childAge, mode, parentSettings,
+  onSentence, onDone, onError, signal,
 }: {
   messages: AiMsg[];
   childName: string;
@@ -48,10 +68,7 @@ export async function streamVoiceChat({
       return;
     }
 
-    if (!resp.body) {
-      onError("no_response");
-      return;
-    }
+    if (!resp.body) { onError("no_response"); return; }
 
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();
@@ -91,12 +108,7 @@ export async function streamVoiceChat({
           const content = parsed.choices?.[0]?.delta?.content as string | undefined;
           if (content) {
             sentenceBuffer += content;
-
-            // Check for sentence boundaries
-            const sentenceEnd = /[.!?…]\s*$/;
-            if (sentenceEnd.test(sentenceBuffer)) {
-              flushSentence();
-            }
+            if (/[.!?…]\s*$/.test(sentenceBuffer)) flushSentence();
           }
         } catch {
           textBuffer = line + "\n" + textBuffer;
@@ -105,42 +117,73 @@ export async function streamVoiceChat({
       }
     }
 
-    // Flush remaining
     flushSentence();
     onDone(fullText);
   } catch (e: any) {
-    if (e.name !== "AbortError") {
-      onError(e.message || "stream_error");
-    }
+    if (e.name !== "AbortError") onError(e.message || "stream_error");
   }
 }
 
 /**
- * Fetches TTS audio as a blob for a given text.
- * Returns an audio URL ready for playback.
+ * Fetches TTS audio. Falls back to browser Speech Synthesis if ElevenLabs is unavailable.
  */
 export async function fetchTTSAudio(
   text: string,
   signal?: AbortSignal
 ): Promise<string> {
-  const response = await fetch(TTS_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-    },
-    body: JSON.stringify({ text }),
-    signal,
-  });
+  // If we already know ElevenLabs is down, go straight to browser TTS
+  if (useBrowserTTS) {
+    return speakWithBrowserTTS(text);
+  }
 
-  if (!response.ok) throw new Error("TTS failed");
+  try {
+    const response = await fetch(TTS_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      },
+      body: JSON.stringify({ text }),
+      signal,
+    });
 
-  const audioBlob = await response.blob();
-  return URL.createObjectURL(audioBlob);
+    if (!response.ok) {
+      console.warn("TTS endpoint error, falling back to browser TTS");
+      useBrowserTTS = true;
+      return speakWithBrowserTTS(text);
+    }
+
+    // Check if the response is JSON (fallback signal) or audio
+    const contentType = response.headers.get("Content-Type") || "";
+    if (contentType.includes("application/json")) {
+      const data = await response.json();
+      if (data?.fallback) {
+        console.warn("ElevenLabs unavailable, using browser TTS:", data.error);
+        useBrowserTTS = true;
+        return speakWithBrowserTTS(text);
+      }
+      throw new Error(data?.error || "Unexpected JSON response");
+    }
+
+    const audioBlob = await response.blob();
+    if (audioBlob.size < 100) {
+      console.warn("TTS returned tiny audio, falling back");
+      useBrowserTTS = true;
+      return speakWithBrowserTTS(text);
+    }
+
+    return URL.createObjectURL(audioBlob);
+  } catch (e: any) {
+    if (e.name === "AbortError") throw e;
+    console.warn("TTS fetch error, falling back to browser TTS:", e.message);
+    useBrowserTTS = true;
+    return speakWithBrowserTTS(text);
+  }
 }
 
 /**
  * Hook for managing an audio queue with interruption support.
+ * Handles both blob URLs and browser TTS sentinel values.
  */
 export function useAudioQueue() {
   const queueRef = useRef<string[]>([]);
@@ -156,6 +199,13 @@ export function useAudioQueue() {
     }
 
     const url = queueRef.current.shift()!;
+
+    // Browser TTS sentinel — already played via speechSynthesis
+    if (url === "__browser_tts__") {
+      playNext();
+      return;
+    }
+
     const audio = new Audio(url);
     currentAudioRef.current = audio;
 
@@ -187,14 +237,17 @@ export function useAudioQueue() {
   }, [playNext]);
 
   const stopAll = useCallback(() => {
-    queueRef.current.forEach(url => URL.revokeObjectURL(url));
+    // Also cancel any browser TTS
+    if ("speechSynthesis" in window) speechSynthesis.cancel();
+
+    queueRef.current.forEach(url => {
+      if (url !== "__browser_tts__") URL.revokeObjectURL(url);
+    });
     queueRef.current = [];
     if (currentAudioRef.current) {
       currentAudioRef.current.pause();
       currentAudioRef.current.currentTime = 0;
-      if (currentAudioRef.current.src) {
-        URL.revokeObjectURL(currentAudioRef.current.src);
-      }
+      if (currentAudioRef.current.src) URL.revokeObjectURL(currentAudioRef.current.src);
       currentAudioRef.current = null;
     }
     isPlayingRef.current = false;
