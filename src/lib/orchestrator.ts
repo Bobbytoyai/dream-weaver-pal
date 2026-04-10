@@ -1,13 +1,16 @@
 /**
- * Bobby Intelligence Orchestrator v2.5
+ * Bobby Intelligence Orchestrator v4.8 — Offline-First
  * 
  * Central brain that decides:
- * → what to say (response selection)
+ * → what to say (response selection — OFFLINE FIRST)
  * → how to say it (emotion + voice tone)
  * → what face to show (facial expression)
  * → what action to trigger (follow-up, game, story)
  * 
- * Pipeline: detect_intent → detect_emotion → retrieve_memory → select_response → assign_expression → generate_follow_up
+ * Pipeline: detect_intent → check_local_cache → check_offline_kb → detect_emotion → retrieve_memory → select_response → assign_expression → generate_follow_up
+ * 
+ * RULE: Always try local/offline before calling AI.
+ * AI is only used when offline confidence < 0.7 AND network is available.
  */
 
 import { detectBobbyEmotion, detectEmotionIntensity } from "./emotionMapper";
@@ -15,9 +18,11 @@ import { detectEmotionForTTS } from "./voicePipeline";
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import type { Emotion } from "./voicePipeline";
 import type { ChildMemory } from "./memoryService";
-import { getOfflineResponse } from "./offlineEngine";
+import { getOfflineResponse, canHandleOffline } from "./offlineEngine";
 import { getCachedResponse, isSimpleGreeting } from "./responseCache";
 import { isHighLatency } from "./stabilityEngine";
+import { lookupCachedAI } from "./localMemoryStore";
+import { matchQAWithConfidence } from "./offline-intents";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TYPES
@@ -140,19 +145,33 @@ function buildMemoryContext(memory: ChildMemory | null, intent: BobbyIntent): st
 function selectResponse(
   input: OrchestratorInput,
   intent: BobbyIntent
-): { response: string | null; source: "cache" | "offline" | "ai" } {
-  // Fast path 1: cached greeting
+): { response: string | null; source: "cache" | "offline" | "local_ai_cache" | "ai" } {
+  // Fast path 1: cached greeting (instant, <1ms)
   if (intent === "greeting" && isSimpleGreeting(input.userText)) {
     return { response: getCachedResponse("greeting"), source: "cache" };
   }
 
-  // Fast path 2: offline engine (no internet OR high latency)
+  // Fast path 2: offline engine — ALWAYS TRY FIRST (offline-first priority)
+  // Check if offline engine can handle with good confidence
+  if (canHandleOffline(input.userText)) {
+    const offlineResp = getOfflineResponse(input.userText, input.childName);
+    return { response: offlineResp.text, source: "offline" };
+  }
+
+  // Fast path 3: local AI response cache (previously cached AI responses)
+  const cachedAI = lookupCachedAI(input.userText);
+  if (cachedAI) {
+    console.log("[Orchestrator] 💾 Using cached AI response");
+    return { response: cachedAI.answer, source: "local_ai_cache" };
+  }
+
+  // Path 4: if offline or high latency, force offline fallback
   if (input.isOffline || isHighLatency()) {
     const offlineResp = getOfflineResponse(input.userText, input.childName);
     return { response: offlineResp.text, source: "offline" };
   }
 
-  // Default: delegate to AI (bobby-brain)
+  // Default: delegate to AI (bobby-brain) — only when local can't handle
   return { response: null, source: "ai" };
 }
 
