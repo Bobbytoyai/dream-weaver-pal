@@ -126,6 +126,18 @@ const STATE_TARGETS: Record<FaceState, Partial<FaceAnimationState>> = {
     headTiltX: 0.06, headTiltZ: 0.14, glowIntensity: 0.6,
     pupilSize: 1.25, cheekGlow: 0.18, irisGlow: 0.75, eyeSparkle: 0.85,
   },
+  playful: {
+    eyeOpenness: 1.1, eyebrowHeight: 0.18, eyebrowTilt: 0.1,
+    mouthOpenness: 0.15, mouthWidth: 0.7, mouthCurve: 0.4, mouthRound: 0, jawDrop: 0.08,
+    headTiltX: 0.05, headTiltZ: 0.12, glowIntensity: 0.8,
+    pupilSize: 1.2, cheekGlow: 0.45, irisGlow: 0.75, eyeSparkle: 0.9,
+  },
+  proud: {
+    eyeOpenness: 1.0, eyebrowHeight: 0.1, eyebrowTilt: 0,
+    mouthOpenness: 0.08, mouthWidth: 0.62, mouthCurve: 0.32, mouthRound: 0, jawDrop: 0.03,
+    headTiltX: -0.06, headTiltZ: 0, glowIntensity: 0.7,
+    pupilSize: 1.1, cheekGlow: 0.35, irisGlow: 0.65, eyeSparkle: 0.75,
+  },
 };
 
 const DEFAULT_STATE: FaceAnimationState = {
