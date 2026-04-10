@@ -25,7 +25,7 @@ interface Story {
   is_favorite: boolean;
 }
 
-const CATEGORY_META: Record<string, { emoji: string; gradient: string; accent: string }> = {
+const CATEGORY_META: Record<string, { emoji: string; gradient: string; accent: string; label?: string }> = {
   Pirate:    { emoji: "🏴‍☠️", gradient: "from-amber-500/20 to-orange-500/10", accent: "border-amber-500/25" },
   Princesse: { emoji: "👑", gradient: "from-pink-500/20 to-rose-500/10", accent: "border-pink-500/25" },
   Espace:    { emoji: "🚀", gradient: "from-indigo-500/20 to-blue-500/10", accent: "border-indigo-500/25" },
@@ -34,7 +34,14 @@ const CATEGORY_META: Record<string, { emoji: string; gradient: string; accent: s
   Éducatif:  { emoji: "🧠", gradient: "from-teal-500/20 to-cyan-500/10", accent: "border-teal-500/25" },
   Aventure:  { emoji: "⚔️", gradient: "from-red-500/20 to-orange-500/10", accent: "border-red-500/25" },
   Nature:    { emoji: "🌿", gradient: "from-lime-500/20 to-green-500/10", accent: "border-lime-500/25" },
+  Mythologie:  { emoji: "🏛️", gradient: "from-yellow-500/20 to-amber-500/10", accent: "border-yellow-500/25", label: "Mythologie" },
+  Musique:     { emoji: "🎵", gradient: "from-fuchsia-500/20 to-pink-500/10", accent: "border-fuchsia-500/25", label: "Musique" },
+  Frissons:    { emoji: "👻", gradient: "from-slate-500/20 to-zinc-500/10", accent: "border-slate-500/25", label: "Frissons" },
+  Voyages:     { emoji: "🌍", gradient: "from-sky-500/20 to-blue-500/10", accent: "border-sky-500/25", label: "Voyages" },
 };
+
+// All categories to show in the grid (including empty ones)
+const ALL_CATEGORIES = ["Pirate", "Princesse", "Espace", "Animaux", "Magie", "Éducatif", "Aventure", "Nature", "Mythologie", "Musique", "Frissons", "Voyages"];
 
 const DEFAULT_META = { emoji: "📖", gradient: "from-slate-500/20 to-gray-500/10", accent: "border-slate-500/25" };
 
@@ -244,43 +251,52 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
             <span className="text-4xl">{meta.emoji}</span>
             <div>
               <h3 className="text-lg font-bold text-foreground">{selectedCategory}</h3>
-              <p className="text-[11px] text-muted-foreground">{catStories.length} histoire{catStories.length > 1 ? "s" : ""}</p>
+              <p className="text-[11px] text-muted-foreground">
+                {catStories.length > 0 ? `${catStories.length} histoire${catStories.length > 1 ? "s" : ""}` : "Bientôt disponible"}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Story cards grid */}
-        <div className="grid grid-cols-2 gap-3">
-          {catStories.map(story => (
-            <button
-              key={story.id}
-              onClick={() => setSelectedStory(story)}
-              className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-4 text-left border ${meta.accent} hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 relative group aspect-square flex flex-col justify-between`}
-            >
-              <div>
-                <span className="text-2xl block mb-2">{meta.emoji}</span>
-                <h4 className="text-[12px] font-bold text-foreground leading-tight line-clamp-2">{story.title}</h4>
-                {story.mood && (
-                  <p className="text-[9px] text-muted-foreground mt-1 line-clamp-1">{story.mood}</p>
-                )}
-              </div>
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
-                  <Clock className="w-2.5 h-2.5" />
-                  {DURATION_LABELS[story.duration] || story.duration}
-                </span>
-                <button
-                  onClick={(e) => { e.stopPropagation(); toggleFavorite(story.id); }}
-                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
-                    story.is_favorite ? "text-red-500" : "text-muted-foreground/30 group-hover:text-red-300"
-                  }`}
-                >
-                  <Heart className={`w-3.5 h-3.5 ${story.is_favorite ? "fill-current" : ""}`} />
-                </button>
-              </div>
-            </button>
-          ))}
-        </div>
+        {catStories.length === 0 ? (
+          <div className="text-center py-12">
+            <span className="text-5xl block mb-4">{meta.emoji}</span>
+            <p className="text-sm font-semibold text-foreground">Bientôt disponible !</p>
+            <p className="text-xs text-muted-foreground mt-1">De nouvelles histoires arrivent très bientôt dans cette catégorie ✨</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {catStories.map(story => (
+              <button
+                key={story.id}
+                onClick={() => setSelectedStory(story)}
+                className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-4 text-left border ${meta.accent} hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 relative group aspect-square flex flex-col justify-between`}
+              >
+                <div>
+                  <span className="text-2xl block mb-2">{meta.emoji}</span>
+                  <h4 className="text-[12px] font-bold text-foreground leading-tight line-clamp-2">{story.title}</h4>
+                  {story.mood && (
+                    <p className="text-[9px] text-muted-foreground mt-1 line-clamp-1">{story.mood}</p>
+                  )}
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
+                    <Clock className="w-2.5 h-2.5" />
+                    {DURATION_LABELS[story.duration] || story.duration}
+                  </span>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleFavorite(story.id); }}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                      story.is_favorite ? "text-red-500" : "text-muted-foreground/30 group-hover:text-red-300"
+                    }`}
+                  >
+                    <Heart className={`w-3.5 h-3.5 ${story.is_favorite ? "fill-current" : ""}`} />
+                  </button>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -337,19 +353,21 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
               <h3 className="text-[13px] font-bold text-foreground">Catégories</h3>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              {Object.entries(categories).map(([category, catStories]) => {
+              {ALL_CATEGORIES.map(category => {
+                const catStories = categories[category] || [];
                 const meta = CATEGORY_META[category] || DEFAULT_META;
+                const isEmpty = catStories.length === 0;
                 return (
                   <button
                     key={category}
                     onClick={() => setSelectedCategory(category)}
-                    className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-5 text-left border ${meta.accent} hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 aspect-square flex flex-col justify-between`}
+                    className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-5 text-left border ${meta.accent} hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 aspect-square flex flex-col justify-between ${isEmpty ? "opacity-75" : ""}`}
                   >
                     <span className="text-4xl block">{meta.emoji}</span>
                     <div>
                       <h3 className="text-[14px] font-bold text-foreground">{category}</h3>
                       <p className="text-[10px] text-muted-foreground mt-0.5">
-                        {catStories.length} histoire{catStories.length > 1 ? "s" : ""}
+                        {isEmpty ? "Bientôt disponible ✨" : `${catStories.length} histoire${catStories.length > 1 ? "s" : ""}`}
                       </p>
                     </div>
                   </button>
