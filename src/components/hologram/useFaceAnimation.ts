@@ -503,7 +503,12 @@ export function useFaceAnimation(
       (targets.headTiltX ?? 0) - gazeY * 0.18 + breathX + microOffset.current.headX + speechHeadNod,
       delta * gazeSpeed * 0.7
     );
-    c.headTiltY = lerp(c.headTiltY, gazeX * 0.45, delta * gazeSpeed * 0.8);
+    // v3.9: Speaking gaze — 70% focus on user, 30% natural drift
+    const speakingGazeScale = faceState === "speaking" ? 0.7 : 1.0;
+    const speakingDriftScale = faceState === "speaking" ? 0.3 : 0;
+    const speakingDriftX = speakingDriftScale * Math.sin(breathPhase.current * 2.1) * 0.06;
+    const speakingDriftY = speakingDriftScale * Math.cos(breathPhase.current * 1.7) * 0.03;
+    c.headTiltY = lerp(c.headTiltY, gazeX * 0.45 * speakingGazeScale + speakingDriftX, delta * gazeSpeed * 0.8);
     c.headTiltZ = lerp(
       c.headTiltZ,
       (targets.headTiltZ ?? 0) + microOffset.current.headZ + gazeX * 0.05 + curiousTiltZ,
@@ -511,14 +516,15 @@ export function useFaceAnimation(
     );
 
     // Strong, fluid pupil tracking — eyes lock onto cursor position
+    // v3.9: 70% focus / 30% drift during speaking
     c.pupilX = lerp(
       c.pupilX,
-      gazeX * 0.32 + thinkingPupilX + microOffset.current.pupilDrift + eyeDriftX,
+      gazeX * 0.32 * speakingGazeScale + thinkingPupilX + microOffset.current.pupilDrift + eyeDriftX + speakingDriftX,
       delta * pupilSpeed * 2.0
     );
     c.pupilY = lerp(
       c.pupilY,
-      gazeY * 0.24 + thinkingPupilY + breathY + eyeDriftY,
+      gazeY * 0.24 * speakingGazeScale + thinkingPupilY + breathY + eyeDriftY + speakingDriftY,
       delta * pupilSpeed * 2.0
     );
 
