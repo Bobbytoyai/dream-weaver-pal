@@ -44,8 +44,42 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: true });
 
     if (msgError || !messages || messages.length === 0) {
-      return new Response(JSON.stringify({ error: "No messages found" }), {
-        status: 404,
+      // Return a default analysis instead of erroring out
+      const defaultAnalysis = {
+        summary: "Session trop courte pour une analyse complète.",
+        emotions: { joy: 50, curiosity: 50, frustration: 0, fear: 0, sadness: 0, excitement: 30 },
+        topics_detected: [],
+        behavior_insights: ["Session courte ou sans messages"],
+        engagement_level: "low",
+        mood_score: "neutral",
+        alerts: [],
+        sociability_score: 50,
+        curiosity_score: 50,
+        emotional_stability_score: 50,
+        extracted_interests: [],
+        session_tags: [],
+      };
+
+      // Save minimal analysis
+      await supabase.from("conversation_analyses").insert({
+        session_id: sessionId,
+        summary: defaultAnalysis.summary,
+        emotions: defaultAnalysis.emotions,
+        topics_detected: [],
+        behavior_insights: defaultAnalysis.behavior_insights,
+        engagement_level: defaultAnalysis.engagement_level,
+        mood_score: defaultAnalysis.mood_score,
+        alerts: [],
+        sociability_score: 50,
+        curiosity_score: 50,
+        emotional_stability_score: 50,
+        extracted_interests: [],
+      });
+
+      await supabase.from("child_sessions").update({ ai_summary: defaultAnalysis.summary, tags: [] }).eq("id", sessionId);
+
+      return new Response(JSON.stringify({ analysis: defaultAnalysis }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
