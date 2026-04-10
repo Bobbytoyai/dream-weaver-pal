@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           text: text.trim(),
-          model_id: "eleven_turbo_v2_5",
+          model_id: "eleven_multilingual_v2",
           voice_settings: {
             stability: profile.stability,
             similarity_boost: profile.similarity_boost,
