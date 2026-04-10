@@ -1148,49 +1148,74 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const renderContenu = () => (
     <div className="p-4 space-y-4">
       <Card title="Modes de contenu" icon={BookOpen}>
-        <div className="space-y-1">
+        <div className="grid grid-cols-2 gap-2">
           {([
-            ["freeChat", "💬 Discussion libre", "Bobby bavarde librement"],
-            ["educational", "📚 Éducatif", "Apprentissage ludique"],
-            ["games", "🎮 Jeux", "Devinettes, quiz, défis"],
-            ["stories", "📖 Histoires", "Contes et aventures"],
-          ] as const).map(([key, label, desc]) => (
-            <div key={key} className="flex items-center justify-between py-2.5">
-              <div>
-                <span className="text-sm font-bold text-foreground">{label}</span>
-                <p className="text-xs text-muted-foreground">{desc}</p>
-              </div>
-              <Toggle
-                value={settings.contentModes[key as keyof typeof settings.contentModes]}
-                onChange={(v) => updateNested("contentModes", key, v)}
-              />
-            </div>
-          ))}
+            ["freeChat", "💬", "Discussion libre", "Bobby bavarde librement"],
+            ["educational", "📚", "Éducatif", "Apprentissage ludique"],
+            ["games", "🎮", "Jeux", "Quiz, devinettes, défis"],
+            ["stories", "📖", "Histoires", "Contes et aventures"],
+          ] as const).map(([key, emoji, label, desc]) => {
+            const active = settings.contentModes[key as keyof typeof settings.contentModes];
+            return (
+              <button key={key}
+                onClick={() => updateNested("contentModes", key, !active)}
+                className={`relative p-4 rounded-2xl text-left transition-all duration-200 border-2 ${
+                  active
+                    ? "bg-primary/10 border-primary/40 shadow-[0_0_16px_hsl(var(--primary)/0.15)]"
+                    : "bg-muted/50 border-transparent hover:bg-muted"
+                }`}>
+                <div className="text-2xl mb-2">{emoji}</div>
+                <h4 className="text-sm font-extrabold text-foreground">{label}</h4>
+                <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{desc}</p>
+                <div className={`absolute top-3 right-3 w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                  active ? "bg-primary text-primary-foreground" : "bg-muted-foreground/20"
+                }`}>
+                  {active && <span className="text-[10px] font-bold">✓</span>}
+                </div>
+              </button>
+            );
+          })}
         </div>
       </Card>
+
       <Card title="Thèmes d'histoires" icon={Sparkles}>
-        <div className="space-y-2">
-          {ALL_THEMES.map(theme => (
-            <button key={theme.id} onClick={() => toggleTheme(theme.id)}
-              className={`w-full flex items-center justify-between p-3 rounded-xl text-sm font-bold transition-all ${
-                settings.enabledThemes.includes(theme.id) ? "bg-primary/10 text-primary border border-primary/30" : "bg-muted text-muted-foreground"
-              }`}>
-              <span>{theme.label}</span>
-              <span className="text-xs">{settings.enabledThemes.includes(theme.id) ? "✓" : "—"}</span>
-            </button>
-          ))}
+        <div className="grid grid-cols-3 gap-2">
+          {ALL_THEMES.map(theme => {
+            const active = settings.enabledThemes.includes(theme.id);
+            return (
+              <button key={theme.id} onClick={() => toggleTheme(theme.id)}
+                className={`p-3 rounded-2xl text-center transition-all duration-200 border-2 ${
+                  active
+                    ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
+                    : "bg-muted/50 border-transparent hover:bg-muted"
+                }`}>
+                <span className="text-xl block mb-1">{theme.label.split(" ")[0]}</span>
+                <span className={`text-[11px] font-bold ${active ? "text-primary" : "text-muted-foreground"}`}>
+                  {theme.label.split(" ").slice(1).join(" ") || theme.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </Card>
-      <Card title="Durée des histoires">
-        <div className="flex gap-2">
-          {([["courte", "⚡ Courte"], ["moyenne", "📖 Moyenne"], ["longue", "📚 Longue"]] as const).map(([val, label]) => (
+
+      <Card title="Durée des histoires" icon={Clock}>
+        <div className="grid grid-cols-3 gap-2">
+          {([["courte", "⚡", "Courte", "~3 min"], ["moyenne", "📖", "Moyenne", "~7 min"], ["longue", "📚", "Longue", "~12 min"]] as const).map(([val, emoji, label, sub]) => (
             <button key={val} onClick={() => updateSetting("storyDuration", val)}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${settings.storyDuration === val ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-              {label}
+              className={`p-3 rounded-2xl text-center transition-all duration-200 border-2 ${
+                settings.storyDuration === val
+                  ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
+                  : "bg-muted/50 border-transparent hover:bg-muted"
+              }`}>
+              <span className="text-lg block">{emoji}</span>
+              <span className={`text-xs font-bold block ${settings.storyDuration === val ? "text-primary" : "text-foreground"}`}>{label}</span>
+              <span className="text-[10px] text-muted-foreground">{sub}</span>
             </button>
           ))}
         </div>
       </Card>
+
       <Card>
         <SettingRow icon={Sparkles} title="Histoires interactives" desc="L'enfant fait des choix dans l'histoire">
           <Toggle value={settings.storyInteractive} onChange={(v) => updateSetting("storyInteractive", v)} />
