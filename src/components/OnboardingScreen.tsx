@@ -1,16 +1,19 @@
 import { useState, useEffect } from "react";
 import companionAvatar from "@/assets/companion-avatar.png";
+import VoicePickerStep from "./onboarding/VoicePickerStep";
+import type { VoiceProfile } from "@/lib/voicePipeline";
 
 interface OnboardingScreenProps {
-  onComplete: (name: string, age: number) => void;
+  onComplete: (name: string, age: number, voice: VoiceProfile) => void;
 }
 
 const ageGroups = [5, 6, 7, 8, 9, 10, 11, 12];
 
 const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
-  const [step, setStep] = useState(0); // 0=welcome, 1=name, 2=age, 3=ready
+  const [step, setStep] = useState(0); // 0=welcome, 1=name, 2=age, 3=voice, 4=ready
   const [name, setName] = useState("");
   const [age, setAge] = useState<number | null>(null);
+  const [voice, setVoice] = useState<VoiceProfile>("female");
   const [animClass, setAnimClass] = useState("animate-fadeInUp");
 
   const goStep = (next: number) => {
@@ -23,11 +26,11 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
 
   // Auto-advance from ready screen
   useEffect(() => {
-    if (step === 3 && age) {
-      const t = setTimeout(() => onComplete(name.trim(), age), 2200);
+    if (step === 4 && age) {
+      const t = setTimeout(() => onComplete(name.trim(), age, voice), 2200);
       return () => clearTimeout(t);
     }
-  }, [step, age, name, onComplete]);
+  }, [step, age, name, voice, onComplete]);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[hsl(230,30%,8%)] via-[hsl(250,25%,12%)] to-[hsl(220,25%,10%)]">
@@ -58,9 +61,9 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
 
       {/* Content */}
       <div className={`relative z-10 flex flex-col items-center w-full max-w-sm px-6 ${animClass}`}>
-        {/* Step indicators */}
+        {/* Step indicators — now 4 dots (0-3) */}
         <div className="flex gap-2 mb-8">
-          {[0, 1, 2].map((s) => (
+          {[0, 1, 2, 3].map((s) => (
             <div
               key={s}
               className={`h-1.5 rounded-full transition-all duration-500 ${
@@ -83,18 +86,18 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
                 className="relative w-40 h-40 drop-shadow-2xl float"
               />
             </div>
-            <h1 className="text-4xl font-extrabold text-white mb-2 tracking-tight">
+            <h1 className="text-4xl font-extrabold text-foreground mb-2 tracking-tight">
               Salut ! <span className="inline-block animate-wave">👋</span>
             </h1>
-            <p className="text-white/60 text-lg mb-1 font-semibold">
+            <p className="text-muted-foreground text-lg mb-1 font-semibold">
               Je suis <span className="text-[hsl(var(--primary))] font-extrabold">Bobby</span>
             </p>
-            <p className="text-white/40 text-base mb-10 max-w-[280px] leading-relaxed">
+            <p className="text-muted-foreground/60 text-base mb-10 max-w-[280px] leading-relaxed">
               Ton compagnon magique pour les histoires, les jeux et les découvertes !
             </p>
             <button
               onClick={() => goStep(1)}
-              className="group relative w-full py-4 rounded-2xl bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-white font-bold text-lg shadow-lg shadow-[hsla(215,85%,58%,0.3)] hover:shadow-xl hover:shadow-[hsla(215,85%,58%,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+              className="group relative w-full py-4 rounded-2xl bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] font-bold text-lg shadow-lg shadow-[hsla(215,85%,58%,0.3)] hover:shadow-xl hover:shadow-[hsla(215,85%,58%,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
             >
               C'est parti ! 🚀
               <div className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -108,10 +111,10 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--secondary))] flex items-center justify-center mb-6 shadow-lg shadow-[hsla(215,85%,58%,0.25)]">
               <span className="text-4xl">😊</span>
             </div>
-            <h2 className="text-3xl font-extrabold text-white mb-2">
+            <h2 className="text-3xl font-extrabold text-foreground mb-2">
               Comment tu t'appelles ?
             </h2>
-            <p className="text-white/40 text-sm mb-8">
+            <p className="text-muted-foreground text-sm mb-8">
               Bobby veut connaître ton prénom !
             </p>
             <input
@@ -120,7 +123,7 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
               onChange={(e) => setName(e.target.value)}
               placeholder="Ton prénom..."
               autoFocus
-              className="w-full rounded-2xl border-2 border-white/10 bg-white/5 backdrop-blur-sm px-6 py-4 text-lg text-center font-bold text-white placeholder:text-white/25 focus:border-[hsl(var(--primary))] focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[hsla(215,85%,58%,0.3)] transition-all"
+              className="w-full rounded-2xl border-2 border-border bg-[hsl(var(--muted))]/30 backdrop-blur-sm px-6 py-4 text-lg text-center font-bold text-foreground placeholder:text-muted-foreground/40 focus:border-[hsl(var(--primary))] focus:bg-[hsl(var(--muted))]/50 focus:outline-none focus:ring-2 focus:ring-[hsla(200,100%,60%,0.3)] transition-all"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && name.trim().length >= 2) goStep(2);
               }}
@@ -128,7 +131,7 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
             <button
               onClick={() => goStep(2)}
               disabled={name.trim().length < 2}
-              className="mt-6 w-full py-4 rounded-2xl bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-white font-bold text-lg shadow-lg shadow-[hsla(215,85%,58%,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed"
+              className="mt-6 w-full py-4 rounded-2xl bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] font-bold text-lg shadow-lg shadow-[hsla(215,85%,58%,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed"
             >
               Suivant ✨
             </button>
@@ -141,10 +144,10 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[hsl(270,55%,62%)] to-[hsl(320,55%,65%)] flex items-center justify-center mb-6 shadow-lg shadow-[hsla(270,55%,62%,0.25)]">
               <span className="text-4xl">🎂</span>
             </div>
-            <h2 className="text-3xl font-extrabold text-white mb-2">
+            <h2 className="text-3xl font-extrabold text-foreground mb-2">
               Tu as quel âge, {name.trim()} ?
             </h2>
-            <p className="text-white/40 text-sm mb-6">
+            <p className="text-muted-foreground text-sm mb-6">
               Pour que Bobby s'adapte à toi !
             </p>
             <div className="grid grid-cols-4 gap-3 w-full mb-8">
@@ -154,8 +157,8 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
                   onClick={() => setAge(a)}
                   className={`relative rounded-2xl py-3.5 text-xl font-extrabold transition-all duration-200 ${
                     age === a
-                      ? "bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-white scale-110 shadow-lg shadow-[hsla(215,85%,58%,0.35)]"
-                      : "bg-white/5 text-white/60 border border-white/10 hover:border-[hsl(var(--primary))]/50 hover:bg-white/10 hover:text-white hover:scale-105"
+                      ? "bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] scale-110 shadow-lg shadow-[hsla(215,85%,58%,0.35)]"
+                      : "bg-[hsl(var(--muted))]/50 text-muted-foreground border border-border hover:border-[hsl(var(--primary))]/50 hover:bg-[hsl(var(--muted))] hover:text-foreground hover:scale-105"
                   }`}
                 >
                   {a}
@@ -165,15 +168,25 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
             <button
               onClick={() => age && goStep(3)}
               disabled={!age}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-white font-bold text-lg shadow-lg shadow-[hsla(215,85%,58%,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed"
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] font-bold text-lg shadow-lg shadow-[hsla(215,85%,58%,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed"
             >
-              Commencer ! 🎉
+              Suivant ✨
             </button>
           </div>
         )}
 
-        {/* ── STEP 3: Ready (auto-advance) ── */}
+        {/* ── STEP 3: Voice ── */}
         {step === 3 && (
+          <VoicePickerStep
+            childName={name.trim()}
+            selectedVoice={voice}
+            onSelect={setVoice}
+            onNext={() => goStep(4)}
+          />
+        )}
+
+        {/* ── STEP 4: Ready (auto-advance) ── */}
+        {step === 4 && (
           <div className="flex flex-col items-center text-center">
             <div className="relative mb-8">
               <div className="absolute inset-0 rounded-full bg-[hsla(145,65%,50%,0.15)] blur-3xl scale-[2] animate-pulse" />
@@ -183,10 +196,10 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
                 className="relative w-32 h-32 drop-shadow-2xl animate-bounce-slow"
               />
             </div>
-            <h2 className="text-3xl font-extrabold text-white mb-3">
+            <h2 className="text-3xl font-extrabold text-foreground mb-3">
               Super, {name.trim()} ! 🌟
             </h2>
-            <p className="text-white/50 text-base mb-6">
+            <p className="text-muted-foreground text-base mb-6">
               Bobby est prêt à jouer avec toi !
             </p>
             <div className="flex gap-1.5">
