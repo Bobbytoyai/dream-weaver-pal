@@ -57,7 +57,7 @@ export interface OrchestratorOutput {
   /** Memory context string to inject into AI prompt */
   memoryContext: string | undefined;
   /** Source of the response */
-  source: "cache" | "offline" | "ai";
+  source: "cache" | "offline" | "local_ai_cache" | "ai";
   /** Suggested follow-up type */
   followUpType?: "question" | "suggestion" | "game" | "story";
 }
