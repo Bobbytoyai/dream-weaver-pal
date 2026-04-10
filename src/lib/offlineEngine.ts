@@ -1245,6 +1245,7 @@ const FOLLOW_UPS: Record<string, string[]> = {
   ADVENTURE: [" On part où ?", ""],
   BLOCKED: [""],
   UNKNOWN: [" Tu veux jouer ou une histoire ?", ""],
+  EDUCATION: [" Tu veux apprendre autre chose ? 😊", " Cool hein ? Tu veux une autre question ?", ""],
   QUESTION_SIMPLE: [""],
 };
 
