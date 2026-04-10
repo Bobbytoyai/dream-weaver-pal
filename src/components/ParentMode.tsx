@@ -235,7 +235,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const loadData = async () => {
     setLoading(true);
     const [sessionsRes, analysesRes] = await Promise.all([
-      supabase.from("child_sessions").select("*").eq("child_name", childName).order("started_at", { ascending: false }).limit(50),
+      supabase.from("child_sessions").select("*").order("started_at", { ascending: false }).limit(50),
       supabase.from("conversation_analyses").select("*").order("created_at", { ascending: false }).limit(50),
     ]);
     if (sessionsRes.data) setSessions(sessionsRes.data as any);
@@ -838,7 +838,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                         }`}>
                           <div className="flex items-center gap-1.5 mb-0.5">
                             <span className="text-[10px] font-bold text-muted-foreground">
-                              {isChild ? `👦 ${childName}` : "🤖 Bobby"}
+                              {isChild ? `👦 ${settings.childName || childName}` : "🤖 Bobby"}
                             </span>
                             {msg.detected_emotion && (
                               <span className="text-[10px]">
