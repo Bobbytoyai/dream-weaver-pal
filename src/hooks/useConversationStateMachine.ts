@@ -529,6 +529,8 @@ export function useConversationStateMachine({
       const offlineResp = getOfflineResponse(cleaned, childName);
       goToSpeaking();
       eventBus.emit({ type: "SPEECH_START" });
+      setBobbyFaceEmotion(detectBobbyEmotion(offlineResp.text));
+      setBobbyEmotionIntensity(detectEmotionIntensity(offlineResp.text));
       recentBobbyTextsRef.current = [offlineResp.text, ...recentBobbyTextsRef.current].slice(0, 8);
       fetchTTSAudio(offlineResp.text, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode).then(url => {
         audioQueue.enqueue(url);
