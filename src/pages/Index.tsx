@@ -5,14 +5,14 @@ import ParentMode from "@/components/ParentMode";
 import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/parentSettings";
 import { useChildMemory } from "@/hooks/useChildMemory";
 
-const CHILD_NAME = "Bobby";
-
 const Index = () => {
   const [mode, setMode] = useState<"voice" | "story" | "parent">("voice");
   const [parentSettings, setParentSettings] = useState<ParentSettings>(DEFAULT_PARENT_SETTINGS);
-  const { memory, loading, saveSettings } = useChildMemory(CHILD_NAME);
 
+  const childName = parentSettings.childName || "Bobby";
   const childAge = parentSettings.childAge || 7;
+
+  const { memory, loading, saveSettings } = useChildMemory(childName);
 
   // Restore parent settings from memory on load
   useEffect(() => {
@@ -31,7 +31,7 @@ const Index = () => {
   if (mode === "parent") {
     return (
       <ParentMode
-        childName={CHILD_NAME}
+        childName={childName}
         onClose={() => setMode("voice")}
         parentSettings={parentSettings}
         onSettingsChange={handleSettingsChange}
@@ -42,7 +42,7 @@ const Index = () => {
   if (mode === "story") {
     return (
       <StoryMode
-        childName={CHILD_NAME}
+        childName={childName}
         childAge={childAge}
         onBack={() => setMode("voice")}
         parentSettings={parentSettings}
@@ -53,7 +53,7 @@ const Index = () => {
 
   return (
     <VoiceScreen
-      childName={CHILD_NAME}
+      childName={childName}
       childAge={childAge}
       onSwitchToChat={() => {}}
       onSwitchToStory={() => setMode("story")}
