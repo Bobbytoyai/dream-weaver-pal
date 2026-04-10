@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Mic, MicOff } from "lucide-react";
+import { Mic, MicOff, BookOpen } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import { ParentSettings } from "@/components/ParentMode";
@@ -321,10 +321,22 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         </p>
       </div>
 
-      {/* Mic Button */}
-      <div className="pb-8 pt-4">
+      {/* Bottom controls */}
+      <div className="pb-8 pt-4 flex items-center gap-6">
+        {/* Story button */}
+        {onSwitchToStory && (
+          <button
+            onClick={onSwitchToStory}
+            disabled={state === "processing" || state === "speaking"}
+            className="w-14 h-14 rounded-full bg-card border-2 border-border flex items-center justify-center hover:border-primary hover:scale-110 active:scale-95 transition-all disabled:opacity-40"
+            aria-label="Mode histoire"
+          >
+            <BookOpen className="w-6 h-6 text-foreground" />
+          </button>
+        )}
+
+        {/* Mic Button */}
         <div className="relative">
-          {/* Pulse rings when listening */}
           {state === "listening" && (
             <>
               <span className="absolute inset-0 rounded-full bg-primary/20 voice-pulse-ring" />
