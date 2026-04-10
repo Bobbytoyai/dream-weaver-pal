@@ -337,10 +337,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   return (
     <group ref={rootRef}>
-      {/* ===== HEAD ===== */}
-      <mesh material={headMat} position={[0, 0, 0]}>
-        <sphereGeometry args={[HR, 64, 64]} />
-      </mesh>
+      {/* HEAD removed — face features only */}
 
       {/* ===== EARS ===== */}
       <mesh material={earMat} position={[-HR * 0.92, 0.2, 0]} scale={[0.22, 0.3, 0.18]}>
