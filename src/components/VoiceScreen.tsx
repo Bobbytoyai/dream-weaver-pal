@@ -279,8 +279,11 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     pendingSentencesRef.current++;
     recentBobbyTextsRef.current = [sentence, ...recentBobbyTextsRef.current].slice(0, 8);
 
+    // Detect emotion from Bobby's response for expressive TTS
+    const responseEmotion = detectEmotionForTTS(sentence) || currentEmotionRef.current;
+
     try {
-      const url = await fetchTTSAudio(sentence, signal, currentVoiceId);
+      const url = await fetchTTSAudio(sentence, signal, currentVoiceId, responseEmotion);
       if (!signal?.aborted) {
         setState("speaking");
         setContinuousListenEnabled(false);
@@ -297,7 +300,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         });
       }
     }
-  }, [audioQueue, goToListening]);
+  }, [audioQueue, currentVoiceId, goToListening]);
 
   const getAIResponse = useCallback(async (userText: string, intent?: Intent) => {
     setState("processing");
