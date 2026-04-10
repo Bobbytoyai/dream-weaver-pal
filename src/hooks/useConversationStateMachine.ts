@@ -478,8 +478,9 @@ export function useConversationStateMachine({
           allSentencesDoneRef.current = true;
           setLastAiResponse(text || "");
           if (text) {
-            setBobbyFaceEmotion(detectBobbyEmotion(text));
-            setBobbyEmotionIntensity(detectEmotionIntensity(text));
+            const refined = refineExpression(text);
+            setBobbyFaceEmotion(refined.faceState);
+            setBobbyEmotionIntensity(refined.faceIntensity);
             setConversationHistory([...newHistory, { role: "assistant", content: text }]);
             session.addMessage("assistant", text);
             eventBus.emit({ type: "RESPONSE_READY", text });
