@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Mic, MicOff, MessageSquare } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
+import { ParentSettings } from "@/components/ParentMode";
 import companionAvatar from "@/assets/companion-avatar.png";
 
 type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
@@ -34,9 +35,10 @@ interface VoiceScreenProps {
   childAge: number;
   onSwitchToChat: () => void;
   onParentMode: () => void;
+  parentSettings?: ParentSettings;
 }
 
-const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode }: VoiceScreenProps) => {
+const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parentSettings }: VoiceScreenProps) => {
   const [state, setState] = useState<VoiceState>("idle");
   const [conversationHistory, setConversationHistory] = useState<AiMsg[]>([]);
 
