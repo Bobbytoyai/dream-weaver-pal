@@ -27,6 +27,8 @@ serve(async (req) => {
       });
     }
 
+    // Voice: child-friendly, cartoon-like, expressive explorer
+    // Xb7hH8MSUJpSbSDYk0k2 = "Alice" (child-like, energetic French voice)
     const selectedVoice = voiceId || "Xb7hH8MSUJpSbSDYk0k2";
 
     const response = await fetch(
@@ -41,11 +43,12 @@ serve(async (req) => {
           text,
           model_id: "eleven_turbo_v2_5",
           voice_settings: {
-            stability: 0.35,
-            similarity_boost: 0.8,
-            style: 0.6,
+            // Cartoon child voice: expressive, dynamic, joyful explorer
+            stability: 0.28,            // Lower = more expressive variation
+            similarity_boost: 0.75,     // Keep voice character
+            style: 0.75,               // High expressiveness
             use_speaker_boost: true,
-            speed: 1.05,
+            speed: 1.08,               // Slightly faster for energy
           },
         }),
       }
@@ -54,7 +57,6 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("ElevenLabs error:", response.status, errorText);
-      // Return 200 with fallback signal so client can use browser TTS
       return new Response(JSON.stringify({ error: "TTS_SERVICE_UNAVAILABLE", fallback: true }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
