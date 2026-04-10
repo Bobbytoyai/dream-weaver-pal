@@ -168,6 +168,7 @@ export function useConversationStateMachine({
   const isSpeakingRef = useRef(false);
   const retryCountRef = useRef(0);
   const narrationAbortRef = useRef<AbortController | null>(null);
+  const speakAndListenRef = useRef<((text: string) => void) | null>(null);
 
   const audioQueue = useAudioQueue();
   const session = useSessionTracker(childName, childAge);
