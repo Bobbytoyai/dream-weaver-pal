@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { BookOpen, Settings } from "lucide-react";
+import { BookOpen, Settings, Camera } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import { useWakeWord } from "@/hooks/useWakeWord";
@@ -304,6 +304,15 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
           <BookOpen className="w-4 h-4" />
           Histoires
         </button>
+
+        {/* Camera active indicator */}
+        {parentSettings?.enableCamera && (
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30">
+            <Camera className="w-3.5 h-3.5 text-primary" />
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          </div>
+        )}
+
         <button
           onClick={handleParentMode}
           className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border text-muted-foreground text-sm hover:border-primary hover:scale-105 active:scale-95 transition-all"
