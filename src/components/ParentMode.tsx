@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Clock, MessageSquare, Heart, Brain, Loader2, RefreshCw, Mic, BookOpen, Timer, Sparkles, Shield, User } from "lucide-react";
+import { ArrowLeft, Clock, MessageSquare, Heart, Brain, Loader2, RefreshCw, Mic, BookOpen, Timer, Sparkles, Shield, User, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ParentModeProps {
@@ -16,6 +16,7 @@ export interface ParentSettings {
   timeLimitMinutes: number | null;
   autoStop: boolean;
   voiceSpeed: "normal" | "slow" | "fast";
+  enableCamera: boolean;
 }
 
 export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
@@ -25,6 +26,7 @@ export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
   timeLimitMinutes: null,
   autoStop: true,
   voiceSpeed: "normal",
+  enableCamera: false,
 };
 
 interface Session {
@@ -278,6 +280,21 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               {label}
             </button>
           ))}
+        </div>
+      </div>
+      <div className="bg-card rounded-2xl p-4 border border-border">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Camera className="w-5 h-5 text-primary" />
+            <div>
+              <h3 className="text-sm font-bold text-foreground">Suivi du visage par caméra</h3>
+              <p className="text-xs text-muted-foreground">Buddy suit le visage de l'enfant avec la caméra</p>
+            </div>
+          </div>
+          <button onClick={() => updateSetting("enableCamera", !settings.enableCamera)}
+            className={`w-12 h-7 rounded-full transition-all ${settings.enableCamera ? "bg-primary" : "bg-muted"}`}>
+            <div className={`w-5 h-5 rounded-full bg-card shadow transition-transform ${settings.enableCamera ? "translate-x-6" : "translate-x-1"}`} />
+          </button>
         </div>
       </div>
     </div>
