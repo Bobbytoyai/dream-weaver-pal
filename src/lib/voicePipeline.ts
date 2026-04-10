@@ -1,5 +1,5 @@
 import { useCallback, useRef } from "react";
-
+import { piperSpeak, piperPreview } from "./piperTTS";
 const VOICE_CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-chat`;
 
 type AiMsg = { role: "user" | "assistant"; content: string };
@@ -236,27 +236,39 @@ export async function streamVoiceChat({
 }
 
 /**
- * Fetch (speak) TTS audio using the browser's Web Speech API.
- * voiceId maps to a VoiceProfile: "child" | "female" | "male"
+ * Fetch TTS audio using Piper TTS (neural, natural French voices).
+ * Falls back to browser TTS if Piper fails.
  */
 export async function fetchTTSAudio(text: string, signal?: AbortSignal, voiceId?: string): Promise<string> {
   const spokenText = sanitizeSpokenText(text);
-  if (!spokenText) return "__browser_tts__";
+  if (!spokenText) return "__piper_silent__";
 
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
   const profile = (voiceId as VoiceProfile) || "female";
-  return speakWithBrowserTTS(spokenText, profile);
+
+  try {
+    return await piperSpeak(spokenText, profile, signal);
+  } catch (e: any) {
+    if (e.name === "AbortError") throw e;
+    console.warn("Piper TTS failed, falling back to browser TTS:", e);
+    return speakWithBrowserTTS(spokenText, profile);
+  }
 }
 
 /**
  * Preview a voice profile (for settings screen)
  */
-export function previewVoiceProfile(profile: VoiceProfile): Promise<void> {
-  return speakWithBrowserTTS(
-    "Salut ! Je suis Bobby, ton compagnon préféré ! On va bien s'amuser ensemble !",
-    profile
-  ).then(() => {});
+export async function previewVoiceProfile(profile: VoiceProfile): Promise<void> {
+  try {
+    await piperPreview(profile);
+  } catch (e) {
+    console.warn("Piper preview failed, using browser TTS:", e);
+    await speakWithBrowserTTS(
+      "Salut ! Je suis Bobby, ton compagnon préféré ! On va bien s'amuser ensemble !",
+      profile,
+    );
+  }
 }
 
 export function useAudioQueue() {
