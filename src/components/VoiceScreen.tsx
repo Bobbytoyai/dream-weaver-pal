@@ -205,6 +205,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const abortRef = useRef<AbortController | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stuckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sleepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSentencesRef = useRef(0);
   const allSentencesDoneRef = useRef(false);
   const sessionStartedRef = useRef(false);
