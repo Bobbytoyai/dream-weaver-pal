@@ -16,7 +16,9 @@ export type FaceState =
   | "reassuring"
   | "sad"
   | "sleepy"
-  | "curious";
+  | "curious"
+  | "playful"
+  | "proud";
 
 export interface FaceAnimationState {
   eyeOpenness: number;
@@ -123,6 +125,18 @@ const STATE_TARGETS: Record<FaceState, Partial<FaceAnimationState>> = {
     mouthOpenness: 0.05, mouthWidth: 0.48, mouthCurve: 0.12, mouthRound: 0, jawDrop: 0,
     headTiltX: 0.06, headTiltZ: 0.14, glowIntensity: 0.6,
     pupilSize: 1.25, cheekGlow: 0.18, irisGlow: 0.75, eyeSparkle: 0.85,
+  },
+  playful: {
+    eyeOpenness: 1.1, eyebrowHeight: 0.18, eyebrowTilt: 0.1,
+    mouthOpenness: 0.15, mouthWidth: 0.7, mouthCurve: 0.4, mouthRound: 0, jawDrop: 0.08,
+    headTiltX: 0.05, headTiltZ: 0.12, glowIntensity: 0.8,
+    pupilSize: 1.2, cheekGlow: 0.45, irisGlow: 0.75, eyeSparkle: 0.9,
+  },
+  proud: {
+    eyeOpenness: 1.0, eyebrowHeight: 0.1, eyebrowTilt: 0,
+    mouthOpenness: 0.08, mouthWidth: 0.62, mouthCurve: 0.32, mouthRound: 0, jawDrop: 0.03,
+    headTiltX: -0.06, headTiltZ: 0, glowIntensity: 0.7,
+    pupilSize: 1.1, cheekGlow: 0.35, irisGlow: 0.65, eyeSparkle: 0.75,
   },
 };
 
@@ -346,6 +360,36 @@ export function useFaceAnimation(
       sleepyEyeWobble = Math.sin(breathPhase.current * 0.5) * 0.08;
     }
 
+    // --- CONFUSED: rapid micro head shake ---
+    let confusedShakeX = 0;
+    let confusedShakeZ = 0;
+    if (faceState === "confused") {
+      const shakeT = breathPhase.current * 8;
+      confusedShakeX = Math.sin(shakeT) * 0.015 * intensity;
+      confusedShakeZ = Math.sin(shakeT * 1.3) * 0.02 * intensity;
+    }
+
+    // --- SURPRISED: freeze 200ms then resume ---
+    let surprisedFreeze = 1;
+    if (faceState === "surprised" && prevExpressionRef.current !== "surprised") {
+      // Just transitioned: apply freeze effect via slower lerp
+      surprisedFreeze = 0.15; // dramatically slow lerp for 200ms effect
+    }
+
+    // --- PLAYFUL: bounce + tilt ---
+    let playfulBounce = 0;
+    let playfulTiltZ = 0;
+    if (faceState === "playful") {
+      playfulBounce = Math.abs(Math.sin(breathPhase.current * 3)) * 0.04 * intensity;
+      playfulTiltZ = Math.sin(breathPhase.current * 2) * 0.05;
+    }
+
+    // --- PROUD: subtle head-up ---
+    let proudHeadUp = 0;
+    if (faceState === "proud") {
+      proudHeadUp = -0.04 * intensity;
+    }
+
     // --- IDLE MOUTH ANIMATION (natural, like breathing through mouth) ---
     mouthIdlePhase.current += delta * 1.2;
     // Breathing-linked mouth movement (amplified)
@@ -500,19 +544,19 @@ export function useFaceAnimation(
 
     c.headTiltX = lerp(
       c.headTiltX,
-      (targets.headTiltX ?? 0) - gazeY * 0.18 + breathX + microOffset.current.headX + speechHeadNod,
-      delta * gazeSpeed * 0.7
+      (targets.headTiltX ?? 0) - gazeY * 0.18 + breathX + microOffset.current.headX + speechHeadNod + playfulBounce + proudHeadUp + confusedShakeX,
+      delta * gazeSpeed * 0.7 * surprisedFreeze
     );
     // v3.9: Speaking gaze — 70% focus on user, 30% natural drift
     const speakingGazeScale = faceState === "speaking" ? 0.7 : 1.0;
     const speakingDriftScale = faceState === "speaking" ? 0.3 : 0;
     const speakingDriftX = speakingDriftScale * Math.sin(breathPhase.current * 2.1) * 0.06;
     const speakingDriftY = speakingDriftScale * Math.cos(breathPhase.current * 1.7) * 0.03;
-    c.headTiltY = lerp(c.headTiltY, gazeX * 0.45 * speakingGazeScale + speakingDriftX, delta * gazeSpeed * 0.8);
+    c.headTiltY = lerp(c.headTiltY, gazeX * 0.45 * speakingGazeScale + speakingDriftX, delta * gazeSpeed * 0.8 * surprisedFreeze);
     c.headTiltZ = lerp(
       c.headTiltZ,
-      (targets.headTiltZ ?? 0) + microOffset.current.headZ + gazeX * 0.05 + curiousTiltZ,
-      delta * gazeSpeed * 0.6
+      (targets.headTiltZ ?? 0) + microOffset.current.headZ + gazeX * 0.05 + curiousTiltZ + playfulTiltZ + confusedShakeZ,
+      delta * gazeSpeed * 0.6 * surprisedFreeze
     );
 
     // Strong, fluid pupil tracking — eyes lock onto cursor position
