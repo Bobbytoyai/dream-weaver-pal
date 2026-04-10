@@ -185,6 +185,11 @@ export function useConversationStateMachine({
         interactionCount: memory.interactionCount,
         relationshipScore: memory.relationshipScore,
         lastEmotions: memory.lastEmotions,
+        engagementTriggers: memory.engagementTriggers,
+        behaviorPatterns: memory.behaviorPatterns as string[],
+        learningSpeed: memory.learningSpeed,
+        interactionStyle: memory.interactionStyle,
+        preferredTopics: memory.preferredTopics,
       });
     }
   }, [memory]);
@@ -291,6 +296,11 @@ export function useConversationStateMachine({
         relationshipScore: cogData.relationshipScore,
         lastEmotions: cogData.lastEmotions,
         emotionalHistory: cogData.emotionalHistory,
+        engagementTriggers: cogData.engagementTriggers,
+        behaviorPatterns: cogData.behaviorPatterns,
+        learningSpeed: cogData.learningSpeed,
+        interactionStyle: cogData.interactionStyle,
+        preferredTopics: cogData.preferredTopics,
       }).catch(console.error);
 
       if (sessionId) {

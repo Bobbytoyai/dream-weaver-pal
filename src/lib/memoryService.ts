@@ -109,6 +109,11 @@ export async function updateMemory(
   if (updates.relationshipScore !== undefined) dbUpdates.relationship_score = updates.relationshipScore;
   if (updates.lastEmotions !== undefined) dbUpdates.last_emotions = updates.lastEmotions;
   if (updates.emotionalHistory !== undefined) dbUpdates.emotional_history = updates.emotionalHistory;
+  if (updates.engagementTriggers !== undefined) dbUpdates.engagement_triggers = updates.engagementTriggers;
+  if (updates.behaviorPatterns !== undefined) dbUpdates.behavior_patterns = updates.behaviorPatterns;
+  if (updates.learningSpeed !== undefined) dbUpdates.learning_speed = updates.learningSpeed;
+  if (updates.interactionStyle !== undefined) dbUpdates.interaction_style = updates.interactionStyle;
+  if (updates.preferredTopics !== undefined) dbUpdates.preferred_topics = updates.preferredTopics;
 
   await supabase
     .from("child_memories")
