@@ -242,19 +242,27 @@ ${story.full_text.replace(/\{child_name\}/g, childName)}`;
     if (!response.ok) {
       const status = response.status;
       if (status === 429) {
-        return new Response(JSON.stringify({ error: "rate_limited" }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        // Rate limited — return fallback signal so client degrades gracefully
+        const fallbackText = "Attends une seconde, je reprends mon souffle !";
+        const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content: fallbackText } }] })}\n\ndata: [DONE]\n\n`;
+        return new Response(sseData, {
+          headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
         });
       }
       if (status === 402) {
-        return new Response(JSON.stringify({ error: "credits_exhausted" }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        const fallbackText = "Je suis un peu fatigué. Réessaie dans un moment !";
+        const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content: fallbackText } }] })}\n\ndata: [DONE]\n\n`;
+        return new Response(sseData, {
+          headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
         });
       }
       const t = await response.text();
       console.error("AI error:", status, t);
-      return new Response(JSON.stringify({ error: "ai_error" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      // Return a friendly fallback instead of 500
+      const fallbackText = "Hmm, petit souci. Tu peux réessayer ?";
+      const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content: fallbackText } }] })}\n\ndata: [DONE]\n\n`;
+      return new Response(sseData, {
+        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
       });
     }
 
@@ -263,8 +271,11 @@ ${story.full_text.replace(/\{child_name\}/g, childName)}`;
     });
   } catch (e) {
     console.error("bobby-brain error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Never return 500 — always give the child a friendly response
+    const fallbackText = "Oups ! Attends, je me reprends. Redis-moi ?";
+    const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content: fallbackText } }] })}\n\ndata: [DONE]\n\n`;
+    return new Response(sseData, {
+      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   }
 });
