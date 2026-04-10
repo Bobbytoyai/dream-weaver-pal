@@ -454,6 +454,20 @@ export function useConversationStateMachine({
     startStuckTimer("PROCESSING");
     setPartialText("");
 
+    // Cognitive engine: record turn & get adaptive hints
+    const cognitiveHints = recordUserTurn(userText);
+
+    // If child is losing attention or exhausted, re-engage locally first
+    if (cognitiveHints.shouldReengage && cognitiveHints.reengageStrategy) {
+      const phrase = getReengagePhrase(cognitiveHints.reengageStrategy);
+      if (cognitiveHints.reengageStrategy === "break") {
+        setBobbyFaceEmotion("calm");
+        setBobbyEmotionIntensity(0.4);
+        speakAndListen(phrase);
+        return;
+      }
+    }
+
     const emotion = orchestratorHints?.childEmotion || detectEmotionForTTS(userText);
     currentEmotionRef.current = emotion;
     session.addMessage("user", userText, emotion);
