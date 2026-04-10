@@ -11,7 +11,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { supabase } from "@/integrations/supabase/client";
 import StoryLibrary from "@/components/StoryLibrary";
 
-import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "./parentSettings";
+import { ParentSettings, DEFAULT_PARENT_SETTINGS, BOBBY_COLORS } from "./parentSettings";
 export type { ParentSettings };
 export { DEFAULT_PARENT_SETTINGS };
 
@@ -1516,6 +1516,24 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   <span className={`text-[11px] font-semibold block ${settings.voiceSpeed === val ? "text-primary" : "text-foreground"}`}>{label}</span>
                 </button>
               ))}
+            </div>
+          </Card>
+
+          <Card title="Couleur de Bobby" icon={Sparkles}>
+            <div className="grid grid-cols-3 gap-2">
+              {BOBBY_COLORS.map((c) => {
+                const selected = settings.bobbyColor === c.id;
+                return (
+                  <button key={c.id} onClick={() => updateSetting("bobbyColor", c.id)}
+                    className={`flex items-center gap-2 p-3 rounded-xl transition-all ${
+                      selected ? "ring-2 ring-primary/50 bg-primary/10" : "bg-muted/50 hover:bg-muted"
+                    }`}>
+                    <div className="w-6 h-6 rounded-full shrink-0 shadow-inner"
+                      style={{ backgroundColor: `hsl(${c.hsl})` }} />
+                    <span className={`text-[11px] font-semibold ${selected ? "text-primary" : "text-foreground"}`}>{c.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </Card>
 

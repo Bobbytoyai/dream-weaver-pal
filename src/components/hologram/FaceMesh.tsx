@@ -2,7 +2,7 @@
  * Bobby Holographic Face — Flat 2D hologram style
  * Manga-shaped eyes, curved smile mouth, tongue on open
  */
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { FaceState, useFaceAnimation } from "./useFaceAnimation";
@@ -14,6 +14,7 @@ interface FaceMeshProps {
   audioAmplitude: number;
   viseme?: VisemeState;
   emotionIntensity?: number;
+  bobbyColor?: string;
 }
 
 // Create a manga eye shape — tall oval, slightly pointed at corners
@@ -28,7 +29,7 @@ function createMangaEyeShape(w: number, h: number): THREE.Shape {
   return shape;
 }
 
-export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIntensity = 0.7 }: FaceMeshProps) {
+export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIntensity = 0.7, bobbyColor }: FaceMeshProps) {
   const rootRef = useRef<THREE.Group>(null);
   const leftEyeRef = useRef<THREE.Group>(null);
   const rightEyeRef = useRef<THREE.Group>(null);
@@ -47,16 +48,24 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   const animation = useFaceAnimation(faceState, gazeRef, audioAmplitude, viseme, emotionIntensity);
 
+  // ─── Color theme from parent settings ─────────────────────
+  const colorHSL = useMemo(() => {
+    const map: Record<string, { h: number; s: number; l: number }> = {
+      blue:   { h: 215, s: 80, l: 65 },
+      purple: { h: 270, s: 60, l: 60 },
+      green:  { h: 155, s: 55, l: 50 },
+      pink:   { h: 330, s: 65, l: 65 },
+      orange: { h: 25,  s: 85, l: 58 },
+      gold:   { h: 45,  s: 80, l: 55 },
+    };
+    return map[bobbyColor || "blue"] || map.blue;
+  }, [bobbyColor]);
+
   // ─── Materials ─────────────────────────────────────────────
 
   const eyeWhiteMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("hsl(210, 60%, 95%)"),
     transparent: true, opacity: 0.95,
-  }), []);
-
-  const eyeRingMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(30, 45%, 42%)"),
-    transparent: true, opacity: 0.5,
   }), []);
 
   const irisMat = useMemo(() => new THREE.MeshBasicMaterial({
@@ -79,14 +88,14 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   }), []);
 
   const eyebrowMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(215, 70%, 60%)"),
+    color: new THREE.Color(`hsl(${colorHSL.h}, 70%, 55%)`),
     transparent: true, opacity: 0.8,
-  }), []);
+  }), [colorHSL]);
 
   const mouthMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(215, 80%, 70%)"),
+    color: new THREE.Color(`hsl(${colorHSL.h}, 75%, 65%)`),
     transparent: true, opacity: 0.85,
-  }), []);
+  }), [colorHSL]);
 
   const tongueMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("hsl(350, 55%, 68%)"),
@@ -94,14 +103,14 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   }), []);
 
   const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(230, 25%, 90%)"),
+    color: new THREE.Color(`hsl(${colorHSL.h}, 20%, 90%)`),
     transparent: true, opacity: 0.92,
-  }), []);
+  }), [colorHSL]);
 
   const blushMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(340, 60%, 75%)"),
+    color: new THREE.Color(`hsl(${Math.min(colorHSL.h + 60, 360)}, 50%, 75%)`),
     transparent: true, opacity: 0.25,
-  }), []);
+  }), [colorHSL]);
 
   // Manga eye shape geometry
   const mangaEyeGeo = useMemo(() => {

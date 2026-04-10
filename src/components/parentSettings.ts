@@ -36,7 +36,17 @@ export interface ParentSettings {
   consentAnalysis: boolean;
   consentImprovement: boolean;
   consentStats: boolean;
+  bobbyColor: string;
 }
+
+export const BOBBY_COLORS = [
+  { id: "blue", label: "Bleu", hsl: "215, 80%, 65%" },
+  { id: "purple", label: "Violet", hsl: "270, 60%, 60%" },
+  { id: "green", label: "Vert", hsl: "155, 55%, 50%" },
+  { id: "pink", label: "Rose", hsl: "330, 65%, 65%" },
+  { id: "orange", label: "Orange", hsl: "25, 85%, 58%" },
+  { id: "gold", label: "Or", hsl: "45, 80%, 55%" },
+];
 
 export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
   childName: "Bobby",
@@ -76,4 +86,5 @@ export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
   consentAnalysis: true,
   consentImprovement: false,
   consentStats: false,
+  bobbyColor: "blue",
 };
