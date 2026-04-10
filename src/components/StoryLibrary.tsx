@@ -3,7 +3,7 @@
  * square story cards, full-text reading, Bobby narration, and favorites.
  */
 import { useState, useEffect, useCallback, useRef } from "react";
-import { BookOpen, Heart, Play, Pause, ArrowLeft, Clock, Sparkles, X } from "lucide-react";
+import { BookOpen, Heart, Play, Pause, ArrowLeft, Clock, Sparkles, X, Download, CheckCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchTTSAudio, useAudioQueue } from "@/lib/voicePipeline";
 import type { VoiceProfile } from "@/lib/voicePipeline";
