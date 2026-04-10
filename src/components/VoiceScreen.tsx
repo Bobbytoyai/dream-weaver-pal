@@ -404,10 +404,19 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   }, [audioQueue, childAge, childName, clearTimers, conversationHistory, goToListening, memory, parentSettings, processSentenceForTTS, session, speakFallback]);
 
   const handleContinuousResult = useCallback((text: string) => {
+    console.log("[VoiceScreen] Continuous result:", text, "state:", stateRef.current);
     clearTimers();
 
+    // If Bobby is currently speaking or processing, interrupt
     if (stateRef.current === "speaking" || stateRef.current === "processing") {
       interrupt();
+    }
+
+    // Echo detection — skip if Bobby just said this
+    if (isEcho(text)) {
+      console.log("[VoiceScreen] Echo detected, ignoring:", text);
+      startSilenceTimers();
+      return;
     }
 
     const hasWake = /\b(bobby|boby|bobbie|bobi)\b/i.test(text);
@@ -415,6 +424,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
     if (cleaned.length < 3) {
       if (hasWake) speakFallback("wake_greeting");
+      else startSilenceTimers();
       return;
     }
 
@@ -439,7 +449,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     }
 
     getAIResponse(cleaned);
-  }, [audioQueue, clearTimers, currentVoiceId, getAIResponse, goToListening, interrupt, session, speakFallback]);
+  }, [audioQueue, clearTimers, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, interrupt, isCalmMode, session, speakFallback, startSilenceTimers]);
 
   // Deepgram STT for continuous listening (replaces Web Speech API)
   const deepgramSTT = useDeepgramSTT({
