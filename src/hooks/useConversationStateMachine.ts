@@ -136,7 +136,13 @@ export function useConversationStateMachine({
   // ─── STATE ───
   const [machineState, setMachineState] = useState<ConversationState>("IDLE");
   const machineStateRef = useRef<ConversationState>("IDLE");
-  const [conversationHistory, setConversationHistory] = useState<AiMsg[]>([]);
+  const [conversationHistory, setConversationHistoryRaw] = useState<AiMsg[]>([]);
+  const setConversationHistory = useCallback((v: AiMsg[] | ((prev: AiMsg[]) => AiMsg[])) => {
+    setConversationHistoryRaw(prev => {
+      const next = typeof v === "function" ? v(prev) : v;
+      return next.length > MAX_HISTORY_LENGTH ? next.slice(-MAX_HISTORY_LENGTH) : next;
+    });
+  }, []);
   const [partialText, setPartialText] = useState("");
   const [micArmed, setMicArmed] = useState(false);
   const [lastRecognized, setLastRecognized] = useState("");
