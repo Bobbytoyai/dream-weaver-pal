@@ -7,7 +7,7 @@ import { useSessionTracker } from "@/hooks/useSessionTracker";
 import { useSmartSTT } from "@/hooks/useSmartSTT";
 import { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
-import { setSfxVolume, initSfxEventBus } from "@/lib/sfx";
+import { setSfxVolume, initSfxEventBus, playThinkingShimmer } from "@/lib/sfx";
 import { useChildMemory } from "@/hooks/useChildMemory";
 import { useConversationRecorder } from "@/hooks/useConversationRecorder";
 import { eventBus } from "@/lib/eventBus";
@@ -386,6 +386,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const getAIResponse = useCallback(async (userText: string, intent?: Intent) => {
     transition("PROCESSING");
+    playThinkingShimmer(); // Instant audio feedback to mask latency
     clearAllTimers();
     startStuckTimer("PROCESSING");
     setPartialText("");

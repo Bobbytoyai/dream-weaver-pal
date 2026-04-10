@@ -60,16 +60,29 @@ export function playStopBip() {
   osc.stop(ctx.currentTime + 0.2);
 }
 
-/** Thinking shimmer — two quick soft tones */
+/** Thinking shimmer — gentle bubbly tones that loop while processing */
 export function playThinkingShimmer() {
   const ctx = getCtx();
   if (!ctx) return;
-  [0, 0.1].forEach((delay, i) => {
+  // Instant soft "pop" for immediate feedback
+  const pop = ctx.createOscillator();
+  const popGain = ctx.createGain();
+  pop.type = "sine";
+  pop.frequency.setValueAtTime(880, ctx.currentTime);
+  pop.frequency.exponentialRampToValueAtTime(1100, ctx.currentTime + 0.06);
+  popGain.gain.setValueAtTime(vol(0.12), ctx.currentTime);
+  popGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+  pop.connect(popGain).connect(ctx.destination);
+  pop.start();
+  pop.stop(ctx.currentTime + 0.12);
+
+  // Two soft trailing sparkle tones
+  [0.08, 0.18].forEach((delay, i) => {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = "triangle";
-    osc.frequency.setValueAtTime(i === 0 ? 700 : 900, ctx.currentTime + delay);
-    gain.gain.setValueAtTime(vol(0.08), ctx.currentTime + delay);
+    osc.frequency.setValueAtTime(i === 0 ? 750 : 950, ctx.currentTime + delay);
+    gain.gain.setValueAtTime(vol(0.06), ctx.currentTime + delay);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.15);
     osc.connect(gain).connect(ctx.destination);
     osc.start(ctx.currentTime + delay);
