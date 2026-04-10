@@ -19,12 +19,12 @@ interface FaceMeshProps {
 // Create a manga eye shape — tall oval, slightly pointed at corners
 function createMangaEyeShape(w: number, h: number): THREE.Shape {
   const shape = new THREE.Shape();
-  // Pointed oval: wider middle, slightly pointed left/right
+  // Almond shape — wide, pointed at corners, less tall
   shape.moveTo(-w, 0);
-  shape.bezierCurveTo(-w, h * 0.8, -w * 0.3, h, 0, h);
-  shape.bezierCurveTo(w * 0.3, h, w, h * 0.8, w, 0);
-  shape.bezierCurveTo(w, -h * 0.7, w * 0.3, -h * 0.85, 0, -h * 0.85);
-  shape.bezierCurveTo(-w * 0.3, -h * 0.85, -w, -h * 0.7, -w, 0);
+  shape.bezierCurveTo(-w * 0.7, h * 0.9, -w * 0.2, h, 0, h * 0.95);
+  shape.bezierCurveTo(w * 0.2, h, w * 0.7, h * 0.9, w, 0);
+  shape.bezierCurveTo(w * 0.7, -h * 0.85, w * 0.2, -h * 0.95, 0, -h * 0.9);
+  shape.bezierCurveTo(-w * 0.2, -h * 0.95, -w * 0.7, -h * 0.85, -w, 0);
   return shape;
 }
 
@@ -105,12 +105,12 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   // Manga eye shape geometry
   const mangaEyeGeo = useMemo(() => {
-    const shape = createMangaEyeShape(0.38, 0.44);
+    const shape = createMangaEyeShape(0.42, 0.3);
     return new THREE.ShapeGeometry(shape, 32);
   }, []);
 
   const mangaIrisGeo = useMemo(() => {
-    const shape = createMangaEyeShape(0.24, 0.28);
+    const shape = createMangaEyeShape(0.26, 0.2);
     return new THREE.ShapeGeometry(shape, 24);
   }, []);
 
@@ -121,17 +121,20 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
     rootRef.current.rotation.z = state.headTiltZ * 0.5;
 
-    // Pupils follow gaze
+    // Pupils — more wandering, less fixed on user
+    const t = performance.now() * 0.001;
+    const wanderX = Math.sin(t * 0.7) * 0.06 + Math.sin(t * 1.9) * 0.03;
+    const wanderY = Math.cos(t * 0.5) * 0.04 + Math.sin(t * 1.3) * 0.02;
     [leftPupilRef, rightPupilRef].forEach(ref => {
       if (ref.current) {
-        ref.current.position.x = state.pupilX * 0.15;
-        ref.current.position.y = state.pupilY * 0.12;
+        ref.current.position.x = state.pupilX * 0.08 + wanderX;
+        ref.current.position.y = state.pupilY * 0.06 + wanderY;
       }
     });
     [leftIrisRef, rightIrisRef].forEach(ref => {
       if (ref.current) {
-        ref.current.position.x = state.pupilX * 0.08;
-        ref.current.position.y = state.pupilY * 0.06;
+        ref.current.position.x = state.pupilX * 0.05 + wanderX * 0.6;
+        ref.current.position.y = state.pupilY * 0.04 + wanderY * 0.6;
       }
     });
 
