@@ -3,7 +3,7 @@
  * square story cards, full-text reading, Bobby narration, and favorites.
  */
 import { useState, useEffect, useCallback, useRef } from "react";
-import { BookOpen, Heart, Play, Pause, ArrowLeft, Clock, Sparkles, X } from "lucide-react";
+import { BookOpen, Heart, Play, Pause, ArrowLeft, Clock, Sparkles, X, Download, CheckCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchTTSAudio, useAudioQueue } from "@/lib/voicePipeline";
 import type { VoiceProfile } from "@/lib/voicePipeline";
@@ -63,6 +63,13 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const [narrating, setNarrating] = useState(false);
   const [showFullText, setShowFullText] = useState(false);
+  const [downloadedIds, setDownloadedIds] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem("bobby_downloaded_stories");
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch { return new Set(); }
+  });
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const audioQueue = useAudioQueue();
   const abortRef = useRef<AbortController | null>(null);
@@ -90,6 +97,22 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
       setSelectedStory(prev => prev ? { ...prev, is_favorite: newVal } : null);
     }
   };
+
+  const downloadStory = useCallback(async (story: Story, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (downloadedIds.has(story.id) || downloadingId) return;
+    setDownloadingId(story.id);
+    try {
+      const text = personalizeText(story.full_text || story.template_text);
+      const data = { id: story.id, title: story.title, category: story.category, theme: story.theme, text, duration: story.duration, mood: story.mood, summary: story.summary };
+      localStorage.setItem(`bobby_story_${story.id}`, JSON.stringify(data));
+      const newSet = new Set(downloadedIds);
+      newSet.add(story.id);
+      setDownloadedIds(newSet);
+      localStorage.setItem("bobby_downloaded_stories", JSON.stringify([...newSet]));
+    } catch { /* storage full */ }
+    setDownloadingId(null);
+  }, [downloadedIds, downloadingId, childName]);
 
   const personalizeText = (text: string) => text.replace(/\{child_name\}/g, childName);
 
@@ -184,11 +207,29 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
             <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
               <span>👤 {selectedStory.age_min}-{selectedStory.age_max} ans</span>
               {selectedStory.interactive && <span>🎮 Interactive</span>}
+              {downloadedIds.has(selectedStory.id) && (
+                <span className="flex items-center gap-0.5 text-success">
+                  <CheckCircle className="w-3 h-3" /> Hors-ligne
+                </span>
+              )}
             </div>
           </div>
 
           {/* Actions */}
           <div className="bg-card px-5 pb-5 space-y-2">
+            {!downloadedIds.has(selectedStory.id) && (
+              <button
+                onClick={() => downloadStory(selectedStory)}
+                disabled={downloadingId === selectedStory.id}
+                className="w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-success/10 text-success border border-success/20 hover:bg-success/20 disabled:opacity-50"
+              >
+                {downloadingId === selectedStory.id ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Téléchargement…</>
+                ) : (
+                  <><Download className="w-4 h-4" /> 📥 Télécharger hors-ligne</>
+                )}
+              </button>
+            )}
             <button
               onClick={() => setShowFullText(!showFullText)}
               className={`w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-gradient-to-r ${meta.gradient} border ${meta.accent} hover:shadow-md`}
@@ -284,14 +325,29 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
                     <Clock className="w-2.5 h-2.5" />
                     {DURATION_LABELS[story.duration] || story.duration}
                   </span>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); toggleFavorite(story.id); }}
-                    className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
-                      story.is_favorite ? "text-red-500" : "text-muted-foreground/30 group-hover:text-red-300"
-                    }`}
-                  >
-                    <Heart className={`w-3.5 h-3.5 ${story.is_favorite ? "fill-current" : ""}`} />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    {downloadedIds.has(story.id) ? (
+                      <CheckCircle className="w-3.5 h-3.5 text-success" />
+                    ) : (
+                      <button
+                        onClick={(e) => downloadStory(story, e)}
+                        disabled={downloadingId === story.id}
+                        className="w-6 h-6 rounded-full flex items-center justify-center transition-all text-muted-foreground/40 group-hover:text-primary"
+                      >
+                        {downloadingId === story.id
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : <Download className="w-3.5 h-3.5" />}
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleFavorite(story.id); }}
+                      className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                        story.is_favorite ? "text-red-500" : "text-muted-foreground/30 group-hover:text-red-300"
+                      }`}
+                    >
+                      <Heart className={`w-3.5 h-3.5 ${story.is_favorite ? "fill-current" : ""}`} />
+                    </button>
+                  </div>
                 </div>
               </button>
             ))}
