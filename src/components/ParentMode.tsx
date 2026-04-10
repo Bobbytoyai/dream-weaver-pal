@@ -1579,18 +1579,23 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const renderReglages = () => (
     <div className="p-4 space-y-3">
-      {/* Section selector */}
-      <div className="flex gap-2 bg-card rounded-2xl p-1.5">
+      {/* Section selector — card pills */}
+      <div className="grid grid-cols-3 gap-2">
         {([
           ["voix", "🎤", "Voix"],
           ["contenu", "📚", "Contenu"],
           ["limites", "⏱️", "Limites"],
         ] as const).map(([key, emoji, label]) => (
           <button key={key} onClick={() => setReglagesSection(key)}
-            className={`flex-1 py-2 rounded-xl text-[12px] font-semibold transition-all ${
-              reglagesSection === key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            className={`p-3 rounded-2xl text-center transition-all duration-200 border ${
+              reglagesSection === key
+                ? "bg-primary/10 border-primary/30 shadow-sm"
+                : "bg-card border-border/30 hover:bg-muted/50"
             }`}>
-            {emoji} {label}
+            <span className="text-xl block mb-1">{emoji}</span>
+            <span className={`text-[11px] font-semibold block ${
+              reglagesSection === key ? "text-primary" : "text-muted-foreground"
+            }`}>{label}</span>
           </button>
         ))}
       </div>
