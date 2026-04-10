@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } fro
 import {
   ArrowLeft, Clock, MessageSquare, Heart, Brain, Loader2, RefreshCw,
   Mic, BookOpen, Timer, Sparkles, Shield, Camera, Volume2, VolumeX,
-  Play, Pause, AlertTriangle, TrendingUp, Trash2, ChevronRight,
+  Play, Pause, AlertTriangle, TrendingUp, Trash2, ChevronRight, Gamepad2,
   BarChart3, Calendar, User, Zap, Moon, Sun, Hand, Lock,
   Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X,
   SkipForward, SkipBack, Activity, Bell, ChevronDown, Star
@@ -10,6 +10,7 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import StoryLibrary from "@/components/StoryLibrary";
+import ContentCategories from "@/components/ContentCategories";
 import { preloadVoice as preloadPiperVoice } from "@/lib/piperTTS";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
@@ -197,11 +198,12 @@ const StatPill = ({ emoji, value, label }: { emoji: string; value: string | numb
 
 // ─── Tab config (5 tabs) ────────────────────────────────────────
 
-type Tab = "dashboard" | "sessions" | "profil" | "reglages" | "histoires" | "confidentialite";
+type Tab = "dashboard" | "sessions" | "activites" | "histoires" | "profil" | "reglages" | "confidentialite";
 
 const tabs: { id: Tab; icon: any; label: string }[] = [
   { id: "dashboard", icon: BarChart3, label: "Tableau" },
   { id: "sessions", icon: MessageSquare, label: "Sessions" },
+  { id: "activites", icon: Gamepad2, label: "Activités" },
   { id: "histoires", icon: BookOpen, label: "Histoires" },
   { id: "profil", icon: User, label: "Profil" },
   { id: "reglages", icon: Settings, label: "Réglages" },
@@ -2365,6 +2367,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     switch (displayedTab) {
       case "dashboard": return renderDashboard();
       case "sessions": return renderSessionsList();
+      case "activites": return (
+        <ContentCategories
+          childName={childName}
+          onSelectCategory={() => {}}
+          onBack={() => setActiveTab("dashboard")}
+        />
+      );
       case "profil": return renderProfil();
       case "reglages": return renderReglages();
       case "histoires": return <StoryLibrary childName={childName} voiceProfile={settings.voiceType || "female"} />;
