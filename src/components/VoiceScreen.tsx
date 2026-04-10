@@ -137,6 +137,12 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const [conversationHistory, setConversationHistory] = useState<AiMsg[]>([]);
   const [partialText, setPartialText] = useState("");
   const [micStatus, setMicStatus] = useState<"ready" | "blocked" | "active">("ready");
+  const currentEmotionRef = useRef<Emotion | undefined>(undefined);
+
+  // Preload voice profile on mount and on switch for instant first response
+  useEffect(() => {
+    preloadVoiceProfile(currentVoiceId as any);
+  }, [currentVoiceId]);
 
   const abortRef = useRef<AbortController | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
