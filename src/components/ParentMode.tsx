@@ -1853,12 +1853,38 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   };
 
   // ═══════════════════════════════════════════════════════════════
+  // TAB TRANSITION ANIMATION
+  // ═══════════════════════════════════════════════════════════════
+
+  const tabIds = tabs.map(t => t.id);
+  const prevTabRef = useRef(activeTab);
+  const [animClass, setAnimClass] = useState("");
+  const [displayedTab, setDisplayedTab] = useState(activeTab);
+
+  useEffect(() => {
+    if (activeTab === prevTabRef.current) return;
+    const prevIdx = tabIds.indexOf(prevTabRef.current);
+    const nextIdx = tabIds.indexOf(activeTab);
+    const direction = nextIdx > prevIdx ? "right" : "left";
+    // exit
+    setAnimClass(direction === "right" ? "tab-exit-left" : "tab-exit-right");
+    const t = setTimeout(() => {
+      setDisplayedTab(activeTab);
+      setAnimClass(direction === "right" ? "tab-enter-right" : "tab-enter-left");
+      const t2 = setTimeout(() => setAnimClass(""), 280);
+      return () => clearTimeout(t2);
+    }, 150);
+    prevTabRef.current = activeTab;
+    return () => clearTimeout(t);
+  }, [activeTab]);
+
+  // ═══════════════════════════════════════════════════════════════
   // RENDER: MAIN
   // ═══════════════════════════════════════════════════════════════
 
   const renderTabContent = () => {
     if (selectedSession) return renderSessionDetail();
-    switch (activeTab) {
+    switch (displayedTab) {
       case "dashboard": return renderDashboard();
       case "sessions": return renderSessionsList();
       case "profil": return renderProfil();
@@ -1898,19 +1924,21 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         <div className="flex border-b border-border bg-card overflow-x-auto">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 min-w-0 flex flex-col items-center gap-1 py-3 px-1 text-[10px] font-bold transition-all ${
+              className={`flex-1 min-w-0 flex flex-col items-center gap-1 py-3 px-1 text-[10px] font-bold transition-all duration-200 ${
                 activeTab === tab.id ? "text-primary border-b-2 border-primary" : "text-muted-foreground"
               }`}>
-              <tab.icon className="w-4 h-4" />
+              <tab.icon className={`w-4 h-4 transition-transform duration-200 ${activeTab === tab.id ? "scale-110" : ""}`} />
               <span className="truncate">{tab.label}</span>
             </button>
           ))}
         </div>
       )}
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        {renderTabContent()}
+      {/* Content with animation */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className={`tab-content-wrapper ${animClass}`}>
+          {renderTabContent()}
+        </div>
       </div>
     </div>
   );
