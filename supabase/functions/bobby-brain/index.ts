@@ -52,6 +52,7 @@ function buildSystemPrompt(intent: Intent, childName: string, childAge: number, 
   else if (personality === "educational") personalityNote = "\nStyle: ÉDUCATIF — intègre un fait éducatif.";
 
   const memoryBlock = memoryContext ? `\n# Mémoire\n${memoryContext}` : "";
+  const cognitiveBlock = cognitiveContext ? `\n# Adaptation comportementale\n${cognitiveContext}` : "";
 
   let safetyBlock = `# Sécurité (non négociable)
 - JAMAIS de contenu violent, effrayant, sexuel, inapproprié
