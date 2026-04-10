@@ -17,7 +17,7 @@ import { hasWakeWord, stripWakeWord, isJustWakeWord, computeWakeConfidence } fro
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 1. STATE MACHINE TYPES
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-type ConversationState = "IDLE" | "LISTENING" | "PROCESSING" | "SPEAKING" | "ERROR";
+type ConversationState = "IDLE" | "LISTENING" | "PROCESSING" | "SPEAKING" | "ERROR" | "SLEEP";
 type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
 type AiMsg = { role: "user" | "assistant"; content: string };
 type Intent = "story" | "game" | "emotion_support" | "question" | "chat";
@@ -30,6 +30,7 @@ function toVoiceState(s: ConversationState): VoiceState {
     case "PROCESSING": return "processing";
     case "SPEAKING": return "speaking";
     case "ERROR": return "interrupted";
+    case "SLEEP": return "session_end";
   }
 }
 
