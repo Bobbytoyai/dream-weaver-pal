@@ -26,44 +26,44 @@ interface VoiceSettings {
 }
 
 const VOICE_PROFILES: Record<string, VoiceSettings> = {
-  // 🎭 Enfant — cartoon authentique
+  // 🎒 Enfant — Mélodie (jeune, naturelle, française native)
   child: {
-    voiceId: "pFZP5JQG7iQjIQuC4Bku",   // Lily
-    stability: 0.28,
+    voiceId: "MmLmgmAm7pKFUJBu1Lov",   // Mélodie
+    stability: 0.30,
     similarity_boost: 0.85,
-    style: 0.85,
-    speed: 1.10,
+    style: 0.80,
+    speed: 1.08,
   },
-  // 👩 Maman — ultra apaisante
+  // 👩 Maman — Mila (douce, apaisante, maternelle)
   female: {
-    voiceId: "XrExE9yKIg1WjnnlVkGX",   // Matilda
-    stability: 0.88,
+    voiceId: "hndZlkpVm5i9lXBY9CKj",   // Mila - Soft Soothing
+    stability: 0.85,
     similarity_boost: 0.82,
     style: 0.25,
     speed: 0.92,
   },
-  // 👨 Papa — calme, protecteur
+  // 👨 Papa — Vincent (calme, protecteur, narratif)
   male: {
-    voiceId: "JBFqnCBsd6RMkjVDRZzb",   // George
-    stability: 0.90,
-    similarity_boost: 0.72,
+    voiceId: "eDaM8z1udmnynsRHDkUP",   // Vincent - Calm & Clear
+    stability: 0.88,
+    similarity_boost: 0.75,
     style: 0.15,
     speed: 0.90,
   },
-  // 👧 Sœur — ado bienveillante, complice, fun
+  // 👧 Sœur — Marine (jeune, complice, fun)
   sister: {
-    voiceId: "Xb7hH8MSUJpSbSDYk0k2",   // Alice
+    voiceId: "6FXyooAOTqUK8m2HWm32",   // Marine - Conversational
     stability: 0.35,
     similarity_boost: 0.80,
-    style: 0.60,
+    style: 0.55,
     speed: 1.05,
   },
-  // 👦 Frère — ado cool, encourageant, dynamique
+  // 👦 Frère — Yanis (jeune, casual, dynamique)
   brother: {
-    voiceId: "IKne3meq5aSn9XLyUdCD",   // Charlie
+    voiceId: "FRY6vOtGqwamgAf39SwP",   // Yanis - Conversational
     stability: 0.38,
     similarity_boost: 0.78,
-    style: 0.55,
+    style: 0.50,
     speed: 1.02,
   },
 };
