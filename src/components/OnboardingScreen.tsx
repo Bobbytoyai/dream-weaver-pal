@@ -6,16 +6,7 @@ interface OnboardingScreenProps {
   onComplete: (name: string, age: number) => void;
 }
 
-const ageGroups = [
-  { label: "5", value: 5 },
-  { label: "6", value: 6 },
-  { label: "7", value: 7 },
-  { label: "8", value: 8 },
-  { label: "9", value: 9 },
-  { label: "10", value: 10 },
-  { label: "11", value: 11 },
-  { label: "12", value: 12 },
-];
+const ageGroups = [5, 6, 7, 8, 9, 10, 11, 12];
 
 const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
   const [step, setStep] = useState<"welcome" | "name" | "age">("welcome");
@@ -28,23 +19,23 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
         <div className="text-center bounce-in max-w-md">
           <img
             src={companionAvatar}
-            alt="Your AI Buddy"
+            alt="Buddy"
             width={200}
             height={200}
             className="mx-auto float mb-6"
           />
           <h1 className="text-4xl font-extrabold text-foreground mb-3">
-            Hi there! 👋
+            Salut ! 👋
           </h1>
           <p className="text-lg text-muted-foreground mb-8">
-            I'm <span className="text-primary font-bold">Buddy</span>, your friendly companion! I love stories, games, and learning new things!
+            Je suis <span className="text-primary font-bold">Buddy</span>, ton compagnon ! J'adore les histoires, les jeux et apprendre plein de trucs !
           </p>
           <Button
             size="lg"
             className="text-lg px-10 py-6 bg-primary text-primary-foreground hover:scale-105 transition-transform"
             onClick={() => setStep("name")}
           >
-            Let's Go! 🚀
+            C'est parti ! 🚀
           </Button>
         </div>
       )}
@@ -59,14 +50,14 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
             className="mx-auto mb-6"
           />
           <h2 className="text-3xl font-extrabold text-foreground mb-2">
-            What's your name? 😊
+            Comment tu t'appelles ? 😊
           </h2>
-          <p className="text-muted-foreground mb-6">I'd love to know what to call you!</p>
+          <p className="text-muted-foreground mb-6">J'aimerais savoir ton prénom !</p>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Type your name..."
+            placeholder="Ton prénom..."
             className="w-full max-w-xs mx-auto block rounded-full border-2 border-primary/30 bg-card px-6 py-4 text-lg text-center font-semibold text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             onKeyDown={(e) => {
               if (e.key === "Enter" && name.trim()) setStep("age");
@@ -78,7 +69,7 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
             onClick={() => name.trim() && setStep("age")}
             disabled={!name.trim()}
           >
-            Next ✨
+            Suivant ✨
           </Button>
         </div>
       )}
@@ -86,21 +77,21 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
       {step === "age" && (
         <div className="text-center bounce-in max-w-md w-full">
           <h2 className="text-3xl font-extrabold text-foreground mb-2">
-            How old are you, {name}? 🎂
+            Tu as quel âge, {name} ? 🎂
           </h2>
-          <p className="text-muted-foreground mb-6">Pick your age!</p>
+          <p className="text-muted-foreground mb-6">Choisis ton âge !</p>
           <div className="grid grid-cols-4 gap-3 max-w-xs mx-auto mb-8">
             {ageGroups.map((a) => (
               <button
-                key={a.value}
-                onClick={() => setAge(a.value)}
+                key={a}
+                onClick={() => setAge(a)}
                 className={`rounded-2xl py-3 text-xl font-bold transition-all duration-200 ${
-                  age === a.value
+                  age === a
                     ? "bg-primary text-primary-foreground scale-110 shadow-md"
                     : "bg-card text-foreground border-2 border-border hover:border-primary hover:scale-105"
                 }`}
               >
-                {a.label}
+                {a}
               </button>
             ))}
           </div>
@@ -110,7 +101,7 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
             onClick={() => age && onComplete(name.trim(), age)}
             disabled={!age}
           >
-            Start! 🎉
+            Commencer ! 🎉
           </Button>
         </div>
       )}
