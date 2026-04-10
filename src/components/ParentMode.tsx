@@ -10,7 +10,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { supabase } from "@/integrations/supabase/client";
 
 import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "./parentSettings";
-export { ParentSettings, DEFAULT_PARENT_SETTINGS };
+export type { ParentSettings };
+export { DEFAULT_PARENT_SETTINGS };
 
 // ─── Types ───────────────────────────────────────────────────────────
 
