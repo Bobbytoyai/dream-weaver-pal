@@ -148,6 +148,8 @@ export function useConversationStateMachine({
   const [lastAiResponse, setLastAiResponse] = useState("");
   const [piperProgress, setPiperProgress] = useState<number>(-1);
   const currentEmotionRef = useRef<Emotion | undefined>(undefined);
+  const [bobbyFaceEmotion, setBobbyFaceEmotion] = useState<FaceState | undefined>(undefined);
+  const [bobbyEmotionIntensity, setBobbyEmotionIntensity] = useState(0.7);
 
   // ─── REFS ───
   const abortRef = useRef<AbortController | null>(null);
