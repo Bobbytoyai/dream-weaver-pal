@@ -440,13 +440,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const emotionCounts = allEmotions.reduce((acc, e) => { acc[e] = (acc[e] || 0) + 1; return acc; }, {} as Record<string, number>);
 
   const recentAnalyses = analyses.slice(0, 7);
-  const avgEmotions = recentAnalyses.length > 0
-    ? Object.keys(emotionScoreLabels).reduce((acc, key) => {
-        const sum = recentAnalyses.reduce((s, a) => s + ((a.emotions as any)?.[key] || 0), 0);
-        acc[key] = Math.round(sum / recentAnalyses.length);
-        return acc;
-      }, {} as Record<string, number>)
-    : {};
 
   const allAlerts = analyses.flatMap(a => (a.alerts || []).map(alert => ({
     ...alert, date: a.created_at, sessionId: a.session_id,
@@ -491,6 +484,18 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     };
   }, [analyses]);
 
+  // Real emotion averages from actual analyses only
+  const avgEmotions = useMemo(() => {
+    if (recentAnalyses.length === 0) return {};
+    return Object.keys(emotionScoreLabels).reduce((acc, key) => {
+      const values = recentAnalyses.map(a => ((a.emotions as any)?.[key] || 0)).filter(v => v > 0);
+      if (values.length > 0) {
+        acc[key] = Math.round(values.reduce((s, v) => s + v, 0) / values.length);
+      }
+      return acc;
+    }, {} as Record<string, number>);
+  }, [recentAnalyses]);
+
   const allInterests = useMemo(() => {
     const counts: Record<string, number> = {};
     analyses.forEach(a => {
@@ -499,13 +504,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     return Object.entries(counts).sort(([, a], [, b]) => b - a).slice(0, 12);
   }, [analyses]);
 
+  // Chart data — only real data, no interpolation
   const emotionChartData = useMemo(() => {
-    // Generate demo data for days without real data to make chart useful
-    const seededRandom = (seed: number) => {
-      const x = Math.sin(seed) * 10000;
-      return x - Math.floor(x);
-    };
-
     const days: { date: string; label: string; joy: number; curiosity: number; frustration: number; fear: number; sadness: number; excitement: number; count: number }[] = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
@@ -527,27 +527,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       day.excitement += emo.excitement || 0;
       day.count++;
     }
-
-    // Fill empty days with plausible interpolated/demo values for visual clarity
-    const daysWithData = days.filter(d => d.count > 0);
-    if (daysWithData.length > 0 && daysWithData.length < 4) {
-      const avgJoy = Math.round(daysWithData.reduce((s, d) => s + d.joy / d.count, 0) / daysWithData.length);
-      const avgCuriosity = Math.round(daysWithData.reduce((s, d) => s + d.curiosity / d.count, 0) / daysWithData.length);
-      const avgExcitement = Math.round(daysWithData.reduce((s, d) => s + d.excitement / d.count, 0) / daysWithData.length);
-      days.forEach((d, idx) => {
-        if (d.count === 0) {
-          const seed = idx * 7 + 42;
-          d.joy = Math.max(10, avgJoy + Math.round((seededRandom(seed) - 0.5) * 30));
-          d.curiosity = Math.max(10, avgCuriosity + Math.round((seededRandom(seed + 1) - 0.5) * 25));
-          d.excitement = Math.max(5, avgExcitement + Math.round((seededRandom(seed + 2) - 0.5) * 20));
-          d.frustration = Math.round(seededRandom(seed + 3) * 15);
-          d.sadness = Math.round(seededRandom(seed + 4) * 10);
-          d.fear = Math.round(seededRandom(seed + 5) * 8);
-          d.count = 1;
-        }
-      });
-    }
-
     return days.map(d => ({
       name: d.label,
       Joie: d.count > 0 ? Math.round(d.joy / d.count) : null,
@@ -558,6 +537,57 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       Tristesse: d.count > 0 ? Math.round(d.sadness / d.count) : null,
     }));
   }, [analyses]);
+
+  // Average session duration
+  const avgSessionDuration = useMemo(() => {
+    const withDuration = sessions.filter(s => s.duration_seconds && s.duration_seconds > 0);
+    if (withDuration.length === 0) return 0;
+    return Math.round(withDuration.reduce((s, ses) => s + (ses.duration_seconds || 0), 0) / withDuration.length);
+  }, [sessions]);
+
+  // Average messages per session
+  const avgMessagesPerSession = useMemo(() => {
+    if (sessions.length === 0) return 0;
+    return Math.round(sessions.reduce((s, ses) => s + ses.message_count, 0) / sessions.length);
+  }, [sessions]);
+
+  // Engagement distribution
+  const engagementDist = useMemo(() => {
+    const dist = { high: 0, medium: 0, low: 0 };
+    recentAnalyses.forEach(a => {
+      if (a.engagement_level === "high") dist.high++;
+      else if (a.engagement_level === "medium") dist.medium++;
+      else dist.low++;
+    });
+    return dist;
+  }, [recentAnalyses]);
+
+  // Mood distribution
+  const moodDist = useMemo(() => {
+    const dist = { positive: 0, neutral: 0, low: 0 };
+    recentAnalyses.forEach(a => {
+      const mood = a.mood_score || "neutral";
+      if (mood === "positive") dist.positive++;
+      else if (mood === "low") dist.low++;
+      else dist.neutral++;
+    });
+    return dist;
+  }, [recentAnalyses]);
+
+  // Weekly activity (sessions per day of week)
+  const weeklyActivity = useMemo(() => {
+    const days = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+    const counts = new Array(7).fill(0);
+    sessions.forEach(s => {
+      const d = new Date(s.started_at).getDay();
+      counts[d === 0 ? 6 : d - 1]++;
+    });
+    return days.map((label, i) => ({ label, count: counts[i] }));
+  }, [sessions]);
+
+  // Last session info
+  const lastSession = sessions[0] || null;
+  const lastAnalysis = lastSession ? analyses.find(a => a.session_id === lastSession.id) : null;
 
   const radarData = useMemo(() => {
     if (!avgScores) return [];
