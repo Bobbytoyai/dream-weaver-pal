@@ -18,6 +18,9 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
   const [voice, setVoice] = useState<VoiceProfile>("female");
   const [interests, setInterests] = useState<string[]>([]);
   const [animClass, setAnimClass] = useState("animate-fadeInUp");
+  const [nameEmotion, setNameEmotion] = useState<"idle" | "happy" | "excited">("idle");
+  const [ageEmotion, setAgeEmotion] = useState<"idle" | "surprised" | "happy">("idle");
+  const ageEmotionTimer = useRef<number>(0);
 
   const goStep = (next: number) => {
     setAnimClass("animate-fadeOut");
