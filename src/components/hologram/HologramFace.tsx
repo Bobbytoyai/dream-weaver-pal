@@ -1,5 +1,5 @@
-import { Suspense, useRef, useState, useCallback } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Suspense, useRef, useCallback } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { FaceMesh } from "./FaceMesh";
 import { HologramParticles, ScanRing } from "./HologramEffects";
 import { useGazeTracker } from "./useGazeTracker";
@@ -101,8 +101,6 @@ function FaceScene({ faceState, gazeRef, getAmplitude }: {
 }) {
   const amplitudeRef = useRef(0);
 
-  // We read amplitude each frame for lip sync
-  const { useFrame } = require("@react-three/fiber");
   useFrame(() => {
     amplitudeRef.current = getAmplitude();
   });
