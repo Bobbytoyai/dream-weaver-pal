@@ -1429,6 +1429,23 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             className="w-full px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
         </div>
       </Card>
+
+      {/* Save confirmation button */}
+      <div className="sticky bottom-0 p-4 bg-gradient-to-t from-card via-card to-transparent">
+        <button
+          onClick={() => {
+            onSettingsChange?.(settings);
+            setSettingsSaved(true);
+            setTimeout(() => setSettingsSaved(false), 2000);
+          }}
+          className={`w-full py-3.5 rounded-2xl text-[14px] font-bold transition-all active:scale-95 ${
+            settingsSaved
+              ? "bg-success text-success-foreground"
+              : "bg-primary text-primary-foreground hover:opacity-90"
+          }`}>
+          {settingsSaved ? "✅ Préférences enregistrées !" : "💾 Enregistrer les préférences"}
+        </button>
+      </div>
     </div>
   );
 
