@@ -266,8 +266,12 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const speakFallback = useCallback(async (key: string) => {
     try {
       setState("speaking");
+      setContinuousListenEnabled(false); // STOP listening while Bobby speaks
       eventBus.emit({ type: "SPEECH_START" });
-      const url = await fetchTTSAudio(FALLBACK_FR[key] || FALLBACK_FR.error);
+      const fallbackText = FALLBACK_FR[key] || FALLBACK_FR.error;
+      // Track Bobby's speech for echo detection
+      recentBobbyTextsRef.current = [fallbackText, ...recentBobbyTextsRef.current].slice(0, 5);
+      const url = await fetchTTSAudio(fallbackText);
       audioQueue.enqueue(url);
       audioQueue.setOnAllDone(() => {
         eventBus.emit({ type: "SPEECH_STOP" });
@@ -276,7 +280,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
           conversationActiveRef.current = false;
           setContinuousListenEnabled(false);
         } else {
-          // After speaking, go to listening mode for continuous conversation
           goToListening();
         }
       });
@@ -295,10 +298,13 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
   const processSentenceForTTS = useCallback(async (sentence: string, signal?: AbortSignal) => {
     pendingSentencesRef.current++;
+    // Track Bobby's speech for echo detection
+    recentBobbyTextsRef.current = [sentence, ...recentBobbyTextsRef.current].slice(0, 8);
     try {
       const url = await fetchTTSAudio(sentence, signal);
       if (!signal?.aborted) {
         setState("speaking");
+        setContinuousListenEnabled(false); // STOP listening while speaking
         audioQueue.enqueue(url);
       }
     } catch {
@@ -308,7 +314,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       if (pendingSentencesRef.current === 0 && allSentencesDoneRef.current) {
         audioQueue.setOnAllDone(() => {
           eventBus.emit({ type: "SPEECH_STOP" });
-          // After Bobby finishes speaking → go to LISTENING for follow-up
           goToListening();
         });
       }
