@@ -29,21 +29,44 @@ function filterSentence(text: string): string | null {
 }
 
 // ─── Voice profiles ──────────────────────────────────────────────
-// Each profile tweaks pitch/rate to create 3 distinct French voices
-// using the browser's built-in Web Speech API (100% free, no API key).
+// Each profile uses a DIFFERENT underlying system voice + pitch/rate tweaks
+// to create 3 distinct French voices using the Web Speech API.
 
 export type VoiceProfile = "child" | "female" | "male";
 
 interface VoiceConfig {
   pitch: number;
   rate: number;
-  preferFemale: boolean; // prefer a female synth voice
+  /** Keywords to PREFER when picking a system voice */
+  preferKeywords: RegExp;
+  /** Keywords to AVOID */
+  avoidKeywords: RegExp;
+  /** Fallback index in the French voice list (0 = first, -1 = last) */
+  fallbackIndex: "first" | "last" | "middle";
 }
 
 const VOICE_PROFILES: Record<VoiceProfile, VoiceConfig> = {
-  child:  { pitch: 1.25, rate: 1.0, preferFemale: true },   // légèrement aigu, pas robotique
-  female: { pitch: 1.1, rate: 0.93, preferFemale: true },   // doux, maman chaleureuse
-  male:   { pitch: 0.75, rate: 0.9, preferFemale: false },  // grave, rassurant
+  child: {
+    pitch: 1.3,
+    rate: 1.02,
+    preferKeywords: /amelie|sophie|audrey|lea|marie|virginie|female|femme/i,
+    avoidKeywords: /thomas|daniel|nicolas|male|homme/i,
+    fallbackIndex: "first",
+  },
+  female: {
+    pitch: 1.0,
+    rate: 0.92,
+    preferKeywords: /amelie|sophie|audrey|lea|marie|virginie|female|femme/i,
+    avoidKeywords: /thomas|daniel|nicolas|male|homme/i,
+    fallbackIndex: "first",
+  },
+  male: {
+    pitch: 0.75,
+    rate: 0.88,
+    preferKeywords: /thomas|daniel|nicolas|male|homme/i,
+    avoidKeywords: /amelie|sophie|audrey|lea|marie|virginie|female|femme/i,
+    fallbackIndex: "last",
+  },
 };
 
 /** Cache resolved voices so we don't search every time */
@@ -56,29 +79,28 @@ function getFrenchVoices(): SpeechSynthesisVoice[] {
   return cachedVoices;
 }
 
-function pickVoice(preferFemale: boolean): SpeechSynthesisVoice | null {
+function pickVoiceForProfile(profile: VoiceProfile): SpeechSynthesisVoice | null {
   const fr = getFrenchVoices();
   if (fr.length === 0) return null;
 
-  if (preferFemale) {
-    // Chercher une voix féminine française (exclure les noms masculins)
-    const female = fr.find(v =>
-      /amelie|audrey|marie|sophie|virginie|lea/i.test(v.name)
-    ) || fr.find(v =>
-      !/thomas|daniel|nicolas|male|homme/i.test(v.name)
-    ) || fr[0];
-    return female;
-  } else {
-    // Chercher une voix masculine française
-    const male = fr.find(v =>
-      /thomas|daniel|nicolas|male|homme/i.test(v.name)
-    ) || fr[fr.length > 1 ? 1 : 0];
-    return male;
-  }
+  const config = VOICE_PROFILES[profile];
+
+  // 1. Try to find a voice matching preferred keywords
+  const preferred = fr.find(v => config.preferKeywords.test(v.name) && !config.avoidKeywords.test(v.name));
+  if (preferred) return preferred;
+
+  // 2. Try to find any voice NOT matching avoid keywords
+  const acceptable = fr.find(v => !config.avoidKeywords.test(v.name));
+  if (acceptable) return acceptable;
+
+  // 3. Fallback by index
+  if (config.fallbackIndex === "last") return fr[fr.length - 1];
+  if (config.fallbackIndex === "middle") return fr[Math.floor(fr.length / 2)];
+  return fr[0];
 }
 
 // Ensure voices are loaded (some browsers load them async)
-if ("speechSynthesis" in window) {
+if (typeof window !== "undefined" && "speechSynthesis" in window) {
   speechSynthesis.getVoices(); // trigger load
   speechSynthesis.onvoiceschanged = () => {
     cachedVoices = [];
