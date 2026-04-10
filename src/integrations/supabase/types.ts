@@ -188,6 +188,7 @@ export type Database = {
           priority: number
           question: string
           updated_at: string
+          usage_count: number
         }
         Insert: {
           age_max?: number
@@ -202,6 +203,7 @@ export type Database = {
           priority?: number
           question: string
           updated_at?: string
+          usage_count?: number
         }
         Update: {
           age_max?: number
@@ -216,6 +218,7 @@ export type Database = {
           priority?: number
           question?: string
           updated_at?: string
+          usage_count?: number
         }
         Relationships: []
       }
