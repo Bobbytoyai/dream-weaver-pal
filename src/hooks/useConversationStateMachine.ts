@@ -723,24 +723,38 @@ export function useConversationStateMachine({
     const WATCHDOG_TIMEOUT = 5000;
     let lastTransitionTime = Date.now();
     let lastState = machineStateRef.current;
+    let stuckCount = 0;
 
     const watchdog = setInterval(() => {
       const now = Date.now();
       const currentState = machineStateRef.current;
-      if (currentState !== lastState) { lastTransitionTime = now; lastState = currentState; return; }
+      if (currentState !== lastState) { lastTransitionTime = now; lastState = currentState; stuckCount = 0; return; }
       if ((currentState === "PROCESSING" || currentState === "ERROR") && now - lastTransitionTime > WATCHDOG_TIMEOUT) {
-        console.warn(`[Watchdog] ⚠️ Stuck in ${currentState} — auto-recovering`);
+        stuckCount++;
+        console.warn(`[Watchdog] ⚠️ Stuck in ${currentState} (${stuckCount}x) — auto-recovering`);
+        reportModuleHealth("ai", false);
         abortRef.current?.abort();
         audioQueue.stopAll();
         eventBus.emit({ type: "SPEECH_STOP" });
         transition("LISTENING");
-        speakAndListen(FALLBACK_FR.recovery);
+        // Soft reset: use friendly phrase instead of error-sounding message
+        speakAndListen(stuckCount > 1 ? getSoftResetPhrase() : FALLBACK_FR.recovery);
+        lastTransitionTime = Date.now();
+        lastState = "LISTENING";
+      }
+      // Also catch stuck SPEAKING (audio frozen)
+      if (currentState === "SPEAKING" && now - lastTransitionTime > 30000) {
+        console.warn("[Watchdog] ⚠️ Speaking too long — recovering");
+        reportModuleHealth("audio", false);
+        audioQueue.stopAll();
+        eventBus.emit({ type: "SPEECH_STOP" });
+        goToListening();
         lastTransitionTime = Date.now();
         lastState = "LISTENING";
       }
     }, WATCHDOG_INTERVAL);
     return () => clearInterval(watchdog);
-  }, [audioQueue, transition, speakAndListen]);
+  }, [audioQueue, transition, speakAndListen, goToListening]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // CLICK INTERACTIONS (debounced 300ms to prevent child rapid taps)
