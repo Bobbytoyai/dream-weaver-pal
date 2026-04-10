@@ -81,10 +81,11 @@ const SYNONYMS: Record<string, string[]> = {
 };
 
 function expandWithSynonyms(word: string): string[] {
-  const results = [word];
+  const results: string[] = [word];
   for (const [key, syns] of Object.entries(SYNONYMS)) {
     if (key === word || syns.includes(word)) {
-      results.push(key, ...syns);
+      results.push(key);
+      syns.forEach(s => results.push(s));
     }
   }
   return [...new Set(results)];
