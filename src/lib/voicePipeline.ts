@@ -325,7 +325,7 @@ export function useAudioQueue() {
   const stopAll = useCallback(() => {
     if ("speechSynthesis" in window) speechSynthesis.cancel();
     queueRef.current.forEach(url => {
-      if (url !== "__browser_tts__") URL.revokeObjectURL(url);
+      if (url !== "__browser_tts__" && url !== "__piper_silent__") URL.revokeObjectURL(url);
     });
     queueRef.current = [];
     if (currentAudioRef.current) {
