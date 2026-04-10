@@ -3,7 +3,7 @@ import { Mic, MicOff, MessageSquare } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import { ParentSettings } from "@/components/ParentMode";
-import companionAvatar from "@/assets/companion-avatar.png";
+import { HologramFace } from "@/components/hologram/HologramFace";
 
 type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
 type AiMsg = { role: "user" | "assistant"; content: string };
