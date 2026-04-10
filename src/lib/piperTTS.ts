@@ -56,8 +56,9 @@ export async function preloadVoice(profile: VoiceProfile, onProgress?: (p: numbe
   const tts = await getTTS();
   const voiceId = VOICE_MODEL[profile];
   await tts.download(voiceId, (progress) => {
-    downloadProgress[voiceId] = progress.progress ?? 0;
-    onProgress?.(downloadProgress[voiceId]);
+    const pct = progress.total > 0 ? progress.loaded / progress.total : 0;
+    downloadProgress[voiceId] = pct;
+    onProgress?.(pct);
   });
 }
 
@@ -83,7 +84,8 @@ export async function piperSpeak(
     text,
     voiceId,
   }, (progress) => {
-    downloadProgress[voiceId] = progress.progress ?? 0;
+    const pct = progress.total > 0 ? progress.loaded / progress.total : 0;
+    downloadProgress[voiceId] = pct;
   });
 
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
