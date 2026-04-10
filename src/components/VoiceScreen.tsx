@@ -214,6 +214,8 @@ const VoiceScreen = ({
             enableCamera={parentSettings?.enableCamera ?? false}
             onTripleTap={sm.handleParentMode}
             bobbyColor={parentSettings?.bobbyColor}
+            emotionOverride={sm.bobbyFaceEmotion}
+            emotionIntensity={sm.bobbyEmotionIntensity}
           />
         </div>
 

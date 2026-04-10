@@ -7,6 +7,8 @@ import { streamVoiceChat, fetchTTSAudio, useAudioQueue, preloadVoiceProfile, det
 import { preloadVoice as preloadPiperVoice } from "@/lib/piperTTS";
 import { preloadOfflineTTSCache } from "@/lib/ttsCache";
 import type { Emotion } from "@/lib/voicePipeline";
+import { detectBobbyEmotion, detectEmotionIntensity } from "@/lib/emotionMapper";
+import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import { useSmartSTT } from "@/hooks/useSmartSTT";
 import { ParentSettings } from "@/components/parentSettings";
@@ -146,6 +148,8 @@ export function useConversationStateMachine({
   const [lastAiResponse, setLastAiResponse] = useState("");
   const [piperProgress, setPiperProgress] = useState<number>(-1);
   const currentEmotionRef = useRef<Emotion | undefined>(undefined);
+  const [bobbyFaceEmotion, setBobbyFaceEmotion] = useState<FaceState | undefined>(undefined);
+  const [bobbyEmotionIntensity, setBobbyEmotionIntensity] = useState(0.7);
 
   // ─── REFS ───
   const abortRef = useRef<AbortController | null>(null);
@@ -467,6 +471,8 @@ export function useConversationStateMachine({
           allSentencesDoneRef.current = true;
           setLastAiResponse(text || "");
           if (text) {
+            setBobbyFaceEmotion(detectBobbyEmotion(text));
+            setBobbyEmotionIntensity(detectEmotionIntensity(text));
             setConversationHistory([...newHistory, { role: "assistant", content: text }]);
             session.addMessage("assistant", text);
             eventBus.emit({ type: "RESPONSE_READY", text });
@@ -523,6 +529,8 @@ export function useConversationStateMachine({
       const offlineResp = getOfflineResponse(cleaned, childName);
       goToSpeaking();
       eventBus.emit({ type: "SPEECH_START" });
+      setBobbyFaceEmotion(detectBobbyEmotion(offlineResp.text));
+      setBobbyEmotionIntensity(detectEmotionIntensity(offlineResp.text));
       recentBobbyTextsRef.current = [offlineResp.text, ...recentBobbyTextsRef.current].slice(0, 8);
       fetchTTSAudio(offlineResp.text, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode).then(url => {
         audioQueue.enqueue(url);
@@ -744,5 +752,7 @@ export function useConversationStateMachine({
     deepgramSTT,
     handleTapBobby,
     handleParentMode,
+    bobbyFaceEmotion,
+    bobbyEmotionIntensity,
   };
 }
