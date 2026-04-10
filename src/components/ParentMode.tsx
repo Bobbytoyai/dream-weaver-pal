@@ -293,7 +293,19 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               <p className="text-xs text-muted-foreground">Buddy suit le visage de l'enfant avec la caméra</p>
             </div>
           </div>
-          <button onClick={() => updateSetting("enableCamera", !settings.enableCamera)}
+          <button onClick={async () => {
+            if (!settings.enableCamera) {
+              try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 320, height: 240 } });
+                stream.getTracks().forEach(t => t.stop());
+                updateSetting("enableCamera", true);
+              } catch {
+                alert("Impossible d'accéder à la caméra. Vérifiez les permissions du navigateur.");
+              }
+            } else {
+              updateSetting("enableCamera", false);
+            }
+          }}
             className={`w-12 h-7 rounded-full transition-all ${settings.enableCamera ? "bg-primary" : "bg-muted"}`}>
             <div className={`w-5 h-5 rounded-full bg-card shadow transition-transform ${settings.enableCamera ? "translate-x-6" : "translate-x-1"}`} />
           </button>
