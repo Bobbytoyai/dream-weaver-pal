@@ -1511,8 +1511,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     <span className="text-[10px] font-mono text-foreground">{formatDuration(todayDuration)} / {settings.timeLimitMinutes || 60} min</span>
                   </div>
                   <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full transition-all ${todayDuration / 60 > settings.timeLimitMinutes || 60 ? "bg-destructive" : "bg-primary"}`}
-                      style={{ width: `${Math.min(100, (todayDuration / 60 / settings.timeLimitMinutes || 60) * 100)}%` }} />
+                    <div className={`h-full rounded-full transition-all ${todayDuration / 60 > (settings.timeLimitMinutes || 60) ? "bg-destructive" : "bg-primary"}`}
+                      style={{ width: `${Math.min(100, (todayDuration / 60 / (settings.timeLimitMinutes || 60)) * 100)}%` }} />
                   </div>
                 </div>
               )}
