@@ -657,6 +657,64 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     return insights;
   }, [recentAnalyses, avgEmotions, allInterests, engagementDist, avgScores, childName]);
 
+  // v4.0: Daily AI summary
+  const dailySummary = useMemo(() => {
+    if (todaySessions.length === 0) return null;
+    const todayAnalyses = recentAnalyses.filter(a => {
+      const s = sessions.find(s => s.id === a.session_id);
+      return s && new Date(s.started_at).toDateString() === new Date().toDateString();
+    });
+    if (todayAnalyses.length === 0 && todaySessions.length > 0) {
+      return `${childName} a eu ${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} aujourd'hui (${formatDuration(todayDuration)}).`;
+    }
+    const summaries = todayAnalyses.map(a => a.summary).filter(Boolean);
+    if (summaries.length === 0) return null;
+    return summaries.join(" ");
+  }, [todaySessions, recentAnalyses, sessions, childName, todayDuration]);
+
+  // v4.0: Parent recommendations based on data
+  const parentRecommendations = useMemo(() => {
+    const recs: { emoji: string; text: string }[] = [];
+    if (recentAnalyses.length === 0) return recs;
+
+    // Recommend based on interests
+    if (allInterests.length > 0) {
+      const topInterest = allInterests[0][0];
+      recs.push({ emoji: "🎨", text: `Proposez une activité créative autour de « ${topInterest} » pour prolonger sa curiosité.` });
+    }
+
+    // Recommend based on low engagement
+    if (engagementDist.low > engagementDist.high) {
+      recs.push({ emoji: "💡", text: `L'engagement est un peu faible. Essayez les jeux interactifs ou les histoires personnalisées.` });
+    }
+
+    // Recommend based on emotional state
+    if (avgScores) {
+      if (avgScores.stability < 40) {
+        recs.push({ emoji: "🤗", text: `Les émotions varient beaucoup. Un moment calme ensemble pourrait aider à stabiliser l'humeur.` });
+      }
+      if (avgScores.sociability > 70) {
+        recs.push({ emoji: "👫", text: `${childName} est très sociable ! Invitez un ami à jouer avec Bobby ensemble.` });
+      }
+      if (avgScores.curiosity > 70) {
+        recs.push({ emoji: "📚", text: `Curiosité élevée ! Activez le mode éducatif pour explorer de nouveaux sujets.` });
+      }
+    }
+
+    // Recommend based on usage patterns
+    const avgDur = totalDuration / Math.max(totalSessions, 1);
+    if (avgDur > 900) { // >15min avg
+      recs.push({ emoji: "⏰", text: `Les sessions sont longues (${formatDuration(Math.round(avgDur))} en moyenne). Pensez à activer une limite de temps.` });
+    }
+
+    // Always suggest at least one
+    if (recs.length === 0) {
+      recs.push({ emoji: "✨", text: `Continuez ainsi ! ${childName} utilise Bobby de manière équilibrée.` });
+    }
+
+    return recs.slice(0, 4);
+  }, [recentAnalyses, allInterests, engagementDist, avgScores, childName, totalDuration, totalSessions]);
+
   // ─── Key moments (emotional highlights) ───────────────────────
   const keyMoments = useMemo(() => {
     if (sessionMessages.length === 0) return [];
