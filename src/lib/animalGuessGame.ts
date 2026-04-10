@@ -477,9 +477,7 @@ function handleGuess(text: string, childName?: string): string {
 
   if (isCorrect) {
     const response = personalize(pickRandom(CORRECT_PHRASES), childName, animal);
-    // Record score
     try {
-      const { recordAnswer } = require("./gameEngine");
       const score = recordAnswer("devine_animal", true);
       const scoreText = score.streak > 1
         ? ` 🔥 Série de ${score.streak} bonnes réponses !`
