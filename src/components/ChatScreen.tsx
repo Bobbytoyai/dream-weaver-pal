@@ -22,11 +22,11 @@ interface ChatScreenProps {
 
 const getInitialGreeting = (name: string, age: number): string => {
   if (age <= 7) {
-    return `Yay, ${name}! 🎉 I'm so happy to meet you! I'm Buddy! Want to play a game, hear a story, or just chat?`;
+    return `Youpi, ${name} ! 🎉 Je suis trop content de te rencontrer ! Je suis Buddy ! Tu veux jouer, entendre une histoire, ou juste discuter ?`;
   } else if (age <= 10) {
-    return `Hey ${name}! 😊 Great to meet you! I'm Buddy, your AI companion. I can tell stories, play games, or help you learn cool stuff. What sounds fun?`;
+    return `Salut ${name} ! 😊 Enchanté ! Je suis Buddy, ton compagnon IA. Je peux raconter des histoires, jouer à des jeux ou t'apprendre des trucs cool. Qu'est-ce qui te tente ?`;
   }
-  return `Hey ${name}! 👋 I'm Buddy, your AI companion. I'm here for stories, games, learning, or just chatting. What are you in the mood for?`;
+  return `Hey ${name} ! 👋 Je suis Buddy, ton compagnon IA. Histoires, jeux, apprentissage ou discussion… t'es d'humeur pour quoi ?`;
 };
 
 const ChatScreen = ({ childName, childAge, onSwitchToVoice }: ChatScreenProps) => {
