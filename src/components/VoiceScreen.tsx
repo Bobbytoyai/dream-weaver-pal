@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { BookOpen, Settings, Camera, Mic, MicOff } from "lucide-react";
-import { streamVoiceChat, fetchTTSAudio, useAudioQueue } from "@/lib/voicePipeline";
+import { streamVoiceChat, fetchTTSAudio, useAudioQueue, preloadVoiceProfile, detectEmotionForTTS } from "@/lib/voicePipeline";
+import type { Emotion } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import { useWakeWord } from "@/hooks/useWakeWord";
 import { useDeepgramSTT } from "@/hooks/useDeepgramSTT";
@@ -136,6 +137,12 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const [conversationHistory, setConversationHistory] = useState<AiMsg[]>([]);
   const [partialText, setPartialText] = useState("");
   const [micStatus, setMicStatus] = useState<"ready" | "blocked" | "active">("ready");
+  const currentEmotionRef = useRef<Emotion | undefined>(undefined);
+
+  // Preload voice profile on mount and on switch for instant first response
+  useEffect(() => {
+    preloadVoiceProfile(currentVoiceId as any);
+  }, [currentVoiceId]);
 
   const abortRef = useRef<AbortController | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -272,8 +279,11 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     pendingSentencesRef.current++;
     recentBobbyTextsRef.current = [sentence, ...recentBobbyTextsRef.current].slice(0, 8);
 
+    // Detect emotion from Bobby's response for expressive TTS
+    const responseEmotion = detectEmotionForTTS(sentence) || currentEmotionRef.current;
+
     try {
-      const url = await fetchTTSAudio(sentence, signal, currentVoiceId);
+      const url = await fetchTTSAudio(sentence, signal, currentVoiceId, responseEmotion);
       if (!signal?.aborted) {
         setState("speaking");
         setContinuousListenEnabled(false);
@@ -290,7 +300,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         });
       }
     }
-  }, [audioQueue, goToListening]);
+  }, [audioQueue, currentVoiceId, goToListening]);
 
   const getAIResponse = useCallback(async (userText: string, intent?: Intent) => {
     setState("processing");
@@ -299,6 +309,8 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     setPartialText("");
 
     const emotion = detectEmotion(userText);
+    // Store emotion for TTS modulation
+    currentEmotionRef.current = (emotion as Emotion) || detectEmotionForTTS(userText);
     session.addMessage("user", userText, emotion);
     eventBus.emit({ type: "VOICE_INPUT", transcript: userText });
     if (emotion) eventBus.emit({ type: "EMOTION_DETECTED", emotion });
