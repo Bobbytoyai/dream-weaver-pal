@@ -64,8 +64,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   // ─── Materials ─────────────────────────────────────────────
 
   const eyeWhiteMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(210, 60%, 95%)"),
-    transparent: true, opacity: 0.95,
+    color: new THREE.Color("hsl(0, 0%, 100%)"),
+    transparent: true, opacity: 1,
   }), []);
 
   const irisMat = useMemo(() => new THREE.MeshBasicMaterial({
@@ -192,13 +192,19 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       rightEyebrowRef.current.rotation.z = -0.1 + state.eyebrowTilt * 0.3;
     }
 
-    // MOUTH — scale the smile arc
+    // MOUTH — animate curve, width, and openness visually
     if (mouthRef.current) {
-      const speakScale = 1 + state.mouthOpenness * 0.4 + state.mouthWidth * 0.15;
-      mouthRef.current.scale.x = speakScale;
-      mouthRef.current.position.y = -0.55 + state.mouthCurve * 0.05;
+      const curveEffect = state.mouthCurve; // -0.2 to 0.55
+      const speakScale = 1 + state.mouthOpenness * 0.5 + state.mouthWidth * 0.2;
+      // Scale X for width, scale Y for curve emphasis (smile = wider + shorter arc)
+      mouthRef.current.scale.x = speakScale * (1 + curveEffect * 0.3);
+      mouthRef.current.scale.y = 1 + Math.abs(curveEffect) * 0.8 + state.mouthOpenness * 0.6;
+      // Move mouth up when smiling, down when frowning
+      mouthRef.current.position.y = -0.55 + curveEffect * 0.12;
+      // Rotate slightly for asymmetric quirks
+      mouthRef.current.rotation.z = Math.PI + state.mouthWidth * 0.02;
       const mat = mouthRef.current.material as THREE.MeshBasicMaterial;
-      mat.opacity = 0.7 + state.mouthOpenness * 0.3;
+      mat.opacity = 0.75 + state.mouthOpenness * 0.25 + Math.abs(curveEffect) * 0.15;
     }
 
     // TONGUE — fade in when mouth opens
@@ -281,7 +287,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
       {/* ===== MOUTH — curved smile ===== */}
       <mesh ref={mouthRef} position={[0, -0.55, 0.01]} material={mouthMat} rotation={[0, 0, Math.PI]}>
-        <torusGeometry args={[0.2, 0.02, 8, 32, Math.PI * 0.5]} />
+        <torusGeometry args={[0.2, 0.028, 8, 32, Math.PI * 0.55]} />
       </mesh>
 
       {/* ===== TONGUE — pink, fades in when mouth opens ===== */}
