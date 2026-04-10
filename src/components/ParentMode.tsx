@@ -388,6 +388,31 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     setSelectedAnalysis(null);
   };
 
+  // v4.2: Skip audio ±10 seconds
+  const skipAudio = (seconds: number) => {
+    if (!audioRef.current || !audioDuration) return;
+    const newTime = Math.max(0, Math.min(audioDuration, audioRef.current.currentTime + seconds));
+    audioRef.current.currentTime = newTime;
+    setAudioProgress((newTime / audioDuration) * 100);
+  };
+
+  // v4.2: Toggle favorite
+  const toggleFavorite = async (session: Session) => {
+    const newVal = !session.is_favorite;
+    await supabase.from("child_sessions").update({ is_favorite: newVal }).eq("id", session.id);
+    setSessions(prev => prev.map(s => s.id === session.id ? { ...s, is_favorite: newVal } : s));
+    if (selectedSession?.id === session.id) setSelectedSession({ ...selectedSession, is_favorite: newVal });
+  };
+
+  // v4.2: Save parent note
+  const saveParentNote = async (sessionId: string, note: string) => {
+    const trimmed = note.trim() || null;
+    await supabase.from("child_sessions").update({ parent_note: trimmed }).eq("id", sessionId);
+    setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, parent_note: trimmed } : s));
+    if (selectedSession?.id === sessionId) setSelectedSession({ ...selectedSession, parent_note: trimmed });
+    setEditingNote(null);
+  };
+
   const exportSessionPDF = (session: Session, analysis: Analysis | null) => {
     const lines: string[] = [
       `RAPPORT DE SESSION — ${childName}`,
