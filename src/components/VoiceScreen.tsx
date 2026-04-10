@@ -206,7 +206,7 @@ interface VoiceScreenProps {
   onNarrationConsumed?: () => void;
 }
 
-const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onParentMode, onActivities, parentSettings, activeGameCategory, onClearGame }: VoiceScreenProps) => {
+const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onParentMode, onActivities, parentSettings, activeGameCategory, onClearGame, pendingNarration, onNarrationConsumed }: VoiceScreenProps) => {
   const currentVoiceId = parentSettings?.voiceType || "female";
   const currentVoiceSpeed = parentSettings?.voiceSpeed || "normal";
   const isCalmMode = parentSettings?.nightMode?.active || parentSettings?.personality === "calm";
