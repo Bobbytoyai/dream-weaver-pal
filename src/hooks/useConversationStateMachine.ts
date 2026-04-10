@@ -699,9 +699,14 @@ export function useConversationStateMachine({
   }, [audioQueue, transition, speakAndListen]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // CLICK INTERACTIONS
+  // CLICK INTERACTIONS (debounced 300ms to prevent child rapid taps)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const lastTapRef = useRef(0);
   const handleTapBobby = useCallback(() => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 300) return; // debounce rapid taps
+    lastTapRef.current = now;
+
     const s = machineStateRef.current;
     if (!micArmed) { setMicArmed(true); }
     if (s === "LISTENING") { goToIdle(); return; }
