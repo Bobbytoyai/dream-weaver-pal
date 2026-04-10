@@ -2491,17 +2491,27 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       {/* Tab bar — scrollable pill style */}
       {!selectedSession && (
         <div className="flex gap-1.5 px-4 py-2.5 bg-card border-b border-border overflow-x-auto scrollbar-hide">
-          {tabs.map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-semibold whitespace-nowrap transition-all duration-200 shrink-0 ${
-                activeTab === tab.id
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}>
-              <tab.icon className="w-3.5 h-3.5" />
-              {tab.label}
-            </button>
-          ))}
+          {tabs.map(tab => {
+            const unanalyzedCount = tab.id === "sessions"
+              ? sessions.filter(s => !analyses.some(a => a.session_id === s.id)).length
+              : 0;
+            return (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-semibold whitespace-nowrap transition-all duration-200 shrink-0 ${
+                  activeTab === tab.id
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}>
+                <tab.icon className="w-3.5 h-3.5" />
+                {tab.label}
+                {unanalyzedCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+                    {unanalyzedCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
 
