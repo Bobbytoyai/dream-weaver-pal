@@ -1,0 +1,1 @@
+ALTER TABLE public.knowledge_base ADD COLUMN emotion text NOT NULL DEFAULT 'happy';

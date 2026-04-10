@@ -181,6 +181,7 @@ export type Database = {
           answer: string
           category: string
           created_at: string
+          emotion: string
           id: string
           is_active: boolean
           keywords: string[]
@@ -194,6 +195,7 @@ export type Database = {
           answer: string
           category?: string
           created_at?: string
+          emotion?: string
           id?: string
           is_active?: boolean
           keywords?: string[]
@@ -207,6 +209,7 @@ export type Database = {
           answer?: string
           category?: string
           created_at?: string
+          emotion?: string
           id?: string
           is_active?: boolean
           keywords?: string[]
