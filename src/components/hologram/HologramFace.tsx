@@ -11,6 +11,10 @@ interface HologramFaceProps {
   voiceState: "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
   enableCamera?: boolean;
   onTripleTap?: () => void;
+  /** Emotion override from AI analysis (e.g. "happy", "sad", "curious") */
+  emotionOverride?: FaceState;
+  /** Emotion intensity 0-1 (default 0.7) */
+  emotionIntensity?: number;
 }
 
 function mapToFaceState(voiceState: HologramFaceProps["voiceState"]): FaceState {
@@ -24,7 +28,13 @@ function mapToFaceState(voiceState: HologramFaceProps["voiceState"]): FaceState 
   }
 }
 
-export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: HologramFaceProps) {
+export function HologramFace({
+  voiceState,
+  enableCamera = false,
+  onTripleTap,
+  emotionOverride,
+  emotionIntensity = 0.7,
+}: HologramFaceProps) {
   const { gazeRef, cameraActive } = useGazeTracker(enableCamera);
   const { connectAudio, getAmplitude, getViseme } = useAudioAmplitude();
   const tapCountRef = useRef(0);
@@ -54,7 +64,9 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
     }
   }, [onTripleTap]);
 
-  const faceState: FaceState = wakeFlash ? "attentive" : mapToFaceState(voiceState);
+  // Emotion override takes precedence over voiceState mapping
+  const baseFaceState: FaceState = wakeFlash ? "attentive" : mapToFaceState(voiceState);
+  const faceState: FaceState = emotionOverride && voiceState !== "speaking" ? emotionOverride : baseFaceState;
 
   return (
     <div
@@ -62,6 +74,7 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
       onClick={handleTap}
       style={{ touchAction: "manipulation" }}
     >
+      {/* Ambient aura */}
       <div className="absolute inset-0 rounded-full pointer-events-none"
         style={{
           background: `radial-gradient(circle, 
@@ -79,23 +92,28 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
         style={{ background: "transparent" }}
       >
         <Suspense fallback={null}>
-          <ambientLight intensity={0.4} color="#e8f4ff" />
+          <ambientLight intensity={0.45} color="#e8f4ff" />
           <directionalLight
             position={[2, 3, 4]}
-            intensity={voiceState === "speaking" ? 1.1 : 0.7}
+            intensity={voiceState === "speaking" ? 1.1 : 0.75}
             color={voiceState === "speaking" ? "#99ddff" : "#bbddee"}
           />
-          <directionalLight position={[-2, 1, 3]} intensity={0.35} color="#cc99ff" />
+          <directionalLight position={[-2, 1, 3]} intensity={0.4} color="#cc99ff" />
           <pointLight
             position={[0, 0.5, 3]}
-            intensity={voiceState === "listening" ? 0.9 : 0.5}
+            intensity={voiceState === "listening" ? 0.9 : 0.55}
             color="#77ddff"
             distance={8}
           />
-          <pointLight position={[0, -1.5, 1]} intensity={0.25} color="#ffccdd" distance={5} />
-          <pointLight position={[0, 2, 1]} intensity={0.15} color="#aaeeff" distance={5} />
+          <pointLight position={[0, -1.5, 1]} intensity={0.28} color="#ffccdd" distance={5} />
+          <pointLight position={[0, 2, 1]} intensity={0.18} color="#aaeeff" distance={5} />
 
-          <FaceScene faceState={faceState} gazeRef={gazeRef} getViseme={getViseme} />
+          <FaceScene
+            faceState={faceState}
+            gazeRef={gazeRef}
+            getViseme={getViseme}
+            emotionIntensity={emotionIntensity}
+          />
           <HologramParticles intensity={voiceState === "speaking" ? 0.8 : voiceState === "listening" ? 0.5 : 0.25} />
           <ScanRing />
         </Suspense>
@@ -104,10 +122,11 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
   );
 }
 
-function FaceScene({ faceState, gazeRef, getViseme }: {
+function FaceScene({ faceState, gazeRef, getViseme, emotionIntensity }: {
   faceState: FaceState;
   gazeRef: React.MutableRefObject<{ x: number; y: number }>;
   getViseme: () => VisemeState;
+  emotionIntensity: number;
 }) {
   const visemeRef = useRef<VisemeState>({
     viseme: "REST", amplitude: 0, mouthOpenness: 0, mouthWidth: 0.5, mouthRound: 0, jawDrop: 0,
@@ -123,6 +142,7 @@ function FaceScene({ faceState, gazeRef, getViseme }: {
       gazeRef={gazeRef}
       audioAmplitude={visemeRef.current.amplitude}
       viseme={visemeRef.current}
+      emotionIntensity={emotionIntensity}
     />
   );
 }
