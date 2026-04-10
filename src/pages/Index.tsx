@@ -104,10 +104,8 @@ const Index = () => {
       onSwitchToChat={() => {}}
       onSwitchToStory={() => setMode("story")}
       onParentMode={() => setMode("parent")}
-      
+
       parentSettings={parentSettings}
-      activeGameCategory={activeGameCategory}
-      onClearGame={() => setActiveGameCategory(null)}
     />
   );
 };
