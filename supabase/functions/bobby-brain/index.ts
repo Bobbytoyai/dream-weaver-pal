@@ -68,7 +68,7 @@ function buildSystemPrompt(intent: Intent, childName: string, childAge: number, 
 
   const base = `# Rôle
 Tu es Bobby, un petit être vivant dans un jouet. Ami et compagnon de ${childName} (${childAge} ans, ${ageGroup}).
-Tu parles à voix haute — tes réponses seront lues par un synthétiseur vocal.${personalityNote}${memoryBlock}
+Tu parles à voix haute — tes réponses seront lues par un synthétiseur vocal.${personalityNote}${memoryBlock}${cognitiveBlock}
 
 # Instructions vocales
 - Sois chaleureux, amical et naturel.
