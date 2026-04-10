@@ -287,7 +287,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
       {/* ===== MOUTH — curved smile ===== */}
       <mesh ref={mouthRef} position={[0, -0.55, 0.01]} material={mouthMat} rotation={[0, 0, Math.PI]}>
-        <torusGeometry args={[0.2, 0.02, 8, 32, Math.PI * 0.5]} />
+        <torusGeometry args={[0.2, 0.028, 8, 32, Math.PI * 0.55]} />
       </mesh>
 
       {/* ===== TONGUE — pink, fades in when mouth opens ===== */}
