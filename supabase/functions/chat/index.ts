@@ -61,20 +61,20 @@ FORMAT: Réponses COURTES (2-4 phrases max). Naturel à l'oral. Pas de longs par
     if (!response.ok) {
       const status = response.status;
       if (status === 429) {
-        return new Response(JSON.stringify({ error: "Too many messages! Let's slow down a bit. Try again in a moment! 🐢" }), {
+        return new Response(JSON.stringify({ error: "Trop de messages ! On ralentit un peu. Réessaie dans un moment ! 🐢" }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits need a top-up. Ask a parent to check the settings! 💳" }), {
+        return new Response(JSON.stringify({ error: "Les crédits IA sont épuisés. Demande à un parent de vérifier ! 💳" }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const t = await response.text();
       console.error("AI gateway error:", status, t);
-      return new Response(JSON.stringify({ error: "Oops, something went wrong! Try again? 🔄" }), {
+      return new Response(JSON.stringify({ error: "Oups, un petit problème ! On réessaie ? 🔄" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+        });
     }
 
     return new Response(response.body, {
