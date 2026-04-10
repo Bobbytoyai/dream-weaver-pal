@@ -88,7 +88,7 @@ function expandWithSynonyms(word: string): string[] {
       syns.forEach(s => results.push(s));
     }
   }
-  return [...new Set(results)];
+  return results.filter((v, i, a) => a.indexOf(v) === i);
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
