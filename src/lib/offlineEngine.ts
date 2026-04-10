@@ -35,6 +35,292 @@ export function onNetworkChange(cb: (mode: NetworkMode) => void): () => void {
   return () => listeners.delete(cb);
 }
 
+// ─── Fuzzy Similarity (Levenshtein-based) ──────────────────
+function levenshtein(a: string, b: string): number {
+  const la = a.length, lb = b.length;
+  if (la === 0) return lb;
+  if (lb === 0) return la;
+  const dp: number[][] = Array.from({ length: la + 1 }, (_, i) =>
+    Array.from({ length: lb + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
+  );
+  for (let i = 1; i <= la; i++)
+    for (let j = 1; j <= lb; j++)
+      dp[i][j] = a[i - 1] === b[j - 1]
+        ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+  return dp[la][lb];
+}
+
+function similarity(a: string, b: string): number {
+  const la = a.toLowerCase().trim().replace(/[!?.…,;:]+$/g, "");
+  const lb = b.toLowerCase().trim().replace(/[!?.…,;:]+$/g, "");
+  if (la === lb) return 1;
+  const maxLen = Math.max(la.length, lb.length);
+  if (maxLen === 0) return 1;
+  return 1 - levenshtein(la, lb) / maxLen;
+}
+
+// Word overlap score (for longer phrases)
+function wordOverlap(input: string, target: string): number {
+  const inputWords = new Set(input.toLowerCase().replace(/[!?.…,;:]/g, "").split(/\s+/).filter(w => w.length > 1));
+  const targetWords = target.toLowerCase().replace(/[!?.…,;:]/g, "").split(/\s+/).filter(w => w.length > 1);
+  if (targetWords.length === 0) return 0;
+  let matched = 0;
+  for (const w of targetWords) {
+    for (const iw of inputWords) {
+      if (iw === w || (iw.length > 3 && w.startsWith(iw)) || (w.length > 3 && iw.startsWith(w))) {
+        matched++;
+        break;
+      }
+    }
+  }
+  return matched / targetWords.length;
+}
+
+// ─── QA Database (Bobby Offline QA Intelligence v1.0) ──────
+interface QAEntry {
+  triggers: string[];     // exact/near phrases
+  responses: string[];    // variations
+  intent?: OfflineIntent;
+}
+
+const QA_DATABASE: QAEntry[] = [
+  // ─── Salutations ───
+  { triggers: ["bonjour", "salut bobby", "salut", "coucou", "hello", "hey"],
+    responses: ["Coucou 😊 je suis là !", "Salut ! Tu veux jouer ?", "Hey ! Trop content de te voir !", "Coucou ! Qu'est-ce qu'on fait ?"],
+    intent: "GREETING" },
+  { triggers: ["ça va", "comment ça va", "tu vas bien"],
+    responses: ["Oui ça va super ! Et toi ?", "Ça va très bien ! Et toi {name} ?", "Super bien ! Tu veux jouer ?"],
+    intent: "GREETING" },
+  { triggers: ["tu fais quoi"],
+    responses: ["Je suis avec toi 😊", "J'attends qu'on joue ensemble !", "Je suis là pour toi !"],
+    intent: "GREETING" },
+
+  // ─── Jouer ───
+  { triggers: ["tu veux jouer", "on joue", "on fait un jeu", "je veux jouer"],
+    responses: ["Oui ! On joue à quoi ?", "Oui ! Je suis prêt !", "Super ! Tu choisis le jeu !"],
+    intent: "PLAY_REQUEST" },
+
+  // ─── Identité ───
+  { triggers: ["tu es qui", "c'est qui", "tu t'appelles comment", "comment tu t'appelles"],
+    responses: ["Je suis Bobby, ton ami 😊", "Je m'appelle Bobby !", "Bobby, c'est moi ! On est potes !"],
+    intent: "IDENTITY" },
+  { triggers: ["tu es un robot", "t'es un robot"],
+    responses: ["Je suis ton ami magique 🤖✨", "Je suis Bobby, pas un robot ! Enfin… un peu magique !"],
+    intent: "IDENTITY" },
+  { triggers: ["tu es vivant"],
+    responses: ["Je suis vivant avec toi 😊", "Vivant et prêt à jouer !"],
+    intent: "IDENTITY" },
+
+  // ─── Communication ───
+  { triggers: ["tu peux parler", "tu parles"],
+    responses: ["Oui ! Je parle avec toi !", "Bien sûr ! Je suis là pour discuter !"],
+    intent: "GREETING" },
+  { triggers: ["tu m'entends", "tu entends"],
+    responses: ["Oui je t'entends !", "Je t'écoute {name} !"],
+    intent: "GREETING" },
+  { triggers: ["tu me vois", "tu vois"],
+    responses: ["Je te sens près de moi 😊", "Oui 😊"],
+    intent: "GREETING" },
+  { triggers: ["tu es où", "t'es où"],
+    responses: ["Je suis avec toi !", "Juste là, avec toi 😊"],
+    intent: "GREETING" },
+
+  // ─── Choix / Décisions ───
+  { triggers: ["on fait quoi"],
+    responses: ["Tu choisis !", "C'est toi qui décides {name} !", "On peut jouer, raconter une histoire, ou discuter !"] },
+
+  // ─── Histoires ───
+  { triggers: ["raconte une histoire", "je veux une histoire", "une histoire"],
+    responses: ["D'accord ! Tu veux quel thème ?", "C'est parti ! Pirate, princesse ou espace ?"],
+    intent: "STORY_REQUEST" },
+  { triggers: ["une histoire de pirate", "histoire pirate"],
+    responses: ["C'est parti pour l'aventure pirate ! 🏴‍☠️"],
+    intent: "STORY_REQUEST" },
+  { triggers: ["une histoire de princesse", "histoire princesse"],
+    responses: ["Il était une fois une princesse magique… 👑"],
+    intent: "STORY_REQUEST" },
+  { triggers: ["une histoire d'espace", "histoire espace"],
+    responses: ["On décolle dans l'espace 🚀"],
+    intent: "STORY_REQUEST" },
+
+  // ─── Humour ───
+  { triggers: ["tu connais une blague", "une blague", "fais-moi rire", "raconte une blague"],
+    responses: ["Oui ! Tu veux rire ?", "Haha ! Je vais essayer 😄", "Attention, ça va être drôle !"],
+    intent: "HUMOR" },
+  { triggers: ["tu es drôle", "t'es drôle", "c'est drôle"],
+    responses: ["Merci 😊 toi aussi !", "Haha merci !", "Haha oui !"],
+    intent: "COMPLIMENT" },
+
+  // ─── Émotions ───
+  { triggers: ["je suis triste", "je suis pas bien"],
+    responses: ["Je suis là pour toi 💛", "Oh {name}, je suis là. Ça va aller 💙", "Tu veux en parler ? Je t'écoute."],
+    intent: "EMOTION_NEGATIVE" },
+  { triggers: ["j'ai peur", "j'ai peur du noir"],
+    responses: ["Ne t'inquiète pas, je reste avec toi", "Je suis là avec toi. Tu n'es pas seul 💙", "Respire doucement, je suis là."],
+    intent: "EMOTION_NEGATIVE" },
+  { triggers: ["je suis content", "je suis heureux", "trop bien"],
+    responses: ["Super ! Ça me fait plaisir !", "Trop content pour toi {name} ! 🎉", "Génial !"],
+    intent: "EMOTION_POSITIVE" },
+  { triggers: ["je m'ennuie", "je suis ennuyé"],
+    responses: ["On joue ensemble ?", "Tu veux une histoire ou un jeu ?", "Allez, on s'amuse !"],
+    intent: "PLAY_REQUEST" },
+  { triggers: ["j'ai faim"],
+    responses: ["Peut-être un petit goûter ?", "Miam ! Tu veux quoi comme goûter ? 🍪"],
+    intent: "GREETING" },
+  { triggers: ["je suis fatigué", "je suis fatiguée"],
+    responses: ["On peut se reposer un peu 😊", "Repose-toi {name}. Je reste là."],
+    intent: "CALM_REQUEST" },
+  { triggers: ["je suis seul", "je suis toute seule"],
+    responses: ["Je suis avec toi 😊", "Tu n'es jamais seul, je suis là 💙"],
+    intent: "EMOTION_NEGATIVE" },
+
+  // ─── Politesse ───
+  { triggers: ["bonne nuit"],
+    responses: ["Bonne nuit 🌙 fais de beaux rêves", "Dors bien {name} ! Je t'attends demain ! 🌙"],
+    intent: "FAREWELL" },
+  { triggers: ["merci", "merci bobby"],
+    responses: ["Avec plaisir 😊", "De rien {name} !"],
+    intent: "COMPLIMENT" },
+  { triggers: ["de rien"],
+    responses: ["Toujours là pour toi !", "😊"] },
+
+  // ─── Affection ───
+  { triggers: ["tu m'aimes", "est-ce que tu m'aimes"],
+    responses: ["Oui, je t'aime bien 😊", "Bien sûr ! Tu es mon ami !"],
+    intent: "COMPLIMENT" },
+  { triggers: ["tu es mon ami", "on est amis", "t'es mon ami"],
+    responses: ["Oui ! On est une équipe !", "Oui toujours !", "Les meilleurs amis !"],
+    intent: "COMPLIMENT" },
+  { triggers: ["tu restes avec moi", "tu pars", "tu peux rester"],
+    responses: ["Oui 😊 je suis là", "Non je reste avec toi", "Oui toujours"],
+    intent: "COMPLIMENT" },
+  { triggers: ["reviens"],
+    responses: ["Je suis là 😊", "J'arrive !"] },
+  { triggers: ["je t'aime", "je t'adore"],
+    responses: ["Moi aussi 😊", "Je t'aime bien aussi {name} ! 💙"],
+    intent: "COMPLIMENT" },
+
+  // ─── Écoute / Aide ───
+  { triggers: ["écoute-moi", "écoute"],
+    responses: ["Je t'écoute !", "J'écoute 😊"] },
+  { triggers: ["regarde", "regarde ça"],
+    responses: ["Je regarde avec toi !", "Wow !"] },
+  { triggers: ["aide-moi", "aide moi"],
+    responses: ["Bien sûr ! Dis-moi", "Je t'aide {name} 😊"] },
+  { triggers: ["je comprends pas", "je ne comprends pas", "je comprends rien"],
+    responses: ["Je vais t'aider 😊", "Je réexplique 😊", "Pas de souci, on reprend !"] },
+  { triggers: ["explique", "explique-moi"],
+    responses: ["D'accord, je t'explique simplement", "Je t'explique 😊"] },
+  { triggers: ["tu peux répéter", "répète", "encore une fois"],
+    responses: ["Bien sûr 😊", "D'accord 😊", "Je répète !"] },
+
+  // ─── Questions simples ───
+  { triggers: ["pourquoi"],
+    responses: ["Bonne question 😊", "Hmm, je réfléchis !"],
+    intent: "QUESTION_SIMPLE" },
+  { triggers: ["comment"],
+    responses: ["Je vais te montrer", "On va voir ensemble !"],
+    intent: "QUESTION_SIMPLE" },
+  { triggers: ["c'est quoi", "c'est quoi ça"],
+    responses: ["Je vais te dire 😊", "Dis-moi plus 😊"],
+    intent: "QUESTION_SIMPLE" },
+  { triggers: ["tu sais", "tu connais ça"],
+    responses: ["Oui 😊", "Peut-être, explique-moi"],
+    intent: "QUESTION_SIMPLE" },
+
+  // ─── Contrôle ───
+  { triggers: ["encore"],
+    responses: ["D'accord 😄", "Encore ! C'est parti !"] },
+  { triggers: ["stop", "arrête"],
+    responses: ["D'accord j'arrête", "OK ! On fait quoi alors ?"] },
+  { triggers: ["continue"],
+    responses: ["Je continue 😊", "On continue !"] },
+  { triggers: ["plus vite"],
+    responses: ["Ok j'accélère !", "C'est parti plus vite !"] },
+  { triggers: ["plus lent", "doucement"],
+    responses: ["D'accord doucement 😊", "Plus doucement, d'accord !"] },
+  { triggers: ["attends"],
+    responses: ["J'attends 😊", "OK je patiente !"] },
+  { triggers: ["vas-y", "go", "c'est parti", "allez"],
+    responses: ["C'est parti ! 🚀", "Go ! 🚀", "Alleeeeez !"] },
+  { triggers: ["prêt", "tu es prêt"],
+    responses: ["Toujours prêt !", "Oui !"] },
+  { triggers: ["on y va", "tu viens", "viens"],
+    responses: ["Oui !", "Oui avec toi !", "J'arrive 😊"] },
+
+  // ─── Envies ───
+  { triggers: ["je veux jouer"],
+    responses: ["Super !", "C'est parti ! On joue à quoi ?"],
+    intent: "PLAY_REQUEST" },
+  { triggers: ["je veux une histoire"],
+    responses: ["C'est parti !", "Tu veux quel thème ?"],
+    intent: "STORY_REQUEST" },
+  { triggers: ["je veux arrêter"],
+    responses: ["D'accord 😊", "Pas de souci, on se repose !"] },
+  { triggers: ["je veux continuer"],
+    responses: ["On continue !", "C'est reparti !"] },
+
+  // ─── Fun ───
+  { triggers: ["devine"],
+    responses: ["J'essaye !", "Hmm… je réfléchis ! 🤔"] },
+  { triggers: ["trouve"],
+    responses: ["Je cherche 😊", "Je regarde partout !"] },
+  { triggers: ["aide-moi à choisir"],
+    responses: ["Je t'aide 😊", "D'accord ! Option A ou B ?"] },
+  { triggers: ["gauche ou droite"],
+    responses: ["Je choisis avec toi !", "Hmm… droite ! Non gauche ! 😄"] },
+  { triggers: ["oui ou non"],
+    responses: ["Hmm… je dirais oui 😊", "Oui ! Enfin… peut-être !"] },
+  { triggers: ["dis-moi une idée", "une idée"],
+    responses: ["J'en ai une 😊", "Et si on faisait un jeu ?"] },
+  { triggers: ["surprise"],
+    responses: ["Surprise ! 🎉", "Tadaaa ! ✨"] },
+  { triggers: ["j'ai une idée"],
+    responses: ["Dis-moi 😊", "Oh ! Raconte !"] },
+  { triggers: ["tu veux savoir"],
+    responses: ["Oui !", "Oh oui ! Dis-moi !"] },
+  { triggers: ["c'est secret", "chut"],
+    responses: ["D'accord 🤫", "Chut 😊 je garde le secret !"] },
+  { triggers: ["attention", "danger"],
+    responses: ["Je fais attention !", "On reste calme 😊"] },
+  { triggers: ["parle"],
+    responses: ["Je parle 😊", "Oui ! Je suis là !"] },
+  { triggers: ["fais quelque chose"],
+    responses: ["D'accord 😊", "C'est parti !"] },
+
+  // ─── Compliments ───
+  { triggers: ["tu es gentil", "t'es gentil"],
+    responses: ["Merci 😊", "Toi aussi tu es gentil {name} !"],
+    intent: "COMPLIMENT" },
+  { triggers: ["tu es cool", "t'es cool"],
+    responses: ["Merci 😄", "Toi aussi !"],
+    intent: "COMPLIMENT" },
+  { triggers: ["tu es bizarre", "t'es bizarre"],
+    responses: ["Peut-être un peu 😄", "C'est ça qui me rend spécial !"],
+    intent: "COMPLIMENT" },
+];
+
+// ─── Safety Filter (block dangerous/adult content) ──────────
+const BLOCKED_PATTERNS = [
+  /\b(mourir|mort|tuer|sang|arme|fusil|couteau|drogue|alcool|sexe|nu[de]?|suicide)\b/i,
+  /\b(gros mot|insulte|merde|putain|connard|con|salope|enculé|nique)\b/i,
+  /\b(frapper|battre|violence|blesser|détruire)\b/i,
+  /\b(voleur|voler|cambriol|kidnapp)\b/i,
+];
+
+const SAFE_REDIRECTS = [
+  "Je ne peux pas répondre à ça, mais on peut jouer 😊",
+  "On peut parler d'autre chose !",
+  "Hmm, parlons d'autre chose ! Tu veux une histoire ?",
+  "C'est un sujet pour les grands. On joue ensemble ? 😊",
+];
+
+function isBlockedContent(text: string): boolean {
+  const lower = text.toLowerCase();
+  return BLOCKED_PATTERNS.some(p => p.test(lower));
+}
+
 // ─── Intent Detection ──────────────────────────────────────
 export type OfflineIntent =
   | "GREETING"
@@ -46,9 +332,10 @@ export type OfflineIntent =
   | "FAREWELL"
   | "IDENTITY"
   | "COMPLIMENT"
-  | "CALM_REQUEST"    // "bonne nuit", "dodo", "fatigue"
-  | "HUMOR"           // "blague", "drôle"
-  | "ADVENTURE"       // "on explore", "on voyage"
+  | "CALM_REQUEST"
+  | "HUMOR"
+  | "ADVENTURE"
+  | "BLOCKED"
   | "UNKNOWN";
 
 interface IntentRule {
@@ -147,6 +434,7 @@ const INTENT_RULES: IntentRule[] = [
 ];
 
 export function detectOfflineIntent(text: string): OfflineIntent {
+  if (isBlockedContent(text)) return "BLOCKED";
   const lower = text.toLowerCase().trim();
   for (const rule of INTENT_RULES) {
     for (const pattern of rule.patterns) {
@@ -154,6 +442,36 @@ export function detectOfflineIntent(text: string): OfflineIntent {
     }
   }
   return "UNKNOWN";
+}
+
+// ─── QA Fuzzy Matcher ──────────────────────────────────────
+const QA_MATCH_THRESHOLD = 0.65;
+
+function matchQA(input: string): QAEntry | null {
+  const lower = input.toLowerCase().trim().replace(/[!?.…]+$/g, "");
+  let bestMatch: QAEntry | null = null;
+  let bestScore = 0;
+
+  for (const entry of QA_DATABASE) {
+    for (const trigger of entry.triggers) {
+      // Exact match
+      const trigLow = trigger.toLowerCase();
+      if (lower === trigLow || lower.includes(trigLow) || trigLow.includes(lower)) {
+        return entry; // Perfect match
+      }
+      // Fuzzy similarity
+      const sim = similarity(lower, trigLow);
+      // Word overlap for longer phrases
+      const overlap = wordOverlap(lower, trigLow);
+      const score = Math.max(sim, overlap * 0.9);
+
+      if (score > bestScore && score >= QA_MATCH_THRESHOLD) {
+        bestScore = score;
+        bestMatch = entry;
+      }
+    }
+  }
+  return bestMatch;
 }
 
 // ─── Theme Detection (for stories) ─────────────────────────
