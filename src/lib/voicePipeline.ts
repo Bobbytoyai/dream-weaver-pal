@@ -5,13 +5,20 @@ const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts`;
 
 type AiMsg = { role: "user" | "assistant"; content: string };
 
-// Track whether ElevenLabs is available; fall back for the session if not
 let useBrowserTTS = false;
 
-/**
- * Browser-based TTS fallback using Speech Synthesis API.
- * Returns a blob URL so it integrates with the existing audio queue.
- */
+// --- POST-RESPONSE SAFETY FILTER (client-side double-check) ---
+const UNSAFE_PATTERNS = [
+  /\b(mourir|mort|tuer|sang|arme|fusil|couteau|drogue|alcool|sexe)\b/i,
+];
+
+function filterSentence(text: string): string | null {
+  for (const p of UNSAFE_PATTERNS) {
+    if (p.test(text)) return null; // skip this sentence
+  }
+  return text;
+}
+
 function speakWithBrowserTTS(text: string): Promise<string> {
   return new Promise((resolve, reject) => {
     if (!("speechSynthesis" in window)) {
@@ -21,16 +28,14 @@ function speakWithBrowserTTS(text: string): Promise<string> {
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "fr-FR";
-    utterance.rate = 1.0;
-    utterance.pitch = 1.1;
+    utterance.rate = 1.05;
+    utterance.pitch = 1.3; // Higher pitch for child cartoon voice
 
-    // Try to find a French voice
     const voices = speechSynthesis.getVoices();
-    const frVoice = voices.find(v => v.lang.startsWith("fr"));
+    const frVoice = voices.find(v => v.lang.startsWith("fr") && v.name.toLowerCase().includes("female"))
+      || voices.find(v => v.lang.startsWith("fr"));
     if (frVoice) utterance.voice = frVoice;
 
-    // We can't get a blob from speechSynthesis, so we use a MediaStream workaround
-    // For simplicity, we'll play directly and return a sentinel URL
     utterance.onend = () => resolve("__browser_tts__");
     utterance.onerror = () => reject(new Error("Browser TTS error"));
     speechSynthesis.speak(utterance);
@@ -79,8 +84,12 @@ export async function streamVoiceChat({
     const flushSentence = () => {
       const trimmed = sentenceBuffer.trim();
       if (trimmed.length > 3) {
-        onSentence(trimmed);
-        fullText += (fullText ? " " : "") + trimmed;
+        // Apply client-side safety filter
+        const safe = filterSentence(trimmed);
+        if (safe) {
+          onSentence(safe);
+          fullText += (fullText ? " " : "") + safe;
+        }
       }
       sentenceBuffer = "";
     };
@@ -124,14 +133,10 @@ export async function streamVoiceChat({
   }
 }
 
-/**
- * Fetches TTS audio. Falls back to browser Speech Synthesis if ElevenLabs is unavailable.
- */
 export async function fetchTTSAudio(
   text: string,
   signal?: AbortSignal
 ): Promise<string> {
-  // If we already know ElevenLabs is down, go straight to browser TTS
   if (useBrowserTTS) {
     return speakWithBrowserTTS(text);
   }
@@ -153,7 +158,6 @@ export async function fetchTTSAudio(
       return speakWithBrowserTTS(text);
     }
 
-    // Check if the response is JSON (fallback signal) or audio
     const contentType = response.headers.get("Content-Type") || "";
     if (contentType.includes("application/json")) {
       const data = await response.json();
@@ -181,10 +185,6 @@ export async function fetchTTSAudio(
   }
 }
 
-/**
- * Hook for managing an audio queue with interruption support.
- * Handles both blob URLs and browser TTS sentinel values.
- */
 export function useAudioQueue() {
   const queueRef = useRef<string[]>([]);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -200,7 +200,6 @@ export function useAudioQueue() {
 
     const url = queueRef.current.shift()!;
 
-    // Browser TTS sentinel — already played via speechSynthesis
     if (url === "__browser_tts__") {
       playNext();
       return;
@@ -237,9 +236,7 @@ export function useAudioQueue() {
   }, [playNext]);
 
   const stopAll = useCallback(() => {
-    // Also cancel any browser TTS
     if ("speechSynthesis" in window) speechSynthesis.cancel();
-
     queueRef.current.forEach(url => {
       if (url !== "__browser_tts__") URL.revokeObjectURL(url);
     });
