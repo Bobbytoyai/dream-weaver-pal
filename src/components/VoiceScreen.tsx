@@ -346,38 +346,61 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     }
     const memoryContext = memoryParts.length > 0 ? memoryParts.join("\n") : undefined;
 
-    await streamVoiceChat({
-      messages: newHistory,
-      childName,
-      childAge,
-      mode,
-      parentSettings,
-      memoryContext,
-      signal: abortController.signal,
-      onSentence: (sentence) => {
-        if (!abortController.signal.aborted) {
-          processSentenceForTTS(sentence, abortController.signal);
-        }
-      },
-      onDone: (text) => {
-        allSentencesDoneRef.current = true;
-        if (text) {
-          setConversationHistory([...newHistory, { role: "assistant", content: text }]);
-          session.addMessage("assistant", text);
-          eventBus.emit({ type: "RESPONSE_READY", text });
-        }
-        if (pendingSentencesRef.current === 0) {
-          audioQueue.setOnAllDone(() => {
-            eventBus.emit({ type: "SPEECH_STOP" });
+    // Timeout safety: if no response in 12s, recover
+    const recoveryTimer = setTimeout(() => {
+      if (stateRef.current === "processing") {
+        console.warn("[VoiceScreen] AI response timeout — recovering");
+        abortController.abort();
+        speakFallback("error");
+      }
+    }, 12000);
+
+    try {
+      await streamVoiceChat({
+        messages: newHistory,
+        childName,
+        childAge,
+        mode,
+        parentSettings,
+        memoryContext,
+        signal: abortController.signal,
+        onSentence: (sentence) => {
+          clearTimeout(recoveryTimer);
+          if (!abortController.signal.aborted) {
+            eventBus.emit({ type: "SPEECH_START" });
+            processSentenceForTTS(sentence, abortController.signal);
+          }
+        },
+        onDone: (text) => {
+          clearTimeout(recoveryTimer);
+          allSentencesDoneRef.current = true;
+          if (text) {
+            setConversationHistory([...newHistory, { role: "assistant", content: text }]);
+            session.addMessage("assistant", text);
+            eventBus.emit({ type: "RESPONSE_READY", text });
+          }
+          if (pendingSentencesRef.current === 0) {
+            audioQueue.setOnAllDone(() => {
+              eventBus.emit({ type: "SPEECH_STOP" });
+              goToListening();
+            });
+          }
+          // If no sentences were produced (empty response), go back to listening
+          if (!text || text.trim().length === 0) {
             goToListening();
-          });
-        }
-      },
-      onError: (error) => {
-        console.error("AI error:", error);
-        if (!abortController.signal.aborted) speakFallback("error");
-      },
-    });
+          }
+        },
+        onError: (error) => {
+          clearTimeout(recoveryTimer);
+          console.error("AI error:", error);
+          if (!abortController.signal.aborted) speakFallback("error");
+        },
+      });
+    } catch (e) {
+      clearTimeout(recoveryTimer);
+      console.error("AI call exception:", e);
+      if (!abortController.signal.aborted) speakFallback("error");
+    }
   }, [audioQueue, childAge, childName, clearTimers, conversationHistory, goToListening, memory, parentSettings, processSentenceForTTS, session, speakFallback]);
 
   const handleContinuousResult = useCallback((text: string) => {
