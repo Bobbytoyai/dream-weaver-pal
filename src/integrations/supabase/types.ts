@@ -22,6 +22,7 @@ export type Database = {
           id: string
           last_story_id: string | null
           preferences: Json
+          privacy_mode: boolean | null
           total_stories_heard: number
           updated_at: string
         }
@@ -32,6 +33,7 @@ export type Database = {
           id?: string
           last_story_id?: string | null
           preferences?: Json
+          privacy_mode?: boolean | null
           total_stories_heard?: number
           updated_at?: string
         }
@@ -42,6 +44,7 @@ export type Database = {
           id?: string
           last_story_id?: string | null
           preferences?: Json
+          privacy_mode?: boolean | null
           total_stories_heard?: number
           updated_at?: string
         }
@@ -67,6 +70,7 @@ export type Database = {
           id: string
           message_count: number
           started_at: string
+          tags: string[] | null
           topics: string[] | null
         }
         Insert: {
@@ -80,6 +84,7 @@ export type Database = {
           id?: string
           message_count?: number
           started_at?: string
+          tags?: string[] | null
           topics?: string[] | null
         }
         Update: {
@@ -93,6 +98,7 @@ export type Database = {
           id?: string
           message_count?: number
           started_at?: string
+          tags?: string[] | null
           topics?: string[] | null
         }
         Relationships: []
@@ -104,13 +110,17 @@ export type Database = {
           audio_path: string | null
           behavior_insights: string[]
           created_at: string
+          curiosity_score: number | null
+          emotional_stability_score: number | null
           emotions: Json
           engagement_level: string
+          extracted_interests: string[] | null
           full_transcription: string | null
           id: string
           interaction_frequency: string | null
           mood_score: string | null
           session_id: string
+          sociability_score: number | null
           summary: string | null
           topics_detected: string[]
         }
@@ -120,13 +130,17 @@ export type Database = {
           audio_path?: string | null
           behavior_insights?: string[]
           created_at?: string
+          curiosity_score?: number | null
+          emotional_stability_score?: number | null
           emotions?: Json
           engagement_level?: string
+          extracted_interests?: string[] | null
           full_transcription?: string | null
           id?: string
           interaction_frequency?: string | null
           mood_score?: string | null
           session_id: string
+          sociability_score?: number | null
           summary?: string | null
           topics_detected?: string[]
         }
@@ -136,13 +150,17 @@ export type Database = {
           audio_path?: string | null
           behavior_insights?: string[]
           created_at?: string
+          curiosity_score?: number | null
+          emotional_stability_score?: number | null
           emotions?: Json
           engagement_level?: string
+          extracted_interests?: string[] | null
           full_transcription?: string | null
           id?: string
           interaction_frequency?: string | null
           mood_score?: string | null
           session_id?: string
+          sociability_score?: number | null
           summary?: string | null
           topics_detected?: string[]
         }
