@@ -18,6 +18,7 @@ export interface ParentSettings {
   autoStop: boolean;
   nightMode: { active: boolean; startHour: string; endHour: string };
   interactions: { wakeWord: boolean; tap: boolean; interruption: boolean };
+  wakeSensitivity: "low" | "medium" | "high";
   recordConversations: boolean;
   privacyMode: boolean;
   // ─── Advanced security ───
