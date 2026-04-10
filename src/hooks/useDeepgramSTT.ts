@@ -122,29 +122,48 @@ export function useDeepgramSTT({ onPartial, onFinal, onError, onUtteranceEnd, on
       const ws = new WebSocket(wsUrl, ["token", key]);
       wsRef.current = ws;
 
-      ws.onopen = () => {
+      ws.onopen = async () => {
         console.log("[DeepgramSTT] Connected (nova-3, 48kHz)");
         
         const audioContext = new AudioContext({ sampleRate: 48000 });
         contextRef.current = audioContext;
         const source = audioContext.createMediaStreamSource(stream);
 
-        const processor = audioContext.createScriptProcessor(2048, 1, 1);
-        processorRef.current = processor;
+        try {
+          // Prefer AudioWorkletNode (off-main-thread, no jank)
+          await audioContext.audioWorklet.addModule("/pcm-worker.js");
+          const workletNode = new AudioWorkletNode(audioContext, "pcm-processor");
+          processorRef.current = workletNode;
 
-        processor.onaudioprocess = (e) => {
-          if (ws.readyState !== WebSocket.OPEN) return;
-          const inputData = e.inputBuffer.getChannelData(0);
-          const pcm16 = new Int16Array(inputData.length);
-          for (let i = 0; i < inputData.length; i++) {
-            const s = Math.max(-1, Math.min(1, inputData[i]));
-            pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-          }
-          ws.send(pcm16.buffer);
-        };
+          workletNode.port.onmessage = (e: MessageEvent) => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(e.data);
+            }
+          };
 
-        source.connect(processor);
-        processor.connect(audioContext.destination);
+          source.connect(workletNode);
+          workletNode.connect(audioContext.destination);
+          console.log("[DeepgramSTT] Using AudioWorkletNode ✅");
+        } catch (workletErr) {
+          // Fallback to ScriptProcessorNode for older browsers
+          console.warn("[DeepgramSTT] AudioWorklet unavailable, falling back to ScriptProcessor:", workletErr);
+          const processor = audioContext.createScriptProcessor(2048, 1, 1);
+          processorRef.current = processor;
+
+          processor.onaudioprocess = (e) => {
+            if (ws.readyState !== WebSocket.OPEN) return;
+            const inputData = e.inputBuffer.getChannelData(0);
+            const pcm16 = new Int16Array(inputData.length);
+            for (let i = 0; i < inputData.length; i++) {
+              const s = Math.max(-1, Math.min(1, inputData[i]));
+              pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+            }
+            ws.send(pcm16.buffer);
+          };
+
+          source.connect(processor);
+          processor.connect(audioContext.destination);
+        }
       };
 
       ws.onmessage = (event) => {
