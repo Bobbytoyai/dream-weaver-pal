@@ -497,18 +497,18 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     language: "fr-FR",
   });
 
-  // Start/stop Deepgram based on micArmed AND not speaking
+  // Start/stop STT based on micArmed AND not speaking
   const shouldListen = micArmed && state !== "speaking" && state !== "processing";
   const shouldListenRef = useRef(shouldListen);
   shouldListenRef.current = shouldListen;
 
   useEffect(() => {
     if (shouldListen) {
-      deepgramSTT.start();
+      nativeSTT.start();
     } else {
-      deepgramSTT.stop();
+      nativeSTT.stop();
     }
-  }, [shouldListen, deepgramSTT]);
+  }, [shouldListen, nativeSTT]);
 
   // ─── Tap to arm microphone (browser policy) ───
   const armMic = useCallback(() => {
