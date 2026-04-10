@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Mic, MicOff, MessageSquare } from "lucide-react";
+import { Mic, MicOff } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import { ParentSettings } from "@/components/ParentMode";
@@ -18,7 +18,6 @@ const FALLBACK_FR: Record<string, string> = {
   interrupted: "Ah oui, pardon ! Dis-moi",
 };
 
-// Simple emotion detection from text
 function detectEmotion(text: string): string | undefined {
   const lower = text.toLowerCase();
   if (lower.match(/triste|pleure|mal|manque|malheureux/)) return "sad";
@@ -51,8 +50,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
   const allSentencesDoneRef = useRef(false);
   const sessionStartedRef = useRef(false);
 
-
-
   const audioQueue = useAudioQueue();
   const session = useSessionTracker(childName, childAge);
 
@@ -79,9 +76,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
   const startSilenceTimers = useCallback(() => {
     clearTimers();
     reengageTimerRef.current = setTimeout(() => {
-      if (stateRef.current === "idle") {
-        speakFallback("reengage");
-      }
+      if (stateRef.current === "idle") speakFallback("reengage");
     }, 8000);
     silenceTimerRef.current = setTimeout(() => {
       if (stateRef.current === "idle" || stateRef.current === "speaking") {
@@ -144,7 +139,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
     setState("processing");
     clearTimers();
 
-    // Detect emotion and track
     const emotion = detectEmotion(userText);
     session.addMessage("user", userText, emotion);
 
@@ -154,7 +148,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
     allSentencesDoneRef.current = false;
     pendingSentencesRef.current = 0;
 
-    // Filler for latency masking
     fetchTTSAudio("hmm…", abortController.signal).then(url => {
       if (!abortController.signal.aborted && stateRef.current === "processing") {
         setState("speaking");
@@ -192,20 +185,15 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
       },
       onError: (error) => {
         console.error("AI error:", error);
-        if (!abortController.signal.aborted) {
-          speakFallback("error");
-        }
+        if (!abortController.signal.aborted) speakFallback("error");
       },
     });
   }, [conversationHistory, childName, childAge, audioQueue, clearTimers, processSentenceForTTS, speakFallback, startSilenceTimers, session]);
 
   const startListening = useCallback(() => {
-    if (stateRef.current === "speaking" || stateRef.current === "processing") {
-      interrupt();
-    }
+    if (stateRef.current === "speaking" || stateRef.current === "processing") interrupt();
     clearTimers();
 
-    // Start session on first listen
     if (!sessionStartedRef.current) {
       session.startSession();
       sessionStartedRef.current = true;
@@ -227,17 +215,12 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0]?.[0]?.transcript?.trim();
-      if (transcript) {
-        getAIResponse(transcript);
-      } else {
-        speakFallback("not_heard");
-      }
+      if (transcript) getAIResponse(transcript);
+      else speakFallback("not_heard");
     };
 
     recognition.onend = () => {
-      if (stateRef.current === "listening") {
-        speakFallback("not_heard");
-      }
+      if (stateRef.current === "listening") speakFallback("not_heard");
     };
 
     recognition.onerror = (event: any) => {
@@ -262,7 +245,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
     startListening();
   }, [state, startListening]);
 
-  // Parent mode handler (moved from triple-tap on avatar to HologramFace)
   const handleParentMode = useCallback(() => {
     if (sessionStartedRef.current) {
       session.endSession();
@@ -271,52 +253,70 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
     onParentMode();
   }, [onParentMode, session]);
 
-
+  // State label
+  const stateLabel = {
+    idle: "Appuie pour parler",
+    listening: "J'écoute…",
+    processing: "Je réfléchis…",
+    speaking: "Je parle…",
+    interrupted: "Dis-moi !",
+    session_end: "À bientôt !",
+  }[state];
 
   return (
-    <div className="flex flex-col items-center justify-between h-screen bg-background px-6 py-8 max-w-lg mx-auto select-none">
-      {/* Header */}
-      <div className="flex items-center justify-end w-full">
-        <button
-          onClick={onSwitchToChat}
-          className="w-10 h-10 rounded-full bg-card border-2 border-border text-muted-foreground flex items-center justify-center hover:border-primary hover:text-primary transition-all"
-          aria-label="Mode texte"
-        >
-          <MessageSquare className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* 3D Hologram Face */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full">
-        <div className="relative w-72 h-72 md:w-80 md:h-80">
+    <div className="flex flex-col items-center justify-between h-screen bg-background px-4 py-6 max-w-lg mx-auto select-none overflow-hidden">
+      {/* 3D Hologram Face — takes most of the screen */}
+      <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0">
+        <div className="relative w-80 h-80 md:w-96 md:h-96">
           <HologramFace
             voiceState={state}
             enableCamera={false}
             onTripleTap={handleParentMode}
           />
         </div>
+
+        {/* State label */}
+        <p className="mt-4 text-sm font-semibold text-muted-foreground tracking-wide uppercase">
+          {stateLabel}
+        </p>
       </div>
 
       {/* Mic Button */}
-      <div className="pb-10">
-        <button
-          onClick={handleMicPress}
-          disabled={state === "processing"}
-          className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 shadow-xl active:scale-90 disabled:opacity-40 ${
-            state === "listening"
-              ? "bg-destructive text-destructive-foreground scale-110 shadow-destructive/30"
-              : state === "session_end"
-              ? "bg-muted text-muted-foreground"
-              : "bg-primary text-primary-foreground hover:scale-110 shadow-primary/30"
-          }`}
-          aria-label={state === "listening" ? "Arrêter l'écoute" : "Parler"}
-        >
-          {state === "listening" ? (
-            <MicOff className="w-10 h-10" />
-          ) : (
-            <Mic className="w-10 h-10" />
+      <div className="pb-8 pt-4">
+        <div className="relative">
+          {/* Pulse rings when listening */}
+          {state === "listening" && (
+            <>
+              <span className="absolute inset-0 rounded-full bg-primary/20 voice-pulse-ring" />
+              <span className="absolute inset-0 rounded-full bg-primary/10 voice-pulse-ring" style={{ animationDelay: "0.5s" }} />
+            </>
           )}
-        </button>
+          <button
+            onClick={handleMicPress}
+            disabled={state === "processing"}
+            className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 shadow-2xl active:scale-90 disabled:opacity-40 ${
+              state === "listening"
+                ? "bg-destructive text-destructive-foreground scale-110"
+                : state === "session_end"
+                ? "bg-muted text-muted-foreground"
+                : "bg-primary text-primary-foreground hover:scale-110"
+            }`}
+            style={{
+              boxShadow: state === "listening"
+                ? "0 0 40px hsl(0 84% 60% / 0.4)"
+                : state === "idle"
+                ? "0 0 30px hsl(200 100% 60% / 0.3)"
+                : undefined,
+            }}
+            aria-label={state === "listening" ? "Arrêter l'écoute" : "Parler"}
+          >
+            {state === "listening" ? (
+              <MicOff className="w-8 h-8" />
+            ) : (
+              <Mic className="w-8 h-8" />
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
