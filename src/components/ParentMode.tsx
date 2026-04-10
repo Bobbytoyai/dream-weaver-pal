@@ -10,6 +10,7 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import StoryLibrary from "@/components/StoryLibrary";
+import { preloadVoice as preloadPiperVoice } from "@/lib/piperTTS";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 import { ParentSettings, DEFAULT_PARENT_SETTINGS, BOBBY_COLORS } from "./parentSettings";
@@ -240,6 +241,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [settingsSaved, setSettingsSaved] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressInterval = useRef<number | null>(null);
+  const [piperDownloading, setPiperDownloading] = useState(false);
+  const [piperProgress, setPiperProgress] = useState<Record<string, number>>({});
+  const [piperDone, setPiperDone] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
@@ -1591,6 +1595,64 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 className="flex-1 h-1.5 rounded-full appearance-none bg-muted accent-primary" />
               <span className="text-[11px] text-muted-foreground w-10 text-right">{Math.round(settings.sfxVolume * 100)}%</span>
             </div>
+          </Card>
+
+          <Card title="Mode offline" icon={Download}>
+            <p className="text-[11px] text-muted-foreground mb-3">
+              Télécharge toutes les voix Piper pour garantir le fonctionnement sans internet (~200 Mo).
+            </p>
+            {piperDone ? (
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-green-500/10 border border-green-500/20">
+                <span className="text-lg">✅</span>
+                <span className="text-[12px] font-semibold text-foreground">Toutes les voix sont prêtes !</span>
+              </div>
+            ) : piperDownloading ? (
+              <div className="space-y-2">
+                {(["female", "male", "child", "sister", "brother"] as const).map((profile) => {
+                  const pct = piperProgress[profile] ?? 0;
+                  const labels: Record<string, string> = { female: "Féminine", male: "Masculine", child: "Enfant", sister: "Grande sœur", brother: "Grand frère" };
+                  return (
+                    <div key={profile} className="flex items-center gap-2">
+                      <span className="text-[11px] font-medium text-foreground w-20 shrink-0">{labels[profile]}</span>
+                      <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                        <div className="h-full rounded-full bg-primary transition-all duration-300"
+                          style={{ width: `${Math.round(pct * 100)}%` }} />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground w-10 text-right">
+                        {pct >= 1 ? "✅" : `${Math.round(pct * 100)}%`}
+                      </span>
+                    </div>
+                  );
+                })}
+                <div className="flex items-center gap-2 mt-1">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                  <span className="text-[11px] text-muted-foreground">Téléchargement en cours…</span>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={async () => {
+                  setPiperDownloading(true);
+                  setPiperDone(false);
+                  const profiles = ["female", "male", "child", "sister", "brother"] as const;
+                  for (const profile of profiles) {
+                    try {
+                      await preloadPiperVoice(profile, (p) => {
+                        setPiperProgress((prev) => ({ ...prev, [profile]: p }));
+                      });
+                      setPiperProgress((prev) => ({ ...prev, [profile]: 1 }));
+                    } catch {
+                      console.warn(`[ParentMode] Failed to download Piper voice: ${profile}`);
+                    }
+                  }
+                  setPiperDownloading(false);
+                  setPiperDone(true);
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-all active:scale-95">
+                <Download className="w-4 h-4" />
+                Télécharger toutes les voix
+              </button>
+            )}
           </Card>
         </>
       )}
