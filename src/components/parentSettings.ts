@@ -4,7 +4,6 @@ export interface ParentSettings {
   childAge: number;
   voiceType: "child" | "female" | "male" | "custom";
   voiceSpeed: "normal" | "slow" | "fast";
-  voicePitch: number;
   sfxVolume: number;
   enableCamera: boolean;
   contentModes: { freeChat: boolean; educational: boolean; games: boolean; stories: boolean };
@@ -45,7 +44,6 @@ export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
   childAge: 7,
   voiceType: "female",
   voiceSpeed: "normal",
-  voicePitch: 1.0,
   sfxVolume: 0.7,
   enableCamera: false,
   contentModes: { freeChat: true, educational: true, games: true, stories: true },

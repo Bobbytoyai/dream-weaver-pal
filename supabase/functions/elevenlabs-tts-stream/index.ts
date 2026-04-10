@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { text, voiceProfile, emotion } = await req.json();
+    const { text, voiceProfile, emotion, speedOverride } = await req.json();
     
     if (!text || text.trim().length === 0) {
       return new Response(new ArrayBuffer(0), {
@@ -96,7 +96,14 @@ Deno.serve(async (req) => {
     if (!ELEVENLABS_API_KEY) throw new Error("ELEVENLABS_API_KEY not configured");
 
     const baseProfile = VOICE_PROFILES[voiceProfile || "female"] || VOICE_PROFILES.female;
-    const profile = applyEmotion(baseProfile, emotion);
+    let profile = applyEmotion(baseProfile, emotion);
+
+    // Apply speed override from parent settings
+    if (speedOverride === "slow") {
+      profile = { ...profile, speed: Math.max(0.7, profile.speed - 0.15) };
+    } else if (speedOverride === "fast") {
+      profile = { ...profile, speed: Math.min(1.2, profile.speed + 0.12) };
+    }
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${profile.voiceId}/stream?output_format=mp3_22050_32`,
