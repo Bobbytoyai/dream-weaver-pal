@@ -156,6 +156,15 @@ export async function fetchTTSAudio(
   const profile = (voiceId as VoiceProfile) || "female";
   const offline = isOffline();
 
+  // ─── CHECK PERSISTENT CACHE (IndexedDB) — instant playback ───
+  try {
+    const persistentCached = await getCachedTTSAudio(spokenText, profile);
+    if (persistentCached) {
+      console.log("[TTS] ⚡ Persistent cache hit!");
+      return persistentCached;
+    }
+  } catch { /* non-critical */ }
+
   // ─── OFFLINE: Skip ElevenLabs entirely → Piper → Browser TTS ───
   if (!offline) {
     try {
