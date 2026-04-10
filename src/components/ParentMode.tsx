@@ -351,7 +351,39 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const todayDuration = todaySessions.reduce((acc, s) => acc + (s.duration_seconds || 0), 0);
   const dominantMood = Object.entries(emotionCounts).sort(([, a], [, b]) => b - a)[0];
 
-  // ─── Presets ──────────────────────────────────────────────────
+  // ─── 7-day emotion evolution ──────────────────────────────────
+  const emotionChartData = useMemo(() => {
+    const days: { date: string; label: string; joy: number; curiosity: number; frustration: number; fear: number; sadness: number; excitement: number; count: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
+      const label = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
+      days.push({ date: dateStr, label, joy: 0, curiosity: 0, frustration: 0, fear: 0, sadness: 0, excitement: 0, count: 0 });
+    }
+    for (const a of analyses) {
+      const aDate = a.created_at.slice(0, 10);
+      const day = days.find(d => d.date === aDate);
+      if (!day) continue;
+      const emo = (a.emotions || {}) as Record<string, number>;
+      day.joy += emo.joy || 0;
+      day.curiosity += emo.curiosity || 0;
+      day.frustration += emo.frustration || 0;
+      day.fear += emo.fear || 0;
+      day.sadness += emo.sadness || 0;
+      day.excitement += emo.excitement || 0;
+      day.count++;
+    }
+    return days.map(d => ({
+      name: d.label,
+      "😊 Joie": d.count > 0 ? Math.round(d.joy / d.count) : null,
+      "🧐 Curiosité": d.count > 0 ? Math.round(d.curiosity / d.count) : null,
+      "😤 Frustration": d.count > 0 ? Math.round(d.frustration / d.count) : null,
+      "😰 Peur": d.count > 0 ? Math.round(d.fear / d.count) : null,
+      "😢 Tristesse": d.count > 0 ? Math.round(d.sadness / d.count) : null,
+      "🤩 Excitation": d.count > 0 ? Math.round(d.excitement / d.count) : null,
+    }));
+  }, [analyses]);
 
   const applyPreset = (name: string) => {
     let next = { ...settings };
