@@ -227,13 +227,17 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     setState("session_end");
 
     if (sessionStartedRef.current) {
+      const messageCount = session.messageCountRef?.current ?? 0;
       const sessionId = await session.endSession();
       eventBus.emit({ type: "SESSION_END" });
       sessionStartedRef.current = false;
 
       if (sessionId) {
         recorder.stopRecording(sessionId).then(() => undefined);
-        recorder.triggerAnalysis(sessionId).then(() => undefined);
+        // Only analyze if there were actual messages exchanged
+        if (messageCount > 0) {
+          recorder.triggerAnalysis(sessionId).then(() => undefined);
+        }
       }
     }
   }, [clearTimers, recorder, session]);
