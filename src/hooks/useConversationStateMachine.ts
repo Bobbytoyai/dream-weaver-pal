@@ -303,7 +303,8 @@ export function useConversationStateMachine({
         const relaunch = getSilenceRelaunch();
         setBobbyFaceEmotion("curious");
         setBobbyEmotionIntensity(0.5);
-        speakAndListen(relaunch);
+        // Use speakAndListenRef to avoid forward-reference issue
+        speakAndListenRef.current?.(relaunch);
       }
     }, 6000);
 
@@ -327,7 +328,7 @@ export function useConversationStateMachine({
       }, 3500 + Math.random() * 1500);
     };
     scheduleBackchannel();
-  }, [clearAllTimers, clearListeningTimers, goToIdle, transition, speakAndListen]);
+  }, [clearAllTimers, clearListeningTimers, goToIdle, transition]);
 
   const goToSpeaking = useCallback(() => {
     clearAllTimers();
