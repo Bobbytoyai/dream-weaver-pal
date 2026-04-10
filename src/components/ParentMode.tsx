@@ -804,36 +804,79 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       )}
 
       {/* ── 7-day Chart ── */}
-      {emotionChartData.some(d => d["😊 Joie"] !== null) && (
+      {emotionChartData.some(d => d.Joie !== null) && (
         <Card title="Évolution (7 jours)" icon={TrendingUp}>
-          <div className="w-full h-48 -ml-2">
+          <div className="w-full h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={emotionChartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} domain={[0, 100]} />
-                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", color: "hsl(var(--card-foreground))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: "12px" }} />
-                <Line type="monotone" dataKey="😊 Joie" stroke="hsl(145, 65%, 42%)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-                <Line type="monotone" dataKey="🧐 Curiosité" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-                <Line type="monotone" dataKey="🤩 Excitation" stroke="hsl(36, 90%, 50%)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-                <Line type="monotone" dataKey="😤 Frustration" stroke="hsl(var(--destructive))" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-                <Line type="monotone" dataKey="😰 Peur" stroke="hsl(260, 45%, 58%)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-                <Line type="monotone" dataKey="😢 Tristesse" stroke="hsl(var(--muted-foreground))" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-              </LineChart>
+              <AreaChart data={emotionChartData} margin={{ top: 10, right: 10, left: -15, bottom: 5 }}>
+                <defs>
+                  <linearGradient id="gradJoie" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(145, 65%, 42%)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(145, 65%, 42%)" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="gradCuriosite" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(210, 80%, 55%)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(210, 80%, 55%)" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="gradExcitation" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(36, 90%, 50%)" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="hsl(36, 90%, 50%)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} domain={[0, 100]} axisLine={false} tickLine={false} />
+                <Tooltip
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload?.length) return null;
+                    const emotionConfig: Record<string, { emoji: string; color: string }> = {
+                      Joie: { emoji: "😊", color: "hsl(145, 65%, 42%)" },
+                      Curiosité: { emoji: "🧐", color: "hsl(210, 80%, 55%)" },
+                      Excitation: { emoji: "🤩", color: "hsl(36, 90%, 50%)" },
+                      Frustration: { emoji: "😤", color: "hsl(0, 75%, 55%)" },
+                      Peur: { emoji: "😰", color: "hsl(260, 45%, 58%)" },
+                      Tristesse: { emoji: "😢", color: "hsl(0, 0%, 55%)" },
+                    };
+                    return (
+                      <div className="bg-card border border-border rounded-2xl p-3 shadow-lg min-w-[140px]">
+                        <p className="text-[12px] font-bold text-foreground mb-2">{label}</p>
+                        <div className="space-y-1.5">
+                          {payload.filter(p => (p.value as number) > 0).sort((a, b) => (b.value as number) - (a.value as number)).map(p => {
+                            const cfg = emotionConfig[p.name as string] || { emoji: "❓", color: "#888" };
+                            return (
+                              <div key={p.name} className="flex items-center gap-2">
+                                <span className="text-sm">{cfg.emoji}</span>
+                                <span className="text-[11px] text-foreground flex-1">{p.name}</span>
+                                <span className="text-[12px] font-bold" style={{ color: cfg.color }}>{p.value}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  }}
+                />
+                <Area type="monotone" dataKey="Joie" stroke="hsl(145, 65%, 42%)" strokeWidth={2.5} fill="url(#gradJoie)" dot={{ r: 4, fill: "hsl(145, 65%, 42%)", strokeWidth: 2, stroke: "hsl(var(--card))" }} connectNulls />
+                <Area type="monotone" dataKey="Curiosité" stroke="hsl(210, 80%, 55%)" strokeWidth={2.5} fill="url(#gradCuriosite)" dot={{ r: 4, fill: "hsl(210, 80%, 55%)", strokeWidth: 2, stroke: "hsl(var(--card))" }} connectNulls />
+                <Area type="monotone" dataKey="Excitation" stroke="hsl(36, 90%, 50%)" strokeWidth={2} fill="url(#gradExcitation)" dot={{ r: 3, fill: "hsl(36, 90%, 50%)", strokeWidth: 2, stroke: "hsl(var(--card))" }} connectNulls />
+                <Area type="monotone" dataKey="Frustration" stroke="hsl(0, 75%, 55%)" strokeWidth={1.5} fill="transparent" dot={{ r: 3, fill: "hsl(0, 75%, 55%)" }} connectNulls />
+                <Area type="monotone" dataKey="Peur" stroke="hsl(260, 45%, 58%)" strokeWidth={1.5} fill="transparent" dot={{ r: 3, fill: "hsl(260, 45%, 58%)" }} connectNulls />
+                <Area type="monotone" dataKey="Tristesse" stroke="hsl(0, 0%, 55%)" strokeWidth={1.5} fill="transparent" dot={{ r: 3, fill: "hsl(0, 0%, 55%)" }} connectNulls />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex flex-wrap gap-2 mt-2">
+          <div className="flex flex-wrap gap-3 mt-3">
             {[
-              { label: "Joie", color: "hsl(145, 65%, 42%)" },
-              { label: "Curiosité", color: "hsl(var(--primary))" },
-              { label: "Excitation", color: "hsl(36, 90%, 50%)" },
-              { label: "Frustration", color: "hsl(var(--destructive))" },
-              { label: "Peur", color: "hsl(260, 45%, 58%)" },
-              { label: "Tristesse", color: "hsl(var(--muted-foreground))" },
+              { label: "Joie", emoji: "😊", color: "hsl(145, 65%, 42%)" },
+              { label: "Curiosité", emoji: "🧐", color: "hsl(210, 80%, 55%)" },
+              { label: "Excitation", emoji: "🤩", color: "hsl(36, 90%, 50%)" },
+              { label: "Frustration", emoji: "😤", color: "hsl(0, 75%, 55%)" },
+              { label: "Peur", emoji: "😰", color: "hsl(260, 45%, 58%)" },
+              { label: "Tristesse", emoji: "😢", color: "hsl(0, 0%, 55%)" },
             ].map(e => (
-              <span key={e.label} className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: e.color }} />
-                {e.label}
+              <span key={e.label} className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: e.color }} />
+                {e.emoji} {e.label}
               </span>
             ))}
           </div>
