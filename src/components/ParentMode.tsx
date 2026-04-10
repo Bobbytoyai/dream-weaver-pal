@@ -194,13 +194,14 @@ const StatPill = ({ emoji, value, label }: { emoji: string; value: string | numb
 
 // ─── Tab config (5 tabs) ────────────────────────────────────────
 
-type Tab = "dashboard" | "sessions" | "profil" | "reglages" | "confidentialite";
+type Tab = "dashboard" | "sessions" | "profil" | "reglages" | "nouveautes" | "confidentialite";
 
 const tabs: { id: Tab; icon: any; label: string }[] = [
   { id: "dashboard", icon: BarChart3, label: "Tableau" },
   { id: "sessions", icon: MessageSquare, label: "Sessions" },
   { id: "profil", icon: User, label: "Profil" },
   { id: "reglages", icon: Settings, label: "Réglages" },
+  { id: "nouveautes", icon: Sparkles, label: "Nouveau" },
   { id: "confidentialite", icon: Shield, label: "Privé" },
 ];
 
