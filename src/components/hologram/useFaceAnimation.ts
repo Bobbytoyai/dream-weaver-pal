@@ -291,24 +291,37 @@ export function useFaceAnimation(
       sleepyEyeWobble = Math.sin(breathPhase.current * 0.5) * 0.08;
     }
 
-    // --- LIP SYNC (viseme-driven when speaking) ---
+    // --- LIP SYNC (cartoon-exaggerated viseme mapping) ---
     let mouthOpenTarget: number;
     let mouthWidthTarget: number;
     let mouthRoundTarget: number;
     let jawDropTarget: number;
 
     if (faceState === "speaking" && viseme && viseme.amplitude > 0.01) {
-      mouthOpenTarget = viseme.mouthOpenness;
+      // Cartoon exaggeration: amplify all viseme values
+      const exaggeration = 1.4;
+      mouthOpenTarget = viseme.mouthOpenness * exaggeration;
       mouthWidthTarget = viseme.mouthWidth;
-      mouthRoundTarget = viseme.mouthRound;
-      jawDropTarget = viseme.jawDrop;
-      const microVar = Math.sin(breathPhase.current * 8) * 0.03;
+      mouthRoundTarget = viseme.mouthRound * 1.3;
+      jawDropTarget = viseme.jawDrop * exaggeration;
+
+      // Add micro-variation for liveliness
+      const microVar = Math.sin(breathPhase.current * 10) * 0.04;
       mouthOpenTarget += microVar;
+
+      // Squash & stretch: wider mouth = less tall, taller mouth = less wide
+      if (mouthOpenTarget > 0.3) {
+        mouthWidthTarget *= 0.85; // compress width when wide open
+      }
+      if (mouthWidthTarget > 0.65) {
+        mouthOpenTarget *= 0.9; // compress height when wide smile
+      }
     } else if (faceState === "speaking") {
-      mouthOpenTarget = Math.min(0.7, audioAmplitude * 3);
+      // Fallback amplitude-based (cartoon style)
+      mouthOpenTarget = Math.min(0.85, audioAmplitude * 4);
       mouthWidthTarget = targets.mouthWidth ?? 0.55;
-      mouthRoundTarget = 0;
-      jawDropTarget = audioAmplitude * 1.5;
+      mouthRoundTarget = audioAmplitude > 0.3 ? 0.2 : 0;
+      jawDropTarget = audioAmplitude * 2;
     } else {
       mouthOpenTarget = targets.mouthOpenness ?? 0;
       mouthWidthTarget = targets.mouthWidth ?? 0.5;
