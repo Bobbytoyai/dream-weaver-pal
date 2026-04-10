@@ -1,4 +1,5 @@
 export interface ParentSettings {
+  childName: string;
   personality: "balanced" | "calm" | "energetic" | "educational";
   childAge: number;
   voiceSpeed: "normal" | "slow" | "fast";
@@ -21,6 +22,7 @@ export interface ParentSettings {
 }
 
 export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
+  childName: "Bobby",
   personality: "balanced",
   childAge: 7,
   voiceSpeed: "normal",
