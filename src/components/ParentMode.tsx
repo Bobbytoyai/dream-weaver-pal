@@ -1196,7 +1196,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 <div className="max-h-80 overflow-y-auto space-y-2">
                   {sessionMessages.map((msg, i) => {
                     const isChild = msg.role === "user";
-                    const isActive = i === activeMessageIdx && playingAudio;
+                    const isActive = i === activeMessageIdx && (playingAudio || ttsPlaying);
+                    const isTtsSpeaking = ttsPlaying === msg.content;
                     return (
                       <div key={i} className={`flex ${isChild ? "justify-start" : "justify-end"} transition-all duration-200`}>
                         <div className={`max-w-[85%] rounded-2xl px-3 py-2 transition-all duration-200 ${
@@ -1215,6 +1216,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                                 {emotionLabels[msg.detected_emotion]?.emoji} {emotionLabels[msg.detected_emotion]?.label || msg.detected_emotion}
                               </span>
                             )}
+                            <button onClick={() => speakMessage(msg.content)}
+                              className="ml-auto w-5 h-5 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors">
+                              {isTtsSpeaking ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                            </button>
                           </div>
                           <p className="text-[12px] text-foreground leading-relaxed">{msg.content}</p>
                         </div>
