@@ -2,20 +2,43 @@ import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-/** Floating pastel particles around the face — warm, magical, anime-style */
+// Generate a circular particle texture
+function createCircleTexture(): THREE.Texture {
+  const size = 64;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  const half = size / 2;
+  const gradient = ctx.createRadialGradient(half, half, 0, half, half, half);
+  gradient.addColorStop(0, "rgba(255,255,255,1)");
+  gradient.addColorStop(0.5, "rgba(255,255,255,0.6)");
+  gradient.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(half, half, half, 0, Math.PI * 2);
+  ctx.fill();
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  return tex;
+}
+
+/** Floating pastel particles — circular, behind the face */
 export function HologramParticles({ intensity = 0.3 }: { intensity?: number }) {
   const pointsRef = useRef<THREE.Points>(null);
-  const count = 100;
+  const count = 80;
+
+  const circleMap = useMemo(() => createCircleTexture(), []);
 
   const positions = useMemo(() => {
     const pos = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
       const theta = Math.random() * Math.PI * 2;
-      const phi = Math.random() * Math.PI;
-      const r = 1.2 + Math.random() * 0.9;
-      pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-      pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta) - 0.2;
-      pos[i * 3 + 2] = r * Math.cos(phi);
+      const r = 0.8 + Math.random() * 1.2;
+      pos[i * 3] = r * Math.cos(theta);
+      pos[i * 3 + 1] = r * Math.sin(theta) - 0.1;
+      // All particles BEHIND the face (negative Z)
+      pos[i * 3 + 2] = -0.3 - Math.random() * 1.5;
     }
     return pos;
   }, []);
@@ -23,11 +46,11 @@ export function HologramParticles({ intensity = 0.3 }: { intensity?: number }) {
   const colors = useMemo(() => {
     const cols = new Float32Array(count * 3);
     const palette = [
-      new THREE.Color("hsl(215, 80%, 78%)"),  // soft blue
-      new THREE.Color("hsl(270, 50%, 78%)"),   // lavender
-      new THREE.Color("hsl(320, 45%, 78%)"),   // pink
-      new THREE.Color("hsl(45, 70%, 80%)"),    // warm gold
-      new THREE.Color("hsl(180, 50%, 75%)"),   // mint
+      new THREE.Color("hsl(215, 70%, 82%)"),
+      new THREE.Color("hsl(260, 40%, 82%)"),
+      new THREE.Color("hsl(310, 35%, 82%)"),
+      new THREE.Color("hsl(45, 60%, 85%)"),
+      new THREE.Color("hsl(180, 40%, 80%)"),
     ];
     for (let i = 0; i < count; i++) {
       const c = palette[i % palette.length];
@@ -40,9 +63,9 @@ export function HologramParticles({ intensity = 0.3 }: { intensity?: number }) {
 
   const speeds = useMemo(() => {
     return Array.from({ length: count }, () => ({
-      speed: 0.15 + Math.random() * 0.4,
+      speed: 0.1 + Math.random() * 0.3,
       phase: Math.random() * Math.PI * 2,
-      radius: 0.02 + Math.random() * 0.06,
+      radius: 0.015 + Math.random() * 0.04,
     }));
   }, []);
 
@@ -59,17 +82,17 @@ export function HologramParticles({ intensity = 0.3 }: { intensity?: number }) {
 
       (posAttr.array as Float32Array)[i * 3] = baseX + Math.sin(time * s.speed + s.phase) * s.radius;
       (posAttr.array as Float32Array)[i * 3 + 1] = baseY + Math.cos(time * s.speed * 0.7 + s.phase) * s.radius * 1.2;
-      (posAttr.array as Float32Array)[i * 3 + 2] = baseZ + Math.sin(time * s.speed * 0.5) * s.radius * 0.5;
+      (posAttr.array as Float32Array)[i * 3 + 2] = baseZ; // stay behind
     }
     posAttr.needsUpdate = true;
 
     const mat = pointsRef.current.material as THREE.PointsMaterial;
-    mat.opacity = 0.35 + intensity * 0.45 + Math.sin(time * 1.5) * 0.06;
-    mat.size = 0.028 + Math.sin(time * 0.8) * 0.005;
+    mat.opacity = 0.3 + intensity * 0.35 + Math.sin(time * 1.2) * 0.05;
+    mat.size = 0.035 + Math.sin(time * 0.6) * 0.005;
   });
 
   return (
-    <points ref={pointsRef}>
+    <points ref={pointsRef} renderOrder={-1}>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
@@ -83,13 +106,16 @@ export function HologramParticles({ intensity = 0.3 }: { intensity?: number }) {
         />
       </bufferGeometry>
       <pointsMaterial
-        size={0.03}
+        size={0.035}
+        map={circleMap}
         vertexColors
         transparent
-        opacity={0.45}
+        opacity={0.4}
         blending={THREE.AdditiveBlending}
         depthWrite={false}
+        depthTest={true}
         sizeAttenuation
+        alphaTest={0.01}
       />
     </points>
   );
