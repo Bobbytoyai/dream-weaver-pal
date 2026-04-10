@@ -181,6 +181,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const currentVoiceId = parentSettings?.voiceType || "female";
   const currentVoiceSpeed = parentSettings?.voiceSpeed || "normal";
   const isCalmMode = parentSettings?.nightMode?.active || parentSettings?.personality === "calm";
+  const { isOffline: networkOffline } = useNetworkMode();
 
   // ─── STATE MACHINE ───
   const [machineState, setMachineState] = useState<ConversationState>("IDLE");
