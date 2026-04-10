@@ -2266,6 +2266,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           {renderTabContent()}
         </div>
       </div>
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        open={!!confirmDialog}
+        title={confirmDialog?.title || ""}
+        description={confirmDialog?.description || ""}
+        confirmLabel={confirmDialog?.confirmLabel}
+        variant={confirmDialog?.variant}
+        onConfirm={() => confirmDialog?.onConfirm()}
+        onCancel={() => setConfirmDialog(null)}
+      />
     </div>
   );
 };
