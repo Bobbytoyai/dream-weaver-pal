@@ -10,6 +10,12 @@ export interface ChildMemory {
   favoriteThemes: string[];
   lastStoryId: string | null;
   totalStoriesHeard: number;
+  // v3.0 cognitive fields
+  progressionLevel: number;
+  interactionCount: number;
+  relationshipScore: number;
+  lastEmotions: string[];
+  emotionalHistory: Array<{ emotion: string; timestamp: string }>;
 }
 
 const memoryCache = new Map<string, ChildMemory>();
@@ -32,6 +38,11 @@ export async function loadMemory(childName: string): Promise<ChildMemory> {
       favoriteThemes: data.favorite_themes || [],
       lastStoryId: data.last_story_id,
       totalStoriesHeard: data.total_stories_heard,
+      progressionLevel: (data as any).progression_level ?? 1,
+      interactionCount: (data as any).interaction_count ?? 0,
+      relationshipScore: (data as any).relationship_score ?? 0,
+      lastEmotions: (data as any).last_emotions ?? [],
+      emotionalHistory: ((data as any).emotional_history as any[]) ?? [],
     };
     memoryCache.set(childName, memory);
     return memory;
@@ -44,6 +55,11 @@ export async function loadMemory(childName: string): Promise<ChildMemory> {
     favoriteThemes: [],
     lastStoryId: null,
     totalStoriesHeard: 0,
+    progressionLevel: 1,
+    interactionCount: 0,
+    relationshipScore: 0,
+    lastEmotions: [],
+    emotionalHistory: [],
   };
 
   await supabase.from("child_memories").insert({
@@ -60,24 +76,23 @@ export async function loadMemory(childName: string): Promise<ChildMemory> {
 /** Update a memory field and persist */
 export async function updateMemory(
   childName: string,
-  updates: Partial<Pick<ChildMemory, "preferences" | "favoriteThemes" | "lastStoryId" | "totalStoriesHeard">>
+  updates: Partial<Pick<ChildMemory, "preferences" | "favoriteThemes" | "lastStoryId" | "totalStoriesHeard" | "progressionLevel" | "interactionCount" | "relationshipScore" | "lastEmotions" | "emotionalHistory">>
 ) {
   const current = await loadMemory(childName);
   const updated = { ...current, ...updates };
   memoryCache.set(childName, updated);
 
-  const dbUpdates: {
-    updated_at: string;
-    preferences?: Json;
-    favorite_themes?: string[];
-    last_story_id?: string | null;
-    total_stories_heard?: number;
-  } = { updated_at: new Date().toISOString() };
+  const dbUpdates: any = { updated_at: new Date().toISOString() };
 
-  if (updates.preferences !== undefined) dbUpdates.preferences = updates.preferences as Json;
+  if (updates.preferences !== undefined) dbUpdates.preferences = updates.preferences;
   if (updates.favoriteThemes !== undefined) dbUpdates.favorite_themes = updates.favoriteThemes;
   if (updates.lastStoryId !== undefined) dbUpdates.last_story_id = updates.lastStoryId;
   if (updates.totalStoriesHeard !== undefined) dbUpdates.total_stories_heard = updates.totalStoriesHeard;
+  if (updates.progressionLevel !== undefined) dbUpdates.progression_level = updates.progressionLevel;
+  if (updates.interactionCount !== undefined) dbUpdates.interaction_count = updates.interactionCount;
+  if (updates.relationshipScore !== undefined) dbUpdates.relationship_score = updates.relationshipScore;
+  if (updates.lastEmotions !== undefined) dbUpdates.last_emotions = updates.lastEmotions;
+  if (updates.emotionalHistory !== undefined) dbUpdates.emotional_history = updates.emotionalHistory;
 
   await supabase
     .from("child_memories")

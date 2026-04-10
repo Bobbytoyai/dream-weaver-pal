@@ -22,7 +22,8 @@ import { isOffline, getOfflineResponse } from "@/lib/offlineEngine";
 import { useNetworkMode } from "@/hooks/useNetworkMode";
 import { orchestrate, refineExpression, getSilenceRelaunch } from "@/lib/orchestrator";
 import { getFailsafeResponse, getLatencyFiller, getSoftResetPhrase, reportModuleHealth, recordLatency, isHighLatency, isLowPower } from "@/lib/stabilityEngine";
-import { recordUserTurn, resetCognitiveState, getReengagePhrase, type CognitiveHints } from "@/lib/cognitiveEngine";
+import { recordUserTurn, resetCognitiveState, getReengagePhrase, initFromMemory, getPersistedCognitiveData, type CognitiveHints } from "@/lib/cognitiveEngine";
+import { updateMemory } from "@/lib/memoryService";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TYPES
@@ -176,6 +177,18 @@ export function useConversationStateMachine({
   const { memory } = useChildMemory(childName);
   const recorder = useConversationRecorder();
 
+  // Initialize cognitive engine from persisted memory
+  useEffect(() => {
+    if (memory) {
+      initFromMemory({
+        progressionLevel: memory.progressionLevel,
+        interactionCount: memory.interactionCount,
+        relationshipScore: memory.relationshipScore,
+        lastEmotions: memory.lastEmotions,
+      });
+    }
+  }, [memory]);
+
   // ─── TRANSITION ───
   const transition = useCallback((to: ConversationState) => {
     const from = machineStateRef.current;
@@ -269,6 +282,17 @@ export function useConversationStateMachine({
       const sessionId = await session.endSession();
       eventBus.emit({ type: "SESSION_END" });
       sessionStartedRef.current = false;
+
+      // Persist cognitive data to memory
+      const cogData = getPersistedCognitiveData();
+      updateMemory(childName, {
+        progressionLevel: cogData.progressionLevel,
+        interactionCount: cogData.interactionCount,
+        relationshipScore: cogData.relationshipScore,
+        lastEmotions: cogData.lastEmotions,
+        emotionalHistory: cogData.emotionalHistory,
+      }).catch(console.error);
+
       if (sessionId) {
         recorder.stopRecording(sessionId).then(() => undefined);
         if (messageCount > 0) recorder.triggerAnalysis(sessionId).then(() => undefined);
