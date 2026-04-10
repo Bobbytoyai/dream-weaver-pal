@@ -23,6 +23,13 @@ import {
   handleAnimalGameInput,
 } from "./animalGuessGame";
 
+import {
+  isMemoryGameActive,
+  isMemoryGameTrigger,
+  startMemoryGame,
+  handleMemoryGameInput,
+} from "./memoryGame";
+
 // ─── Network State ──────────────────────────────────────────
 export type NetworkMode = "ONLINE" | "OFFLINE" | "HYBRID";
 
@@ -1881,11 +1888,11 @@ const TONGUE_TWISTERS = [
   "Essaie de dire vite : Tonton, ton thé t'a-t-il ôté ta toux ? 🍵",
 ];
 
-export type MiniGameType = "riddle" | "true_false" | "animal_quiz" | "would_you_rather" | "tongue_twister" | "animal_guess";
+export type MiniGameType = "riddle" | "true_false" | "animal_quiz" | "would_you_rather" | "tongue_twister" | "animal_guess" | "memory_game";
 
 function pickMiniGame(): { type: MiniGameType; text: string } {
   const gameType = pickRandom(
-    ["riddle", "true_false", "animal_quiz", "would_you_rather", "tongue_twister", "animal_guess"],
+    ["riddle", "true_false", "animal_quiz", "would_you_rather", "tongue_twister", "animal_guess", "memory_game"],
     "game_type"
   ) as MiniGameType;
 
@@ -1893,6 +1900,10 @@ function pickMiniGame(): { type: MiniGameType; text: string } {
     case "animal_guess": {
       const intro = startAnimalGame(undefined, 7);
       return { type: "animal_guess", text: intro };
+    }
+    case "memory_game": {
+      const intro = startMemoryGame(undefined, 7);
+      return { type: "memory_game", text: intro };
     }
     case "riddle": {
       const r = RIDDLES[Math.floor(Math.random() * RIDDLES.length)];
@@ -1960,6 +1971,19 @@ export function getOfflineResponse(
     return { text: gameResp, intent: "PLAY_REQUEST", isOffline: true, gameType: "animal_guess" as MiniGameType };
   }
 
+  // 1d. Mission Mémoire game — if active, route ALL input to the game
+  if (isMemoryGameActive()) {
+    const gameResp = handleMemoryGameInput(text, childName);
+    updateContext("PLAY_REQUEST", text, gameResp);
+    return { text: gameResp, intent: "PLAY_REQUEST", isOffline: true, gameType: "memory_game" as MiniGameType };
+  }
+
+  // 1e. Detect "Mission Mémoire" trigger
+  if (isMemoryGameTrigger(text)) {
+    const gameResp = startMemoryGame(childName, 7);
+    updateContext("PLAY_REQUEST", text, gameResp);
+    return { text: gameResp, intent: "PLAY_REQUEST", isOffline: true, gameType: "memory_game" as MiniGameType };
+  }
   // 2. Multi-turn follow-up: handle answers to Bobby's previous questions
   const followUpAnswer = handleFollowUpAnswer(text, childName);
   if (followUpAnswer) return followUpAnswer;
