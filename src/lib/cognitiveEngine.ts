@@ -1,8 +1,9 @@
 /**
- * Bobby Cognitive & Behavioral Intelligence Engine v3.0
+ * Bobby Adaptive Intelligence Core v4.0 — GOD MODE
  * 
  * Tracks: attention, fatigue, energy, progression, emotional memory,
- * meta-comprehension, motivation, and relationship depth.
+ * meta-comprehension, motivation, relationship depth, engagement patterns,
+ * prediction, learning speed, and behavioral adaptation.
  */
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -13,6 +14,25 @@ export type AttentionLevel = "high" | "medium" | "low" | "lost";
 export type FatigueLevel = "fresh" | "normal" | "tired" | "exhausted";
 export type ChildEnergy = "calm" | "balanced" | "energetic";
 export type SilenceType = "thinking" | "distracted" | "unknown";
+export type LearningSpeed = "slow" | "normal" | "fast";
+export type InteractionStyle = "explorer" | "guided" | "balanced";
+export type PredictedIntent = "story" | "game" | "question" | "chat" | "emotion" | "unknown";
+
+export interface EngagementEntry {
+  topic: string;
+  mode: string;
+  score: number; // 0-100
+  count: number;
+}
+
+export interface AdaptiveProfile {
+  learningSpeed: LearningSpeed;
+  interactionStyle: InteractionStyle;
+  engagementTriggers: string[];
+  behaviorPatterns: string[];
+  preferredTopics: Record<string, number>; // topic → engagement score
+  predictedNextIntent: PredictedIntent;
+}
 
 export interface CognitiveState {
   attention: AttentionLevel;
@@ -25,16 +45,24 @@ export interface CognitiveState {
   repetitionCount: number;
   lastUserMessageTime: number;
   sessionStartTime: number;
-  // v3.0 additions
-  progressionLevel: number; // 1-10
-  comprehensionSignals: number; // positive = understands, negative = confused
-  emotionHistory: string[]; // last N emotions this session
-  motivationScore: number; // 0-100
-  relationshipDepth: number; // 0-100, grows across sessions
-  interactionCount: number; // total across all sessions
+  progressionLevel: number;
+  comprehensionSignals: number;
+  emotionHistory: string[];
+  motivationScore: number;
+  relationshipDepth: number;
+  interactionCount: number;
   lastSilenceType: SilenceType;
-  consecutiveErrors: number; // child giving "wrong" answers in games
-  variationSeed: number; // changes each turn for behavioral variation
+  consecutiveErrors: number;
+  variationSeed: number;
+  // v4.0
+  engagementScores: Record<string, EngagementEntry>;
+  currentMode: string;
+  currentTopics: string[];
+  intentHistory: string[];
+  learningSpeed: LearningSpeed;
+  interactionStyle: InteractionStyle;
+  engagementTriggers: string[];
+  behaviorPatterns: string[];
 }
 
 export interface CognitiveHints {
@@ -45,7 +73,6 @@ export interface CognitiveHints {
   shouldReengage: boolean;
   reengageStrategy?: "game" | "question" | "break" | "story";
   promptContext: string;
-  // v3.0
   progressionLevel: number;
   shouldSimplify: boolean;
   shouldEncourage: boolean;
@@ -53,6 +80,9 @@ export interface CognitiveHints {
   emotionalTrend: "improving" | "stable" | "declining" | "unknown";
   relationshipPhase: "new" | "growing" | "established" | "deep";
   variationHint: string;
+  // v4.0
+  adaptiveProfile: AdaptiveProfile;
+  predictedIntent: PredictedIntent;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
