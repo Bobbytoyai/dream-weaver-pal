@@ -1,9 +1,9 @@
 /**
- * StoryLibrary — Parent-facing story browser with categories,
- * full-text reading, Bobby narration, and favorites.
+ * StoryLibrary — Card-based story browser with square category cards,
+ * square story cards, full-text reading, Bobby narration, and favorites.
  */
 import { useState, useEffect, useCallback, useRef } from "react";
-import { BookOpen, Heart, Play, Pause, ChevronRight, ArrowLeft, Clock, Sparkles, X } from "lucide-react";
+import { BookOpen, Heart, Play, Pause, ArrowLeft, Clock, Sparkles, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchTTSAudio, useAudioQueue } from "@/lib/voicePipeline";
 import type { VoiceProfile } from "@/lib/voicePipeline";
@@ -25,16 +25,18 @@ interface Story {
   is_favorite: boolean;
 }
 
-const CATEGORY_ICONS: Record<string, string> = {
-  Pirate: "🏴‍☠️",
-  Princesse: "👑",
-  Espace: "🚀",
-  Animaux: "🐾",
-  Magie: "✨",
-  Éducatif: "🧠",
-  Aventure: "⚔️",
-  Nature: "🌿",
+const CATEGORY_META: Record<string, { emoji: string; gradient: string; accent: string }> = {
+  Pirate:    { emoji: "🏴‍☠️", gradient: "from-amber-500/20 to-orange-500/10", accent: "border-amber-500/25" },
+  Princesse: { emoji: "👑", gradient: "from-pink-500/20 to-rose-500/10", accent: "border-pink-500/25" },
+  Espace:    { emoji: "🚀", gradient: "from-indigo-500/20 to-blue-500/10", accent: "border-indigo-500/25" },
+  Animaux:   { emoji: "🐾", gradient: "from-emerald-500/20 to-green-500/10", accent: "border-emerald-500/25" },
+  Magie:     { emoji: "✨", gradient: "from-violet-500/20 to-purple-500/10", accent: "border-violet-500/25" },
+  Éducatif:  { emoji: "🧠", gradient: "from-teal-500/20 to-cyan-500/10", accent: "border-teal-500/25" },
+  Aventure:  { emoji: "⚔️", gradient: "from-red-500/20 to-orange-500/10", accent: "border-red-500/25" },
+  Nature:    { emoji: "🌿", gradient: "from-lime-500/20 to-green-500/10", accent: "border-lime-500/25" },
 };
+
+const DEFAULT_META = { emoji: "📖", gradient: "from-slate-500/20 to-gray-500/10", accent: "border-slate-500/25" };
 
 const DURATION_LABELS: Record<string, string> = {
   short: "3-5 min",
@@ -50,6 +52,7 @@ interface StoryLibraryProps {
 export default function StoryLibrary({ childName, voiceProfile = "female" }: StoryLibraryProps) {
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const [narrating, setNarrating] = useState(false);
   const [showFullText, setShowFullText] = useState(false);
@@ -57,9 +60,7 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
   const audioQueue = useAudioQueue();
   const abortRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    loadStories();
-  }, []);
+  useEffect(() => { loadStories(); }, []);
 
   const loadStories = async () => {
     setLoading(true);
@@ -83,39 +84,23 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
     }
   };
 
-  const personalizeText = (text: string) => {
-    return text.replace(/\{child_name\}/g, childName);
-  };
+  const personalizeText = (text: string) => text.replace(/\{child_name\}/g, childName);
 
   const startNarration = useCallback(async (story: Story) => {
     if (narrating) {
-      // Stop narration
       abortRef.current?.abort();
       audioQueue.stopAll();
       setNarrating(false);
       return;
     }
-
     const text = story.full_text || story.template_text;
     if (!text) return;
-
     const personalized = personalizeText(text);
-
-    // Emit event to redirect to home and narrate directly
-    eventBus.emit({
-      type: "NARRATE_STORY",
-      storyId: story.id,
-      title: story.title,
-      text: personalized,
-    });
+    eventBus.emit({ type: "NARRATE_STORY", storyId: story.id, title: story.title, text: personalized });
   }, [narrating, audioQueue, childName]);
 
-  // Cleanup on unmount
   useEffect(() => {
-    return () => {
-      abortRef.current?.abort();
-      audioQueue.stopAll();
-    };
+    return () => { abortRef.current?.abort(); audioQueue.stopAll(); };
   }, []);
 
   // Group stories by category
@@ -126,37 +111,35 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
     return acc;
   }, {});
 
-  // Favorites
   const favorites = stories.filter(s => s.is_favorite);
 
-  // ─── Detail View ───
+  // ─── Story Detail View ───
   if (selectedStory) {
+    const meta = CATEGORY_META[selectedStory.category] || DEFAULT_META;
     const personalized = selectedStory.full_text
       ? personalizeText(selectedStory.full_text)
       : personalizeText(selectedStory.template_text);
 
     return (
       <div className="p-4 space-y-4">
-        {/* Back button */}
         <button
           onClick={() => { setSelectedStory(null); setShowFullText(false); setNarrating(false); abortRef.current?.abort(); audioQueue.stopAll(); }}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Bibliothèque
+          {selectedCategory || "Bibliothèque"}
         </button>
 
-        {/* Story card */}
-        <div className="bg-card rounded-2xl overflow-hidden">
-          {/* Header with emoji */}
-          <div className="bg-gradient-to-br from-primary/10 to-primary/5 px-5 pt-5 pb-4">
+        <div className={`rounded-2xl overflow-hidden border ${meta.accent}`}>
+          {/* Hero header */}
+          <div className={`bg-gradient-to-br ${meta.gradient} px-5 pt-6 pb-5`}>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <span className="text-3xl">{CATEGORY_ICONS[selectedStory.category] || "📖"}</span>
+                <span className="text-4xl">{meta.emoji}</span>
                 <div>
-                  <h3 className="text-base font-bold text-foreground leading-tight">{selectedStory.title}</h3>
+                  <h3 className="text-lg font-bold text-foreground leading-tight">{selectedStory.title}</h3>
                   <div className="flex items-center gap-2 mt-1.5">
-                    <span className="text-[10px] px-2 py-0.5 bg-primary/15 text-primary rounded-full font-semibold">
+                    <span className="text-[10px] px-2 py-0.5 bg-foreground/5 text-foreground/70 rounded-full font-semibold">
                       {selectedStory.category}
                     </span>
                     <span className="text-[10px] text-muted-foreground flex items-center gap-1">
@@ -168,10 +151,8 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
               </div>
               <button
                 onClick={() => toggleFavorite(selectedStory.id)}
-                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
-                  selectedStory.is_favorite
-                    ? "bg-red-50 text-red-500"
-                    : "bg-muted/50 text-muted-foreground hover:text-red-400"
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                  selectedStory.is_favorite ? "bg-red-500/10 text-red-500" : "bg-foreground/5 text-muted-foreground hover:text-red-400"
                 }`}
               >
                 <Heart className={`w-5 h-5 ${selectedStory.is_favorite ? "fill-current" : ""}`} />
@@ -179,42 +160,35 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
             </div>
           </div>
 
-          {/* Mood & Info */}
-          <div className="px-5 py-3 space-y-3">
+          {/* Info */}
+          <div className="bg-card px-5 py-4 space-y-3">
             {selectedStory.mood && (
               <div className="flex items-center gap-2">
                 <Sparkles className="w-3.5 h-3.5 text-primary" />
                 <span className="text-[11px] text-muted-foreground">{selectedStory.mood}</span>
               </div>
             )}
-
-            {/* Summary */}
             {selectedStory.summary && (
               <div>
                 <h4 className="text-[11px] font-semibold text-foreground mb-1">Résumé</h4>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">{selectedStory.summary}</p>
               </div>
             )}
-
-            {/* Age range */}
             <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
               <span>👤 {selectedStory.age_min}-{selectedStory.age_max} ans</span>
               {selectedStory.interactive && <span>🎮 Interactive</span>}
             </div>
           </div>
 
-          {/* Action buttons */}
-          <div className="px-5 pb-4 space-y-2">
-            {/* Full text toggle */}
+          {/* Actions */}
+          <div className="bg-card px-5 pb-5 space-y-2">
             <button
               onClick={() => setShowFullText(!showFullText)}
-              className="w-full py-3 rounded-xl bg-muted/40 text-foreground font-semibold text-sm hover:bg-muted/60 transition-all flex items-center justify-center gap-2"
+              className={`w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-gradient-to-r ${meta.gradient} border ${meta.accent} hover:shadow-md`}
             >
               <BookOpen className="w-4 h-4" />
-              {showFullText ? "Masquer le texte" : "Lire l'histoire"}
+              {showFullText ? "Masquer le texte" : "📖 Lire l'histoire"}
             </button>
-
-            {/* Bobby narration */}
             <button
               onClick={() => startNarration(selectedStory)}
               className={`w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
@@ -224,21 +198,14 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
               }`}
             >
               {narrating ? (
-                <>
-                  <Pause className="w-4 h-4" />
-                  Arrêter la narration
-                </>
+                <><Pause className="w-4 h-4" /> Arrêter la narration</>
               ) : (
-                <>
-                  <Play className="w-4 h-4" />
-                  ▶️ Lancer narration Bobby
-                </>
+                <><Play className="w-4 h-4" /> ▶️ Bobby raconte</>
               )}
             </button>
           </div>
         </div>
 
-        {/* Full text */}
         {showFullText && (
           <div className="bg-card rounded-2xl p-5">
             <div className="flex items-center justify-between mb-3">
@@ -256,7 +223,69 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
     );
   }
 
-  // ─── List View ───
+  // ─── Category Stories View (square story cards) ───
+  if (selectedCategory) {
+    const catStories = categories[selectedCategory] || [];
+    const meta = CATEGORY_META[selectedCategory] || DEFAULT_META;
+
+    return (
+      <div className="p-4 space-y-4">
+        <button
+          onClick={() => setSelectedCategory(null)}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Bibliothèque
+        </button>
+
+        {/* Category header */}
+        <div className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-5 border ${meta.accent}`}>
+          <div className="flex items-center gap-3">
+            <span className="text-4xl">{meta.emoji}</span>
+            <div>
+              <h3 className="text-lg font-bold text-foreground">{selectedCategory}</h3>
+              <p className="text-[11px] text-muted-foreground">{catStories.length} histoire{catStories.length > 1 ? "s" : ""}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Story cards grid */}
+        <div className="grid grid-cols-2 gap-3">
+          {catStories.map(story => (
+            <button
+              key={story.id}
+              onClick={() => setSelectedStory(story)}
+              className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-4 text-left border ${meta.accent} hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 relative group aspect-square flex flex-col justify-between`}
+            >
+              <div>
+                <span className="text-2xl block mb-2">{meta.emoji}</span>
+                <h4 className="text-[12px] font-bold text-foreground leading-tight line-clamp-2">{story.title}</h4>
+                {story.mood && (
+                  <p className="text-[9px] text-muted-foreground mt-1 line-clamp-1">{story.mood}</p>
+                )}
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-[9px] text-muted-foreground flex items-center gap-0.5">
+                  <Clock className="w-2.5 h-2.5" />
+                  {DURATION_LABELS[story.duration] || story.duration}
+                </span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleFavorite(story.id); }}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                    story.is_favorite ? "text-red-500" : "text-muted-foreground/30 group-hover:text-red-300"
+                  }`}
+                >
+                  <Heart className={`w-3.5 h-3.5 ${story.is_favorite ? "fill-current" : ""}`} />
+                </button>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Main View: Category cards grid ───
   return (
     <div className="p-4 space-y-4">
       {loading ? (
@@ -271,77 +300,65 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
         </div>
       ) : (
         <>
-          {/* Favorites section */}
+          {/* Favorites */}
           {favorites.length > 0 && (
             <div>
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-3">
                 <Heart className="w-4 h-4 text-red-500" />
                 <h3 className="text-[13px] font-bold text-foreground">Favoris</h3>
               </div>
-              <div className="space-y-2">
-                {favorites.map(story => (
-                  <StoryCard key={story.id} story={story} onSelect={setSelectedStory} onToggleFavorite={toggleFavorite} />
-                ))}
+              <div className="grid grid-cols-2 gap-3">
+                {favorites.map(story => {
+                  const meta = CATEGORY_META[story.category] || DEFAULT_META;
+                  return (
+                    <button
+                      key={story.id}
+                      onClick={() => setSelectedStory(story)}
+                      className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-4 text-left border ${meta.accent} hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 relative`}
+                    >
+                      <Heart className="w-3 h-3 text-red-500 fill-current absolute top-3 right-3" />
+                      <span className="text-2xl block mb-2">{meta.emoji}</span>
+                      <h4 className="text-[12px] font-bold text-foreground leading-tight line-clamp-2">{story.title}</h4>
+                      <span className="text-[9px] text-muted-foreground flex items-center gap-0.5 mt-1.5">
+                        <Clock className="w-2.5 h-2.5" />
+                        {DURATION_LABELS[story.duration] || story.duration}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
 
-          {/* Categories */}
-          {Object.entries(categories).map(([category, catStories]) => (
-            <div key={category}>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg">{CATEGORY_ICONS[category] || "📂"}</span>
-                <h3 className="text-[13px] font-bold text-foreground">{category}</h3>
-                <span className="text-[10px] text-muted-foreground">({catStories.length})</span>
-              </div>
-              <div className="space-y-2">
-                {catStories.map(story => (
-                  <StoryCard key={story.id} story={story} onSelect={setSelectedStory} onToggleFavorite={toggleFavorite} />
-                ))}
-              </div>
+          {/* Category cards grid */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <BookOpen className="w-4 h-4 text-primary" />
+              <h3 className="text-[13px] font-bold text-foreground">Catégories</h3>
             </div>
-          ))}
+            <div className="grid grid-cols-2 gap-3">
+              {Object.entries(categories).map(([category, catStories]) => {
+                const meta = CATEGORY_META[category] || DEFAULT_META;
+                return (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-5 text-left border ${meta.accent} hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 aspect-square flex flex-col justify-between`}
+                  >
+                    <span className="text-4xl block">{meta.emoji}</span>
+                    <div>
+                      <h3 className="text-[14px] font-bold text-foreground">{category}</h3>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {catStories.length} histoire{catStories.length > 1 ? "s" : ""}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </>
       )}
-    </div>
-  );
-}
-
-// ─── Story Card ───
-function StoryCard({ story, onSelect, onToggleFavorite }: {
-  story: Story;
-  onSelect: (s: Story) => void;
-  onToggleFavorite: (id: string) => void;
-}) {
-  return (
-    <div
-      className="bg-card rounded-xl p-3.5 flex items-center gap-3 cursor-pointer hover:shadow-sm active:scale-[0.98] transition-all duration-200"
-      onClick={() => onSelect(story)}
-    >
-      <span className="text-2xl shrink-0">{CATEGORY_ICONS[story.category] || "📖"}</span>
-      <div className="flex-1 min-w-0">
-        <h4 className="text-[12px] font-semibold text-foreground truncate">{story.title}</h4>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-            <Clock className="w-2.5 h-2.5" />
-            {DURATION_LABELS[story.duration] || story.duration}
-          </span>
-          {story.mood && (
-            <span className="text-[10px] text-muted-foreground/70 truncate">{story.mood}</span>
-          )}
-        </div>
-      </div>
-      <div className="flex items-center gap-1.5 shrink-0">
-        <button
-          onClick={(e) => { e.stopPropagation(); onToggleFavorite(story.id); }}
-          className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-            story.is_favorite ? "text-red-500" : "text-muted-foreground/30 hover:text-red-300"
-          }`}
-        >
-          <Heart className={`w-4 h-4 ${story.is_favorite ? "fill-current" : ""}`} />
-        </button>
-        <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
-      </div>
     </div>
   );
 }
