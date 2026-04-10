@@ -40,7 +40,7 @@ export function useChildMemory(childName: string) {
   }, [childName]);
 
   const savePref = useCallback(async (key: string, value: unknown) => {
-    await setPreference(childName, key);
+    await setPreference(childName, key, value);
     setMemory((m) => m ? { ...m, preferences: { ...m.preferences, [key]: value } } : m);
   }, [childName]);
 
