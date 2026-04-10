@@ -2,7 +2,7 @@ export interface ParentSettings {
   childName: string;
   personality: "balanced" | "calm" | "energetic" | "educational";
   childAge: number;
-  voiceType: "child" | "female" | "male" | "custom";
+  voiceType: "child" | "female" | "male" | "sister" | "brother" | "custom";
   voiceSpeed: "normal" | "slow" | "fast";
   sfxVolume: number;
   enableCamera: boolean;

@@ -1,10 +1,12 @@
 /**
- * ElevenLabs TTS Streaming — Emotional Voice Engine V2
+ * ElevenLabs TTS Streaming — Emotional Voice Engine V3
  * 
- * 3 voice profiles optimized for emotional connection with children:
+ * 5 voice profiles optimized for emotional connection with children:
  * 🎭 Enfant (Lily) — cartoon authentique, joyeux, magique
  * 👩 Maman (Matilda) — ultra apaisante, enveloppante, maternelle
  * 👨 Papa (George) — calme, protecteur, rassurant
+ * 👧 Sœur (Alice) — ado bienveillante, complice, fun
+ * 👦 Frère (Charlie) — ado cool, encourageant, dynamique
  * 
  * Emotion modifiers + calm mode for bedtime/stress situations.
  */
@@ -14,7 +16,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// ─── Voice Profiles (V2 — Emotional Comfort) ───────────────
+// ─── Voice Profiles (V3 — 5 Profiles) ──────────────────────
 interface VoiceSettings {
   voiceId: string;
   stability: number;
@@ -24,9 +26,7 @@ interface VoiceSettings {
 }
 
 const VOICE_PROFILES: Record<string, VoiceSettings> = {
-  // 🎭 Enfant — cartoon authentique, pas caricature
-  // Stability basse = variations naturelles, micro-rires, expressivité
-  // Style élevé = personnalité cartoon vivante
+  // 🎭 Enfant — cartoon authentique
   child: {
     voiceId: "pFZP5JQG7iQjIQuC4Bku",   // Lily
     stability: 0.28,
@@ -34,10 +34,7 @@ const VOICE_PROFILES: Record<string, VoiceSettings> = {
     style: 0.85,
     speed: 1.10,
   },
-  // 👩 Maman — ultra apaisante, enveloppante
-  // Stability très haute = voix régulière, calmante
-  // Style bas = naturel, pas théâtral
-  // Speed réduit = rythme lent, sécurisant
+  // 👩 Maman — ultra apaisante
   female: {
     voiceId: "XrExE9yKIg1WjnnlVkGX",   // Matilda
     stability: 0.88,
@@ -45,15 +42,29 @@ const VOICE_PROFILES: Record<string, VoiceSettings> = {
     style: 0.25,
     speed: 0.92,
   },
-  // 👨 Papa — calme, protecteur, confiant
-  // Stability très haute = voix posée, stable
-  // Speed légèrement lent = rythme rassurant
+  // 👨 Papa — calme, protecteur
   male: {
     voiceId: "JBFqnCBsd6RMkjVDRZzb",   // George
     stability: 0.90,
     similarity_boost: 0.72,
     style: 0.15,
     speed: 0.90,
+  },
+  // 👧 Sœur — ado bienveillante, complice, fun
+  sister: {
+    voiceId: "Xb7hH8MSUJpSbSDYk0k2",   // Alice
+    stability: 0.35,
+    similarity_boost: 0.80,
+    style: 0.60,
+    speed: 1.05,
+  },
+  // 👦 Frère — ado cool, encourageant, dynamique
+  brother: {
+    voiceId: "IKne3meq5aSn9XLyUdCD",   // Charlie
+    stability: 0.38,
+    similarity_boost: 0.78,
+    style: 0.55,
+    speed: 1.02,
   },
 };
 
