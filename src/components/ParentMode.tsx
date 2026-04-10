@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   ArrowLeft, Clock, MessageSquare, Heart, Brain, Loader2, RefreshCw,
   Mic, BookOpen, Timer, Sparkles, Shield, Camera, Volume2, VolumeX,
@@ -6,6 +6,7 @@ import {
   BarChart3, Calendar, User, Zap, Moon, Sun, Hand, Lock,
   Download, ToggleLeft, Settings, Eye, EyeOff
 } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -350,7 +351,39 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const todayDuration = todaySessions.reduce((acc, s) => acc + (s.duration_seconds || 0), 0);
   const dominantMood = Object.entries(emotionCounts).sort(([, a], [, b]) => b - a)[0];
 
-  // ─── Presets ──────────────────────────────────────────────────
+  // ─── 7-day emotion evolution ──────────────────────────────────
+  const emotionChartData = useMemo(() => {
+    const days: { date: string; label: string; joy: number; curiosity: number; frustration: number; fear: number; sadness: number; excitement: number; count: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
+      const label = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
+      days.push({ date: dateStr, label, joy: 0, curiosity: 0, frustration: 0, fear: 0, sadness: 0, excitement: 0, count: 0 });
+    }
+    for (const a of analyses) {
+      const aDate = a.created_at.slice(0, 10);
+      const day = days.find(d => d.date === aDate);
+      if (!day) continue;
+      const emo = (a.emotions || {}) as Record<string, number>;
+      day.joy += emo.joy || 0;
+      day.curiosity += emo.curiosity || 0;
+      day.frustration += emo.frustration || 0;
+      day.fear += emo.fear || 0;
+      day.sadness += emo.sadness || 0;
+      day.excitement += emo.excitement || 0;
+      day.count++;
+    }
+    return days.map(d => ({
+      name: d.label,
+      "😊 Joie": d.count > 0 ? Math.round(d.joy / d.count) : null,
+      "🧐 Curiosité": d.count > 0 ? Math.round(d.curiosity / d.count) : null,
+      "😤 Frustration": d.count > 0 ? Math.round(d.frustration / d.count) : null,
+      "😰 Peur": d.count > 0 ? Math.round(d.fear / d.count) : null,
+      "😢 Tristesse": d.count > 0 ? Math.round(d.sadness / d.count) : null,
+      "🤩 Excitation": d.count > 0 ? Math.round(d.excitement / d.count) : null,
+    }));
+  }, [analyses]);
 
   const applyPreset = (name: string) => {
     let next = { ...settings };
@@ -474,6 +507,50 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 </div>
               );
             })}
+          </div>
+        </Card>
+      )}
+
+      {/* 7-day emotion evolution chart */}
+      {emotionChartData.some(d => d["😊 Joie"] !== null) && (
+        <Card title="Évolution émotionnelle (7 jours)" icon={TrendingUp}>
+          <div className="w-full h-52 -ml-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={emotionChartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} domain={[0, 100]} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "12px",
+                    fontSize: "12px",
+                  }}
+                />
+                <Line type="monotone" dataKey="😊 Joie" stroke="#22c55e" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="🧐 Curiosité" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="🤩 Excitation" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="😤 Frustration" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="😰 Peur" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="😢 Tristesse" stroke="#64748b" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {[
+              { label: "Joie", color: "#22c55e" },
+              { label: "Curiosité", color: "#3b82f6" },
+              { label: "Excitation", color: "#f59e0b" },
+              { label: "Frustration", color: "#ef4444" },
+              { label: "Peur", color: "#8b5cf6" },
+              { label: "Tristesse", color: "#64748b" },
+            ].map(e => (
+              <span key={e.label} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: e.color }} />
+                {e.label}
+              </span>
+            ))}
           </div>
         </Card>
       )}
