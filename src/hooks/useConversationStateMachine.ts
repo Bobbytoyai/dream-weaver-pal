@@ -184,6 +184,10 @@ export function useConversationStateMachine({
   // ─── INIT ───
   useEffect(() => { initSfxEventBus(); }, []);
   useEffect(() => { setSfxVolume(parentSettings?.sfxVolume ?? 0.7); }, [parentSettings?.sfxVolume]);
+  // Whisper mode: lower TTS volume in calm/night mode
+  useEffect(() => {
+    audioQueue.setVolume(isCalmMode ? 0.45 : 1.0);
+  }, [isCalmMode, audioQueue]);
   useEffect(() => { preloadVoiceProfile(currentVoiceId as any); }, [currentVoiceId]);
 
   useEffect(() => {
