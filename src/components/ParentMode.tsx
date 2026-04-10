@@ -1455,8 +1455,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const VOICE_MAP: Record<string, { label: string; emoji: string; desc: string }> = {
     child: { label: "Enfant", emoji: "🧒", desc: "Voix douce d'enfant" },
-    female: { label: "Femme", emoji: "👩", desc: "Voix féminine chaleureuse" },
-    male: { label: "Homme", emoji: "👨", desc: "Voix grave et rassurante" },
+    female: { label: "Maman", emoji: "👩", desc: "Voix féminine chaleureuse" },
+    male: { label: "Papa", emoji: "👨", desc: "Voix grave et rassurante" },
+    sister: { label: "Sœur", emoji: "👧", desc: "Ado bienveillante, complice" },
+    brother: { label: "Frère", emoji: "👦", desc: "Ado cool, encourageant" },
     custom: { label: "Personnaliser", emoji: "🎨", desc: "Bientôt disponible" },
   };
 
