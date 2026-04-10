@@ -55,22 +55,22 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   }), []);
 
   const eyeRingMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(215, 90%, 70%)"),
+    color: new THREE.Color("hsl(30, 45%, 42%)"),
     transparent: true, opacity: 0.5,
   }), []);
 
   const irisMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(210, 100%, 58%)"),
+    color: new THREE.Color("hsl(35, 55%, 40%)"),
     transparent: true, opacity: 0.9,
   }), []);
 
   const irisInnerMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(195, 100%, 65%)"),
+    color: new THREE.Color("hsl(40, 65%, 52%)"),
     transparent: true, opacity: 0.8,
   }), []);
 
   const pupilMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(220, 80%, 12%)"),
+    color: new THREE.Color("hsl(20, 50%, 8%)"),
   }), []);
 
   const highlightMat = useMemo(() => new THREE.MeshBasicMaterial({
