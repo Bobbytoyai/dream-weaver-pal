@@ -542,6 +542,7 @@ export function useConversationStateMachine({
       await streamVoiceChat({
         messages: newHistory,
         childName, childAge, mode, parentSettings, memoryContext,
+        cognitiveContext: cognitiveHints.promptContext || undefined,
         signal: abortController.signal,
         onSentence: (sentence) => {
           clearTimeout(recoveryTimer);
