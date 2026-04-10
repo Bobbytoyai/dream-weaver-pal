@@ -220,11 +220,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <group ref={eyeRef} position={[x, eyeY, 0]} key={side}>
         {/* Eye white — manga shape */}
         <mesh geometry={mangaEyeGeo} material={eyeWhiteMat} />
-        {/* Eye outline ring */}
-        <mesh material={eyeRingMat} position={[0, 0, 0.005]}>
-          <ringGeometry args={[0.35, 0.39, 48]} />
-        </mesh>
-        {/* Iris — manga shape, slightly smaller */}
+        {/* Iris — manga shape */}
         <mesh ref={irisRef} geometry={mangaIrisGeo} position={[0, -0.02, 0.01]} material={irisMat} />
         {/* Inner iris glow */}
         <mesh position={[0, 0, 0.015]} material={irisInnerMat}>
@@ -234,7 +230,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         <mesh ref={pupilRef} position={[0, 0, 0.02]} material={pupilMat}>
           <circleGeometry args={[0.1, 32]} />
         </mesh>
-        {/* Main highlight — large */}
+        {/* Main highlight */}
         <mesh position={[0.1, 0.14, 0.03]} material={highlightMat}>
           <circleGeometry args={[0.07, 16]} />
         </mesh>
@@ -242,9 +238,24 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         <mesh position={[-0.06, -0.08, 0.03]} material={highlightMat} scale={0.45}>
           <circleGeometry args={[0.045, 12]} />
         </mesh>
-        {/* Eyelid — thin, matches eye width */}
-        <mesh ref={eyelidRef} position={[0, 0.28, 0.04]} material={eyelidMat}>
-          <planeGeometry args={[0.82, 0.16]} />
+        {/* Eyelashes — curved lines on top of eye */}
+        {[...Array(5)].map((_, i) => {
+          const angle = -0.45 + i * 0.22;
+          const lx = Math.sin(angle) * 0.38;
+          const ly = Math.cos(angle) * 0.28 + 0.04;
+          const tipX = Math.sin(angle) * 0.48;
+          const tipY = Math.cos(angle) * 0.38 + 0.06;
+          const rot = angle * 0.6;
+          return (
+            <mesh key={i} position={[(lx + tipX) / 2, (ly + tipY) / 2, 0.02]} rotation={[0, 0, rot]}>
+              <planeGeometry args={[0.015, 0.12]} />
+              <meshBasicMaterial color="hsl(220, 50%, 25%)" transparent opacity={0.8} />
+            </mesh>
+          );
+        })}
+        {/* Eyelid — thin, for blink */}
+        <mesh ref={eyelidRef} position={[0, 0.22, 0.04]} material={eyelidMat}>
+          <planeGeometry args={[0.88, 0.14]} />
         </mesh>
       </group>
     );
