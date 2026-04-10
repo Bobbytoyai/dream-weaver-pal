@@ -95,6 +95,32 @@ const VoiceScreen = ({
     pendingNarration, onNarrationConsumed, onParentMode,
   });
 
+  // Launch game activity when selected from Activities menu
+  const lastGameRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!activeGameCategory || activeGameCategory === lastGameRef.current) return;
+    lastGameRef.current = activeGameCategory;
+    const GAME_PROMPTS: Record<string, string> = {
+      quiz_animaux: `${childName}, on joue au Quiz Animaux ! Je pense à un animal… devine lequel ! 🐾`,
+      devinettes: `${childName}, j'ai une devinette pour toi ! Écoute bien… 🤔`,
+      vrai_faux: `${childName}, on joue à Vrai ou Faux ! Je te dis quelque chose et tu me dis si c'est vrai ou faux ! ✅`,
+      quiz_educatif: `${childName}, on explore la science ensemble ! Prêt pour un quiz ? 🔬`,
+      blagues: `${childName}, tu veux rire ? J'ai une blague trop drôle pour toi ! 😂`,
+    };
+    const prompt = GAME_PROMPTS[activeGameCategory];
+    if (prompt) {
+      // Small delay to let the screen mount
+      setTimeout(() => {
+        sm.handleTapBobby(); // Wake Bobby
+        setTimeout(() => {
+          // Speak the game intro then listen for the child's answer
+          eventBus.emit({ type: "SFX_PLAY", sound: "speaking_chime" });
+        }, 300);
+      }, 500);
+    }
+    onClearGame?.();
+  }, [activeGameCategory, childName, sm, onClearGame]);
+
   const [showDebug, setShowDebug] = useState(false);
 
   // Debug toggle (5 taps on parent button)
