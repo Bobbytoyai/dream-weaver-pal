@@ -466,6 +466,15 @@ export function getOfflineResponse(
     case "COMPLIMENT":
       response = pickRandom(RESPONSES.COMPLIMENT, "COMPLIMENT");
       break;
+    case "CALM_REQUEST":
+      response = pickRandom(RESPONSES.CALM, "CALM");
+      break;
+    case "HUMOR":
+      response = pickRandom(RESPONSES.HUMOR, "HUMOR");
+      break;
+    case "ADVENTURE":
+      response = pickRandom(RESPONSES.ADVENTURE, "ADVENTURE");
+      break;
     case "UNKNOWN":
     default:
       response = pickRandom(RESPONSES.OFFLINE_FALLBACK, "FALLBACK");
