@@ -65,7 +65,14 @@ export async function updateMemory(
   const updated = { ...current, ...updates };
   memoryCache.set(childName, updated);
 
-  const dbUpdates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  const dbUpdates: {
+    updated_at: string;
+    preferences?: Record<string, unknown>;
+    favorite_themes?: string[];
+    last_story_id?: string | null;
+    total_stories_heard?: number;
+  } = { updated_at: new Date().toISOString() };
+
   if (updates.preferences !== undefined) dbUpdates.preferences = updates.preferences;
   if (updates.favoriteThemes !== undefined) dbUpdates.favorite_themes = updates.favoriteThemes;
   if (updates.lastStoryId !== undefined) dbUpdates.last_story_id = updates.lastStoryId;
