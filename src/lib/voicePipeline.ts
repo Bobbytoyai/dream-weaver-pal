@@ -281,7 +281,7 @@ export async function streamVoiceChat({
     let sentenceBuffer = "";
 
     const SENTENCE_RE = /[.!?…]\s*/;
-    const COMMA_MIN_LENGTH = 40; // Flush on comma if buffer is long enough
+    const COMMA_MIN_LENGTH = 20; // Flush on comma early for faster first audio
 
     const flushSentence = () => {
       const trimmed = sentenceBuffer.trim();
