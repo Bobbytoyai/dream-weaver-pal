@@ -6,7 +6,7 @@ import { ParentSettings } from "@/components/ParentMode";
 import { HologramFace } from "@/components/hologram/HologramFace";
 import {
   playListeningPling, playStopBip, playThinkingShimmer,
-  playSpeakingChime, playSessionEnd, playInterrupted
+  playSpeakingChime, playSessionEnd, playInterrupted, setSfxVolume
 } from "@/lib/sfx";
 
 type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
@@ -58,6 +58,11 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
   const session = useSessionTracker(childName, childAge);
 
   useEffect(() => { stateRef.current = state; }, [state]);
+
+  // Sync SFX volume from parent settings
+  useEffect(() => {
+    setSfxVolume(parentSettings?.sfxVolume ?? 0.7);
+  }, [parentSettings?.sfxVolume]);
 
   // Play SFX on state transitions
   const prevStateRef = useRef<VoiceState>("idle");
