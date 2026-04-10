@@ -57,14 +57,14 @@ function speakWithBrowserTTS(text: string): Promise<string> {
   });
 }
 
-async function requestEdgeTTS(text: string, signal?: AbortSignal): Promise<string> {
+async function requestEdgeTTS(text: string, signal?: AbortSignal, voiceId?: string): Promise<string> {
   const response = await fetch(TTS_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, ...(voiceId ? { voiceId } : {}) }),
     signal,
   });
 
@@ -189,17 +189,17 @@ export async function streamVoiceChat({
   }
 }
 
-export async function fetchTTSAudio(text: string, signal?: AbortSignal): Promise<string> {
+export async function fetchTTSAudio(text: string, signal?: AbortSignal, voiceId?: string): Promise<string> {
   const spokenText = sanitizeSpokenText(text);
   if (!spokenText) return "__browser_tts__";
 
   try {
-    return await requestEdgeTTS(spokenText, signal);
+    return await requestEdgeTTS(spokenText, signal, voiceId);
   } catch (firstError: any) {
     if (firstError.name === "AbortError") throw firstError;
 
     try {
-      return await requestEdgeTTS(spokenText, signal);
+      return await requestEdgeTTS(spokenText, signal, voiceId);
     } catch (secondError: any) {
       if (secondError.name === "AbortError") throw secondError;
       console.warn("TTS fetch error, using browser fallback for this sentence only:", secondError.message);

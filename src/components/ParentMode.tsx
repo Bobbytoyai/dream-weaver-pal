@@ -1024,9 +1024,80 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   // RENDER: VOIX
   // ═══════════════════════════════════════════════════════════════
 
+  const VOICE_MAP: Record<string, { id: string; label: string; emoji: string; desc: string }> = {
+    child: { id: "e79twtVS2278lVZZQiAD", label: "Enfant", emoji: "👦", desc: "Voix douce et enjouée" },
+    female: { id: "Xb7hH8MSUJpSbSDYk0k2", label: "Femme", emoji: "👩", desc: "Voix chaleureuse et rassurante" },
+    male: { id: "onwK4e9ZLuTAKqWW03F9", label: "Homme", emoji: "👨", desc: "Voix grave et bienveillante" },
+    custom: { id: "", label: "Personnaliser", emoji: "🎨", desc: "Bientôt disponible" },
+  };
+
+  const [previewPlaying, setPreviewPlaying] = useState(false);
+
+  const previewVoice = async (voiceType: string) => {
+    if (previewPlaying || voiceType === "custom") return;
+    const voiceInfo = VOICE_MAP[voiceType];
+    if (!voiceInfo?.id) return;
+    setPreviewPlaying(true);
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tts`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ text: `Salut ! Je suis Bobby, ton compagnon préféré !`, voiceId: voiceInfo.id }),
+      });
+      const ct = resp.headers.get("Content-Type") || "";
+      if (ct.includes("audio")) {
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.onended = () => { URL.revokeObjectURL(url); setPreviewPlaying(false); };
+        audio.onerror = () => { URL.revokeObjectURL(url); setPreviewPlaying(false); };
+        await audio.play();
+      } else {
+        setPreviewPlaying(false);
+      }
+    } catch { setPreviewPlaying(false); }
+  };
+
   const renderVoix = () => (
     <div className="p-4 space-y-4">
-      <Card title="Vitesse de la voix" icon={Mic}>
+      <Card title="Type de voix" icon={Mic}>
+        <div className="space-y-2">
+          {(["child", "female", "male", "custom"] as const).map((type) => {
+            const info = VOICE_MAP[type];
+            const isCustom = type === "custom";
+            return (
+              <button key={type}
+                onClick={() => !isCustom && updateSetting("voiceType", type)}
+                disabled={isCustom}
+                className={`w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 ${
+                  isCustom ? "opacity-50 cursor-not-allowed bg-muted" :
+                  settings.voiceType === type ? "bg-primary/10 border border-primary/30" : "bg-muted hover:bg-muted/80"
+                }`}>
+                <span className="text-2xl">{info.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-bold text-foreground">{info.label}</span>
+                  <p className="text-xs text-muted-foreground">{info.desc}</p>
+                </div>
+                {!isCustom && settings.voiceType === type && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); previewVoice(type); }}
+                    disabled={previewPlaying}
+                    className="px-3 py-1.5 rounded-lg bg-primary/20 text-primary text-xs font-bold hover:bg-primary/30 transition-all flex items-center gap-1">
+                    {previewPlaying ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
+                    Test
+                  </button>
+                )}
+                {isCustom && <Lock className="w-4 h-4 text-muted-foreground" />}
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
+      <Card title="Vitesse de la voix" icon={Zap}>
         <div className="flex gap-2">
           {([["slow", "🐢 Lent"], ["normal", "🔊 Normal"], ["fast", "⚡ Rapide"]] as const).map(([val, label]) => (
             <button key={val} onClick={() => updateSetting("voiceSpeed", val)}

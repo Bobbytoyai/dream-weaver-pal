@@ -28,7 +28,14 @@ interface StoryModeProps {
   onParentMode: () => void;
 }
 
+const VOICE_IDS: Record<string, string> = {
+  child: "e79twtVS2278lVZZQiAD",
+  female: "Xb7hH8MSUJpSbSDYk0k2",
+  male: "onwK4e9ZLuTAKqWW03F9",
+};
+
 export default function StoryMode({ childName, childAge, onBack, parentSettings, onParentMode }: StoryModeProps) {
+  const currentVoiceId = VOICE_IDS[parentSettings?.voiceType || "female"] || VOICE_IDS.female;
   const [phase, setPhase] = useState<StoryPhase>("pick");
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [currentTheme, setCurrentTheme] = useState<string | null>(null);
@@ -59,7 +66,7 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
   const processSentenceForTTS = useCallback(async (sentence: string, signal?: AbortSignal) => {
     pendingRef.current++;
     try {
-      const url = await fetchTTSAudio(sentence, signal);
+      const url = await fetchTTSAudio(sentence, signal, currentVoiceId);
       if (!signal?.aborted) {
         setVoiceState("speaking");
         eventBus.emit({ type: "SPEECH_START" });
@@ -97,7 +104,7 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
     eventBus.emit({ type: "STORY_START", theme, title: template?.title || theme });
 
     // Play a "hmm" filler while loading
-    fetchTTSAudio("Il était une fois…", abortController.signal).then(url => {
+    fetchTTSAudio("Il était une fois…", abortController.signal, currentVoiceId).then(url => {
       if (!abortController.signal.aborted) {
         setVoiceState("speaking");
         eventBus.emit({ type: "SPEECH_START" });

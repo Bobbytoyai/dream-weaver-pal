@@ -160,9 +160,16 @@ interface VoiceScreenProps {
   parentSettings?: ParentSettings;
 }
 
+const VOICE_IDS: Record<string, string> = {
+  child: "e79twtVS2278lVZZQiAD",
+  female: "Xb7hH8MSUJpSbSDYk0k2",
+  male: "onwK4e9ZLuTAKqWW03F9",
+};
+
 const SILENCE_TIMEOUT = 40000;
 
 const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onParentMode, parentSettings }: VoiceScreenProps) => {
+  const currentVoiceId = VOICE_IDS[parentSettings?.voiceType || "female"] || VOICE_IDS.female;
   const [state, setState] = useState<VoiceState>("idle");
   const [conversationHistory, setConversationHistory] = useState<AiMsg[]>([]);
   const [partialText, setPartialText] = useState("");
@@ -275,7 +282,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       setContinuousListenEnabled(false);
       eventBus.emit({ type: "SPEECH_START" });
       recentBobbyTextsRef.current = [fallbackText, ...recentBobbyTextsRef.current].slice(0, 5);
-      const url = await fetchTTSAudio(fallbackText);
+      const url = await fetchTTSAudio(fallbackText, undefined, currentVoiceId);
       audioQueue.enqueue(url);
       audioQueue.setOnAllDone(() => {
         eventBus.emit({ type: "SPEECH_STOP" });
@@ -305,7 +312,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     recentBobbyTextsRef.current = [sentence, ...recentBobbyTextsRef.current].slice(0, 8);
 
     try {
-      const url = await fetchTTSAudio(sentence, signal);
+      const url = await fetchTTSAudio(sentence, signal, currentVoiceId);
       if (!signal?.aborted) {
         setState("speaking");
         setContinuousListenEnabled(false);
