@@ -1258,22 +1258,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       <Card title="Centres d'intérêt" icon={Heart}>
         <div className="space-y-2">
           <div className="flex flex-wrap gap-2">
-            {settings.interests.map(i => (
-              <button key={i} onClick={() => updateSetting("interests", settings.interests.filter(x => x !== i))}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[11px] font-medium hover:bg-destructive/10 hover:text-destructive transition-all">
-                {i} <X className="w-3 h-3" />
-              </button>
+            {allInterests.map(([interest]) => (
+              <span key={interest} className="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[11px] font-medium">
+                {interest}
+              </span>
             ))}
+            {allInterests.length === 0 && (
+              <p className="text-[11px] text-muted-foreground">Les intérêts seront détectés automatiquement pendant les sessions.</p>
+            )}
           </div>
-          <input type="text" placeholder="Ajouter un intérêt…"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) {
-                const val = (e.target as HTMLInputElement).value.trim();
-                if (!settings.interests.includes(val)) { updateSetting("interests", [...settings.interests, val]); }
-                (e.target as HTMLInputElement).value = "";
-              }
-            }}
-            className="w-full px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
         </div>
       </Card>
 
