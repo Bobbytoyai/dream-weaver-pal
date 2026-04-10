@@ -99,47 +99,16 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
     const text = story.full_text || story.template_text;
     if (!text) return;
 
-    setNarrating(true);
-    const abortController = new AbortController();
-    abortRef.current = abortController;
-
     const personalized = personalizeText(text);
-    // Split into paragraphs/sentences for sequential TTS
-    const sentences = personalized
-      .split(/\n\n+/)
-      .map(s => s.trim())
-      .filter(s => s.length > 2);
 
-    try {
-      for (let i = 0; i < sentences.length; i++) {
-        if (abortController.signal.aborted) break;
-
-        const sentence = sentences[i];
-        const url = await fetchTTSAudio(
-          sentence,
-          abortController.signal,
-          voiceProfile as VoiceProfile,
-          undefined,
-          undefined,
-          false
-        );
-
-        if (!abortController.signal.aborted && url !== "__silent__") {
-          audioQueue.enqueue(url);
-        }
-      }
-
-      // Set completion callback
-      audioQueue.setOnAllDone(() => {
-        setNarrating(false);
-      });
-    } catch (e: any) {
-      if (e.name !== "AbortError") {
-        console.error("[StoryLibrary] Narration error:", e);
-      }
-      setNarrating(false);
-    }
-  }, [narrating, audioQueue, voiceProfile, childName]);
+    // Emit event to redirect to home and narrate directly
+    eventBus.emit({
+      type: "NARRATE_STORY",
+      storyId: story.id,
+      title: story.title,
+      text: personalized,
+    });
+  }, [narrating, audioQueue, childName]);
 
   // Cleanup on unmount
   useEffect(() => {
