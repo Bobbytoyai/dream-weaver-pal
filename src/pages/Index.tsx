@@ -2,11 +2,12 @@ import { useState } from "react";
 import OnboardingScreen from "@/components/OnboardingScreen";
 import ChatScreen from "@/components/ChatScreen";
 import VoiceScreen from "@/components/VoiceScreen";
-import ParentMode from "@/components/ParentMode";
+import ParentMode, { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/ParentMode";
 
 const Index = () => {
   const [profile, setProfile] = useState<{ name: string; age: number } | null>(null);
   const [mode, setMode] = useState<"chat" | "voice" | "parent">("voice");
+  const [parentSettings, setParentSettings] = useState<ParentSettings>(DEFAULT_PARENT_SETTINGS);
 
   if (!profile) {
     return <OnboardingScreen onComplete={(name, age) => setProfile({ name, age })} />;
@@ -17,6 +18,8 @@ const Index = () => {
       <ParentMode
         childName={profile.name}
         onClose={() => setMode("voice")}
+        parentSettings={parentSettings}
+        onSettingsChange={setParentSettings}
       />
     );
   }
@@ -28,6 +31,7 @@ const Index = () => {
         childAge={profile.age}
         onSwitchToChat={() => setMode("chat")}
         onParentMode={() => setMode("parent")}
+        parentSettings={parentSettings}
       />
     );
   }
