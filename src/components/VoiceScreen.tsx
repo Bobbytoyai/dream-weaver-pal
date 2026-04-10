@@ -338,7 +338,9 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     else if (detectedIntent === "game") mode = "game";
     else if (detectedIntent === "emotion_support") mode = "chat"; // handled by system prompt
 
-    const newHistory: AiMsg[] = [...conversationHistory, { role: "user", content: userText }];
+    // Keep only last 10 messages for context (prevents confusion)
+    const trimmedHistory = conversationHistory.length > 10 ? conversationHistory.slice(-10) : conversationHistory;
+    const newHistory: AiMsg[] = [...trimmedHistory, { role: "user", content: userText }];
     const abortController = new AbortController();
     abortRef.current = abortController;
     allSentencesDoneRef.current = false;
