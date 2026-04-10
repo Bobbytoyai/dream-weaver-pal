@@ -14,7 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      child_sessions: {
+        Row: {
+          ai_summary: string | null
+          child_age: number
+          child_name: string
+          created_at: string
+          detected_emotions: string[] | null
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          message_count: number
+          started_at: string
+          topics: string[] | null
+        }
+        Insert: {
+          ai_summary?: string | null
+          child_age: number
+          child_name: string
+          created_at?: string
+          detected_emotions?: string[] | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          message_count?: number
+          started_at?: string
+          topics?: string[] | null
+        }
+        Update: {
+          ai_summary?: string | null
+          child_age?: number
+          child_name?: string
+          created_at?: string
+          detected_emotions?: string[] | null
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          message_count?: number
+          started_at?: string
+          topics?: string[] | null
+        }
+        Relationships: []
+      }
+      session_messages: {
+        Row: {
+          content: string
+          created_at: string
+          detected_emotion: string | null
+          id: string
+          role: string
+          session_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          detected_emotion?: string | null
+          id?: string
+          role: string
+          session_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          detected_emotion?: string | null
+          id?: string
+          role?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "child_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

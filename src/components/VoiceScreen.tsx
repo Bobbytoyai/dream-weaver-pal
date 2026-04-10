@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Mic, MicOff, MessageSquare } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue } from "@/lib/voicePipeline";
+import { useSessionTracker } from "@/hooks/useSessionTracker";
 import companionAvatar from "@/assets/companion-avatar.png";
 
 type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
 type AiMsg = { role: "user" | "assistant"; content: string };
 
-// Fallback spoken messages for errors
 const FALLBACK_FR: Record<string, string> = {
   not_heard: "Hmm… j'ai pas bien entendu… tu peux répéter ?",
   thinking: "hmm… attends…",
@@ -17,13 +17,26 @@ const FALLBACK_FR: Record<string, string> = {
   interrupted: "Ah oui, pardon ! Dis-moi",
 };
 
+// Simple emotion detection from text
+function detectEmotion(text: string): string | undefined {
+  const lower = text.toLowerCase();
+  if (lower.match(/triste|pleure|mal|manque|malheureux/)) return "sad";
+  if (lower.match(/peur|effrayé|cauchemar|noir|monstre/)) return "scared";
+  if (lower.match(/ennui|ennuie|rien à faire|boring/)) return "bored";
+  if (lower.match(/content|super|génial|trop bien|cool|adore|aime|heureux|yay/)) return "happy";
+  if (lower.match(/pourquoi|comment|c'est quoi|sais pas/)) return "curious";
+  if (lower.match(/wow|waouh|incroyable|fou|dingue/)) return "excited";
+  return undefined;
+}
+
 interface VoiceScreenProps {
   childName: string;
   childAge: number;
   onSwitchToChat: () => void;
+  onParentMode: () => void;
 }
 
-const VoiceScreen = ({ childName, childAge, onSwitchToChat }: VoiceScreenProps) => {
+const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode }: VoiceScreenProps) => {
   const [state, setState] = useState<VoiceState>("idle");
   const [conversationHistory, setConversationHistory] = useState<AiMsg[]>([]);
 
@@ -34,13 +47,17 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat }: VoiceScreenProps) 
   const stateRef = useRef<VoiceState>("idle");
   const pendingSentencesRef = useRef(0);
   const allSentencesDoneRef = useRef(false);
+  const sessionStartedRef = useRef(false);
+
+  // Triple-tap detection for parent mode
+  const tapCountRef = useRef(0);
+  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const audioQueue = useAudioQueue();
+  const session = useSessionTracker(childName, childAge);
 
-  // Keep stateRef in sync
   useEffect(() => { stateRef.current = state; }, [state]);
 
-  // Cleanup
   useEffect(() => {
     return () => {
       recognitionRef.current?.abort?.();
@@ -48,6 +65,9 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat }: VoiceScreenProps) 
       abortRef.current?.abort();
       audioQueue.stopAll();
       clearTimers();
+      if (sessionStartedRef.current) {
+        session.endSession();
+      }
     };
   }, []);
 
@@ -58,17 +78,17 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat }: VoiceScreenProps) 
 
   const startSilenceTimers = useCallback(() => {
     clearTimers();
-    // 8 seconds → soft re-engage
     reengageTimerRef.current = setTimeout(() => {
       if (stateRef.current === "idle") {
         speakFallback("reengage");
       }
     }, 8000);
-    // 40 seconds → session end
     silenceTimerRef.current = setTimeout(() => {
       if (stateRef.current === "idle" || stateRef.current === "speaking") {
         setState("session_end");
         speakFallback("session_end");
+        session.endSession();
+        sessionStartedRef.current = false;
       }
     }, 40000);
   }, []);
@@ -92,7 +112,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat }: VoiceScreenProps) 
   }, [audioQueue, startSilenceTimers]);
 
   const interrupt = useCallback(() => {
-    // Stop everything immediately
     abortRef.current?.abort();
     audioQueue.stopAll();
     recognitionRef.current?.stop?.();
@@ -109,10 +128,9 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat }: VoiceScreenProps) 
         audioQueue.enqueue(url);
       }
     } catch {
-      // TTS failed for this sentence, continue
+      // continue
     } finally {
       pendingSentencesRef.current--;
-      // If all sentences done and stream is done, mark complete
       if (pendingSentencesRef.current === 0 && allSentencesDoneRef.current) {
         audioQueue.setOnAllDone(() => {
           setState("idle");
@@ -126,21 +144,25 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat }: VoiceScreenProps) 
     setState("processing");
     clearTimers();
 
+    // Detect emotion and track
+    const emotion = detectEmotion(userText);
+    session.addMessage("user", userText, emotion);
+
     const newHistory: AiMsg[] = [...conversationHistory, { role: "user", content: userText }];
     const abortController = new AbortController();
     abortRef.current = abortController;
     allSentencesDoneRef.current = false;
     pendingSentencesRef.current = 0;
 
-    let fullResponse = "";
-
-    // Send a "thinking" filler TTS immediately for latency masking
-    const fillerPromise = fetchTTSAudio("hmm…", abortController.signal).then(url => {
+    // Filler for latency masking
+    fetchTTSAudio("hmm…", abortController.signal).then(url => {
       if (!abortController.signal.aborted && stateRef.current === "processing") {
         setState("speaking");
         audioQueue.enqueue(url);
       }
     }).catch(() => {});
+
+    let fullResponse = "";
 
     await streamVoiceChat({
       messages: newHistory,
@@ -158,8 +180,8 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat }: VoiceScreenProps) 
         allSentencesDoneRef.current = true;
         if (text) {
           setConversationHistory([...newHistory, { role: "assistant", content: text }]);
+          session.addMessage("assistant", text);
         }
-        // If no pending TTS, go idle
         if (pendingSentencesRef.current === 0) {
           audioQueue.setOnAllDone(() => {
             setState("idle");
@@ -174,15 +196,19 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat }: VoiceScreenProps) 
         }
       },
     });
-  }, [conversationHistory, childName, childAge, audioQueue, clearTimers, processSentenceForTTS, speakFallback, startSilenceTimers]);
+  }, [conversationHistory, childName, childAge, audioQueue, clearTimers, processSentenceForTTS, speakFallback, startSilenceTimers, session]);
 
   const startListening = useCallback(() => {
-    // If currently speaking or processing, interrupt first
     if (stateRef.current === "speaking" || stateRef.current === "processing") {
       interrupt();
     }
-
     clearTimers();
+
+    // Start session on first listen
+    if (!sessionStartedRef.current) {
+      session.startSession();
+      sessionStartedRef.current = true;
+    }
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -195,7 +221,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat }: VoiceScreenProps) 
     recognition.interimResults = false;
     recognition.lang = "fr-FR";
     recognition.maxAlternatives = 1;
-
     recognitionRef.current = recognition;
     setState("listening");
 
@@ -210,7 +235,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat }: VoiceScreenProps) 
 
     recognition.onend = () => {
       if (stateRef.current === "listening") {
-        // No result received
         speakFallback("not_heard");
       }
     };
@@ -226,12 +250,10 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat }: VoiceScreenProps) 
     };
 
     recognition.start();
-  }, [interrupt, clearTimers, getAIResponse, speakFallback, startSilenceTimers]);
+  }, [interrupt, clearTimers, getAIResponse, speakFallback, startSilenceTimers, session]);
 
   const handleMicPress = useCallback(() => {
-    if (state === "session_end") {
-      setState("idle");
-    }
+    if (state === "session_end") setState("idle");
     if (state === "listening") {
       recognitionRef.current?.stop();
       return;
@@ -239,28 +261,40 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat }: VoiceScreenProps) 
     startListening();
   }, [state, startListening]);
 
-  // Avatar animation class based on state
+  // Triple-tap on avatar for parent mode
+  const handleAvatarTap = useCallback(() => {
+    tapCountRef.current++;
+    if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+
+    if (tapCountRef.current >= 3) {
+      tapCountRef.current = 0;
+      // End session before switching
+      if (sessionStartedRef.current) {
+        session.endSession();
+        sessionStartedRef.current = false;
+      }
+      onParentMode();
+      return;
+    }
+
+    tapTimerRef.current = setTimeout(() => {
+      tapCountRef.current = 0;
+    }, 600);
+  }, [onParentMode, session]);
+
   const avatarAnimation = {
-    idle: "",
-    listening: "voice-listening",
-    processing: "voice-thinking",
-    speaking: "voice-talking",
-    interrupted: "",
-    session_end: "",
+    idle: "", listening: "voice-listening", processing: "voice-thinking",
+    speaking: "voice-talking", interrupted: "", session_end: "",
   }[state];
 
   const borderColor = {
-    idle: "border-border",
-    listening: "border-primary",
-    processing: "border-muted-foreground",
-    speaking: "border-secondary",
-    interrupted: "border-primary",
-    session_end: "border-border opacity-60",
+    idle: "border-border", listening: "border-primary", processing: "border-muted-foreground",
+    speaking: "border-secondary", interrupted: "border-primary", session_end: "border-border opacity-60",
   }[state];
 
   return (
     <div className="flex flex-col items-center justify-between h-screen bg-background px-6 py-8 max-w-lg mx-auto select-none">
-      {/* Minimal header - no text */}
+      {/* Header */}
       <div className="flex items-center justify-end w-full">
         <button
           onClick={onSwitchToChat}
@@ -271,10 +305,9 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat }: VoiceScreenProps) 
         </button>
       </div>
 
-      {/* Animated Character - the main visual focus */}
+      {/* Animated Character */}
       <div className="flex-1 flex flex-col items-center justify-center">
         <div className="relative">
-          {/* Pulse rings for listening */}
           {state === "listening" && (
             <>
               <div className="absolute inset-[-16px] rounded-full bg-primary/20 voice-pulse-ring" />
@@ -282,22 +315,17 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat }: VoiceScreenProps) 
               <div className="absolute inset-[-16px] rounded-full bg-primary/5 voice-pulse-ring" style={{ animationDelay: "1s" }} />
             </>
           )}
-
-          {/* Processing rings */}
           {state === "processing" && (
             <div className="absolute inset-[-8px] rounded-full border-4 border-muted-foreground/30 border-t-muted-foreground animate-spin" />
           )}
-
-          {/* Speaking wave effect */}
           {state === "speaking" && (
-            <>
-              <div className="absolute inset-[-12px] rounded-full bg-secondary/15 voice-pulse-ring" style={{ animationDuration: "2s" }} />
-            </>
+            <div className="absolute inset-[-12px] rounded-full bg-secondary/15 voice-pulse-ring" style={{ animationDuration: "2s" }} />
           )}
 
-          {/* Avatar */}
+          {/* Avatar - triple tap for parent mode */}
           <div
-            className={`relative w-56 h-56 rounded-full bg-card flex items-center justify-center overflow-hidden border-4 transition-all duration-300 ${borderColor} ${avatarAnimation}`}
+            onClick={handleAvatarTap}
+            className={`relative w-56 h-56 rounded-full bg-card flex items-center justify-center overflow-hidden border-4 transition-all duration-300 cursor-pointer ${borderColor} ${avatarAnimation}`}
           >
             <img
               src={companionAvatar}
@@ -305,16 +333,16 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat }: VoiceScreenProps) 
               width={200}
               height={200}
               className={`transition-transform duration-300 ${
-                state === "speaking" ? "scale-110" : 
-                state === "processing" ? "scale-95 opacity-80" : 
+                state === "speaking" ? "scale-110" :
+                state === "processing" ? "scale-95 opacity-80" :
                 state === "session_end" ? "scale-90 opacity-50" : ""
               }`}
             />
           </div>
         </div>
 
-        {/* Subtle state indicator dots - no text */}
-        <div className="flex gap-2 mt-8">
+        {/* State indicator dots */}
+        <div className="flex gap-2 mt-8 min-h-[1.5rem]">
           {state === "listening" && (
             <div className="flex gap-1.5">
               <span className="w-3 h-3 rounded-full bg-primary animate-pulse" />
@@ -347,7 +375,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat }: VoiceScreenProps) 
         </div>
       </div>
 
-      {/* Mic Button - large, prominent, the only interaction */}
+      {/* Mic Button */}
       <div className="pb-10">
         <button
           onClick={handleMicPress}
