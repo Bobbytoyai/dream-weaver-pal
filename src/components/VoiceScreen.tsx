@@ -470,6 +470,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     enabled: wakeWordEnabled,
     onWake: handleWake,
     onPartial: setPartialText,
+    sensitivity: parentSettings?.wakeSensitivity || "high",
   });
 
   const handleParentMode = useCallback(() => {
