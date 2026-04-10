@@ -109,8 +109,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   }), []);
 
   const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(230, 25%, 90%)"),
-    transparent: true, opacity: 0.92,
+    color: new THREE.Color("hsl(220, 20%, 85%)"),
+    transparent: true, opacity: 0.97,
   }), []);
 
   const blushMat = useMemo(() => new THREE.MeshBasicMaterial({
