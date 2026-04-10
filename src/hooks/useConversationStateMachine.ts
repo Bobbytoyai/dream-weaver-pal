@@ -20,6 +20,7 @@ import { getCachedResponse, isSimpleGreeting } from "@/lib/responseCache";
 import { hasWakeWord, stripWakeWord, isJustWakeWord, computeWakeConfidence } from "@/lib/wakeWordEngine";
 import { isOffline, getOfflineResponse } from "@/lib/offlineEngine";
 import { useNetworkMode } from "@/hooks/useNetworkMode";
+import { orchestrate, refineExpression, getSilenceRelaunch } from "@/lib/orchestrator";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TYPES
@@ -391,7 +392,7 @@ export function useConversationStateMachine({
   // AI RESPONSE
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const lastAIRequestTimeRef = useRef(0);
-  const getAIResponse = useCallback(async (userText: string, intent?: Intent) => {
+  const getAIResponse = useCallback(async (userText: string, intent?: Intent, orchestratorHints?: ReturnType<typeof orchestrate>) => {
     // Rate limit: prevent duplicate AI requests within 800ms
     const now = Date.now();
     if (now - lastAIRequestTimeRef.current < 800) {
@@ -401,22 +402,25 @@ export function useConversationStateMachine({
     lastAIRequestTimeRef.current = now;
 
     transition("PROCESSING");
-    // SFX is auto-triggered by eventBus STATE_CHANGED → no manual playThinkingShimmer needed
     clearAllTimers();
     startStuckTimer("PROCESSING");
     setPartialText("");
 
-    const emotion = detectEmotionForTTS(userText);
+    const emotion = orchestratorHints?.childEmotion || detectEmotionForTTS(userText);
     currentEmotionRef.current = emotion;
     session.addMessage("user", userText, emotion);
     eventBus.emit({ type: "VOICE_INPUT", transcript: userText });
     if (emotion) eventBus.emit({ type: "EMOTION_DETECTED", emotion });
     setLastRecognized(userText);
 
+    // Use orchestrator hints for face pre-state
+    if (orchestratorHints) {
+      setBobbyFaceEmotion(orchestratorHints.faceState);
+      setBobbyEmotionIntensity(orchestratorHints.faceIntensity);
+    }
+
     const detectedIntent = intent || detectIntent(userText);
-    let mode = "chat";
-    if (detectedIntent === "story") mode = "story";
-    else if (detectedIntent === "game") mode = "game";
+    const mode = orchestratorHints?.aiMode || (detectedIntent === "story" ? "story" : detectedIntent === "game" ? "game" : "chat");
 
     // History already capped at MAX_HISTORY_LENGTH by setter; trim to last 10 for API speed
     const trimmedHistory = conversationHistory.slice(-10);
@@ -426,16 +430,19 @@ export function useConversationStateMachine({
     allSentencesDoneRef.current = false;
     pendingSentencesRef.current = 0;
 
-    const memoryParts: string[] = [];
-    if (memory) {
-      if (memory.favoriteThemes.length > 0) memoryParts.push(`Thèmes favoris: ${memory.favoriteThemes.join(", ")}`);
-      if (memory.totalStoriesHeard > 0) memoryParts.push(`Histoires écoutées: ${memory.totalStoriesHeard}`);
-      const prefs = memory.preferences as Record<string, unknown>;
-      if (prefs && Object.keys(prefs).length > 0) {
-        memoryParts.push(`Préférences: ${Object.entries(prefs).map(([k, v]) => `${k}: ${v}`).join(", ")}`);
+    // Use orchestrator memory context if available, otherwise build locally
+    const memoryContext = orchestratorHints?.memoryContext || (() => {
+      const memoryParts: string[] = [];
+      if (memory) {
+        if (memory.favoriteThemes.length > 0) memoryParts.push(`Thèmes favoris: ${memory.favoriteThemes.join(", ")}`);
+        if (memory.totalStoriesHeard > 0) memoryParts.push(`Histoires écoutées: ${memory.totalStoriesHeard}`);
+        const prefs = memory.preferences as Record<string, unknown>;
+        if (prefs && Object.keys(prefs).length > 0) {
+          memoryParts.push(`Préférences: ${Object.entries(prefs).map(([k, v]) => `${k}: ${v}`).join(", ")}`);
+        }
       }
-    }
-    const memoryContext = memoryParts.length > 0 ? memoryParts.join("\n") : undefined;
+      return memoryParts.length > 0 ? memoryParts.join("\n") : undefined;
+    })();
 
     const recoveryTimer = setTimeout(() => {
       if (machineStateRef.current === "PROCESSING") {
@@ -471,8 +478,9 @@ export function useConversationStateMachine({
           allSentencesDoneRef.current = true;
           setLastAiResponse(text || "");
           if (text) {
-            setBobbyFaceEmotion(detectBobbyEmotion(text));
-            setBobbyEmotionIntensity(detectEmotionIntensity(text));
+            const refined = refineExpression(text);
+            setBobbyFaceEmotion(refined.faceState);
+            setBobbyEmotionIntensity(refined.faceIntensity);
             setConversationHistory([...newHistory, { role: "assistant", content: text }]);
             session.addMessage("assistant", text);
             eventBus.emit({ type: "RESPONSE_READY", text });
@@ -525,40 +533,36 @@ export function useConversationStateMachine({
       return;
     }
 
-    if (isOffline()) {
-      const offlineResp = getOfflineResponse(cleaned, childName);
+    // ─── ORCHESTRATOR ───
+    const decision = orchestrate({
+      userText: cleaned,
+      childName,
+      childAge,
+      memory: memory ?? null,
+      isOffline: isOffline(),
+      conversationHistory: [],
+    });
+
+    // Local response (cached or offline)
+    if (decision.response !== null) {
       goToSpeaking();
       eventBus.emit({ type: "SPEECH_START" });
-      setBobbyFaceEmotion(detectBobbyEmotion(offlineResp.text));
-      setBobbyEmotionIntensity(detectEmotionIntensity(offlineResp.text));
-      recentBobbyTextsRef.current = [offlineResp.text, ...recentBobbyTextsRef.current].slice(0, 8);
-      fetchTTSAudio(offlineResp.text, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode).then(url => {
+      setBobbyFaceEmotion(decision.faceState);
+      setBobbyEmotionIntensity(decision.faceIntensity);
+      recentBobbyTextsRef.current = [decision.response, ...recentBobbyTextsRef.current].slice(0, 8);
+      fetchTTSAudio(decision.response, undefined, currentVoiceId, decision.voiceTone, currentVoiceSpeed, isCalmMode).then(url => {
         audioQueue.enqueue(url);
         audioQueue.setOnAllDone(() => { eventBus.emit({ type: "SPEECH_STOP" }); goToListening(); });
       }).catch(() => goToListening());
-      setConversationHistory(prev => [...prev, { role: "user", content: cleaned }, { role: "assistant", content: offlineResp.text }]);
-      session.addMessage("user", cleaned);
-      session.addMessage("assistant", offlineResp.text);
+      setConversationHistory(prev => [...prev, { role: "user", content: cleaned }, { role: "assistant", content: decision.response }]);
+      session.addMessage("user", cleaned, decision.childEmotion);
+      session.addMessage("assistant", decision.response);
       return;
     }
 
-    if (isSimpleGreeting(cleaned)) {
-      const cached = getCachedResponse("greeting");
-      goToSpeaking();
-      eventBus.emit({ type: "SPEECH_START" });
-      recentBobbyTextsRef.current = [cached, ...recentBobbyTextsRef.current].slice(0, 8);
-      fetchTTSAudio(cached, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode).then(url => {
-        audioQueue.enqueue(url);
-        audioQueue.setOnAllDone(() => { eventBus.emit({ type: "SPEECH_STOP" }); goToListening(); });
-      }).catch(() => goToListening());
-      setConversationHistory(prev => [...prev, { role: "user", content: cleaned }, { role: "assistant", content: cached }]);
-      session.addMessage("user", cleaned);
-      session.addMessage("assistant", cached);
-      return;
-    }
-
-    getAIResponse(cleaned);
-  }, [audioQueue, childName, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, goToSpeaking, isCalmMode, session, speakAndListen]);
+    // AI path — pass orchestrator hints
+    getAIResponse(cleaned, undefined, decision);
+  }, [audioQueue, childAge, childName, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, goToSpeaking, isCalmMode, memory, session, speakAndListen, setConversationHistory]);
 
   const scheduleFlush = useCallback(() => {
     if (utteranceFlushTimerRef.current) clearTimeout(utteranceFlushTimerRef.current);
