@@ -17,6 +17,7 @@ import type { Emotion } from "./voicePipeline";
 import type { ChildMemory } from "./memoryService";
 import { getOfflineResponse } from "./offlineEngine";
 import { getCachedResponse, isSimpleGreeting } from "./responseCache";
+import { isHighLatency } from "./stabilityEngine";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TYPES
