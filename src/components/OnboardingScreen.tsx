@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { HologramFace } from "./hologram/HologramFace";
 import VoicePickerStep from "./onboarding/VoicePickerStep";
 import InterestsStep from "./onboarding/InterestsStep";
