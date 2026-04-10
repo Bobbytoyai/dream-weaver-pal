@@ -620,8 +620,8 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const deepgramSTT = useSmartSTT({
     onPartial: useCallback((text: string) => {
       setPartialText(text);
-      // Wake word on partial — instant activation
-      if (machineStateRef.current === "IDLE" && !wakeTriggeredFromPartialRef.current && hasWakeWord(text, true)) {
+      // Wake word on partial — instant activation (IDLE or SLEEP)
+      if ((machineStateRef.current === "IDLE" || machineStateRef.current === "SLEEP") && !wakeTriggeredFromPartialRef.current && hasWakeWord(text, true)) {
         console.log("[VoiceScreen] ⚡ Wake on PARTIAL!");
         wakeTriggeredFromPartialRef.current = true;
         eventBus.emit({ type: "WAKE_DETECTED", confidence: computeWakeConfidence(text) });
@@ -687,11 +687,11 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       return;
     }
 
-    // IDLE or ERROR → start conversation
+    // IDLE, ERROR, or SLEEP → start conversation
     ensureSession();
     eventBus.emit({ type: "WAKE_TRIGGERED" });
     eventBus.emit({ type: "WAKE_DETECTED", confidence: 1.0 });
-    speakAndListen(FALLBACK_FR.wake_greeting);
+    speakAndListen(s === "SLEEP" ? FALLBACK_FR.sleep_wake : FALLBACK_FR.wake_greeting);
   }, [micArmed, ensureSession, goToIdle, interrupt, speakAndListen]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
