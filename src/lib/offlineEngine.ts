@@ -30,6 +30,13 @@ import {
   handleMemoryGameInput,
 } from "./memoryGame";
 
+import {
+  isLearningActive,
+  isLearningTrigger,
+  startLearning,
+  handleLearningInput,
+} from "./learningEngine";
+
 // ─── Network State ──────────────────────────────────────────
 export type NetworkMode = "ONLINE" | "OFFLINE" | "HYBRID";
 
