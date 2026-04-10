@@ -7,6 +7,8 @@ import { streamVoiceChat, fetchTTSAudio, useAudioQueue, preloadVoiceProfile, det
 import { preloadVoice as preloadPiperVoice } from "@/lib/piperTTS";
 import { preloadOfflineTTSCache } from "@/lib/ttsCache";
 import type { Emotion } from "@/lib/voicePipeline";
+import { detectBobbyEmotion, detectEmotionIntensity } from "@/lib/emotionMapper";
+import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import { useSmartSTT } from "@/hooks/useSmartSTT";
 import { ParentSettings } from "@/components/parentSettings";
