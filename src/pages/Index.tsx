@@ -3,6 +3,7 @@ import VoiceScreen from "@/components/VoiceScreen";
 import StoryMode from "@/components/StoryMode";
 import ParentMode from "@/components/ParentMode";
 import OnboardingScreen from "@/components/OnboardingScreen";
+import ContentCategories, { type SubCategory } from "@/components/ContentCategories";
 import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/parentSettings";
 import { useChildMemory } from "@/hooks/useChildMemory";
 
@@ -24,7 +25,8 @@ function saveProfile(name: string, age: number) {
 
 const Index = () => {
   const [profile, setProfile] = useState<{ name: string; age: number } | null>(loadProfile);
-  const [mode, setMode] = useState<"voice" | "story" | "parent">("voice");
+  const [mode, setMode] = useState<"voice" | "story" | "parent" | "activities">("voice");
+  const [activeGameCategory, setActiveGameCategory] = useState<SubCategory | null>(null);
   const [parentSettings, setParentSettings] = useState<ParentSettings>(() => {
     const saved = loadProfile();
     return {
@@ -95,6 +97,24 @@ const Index = () => {
     );
   }
 
+  if (mode === "activities") {
+    return (
+      <ContentCategories
+        childName={childName}
+        onSelectCategory={(sub) => {
+          setActiveGameCategory(sub);
+          if (sub === "histoires") {
+            setMode("story");
+          } else {
+            // Go back to voice with game context
+            setMode("voice");
+          }
+        }}
+        onBack={() => { setActiveGameCategory(null); setMode("voice"); }}
+      />
+    );
+  }
+
   return (
     <VoiceScreen
       childName={childName}
@@ -102,7 +122,10 @@ const Index = () => {
       onSwitchToChat={() => {}}
       onSwitchToStory={() => setMode("story")}
       onParentMode={() => setMode("parent")}
+      onActivities={() => setMode("activities")}
       parentSettings={parentSettings}
+      activeGameCategory={activeGameCategory}
+      onClearGame={() => setActiveGameCategory(null)}
     />
   );
 };

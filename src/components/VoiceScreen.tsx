@@ -1,6 +1,6 @@
 /* v4 — Robust State Machine + Click Toggle + Auto-Recovery + Debug Overlay */
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Settings, Camera, Mic, MicOff, Bug } from "lucide-react";
+import { Settings, Camera, Mic, MicOff, Bug, Gamepad2 } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue, preloadVoiceProfile, detectEmotionForTTS } from "@/lib/voicePipeline";
 import { preloadVoice as preloadPiperVoice } from "@/lib/piperTTS";
 import { preloadOfflineTTSCache } from "@/lib/ttsCache";
@@ -177,10 +177,13 @@ interface VoiceScreenProps {
   onSwitchToChat: () => void;
   onSwitchToStory?: () => void;
   onParentMode: () => void;
+  onActivities?: () => void;
   parentSettings?: ParentSettings;
+  activeGameCategory?: string | null;
+  onClearGame?: () => void;
 }
 
-const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onParentMode, parentSettings }: VoiceScreenProps) => {
+const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onParentMode, onActivities, parentSettings, activeGameCategory, onClearGame }: VoiceScreenProps) => {
   const currentVoiceId = parentSettings?.voiceType || "female";
   const currentVoiceSpeed = parentSettings?.voiceSpeed || "normal";
   const isCalmMode = parentSettings?.nightMode?.active || parentSettings?.personality === "calm";
@@ -815,7 +818,16 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       <FloatingParticles />
 
       {/* Top bar */}
-      <div className="w-full flex items-center justify-end px-2 relative z-10">
+      <div className="w-full flex items-center justify-between px-2 relative z-10">
+        <div>
+          {onActivities && (
+            <button onClick={onActivities}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/50 text-muted-foreground text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300">
+              <Gamepad2 className="w-4 h-4" />
+              Activités
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           {parentSettings?.enableCamera && (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 backdrop-blur-sm border border-primary/20 text-primary">
