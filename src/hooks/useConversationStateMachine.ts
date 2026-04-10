@@ -21,6 +21,7 @@ import { hasWakeWord, stripWakeWord, isJustWakeWord, computeWakeConfidence } fro
 import { isOffline, getOfflineResponse } from "@/lib/offlineEngine";
 import { useNetworkMode } from "@/hooks/useNetworkMode";
 import { orchestrate, refineExpression, getSilenceRelaunch } from "@/lib/orchestrator";
+import { getFailsafeResponse, getLatencyFiller, getSoftResetPhrase, reportModuleHealth, recordLatency, isHighLatency, isLowPower } from "@/lib/stabilityEngine";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TYPES
@@ -444,15 +445,33 @@ export function useConversationStateMachine({
       return memoryParts.length > 0 ? memoryParts.join("\n") : undefined;
     })();
 
+    const aiStartTime = Date.now();
+
+    // Latency filler: if AI takes >2s, show a micro-reaction
+    const latencyFillerTimer = setTimeout(() => {
+      if (machineStateRef.current === "PROCESSING") {
+        const filler = getLatencyFiller();
+        setBobbyFaceEmotion("thinking");
+        setBobbyEmotionIntensity(0.5);
+        // Speak the filler but don't reset the AI call
+        fetchTTSAudio(filler, abortController.signal, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode)
+          .then(url => { if (!abortController.signal.aborted) { goToSpeaking(); audioQueue.enqueue(url); } })
+          .catch(() => {});
+      }
+    }, 2000);
+
     const recoveryTimer = setTimeout(() => {
       if (machineStateRef.current === "PROCESSING") {
         abortController.abort();
         if (retryCountRef.current < MAX_AI_RETRIES) {
           retryCountRef.current++;
-          getAIResponse(userText, intent);
+          getAIResponse(userText, intent, orchestratorHints);
         } else {
           retryCountRef.current = 0;
-          speakAndListen(FALLBACK_FR.not_heard);
+          // Failsafe: use offline engine or generic response
+          reportModuleHealth("ai", false);
+          const offlineResp = getOfflineResponse(userText, childName);
+          speakAndListen(offlineResp.text || getFailsafeResponse());
         }
       }
     }, AI_RESPONSE_TIMEOUT);
@@ -465,7 +484,12 @@ export function useConversationStateMachine({
         signal: abortController.signal,
         onSentence: (sentence) => {
           clearTimeout(recoveryTimer);
+          clearTimeout(latencyFillerTimer);
           if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current);
+          if (!gotFirstSentence) {
+            recordLatency(Date.now() - aiStartTime);
+            reportModuleHealth("ai", true);
+          }
           gotFirstSentence = true;
           if (!abortController.signal.aborted) {
             eventBus.emit({ type: "SPEECH_START" });
@@ -474,6 +498,7 @@ export function useConversationStateMachine({
         },
         onDone: (text) => {
           clearTimeout(recoveryTimer);
+          clearTimeout(latencyFillerTimer);
           if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current);
           allSentencesDoneRef.current = true;
           setLastAiResponse(text || "");
@@ -492,28 +517,35 @@ export function useConversationStateMachine({
         },
         onError: (error) => {
           clearTimeout(recoveryTimer);
+          clearTimeout(latencyFillerTimer);
           console.error("AI error:", error);
           if (!abortController.signal.aborted) {
             if (retryCountRef.current < MAX_AI_RETRIES) {
               retryCountRef.current++;
-              getAIResponse(userText, intent);
+              getAIResponse(userText, intent, orchestratorHints);
             } else {
               retryCountRef.current = 0;
-              speakAndListen(FALLBACK_FR.not_heard);
+              reportModuleHealth("ai", false);
+              // Graceful fallback to offline engine
+              const offlineResp = getOfflineResponse(userText, childName);
+              speakAndListen(offlineResp.text || getFailsafeResponse());
             }
           }
         },
       });
     } catch (e) {
       clearTimeout(recoveryTimer);
+      clearTimeout(latencyFillerTimer);
       console.error("AI call exception:", e);
       if (!abortController.signal.aborted) {
         retryCountRef.current = 0;
+        reportModuleHealth("ai", false);
+        // Soft reset: offline response, never silence
         const offlineResp = getOfflineResponse(userText, childName);
-        speakAndListen(offlineResp.text);
+        speakAndListen(offlineResp.text || getFailsafeResponse());
       }
     }
-  }, [audioQueue, childAge, childName, clearAllTimers, conversationHistory, goToListening, goToSpeaking, memory, parentSettings, processSentenceForTTS, session, speakAndListen, startStuckTimer, transition]);
+  }, [audioQueue, childAge, childName, clearAllTimers, conversationHistory, currentVoiceId, currentVoiceSpeed, goToListening, goToSpeaking, isCalmMode, memory, parentSettings, processSentenceForTTS, session, speakAndListen, startStuckTimer, transition]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // FLUSH ACCUMULATED TEXT
@@ -691,24 +723,38 @@ export function useConversationStateMachine({
     const WATCHDOG_TIMEOUT = 5000;
     let lastTransitionTime = Date.now();
     let lastState = machineStateRef.current;
+    let stuckCount = 0;
 
     const watchdog = setInterval(() => {
       const now = Date.now();
       const currentState = machineStateRef.current;
-      if (currentState !== lastState) { lastTransitionTime = now; lastState = currentState; return; }
+      if (currentState !== lastState) { lastTransitionTime = now; lastState = currentState; stuckCount = 0; return; }
       if ((currentState === "PROCESSING" || currentState === "ERROR") && now - lastTransitionTime > WATCHDOG_TIMEOUT) {
-        console.warn(`[Watchdog] ⚠️ Stuck in ${currentState} — auto-recovering`);
+        stuckCount++;
+        console.warn(`[Watchdog] ⚠️ Stuck in ${currentState} (${stuckCount}x) — auto-recovering`);
+        reportModuleHealth("ai", false);
         abortRef.current?.abort();
         audioQueue.stopAll();
         eventBus.emit({ type: "SPEECH_STOP" });
         transition("LISTENING");
-        speakAndListen(FALLBACK_FR.recovery);
+        // Soft reset: use friendly phrase instead of error-sounding message
+        speakAndListen(stuckCount > 1 ? getSoftResetPhrase() : FALLBACK_FR.recovery);
+        lastTransitionTime = Date.now();
+        lastState = "LISTENING";
+      }
+      // Also catch stuck SPEAKING (audio frozen)
+      if (currentState === "SPEAKING" && now - lastTransitionTime > 30000) {
+        console.warn("[Watchdog] ⚠️ Speaking too long — recovering");
+        reportModuleHealth("audio", false);
+        audioQueue.stopAll();
+        eventBus.emit({ type: "SPEECH_STOP" });
+        goToListening();
         lastTransitionTime = Date.now();
         lastState = "LISTENING";
       }
     }, WATCHDOG_INTERVAL);
     return () => clearInterval(watchdog);
-  }, [audioQueue, transition, speakAndListen]);
+  }, [audioQueue, transition, speakAndListen, goToListening]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // CLICK INTERACTIONS (debounced 300ms to prevent child rapid taps)
