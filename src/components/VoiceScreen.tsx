@@ -50,21 +50,7 @@ function detectEmotion(text: string): string | undefined {
   if (lower.match(/colère|énervé|fâché|énerve|rage|grrr/)) return "angry";
   return undefined;
 }
-
-function stripWakeWord(text: string): string {
-  return text.replace(/\b(bobby|boby|bobbie|bobi)\b/gi, "").replace(/\s+/g, " ").trim();
-}
-
-function isJustWakeWord(text: string): boolean {
-  const stripped = stripWakeWord(text);
-  return stripped.length < 3 || /^[?,!.\s]*$/.test(stripped);
-}
-
-const WAKE_RE = /\b(bobby|boby|bobbie|bobi|bob y|bo bi|babi|bobé|buby|bubby)\b/i;
-
-function hasWakeWord(text: string): boolean {
-  return WAKE_RE.test(text);
-}
+// Wake word functions imported from @/lib/wakeWordEngine
 
 const recentBobbyTextsRef = { current: [] as string[] };
 
