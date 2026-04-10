@@ -141,7 +141,7 @@ const Index = () => {
       onSwitchToChat={() => {}}
       onSwitchToStory={() => setMode("story")}
       onParentMode={() => setMode("parent")}
-      onActivities={() => setMode("activities")}
+      
       parentSettings={parentSettings}
       pendingNarration={pendingNarration}
       onNarrationConsumed={() => setPendingNarration(null)}
