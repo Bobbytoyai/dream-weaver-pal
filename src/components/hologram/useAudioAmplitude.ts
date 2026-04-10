@@ -207,6 +207,26 @@ export function useAudioAmplitude() {
     visemeRef.current = {
       viseme, amplitude, mouthOpenness, mouthWidth, mouthRound, jawDrop,
     };
+
+    // v3.0: Intonation analysis — detect emphasis & pitch trends
+    prevAmplitudes.current.push(amplitude);
+    if (prevAmplitudes.current.length > 8) prevAmplitudes.current.shift();
+    
+    const recentAmps = prevAmplitudes.current;
+    const avgAmp = recentAmps.reduce((a, b) => a + b, 0) / recentAmps.length;
+    
+    // Emphasis: current amplitude vs recent average
+    const emphasis = amplitude > avgAmp * 1.3 ? Math.min(1, (amplitude / avgAmp - 1) * 2) : 0;
+    
+    // Pitch trend: track low-frequency energy changes (fundamental frequency proxy)
+    const lowDelta = sm.low - prevLowEnergy.current;
+    prevLowEnergy.current = sm.low;
+    let pitchTrend: IntonationState["pitchTrend"] = "flat";
+    if (lowDelta > 0.05) pitchTrend = "rising";
+    else if (lowDelta < -0.05) pitchTrend = "falling";
+    
+    intonationRef.current = { pitchTrend, emphasis, energy: amplitude };
+
     return visemeRef.current;
   }, []);
 
@@ -220,11 +240,15 @@ export function useAudioAmplitude() {
     return analyzeViseme();
   }, [analyzeViseme]);
 
+  const getIntonation = useCallback((): IntonationState => {
+    return { ...intonationRef.current };
+  }, []);
+
   useEffect(() => {
     return () => {
       contextRef.current?.close();
     };
   }, []);
 
-  return { connectAudio, getAmplitude, getViseme, amplitudeRef, visemeRef };
+  return { connectAudio, getAmplitude, getViseme, getIntonation, amplitudeRef, visemeRef, intonationRef };
 }
