@@ -1586,9 +1586,10 @@ export function getOfflineResponse(
       break;
   }
 
+  const contextPrefix = buildContextualPrefix(childName);
   const finalText = personalize(response, childName);
   const followUp = getFollowUp(intent);
-  const fullResponse = finalText + followUp;
+  const fullResponse = (contextPrefix ? contextPrefix + " " : "") + finalText + followUp;
   updateContext(intent, text, fullResponse);
   return { text: fullResponse, intent, isOffline: true };
 }
