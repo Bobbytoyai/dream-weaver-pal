@@ -79,7 +79,7 @@ export function useAudioAmplitude() {
 
     const analyser = analyserRef.current;
     const freqData = freqDataRef.current;
-    analyser.getByteFrequencyData(freqData);
+    analyser.getByteFrequencyData(freqData as any);
 
     const sampleRate = contextRef.current?.sampleRate || 44100;
     const binWidth = sampleRate / (analyser.fftSize);
