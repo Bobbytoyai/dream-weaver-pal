@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import VoiceScreen from "@/components/VoiceScreen";
 import StoryMode from "@/components/StoryMode";
-import ParentMode, { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/ParentMode";
+import ParentMode from "@/components/ParentMode";
+import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/parentSettings";
 import { useChildMemory } from "@/hooks/useChildMemory";
 
 const CHILD_NAME = "Bobby";

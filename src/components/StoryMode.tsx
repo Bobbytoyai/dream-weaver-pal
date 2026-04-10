@@ -6,7 +6,7 @@ import { streamStory, getRandomStory, type StoryTemplate } from "@/lib/storyEngi
 import { useChildMemory } from "@/hooks/useChildMemory";
 import { eventBus } from "@/lib/eventBus";
 import { initSfxEventBus } from "@/lib/sfx";
-import { ParentSettings } from "@/components/ParentMode";
+import { ParentSettings } from "@/components/parentSettings";
 
 type StoryPhase = "pick" | "loading" | "telling" | "done";
 type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
