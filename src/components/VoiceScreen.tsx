@@ -386,6 +386,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const getAIResponse = useCallback(async (userText: string, intent?: Intent) => {
     transition("PROCESSING");
+    playThinkingShimmer(); // Instant audio feedback to mask latency
     clearAllTimers();
     startStuckTimer("PROCESSING");
     setPartialText("");
