@@ -657,6 +657,64 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     return insights;
   }, [recentAnalyses, avgEmotions, allInterests, engagementDist, avgScores, childName]);
 
+  // v4.0: Daily AI summary
+  const dailySummary = useMemo(() => {
+    if (todaySessions.length === 0) return null;
+    const todayAnalyses = recentAnalyses.filter(a => {
+      const s = sessions.find(s => s.id === a.session_id);
+      return s && new Date(s.started_at).toDateString() === new Date().toDateString();
+    });
+    if (todayAnalyses.length === 0 && todaySessions.length > 0) {
+      return `${childName} a eu ${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} aujourd'hui (${formatDuration(todayDuration)}).`;
+    }
+    const summaries = todayAnalyses.map(a => a.summary).filter(Boolean);
+    if (summaries.length === 0) return null;
+    return summaries.join(" ");
+  }, [todaySessions, recentAnalyses, sessions, childName, todayDuration]);
+
+  // v4.0: Parent recommendations based on data
+  const parentRecommendations = useMemo(() => {
+    const recs: { emoji: string; text: string }[] = [];
+    if (recentAnalyses.length === 0) return recs;
+
+    // Recommend based on interests
+    if (allInterests.length > 0) {
+      const topInterest = allInterests[0][0];
+      recs.push({ emoji: "🎨", text: `Proposez une activité créative autour de « ${topInterest} » pour prolonger sa curiosité.` });
+    }
+
+    // Recommend based on low engagement
+    if (engagementDist.low > engagementDist.high) {
+      recs.push({ emoji: "💡", text: `L'engagement est un peu faible. Essayez les jeux interactifs ou les histoires personnalisées.` });
+    }
+
+    // Recommend based on emotional state
+    if (avgScores) {
+      if (avgScores.stability < 40) {
+        recs.push({ emoji: "🤗", text: `Les émotions varient beaucoup. Un moment calme ensemble pourrait aider à stabiliser l'humeur.` });
+      }
+      if (avgScores.sociability > 70) {
+        recs.push({ emoji: "👫", text: `${childName} est très sociable ! Invitez un ami à jouer avec Bobby ensemble.` });
+      }
+      if (avgScores.curiosity > 70) {
+        recs.push({ emoji: "📚", text: `Curiosité élevée ! Activez le mode éducatif pour explorer de nouveaux sujets.` });
+      }
+    }
+
+    // Recommend based on usage patterns
+    const avgDur = totalDuration / Math.max(totalSessions, 1);
+    if (avgDur > 900) { // >15min avg
+      recs.push({ emoji: "⏰", text: `Les sessions sont longues (${formatDuration(Math.round(avgDur))} en moyenne). Pensez à activer une limite de temps.` });
+    }
+
+    // Always suggest at least one
+    if (recs.length === 0) {
+      recs.push({ emoji: "✨", text: `Continuez ainsi ! ${childName} utilise Bobby de manière équilibrée.` });
+    }
+
+    return recs.slice(0, 4);
+  }, [recentAnalyses, allInterests, engagementDist, avgScores, childName, totalDuration, totalSessions]);
+
   // ─── Key moments (emotional highlights) ───────────────────────
   const keyMoments = useMemo(() => {
     if (sessionMessages.length === 0) return [];
@@ -798,7 +856,36 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         ))}
       </div>
 
-      {/* ═══ 2. INSIGHTS INTELLIGENTS ═══ */}
+      {/* ═══ 2b. RÉSUMÉ DU JOUR ═══ */}
+      {dailySummary && (
+        <div className="bg-card rounded-2xl p-4 border border-border/30">
+          <div className="flex items-center gap-2 mb-2">
+            <Calendar className="w-4 h-4 text-primary" />
+            <h3 className="text-[13px] font-bold text-foreground">Résumé du jour</h3>
+          </div>
+          <p className="text-[12px] text-foreground/80 leading-relaxed">{dailySummary}</p>
+        </div>
+      )}
+
+      {/* ═══ 2c. RECOMMANDATIONS PARENT ═══ */}
+      {parentRecommendations.length > 0 && (
+        <div className="bg-card rounded-2xl p-4 border border-primary/15">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <h3 className="text-[13px] font-bold text-foreground">Recommandations</h3>
+          </div>
+          <div className="space-y-2">
+            {parentRecommendations.map((rec, i) => (
+              <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-xl bg-primary/5">
+                <span className="text-sm mt-0.5">{rec.emoji}</span>
+                <p className="text-[12px] text-foreground/80 leading-relaxed">{rec.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ═══ 2d. ANALYSE SEMAINE ═══ */}
       {dailyInsights.length > 0 && (
         <div className="bg-card rounded-2xl p-4 border border-border/30">
           <div className="flex items-center gap-2 mb-3">
