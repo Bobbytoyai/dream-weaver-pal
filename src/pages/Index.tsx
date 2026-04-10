@@ -3,7 +3,7 @@ import VoiceScreen from "@/components/VoiceScreen";
 import StoryMode from "@/components/StoryMode";
 import ParentMode from "@/components/ParentMode";
 import OnboardingScreen from "@/components/OnboardingScreen";
-import ContentCategories, { type SubCategory } from "@/components/ContentCategories";
+
 import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/parentSettings";
 import { useChildMemory } from "@/hooks/useChildMemory";
 
@@ -25,8 +25,7 @@ function saveProfile(name: string, age: number) {
 
 const Index = () => {
   const [profile, setProfile] = useState<{ name: string; age: number } | null>(loadProfile);
-  const [mode, setMode] = useState<"voice" | "story" | "parent" | "activities">("voice");
-  const [activeGameCategory, setActiveGameCategory] = useState<SubCategory | null>(null);
+  const [mode, setMode] = useState<"voice" | "story" | "parent">("voice");
   const [parentSettings, setParentSettings] = useState<ParentSettings>(() => {
     const saved = loadProfile();
     return {
