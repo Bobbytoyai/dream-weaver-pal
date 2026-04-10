@@ -75,16 +75,9 @@ function detectIntent(text: string): Intent {
   return "chat";
 }
 
+// detectEmotion centralized — reuse detectEmotionForTTS from voicePipeline
 function detectEmotion(text: string): string | undefined {
-  const lower = text.toLowerCase();
-  if (lower.match(/triste|pleure|mal|manque|malheureux/)) return "sad";
-  if (lower.match(/peur|effrayé|cauchemar|noir|monstre/)) return "scared";
-  if (lower.match(/ennui|ennuie|rien à faire|boring/)) return "bored";
-  if (lower.match(/content|super|génial|trop bien|cool|adore|aime|heureux|yay/)) return "happy";
-  if (lower.match(/pourquoi|comment|c'est quoi|sais pas/)) return "curious";
-  if (lower.match(/wow|waouh|incroyable|fou|dingue/)) return "excited";
-  if (lower.match(/colère|énervé|fâché|énerve|rage|grrr/)) return "angry";
-  return undefined;
+  return detectEmotionForTTS(text);
 }
 
 // Echo detection
