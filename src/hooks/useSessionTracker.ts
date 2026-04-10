@@ -42,6 +42,7 @@ export function useSessionTracker(childName: string, childAge: number) {
       .update({
         ended_at: new Date().toISOString(),
         duration_seconds: durationSeconds,
+        message_count: messageCountRef.current,
       })
       .eq("id", sessionIdRef.current);
 
