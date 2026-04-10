@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import VoiceScreen from "@/components/VoiceScreen";
 import StoryMode from "@/components/StoryMode";
+import ContentCategories from "@/components/ContentCategories";
 import ParentMode from "@/components/ParentMode";
 import OnboardingScreen from "@/components/OnboardingScreen";
 
@@ -32,7 +33,7 @@ interface PendingNarration {
 
 const Index = () => {
   const [profile, setProfile] = useState<{ name: string; age: number } | null>(loadProfile);
-  const [mode, setMode] = useState<"voice" | "story" | "parent">("voice");
+  const [mode, setMode] = useState<"voice" | "story" | "parent" | "activities">("voice");
   const [pendingNarration, setPendingNarration] = useState<PendingNarration | null>(null);
   const [parentSettings, setParentSettings] = useState<ParentSettings>(() => {
     const saved = loadProfile();
@@ -107,6 +108,20 @@ const Index = () => {
     );
   }
 
+  if (mode === "activities") {
+    return (
+      <ContentCategories
+        childName={childName}
+        voiceProfile={parentSettings.voiceType || "female"}
+        onSelectCategory={(cat) => {
+          // Return to voice with the selected game category
+          setMode("voice");
+        }}
+        onBack={() => setMode("voice")}
+      />
+    );
+  }
+
   if (mode === "story") {
     return (
       <StoryMode
@@ -126,6 +141,7 @@ const Index = () => {
       onSwitchToChat={() => {}}
       onSwitchToStory={() => setMode("story")}
       onParentMode={() => setMode("parent")}
+      onActivities={() => setMode("activities")}
       parentSettings={parentSettings}
       pendingNarration={pendingNarration}
       onNarrationConsumed={() => setPendingNarration(null)}
