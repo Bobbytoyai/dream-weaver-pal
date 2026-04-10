@@ -687,6 +687,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
             voiceState={state}
             enableCamera={parentSettings?.enableCamera ?? false}
             onTripleTap={handleParentMode}
+            bobbyColor={parentSettings?.bobbyColor}
           />
         </div>
 

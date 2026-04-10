@@ -13,6 +13,7 @@ interface HologramFaceProps {
   onTripleTap?: () => void;
   emotionOverride?: FaceState;
   emotionIntensity?: number;
+  bobbyColor?: string;
 }
 
 function mapToFaceState(voiceState: HologramFaceProps["voiceState"]): FaceState {
@@ -32,6 +33,7 @@ export function HologramFace({
   onTripleTap,
   emotionOverride,
   emotionIntensity = 0.7,
+  bobbyColor,
 }: HologramFaceProps) {
   const { gazeRef, cameraActive } = useGazeTracker(enableCamera);
   const { connectAudio, getAmplitude, getViseme } = useAudioAmplitude();
@@ -116,6 +118,7 @@ export function HologramFace({
             gazeRef={gazeRef}
             getViseme={getViseme}
             emotionIntensity={emotionIntensity}
+            bobbyColor={bobbyColor}
           />
           <HologramParticles intensity={voiceState === "speaking" ? 0.8 : voiceState === "listening" ? 0.5 : 0.25} />
           <ScanRing />
@@ -125,11 +128,12 @@ export function HologramFace({
   );
 }
 
-function FaceScene({ faceState, gazeRef, getViseme, emotionIntensity }: {
+function FaceScene({ faceState, gazeRef, getViseme, emotionIntensity, bobbyColor }: {
   faceState: FaceState;
   gazeRef: React.MutableRefObject<{ x: number; y: number }>;
   getViseme: () => VisemeState;
   emotionIntensity: number;
+  bobbyColor?: string;
 }) {
   const visemeRef = useRef<VisemeState>({
     viseme: "REST", amplitude: 0, mouthOpenness: 0, mouthWidth: 0.5, mouthRound: 0, jawDrop: 0,
@@ -146,6 +150,7 @@ function FaceScene({ faceState, gazeRef, getViseme, emotionIntensity }: {
       audioAmplitude={visemeRef.current.amplitude}
       viseme={visemeRef.current}
       emotionIntensity={emotionIntensity}
+      bobbyColor={bobbyColor}
     />
   );
 }
