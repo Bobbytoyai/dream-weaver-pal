@@ -15,6 +15,7 @@ export async function streamVoiceChat({
   childName,
   childAge,
   mode,
+  parentSettings,
   onSentence,
   onDone,
   onError,
@@ -24,6 +25,7 @@ export async function streamVoiceChat({
   childName: string;
   childAge: number;
   mode: string;
+  parentSettings?: any;
   onSentence: (sentence: string) => void;
   onDone: (fullText: string) => void;
   onError: (error: string) => void;
@@ -36,7 +38,7 @@ export async function streamVoiceChat({
         "Content-Type": "application/json",
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
-      body: JSON.stringify({ messages, childName, childAge, mode }),
+      body: JSON.stringify({ messages, childName, childAge, mode, parentSettings }),
       signal,
     });
 

@@ -171,6 +171,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
       childName,
       childAge,
       mode: "chat",
+      parentSettings,
       signal: abortController.signal,
       onSentence: (sentence) => {
         if (!abortController.signal.aborted) {
