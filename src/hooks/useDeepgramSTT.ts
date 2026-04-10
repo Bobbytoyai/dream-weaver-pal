@@ -91,9 +91,9 @@ export function useDeepgramSTT({ onPartial, onFinal, onError, language = "fr" }:
       streamRef.current = stream;
 
       // 3. Connect WebSocket
-      const wsUrl = `${DEEPGRAM_WS_URL}?language=${language}&model=nova-2&smart_format=true&interim_results=true&utterance_end_ms=1000&vad_events=true&encoding=linear16&sample_rate=16000&channels=1`;
+      const wsUrl = `${DEEPGRAM_WS_URL}?language=${language}&model=nova-2&smart_format=true&interim_results=true&utterance_end_ms=1000&vad_events=true&encoding=linear16&sample_rate=16000&channels=1&token=${encodeURIComponent(key)}`;
 
-      const ws = new WebSocket(wsUrl, ["token", key]);
+      const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
