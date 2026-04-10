@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send } from "lucide-react";
+import { Send, Mic } from "lucide-react";
 import { toast } from "sonner";
 import ChatMessage from "./ChatMessage";
 import ModeSelector, { type ChatMode } from "./ModeSelector";
@@ -29,7 +29,7 @@ const getInitialGreeting = (name: string, age: number): string => {
   return `Hey ${name}! 👋 I'm Buddy, your AI companion. I'm here for stories, games, learning, or just chatting. What are you in the mood for?`;
 };
 
-const ChatScreen = ({ childName, childAge }: ChatScreenProps) => {
+const ChatScreen = ({ childName, childAge, onSwitchToVoice }: ChatScreenProps) => {
   const initialGreeting = getInitialGreeting(childName, childAge);
   const [messages, setMessages] = useState<Message[]>([
     { id: "1", content: initialGreeting, isUser: false },
@@ -120,7 +120,17 @@ const ChatScreen = ({ childName, childAge }: ChatScreenProps) => {
           <h2 className="text-lg font-extrabold text-foreground">Buddy</h2>
           <p className="text-xs text-success font-semibold">● Online</p>
         </div>
-        <span className="text-2xl">🌟</span>
+        {onSwitchToVoice ? (
+          <button
+            onClick={onSwitchToVoice}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-bold text-sm hover:bg-primary/20 transition-all"
+          >
+            <Mic className="w-4 h-4" />
+            Voice
+          </button>
+        ) : (
+          <span className="text-2xl">🌟</span>
+        )}
       </div>
 
       {/* Mode Selector */}
