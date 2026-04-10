@@ -63,6 +63,13 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const [narrating, setNarrating] = useState(false);
   const [showFullText, setShowFullText] = useState(false);
+  const [downloadedIds, setDownloadedIds] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem("bobby_downloaded_stories");
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch { return new Set(); }
+  });
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const audioQueue = useAudioQueue();
   const abortRef = useRef<AbortController | null>(null);
