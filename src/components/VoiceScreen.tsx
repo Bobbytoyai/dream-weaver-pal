@@ -270,7 +270,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
         <div className="relative w-80 h-80 md:w-96 md:h-96">
           <HologramFace
             voiceState={state}
-            enableCamera={false}
+            enableCamera={parentSettings?.enableCamera ?? false}
             onTripleTap={handleParentMode}
           />
         </div>
