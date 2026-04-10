@@ -497,7 +497,6 @@ function handleGuess(text: string, childName?: string): string {
     // Game over — but NEVER say "lost", always encourage
     const reveal = personalize(pickRandom(REVEAL_PHRASES), childName, animal);
     try {
-      const { recordAnswer } = require("./gameEngine");
       recordAnswer("devine_animal", false);
     } catch { /* ignore */ }
     gameState.active = false;
