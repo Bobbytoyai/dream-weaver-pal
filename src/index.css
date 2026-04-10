@@ -215,3 +215,47 @@
 .shimmer {
   animation: shimmer 2.5s ease-in-out infinite;
 }
+
+/* ── Onboarding animations ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-16px); }
+}
+@keyframes drift1 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(40px, 30px); }
+}
+@keyframes drift2 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-30px, -40px); }
+}
+@keyframes drift3 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(25px, -20px); }
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.1; transform: scale(0.8); }
+  50% { opacity: 0.8; transform: scale(1.2); }
+}
+@keyframes wave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(20deg); }
+  75% { transform: rotate(-15deg); }
+}
+@keyframes bounceSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+.animate-fadeInUp { animation: fadeInUp 0.4s ease-out both; }
+.animate-fadeOut { animation: fadeOut 0.25s ease-in both; }
+.animate-drift1 { animation: drift1 12s ease-in-out infinite; }
+.animate-drift2 { animation: drift2 15s ease-in-out infinite; }
+.animate-drift3 { animation: drift3 10s ease-in-out infinite; }
+.animate-twinkle { animation: twinkle ease-in-out infinite; }
+.animate-wave { animation: wave 1.5s ease-in-out infinite; display: inline-block; }
+.animate-bounce-slow { animation: bounceSlow 2s ease-in-out infinite; }
