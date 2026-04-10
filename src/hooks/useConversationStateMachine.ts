@@ -355,6 +355,7 @@ export function useConversationStateMachine({
       audioQueue.setOnAllDone(() => { eventBus.emit({ type: "SPEECH_STOP" }); goToListening(); });
     } catch { goToListening(); }
   }, [audioQueue, currentVoiceId, currentVoiceSpeed, goToListening, goToSpeaking, isCalmMode]);
+  useEffect(() => { speakAndListenRef.current = speakAndListen; }, [speakAndListen]);
 
   const interrupt = useCallback(() => {
     abortRef.current?.abort();
