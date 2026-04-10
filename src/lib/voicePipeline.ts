@@ -85,6 +85,13 @@ async function fetchElevenLabsTTS(
   const cached = audioCache.get(cacheKey);
   if (cached) return cached;
 
+  // Create a timeout signal (8s max) merged with caller signal
+  const timeoutController = new AbortController();
+  const timeoutId = setTimeout(() => timeoutController.abort(), 8000);
+  const mergedSignal = signal
+    ? AbortSignal.any?.([signal, timeoutController.signal]) ?? signal
+    : timeoutController.signal;
+
   const response = await fetch(ELEVENLABS_TTS_URL, {
     method: "POST",
     headers: {
@@ -98,8 +105,9 @@ async function fetchElevenLabsTTS(
       ...(speedOverride && speedOverride !== "normal" ? { speedOverride } : {}),
       ...(calmMode ? { calmMode: true } : {}),
     }),
-    signal,
+    signal: mergedSignal,
   });
+  clearTimeout(timeoutId);
 
   if (!response.ok) {
     throw new Error(`ElevenLabs TTS error: ${response.status}`);

@@ -10,7 +10,7 @@ import type { Emotion } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import { useSmartSTT } from "@/hooks/useSmartSTT";
 import { ParentSettings } from "@/components/parentSettings";
-import { setSfxVolume, initSfxEventBus, playThinkingShimmer } from "@/lib/sfx";
+import { setSfxVolume, initSfxEventBus } from "@/lib/sfx";
 import { useChildMemory } from "@/hooks/useChildMemory";
 import { useConversationRecorder } from "@/hooks/useConversationRecorder";
 import { eventBus } from "@/lib/eventBus";
@@ -75,10 +75,7 @@ function detectIntent(text: string): Intent {
   return "chat";
 }
 
-// detectEmotion centralized — reuse detectEmotionForTTS from voicePipeline
-function detectEmotion(text: string): string | undefined {
-  return detectEmotionForTTS(text);
-}
+// detectEmotion is now just detectEmotionForTTS (centralized in voicePipeline)
 
 // Echo detection
 const recentBobbyTextsRef = { current: [] as string[] };
@@ -389,15 +386,24 @@ export function useConversationStateMachine({
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // AI RESPONSE
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const lastAIRequestTimeRef = useRef(0);
   const getAIResponse = useCallback(async (userText: string, intent?: Intent) => {
+    // Rate limit: prevent duplicate AI requests within 800ms
+    const now = Date.now();
+    if (now - lastAIRequestTimeRef.current < 800) {
+      console.log("[StateMachine] ⚡ Rate-limited AI request, skipping");
+      return;
+    }
+    lastAIRequestTimeRef.current = now;
+
     transition("PROCESSING");
-    playThinkingShimmer();
+    // SFX is auto-triggered by eventBus STATE_CHANGED → no manual playThinkingShimmer needed
     clearAllTimers();
     startStuckTimer("PROCESSING");
     setPartialText("");
 
-    const emotion = detectEmotion(userText);
-    currentEmotionRef.current = (emotion as Emotion) || detectEmotionForTTS(userText);
+    const emotion = detectEmotionForTTS(userText);
+    currentEmotionRef.current = emotion;
     session.addMessage("user", userText, emotion);
     eventBus.emit({ type: "VOICE_INPUT", transcript: userText });
     if (emotion) eventBus.emit({ type: "EMOTION_DETECTED", emotion });
@@ -408,7 +414,8 @@ export function useConversationStateMachine({
     if (detectedIntent === "story") mode = "story";
     else if (detectedIntent === "game") mode = "game";
 
-    const trimmedHistory = conversationHistory.length > 10 ? conversationHistory.slice(-10) : conversationHistory;
+    // History already capped at MAX_HISTORY_LENGTH by setter; trim to last 10 for API speed
+    const trimmedHistory = conversationHistory.slice(-10);
     const newHistory: AiMsg[] = [...trimmedHistory, { role: "user", content: userText }];
     const abortController = new AbortController();
     abortRef.current = abortController;
