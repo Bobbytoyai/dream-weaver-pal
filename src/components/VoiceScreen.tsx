@@ -13,6 +13,8 @@ import { useConversationRecorder } from "@/hooks/useConversationRecorder";
 import { eventBus } from "@/lib/eventBus";
 import { getCachedResponse, isSimpleGreeting } from "@/lib/responseCache";
 import { hasWakeWord, stripWakeWord, isJustWakeWord, computeWakeConfidence } from "@/lib/wakeWordEngine";
+import { isOffline, canHandleOffline, getOfflineResponse, detectOfflineIntent } from "@/lib/offlineEngine";
+import { useNetworkMode } from "@/hooks/useNetworkMode";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 1. STATE MACHINE TYPES
@@ -146,15 +148,16 @@ const FloatingParticles = () => {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // DEBUG OVERLAY
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const DebugOverlay = ({ state, micArmed, micRunning, partialText, lastRecognized, lastAiResponse, sttBackend }: {
+const DebugOverlay = ({ state, micArmed, micRunning, partialText, lastRecognized, lastAiResponse, sttBackend, offline }: {
   state: ConversationState; micArmed: boolean; micRunning: boolean;
-  partialText: string; lastRecognized: string; lastAiResponse: string; sttBackend: string;
+  partialText: string; lastRecognized: string; lastAiResponse: string; sttBackend: string; offline: boolean;
 }) => (
   <div className="fixed top-0 left-0 right-0 z-50 bg-black/85 text-white p-3 text-[10px] font-mono space-y-1 pointer-events-none max-h-48 overflow-y-auto">
     <div className="flex gap-3 flex-wrap">
       <span>State: <span className={`font-bold ${state === "ERROR" ? "text-red-400" : state === "LISTENING" ? "text-green-400" : state === "SPEAKING" ? "text-blue-400" : state === "PROCESSING" ? "text-yellow-400" : state === "SLEEP" ? "text-indigo-400" : "text-gray-400"}`}>{state}</span></span>
       <span>Mic: {micArmed ? (micRunning ? "🟢 ON" : "🟡 ARMED") : "🔴 OFF"}</span>
       <span>STT: {sttBackend}</span>
+      <span>Net: {offline ? "🔴 OFFLINE" : "🟢 ONLINE"}</span>
     </div>
     {partialText && <div className="text-green-300 truncate">📝 Partial: "{partialText}"</div>}
     {lastRecognized && <div className="text-cyan-300 truncate">✅ Recognized: "{lastRecognized}"</div>}
@@ -179,6 +182,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const currentVoiceId = parentSettings?.voiceType || "female";
   const currentVoiceSpeed = parentSettings?.voiceSpeed || "normal";
   const isCalmMode = parentSettings?.nightMode?.active || parentSettings?.personality === "calm";
+  const { isOffline: networkOffline } = useNetworkMode();
 
   // ─── STATE MACHINE ───
   const [machineState, setMachineState] = useState<ConversationState>("IDLE");
@@ -493,7 +497,9 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       console.error("AI call exception:", e);
       if (!abortController.signal.aborted) {
         retryCountRef.current = 0;
-        speakAndListen(FALLBACK_FR.error);
+        // Fallback to offline engine on network failure
+        const offlineResp = getOfflineResponse(userText, childName);
+        speakAndListen(offlineResp.text);
       }
     }
   }, [audioQueue, childAge, childName, clearAllTimers, conversationHistory, goToListening, goToSpeaking, memory, parentSettings, processSentenceForTTS, session, speakAndListen, startStuckTimer, transition]);
@@ -517,6 +523,23 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       return;
     }
 
+    // ─── OFFLINE ENGINE: instant response when offline or simple intent ───
+    if (isOffline()) {
+      console.log("[VoiceScreen] ⚡ OFFLINE response for:", cleaned);
+      const offlineResp = getOfflineResponse(cleaned, childName);
+      goToSpeaking();
+      eventBus.emit({ type: "SPEECH_START" });
+      recentBobbyTextsRef.current = [offlineResp.text, ...recentBobbyTextsRef.current].slice(0, 8);
+      fetchTTSAudio(offlineResp.text, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode).then(url => {
+        audioQueue.enqueue(url);
+        audioQueue.setOnAllDone(() => { eventBus.emit({ type: "SPEECH_STOP" }); goToListening(); });
+      }).catch(() => goToListening());
+      setConversationHistory(prev => [...prev, { role: "user", content: cleaned }, { role: "assistant", content: offlineResp.text }]);
+      session.addMessage("user", cleaned);
+      session.addMessage("assistant", offlineResp.text);
+      return;
+    }
+
     if (isSimpleGreeting(cleaned)) {
       const cached = getCachedResponse("greeting");
       goToSpeaking();
@@ -533,7 +556,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     }
 
     getAIResponse(cleaned);
-  }, [audioQueue, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, goToSpeaking, isCalmMode, session, speakAndListen]);
+  }, [audioQueue, childName, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, goToSpeaking, isCalmMode, session, speakAndListen]);
 
   const scheduleFlush = useCallback(() => {
     if (utteranceFlushTimerRef.current) clearTimeout(utteranceFlushTimerRef.current);
@@ -759,7 +782,15 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
           lastRecognized={lastRecognized}
           lastAiResponse={lastAiResponse}
           sttBackend={deepgramSTT.backend}
+          offline={networkOffline}
         />
+      )}
+
+      {/* Offline indicator */}
+      {networkOffline && (
+        <div className="fixed top-2 left-2 z-40 px-3 py-1 rounded-full bg-orange-500/90 text-white text-[10px] font-bold animate-pulse">
+          ⚡ Mode Offline
+        </div>
       )}
 
       <FloatingParticles />
