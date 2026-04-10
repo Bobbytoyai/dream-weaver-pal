@@ -83,14 +83,14 @@ interface EmotionModifier {
 }
 
 const EMOTION_MODIFIERS: Record<Emotion, EmotionModifier> = {
-  happy:   { stabilityDelta: -0.10, styleDelta: +0.15, speedDelta: +0.04 },
-  excited: { stabilityDelta: -0.15, styleDelta: +0.20, speedDelta: +0.06 },
-  sad:     { stabilityDelta: +0.15, styleDelta: -0.10, speedDelta: -0.10 },
-  scared:  { stabilityDelta: +0.20, styleDelta: -0.05, speedDelta: -0.08 },
-  calm:    { stabilityDelta: +0.10, styleDelta: -0.15, speedDelta: -0.12 },
-  curious: { stabilityDelta: -0.05, styleDelta: +0.10, speedDelta: +0.02 },
-  angry:   { stabilityDelta: +0.05, styleDelta: +0.08, speedDelta: +0.03 },
-  bored:   { stabilityDelta: +0.10, styleDelta: -0.05, speedDelta: -0.04 },
+  happy:   { stabilityDelta: -0.05, styleDelta: +0.10, speedDelta: +0.02 },
+  excited: { stabilityDelta: -0.08, styleDelta: +0.12, speedDelta: +0.03 },
+  sad:     { stabilityDelta: +0.10, styleDelta: -0.08, speedDelta: -0.06 },
+  scared:  { stabilityDelta: +0.12, styleDelta: -0.05, speedDelta: -0.05 },
+  calm:    { stabilityDelta: +0.08, styleDelta: -0.10, speedDelta: -0.08 },
+  curious: { stabilityDelta: -0.03, styleDelta: +0.05, speedDelta: +0.01 },
+  angry:   { stabilityDelta: +0.03, styleDelta: +0.05, speedDelta: +0.02 },
+  bored:   { stabilityDelta: +0.05, styleDelta: -0.03, speedDelta: -0.02 },
 };
 
 function clamp(v: number, min: number, max: number): number {
