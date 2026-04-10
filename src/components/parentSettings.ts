@@ -2,6 +2,7 @@ export interface ParentSettings {
   childName: string;
   personality: "balanced" | "calm" | "energetic" | "educational";
   childAge: number;
+  voiceType: "child" | "female" | "male" | "custom";
   voiceSpeed: "normal" | "slow" | "fast";
   voicePitch: number;
   sfxVolume: number;
@@ -25,6 +26,7 @@ export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
   childName: "Bobby",
   personality: "balanced",
   childAge: 7,
+  voiceType: "female",
   voiceSpeed: "normal",
   voicePitch: 1.0,
   sfxVolume: 0.7,
