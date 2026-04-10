@@ -256,7 +256,10 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const goToListening = useCallback(() => {
     setState("listening");
     setMicStatus("active");
-    setContinuousListenEnabled(true);
+    // Small delay before re-enabling mic to avoid capturing tail-end of Bobby's speech
+    setTimeout(() => {
+      setContinuousListenEnabled(true);
+    }, 600);
     startSilenceTimers();
   }, [startSilenceTimers]);
 
