@@ -123,6 +123,27 @@ const INTENT_RULES: IntentRule[] = [
       /\b(je suis triste|j'ai peur|j'ai mal|je m'ennuie)\b/i,
     ],
   },
+  {
+    intent: "CALM_REQUEST",
+    patterns: [
+      /\b(bonne nuit|dodo|dormir|fatigué|sommeil|calme|repos|nuit)\b/i,
+      /\b(je suis fatigué|on dort|on se calme)\b/i,
+    ],
+  },
+  {
+    intent: "HUMOR",
+    patterns: [
+      /\b(blague|drôle|rigol|marrant|rire|haha|hihi)\b/i,
+      /\b(fais[- ]moi rire|une blague|raconte une blague)\b/i,
+    ],
+  },
+  {
+    intent: "ADVENTURE",
+    patterns: [
+      /\b(on explore|on voyage|aventure|découvr|explorer)\b/i,
+      /\b(on part|on vole|on saute|on court|on nage)\b/i,
+    ],
+  },
 ];
 
 export function detectOfflineIntent(text: string): OfflineIntent {
