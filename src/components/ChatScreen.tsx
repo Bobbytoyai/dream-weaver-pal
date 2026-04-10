@@ -17,6 +17,7 @@ type AiMsg = { role: "user" | "assistant"; content: string };
 interface ChatScreenProps {
   childName: string;
   childAge: number;
+  onSwitchToVoice?: () => void;
 }
 
 const getInitialGreeting = (name: string, age: number): string => {
