@@ -780,7 +780,15 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
           lastRecognized={lastRecognized}
           lastAiResponse={lastAiResponse}
           sttBackend={deepgramSTT.backend}
+          offline={networkOffline}
         />
+      )}
+
+      {/* Offline indicator */}
+      {networkOffline && (
+        <div className="fixed top-2 left-2 z-40 px-3 py-1 rounded-full bg-orange-500/90 text-white text-[10px] font-bold animate-pulse">
+          ⚡ Mode Offline
+        </div>
       )}
 
       <FloatingParticles />
