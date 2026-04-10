@@ -613,13 +613,20 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
       {/* Hologram area */}
       <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 relative z-10">
-        <div className="absolute w-96 h-96 rounded-full glow-pulse pointer-events-none"
+        <div className="absolute w-96 h-96 rounded-full pointer-events-none transition-all duration-500"
           style={{
-            background: `radial-gradient(circle, 
-              hsla(215, 85%, 70%, ${state === "speaking" ? 0.2 : 0.12}) 0%, 
-              hsla(270, 50%, 70%, ${state === "speaking" ? 0.12 : 0.06}) 35%,
-              hsla(320, 40%, 70%, 0.03) 55%,
-              transparent 75%)`,
+            background: partialText && state === "listening"
+              ? `radial-gradient(circle, 
+                  hsla(210, 100%, 65%, 0.35) 0%, 
+                  hsla(210, 90%, 60%, 0.2) 30%,
+                  hsla(230, 70%, 65%, 0.08) 55%,
+                  transparent 75%)`
+              : `radial-gradient(circle, 
+                  hsla(215, 85%, 70%, ${state === "speaking" ? 0.2 : 0.12}) 0%, 
+                  hsla(270, 50%, 70%, ${state === "speaking" ? 0.12 : 0.06}) 35%,
+                  hsla(320, 40%, 70%, 0.03) 55%,
+                  transparent 75%)`,
+            animation: partialText && state === "listening" ? "glow-voice 1.2s ease-in-out infinite alternate" : undefined,
           }}
         />
 
