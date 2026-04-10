@@ -313,13 +313,28 @@ export function useConversationStateMachine({
     narrationAbortRef.current?.abort();
     audioQueue.stopAll();
     clearAllTimers();
+    accumulatedTextRef.current = ""; // Clear stale accumulated text
+    isSpeakingRef.current = false;
     eventBus.emit({ type: "SPEECH_STOP" });
-    transition("LISTENING");
-  }, [audioQueue, clearAllTimers, transition]);
+    // Use goToListening to properly set silence timer
+    goToListening();
+  }, [audioQueue, clearAllTimers, goToListening]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // PENDING NARRATION
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // Refs for narration effect to avoid stale closures
+  const goToSpeakingRef = useRef(goToSpeaking);
+  const goToListeningRef = useRef(goToListening);
+  const currentVoiceIdRef = useRef(currentVoiceId);
+  const currentVoiceSpeedRef = useRef(currentVoiceSpeed);
+  const isCalmModeRef = useRef(isCalmMode);
+  useEffect(() => { goToSpeakingRef.current = goToSpeaking; }, [goToSpeaking]);
+  useEffect(() => { goToListeningRef.current = goToListening; }, [goToListening]);
+  useEffect(() => { currentVoiceIdRef.current = currentVoiceId; }, [currentVoiceId]);
+  useEffect(() => { currentVoiceSpeedRef.current = currentVoiceSpeed; }, [currentVoiceSpeed]);
+  useEffect(() => { isCalmModeRef.current = isCalmMode; }, [isCalmMode]);
+
   useEffect(() => {
     if (!pendingNarration) return;
     const timer = setTimeout(async () => {
@@ -330,7 +345,7 @@ export function useConversationStateMachine({
       const abortController = new AbortController();
       narrationAbortRef.current = abortController;
       eventBus.emit({ type: "STORY_START", theme: "", title });
-      goToSpeaking();
+      goToSpeakingRef.current();
       eventBus.emit({ type: "SPEECH_START" });
       try {
         for (let i = 0; i < sentences.length; i++) {
@@ -338,17 +353,17 @@ export function useConversationStateMachine({
           const sentence = sentences[i];
           recentBobbyTextsRef.current = [sentence, ...recentBobbyTextsRef.current].slice(0, 8);
           const emotion = detectEmotionForTTS(sentence);
-          const url = await fetchTTSAudio(sentence, abortController.signal, currentVoiceId, emotion, currentVoiceSpeed, isCalmMode);
+          const url = await fetchTTSAudio(sentence, abortController.signal, currentVoiceIdRef.current, emotion, currentVoiceSpeedRef.current, isCalmModeRef.current);
           if (!abortController.signal.aborted && url !== "__silent__") audioQueue.enqueue(url);
         }
-        audioQueue.setOnAllDone(() => { eventBus.emit({ type: "SPEECH_STOP" }); eventBus.emit({ type: "STORY_END" }); goToListening(); });
+        audioQueue.setOnAllDone(() => { eventBus.emit({ type: "SPEECH_STOP" }); eventBus.emit({ type: "STORY_END" }); goToListeningRef.current(); });
       } catch (e: any) {
         if (e.name !== "AbortError") console.error("[VoiceScreen] Story narration error:", e);
-        eventBus.emit({ type: "SPEECH_STOP" }); eventBus.emit({ type: "STORY_END" }); goToListening();
+        eventBus.emit({ type: "SPEECH_STOP" }); eventBus.emit({ type: "STORY_END" }); goToListeningRef.current();
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [pendingNarration]);
+  }, [pendingNarration, onNarrationConsumed, audioQueue]);
 
   useEffect(() => { return () => { narrationAbortRef.current?.abort(); }; }, []);
 
@@ -591,6 +606,9 @@ export function useConversationStateMachine({
     if (machineStateRef.current === "SPEAKING" || machineStateRef.current === "PROCESSING") {
       interrupt();
     }
+
+    // Ensure session is active for LISTENING state
+    ensureSession();
 
     if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
     const wake = hasWakeWord(trimmed);
