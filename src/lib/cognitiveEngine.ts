@@ -112,6 +112,15 @@ function createFreshState(): CognitiveState {
     lastSilenceType: "unknown",
     consecutiveErrors: 0,
     variationSeed: 0,
+    // v4.0
+    engagementScores: {},
+    currentMode: "chat",
+    currentTopics: [],
+    intentHistory: [],
+    learningSpeed: "normal",
+    interactionStyle: "balanced",
+    engagementTriggers: [],
+    behaviorPatterns: [],
   };
 }
 
