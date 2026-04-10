@@ -1075,33 +1075,33 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const renderVoix = () => (
     <div className="p-4 space-y-4">
       <Card title="Type de voix" icon={Mic}>
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-2">
           {(["child", "female", "male", "custom"] as const).map((type) => {
             const info = VOICE_MAP[type];
             const isCustom = type === "custom";
+            const selected = settings.voiceType === type;
             return (
               <button key={type}
                 onClick={() => !isCustom && updateSetting("voiceType", type)}
                 disabled={isCustom}
-                className={`w-full text-left p-3 rounded-xl transition-all flex items-center gap-3 ${
-                  isCustom ? "opacity-50 cursor-not-allowed bg-muted" :
-                  settings.voiceType === type ? "bg-primary/10 border border-primary/30" : "bg-muted hover:bg-muted/80"
+                className={`relative p-4 rounded-2xl text-left transition-all duration-200 border-2 ${
+                  isCustom ? "opacity-40 cursor-not-allowed bg-muted/30 border-transparent" :
+                  selected
+                    ? "bg-primary/10 border-primary/40 shadow-[0_0_16px_hsl(var(--primary)/0.15)]"
+                    : "bg-muted/50 border-transparent hover:bg-muted"
                 }`}>
-                <span className="text-2xl">{info.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-bold text-foreground">{info.label}</span>
-                  <p className="text-xs text-muted-foreground">{info.desc}</p>
-                </div>
-                {!isCustom && settings.voiceType === type && (
+                <div className="text-2xl mb-2">{info.emoji}</div>
+                <h4 className="text-sm font-extrabold text-foreground">{info.label}</h4>
+                <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{info.desc}</p>
+                {!isCustom && selected && (
                   <button
                     onClick={(e) => { e.stopPropagation(); previewVoice(type); }}
                     disabled={previewPlaying}
-                    className="px-3 py-1.5 rounded-lg bg-primary/20 text-primary text-xs font-bold hover:bg-primary/30 transition-all flex items-center gap-1">
-                    {previewPlaying ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
-                    Test
+                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-all">
+                    {previewPlaying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
                   </button>
                 )}
-                {isCustom && <Lock className="w-4 h-4 text-muted-foreground" />}
+                {isCustom && <Lock className="absolute top-3 right-3 w-4 h-4 text-muted-foreground" />}
               </button>
             );
           })}
