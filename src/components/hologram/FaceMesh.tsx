@@ -5,12 +5,13 @@ import { FaceState, useFaceAnimation } from "./useFaceAnimation";
 
 interface FaceMeshProps {
   faceState: FaceState;
-  gazeTarget: { x: number; y: number };
+  /** Pass the REF so we read .current every frame — not a stale snapshot */
+  gazeRef: React.MutableRefObject<{ x: number; y: number }>;
   audioAmplitude: number;
 }
 
 /** Holographic child-friendly 3D face with dark-mode glow aesthetic */
-export function FaceMesh({ faceState, gazeTarget, audioAmplitude }: FaceMeshProps) {
+export function FaceMesh({ faceState, gazeRef, audioAmplitude }: FaceMeshProps) {
   const headRef = useRef<THREE.Group>(null);
   const leftEyeRef = useRef<THREE.Group>(null);
   const rightEyeRef = useRef<THREE.Group>(null);
@@ -23,7 +24,8 @@ export function FaceMesh({ faceState, gazeTarget, audioAmplitude }: FaceMeshProp
   const rightEyelidRef = useRef<THREE.Mesh>(null);
   const glowShellRef = useRef<THREE.Mesh>(null);
 
-  const animation = useFaceAnimation(faceState, gazeTarget, audioAmplitude);
+  // Pass the gazeRef (not .current) so animation reads it every frame
+  const animation = useFaceAnimation(faceState, gazeRef, audioAmplitude);
 
   // Holographic skin — translucent blue-white
   const skinMat = useMemo(() => new THREE.MeshStandardMaterial({

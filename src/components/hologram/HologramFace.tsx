@@ -96,6 +96,7 @@ export function HologramFace({ voiceState, enableCamera = false, onTripleTap }: 
             distance={5}
           />
 
+          {/* KEY FIX: pass gazeRef (the ref itself) so it's read per-frame, not per-render */}
           <FaceScene faceState={faceState} gazeRef={gazeRef} getAmplitude={getAmplitude} />
           <HologramParticles intensity={voiceState === "speaking" ? 0.8 : voiceState === "listening" ? 0.5 : 0.25} />
           <ScanRing />
@@ -116,10 +117,11 @@ function FaceScene({ faceState, gazeRef, getAmplitude }: {
     amplitudeRef.current = getAmplitude();
   });
 
+  // Pass the REF itself to FaceMesh — it reads .current every frame inside useFrame
   return (
     <FaceMesh
       faceState={faceState}
-      gazeTarget={gazeRef.current}
+      gazeRef={gazeRef}
       audioAmplitude={amplitudeRef.current}
     />
   );
