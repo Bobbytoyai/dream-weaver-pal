@@ -47,11 +47,17 @@ const Index = () => {
     } catch { /* ignore */ }
   }, [memory]);
 
-  const handleOnboardingComplete = (name: string, age: number, voice?: string) => {
+  const handleOnboardingComplete = (name: string, age: number, voice?: string, interests?: string[]) => {
     saveProfile(name, age);
     setProfile({ name, age });
     const voiceType = (voice === "child" ? "child" : voice === "male" ? "male" : "female") as ParentSettings["voiceType"];
-    setParentSettings((prev) => ({ ...prev, childName: name, childAge: age, voiceType }));
+    setParentSettings((prev) => ({
+      ...prev,
+      childName: name,
+      childAge: age,
+      voiceType,
+      ...(interests?.length ? { enabledThemes: interests } : {}),
+    }));
   };
 
   const handleSettingsChange = (settings: ParentSettings) => {
