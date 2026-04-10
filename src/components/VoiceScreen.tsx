@@ -695,7 +695,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
   return (
     <div className="child-light flex flex-col items-center justify-between h-screen px-4 py-6 max-w-lg mx-auto select-none overflow-hidden relative"
-      style={{ background: `linear-gradient(180deg, hsl(220, 60%, 97%) 0%, hsl(235, 50%, 96%) 40%, hsl(270, 40%, 96%) 70%, hsl(320, 35%, 96%) 100%)` }}>
+      style={{ background: `linear-gradient(180deg, hsl(220, 55%, 88%) 0%, hsl(235, 45%, 85%) 40%, hsl(270, 38%, 84%) 70%, hsl(320, 32%, 86%) 100%)` }}>
 
       {/* Debug overlay */}
       {showDebug && (
