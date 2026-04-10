@@ -8,11 +8,32 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// French voice IDs — carefully selected for child companion
-const VOICE_MAP: Record<string, string> = {
-  female: "FGY2WhTYpPnrIDTdsKH5",  // Laura - warm female
-  child: "Xb7hH8MSUJpSbSDYk0k2",   // Alice - lighter/younger
-  male: "onwK4e9ZLuTAKqWW03F9",     // Daniel - warm male
+// 3 French voice profiles for Bobby
+// 🎭 Cartoon = fun, animated, playful (dessin animé)
+// 👩 Maman = warm, reassuring, slightly funny
+// 👨 Papa = deep, calm, protective
+const VOICE_PROFILES: Record<string, { voiceId: string; stability: number; similarity_boost: number; style: number; speed: number }> = {
+  child: {
+    voiceId: "pFZP5JQG7iQjIQuC4Bku",   // Lily — bright, cartoon-like
+    stability: 0.35,
+    similarity_boost: 0.8,
+    style: 0.7,
+    speed: 1.1,
+  },
+  female: {
+    voiceId: "XrExE9yKIg1WjnnlVkGX",   // Matilda — warm, maternal, fun
+    stability: 0.5,
+    similarity_boost: 0.75,
+    style: 0.45,
+    speed: 1.0,
+  },
+  male: {
+    voiceId: "JBFqnCBsd6RMkjVDRZzb",   // George — deep, reassuring dad
+    stability: 0.65,
+    similarity_boost: 0.7,
+    style: 0.25,
+    speed: 0.95,
+  },
 };
 
 Deno.serve(async (req) => {
@@ -30,10 +51,10 @@ Deno.serve(async (req) => {
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     if (!ELEVENLABS_API_KEY) throw new Error("ELEVENLABS_API_KEY not configured");
 
-    const voiceId = VOICE_MAP[voiceProfile || "female"] || VOICE_MAP.female;
+    const profile = VOICE_PROFILES[voiceProfile || "female"] || VOICE_PROFILES.female;
 
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_22050_32`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${profile.voiceId}/stream?output_format=mp3_22050_32`,
       {
         method: "POST",
         headers: {
@@ -44,11 +65,11 @@ Deno.serve(async (req) => {
           text: text.trim(),
           model_id: "eleven_turbo_v2_5",
           voice_settings: {
-            stability: 0.6,
-            similarity_boost: 0.75,
-            style: 0.3,
+            stability: profile.stability,
+            similarity_boost: profile.similarity_boost,
+            style: profile.style,
             use_speaker_boost: true,
-            speed: 1.0,
+            speed: profile.speed,
           },
         }),
       }
