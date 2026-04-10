@@ -403,9 +403,84 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     }
   }, [audioQueue, currentVoiceId, currentVoiceSpeed, goToListening, goToSpeaking, isCalmMode]);
 
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // PENDING NARRATION — auto-narrate story from library
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  const narrationAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (!pendingNarration) return;
+
+    // Small delay to let the screen render first
+    const timer = setTimeout(async () => {
+      const { text, title } = pendingNarration;
+      onNarrationConsumed?.();
+
+      // Split text into sentences/paragraphs for sequential TTS
+      const sentences = text
+        .split(/(?<=[.!?])\s+|\n\n+/)
+        .map(s => s.trim())
+        .filter(s => s.length > 2);
+
+      if (sentences.length === 0) return;
+
+      const abortController = new AbortController();
+      narrationAbortRef.current = abortController;
+
+      // Announce the story
+      eventBus.emit({ type: "STORY_START", theme: "", title });
+      goToSpeaking();
+      eventBus.emit({ type: "SPEECH_START" });
+
+      try {
+        for (let i = 0; i < sentences.length; i++) {
+          if (abortController.signal.aborted) break;
+
+          const sentence = sentences[i];
+          recentBobbyTextsRef.current = [sentence, ...recentBobbyTextsRef.current].slice(0, 8);
+
+          const emotion = detectEmotionForTTS(sentence);
+          const url = await fetchTTSAudio(
+            sentence,
+            abortController.signal,
+            currentVoiceId,
+            emotion,
+            currentVoiceSpeed,
+            isCalmMode
+          );
+
+          if (!abortController.signal.aborted && url !== "__silent__") {
+            audioQueue.enqueue(url);
+          }
+        }
+
+        audioQueue.setOnAllDone(() => {
+          eventBus.emit({ type: "SPEECH_STOP" });
+          eventBus.emit({ type: "STORY_END" });
+          goToListening();
+        });
+      } catch (e: any) {
+        if (e.name !== "AbortError") {
+          console.error("[VoiceScreen] Story narration error:", e);
+        }
+        eventBus.emit({ type: "SPEECH_STOP" });
+        eventBus.emit({ type: "STORY_END" });
+        goToListening();
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [pendingNarration]);
+
+  // Cleanup narration on unmount
+  useEffect(() => {
+    return () => { narrationAbortRef.current?.abort(); };
+  }, []);
+
   // Interrupt current speech
   const interrupt = useCallback(() => {
     abortRef.current?.abort();
+    narrationAbortRef.current?.abort();
     audioQueue.stopAll();
     clearAllTimers();
     eventBus.emit({ type: "SPEECH_STOP" });
