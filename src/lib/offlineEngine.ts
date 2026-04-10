@@ -1829,6 +1829,9 @@ export function getOfflineResponse(
     case "ADVENTURE":
       response = pickRandom(RESPONSES.ADVENTURE, "ADVENTURE");
       break;
+    case "EDUCATION":
+      response = pickRandom(RESPONSES.EDUCATION, "EDUCATION");
+      break;
     case "UNKNOWN":
     default:
       response = pickRandom(RESPONSES.OFFLINE_FALLBACK, "FALLBACK");
