@@ -223,7 +223,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [selectedAnalysis, setSelectedAnalysis] = useState<Analysis | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const [settings, setSettings] = useState<ParentSettings>(parentSettings || DEFAULT_PARENT_SETTINGS);
+  const [settings, setSettings] = useState<ParentSettings>(() => ({
+    ...DEFAULT_PARENT_SETTINGS,
+    ...(parentSettings || {}),
+    contentModes: { ...DEFAULT_PARENT_SETTINGS.contentModes, ...(parentSettings?.contentModes || {}) },
+    nightMode: { ...DEFAULT_PARENT_SETTINGS.nightMode, ...(parentSettings?.nightMode || {}) },
+    interactions: { ...DEFAULT_PARENT_SETTINGS.interactions, ...(parentSettings?.interactions || {}) },
+  }));
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [newBlockedTopic, setNewBlockedTopic] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
