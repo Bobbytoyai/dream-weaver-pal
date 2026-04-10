@@ -268,6 +268,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const sessionStartedRef = useRef(false);
   const conversationActiveRef = useRef(false);
   const accumulatedTextRef = useRef("");
+  const sttStreamRef = useRef<MediaStream | null>(null);
   const utteranceFlushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSpeakingRef = useRef(false);
   const retryCountRef = useRef(0);
@@ -758,7 +759,8 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     if (!sessionStartedRef.current) {
       session.startSession();
       sessionStartedRef.current = true;
-      recorder.startRecording();
+      // Share the STT MediaStream with the recorder to avoid duplicate getUserMedia
+      recorder.startRecording(sttStreamRef.current ?? undefined);
       eventBus.emit({ type: "SESSION_START" });
     }
     conversationActiveRef.current = true;
@@ -812,11 +814,55 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     language: "fr",
   });
 
+  // Sync STT stream ref for recorder sharing
+  useEffect(() => {
+    sttStreamRef.current = deepgramSTT.streamRef?.current ?? null;
+  });
+
   // Start/stop STT — keep mic open for interruption detection
   useEffect(() => {
     if (micArmed) deepgramSTT.start();
     else deepgramSTT.stop();
   }, [micArmed, deepgramSTT]);
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // GLOBAL WATCHDOG — auto-recover from ANY stuck state after 5s
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  useEffect(() => {
+    const WATCHDOG_INTERVAL = 1000;
+    const WATCHDOG_TIMEOUT = 5000;
+    let lastTransitionTime = Date.now();
+    let lastState = machineStateRef.current;
+
+    const watchdog = setInterval(() => {
+      const now = Date.now();
+      const currentState = machineStateRef.current;
+
+      // Reset timer on state change
+      if (currentState !== lastState) {
+        lastTransitionTime = now;
+        lastState = currentState;
+        return;
+      }
+
+      // Only recover from PROCESSING or ERROR (not IDLE/LISTENING/SLEEP/SPEAKING)
+      if (
+        (currentState === "PROCESSING" || currentState === "ERROR") &&
+        now - lastTransitionTime > WATCHDOG_TIMEOUT
+      ) {
+        console.warn(`[Watchdog] ⚠️ Stuck in ${currentState} for ${WATCHDOG_TIMEOUT}ms — auto-recovering`);
+        abortRef.current?.abort();
+        audioQueue.stopAll();
+        eventBus.emit({ type: "SPEECH_STOP" });
+        transition("LISTENING");
+        speakAndListen(FALLBACK_FR.recovery);
+        lastTransitionTime = Date.now();
+        lastState = "LISTENING";
+      }
+    }, WATCHDOG_INTERVAL);
+
+    return () => clearInterval(watchdog);
+  }, [audioQueue, transition, speakAndListen]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 9. CLICK INTERACTIONS

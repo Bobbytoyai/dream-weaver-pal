@@ -260,5 +260,5 @@ export function useDeepgramSTT({ onPartial, onFinal, onError, onUtteranceEnd, on
     return () => { stop(); };
   }, [stop]);
 
-  return { start, stop, isRunning: isRunningRef };
+  return { start, stop, isRunning: isRunningRef, streamRef };
 }

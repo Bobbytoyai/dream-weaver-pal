@@ -157,5 +157,7 @@ export function useSmartSTT({ onPartial, onFinal, onError, onUtteranceEnd, onSpe
     isRunning: isRunningRef,
     backend,
     retryDeepgram,
+    /** Expose Deepgram's active MediaStream for reuse (e.g. recorder) */
+    streamRef: deepgram.streamRef,
   };
 }
