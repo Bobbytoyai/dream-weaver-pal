@@ -19,6 +19,8 @@ const KB_EMOTION_MAP: Record<string, FaceState> = {
   calm: "calm",
   thinking: "thinking",
   surprised: "surprised",
+  playful: "playful",
+  proud: "proud",
 };
 
 // ─── TTS Emotion → FaceState mapping ────────────────────────
@@ -83,6 +85,14 @@ export function detectBobbyEmotion(text: string): FaceState {
   // HAPPY (default positive)
   if (/😊|😄|💛|❤️|aime|content|heureux|sourire|rire|rigol|adore|chouette|sympa/.test(lower))
     return "happy";
+
+  // PLAYFUL
+  if (/blague|taquin|coquin|farce|😜|😝|😏|haha|hihi|marrant|drôle|rigolo/.test(lower))
+    return "playful";
+
+  // PROUD
+  if (/bravo|fier|champion|réussi|gagné|bien joué|super boulot|tu gères|💪|🏆/.test(lower))
+    return "proud";
 
   // Reassuring (for emotional support responses)
   if (/je suis là|t'écoute|ensemble|confiance|normal/.test(lower))
