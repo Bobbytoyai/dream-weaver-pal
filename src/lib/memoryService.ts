@@ -92,7 +92,7 @@ export async function loadMemory(childName: string): Promise<ChildMemory> {
 /** Update a memory field and persist */
 export async function updateMemory(
   childName: string,
-  updates: Partial<Pick<ChildMemory, "preferences" | "favoriteThemes" | "lastStoryId" | "totalStoriesHeard" | "progressionLevel" | "interactionCount" | "relationshipScore" | "lastEmotions" | "emotionalHistory">>
+  updates: Partial<Omit<ChildMemory, "childName">>
 ) {
   const current = await loadMemory(childName);
   const updated = { ...current, ...updates };
