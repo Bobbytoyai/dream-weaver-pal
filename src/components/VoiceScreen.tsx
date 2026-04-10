@@ -309,6 +309,8 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     setPartialText("");
 
     const emotion = detectEmotion(userText);
+    // Store emotion for TTS modulation
+    currentEmotionRef.current = (emotion as Emotion) || detectEmotionForTTS(userText);
     session.addMessage("user", userText, emotion);
     eventBus.emit({ type: "VOICE_INPUT", transcript: userText });
     if (emotion) eventBus.emit({ type: "EMOTION_DETECTED", emotion });
