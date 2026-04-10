@@ -7,7 +7,7 @@ import {
   Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X,
   SkipForward, SkipBack, Activity, Bell, ChevronDown, Star
 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 
 import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "./parentSettings";
