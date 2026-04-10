@@ -174,6 +174,11 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const allSentencesDoneRef = useRef(false);
   const sessionStartedRef = useRef(false);
   const conversationActiveRef = useRef(false);
+  
+  // Continuous listening: accumulate transcript chunks
+  const accumulatedTextRef = useRef("");
+  const utteranceFlushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isSpeakingRef = useRef(false); // VAD: user is currently speaking
 
   const audioQueue = useAudioQueue();
   const session = useSessionTracker(childName, childAge);
