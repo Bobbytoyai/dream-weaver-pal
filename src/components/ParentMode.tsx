@@ -1109,11 +1109,16 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       </Card>
 
       <Card title="Vitesse de la voix" icon={Zap}>
-        <div className="flex gap-2">
-          {([["slow", "🐢 Lent"], ["normal", "🔊 Normal"], ["fast", "⚡ Rapide"]] as const).map(([val, label]) => (
+        <div className="grid grid-cols-3 gap-2">
+          {([["slow", "🐢", "Lent"], ["normal", "🔊", "Normal"], ["fast", "⚡", "Rapide"]] as const).map(([val, emoji, label]) => (
             <button key={val} onClick={() => updateSetting("voiceSpeed", val)}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${settings.voiceSpeed === val ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-              {label}
+              className={`p-3 rounded-2xl text-center transition-all duration-200 border-2 ${
+                settings.voiceSpeed === val
+                  ? "bg-primary/10 border-primary/40 shadow-[0_0_12px_hsl(var(--primary)/0.15)]"
+                  : "bg-muted/50 border-transparent hover:bg-muted"
+              }`}>
+              <span className="text-lg block">{emoji}</span>
+              <span className={`text-xs font-bold block ${settings.voiceSpeed === val ? "text-primary" : "text-foreground"}`}>{label}</span>
             </button>
           ))}
         </div>
