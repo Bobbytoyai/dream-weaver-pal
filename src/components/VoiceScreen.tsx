@@ -160,9 +160,16 @@ interface VoiceScreenProps {
   parentSettings?: ParentSettings;
 }
 
+const VOICE_IDS: Record<string, string> = {
+  child: "e79twtVS2278lVZZQiAD",
+  female: "Xb7hH8MSUJpSbSDYk0k2",
+  male: "onwK4e9ZLuTAKqWW03F9",
+};
+
 const SILENCE_TIMEOUT = 40000;
 
 const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onParentMode, parentSettings }: VoiceScreenProps) => {
+  const currentVoiceId = VOICE_IDS[parentSettings?.voiceType || "female"] || VOICE_IDS.female;
   const [state, setState] = useState<VoiceState>("idle");
   const [conversationHistory, setConversationHistory] = useState<AiMsg[]>([]);
   const [partialText, setPartialText] = useState("");
