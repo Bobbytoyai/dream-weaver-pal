@@ -540,6 +540,32 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     }));
   }, [analyses]);
 
+  // Session duration per day (line chart data)
+  const sessionDurationChartData = useMemo(() => {
+    const days: { date: string; label: string; totalMin: number; count: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
+      const label = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
+      days.push({ date: dateStr, label, totalMin: 0, count: 0 });
+    }
+    for (const s of sessions) {
+      if (!s.duration_seconds || s.duration_seconds <= 0) continue;
+      const sDate = s.started_at.slice(0, 10);
+      const day = days.find(d => d.date === sDate);
+      if (!day) continue;
+      day.totalMin += s.duration_seconds / 60;
+      day.count++;
+    }
+    return days.map(d => ({
+      name: d.label,
+      minutes: Math.round(d.totalMin),
+      sessions: d.count,
+      hasData: d.count > 0,
+    }));
+  }, [sessions]);
+
   // Average session duration
   const avgSessionDuration = useMemo(() => {
     const withDuration = sessions.filter(s => s.duration_seconds && s.duration_seconds > 0);
