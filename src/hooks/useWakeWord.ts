@@ -78,7 +78,7 @@ export function useWakeWord({
     };
 
     recognition.onend = () => {
-      // Auto-restart if still enabled (browser stops after silence)
+      console.log("[WakeWord] onend fired, enabled:", enabledRef.current, "isRunning:", isRunningRef.current);
       if (enabledRef.current && isRunningRef.current) {
         restartTimerRef.current = setTimeout(() => {
           isRunningRef.current = false;
@@ -90,13 +90,11 @@ export function useWakeWord({
     };
 
     recognition.onerror = (event: any) => {
+      console.warn("[WakeWord] onerror:", event.error);
       if (event.error === "aborted" || event.error === "no-speech") {
-        // Normal — will auto-restart via onend
         return;
       }
-      console.warn("Wake word STT error:", event.error);
       isRunningRef.current = false;
-      // Retry after delay
       if (enabledRef.current) {
         restartTimerRef.current = setTimeout(() => {
           startListening();
@@ -106,7 +104,9 @@ export function useWakeWord({
 
     try {
       recognition.start();
-    } catch {
+      console.log("[WakeWord] recognition.start() called successfully");
+    } catch (e) {
+      console.error("[WakeWord] recognition.start() failed:", e);
       isRunningRef.current = false;
     }
   }, [onWake, onPartial, stopListening]);
