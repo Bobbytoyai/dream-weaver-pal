@@ -469,6 +469,8 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   }, [continuousListenEnabled, deepgramSTT]);
 
   const handleWake = useCallback((transcript: string) => {
+    console.log("[VoiceScreen] Wake detected:", transcript);
+    
     if (stateRef.current === "speaking" || stateRef.current === "processing") {
       interrupt();
     }
@@ -483,14 +485,38 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     conversationActiveRef.current = true;
     eventBus.emit({ type: "WAKE_TRIGGERED" });
 
+    // If user just said "Bobby" alone → greet and listen
     if (isJustWakeWord(transcript)) {
       speakFallback("wake_greeting");
       return;
     }
 
+    // User said "Bobby + message" → respond directly to the message
     const command = stripWakeWord(transcript);
+    console.log("[VoiceScreen] Processing command:", command);
+    
+    // Check if it's a simple greeting for instant response
+    if (isSimpleGreeting(command)) {
+      const cached = getCachedResponse("greeting");
+      setState("speaking");
+      setContinuousListenEnabled(false);
+      eventBus.emit({ type: "SPEECH_START" });
+      recentBobbyTextsRef.current = [cached, ...recentBobbyTextsRef.current].slice(0, 8);
+      fetchTTSAudio(cached, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode).then(url => {
+        audioQueue.enqueue(url);
+        audioQueue.setOnAllDone(() => {
+          eventBus.emit({ type: "SPEECH_STOP" });
+          goToListening();
+        });
+      }).catch(() => goToListening());
+      setConversationHistory(prev => [...prev, { role: "user", content: command }, { role: "assistant", content: cached }]);
+      session.addMessage("user", command);
+      session.addMessage("assistant", cached);
+      return;
+    }
+    
     getAIResponse(command);
-  }, [getAIResponse, interrupt, recorder, session, speakFallback]);
+  }, [audioQueue, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, interrupt, isCalmMode, recorder, session, speakFallback]);
 
   const { startListening } = useWakeWord({
     enabled: wakeWordEnabled,
