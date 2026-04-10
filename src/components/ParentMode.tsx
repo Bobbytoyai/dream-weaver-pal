@@ -649,9 +649,25 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const lastAnalysis = lastSession ? analyses.find(a => a.session_id === lastSession.id) : null;
 
   const filteredSessions = useMemo(() => {
-    if (!tagFilter) return sessions;
-    return sessions.filter(s => s.tags?.includes(tagFilter));
-  }, [sessions, tagFilter]);
+    let list = sessions;
+    if (tagFilter) list = list.filter(s => s.tags?.includes(tagFilter));
+    if (sessionFavFilter) list = list.filter(s => s.is_favorite);
+    if (sessionSearch.trim()) {
+      const q = sessionSearch.toLowerCase();
+      list = list.filter(s => {
+        const analysis = analyses.find(a => a.session_id === s.id);
+        return (
+          s.ai_summary?.toLowerCase().includes(q) ||
+          s.tags?.some(t => t.toLowerCase().includes(q)) ||
+          s.topics?.some(t => t.toLowerCase().includes(q)) ||
+          analysis?.summary?.toLowerCase().includes(q) ||
+          analysis?.topics_detected?.some(t => t.toLowerCase().includes(q)) ||
+          analysis?.extracted_interests?.some(i => i.toLowerCase().includes(q))
+        );
+      });
+    }
+    return list;
+  }, [sessions, tagFilter, sessionFavFilter, sessionSearch, analyses]);
 
   // Smart daily insights — picks one relevant insight
   const dailyInsights = useMemo(() => {
