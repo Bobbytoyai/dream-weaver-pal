@@ -344,19 +344,21 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
               <h3 className="text-[13px] font-bold text-foreground">Catégories</h3>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              {Object.entries(categories).map(([category, catStories]) => {
+              {ALL_CATEGORIES.map(category => {
+                const catStories = categories[category] || [];
                 const meta = CATEGORY_META[category] || DEFAULT_META;
+                const isEmpty = catStories.length === 0;
                 return (
                   <button
                     key={category}
                     onClick={() => setSelectedCategory(category)}
-                    className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-5 text-left border ${meta.accent} hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 aspect-square flex flex-col justify-between`}
+                    className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-5 text-left border ${meta.accent} hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 aspect-square flex flex-col justify-between ${isEmpty ? "opacity-75" : ""}`}
                   >
                     <span className="text-4xl block">{meta.emoji}</span>
                     <div>
                       <h3 className="text-[14px] font-bold text-foreground">{category}</h3>
                       <p className="text-[10px] text-muted-foreground mt-0.5">
-                        {catStories.length} histoire{catStories.length > 1 ? "s" : ""}
+                        {isEmpty ? "Bientôt disponible ✨" : `${catStories.length} histoire${catStories.length > 1 ? "s" : ""}`}
                       </p>
                     </div>
                   </button>
