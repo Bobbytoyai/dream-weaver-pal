@@ -379,6 +379,7 @@ export function useAudioQueue() {
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const isPlayingRef = useRef(false);
   const onAllDoneRef = useRef<(() => void) | null>(null);
+  const volumeRef = useRef(1.0);
 
   const playNext = useCallback(() => {
     if (queueRef.current.length === 0) {
@@ -395,10 +396,10 @@ export function useAudioQueue() {
     }
 
     const audio = new Audio(url);
+    audio.volume = volumeRef.current;
     currentAudioRef.current = audio;
 
     audio.onended = () => {
-      // Don't revoke cached URLs
       if (!audioCache.has(url)) URL.revokeObjectURL(url);
       currentAudioRef.current = null;
       playNext();
@@ -445,5 +446,11 @@ export function useAudioQueue() {
     onAllDoneRef.current = cb;
   }, []);
 
-  return { enqueue, stopAll, setOnAllDone, isPlaying: isPlayingRef };
+  /** Set playback volume (0-1). Use 0.4-0.5 for whisper/calm mode */
+  const setVolume = useCallback((v: number) => {
+    volumeRef.current = Math.max(0, Math.min(1, v));
+    if (currentAudioRef.current) currentAudioRef.current.volume = volumeRef.current;
+  }, []);
+
+  return { enqueue, stopAll, setOnAllDone, setVolume, isPlaying: isPlayingRef };
 }
