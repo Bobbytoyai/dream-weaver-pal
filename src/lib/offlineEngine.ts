@@ -143,12 +143,23 @@ function wordOverlap(input: string, target: string): number {
 
 type Mood = "neutral" | "happy" | "sad" | "scared" | "excited" | "calm" | "bored";
 
+interface ConversationTurn {
+  role: "user" | "bobby";
+  text: string;
+  intent: OfflineIntent;
+  topic: string;
+  timestamp: number;
+}
+
 interface ConversationContext {
   lastIntent: OfflineIntent;
   lastTopic: string;
   mood: Mood;
   interactionCount: number;
   lastResponses: string[];  // track last 5 responses for anti-repetition
+  history: ConversationTurn[];  // multi-turn conversation memory (last 20 turns)
+  mentionedTopics: Set<string>;  // all topics mentioned in session
+  childPreferences: Record<string, number>;  // topic → mention count
 }
 
 const context: ConversationContext = {
@@ -157,7 +168,32 @@ const context: ConversationContext = {
   mood: "neutral",
   interactionCount: 0,
   lastResponses: [],
+  history: [],
+  mentionedTopics: new Set(),
+  childPreferences: {},
 };
+
+// ─── Topic extraction ───────────────────────────────────────
+const TOPIC_KEYWORDS: Record<string, string[]> = {
+  pirate: ["pirate", "trésor", "bateau", "mer", "capitaine", "île"],
+  princesse: ["princesse", "château", "roi", "reine", "fée", "magie", "couronne"],
+  espace: ["espace", "astronaute", "fusée", "étoile", "planète", "lune", "alien"],
+  animaux: ["animal", "chat", "chien", "lapin", "ours", "loup", "dragon", "dinosaure"],
+  nature: ["forêt", "montagne", "rivière", "fleur", "arbre", "jardin"],
+  nourriture: ["manger", "gâteau", "chocolat", "bonbon", "goûter", "faim"],
+  famille: ["maman", "papa", "frère", "sœur", "famille", "mamie", "papi"],
+  école: ["école", "maîtresse", "copain", "copine", "classe", "apprendre"],
+  sport: ["foot", "ballon", "courir", "nager", "vélo", "sport"],
+};
+
+function extractTopics(text: string): string[] {
+  const lower = normalizeInput(text);
+  const found: string[] = [];
+  for (const [topic, keywords] of Object.entries(TOPIC_KEYWORDS)) {
+    if (keywords.some(kw => lower.includes(kw))) found.push(topic);
+  }
+  return found;
+}
 
 function updateContext(intent: OfflineIntent, topic: string, response: string) {
   context.lastIntent = intent;
@@ -165,6 +201,23 @@ function updateContext(intent: OfflineIntent, topic: string, response: string) {
   context.interactionCount++;
   context.lastResponses.push(response);
   if (context.lastResponses.length > 5) context.lastResponses.shift();
+
+  // Store turn in history
+  context.history.push(
+    { role: "user", text: topic, intent, topic, timestamp: Date.now() },
+    { role: "bobby", text: response, intent, topic, timestamp: Date.now() },
+  );
+  // Keep last 20 turns (10 exchanges)
+  if (context.history.length > 20) {
+    context.history = context.history.slice(-20);
+  }
+
+  // Track topics
+  const topics = extractTopics(topic);
+  topics.forEach(t => {
+    context.mentionedTopics.add(t);
+    context.childPreferences[t] = (context.childPreferences[t] || 0) + 1;
+  });
 
   // Update mood based on intent
   if (intent === "EMOTION_POSITIVE") context.mood = "happy";
