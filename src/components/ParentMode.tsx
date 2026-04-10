@@ -4,7 +4,7 @@ import {
   Mic, BookOpen, Timer, Sparkles, Shield, Camera, Volume2, VolumeX,
   Play, Pause, AlertTriangle, TrendingUp, Trash2, ChevronRight,
   BarChart3, Calendar, User, Zap, Moon, Sun, Hand, Lock,
-  Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag
+  Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
