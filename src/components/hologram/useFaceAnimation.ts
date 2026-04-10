@@ -171,6 +171,12 @@ export function useFaceAnimation(
   const doubleBlinkChance = useRef(0);
   const sparklePhase = useRef(Math.random() * Math.PI * 2);
   const eyeDriftPhase = useRef(Math.random() * Math.PI * 2);
+  // Mouth idle animation refs
+  const mouthIdlePhase = useRef(Math.random() * Math.PI * 2);
+  const mouthQuirkTimer = useRef(0);
+  const nextMouthQuirk = useRef(3 + Math.random() * 4);
+  const mouthQuirkPhase = useRef(0); // 0=none, 1=quirking, 2=returning
+  const mouthQuirkTarget = useRef({ curve: 0, width: 0, open: 0 });
 
   const update = useCallback((delta: number) => {
     const c = current.current;
