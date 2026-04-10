@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export function useSessionTracker(childName: string, childAge: number) {
   const sessionIdRef = useRef<string | null>(null);
   const startTimeRef = useRef<Date | null>(null);
+  const messageCountRef = useRef(0);
 
   const startSession = useCallback(async () => {
     startTimeRef.current = new Date();
