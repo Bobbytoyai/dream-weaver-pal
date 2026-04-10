@@ -638,19 +638,23 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       }
     }, [handleTranscript]),
     onUtteranceEnd: useCallback(() => {
-      console.log("[VoiceScreen] 📢 UtteranceEnd");
+      console.log("[VoiceScreen] 📢 UtteranceEnd — immediate flush");
       isSpeakingRef.current = false;
-      if (accumulatedTextRef.current.trim().length > 2) scheduleFlush();
-    }, [scheduleFlush]),
+      // Flush immediately on UtteranceEnd for lowest latency
+      if (accumulatedTextRef.current.trim().length > 2) {
+        if (utteranceFlushTimerRef.current) { clearTimeout(utteranceFlushTimerRef.current); utteranceFlushTimerRef.current = null; }
+        flushAccumulatedText();
+      }
+    }, [flushAccumulatedText]),
     onSpeechStarted: useCallback(() => {
       isSpeakingRef.current = true;
-      // Extend flush timer while user speaks — max 2.5s safety
+      // Extend flush timer while user speaks — max 1.8s safety (was 2.5s)
       if (utteranceFlushTimerRef.current) {
         clearTimeout(utteranceFlushTimerRef.current);
         utteranceFlushTimerRef.current = setTimeout(() => {
           isSpeakingRef.current = false;
           flushAccumulatedText();
-        }, 2500);
+        }, 1800);
       }
     }, [flushAccumulatedText]),
     onError: useCallback((err: string) => { console.warn("[STT] Error:", err); }, []),

@@ -217,7 +217,10 @@ ${story.full_text.replace(/\{child_name\}/g, childName)}`;
     // Keep only recent messages for speed (voice needs fast responses)
     const recentMessages = messages.length > 6 ? messages.slice(-6) : messages;
 
-    // Use gemini-2.5-flash for all intents — best balance of speed + quality for voice
+    // Model selection: flash-lite for simple chat (fastest), flash for complex intents
+    const useFlashLite = intent === "chat" || intent === "calm";
+    const model = useFlashLite ? "google/gemini-2.5-flash-lite" : "google/gemini-2.5-flash";
+
     const response = await fetch(LOVABLE_API_URL, {
       method: "POST",
       headers: {
@@ -225,7 +228,7 @@ ${story.full_text.replace(/\{child_name\}/g, childName)}`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model,
         messages: [
           { role: "system", content: systemPrompt },
           ...recentMessages,
