@@ -304,6 +304,15 @@ export function useConversationStateMachine({
         preferredTopics: cogData.preferredTopics,
       }).catch(console.error);
 
+      // Also persist to localStorage for offline-first intelligence
+      updateLocalProfileFromCognitive(childName, {
+        engagementTriggers: cogData.engagementTriggers,
+        behaviorPatterns: cogData.behaviorPatterns,
+        learningSpeed: cogData.learningSpeed,
+        interactionStyle: cogData.interactionStyle,
+        preferredTopics: cogData.preferredTopics,
+      });
+
       if (sessionId) {
         recorder.stopRecording(sessionId).then(() => undefined);
         if (messageCount > 0) recorder.triggerAnalysis(sessionId).then(() => undefined);
@@ -607,6 +616,8 @@ export function useConversationStateMachine({
             setConversationHistory([...newHistory, { role: "assistant", content: text }]);
             session.addMessage("assistant", text);
             eventBus.emit({ type: "RESPONSE_READY", text });
+            // Cache AI response locally for offline reuse
+            cacheAIResponse(userText, text, detectedIntent, refined.faceState, childName);
           }
           if (pendingSentencesRef.current === 0) {
             audioQueue.setOnAllDone(() => { eventBus.emit({ type: "SPEECH_STOP" }); goToListening(); });
