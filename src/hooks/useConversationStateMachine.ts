@@ -516,6 +516,7 @@ export function useConversationStateMachine({
     }
 
     const detectedIntent = intent || detectIntent(userText);
+    recordIntent(detectedIntent);
     const mode = orchestratorHints?.aiMode || (detectedIntent === "story" ? "story" : detectedIntent === "game" ? "game" : "chat");
 
     // History already capped at MAX_HISTORY_LENGTH by setter; trim to last 10 for API speed
