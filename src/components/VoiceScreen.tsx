@@ -36,11 +36,12 @@ interface VoiceScreenProps {
   childName: string;
   childAge: number;
   onSwitchToChat: () => void;
+  onSwitchToStory?: () => void;
   onParentMode: () => void;
   parentSettings?: ParentSettings;
 }
 
-const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parentSettings }: VoiceScreenProps) => {
+const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onParentMode, parentSettings }: VoiceScreenProps) => {
   const [state, setState] = useState<VoiceState>("idle");
   const [conversationHistory, setConversationHistory] = useState<AiMsg[]>([]);
 
