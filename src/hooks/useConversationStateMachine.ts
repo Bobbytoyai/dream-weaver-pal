@@ -282,6 +282,17 @@ export function useConversationStateMachine({
       const sessionId = await session.endSession();
       eventBus.emit({ type: "SESSION_END" });
       sessionStartedRef.current = false;
+
+      // Persist cognitive data to memory
+      const cogData = getPersistedCognitiveData();
+      updateMemory(childName, {
+        progressionLevel: cogData.progressionLevel,
+        interactionCount: cogData.interactionCount,
+        relationshipScore: cogData.relationshipScore,
+        lastEmotions: cogData.lastEmotions,
+        emotionalHistory: cogData.emotionalHistory,
+      }).catch(console.error);
+
       if (sessionId) {
         recorder.stopRecording(sessionId).then(() => undefined);
         if (messageCount > 0) recorder.triggerAnalysis(sessionId).then(() => undefined);
