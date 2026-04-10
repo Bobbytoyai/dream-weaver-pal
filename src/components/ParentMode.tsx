@@ -196,17 +196,17 @@ const StatPill = ({ emoji, value, label }: { emoji: string; value: string | numb
   </div>
 );
 
-// ─── Tab config (5 tabs) ────────────────────────────────────────
+// ─── Tab config (6 tabs) ────────────────────────────────────────
 
 type Tab = "dashboard" | "sessions" | "activites" | "profil" | "reglages" | "confidentialite";
 
-const tabs: { id: Tab; icon: any; label: string }[] = [
-  { id: "dashboard", icon: BarChart3, label: "Tableau" },
-  { id: "sessions", icon: MessageSquare, label: "Sessions" },
-  { id: "activites", icon: Gamepad2, label: "Activités" },
-  { id: "profil", icon: User, label: "Profil" },
-  { id: "reglages", icon: Settings, label: "Réglages" },
-  { id: "confidentialite", icon: Shield, label: "Privé" },
+const tabs: { id: Tab; icon: any; label: string; emoji?: string }[] = [
+  { id: "dashboard", icon: BarChart3, label: "Tableau", emoji: "📊" },
+  { id: "sessions", icon: MessageSquare, label: "Sessions", emoji: "💬" },
+  { id: "activites", icon: Gamepad2, label: "Activités", emoji: "🎮" },
+  { id: "profil", icon: User, label: "Profil", emoji: "👤" },
+  { id: "reglages", icon: Settings, label: "Réglages", emoji: "⚙️" },
+  { id: "confidentialite", icon: Shield, label: "Privé", emoji: "🔒" },
 ];
 
 // ─── Main Component ───────────────────────────────────────────────
@@ -756,18 +756,18 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     return (
     <div className="p-4 space-y-3">
 
-      {/* ═══ 1. KPI HERO ROW ═══ */}
-      <div className="grid grid-cols-4 gap-2">
+      {/* ═══ 1. KPI HERO CARDS ═══ */}
+      <div className="grid grid-cols-2 gap-3">
         {[
-          { value: totalSessions, label: "Sessions", emoji: "💬", accent: "from-blue-500/15 to-blue-600/5" },
-          { value: totalMessages, label: "Messages", emoji: "📝", accent: "from-green-500/15 to-green-600/5" },
-          { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", accent: "from-purple-500/15 to-purple-600/5" },
-          { value: todaySessions.length, label: "Aujourd'hui", emoji: "📅", accent: "from-orange-500/15 to-orange-600/5" },
+          { value: totalSessions, label: "Sessions", emoji: "💬", gradient: "from-blue-500/15 to-blue-600/5" },
+          { value: totalMessages, label: "Messages", emoji: "📝", gradient: "from-emerald-500/15 to-emerald-600/5" },
+          { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", gradient: "from-purple-500/15 to-purple-600/5" },
+          { value: todaySessions.length, label: "Aujourd'hui", emoji: "📅", gradient: "from-orange-500/15 to-orange-600/5" },
         ].map((kpi) => (
-          <div key={kpi.label} className={`bg-gradient-to-br ${kpi.accent} rounded-2xl p-3 text-center border border-border/30`}>
-            <span className="text-lg block">{kpi.emoji}</span>
-            <p className="text-base font-extrabold text-foreground mt-1">{kpi.value}</p>
-            <p className="text-[9px] text-muted-foreground font-medium mt-0.5">{kpi.label}</p>
+          <div key={kpi.label} className={`bg-gradient-to-br ${kpi.gradient} rounded-2xl p-4 border border-border/30 aspect-square flex flex-col items-center justify-center`}>
+            <span className="text-2xl block mb-2">{kpi.emoji}</span>
+            <p className="text-xl font-extrabold text-foreground">{kpi.value}</p>
+            <p className="text-[10px] text-muted-foreground font-medium mt-1">{kpi.label}</p>
           </div>
         ))}
       </div>
@@ -1579,18 +1579,23 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const renderReglages = () => (
     <div className="p-4 space-y-3">
-      {/* Section selector */}
-      <div className="flex gap-2 bg-card rounded-2xl p-1.5">
+      {/* Section selector — card pills */}
+      <div className="grid grid-cols-3 gap-2">
         {([
           ["voix", "🎤", "Voix"],
           ["contenu", "📚", "Contenu"],
           ["limites", "⏱️", "Limites"],
         ] as const).map(([key, emoji, label]) => (
           <button key={key} onClick={() => setReglagesSection(key)}
-            className={`flex-1 py-2 rounded-xl text-[12px] font-semibold transition-all ${
-              reglagesSection === key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            className={`p-3 rounded-2xl text-center transition-all duration-200 border ${
+              reglagesSection === key
+                ? "bg-primary/10 border-primary/30 shadow-sm"
+                : "bg-card border-border/30 hover:bg-muted/50"
             }`}>
-            {emoji} {label}
+            <span className="text-xl block mb-1">{emoji}</span>
+            <span className={`text-[11px] font-semibold block ${
+              reglagesSection === key ? "text-primary" : "text-muted-foreground"
+            }`}>{label}</span>
           </button>
         ))}
       </div>
@@ -2415,16 +2420,18 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         )}
       </div>
 
-      {/* Tab bar */}
+      {/* Tab bar — scrollable pill style */}
       {!selectedSession && (
-        <div className="flex border-b border-border bg-card">
+        <div className="flex gap-1.5 px-4 py-2.5 bg-card border-b border-border overflow-x-auto scrollbar-hide">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 min-w-0 flex flex-col items-center gap-0.5 py-2.5 px-1 text-[10px] font-medium transition-all duration-200 ${
-                activeTab === tab.id ? "text-primary border-b-2 border-primary" : "text-muted-foreground"
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-semibold whitespace-nowrap transition-all duration-200 shrink-0 ${
+                activeTab === tab.id
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}>
-              <tab.icon className={`w-4 h-4 transition-transform duration-200 ${activeTab === tab.id ? "scale-110" : ""}`} />
-              <span className="truncate">{tab.label}</span>
+              <tab.icon className="w-3.5 h-3.5" />
+              {tab.label}
             </button>
           ))}
         </div>
