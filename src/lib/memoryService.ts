@@ -2,6 +2,7 @@
  * Memory Service — persists child preferences between sessions.
  */
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 export interface ChildMemory {
   childName: string;
@@ -67,13 +68,13 @@ export async function updateMemory(
 
   const dbUpdates: {
     updated_at: string;
-    preferences?: Record<string, unknown>;
+    preferences?: Json;
     favorite_themes?: string[];
     last_story_id?: string | null;
     total_stories_heard?: number;
   } = { updated_at: new Date().toISOString() };
 
-  if (updates.preferences !== undefined) dbUpdates.preferences = updates.preferences;
+  if (updates.preferences !== undefined) dbUpdates.preferences = updates.preferences as Json;
   if (updates.favoriteThemes !== undefined) dbUpdates.favorite_themes = updates.favoriteThemes;
   if (updates.lastStoryId !== undefined) dbUpdates.last_story_id = updates.lastStoryId;
   if (updates.totalStoriesHeard !== undefined) dbUpdates.total_stories_heard = updates.totalStoriesHeard;
