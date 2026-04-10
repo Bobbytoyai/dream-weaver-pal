@@ -27,44 +27,49 @@ interface VoiceSettings {
 
 const VOICE_PROFILES: Record<string, VoiceSettings> = {
   // 🎒 Enfant — Mélodie (jeune, naturelle, française native)
+  // Légèrement ralentie pour clarté enfantine, stabilité remontée pour moins de distorsion
   child: {
-    voiceId: "MmLmgmAm7pKFUJBu1Lov",   // Mélodie
-    stability: 0.30,
+    voiceId: "MmLmgmAm7pKFUJBu1Lov",
+    stability: 0.40,
     similarity_boost: 0.85,
-    style: 0.80,
-    speed: 1.08,
+    style: 0.70,
+    speed: 1.0,
   },
   // 👩 Maman — Mila (douce, apaisante, maternelle)
+  // Vitesse naturelle, très stable pour effet berceuse
   female: {
-    voiceId: "hndZlkpVm5i9lXBY9CKj",   // Mila - Soft Soothing
-    stability: 0.85,
+    voiceId: "hndZlkpVm5i9lXBY9CKj",
+    stability: 0.80,
     similarity_boost: 0.82,
-    style: 0.25,
-    speed: 0.92,
+    style: 0.20,
+    speed: 0.95,
   },
   // 👨 Papa — Vincent (calme, protecteur, narratif)
+  // Remonté de 0.90 à 0.95 pour éviter l'effet "trop lent"
   male: {
-    voiceId: "eDaM8z1udmnynsRHDkUP",   // Vincent - Calm & Clear
-    stability: 0.88,
-    similarity_boost: 0.75,
-    style: 0.15,
-    speed: 0.90,
+    voiceId: "eDaM8z1udmnynsRHDkUP",
+    stability: 0.82,
+    similarity_boost: 0.78,
+    style: 0.18,
+    speed: 0.95,
   },
   // 👧 Sœur — Marine (jeune, complice, fun)
+  // Stabilité remontée, vitesse ramenée à 1.0 pour clarté
   sister: {
-    voiceId: "6FXyooAOTqUK8m2HWm32",   // Marine - Conversational
-    stability: 0.35,
+    voiceId: "6FXyooAOTqUK8m2HWm32",
+    stability: 0.42,
     similarity_boost: 0.80,
-    style: 0.55,
-    speed: 1.05,
+    style: 0.50,
+    speed: 1.0,
   },
   // 👦 Frère — Yanis (jeune, casual, dynamique)
+  // Stabilité remontée pour moins de distorsion, vitesse 1.0
   brother: {
-    voiceId: "FRY6vOtGqwamgAf39SwP",   // Yanis - Conversational
-    stability: 0.38,
+    voiceId: "FRY6vOtGqwamgAf39SwP",
+    stability: 0.45,
     similarity_boost: 0.78,
-    style: 0.50,
-    speed: 1.02,
+    style: 0.45,
+    speed: 1.0,
   },
 };
 
