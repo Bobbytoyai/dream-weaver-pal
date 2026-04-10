@@ -27,8 +27,8 @@ serve(async (req) => {
       });
     }
 
-    // Voice: child-friendly, cartoon-like, expressive explorer
-    // Xb7hH8MSUJpSbSDYk0k2 = "Alice" (child-like, energetic French voice)
+    // Voice: child-friendly but stable and less synthetic
+    // Xb7hH8MSUJpSbSDYk0k2 = "Alice"
     const selectedVoice = voiceId || "Xb7hH8MSUJpSbSDYk0k2";
 
     const response = await fetch(
@@ -43,12 +43,11 @@ serve(async (req) => {
           text,
           model_id: "eleven_turbo_v2_5",
           voice_settings: {
-            // Cartoon child voice: expressive, dynamic, joyful explorer
-            stability: 0.28,            // Lower = more expressive variation
-            similarity_boost: 0.75,     // Keep voice character
-            style: 0.75,               // High expressiveness
+            stability: 0.55,
+            similarity_boost: 0.82,
+            style: 0.2,
             use_speaker_boost: true,
-            speed: 1.08,               // Slightly faster for energy
+            speed: 1.0,
           },
         }),
       }

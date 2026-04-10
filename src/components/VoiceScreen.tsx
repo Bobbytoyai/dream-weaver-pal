@@ -14,17 +14,16 @@ type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupte
 type AiMsg = { role: "user" | "assistant"; content: string };
 
 const FALLBACK_FR: Record<string, string> = {
-  not_heard: "Hmm… j'ai pas bien entendu… tu peux répéter ?",
-  thinking: "hmm… attends…",
-  error: "Oh… un petit souci… réessaie !",
-  reengage: "Tu es encore là ? Dis Bobby si tu veux me parler !",
-  session_end: "Je suis là quand tu veux revenir… dis juste Bobby !",
+  not_heard: "Je n'ai pas bien entendu. Tu peux répéter ?",
+  thinking: "Une seconde.",
+  error: "Petit souci. Réessaie !",
+  reengage: "",
+  session_end: "",
   welcome: "Salut ! Dis Bobby pour me parler !",
-  interrupted: "Ah oui, pardon ! Dis-moi",
-  wake_greeting: "Oui ? Je suis là !",
+  interrupted: "Pardon. Je t'écoute.",
+  wake_greeting: "Oui ? Je t'écoute.",
 };
 
-// --- INTENT DETECTION ---
 type Intent = "story" | "game" | "emotion_support" | "question" | "chat";
 
 function detectIntent(text: string): Intent {
@@ -48,7 +47,6 @@ function detectEmotion(text: string): string | undefined {
   return undefined;
 }
 
-/** Strip wake word from transcript */
 function stripWakeWord(text: string): string {
   return text.replace(/\b(bobby|boby|bobbie|bobi)\b/gi, "").replace(/\s+/g, " ").trim();
 }
@@ -58,8 +56,6 @@ function isJustWakeWord(text: string): boolean {
   return stripped.length < 3 || /^[?,!.\s]*$/.test(stripped);
 }
 
-// --- ECHO DETECTION ---
-// Tracks what Bobby said so we can filter it from mic input
 const recentBobbyTextsRef = { current: [] as string[] };
 
 function normalizeForComparison(text: string): string {
@@ -69,29 +65,30 @@ function normalizeForComparison(text: string): string {
 function isEcho(transcript: string): boolean {
   const normalized = normalizeForComparison(transcript);
   if (normalized.length < 5) return false;
-  
+
   for (const bobbyText of recentBobbyTextsRef.current) {
     const bobbyNorm = normalizeForComparison(bobbyText);
-    // Check if the transcript is a substantial substring of what Bobby said
+    if (!bobbyNorm) continue;
     if (bobbyNorm.includes(normalized)) return true;
     if (normalized.includes(bobbyNorm) && bobbyNorm.length > 10) return true;
-    
-    // Check word overlap (>60% means likely echo)
+
     const transcriptWords = normalized.split(" ");
     const bobbyWords = new Set(bobbyNorm.split(" "));
-    const overlap = transcriptWords.filter(w => bobbyWords.has(w)).length;
+    const overlap = transcriptWords.filter((word) => bobbyWords.has(word)).length;
     if (transcriptWords.length > 3 && overlap / transcriptWords.length > 0.6) return true;
   }
+
   return false;
 }
 
-// --- CONTINUOUS LISTENING (after Bobby speaks, listen for follow-up) ---
 function useContinuousListening(onResult: (text: string) => void, enabled: boolean) {
   const recognitionRef = useRef<any>(null);
   const enabledRef = useRef(enabled);
   const isRunningRef = useRef(false);
 
-  useEffect(() => { enabledRef.current = enabled; }, [enabled]);
+  useEffect(() => {
+    enabledRef.current = enabled;
+  }, [enabled]);
 
   const start = useCallback(() => {
     if (isRunningRef.current) return;
@@ -112,12 +109,9 @@ function useContinuousListening(onResult: (text: string) => void, enabled: boole
         const transcript = String(event.results[i][0].transcript || "").trim();
         if (transcript.length > best.length) best = transcript;
       }
+
       if (best.length > 2) {
-        // ECHO FILTER: skip if this sounds like Bobby's own speech
-        if (isEcho(best)) {
-          console.log("[Echo] Filtered Bobby's own speech:", best.slice(0, 50));
-          return;
-        }
+        if (isEcho(best)) return;
         onResult(best);
       }
     };
@@ -138,13 +132,19 @@ function useContinuousListening(onResult: (text: string) => void, enabled: boole
       }
     };
 
-    try { rec.start(); } catch { isRunningRef.current = false; }
+    try {
+      rec.start();
+    } catch {
+      isRunningRef.current = false;
+    }
   }, [onResult]);
 
   const stop = useCallback(() => {
     enabledRef.current = false;
     isRunningRef.current = false;
-    try { recognitionRef.current?.abort(); } catch {}
+    try {
+      recognitionRef.current?.abort();
+    } catch {}
     recognitionRef.current = null;
   }, []);
 
@@ -160,8 +160,7 @@ interface VoiceScreenProps {
   parentSettings?: ParentSettings;
 }
 
-const SILENCE_TIMEOUT = 40000; // 40s per spec
-const REENGAGE_TIMEOUT = 15000;
+const SILENCE_TIMEOUT = 40000;
 
 const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onParentMode, parentSettings }: VoiceScreenProps) => {
   const [state, setState] = useState<VoiceState>("idle");
@@ -171,25 +170,23 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
   const abortRef = useRef<AbortController | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const reengageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stateRef = useRef<VoiceState>("idle");
   const pendingSentencesRef = useRef(0);
   const allSentencesDoneRef = useRef(false);
   const sessionStartedRef = useRef(false);
-  const conversationActiveRef = useRef(false); // tracks if we're in active conversation
+  const conversationActiveRef = useRef(false);
 
   const audioQueue = useAudioQueue();
   const session = useSessionTracker(childName, childAge);
   const { memory, loading, saveSettings } = useChildMemory(childName);
   const recorder = useConversationRecorder();
 
-  // Wake word only when NOT in active conversation
   const wakeWordEnabled = (state === "idle" || state === "session_end") && !conversationActiveRef.current;
-
-  // Continuous listening = active after Bobby finishes speaking
   const [continuousListenEnabled, setContinuousListenEnabled] = useState(false);
 
-  useEffect(() => { initSfxEventBus(); }, []);
+  useEffect(() => {
+    initSfxEventBus();
+  }, []);
 
   const prevStateRef = useRef<VoiceState>("idle");
   useEffect(() => {
@@ -198,8 +195,17 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     prevStateRef.current = state;
   }, [state]);
 
-  useEffect(() => { stateRef.current = state; }, [state]);
-  useEffect(() => { setSfxVolume(parentSettings?.sfxVolume ?? 0.7); }, [parentSettings?.sfxVolume]);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  useEffect(() => {
+    setSfxVolume(parentSettings?.sfxVolume ?? 0.7);
+  }, [parentSettings?.sfxVolume]);
+
+  const clearTimers = useCallback(() => {
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -211,52 +217,39 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         eventBus.emit({ type: "SESSION_END" });
       }
     };
-  }, []);
-
-  const clearTimers = useCallback(() => {
-    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-    if (reengageTimerRef.current) clearTimeout(reengageTimerRef.current);
-  }, []);
+  }, [audioQueue, clearTimers, session]);
 
   const endConversation = useCallback(async () => {
+    clearTimers();
     conversationActiveRef.current = false;
     setContinuousListenEnabled(false);
+    setMicStatus("ready");
     setState("session_end");
-    speakFallback("session_end");
+
     if (sessionStartedRef.current) {
       const sessionId = await session.endSession();
       eventBus.emit({ type: "SESSION_END" });
       sessionStartedRef.current = false;
-      // Stop recording and trigger analysis in background
+
       if (sessionId) {
-        recorder.stopRecording(sessionId).then((audioPath) => {
-          if (audioPath) console.log("[Recorder] Audio saved:", audioPath);
-        });
-        recorder.triggerAnalysis(sessionId).then((analysis) => {
-          if (analysis) console.log("[Recorder] Analysis complete");
-        });
+        recorder.stopRecording(sessionId).then(() => undefined);
+        recorder.triggerAnalysis(sessionId).then(() => undefined);
       }
     }
-  }, []);
+  }, [clearTimers, recorder, session]);
 
   const startSilenceTimers = useCallback(() => {
     clearTimers();
-    reengageTimerRef.current = setTimeout(() => {
-      if (stateRef.current === "listening" || stateRef.current === "idle") {
-        speakFallback("reengage");
-      }
-    }, REENGAGE_TIMEOUT);
     silenceTimerRef.current = setTimeout(() => {
       if (stateRef.current === "listening" || stateRef.current === "idle") {
         endConversation();
       }
     }, SILENCE_TIMEOUT);
-  }, []);
+  }, [clearTimers, endConversation]);
 
   const goToListening = useCallback(() => {
     setState("listening");
     setMicStatus("active");
-    // Small delay before re-enabling mic to avoid capturing tail-end of Bobby's speech
     setTimeout(() => {
       setContinuousListenEnabled(true);
     }, 600);
@@ -264,12 +257,19 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   }, [startSilenceTimers]);
 
   const speakFallback = useCallback(async (key: string) => {
+    const fallbackText = FALLBACK_FR[key] || FALLBACK_FR.error;
+    if (!fallbackText) {
+      if (key === "session_end") {
+        setState("session_end");
+        setContinuousListenEnabled(false);
+      }
+      return;
+    }
+
     try {
       setState("speaking");
-      setContinuousListenEnabled(false); // STOP listening while Bobby speaks
+      setContinuousListenEnabled(false);
       eventBus.emit({ type: "SPEECH_START" });
-      const fallbackText = FALLBACK_FR[key] || FALLBACK_FR.error;
-      // Track Bobby's speech for echo detection
       recentBobbyTextsRef.current = [fallbackText, ...recentBobbyTextsRef.current].slice(0, 5);
       const url = await fetchTTSAudio(fallbackText);
       audioQueue.enqueue(url);
@@ -298,17 +298,17 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
   const processSentenceForTTS = useCallback(async (sentence: string, signal?: AbortSignal) => {
     pendingSentencesRef.current++;
-    // Track Bobby's speech for echo detection
     recentBobbyTextsRef.current = [sentence, ...recentBobbyTextsRef.current].slice(0, 8);
+
     try {
       const url = await fetchTTSAudio(sentence, signal);
       if (!signal?.aborted) {
         setState("speaking");
-        setContinuousListenEnabled(false); // STOP listening while speaking
+        setContinuousListenEnabled(false);
         audioQueue.enqueue(url);
       }
     } catch {
-      // continue
+      // ignore and continue
     } finally {
       pendingSentencesRef.current--;
       if (pendingSentencesRef.current === 0 && allSentencesDoneRef.current) {
@@ -331,31 +331,17 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     eventBus.emit({ type: "VOICE_INPUT", transcript: userText });
     if (emotion) eventBus.emit({ type: "EMOTION_DETECTED", emotion });
 
-    // Detect intent for mode
     const detectedIntent = intent || detectIntent(userText);
     let mode = "chat";
     if (detectedIntent === "story") mode = "story";
     else if (detectedIntent === "game") mode = "game";
-    else if (detectedIntent === "emotion_support") mode = "chat"; // handled by system prompt
 
-    // Keep only last 10 messages for context (prevents confusion)
     const trimmedHistory = conversationHistory.length > 10 ? conversationHistory.slice(-10) : conversationHistory;
     const newHistory: AiMsg[] = [...trimmedHistory, { role: "user", content: userText }];
     const abortController = new AbortController();
     abortRef.current = abortController;
     allSentencesDoneRef.current = false;
     pendingSentencesRef.current = 0;
-
-    // Quick "hmm" while waiting
-    fetchTTSAudio("hmm…", abortController.signal).then(url => {
-      if (!abortController.signal.aborted && stateRef.current === "processing") {
-        setState("speaking");
-        eventBus.emit({ type: "SPEECH_START" });
-        audioQueue.enqueue(url);
-      }
-    }).catch(() => {});
-
-    let fullResponse = "";
 
     await streamVoiceChat({
       messages: newHistory,
@@ -370,7 +356,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         }
       },
       onDone: (text) => {
-        fullResponse = text;
         allSentencesDoneRef.current = true;
         if (text) {
           setConversationHistory([...newHistory, { role: "assistant", content: text }]);
@@ -389,29 +374,25 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         if (!abortController.signal.aborted) speakFallback("error");
       },
     });
-  }, [conversationHistory, childName, childAge, audioQueue, clearTimers, processSentenceForTTS, speakFallback, goToListening, session, parentSettings]);
+  }, [audioQueue, childAge, childName, clearTimers, conversationHistory, goToListening, parentSettings, processSentenceForTTS, session, speakFallback]);
 
-  // Handle continuous listening results
   const handleContinuousResult = useCallback((text: string) => {
     clearTimers();
 
-    // Check if it's an interruption during speech
     if (stateRef.current === "speaking" || stateRef.current === "processing") {
       interrupt();
     }
 
-    // Check if wake word is said (with or without command)
     const hasWake = /\b(bobby|boby|bobbie|bobi)\b/i.test(text);
     const cleaned = hasWake ? stripWakeWord(text) : text;
 
     if (cleaned.length < 3) {
-      // Just wake word or too short
       if (hasWake) speakFallback("wake_greeting");
       return;
     }
 
     getAIResponse(cleaned);
-  }, [interrupt, getAIResponse, speakFallback, clearTimers]);
+  }, [clearTimers, getAIResponse, interrupt, speakFallback]);
 
   const continuousListening = useContinuousListening(handleContinuousResult, continuousListenEnabled);
 
@@ -421,9 +402,8 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     } else {
       continuousListening.stop();
     }
-  }, [continuousListenEnabled]);
+  }, [continuousListenEnabled, continuousListening]);
 
-  // Wake word handler — starts the conversation
   const handleWake = useCallback((transcript: string) => {
     if (stateRef.current === "speaking" || stateRef.current === "processing") {
       interrupt();
@@ -432,7 +412,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     if (!sessionStartedRef.current) {
       session.startSession();
       sessionStartedRef.current = true;
-      recorder.startRecording(); // Start audio recording
+      recorder.startRecording();
       eventBus.emit({ type: "SESSION_START" });
     }
 
@@ -446,7 +426,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
 
     const command = stripWakeWord(transcript);
     getAIResponse(command);
-  }, [interrupt, session, speakFallback, getAIResponse]);
+  }, [getAIResponse, interrupt, recorder, session, speakFallback]);
 
   const { startListening } = useWakeWord({
     enabled: wakeWordEnabled,
@@ -505,13 +485,9 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         <div
           className="relative w-80 h-80 md:w-96 md:h-96"
           onPointerDownCapture={() => {
-            // Single tap on Bobby = activate mic and start conversation
             if (stateRef.current === "speaking" || stateRef.current === "processing") return;
-            
-            // Arm the wake word listener (browser gesture requirement)
             startListening({ fromUserGesture: true });
-            
-            // If idle/session_end, directly start the conversation
+
             if (stateRef.current === "idle" || stateRef.current === "session_end") {
               if (!sessionStartedRef.current) {
                 session.startSession();
@@ -537,7 +513,6 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
           {stateLabel}
         </p>
 
-        {/* Mic status indicator */}
         <div className="mt-2 flex flex-col items-center gap-1.5">
           {state === "listening" ? (
             <div className="flex items-center gap-2">
