@@ -8,6 +8,8 @@ import {
   playListeningPling, playStopBip, playThinkingShimmer,
   playSpeakingChime, playSessionEnd, playInterrupted, setSfxVolume
 } from "@/lib/sfx";
+import { useChildMemory } from "@/hooks/useChildMemory";
+import { eventBus } from "@/lib/eventBus";
 
 type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
 type AiMsg = { role: "user" | "assistant"; content: string };
@@ -56,6 +58,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
 
   const audioQueue = useAudioQueue();
   const session = useSessionTracker(childName, childAge);
+  const { memory, addFavoriteTheme } = useChildMemory(childName);
 
   useEffect(() => { stateRef.current = state; }, [state]);
 
@@ -165,6 +168,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onParentMode, parent
 
     const emotion = detectEmotion(userText);
     session.addMessage("user", userText, emotion);
+    eventBus.emit({ type: "VOICE_INPUT", transcript: userText });
 
     const newHistory: AiMsg[] = [...conversationHistory, { role: "user", content: userText }];
     const abortController = new AbortController();
