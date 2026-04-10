@@ -1,7 +1,7 @@
 import { useRef, useCallback, useEffect } from "react";
 import { eventBus } from "@/lib/eventBus";
 
-const WAKE_WORDS = ["bobby", "boby", "bobbie", "bob y", "bo bi", "bobi"];
+const WAKE_WORDS = ["bobby", "boby", "bobbie", "bob y", "bo bi", "bobi", "babi", "bobe", "bob", "booby", "bobee", "bobe", "bobé", "bobi", "bo by", "bob bee", "bobee"];
 
 function normalizeText(text: string): string {
   return text
@@ -127,15 +127,14 @@ export function useWakeWord({
 
         // React on final result with sufficient confidence
         if (bestConfidence >= CONFIDENCE_THRESHOLD && result.isFinal) {
-          // Emit event immediately for < 300ms reaction
           eventBus.emit({ type: "WAKE_DETECTED", confidence: bestConfidence });
           stopListening();
           onWake(bestTranscript);
           return;
         }
 
-        // Also react on interim results with very high confidence for speed
-        if (bestConfidence >= 0.9 && !result.isFinal) {
+        // Also react on interim results with good confidence for speed (<300ms)
+        if (bestConfidence >= 0.7 && !result.isFinal) {
           eventBus.emit({ type: "WAKE_DETECTED", confidence: bestConfidence });
           stopListening();
           onWake(bestTranscript);
