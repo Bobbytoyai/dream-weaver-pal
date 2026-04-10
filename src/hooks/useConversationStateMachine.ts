@@ -526,40 +526,36 @@ export function useConversationStateMachine({
       return;
     }
 
-    if (isOffline()) {
-      const offlineResp = getOfflineResponse(cleaned, childName);
+    // ─── ORCHESTRATOR ───
+    const decision = orchestrate({
+      userText: cleaned,
+      childName,
+      childAge,
+      memory: memory ?? null,
+      isOffline: isOffline(),
+      conversationHistory: [],
+    });
+
+    // Local response (cached or offline)
+    if (decision.response !== null) {
       goToSpeaking();
       eventBus.emit({ type: "SPEECH_START" });
-      setBobbyFaceEmotion(detectBobbyEmotion(offlineResp.text));
-      setBobbyEmotionIntensity(detectEmotionIntensity(offlineResp.text));
-      recentBobbyTextsRef.current = [offlineResp.text, ...recentBobbyTextsRef.current].slice(0, 8);
-      fetchTTSAudio(offlineResp.text, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode).then(url => {
+      setBobbyFaceEmotion(decision.faceState);
+      setBobbyEmotionIntensity(decision.faceIntensity);
+      recentBobbyTextsRef.current = [decision.response, ...recentBobbyTextsRef.current].slice(0, 8);
+      fetchTTSAudio(decision.response, undefined, currentVoiceId, decision.voiceTone, currentVoiceSpeed, isCalmMode).then(url => {
         audioQueue.enqueue(url);
         audioQueue.setOnAllDone(() => { eventBus.emit({ type: "SPEECH_STOP" }); goToListening(); });
       }).catch(() => goToListening());
-      setConversationHistory(prev => [...prev, { role: "user", content: cleaned }, { role: "assistant", content: offlineResp.text }]);
-      session.addMessage("user", cleaned);
-      session.addMessage("assistant", offlineResp.text);
+      setConversationHistory(prev => [...prev, { role: "user", content: cleaned }, { role: "assistant", content: decision.response }]);
+      session.addMessage("user", cleaned, decision.childEmotion);
+      session.addMessage("assistant", decision.response);
       return;
     }
 
-    if (isSimpleGreeting(cleaned)) {
-      const cached = getCachedResponse("greeting");
-      goToSpeaking();
-      eventBus.emit({ type: "SPEECH_START" });
-      recentBobbyTextsRef.current = [cached, ...recentBobbyTextsRef.current].slice(0, 8);
-      fetchTTSAudio(cached, undefined, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode).then(url => {
-        audioQueue.enqueue(url);
-        audioQueue.setOnAllDone(() => { eventBus.emit({ type: "SPEECH_STOP" }); goToListening(); });
-      }).catch(() => goToListening());
-      setConversationHistory(prev => [...prev, { role: "user", content: cleaned }, { role: "assistant", content: cached }]);
-      session.addMessage("user", cleaned);
-      session.addMessage("assistant", cached);
-      return;
-    }
-
-    getAIResponse(cleaned);
-  }, [audioQueue, childName, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, goToSpeaking, isCalmMode, session, speakAndListen]);
+    // AI path — pass orchestrator hints
+    getAIResponse(cleaned, undefined, decision);
+  }, [audioQueue, childAge, childName, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, goToSpeaking, isCalmMode, memory, session, speakAndListen, setConversationHistory]);
 
   const scheduleFlush = useCallback(() => {
     if (utteranceFlushTimerRef.current) clearTimeout(utteranceFlushTimerRef.current);
