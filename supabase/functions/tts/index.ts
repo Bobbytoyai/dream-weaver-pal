@@ -12,18 +12,21 @@ serve(async (req) => {
     const { text, voiceId } = await req.json();
 
     if (!text || typeof text !== "string" || text.length > 5000) {
-      return new Response(JSON.stringify({ error: "Invalid text" }), {
-        status: 400,
+      return new Response(JSON.stringify({ error: "Invalid text", fallback: true }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
     if (!ELEVENLABS_API_KEY) {
-      throw new Error("ELEVENLABS_API_KEY is not configured");
+      console.error("ELEVENLABS_API_KEY is not configured");
+      return new Response(JSON.stringify({ error: "TTS_NOT_CONFIGURED", fallback: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Alice - warm, friendly, great for kids, supports French via multilingual model
     const selectedVoice = voiceId || "Xb7hH8MSUJpSbSDYk0k2";
 
     const response = await fetch(
@@ -51,13 +54,13 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("ElevenLabs error:", response.status, errorText);
-      return new Response(JSON.stringify({ error: "TTS generation failed" }), {
-        status: 500,
+      // Return 200 with fallback signal so client can use browser TTS
+      return new Response(JSON.stringify({ error: "TTS_SERVICE_UNAVAILABLE", fallback: true }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Stream audio back directly for minimum latency
     return new Response(response.body, {
       headers: {
         ...corsHeaders,
@@ -67,8 +70,8 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("TTS error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500,
+    return new Response(JSON.stringify({ error: "TTS_SERVICE_FAILED", fallback: true }), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
