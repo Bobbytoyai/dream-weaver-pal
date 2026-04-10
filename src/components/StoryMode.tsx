@@ -1,12 +1,14 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { BookOpen, ArrowLeft, X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { HologramFace } from "@/components/hologram/HologramFace";
-import { fetchTTSAudio, useAudioQueue } from "@/lib/voicePipeline";
-import { streamStory, getRandomStory, type StoryTemplate } from "@/lib/storyEngine";
+import { fetchTTSAudio, detectEmotionForTTS } from "@/lib/voicePipeline";
+import type { Emotion } from "@/lib/voicePipeline";
+import { streamStory, getRandomStory } from "@/lib/storyEngine";
 import { useChildMemory } from "@/hooks/useChildMemory";
 import { eventBus } from "@/lib/eventBus";
 import { initSfxEventBus } from "@/lib/sfx";
 import { ParentSettings } from "@/components/parentSettings";
+import StoryNarrationPlayer from "./StoryNarrationPlayer";
 
 type StoryPhase = "pick" | "loading" | "telling" | "done";
 type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
@@ -67,14 +69,11 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
   const [phase, setPhase] = useState<StoryPhase>("pick");
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [currentTheme, setCurrentTheme] = useState<string | null>(null);
-  const [storyText, setStoryText] = useState("");
   const [storyTitle, setStoryTitle] = useState("");
+  const [sentences, setSentences] = useState<string[]>([]);
+  const [isStoryComplete, setIsStoryComplete] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
-  const pendingRef = useRef(0);
-  const allDoneRef = useRef(false);
-
-  const audioQueue = useAudioQueue();
   const { incrementStoriesHeard, addFavoriteTheme } = useChildMemory(childName);
 
   useEffect(() => {
@@ -89,36 +88,19 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
     prevVoiceState.current = voiceState;
   }, [voiceState]);
 
-  const processSentenceForTTS = useCallback(async (sentence: string, signal?: AbortSignal) => {
-    pendingRef.current++;
-    try {
-      const url = await fetchTTSAudio(sentence, signal, currentVoiceId);
-      if (!signal?.aborted) {
-        setVoiceState("speaking");
-        eventBus.emit({ type: "SPEECH_START" });
-        audioQueue.enqueue(url);
-      }
-    } catch {
-      // skip
-    } finally {
-      pendingRef.current--;
-      if (pendingRef.current === 0 && allDoneRef.current) {
-        audioQueue.setOnAllDone(() => {
-          eventBus.emit({ type: "SPEECH_STOP" });
-          setVoiceState("idle");
-          setPhase("done");
-        });
-      }
-    }
-  }, [audioQueue]);
+  // Emotion-aware TTS fetcher for the player
+  const fetchStoryAudio = useCallback(async (text: string, emotion?: Emotion): Promise<string> => {
+    // For stories, use more expressive settings
+    const storyEmotion = emotion || detectEmotionForTTS(text) || "excited";
+    return fetchTTSAudio(text, abortRef.current?.signal, currentVoiceId, storyEmotion);
+  }, [currentVoiceId]);
 
   const startStory = useCallback(async (theme: string) => {
     setCurrentTheme(theme);
     setPhase("loading");
-    setStoryText("");
+    setSentences([]);
+    setIsStoryComplete(false);
     setVoiceState("processing");
-    allDoneRef.current = false;
-    pendingRef.current = 0;
 
     const abortController = new AbortController();
     abortRef.current = abortController;
@@ -128,15 +110,8 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
 
     eventBus.emit({ type: "STORY_START", theme, title: template?.title || theme });
 
-    fetchTTSAudio("Il était une fois…", abortController.signal, currentVoiceId).then(url => {
-      if (!abortController.signal.aborted) {
-        setVoiceState("speaking");
-        eventBus.emit({ type: "SPEECH_START" });
-        audioQueue.enqueue(url);
-      }
-    }).catch(() => {});
-
     setPhase("telling");
+    setVoiceState("speaking");
 
     await streamStory({
       template: template || undefined,
@@ -146,27 +121,15 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
       signal: abortController.signal,
       onSentence: (sentence) => {
         if (!abortController.signal.aborted) {
-          setStoryText(prev => prev + (prev ? " " : "") + sentence);
-          processSentenceForTTS(sentence, abortController.signal);
+          setSentences(prev => [...prev, sentence]);
         }
       },
       onDone: (fullText) => {
-        allDoneRef.current = true;
-        setStoryText(fullText);
-
+        setIsStoryComplete(true);
         if (template) {
           incrementStoriesHeard(template.id, theme);
         }
         addFavoriteTheme(theme);
-
-        if (pendingRef.current === 0) {
-          audioQueue.setOnAllDone(() => {
-            eventBus.emit({ type: "SPEECH_STOP" });
-            eventBus.emit({ type: "STORY_END" });
-            setVoiceState("idle");
-            setPhase("done");
-          });
-        }
       },
       onError: (error) => {
         console.error("Story error:", error);
@@ -174,21 +137,28 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
         setPhase("pick");
       },
     });
-  }, [childName, childAge, audioQueue, processSentenceForTTS, incrementStoriesHeard, addFavoriteTheme]);
+  }, [childName, childAge, incrementStoriesHeard, addFavoriteTheme]);
 
   const stopStory = useCallback(() => {
     abortRef.current?.abort();
-    audioQueue.stopAll();
     eventBus.emit({ type: "SPEECH_STOP" });
     eventBus.emit({ type: "STORY_END" });
     setVoiceState("idle");
     setPhase("pick");
-  }, [audioQueue]);
+    setSentences([]);
+    setIsStoryComplete(false);
+  }, []);
+
+  const handleNarrationFinished = useCallback(() => {
+    eventBus.emit({ type: "SPEECH_STOP" });
+    eventBus.emit({ type: "STORY_END" });
+    setVoiceState("idle");
+    setPhase("done");
+  }, []);
 
   useEffect(() => {
     return () => {
       abortRef.current?.abort();
-      audioQueue.stopAll();
     };
   }, []);
 
@@ -196,12 +166,10 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
     <div className="child-light flex flex-col items-center justify-between h-screen px-4 py-6 max-w-lg mx-auto select-none overflow-hidden relative"
       style={{ background: `linear-gradient(180deg, hsl(270, 45%, 96%) 0%, hsl(235, 50%, 96%) 40%, hsl(215, 55%, 96%) 70%, hsl(320, 35%, 96.5%) 100%)` }}>
 
-      {/* Floating particles */}
       <FloatingParticles />
 
       {/* Hologram */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 relative z-10">
-        {/* Soft glow */}
+      <div className="flex-shrink-0 flex flex-col items-center w-full relative z-10">
         <div className="absolute w-80 h-80 rounded-full glow-pulse pointer-events-none"
           style={{
             background: `radial-gradient(circle, 
@@ -210,8 +178,7 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
               transparent 70%)`,
           }}
         />
-
-        <div className="relative w-72 h-72 md:w-80 md:h-80">
+        <div className="relative w-52 h-52 md:w-60 md:h-60">
           <HologramFace
             voiceState={voiceState}
             enableCamera={parentSettings?.enableCamera ?? false}
@@ -220,25 +187,29 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
         </div>
 
         {/* Story title / status */}
-        <p className="mt-3 text-sm font-bold text-foreground/70 tracking-wide uppercase">
+        <p className="mt-2 text-sm font-bold text-foreground/70 tracking-wide uppercase">
           {phase === "pick" && "Choisis un thème !"}
           {phase === "loading" && "Préparation de l'histoire…"}
           {phase === "telling" && (storyTitle || "Il était une fois…")}
           {phase === "done" && "Fin de l'histoire ✨"}
         </p>
-
-        {/* Scrolling story text */}
-        {(phase === "telling" || phase === "done") && storyText && (
-          <div className="mt-3 max-h-24 overflow-y-auto px-4 w-full">
-            <p className="text-xs text-muted-foreground/70 text-center leading-relaxed">
-              {storyText.slice(-200)}
-            </p>
-          </div>
-        )}
       </div>
 
+      {/* Narration Player */}
+      {(phase === "telling" || phase === "done") && sentences.length > 0 && (
+        <div className="flex-1 min-h-0 w-full relative z-10 flex flex-col justify-center py-3">
+          <StoryNarrationPlayer
+            sentences={sentences}
+            isComplete={isStoryComplete}
+            fetchAudio={fetchStoryAudio}
+            onFinished={handleNarrationFinished}
+            voiceState={voiceState}
+          />
+        </div>
+      )}
+
       {/* Bottom controls */}
-      <div className="pb-6 pt-2 w-full relative z-10">
+      <div className="pb-4 pt-2 w-full relative z-10 flex-shrink-0">
         {phase === "pick" && (
           <>
             <div className="grid grid-cols-3 gap-3 mb-4">
@@ -269,10 +240,10 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
         {phase === "done" && (
           <div className="flex flex-col gap-3">
             <button onClick={() => currentTheme && startStory(currentTheme)}
-              className="w-full py-3.5 rounded-full bg-primary text-primary-foreground font-bold text-sm shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300 active:scale-95">
+              className="w-full py-3.5 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] font-bold text-sm shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300 active:scale-95">
               🔄 Encore une !
             </button>
-            <button onClick={() => { setPhase("pick"); setStoryText(""); }}
+            <button onClick={() => { setPhase("pick"); setSentences([]); setIsStoryComplete(false); }}
               className="w-full py-3.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/40 text-foreground font-bold text-sm shadow-sm hover:shadow-md transition-all duration-300">
               📚 Autre thème
             </button>
