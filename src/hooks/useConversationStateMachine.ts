@@ -24,6 +24,7 @@ import { orchestrate, refineExpression, getSilenceRelaunch } from "@/lib/orchest
 import { getFailsafeResponse, getLatencyFiller, getSoftResetPhrase, reportModuleHealth, recordLatency, isHighLatency, isLowPower } from "@/lib/stabilityEngine";
 import { recordUserTurn, resetCognitiveState, getReengagePhrase, initFromMemory, getPersistedCognitiveData, recordIntent, type CognitiveHints } from "@/lib/cognitiveEngine";
 import { updateMemory } from "@/lib/memoryService";
+import { cacheAIResponse, updateLocalProfileFromCognitive } from "@/lib/localMemoryStore";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TYPES
