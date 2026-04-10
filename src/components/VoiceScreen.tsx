@@ -134,6 +134,7 @@ const FloatingParticles = () => {
 const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onParentMode, parentSettings }: VoiceScreenProps) => {
   const currentVoiceId = parentSettings?.voiceType || "female";
   const currentVoiceSpeed = parentSettings?.voiceSpeed || "normal";
+  const isCalmMode = parentSettings?.nightMode?.active || parentSettings?.personality === "calm";
   const [state, setState] = useState<VoiceState>("idle");
   const [conversationHistory, setConversationHistory] = useState<AiMsg[]>([]);
   const [partialText, setPartialText] = useState("");
