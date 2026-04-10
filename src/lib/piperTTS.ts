@@ -25,15 +25,19 @@ async function getTTS() {
 /** Maps our profile names → Piper voice model IDs */
 const VOICE_MODEL: Record<VoiceProfile, string> = {
   female: "fr_FR-siwis-medium",
-  child: "fr_FR-siwis-medium",   // same model, pitch shifted
+  child: "fr_FR-siwis-medium",
   male: "fr_FR-mls-medium",
+  sister: "fr_FR-siwis-medium",
+  brother: "fr_FR-mls-medium",
 };
 
 /** Pitch multiplier applied via Web Audio API */
 const PITCH_SHIFT: Record<VoiceProfile, number> = {
-  child: 1.18,   // slightly higher pitch for a cute child effect
-  female: 1.0,   // natural
-  male: 1.0,     // natural
+  child: 1.18,
+  female: 1.0,
+  male: 1.0,
+  sister: 1.08,
+  brother: 1.12,
 };
 
 /** Rate (playback speed) adjustments */
@@ -41,6 +45,8 @@ const RATE_SHIFT: Record<VoiceProfile, number> = {
   child: 1.02,
   female: 0.95,
   male: 0.92,
+  sister: 1.0,
+  brother: 0.98,
 };
 
 let downloadProgress: Record<string, number> = {};
