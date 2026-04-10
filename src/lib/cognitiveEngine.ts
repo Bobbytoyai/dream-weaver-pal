@@ -512,6 +512,8 @@ export function recordUserTurn(userText: string, detectedEmotion?: string): Cogn
   // Update derived metrics
   updateProgression();
   updateMotivation();
+  updateEngagement(userText);
+  updateLearningSpeed();
 
   // Relationship grows with each interaction
   state.relationshipDepth = Math.min(100, state.relationshipDepth + 0.5);
@@ -523,6 +525,8 @@ export function recordUserTurn(userText: string, detectedEmotion?: string): Cogn
   const emotionalTrend = detectEmotionalTrend();
   const relationshipPhase = getRelationshipPhase();
   const variationHint = getVariationHint();
+  const predictedIntent = predictNextIntent();
+  const adaptiveProfile = buildAdaptiveProfile();
 
   const partial: Omit<CognitiveHints, "promptContext"> = {
     attention,
@@ -538,6 +542,8 @@ export function recordUserTurn(userText: string, detectedEmotion?: string): Cogn
     emotionalTrend,
     relationshipPhase,
     variationHint,
+    adaptiveProfile,
+    predictedIntent,
   };
 
   return {
