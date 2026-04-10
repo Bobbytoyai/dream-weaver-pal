@@ -115,7 +115,7 @@ const Index = () => {
         childName={childName}
         voiceProfile={parentSettings.voiceType || "female"}
         onSelectCategory={(cat) => {
-          // Return to voice with the selected game category
+          setActiveGameCategory(cat);
           setMode("voice");
         }}
         onBack={() => setMode("voice")}
