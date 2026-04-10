@@ -475,6 +475,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
               if (!sessionStartedRef.current) {
                 session.startSession();
                 sessionStartedRef.current = true;
+                recorder.startRecording();
                 eventBus.emit({ type: "SESSION_START" });
               }
               conversationActiveRef.current = true;
