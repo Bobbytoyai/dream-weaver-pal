@@ -424,7 +424,7 @@ export function useFaceAnimation(
     c.mouthWidth = lerp(c.mouthWidth, mouthWidthTarget + microOffset.current.mouthQuirk, delta * mouthSpeed * 0.8);
     c.mouthRound = lerp(c.mouthRound, mouthRoundTarget, delta * mouthSpeed * 0.7);
     c.jawDrop = lerp(c.jawDrop, jawDropTarget, delta * mouthSpeed);
-    c.mouthCurve = lerp(c.mouthCurve, targets.mouthCurve ?? 0, delta * baseSpeed * 1.5);
+    c.mouthCurve = lerp(c.mouthCurve, (targets.mouthCurve ?? 0) + mouthBreathCurve + mouthQuirkCurveAdd, delta * baseSpeed * 1.5);
 
     c.pupilSize = lerp(c.pupilSize, (targets.pupilSize ?? 1) + breathScale, delta * baseSpeed);
 
