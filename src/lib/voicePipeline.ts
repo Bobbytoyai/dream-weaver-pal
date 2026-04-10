@@ -11,6 +11,7 @@
 import { useCallback, useRef } from "react";
 import { piperSpeak, piperPreview } from "./piperTTS";
 import { isOffline } from "./offlineEngine";
+import { getCachedTTSAudio, makeCacheKey } from "./ttsCache";
 
 const BOBBY_BRAIN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bobby-brain`;
 const ELEVENLABS_TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`;
