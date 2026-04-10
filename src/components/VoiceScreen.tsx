@@ -736,6 +736,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     PROCESSING: "Je réfléchis…",
     SPEAKING: "Je parle…",
     ERROR: "Dis-moi !",
+    SLEEP: "💤 Bobby dort… dis son nom pour le réveiller !",
   }[machineState];
 
   return (
