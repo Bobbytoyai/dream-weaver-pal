@@ -20,6 +20,18 @@ export interface ParentSettings {
   interactions: { wakeWord: boolean; tap: boolean; interruption: boolean };
   recordConversations: boolean;
   privacyMode: boolean;
+  // ─── Advanced security ───
+  parentPin: string;
+  safeWord: string;
+  safeWordAction: "pause" | "alert" | "stop";
+  emergencyContact: { name: string; email: string };
+  alertOnSensitive: boolean;
+  alertTopics: string[];
+  maxMessageLength: number;
+  blockPersonalInfo: boolean;
+  languageLevel: "simple" | "adapté" | "avancé";
+  blockExternalLinks: boolean;
+  sessionWatermark: boolean;
 }
 
 export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
@@ -44,4 +56,16 @@ export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
   interactions: { wakeWord: true, tap: true, interruption: true },
   recordConversations: true,
   privacyMode: false,
+  // ─── Advanced security defaults ───
+  parentPin: "",
+  safeWord: "",
+  safeWordAction: "pause",
+  emergencyContact: { name: "", email: "" },
+  alertOnSensitive: true,
+  alertTopics: ["violence", "peur extrême", "harcèlement", "contenu adulte"],
+  maxMessageLength: 500,
+  blockPersonalInfo: true,
+  languageLevel: "adapté",
+  blockExternalLinks: true,
+  sessionWatermark: false,
 };
