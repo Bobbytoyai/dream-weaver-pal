@@ -8,6 +8,7 @@ export function useSessionTracker(childName: string, childAge: number) {
 
   const startSession = useCallback(async () => {
     startTimeRef.current = new Date();
+    messageCountRef.current = 0;
     const { data, error } = await supabase
       .from("child_sessions")
       .insert({ child_name: childName, child_age: childAge })
@@ -22,6 +23,7 @@ export function useSessionTracker(childName: string, childAge: number) {
 
   const addMessage = useCallback(async (role: "user" | "assistant", content: string, detectedEmotion?: string) => {
     if (!sessionIdRef.current) return;
+    messageCountRef.current++;
     await supabase
       .from("session_messages")
       .insert({
@@ -48,5 +50,5 @@ export function useSessionTracker(childName: string, childAge: number) {
     return id;
   }, []);
 
-  return { startSession, addMessage, endSession, sessionIdRef };
+  return { startSession, addMessage, endSession, sessionIdRef, messageCountRef };
 }
