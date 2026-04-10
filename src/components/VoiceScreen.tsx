@@ -3,12 +3,14 @@ import { BookOpen, Settings, Camera, Mic, MicOff } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import { useWakeWord } from "@/hooks/useWakeWord";
+import { useDeepgramSTT } from "@/hooks/useDeepgramSTT";
 import { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
 import { setSfxVolume, initSfxEventBus } from "@/lib/sfx";
 import { useChildMemory } from "@/hooks/useChildMemory";
 import { useConversationRecorder } from "@/hooks/useConversationRecorder";
 import { eventBus } from "@/lib/eventBus";
+import { getCachedResponse, isSimpleGreeting } from "@/lib/responseCache";
 
 type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
 type AiMsg = { role: "user" | "assistant"; content: string };
