@@ -23,6 +23,13 @@ import {
   handleAnimalGameInput,
 } from "./animalGuessGame";
 
+import {
+  isMemoryGameActive,
+  isMemoryGameTrigger,
+  startMemoryGame,
+  handleMemoryGameInput,
+} from "./memoryGame";
+
 // ─── Network State ──────────────────────────────────────────
 export type NetworkMode = "ONLINE" | "OFFLINE" | "HYBRID";
 
