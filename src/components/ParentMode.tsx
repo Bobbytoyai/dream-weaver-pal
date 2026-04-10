@@ -511,6 +511,50 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </Card>
       )}
 
+      {/* 7-day emotion evolution chart */}
+      {emotionChartData.some(d => d["😊 Joie"] !== null) && (
+        <Card title="Évolution émotionnelle (7 jours)" icon={TrendingUp}>
+          <div className="w-full h-52 -ml-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={emotionChartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} domain={[0, 100]} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "12px",
+                    fontSize: "12px",
+                  }}
+                />
+                <Line type="monotone" dataKey="😊 Joie" stroke="#22c55e" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="🧐 Curiosité" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="🤩 Excitation" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="😤 Frustration" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="😰 Peur" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+                <Line type="monotone" dataKey="😢 Tristesse" stroke="#64748b" strokeWidth={2} dot={{ r: 3 }} connectNulls />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {[
+              { label: "Joie", color: "#22c55e" },
+              { label: "Curiosité", color: "#3b82f6" },
+              { label: "Excitation", color: "#f59e0b" },
+              { label: "Frustration", color: "#ef4444" },
+              { label: "Peur", color: "#8b5cf6" },
+              { label: "Tristesse", color: "#64748b" },
+            ].map(e => (
+              <span key={e.label} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: e.color }} />
+                {e.label}
+              </span>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {/* All-time stats */}
       <Card title="Statistiques globales" icon={TrendingUp}>
         <div className="grid grid-cols-3 gap-3">
