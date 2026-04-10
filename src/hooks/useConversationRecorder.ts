@@ -3,30 +3,42 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Records audio during conversations and uploads to storage.
- * Also triggers AI analysis after session ends.
+ * Accepts an external MediaStream to avoid duplicate getUserMedia calls.
  */
 export function useConversationRecorder() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const ownsStreamRef = useRef(false);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const startRecording = useCallback(async () => {
+  /**
+   * Start recording. If an external stream is provided, use it (no new getUserMedia).
+   * Otherwise falls back to creating its own stream.
+   */
+  const startRecording = useCallback(async (externalStream?: MediaStream) => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      let stream: MediaStream;
+      if (externalStream && externalStream.active) {
+        stream = externalStream;
+        ownsStreamRef.current = false;
+      } else {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        ownsStreamRef.current = true;
+      }
       streamRef.current = stream;
-      
+
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
           ? "audio/webm;codecs=opus"
           : "audio/webm",
       });
-      
+
       chunksRef.current = [];
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
-      
-      mediaRecorder.start(5000); // chunk every 5s
+
+      mediaRecorder.start(5000);
       mediaRecorderRef.current = mediaRecorder;
       return true;
     } catch (err) {
@@ -44,8 +56,10 @@ export function useConversationRecorder() {
       }
 
       recorder.onstop = async () => {
-        // Stop all tracks
-        streamRef.current?.getTracks().forEach((t) => t.stop());
+        // Only stop tracks if we own the stream
+        if (ownsStreamRef.current && streamRef.current) {
+          streamRef.current.getTracks().forEach((t) => t.stop());
+        }
         streamRef.current = null;
         mediaRecorderRef.current = null;
 
@@ -57,7 +71,6 @@ export function useConversationRecorder() {
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         chunksRef.current = [];
 
-        // Upload to storage
         const path = `${sessionId}.webm`;
         const { error } = await supabase.storage
           .from("conversation-audio")
