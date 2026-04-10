@@ -82,9 +82,9 @@ export async function updateMemory(
   const updated = { ...current, ...updates };
   memoryCache.set(childName, updated);
 
-  const dbUpdates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  const dbUpdates: any = { updated_at: new Date().toISOString() };
 
-  if (updates.preferences !== undefined) dbUpdates.preferences = updates.preferences as Json;
+  if (updates.preferences !== undefined) dbUpdates.preferences = updates.preferences;
   if (updates.favoriteThemes !== undefined) dbUpdates.favorite_themes = updates.favoriteThemes;
   if (updates.lastStoryId !== undefined) dbUpdates.last_story_id = updates.lastStoryId;
   if (updates.totalStoriesHeard !== undefined) dbUpdates.total_stories_heard = updates.totalStoriesHeard;
@@ -92,7 +92,7 @@ export async function updateMemory(
   if (updates.interactionCount !== undefined) dbUpdates.interaction_count = updates.interactionCount;
   if (updates.relationshipScore !== undefined) dbUpdates.relationship_score = updates.relationshipScore;
   if (updates.lastEmotions !== undefined) dbUpdates.last_emotions = updates.lastEmotions;
-  if (updates.emotionalHistory !== undefined) dbUpdates.emotional_history = updates.emotionalHistory as Json;
+  if (updates.emotionalHistory !== undefined) dbUpdates.emotional_history = updates.emotionalHistory;
 
   await supabase
     .from("child_memories")
