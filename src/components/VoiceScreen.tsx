@@ -818,7 +818,16 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       <FloatingParticles />
 
       {/* Top bar */}
-      <div className="w-full flex items-center justify-end px-2 relative z-10">
+      <div className="w-full flex items-center justify-between px-2 relative z-10">
+        <div>
+          {onActivities && (
+            <button onClick={onActivities}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/50 text-muted-foreground text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300">
+              <Gamepad2 className="w-4 h-4" />
+              Activités
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           {parentSettings?.enableCamera && (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 backdrop-blur-sm border border-primary/20 text-primary">
