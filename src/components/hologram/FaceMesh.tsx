@@ -120,6 +120,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (!rootRef.current) return;
 
     rootRef.current.rotation.z = state.headTiltZ * 0.5;
+    rootRef.current.rotation.y = state.headTiltY * 0.6;
+    rootRef.current.rotation.x = state.headTiltX * 0.3;
 
     // Pupils — deeply follow cursor, subtle wander layered on top
     const t = performance.now() * 0.001;
