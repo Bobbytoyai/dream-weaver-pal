@@ -1,3 +1,4 @@
+/* v2 — SmartSTT */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { BookOpen, Settings, Camera, Mic, MicOff } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue, preloadVoiceProfile, detectEmotionForTTS } from "@/lib/voicePipeline";
