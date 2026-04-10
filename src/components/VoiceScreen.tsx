@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Settings, Camera, Mic, MicOff, Bug } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue, preloadVoiceProfile, detectEmotionForTTS } from "@/lib/voicePipeline";
 import { preloadVoice as preloadPiperVoice } from "@/lib/piperTTS";
+import { preloadOfflineTTSCache } from "@/lib/ttsCache";
 import type { Emotion } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
 import { useSmartSTT } from "@/hooks/useSmartSTT";
@@ -214,6 +215,16 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       console.warn("[VoiceScreen] Piper voice preload failed (non-critical)");
     });
   }, [currentVoiceId]);
+
+  // Pre-cache TTS audio for offline phrases (runs in background when online)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      preloadOfflineTTSCache(currentVoiceId as any, childName).catch(() => {
+        console.warn("[VoiceScreen] TTS cache preload failed (non-critical)");
+      });
+    }, 3000); // Delay 3s to not compete with initial load
+    return () => clearTimeout(timer);
+  }, [currentVoiceId, childName]);
 
   const abortRef = useRef<AbortController | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

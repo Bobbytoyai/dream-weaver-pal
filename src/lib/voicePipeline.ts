@@ -11,6 +11,7 @@
 import { useCallback, useRef } from "react";
 import { piperSpeak, piperPreview } from "./piperTTS";
 import { isOffline } from "./offlineEngine";
+import { getCachedTTSAudio, makeCacheKey } from "./ttsCache";
 
 const BOBBY_BRAIN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bobby-brain`;
 const ELEVENLABS_TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`;
@@ -154,6 +155,15 @@ export async function fetchTTSAudio(
 
   const profile = (voiceId as VoiceProfile) || "female";
   const offline = isOffline();
+
+  // ─── CHECK PERSISTENT CACHE (IndexedDB) — instant playback ───
+  try {
+    const persistentCached = await getCachedTTSAudio(spokenText, profile);
+    if (persistentCached) {
+      console.log("[TTS] ⚡ Persistent cache hit!");
+      return persistentCached;
+    }
+  } catch { /* non-critical */ }
 
   // ─── OFFLINE: Skip ElevenLabs entirely → Piper → Browser TTS ───
   if (!offline) {
