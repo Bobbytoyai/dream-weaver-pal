@@ -50,10 +50,12 @@ interface UseDeepgramSTTOptions {
   onPartial: (text: string) => void;
   onFinal: (text: string) => void;
   onError?: (error: string) => void;
+  onUtteranceEnd?: () => void;
+  onSpeechStarted?: () => void;
   language?: string;
 }
 
-export function useDeepgramSTT({ onPartial, onFinal, onError, language = "fr" }: UseDeepgramSTTOptions) {
+export function useDeepgramSTT({ onPartial, onFinal, onError, onUtteranceEnd, onSpeechStarted, language = "fr" }: UseDeepgramSTTOptions) {
   const wsRef = useRef<WebSocket | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | AudioWorkletNode | null>(null);
@@ -64,10 +66,14 @@ export function useDeepgramSTT({ onPartial, onFinal, onError, language = "fr" }:
   const onPartialRef = useRef(onPartial);
   const onFinalRef = useRef(onFinal);
   const onErrorRef = useRef(onError);
+  const onUtteranceEndRef = useRef(onUtteranceEnd);
+  const onSpeechStartedRef = useRef(onSpeechStarted);
 
   useEffect(() => { onPartialRef.current = onPartial; }, [onPartial]);
   useEffect(() => { onFinalRef.current = onFinal; }, [onFinal]);
   useEffect(() => { onErrorRef.current = onError; }, [onError]);
+  useEffect(() => { onUtteranceEndRef.current = onUtteranceEnd; }, [onUtteranceEnd]);
+  useEffect(() => { onSpeechStartedRef.current = onSpeechStarted; }, [onSpeechStarted]);
 
   const cleanupAudio = useCallback(() => {
     if (processorRef.current) {
@@ -162,9 +168,14 @@ export function useDeepgramSTT({ onPartial, onFinal, onError, language = "fr" }:
             }
           }
 
-          // UtteranceEnd event — speech has truly ended
           if (data.type === "UtteranceEnd") {
-            // Deepgram detected end of speech — good signal for conversation flow
+            console.log("[DeepgramSTT] UtteranceEnd — speech truly ended");
+            onUtteranceEndRef.current?.();
+          }
+
+          if (data.type === "SpeechStarted") {
+            console.log("[DeepgramSTT] SpeechStarted — voice detected");
+            onSpeechStartedRef.current?.();
           }
         } catch {}
       };
