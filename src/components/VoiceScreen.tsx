@@ -508,16 +508,8 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       <FloatingParticles />
 
       {/* Top bar */}
-      <div className="w-full flex items-center justify-between px-2 relative z-10">
-        <div className="flex items-center gap-2">
-          {onSwitchToStory && (
-            <button onClick={onSwitchToStory}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/50 text-foreground text-sm font-bold shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300">
-              <BookOpen className="w-4 h-4 text-secondary" />
-              <span>Histoires</span>
-            </button>
-          )}
-        </div>
+      <div className="w-full flex items-center justify-end px-2 relative z-10">
+        <div className="flex items-center gap-2" />
 
         <div className="flex items-center gap-2">
           {parentSettings?.enableCamera && (
