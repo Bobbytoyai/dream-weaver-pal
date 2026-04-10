@@ -71,7 +71,8 @@ async function fetchElevenLabsTTS(
   text: string,
   voiceProfile: VoiceProfile,
   signal?: AbortSignal,
-  emotion?: Emotion
+  emotion?: Emotion,
+  speedOverride?: "slow" | "normal" | "fast"
 ): Promise<string> {
   const spokenText = sanitizeSpokenText(text);
   if (!spokenText) return "__silent__";
@@ -91,6 +92,7 @@ async function fetchElevenLabsTTS(
       text: spokenText,
       voiceProfile,
       ...(emotion ? { emotion } : {}),
+      ...(speedOverride && speedOverride !== "normal" ? { speedOverride } : {}),
     }),
     signal,
   });
@@ -139,7 +141,8 @@ export async function fetchTTSAudio(
   text: string,
   signal?: AbortSignal,
   voiceId?: string,
-  emotion?: Emotion
+  emotion?: Emotion,
+  speedOverride?: "slow" | "normal" | "fast"
 ): Promise<string> {
   const spokenText = sanitizeSpokenText(text);
   if (!spokenText) return "__silent__";
@@ -148,7 +151,7 @@ export async function fetchTTSAudio(
   const profile = (voiceId as VoiceProfile) || "female";
 
   try {
-    return await fetchElevenLabsTTS(spokenText, profile, signal, emotion);
+    return await fetchElevenLabsTTS(spokenText, profile, signal, emotion, speedOverride);
   } catch (e: any) {
     if (e.name === "AbortError") throw e;
     console.warn("[TTS] ElevenLabs failed, trying Piper:", e.message);
