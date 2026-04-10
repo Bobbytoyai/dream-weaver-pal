@@ -975,6 +975,8 @@ export function getOfflineResponse(
  * or if we should try online.
  */
 export function canHandleOffline(text: string): boolean {
+  if (isBlockedContent(text)) return true;
+  if (matchQA(text)) return true;
   const intent = detectOfflineIntent(text);
   return intent !== "UNKNOWN";
 }
