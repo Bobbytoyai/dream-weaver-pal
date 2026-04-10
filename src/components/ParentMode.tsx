@@ -1496,10 +1496,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[12px] text-foreground font-medium">Durée max par jour</span>
-                <span className="text-lg font-bold text-primary">{settings.dailyLimit} min</span>
+                <span className="text-lg font-bold text-primary">{settings.timeLimitMinutes || 60} min</span>
               </div>
-              <input type="range" min="10" max="120" step="5" value={settings.dailyLimit}
-                onChange={(e) => updateSetting("dailyLimit", Number(e.target.value))}
+              <input type="range" min="10" max="120" step="5" value={settings.timeLimitMinutes || 60}
+                onChange={(e) => updateSetting("timeLimitMinutes", Number(e.target.value))}
                 className="w-full h-2 rounded-full appearance-none bg-muted accent-primary" />
               <div className="flex justify-between text-[9px] text-muted-foreground">
                 <span>10 min</span><span>60 min</span><span>120 min</span>
@@ -1508,11 +1508,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 <div className="mt-2 pt-2 border-t border-border">
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-[10px] text-muted-foreground">Aujourd'hui</span>
-                    <span className="text-[10px] font-mono text-foreground">{formatDuration(todayDuration)} / {settings.dailyLimit} min</span>
+                    <span className="text-[10px] font-mono text-foreground">{formatDuration(todayDuration)} / {settings.timeLimitMinutes || 60} min</span>
                   </div>
                   <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full transition-all ${todayDuration / 60 > settings.dailyLimit ? "bg-destructive" : "bg-primary"}`}
-                      style={{ width: `${Math.min(100, (todayDuration / 60 / settings.dailyLimit) * 100)}%` }} />
+                    <div className={`h-full rounded-full transition-all ${todayDuration / 60 > settings.timeLimitMinutes || 60 ? "bg-destructive" : "bg-primary"}`}
+                      style={{ width: `${Math.min(100, (todayDuration / 60 / settings.timeLimitMinutes || 60) * 100)}%` }} />
                   </div>
                 </div>
               )}
