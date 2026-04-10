@@ -7,7 +7,7 @@ import {
   Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X,
   SkipForward, SkipBack, Activity, Bell, ChevronDown, Star
 } from "lucide-react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import StoryLibrary from "@/components/StoryLibrary";
 import ContentCategories from "@/components/ContentCategories";
@@ -531,12 +531,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     }
     return days.map(d => ({
       name: d.label,
-      Joie: d.count > 0 ? Math.round(d.joy / d.count) : null,
-      Curiosité: d.count > 0 ? Math.round(d.curiosity / d.count) : null,
-      Excitation: d.count > 0 ? Math.round(d.excitement / d.count) : null,
-      Frustration: d.count > 0 ? Math.round(d.frustration / d.count) : null,
-      Peur: d.count > 0 ? Math.round(d.fear / d.count) : null,
-      Tristesse: d.count > 0 ? Math.round(d.sadness / d.count) : null,
+      Joie: d.count > 0 ? Math.round(d.joy / d.count) : 0,
+      Curiosité: d.count > 0 ? Math.round(d.curiosity / d.count) : 0,
+      Excitation: d.count > 0 ? Math.round(d.excitement / d.count) : 0,
+      Frustration: d.count > 0 ? Math.round(d.frustration / d.count) : 0,
+      Peur: d.count > 0 ? Math.round(d.fear / d.count) : 0,
+      Tristesse: d.count > 0 ? Math.round(d.sadness / d.count) : 0,
+      hasData: d.count > 0,
     }));
   }, [analyses]);
 
@@ -892,41 +893,34 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       )}
 
       {/* ═══ 6. GRAPHIQUE ÉVOLUTION ═══ */}
-      {emotionChartData.some(d => d.Joie !== null) && (
+      {emotionChartData.some(d => d.hasData) && (
         <div className="bg-card rounded-2xl p-4 border border-border/30">
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp className="w-4 h-4 text-muted-foreground" />
             <h3 className="text-[13px] font-bold text-foreground">Évolution (7 jours)</h3>
           </div>
-          <div className="w-full h-52">
+          <div className="w-full h-56">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={emotionChartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-                <defs>
-                  <linearGradient id="gradJoie" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(145, 65%, 42%)" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(145, 65%, 42%)" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="gradCuriosite" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(210, 80%, 55%)" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(210, 80%, 55%)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+              <BarChart data={emotionChartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }} barCategoryGap="20%">
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} domain={[0, 100]} axisLine={false} tickLine={false} />
                 <Tooltip
+                  cursor={{ fill: "hsl(var(--muted))", opacity: 0.3, radius: 6 }}
                   content={({ active, payload, label }) => {
                     if (!active || !payload?.length) return null;
+                    const dataPoint = emotionChartData.find(d => d.name === label);
+                    if (!dataPoint?.hasData) return null;
                     return (
                       <div className="bg-card border border-border rounded-xl p-2.5 shadow-lg min-w-[130px]">
                         <p className="text-[11px] font-bold text-foreground mb-1.5">{label}</p>
-                        {payload.filter(p => (p.value as number) > 0).sort((a, b) => (b.value as number) - (a.value as number)).map(p => {
+                        {payload.filter(p => p.dataKey !== "hasData" && (p.value as number) > 0).sort((a, b) => (b.value as number) - (a.value as number)).map(p => {
                           const cfg = emotionConfig[p.name as string] || { emoji: "❓", color: "#888" };
                           return (
                             <div key={p.name} className="flex items-center gap-1.5 py-0.5">
                               <span className="text-xs">{cfg.emoji}</span>
                               <span className="text-[10px] text-foreground flex-1">{p.name}</span>
-                              <span className="text-[11px] font-bold" style={{ color: cfg.color }}>{p.value}</span>
+                              <span className="text-[11px] font-bold" style={{ color: cfg.color }}>{p.value}%</span>
                             </div>
                           );
                         })}
@@ -934,13 +928,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     );
                   }}
                 />
-                <Area type="monotone" dataKey="Joie" stroke="hsl(145, 65%, 42%)" strokeWidth={2} fill="url(#gradJoie)" dot={{ r: 3, fill: "hsl(145, 65%, 42%)", strokeWidth: 1.5, stroke: "hsl(var(--card))" }} connectNulls />
-                <Area type="monotone" dataKey="Curiosité" stroke="hsl(210, 80%, 55%)" strokeWidth={2} fill="url(#gradCuriosite)" dot={{ r: 3, fill: "hsl(210, 80%, 55%)", strokeWidth: 1.5, stroke: "hsl(var(--card))" }} connectNulls />
-                <Area type="monotone" dataKey="Excitation" stroke="hsl(36, 90%, 50%)" strokeWidth={1.5} fill="transparent" dot={{ r: 2.5, fill: "hsl(36, 90%, 50%)" }} connectNulls />
-                <Area type="monotone" dataKey="Frustration" stroke="hsl(0, 75%, 55%)" strokeWidth={1.5} fill="transparent" dot={{ r: 2, fill: "hsl(0, 75%, 55%)" }} connectNulls />
-                <Area type="monotone" dataKey="Peur" stroke="hsl(260, 45%, 58%)" strokeWidth={1} fill="transparent" dot={{ r: 2, fill: "hsl(260, 45%, 58%)" }} connectNulls />
-                <Area type="monotone" dataKey="Tristesse" stroke="hsl(0, 0%, 55%)" strokeWidth={1} fill="transparent" dot={{ r: 2, fill: "hsl(0, 0%, 55%)" }} connectNulls />
-              </AreaChart>
+                <Bar dataKey="Joie" fill="hsl(145, 65%, 42%)" radius={[4, 4, 0, 0]} maxBarSize={12} />
+                <Bar dataKey="Curiosité" fill="hsl(210, 80%, 55%)" radius={[4, 4, 0, 0]} maxBarSize={12} />
+                <Bar dataKey="Excitation" fill="hsl(36, 90%, 50%)" radius={[4, 4, 0, 0]} maxBarSize={12} />
+                <Bar dataKey="Frustration" fill="hsl(0, 75%, 55%)" radius={[4, 4, 0, 0]} maxBarSize={12} />
+                <Bar dataKey="Peur" fill="hsl(260, 45%, 58%)" radius={[4, 4, 0, 0]} maxBarSize={12} />
+                <Bar dataKey="Tristesse" fill="hsl(0, 0%, 55%)" radius={[4, 4, 0, 0]} maxBarSize={12} />
+              </BarChart>
             </ResponsiveContainer>
           </div>
           <div className="flex flex-wrap gap-2 mt-2">
