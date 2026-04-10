@@ -3,7 +3,7 @@ import { BookOpen, Settings, Camera, Mic, MicOff } from "lucide-react";
 import { streamVoiceChat, fetchTTSAudio, useAudioQueue, preloadVoiceProfile, detectEmotionForTTS } from "@/lib/voicePipeline";
 import type { Emotion } from "@/lib/voicePipeline";
 import { useSessionTracker } from "@/hooks/useSessionTracker";
-import { useDeepgramSTT } from "@/hooks/useDeepgramSTT";
+import { useSmartSTT } from "@/hooks/useSmartSTT";
 import { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
 import { setSfxVolume, initSfxEventBus } from "@/lib/sfx";
@@ -509,8 +509,8 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     getAIResponse(cleaned);
   }, [audioQueue, clearTimers, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, interrupt, isCalmMode, recorder, session, speakFallback, startSilenceTimers]);
 
-  // ─── Deepgram Speech Recognition — always on when mic is armed ───
-  const deepgramSTT = useDeepgramSTT({
+  // ─── Smart STT with Deepgram → Native fallback ───
+  const deepgramSTT = useSmartSTT({
     onPartial: useCallback((text: string) => {
       setPartialText(text);
     }, []),
@@ -521,7 +521,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       }
     }, [handleTranscript]),
     onError: useCallback((err: string) => {
-      console.warn("[DeepgramSTT] Error:", err);
+      console.warn("[STT] Error:", err);
     }, []),
     language: "fr",
   });
