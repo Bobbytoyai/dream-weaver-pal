@@ -497,7 +497,9 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       console.error("AI call exception:", e);
       if (!abortController.signal.aborted) {
         retryCountRef.current = 0;
-        speakAndListen(FALLBACK_FR.error);
+        // Fallback to offline engine on network failure
+        const offlineResp = getOfflineResponse(userText, childName);
+        speakAndListen(offlineResp.text);
       }
     }
   }, [audioQueue, childAge, childName, clearAllTimers, conversationHistory, goToListening, goToSpeaking, memory, parentSettings, processSentenceForTTS, session, speakAndListen, startStuckTimer, transition]);
