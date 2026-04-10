@@ -220,10 +220,12 @@ Deno.serve(async (req) => {
     const userText = lastUserMsg?.content || "";
 
     // ─── Knowledge base check (curated answers first) ────
-    const kbAnswer = await findKnowledgeMatch(userText, childAge);
-    if (kbAnswer) {
-      const answer = kbAnswer.replace(/\{child_name\}/g, childName);
-      const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content: answer } }] })}\n\ndata: [DONE]\n\n`;
+    const kbMatch = await findKnowledgeMatch(userText, childAge);
+    if (kbMatch) {
+      const answer = kbMatch.answer.replace(/\{child_name\}/g, childName);
+      // Include emotion metadata as SSE comment for client-side expression mapping
+      const emotionMeta = `data: ${JSON.stringify({ choices: [{ delta: { content: "" } }], metadata: { emotion: kbMatch.emotion, source: "kb" } })}\n\n`;
+      const sseData = emotionMeta + `data: ${JSON.stringify({ choices: [{ delta: { content: answer } }] })}\n\ndata: [DONE]\n\n`;
       return new Response(sseData, {
         headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
       });
