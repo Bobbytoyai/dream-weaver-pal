@@ -543,10 +543,8 @@ export function useConversationStateMachine({
         // Soft reset: offline response, never silence
         const offlineResp = getOfflineResponse(userText, childName);
         speakAndListen(offlineResp.text || getFailsafeResponse());
-      }
     }
-    }
-  }, [audioQueue, childAge, childName, clearAllTimers, conversationHistory, goToListening, goToSpeaking, memory, parentSettings, processSentenceForTTS, session, speakAndListen, startStuckTimer, transition]);
+  }, [audioQueue, childAge, childName, clearAllTimers, conversationHistory, currentVoiceId, currentVoiceSpeed, goToListening, goToSpeaking, isCalmMode, memory, parentSettings, processSentenceForTTS, session, speakAndListen, startStuckTimer, transition]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // FLUSH ACCUMULATED TEXT
