@@ -105,6 +105,16 @@ async function fetchElevenLabsTTS(
     throw new Error(`ElevenLabs TTS error: ${response.status}`);
   }
 
+  // Check if the edge function returned a fallback JSON instead of audio
+  const contentType = response.headers.get("Content-Type") || "";
+  if (contentType.includes("application/json")) {
+    const data = await response.json();
+    if (data.fallback) {
+      throw new Error("TTS_SERVICE_UNAVAILABLE");
+    }
+    throw new Error(data.error || "TTS error");
+  }
+
   const audioBlob = await response.blob();
   const blobUrl = URL.createObjectURL(audioBlob);
 

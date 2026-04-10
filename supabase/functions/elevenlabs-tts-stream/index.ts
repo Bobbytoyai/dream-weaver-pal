@@ -146,34 +146,49 @@ Deno.serve(async (req) => {
 
     console.log(`[TTS V2] profile=${voiceProfile} emotion=${emotion || "none"} speed=${profile.speed.toFixed(2)} stability=${profile.stability.toFixed(2)} style=${profile.style.toFixed(2)} calm=${!!calmMode}`);
 
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${profile.voiceId}/stream?output_format=mp3_22050_32`,
-      {
-        method: "POST",
-        headers: {
-          "xi-api-key": ELEVENLABS_API_KEY,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          text: text.trim(),
-          model_id: "eleven_multilingual_v2",
-          voice_settings: {
-            stability: profile.stability,
-            similarity_boost: profile.similarity_boost,
-            style: profile.style,
-            use_speaker_boost: true,
-            speed: profile.speed,
+    // Retry logic for transient errors (409 conflict, 429 rate limit, 5xx)
+    let response: Response | null = null;
+    const MAX_RETRIES = 2;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      response = await fetch(
+        `https://api.elevenlabs.io/v1/text-to-speech/${profile.voiceId}/stream?output_format=mp3_22050_32`,
+        {
+          method: "POST",
+          headers: {
+            "xi-api-key": ELEVENLABS_API_KEY,
+            "Content-Type": "application/json",
           },
-        }),
-      }
-    );
+          body: JSON.stringify({
+            text: text.trim(),
+            model_id: "eleven_multilingual_v2",
+            voice_settings: {
+              stability: profile.stability,
+              similarity_boost: profile.similarity_boost,
+              style: profile.style,
+              use_speaker_boost: true,
+              speed: profile.speed,
+            },
+          }),
+        }
+      );
 
-    if (!response.ok) {
+      if (response.ok) break;
+
+      const isRetryable = response.status === 409 || response.status === 429 || response.status >= 500;
+      if (isRetryable && attempt < MAX_RETRIES) {
+        const delay = (attempt + 1) * 500;
+        console.warn(`[TTS] Retryable error ${response.status}, retrying in ${delay}ms (attempt ${attempt + 1}/${MAX_RETRIES})`);
+        await new Promise(r => setTimeout(r, delay));
+        continue;
+      }
+
+      // Non-retryable or exhausted retries — return graceful fallback
       const errText = await response.text();
       console.error("ElevenLabs error:", response.status, errText);
-      return new Response(JSON.stringify({ error: "tts_error" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "TTS_SERVICE_UNAVAILABLE", fallback: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     return new Response(response.body, {
@@ -185,8 +200,9 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("elevenlabs-tts error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: "TTS_SERVICE_FAILED", fallback: true }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   }
 });
