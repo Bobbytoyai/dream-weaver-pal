@@ -1991,6 +1991,21 @@ export function getOfflineResponse(
     updateContext("PLAY_REQUEST", text, gameResp);
     return { text: gameResp, intent: "PLAY_REQUEST", isOffline: true, gameType: "memory_game" as MiniGameType };
   }
+
+  // 1f. Learning Engine — if active, route ALL input
+  if (isLearningActive()) {
+    const gameResp = handleLearningInput(text, childName);
+    updateContext("EDUCATION", text, gameResp);
+    return { text: gameResp, intent: "EDUCATION", isOffline: true, gameType: "learning" as MiniGameType };
+  }
+
+  // 1g. Detect "Apprends avec moi" trigger
+  if (isLearningTrigger(text)) {
+    const gameResp = startLearning(childName, 7);
+    updateContext("EDUCATION", text, gameResp);
+    return { text: gameResp, intent: "EDUCATION", isOffline: true, gameType: "learning" as MiniGameType };
+  }
+
   // 2. Multi-turn follow-up: handle answers to Bobby's previous questions
   const followUpAnswer = handleFollowUpAnswer(text, childName);
   if (followUpAnswer) return followUpAnswer;
