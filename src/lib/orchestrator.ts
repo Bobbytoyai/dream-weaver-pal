@@ -146,8 +146,8 @@ function selectResponse(
     return { response: getCachedResponse("greeting"), source: "cache" };
   }
 
-  // Fast path 2: offline engine
-  if (input.isOffline) {
+  // Fast path 2: offline engine (no internet OR high latency)
+  if (input.isOffline || isHighLatency()) {
     const offlineResp = getOfflineResponse(input.userText, input.childName);
     return { response: offlineResp.text, source: "offline" };
   }
