@@ -1,10 +1,11 @@
 /**
- * Voice Pipeline v2 — Optimized for ultra-low latency
+ * Voice Pipeline v3 — Emotional TTS with preloading & caching
  * 
- * TTS: ElevenLabs streaming (premium) with Piper fallback (offline)
- * LLM: bobby-brain unified agent
- * 
- * Pipeline: STT → bobby-brain → sentence split → ElevenLabs TTS → audio queue
+ * Features:
+ * - Emotion-aware TTS (adjusts voice dynamically)
+ * - Audio cache for frequent phrases (instant playback)
+ * - Voice preloading on profile switch (no gap)
+ * - Fallback cascade: ElevenLabs → Piper → Browser TTS
  */
 
 import { useCallback, useRef } from "react";
@@ -42,11 +43,43 @@ function filterSentence(text: string): string | null {
 
 // ─── Voice profiles ─────────────────────────────────────────
 export type VoiceProfile = "child" | "female" | "male";
+export type Emotion = "happy" | "sad" | "scared" | "excited" | "calm" | "curious" | "angry" | "bored";
+
+// ─── TTS Audio Cache ────────────────────────────────────────
+// Cache frequently used phrases to avoid API calls
+const audioCache = new Map<string, string>(); // key → blob URL
+const MAX_CACHE_SIZE = 30;
+
+function getCacheKey(text: string, profile: VoiceProfile, emotion?: Emotion): string {
+  return `${profile}:${emotion || "neutral"}:${text.toLowerCase().trim()}`;
+}
+
+function cacheAudio(key: string, blobUrl: string) {
+  if (audioCache.size >= MAX_CACHE_SIZE) {
+    // Evict oldest entry
+    const first = audioCache.keys().next().value;
+    if (first) {
+      URL.revokeObjectURL(audioCache.get(first)!);
+      audioCache.delete(first);
+    }
+  }
+  audioCache.set(key, blobUrl);
+}
 
 // ─── ElevenLabs TTS (primary) ───────────────────────────────
-async function fetchElevenLabsTTS(text: string, voiceProfile: VoiceProfile, signal?: AbortSignal): Promise<string> {
+async function fetchElevenLabsTTS(
+  text: string,
+  voiceProfile: VoiceProfile,
+  signal?: AbortSignal,
+  emotion?: Emotion
+): Promise<string> {
   const spokenText = sanitizeSpokenText(text);
   if (!spokenText) return "__silent__";
+
+  // Check cache first
+  const cacheKey = getCacheKey(spokenText, voiceProfile, emotion);
+  const cached = audioCache.get(cacheKey);
+  if (cached) return cached;
 
   const response = await fetch(ELEVENLABS_TTS_URL, {
     method: "POST",
@@ -54,7 +87,11 @@ async function fetchElevenLabsTTS(text: string, voiceProfile: VoiceProfile, sign
       "Content-Type": "application/json",
       Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
-    body: JSON.stringify({ text: spokenText, voiceProfile }),
+    body: JSON.stringify({
+      text: spokenText,
+      voiceProfile,
+      ...(emotion ? { emotion } : {}),
+    }),
     signal,
   });
 
@@ -63,7 +100,14 @@ async function fetchElevenLabsTTS(text: string, voiceProfile: VoiceProfile, sign
   }
 
   const audioBlob = await response.blob();
-  return URL.createObjectURL(audioBlob);
+  const blobUrl = URL.createObjectURL(audioBlob);
+
+  // Cache short phrases (likely to be reused)
+  if (spokenText.length < 80) {
+    cacheAudio(cacheKey, blobUrl);
+  }
+
+  return blobUrl;
 }
 
 // ─── Browser TTS (last resort fallback) ─────────────────────
@@ -88,24 +132,28 @@ function speakWithBrowserTTS(text: string): Promise<string> {
 
 // ─── Public TTS API ─────────────────────────────────────────
 /**
- * Fetch TTS audio. Tries: ElevenLabs → Piper → Browser TTS
+ * Fetch TTS audio with emotion support.
+ * Tries: ElevenLabs → Piper → Browser TTS
  */
-export async function fetchTTSAudio(text: string, signal?: AbortSignal, voiceId?: string): Promise<string> {
+export async function fetchTTSAudio(
+  text: string,
+  signal?: AbortSignal,
+  voiceId?: string,
+  emotion?: Emotion
+): Promise<string> {
   const spokenText = sanitizeSpokenText(text);
   if (!spokenText) return "__silent__";
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
   const profile = (voiceId as VoiceProfile) || "female";
 
-  // Try ElevenLabs first (premium, natural)
   try {
-    return await fetchElevenLabsTTS(spokenText, profile, signal);
+    return await fetchElevenLabsTTS(spokenText, profile, signal, emotion);
   } catch (e: any) {
     if (e.name === "AbortError") throw e;
     console.warn("[TTS] ElevenLabs failed, trying Piper:", e.message);
   }
 
-  // Try Piper (local, free)
   try {
     return await piperSpeak(spokenText, profile, signal);
   } catch (e: any) {
@@ -113,32 +161,65 @@ export async function fetchTTSAudio(text: string, signal?: AbortSignal, voiceId?
     console.warn("[TTS] Piper failed, falling back to browser TTS:", e.message);
   }
 
-  // Last resort: browser TTS
   return speakWithBrowserTTS(spokenText);
+}
+
+/**
+ * Preload a voice profile (warm up the ElevenLabs connection)
+ * Call on profile switch for instant first response
+ */
+export async function preloadVoiceProfile(profile: VoiceProfile): Promise<void> {
+  const warmupText = "Hmm.";
+  const cacheKey = getCacheKey(warmupText, profile);
+  if (audioCache.has(cacheKey)) return; // Already warm
+
+  try {
+    await fetchElevenLabsTTS(warmupText, profile);
+  } catch {
+    // Silent failure — preloading is best-effort
+  }
 }
 
 /**
  * Preview a voice profile (for settings screen)
  */
 export async function previewVoiceProfile(profile: VoiceProfile): Promise<void> {
-  const previewText = "Salut ! Je suis Bobby, ton compagnon préféré ! On va bien s'amuser ensemble !";
+  const previewTexts: Record<VoiceProfile, string> = {
+    child: "Salut ! Je suis Bobby ! On va bien s'amuser ensemble, hein ?",
+    female: "Bonjour mon cœur ! Je suis là pour toi, on va passer un super moment !",
+    male: "Hey bonhomme ! C'est Bobby. Je suis là, tu peux compter sur moi.",
+  };
+  const text = previewTexts[profile];
   try {
-    const url = await fetchElevenLabsTTS(previewText, profile);
+    const url = await fetchElevenLabsTTS(text, profile);
     if (url === "__silent__") return;
     return new Promise((resolve, reject) => {
       const audio = new Audio(url);
-      audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
-      audio.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Playback error")); };
+      audio.onended = () => resolve();
+      audio.onerror = () => reject(new Error("Playback error"));
       audio.play().catch(reject);
     });
   } catch {
-    // Fallback to Piper preview
     try {
       await piperPreview(profile);
     } catch {
-      await speakWithBrowserTTS(previewText);
+      await speakWithBrowserTTS(text);
     }
   }
+}
+
+// ─── Emotion detection from text (for TTS modulation) ───────
+export function detectEmotionForTTS(text: string): Emotion | undefined {
+  const lower = text.toLowerCase();
+  if (/triste|pleure|mal|manque|malheureux/.test(lower)) return "sad";
+  if (/peur|effrayé|cauchemar|noir|monstre/.test(lower)) return "scared";
+  if (/ennui|ennuie|rien à faire/.test(lower)) return "bored";
+  if (/content|super|génial|trop bien|cool|adore|aime|heureux|yay/.test(lower)) return "happy";
+  if (/pourquoi|comment|c'est quoi|sais pas/.test(lower)) return "curious";
+  if (/wow|waouh|incroyable|fou|dingue/.test(lower)) return "excited";
+  if (/colère|énervé|fâché|énerve|rage|grrr/.test(lower)) return "angry";
+  if (/dodo|dormir|nuit|fatigué|sommeil|calme/.test(lower)) return "calm";
+  return undefined;
 }
 
 // ─── Stream voice chat (bobby-brain) ────────────────────────
@@ -228,6 +309,7 @@ export async function streamVoiceChat({
           const content = parsed.choices?.[0]?.delta?.content as string | undefined;
           if (content) {
             sentenceBuffer += content;
+            // Flush on sentence-ending punctuation
             if (/[.!?…]\s*$/.test(sentenceBuffer)) flushSentence();
           }
         } catch {
@@ -269,19 +351,20 @@ export function useAudioQueue() {
     currentAudioRef.current = audio;
 
     audio.onended = () => {
-      URL.revokeObjectURL(url);
+      // Don't revoke cached URLs
+      if (!audioCache.has(url)) URL.revokeObjectURL(url);
       currentAudioRef.current = null;
       playNext();
     };
 
     audio.onerror = () => {
-      URL.revokeObjectURL(url);
+      if (!audioCache.has(url)) URL.revokeObjectURL(url);
       currentAudioRef.current = null;
       playNext();
     };
 
     audio.play().catch(() => {
-      URL.revokeObjectURL(url);
+      if (!audioCache.has(url)) URL.revokeObjectURL(url);
       currentAudioRef.current = null;
       playNext();
     });
@@ -298,13 +381,14 @@ export function useAudioQueue() {
   const stopAll = useCallback(() => {
     if ("speechSynthesis" in window) speechSynthesis.cancel();
     queueRef.current.forEach(url => {
-      if (url !== "__browser_tts__" && url !== "__silent__" && url !== "__piper_silent__") URL.revokeObjectURL(url);
+      if (url !== "__browser_tts__" && url !== "__silent__" && url !== "__piper_silent__" && !audioCache.has(url)) {
+        URL.revokeObjectURL(url);
+      }
     });
     queueRef.current = [];
     if (currentAudioRef.current) {
       currentAudioRef.current.pause();
       currentAudioRef.current.currentTime = 0;
-      if (currentAudioRef.current.src) URL.revokeObjectURL(currentAudioRef.current.src);
       currentAudioRef.current = null;
     }
     isPlayingRef.current = false;
