@@ -589,74 +589,45 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const lastSession = sessions[0] || null;
   const lastAnalysis = lastSession ? analyses.find(a => a.session_id === lastSession.id) : null;
 
-  const radarData = useMemo(() => {
-    if (!avgScores) return [];
-    return [
-      { subject: "Sociabilité", value: avgScores.sociability },
-      { subject: "Curiosité", value: avgScores.curiosity },
-      { subject: "Stabilité", value: avgScores.stability },
-    ];
-  }, [avgScores]);
-
   const filteredSessions = useMemo(() => {
     if (!tagFilter) return sessions;
     return sessions.filter(s => s.tags?.includes(tagFilter));
   }, [sessions, tagFilter]);
 
-  const engagementDescription = useMemo(() => {
-    const highCount = recentAnalyses.filter(a => a.engagement_level === "high").length;
-    const total = recentAnalyses.length;
-    if (total === 0) return { label: "—", level: "neutral" };
-    const ratio = highCount / total;
-    if (ratio >= 0.6) return { label: "Élevé", level: "high" };
-    if (ratio >= 0.3) return { label: "Moyen", level: "medium" };
-    return { label: "Faible", level: "low" };
-  }, [recentAnalyses]);
-
-  // ─── Insight du jour ──────────────────────────────────────────
-  const dailyInsight = useMemo(() => {
-    if (recentAnalyses.length === 0) return null;
-
+  // Smart daily insights — picks one relevant insight
+  const dailyInsights = useMemo(() => {
     const insights: string[] = [];
+    if (recentAnalyses.length === 0) return insights;
 
-    // Topic trend
-    if (topTopics.length > 0) {
-      const top = topTopics[0];
-      insights.push(`${childName} s'intéresse beaucoup à "${top[0]}" cette semaine (mentionné ${top[1]} fois).`);
-    }
-
-    // Emotion trend
-    const joyAvg = recentAnalyses.reduce((s, a) => s + ((a.emotions as any)?.joy || 0), 0) / recentAnalyses.length;
-    const curiosityAvg = recentAnalyses.reduce((s, a) => s + ((a.emotions as any)?.curiosity || 0), 0) / recentAnalyses.length;
-    if (joyAvg > 60) {
-      insights.push(`${childName} est globalement très joyeux dans ses échanges avec Bobby ! 🌟`);
-    } else if (curiosityAvg > 50) {
-      insights.push(`${childName} montre une belle curiosité — Bobby stimule son envie d'apprendre !`);
-    }
-
-    // Engagement trend
-    const highEngCount = recentAnalyses.filter(a => a.engagement_level === "high").length;
-    if (highEngCount >= Math.ceil(recentAnalyses.length * 0.6)) {
-      insights.push(`L'engagement de ${childName} est excellent : ${highEngCount} sessions très engagées sur ${recentAnalyses.length}.`);
-    }
-
-    // Score evolution
-    if (avgScores) {
-      if (avgScores.sociability > 70) {
-        insights.push(`${childName} développe de belles compétences sociales (score : ${avgScores.sociability}/100).`);
-      }
-      if (avgScores.curiosity > 70) {
-        insights.push(`La curiosité de ${childName} est remarquable (score : ${avgScores.curiosity}/100) !`);
+    // Dominant emotion
+    const sortedEmotions = Object.entries(avgEmotions).sort(([, a], [, b]) => b - a);
+    if (sortedEmotions.length > 0) {
+      const [topEmo, topVal] = sortedEmotions[0];
+      const info = emotionScoreLabels[topEmo];
+      if (info && topVal > 40) {
+        insights.push(`${info.emoji} ${childName} est principalement ${info.label.toLowerCase()} (${topVal}%) dans ses échanges.`);
       }
     }
 
-    // Session frequency
-    if (todaySessions.length > 0) {
-      insights.push(`${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} aujourd'hui, pour ${formatDuration(todayDuration)} d'échanges.`);
+    // Interests
+    if (allInterests.length > 0) {
+      const top3 = allInterests.slice(0, 3).map(([i]) => i).join(", ");
+      insights.push(`🎯 Centres d'intérêt principaux : ${top3}.`);
     }
 
-    return insights.length > 0 ? insights[Math.floor(Date.now() / 86400000) % insights.length] : null;
-  }, [recentAnalyses, topTopics, avgScores, childName, todaySessions, todayDuration]);
+    // Engagement
+    if (engagementDist.high > 0) {
+      const pct = Math.round((engagementDist.high / recentAnalyses.length) * 100);
+      insights.push(`🔥 ${pct}% des sessions sont très engagées.`);
+    }
+
+    // Scores
+    if (avgScores && avgScores.curiosity > 60) {
+      insights.push(`🔍 Curiosité élevée (${avgScores.curiosity}/100) — Bobby stimule l'apprentissage !`);
+    }
+
+    return insights;
+  }, [recentAnalyses, avgEmotions, allInterests, engagementDist, avgScores, childName]);
 
   // ─── Key moments (emotional highlights) ───────────────────────
   const keyMoments = useMemo(() => {
