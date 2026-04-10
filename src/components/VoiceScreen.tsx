@@ -231,9 +231,13 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const goToListening = useCallback(() => {
     setState("listening");
     setMicStatus("active");
+    setPartialText("");
+    // Shorter delay for snappier conversation feel
     setTimeout(() => {
-      setContinuousListenEnabled(true);
-    }, 600);
+      if (stateRef.current === "listening") {
+        setContinuousListenEnabled(true);
+      }
+    }, 400);
     startSilenceTimers();
   }, [startSilenceTimers]);
 
