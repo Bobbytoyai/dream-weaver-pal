@@ -190,11 +190,17 @@ export function useFaceAnimation(
   const lastFrameTime = useRef(0);
 
   const update = useCallback((delta: number) => {
+    const frameStart = performance.now();
     const c = current.current;
     const gaze = gazeRef.current;
     const gazeX = clamp(gaze.x, -1, 1);
     const gazeY = clamp(gaze.y, -1, 1);
     const rawTargets = { ...DEFAULT_STATE, ...STATE_TARGETS[faceState] };
+
+    // v3.0: Blend emotion into speaking state (eyes, eyebrows, cheeks, glow)
+    const emotionTargets = emotionDuringSpeech && faceState === "speaking"
+      ? { ...DEFAULT_STATE, ...STATE_TARGETS[emotionDuringSpeech] }
+      : null;
 
     // Apply emotion intensity: lerp between idle and target
     const idleTargets = STATE_TARGETS.idle;
@@ -206,6 +212,22 @@ export function useFaceAnimation(
         const targetVal = (rawTargets as any)[key];
         if (typeof targetVal === "number" && typeof idleVal === "number") {
           (targets as any)[key] = idleVal + (targetVal - idleVal) * intensity;
+        }
+      }
+    }
+
+    // v3.0: If speaking with emotion, blend non-mouth properties from emotion
+    if (emotionTargets) {
+      const blendKeys: (keyof FaceAnimationState)[] = [
+        "eyeOpenness", "eyebrowHeight", "eyebrowTilt", "glowIntensity",
+        "cheekGlow", "irisGlow", "eyeSparkle", "pupilSize",
+      ];
+      for (const key of blendKeys) {
+        const emotionVal = (emotionTargets as any)[key];
+        const speakVal = (targets as any)[key];
+        if (typeof emotionVal === "number" && typeof speakVal === "number") {
+          // 60% emotion, 40% speaking base for natural blend
+          (targets as any)[key] = speakVal * 0.4 + emotionVal * 0.6 * intensity;
         }
       }
     }
