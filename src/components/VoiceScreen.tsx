@@ -509,8 +509,8 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     getAIResponse(cleaned);
   }, [audioQueue, clearTimers, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, interrupt, isCalmMode, recorder, session, speakFallback, startSilenceTimers]);
 
-  // ─── Deepgram Speech Recognition — always on when mic is armed ───
-  const deepgramSTT = useDeepgramSTT({
+  // ─── Smart STT with Deepgram → Native fallback ───
+  const deepgramSTT = useSmartSTT({
     onPartial: useCallback((text: string) => {
       setPartialText(text);
     }, []),
@@ -521,7 +521,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       }
     }, [handleTranscript]),
     onError: useCallback((err: string) => {
-      console.warn("[DeepgramSTT] Error:", err);
+      console.warn("[STT] Error:", err);
     }, []),
     language: "fr",
   });
