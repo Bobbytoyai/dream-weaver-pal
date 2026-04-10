@@ -1967,6 +1967,19 @@ export function getOfflineResponse(
     return { text: gameResp, intent: "PLAY_REQUEST", isOffline: true, gameType: "animal_guess" as MiniGameType };
   }
 
+  // 1d. Mission Mémoire game — if active, route ALL input to the game
+  if (isMemoryGameActive()) {
+    const gameResp = handleMemoryGameInput(text, childName);
+    updateContext("PLAY_REQUEST", text, gameResp);
+    return { text: gameResp, intent: "PLAY_REQUEST", isOffline: true, gameType: "memory_game" as MiniGameType };
+  }
+
+  // 1e. Detect "Mission Mémoire" trigger
+  if (isMemoryGameTrigger(text)) {
+    const gameResp = startMemoryGame(childName, 7);
+    updateContext("PLAY_REQUEST", text, gameResp);
+    return { text: gameResp, intent: "PLAY_REQUEST", isOffline: true, gameType: "memory_game" as MiniGameType };
+  }
   // 2. Multi-turn follow-up: handle answers to Bobby's previous questions
   const followUpAnswer = handleFollowUpAnswer(text, childName);
   if (followUpAnswer) return followUpAnswer;
