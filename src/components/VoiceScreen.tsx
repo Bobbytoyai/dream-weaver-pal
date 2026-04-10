@@ -327,7 +327,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         abortController.abort();
         speakFallback("error");
       }
-    }, 12000);
+    }, 8000);
 
     try {
       await streamVoiceChat({
