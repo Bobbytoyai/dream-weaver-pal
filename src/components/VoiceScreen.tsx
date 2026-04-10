@@ -546,10 +546,31 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 6. TRANSCRIPT HANDLER
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  const handleTranscript = useCallback((text: string) => {
+  const handleTranscript = useCallback((text: string, confidence?: number) => {
     const trimmed = text.trim();
     if (trimmed.length < 2) return;
-    console.log("[VoiceScreen] Final:", trimmed, "state:", machineStateRef.current);
+    console.log("[VoiceScreen] Final:", trimmed, "state:", machineStateRef.current, "confidence:", confidence);
+
+    // ─── LOW CONFIDENCE: ask to repeat ───
+    if (confidence !== undefined && confidence < LOW_CONFIDENCE_THRESHOLD && !hasWakeWord(trimmed)) {
+      console.log("[VoiceScreen] ⚠️ Low confidence STT — asking to repeat");
+      speakAndListen(FALLBACK_FR.low_confidence);
+      return;
+    }
+
+    // ─── SLEEP: wake word required to wake up ───
+    if (machineStateRef.current === "SLEEP") {
+      if (!hasWakeWord(trimmed)) return;
+      console.log("[VoiceScreen] ☀️ Waking from SLEEP!");
+      eventBus.emit({ type: "WAKE_DETECTED", confidence: 0.9 });
+      ensureSession();
+      if (isJustWakeWord(trimmed)) { speakAndListen(FALLBACK_FR.sleep_wake); return; }
+      const command = stripWakeWord(trimmed);
+      speakAndListen(FALLBACK_FR.sleep_wake);
+      accumulatedTextRef.current = command;
+      scheduleFlush();
+      return;
+    }
 
     // ─── IDLE: wake word or click required ───
     if (machineStateRef.current === "IDLE") {
