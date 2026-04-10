@@ -17,7 +17,7 @@ import { hasWakeWord, stripWakeWord, isJustWakeWord, computeWakeConfidence } fro
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 1. STATE MACHINE TYPES
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-type ConversationState = "IDLE" | "LISTENING" | "PROCESSING" | "SPEAKING" | "ERROR";
+type ConversationState = "IDLE" | "LISTENING" | "PROCESSING" | "SPEAKING" | "ERROR" | "SLEEP";
 type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
 type AiMsg = { role: "user" | "assistant"; content: string };
 type Intent = "story" | "game" | "emotion_support" | "question" | "chat";
@@ -30,6 +30,7 @@ function toVoiceState(s: ConversationState): VoiceState {
     case "PROCESSING": return "processing";
     case "SPEAKING": return "speaking";
     case "ERROR": return "interrupted";
+    case "SLEEP": return "session_end";
   }
 }
 
@@ -41,6 +42,8 @@ const FALLBACK_FR: Record<string, string> = {
   welcome: "Salut ! Dis Bobby pour me parler !",
   wake_greeting: "Oui? Je t'écoute.",
   recovery: "Je t'écoute 😊",
+  low_confidence: "Je n'ai pas bien compris, tu peux répéter plus fort ?",
+  sleep_wake: "Oh ! Me revoilà ! Qu'est-ce que tu veux ?",
 };
 
 function detectIntent(text: string): Intent {
@@ -91,11 +94,13 @@ function isEcho(transcript: string): boolean {
 // CONSTANTS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const SILENCE_IDLE_TIMEOUT = 40000;       // 40s silence → IDLE
+const SLEEP_TIMEOUT = 120000;             // 2min inactivity → SLEEP
 const UTTERANCE_FLUSH_DELAY = 1200;       // ms after utterance end before flushing
 const SHORT_UTTERANCE_FLUSH = 800;        // faster flush for short text
 const STUCK_TIMEOUT = 3500;               // 3.5s stuck in any state → auto-recover
 const AI_RESPONSE_TIMEOUT = 5000;         // 5s max for AI response
 const MAX_AI_RETRIES = 1;                 // retry once on failure
+const LOW_CONFIDENCE_THRESHOLD = 0.45;    // below this → ask to repeat
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // UI COMPONENTS
@@ -146,7 +151,7 @@ const DebugOverlay = ({ state, micArmed, micRunning, partialText, lastRecognized
 }) => (
   <div className="fixed top-0 left-0 right-0 z-50 bg-black/85 text-white p-3 text-[10px] font-mono space-y-1 pointer-events-none max-h-48 overflow-y-auto">
     <div className="flex gap-3 flex-wrap">
-      <span>State: <span className={`font-bold ${state === "ERROR" ? "text-red-400" : state === "LISTENING" ? "text-green-400" : state === "SPEAKING" ? "text-blue-400" : state === "PROCESSING" ? "text-yellow-400" : "text-gray-400"}`}>{state}</span></span>
+      <span>State: <span className={`font-bold ${state === "ERROR" ? "text-red-400" : state === "LISTENING" ? "text-green-400" : state === "SPEAKING" ? "text-blue-400" : state === "PROCESSING" ? "text-yellow-400" : state === "SLEEP" ? "text-indigo-400" : "text-gray-400"}`}>{state}</span></span>
       <span>Mic: {micArmed ? (micRunning ? "🟢 ON" : "🟡 ARMED") : "🔴 OFF"}</span>
       <span>STT: {sttBackend}</span>
     </div>
@@ -200,6 +205,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const abortRef = useRef<AbortController | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stuckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sleepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSentencesRef = useRef(0);
   const allSentencesDoneRef = useRef(false);
   const sessionStartedRef = useRef(false);
@@ -222,6 +228,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
     if (utteranceFlushTimerRef.current) { clearTimeout(utteranceFlushTimerRef.current); utteranceFlushTimerRef.current = null; }
     if (stuckTimerRef.current) { clearTimeout(stuckTimerRef.current); stuckTimerRef.current = null; }
+    if (sleepTimerRef.current) { clearTimeout(sleepTimerRef.current); sleepTimerRef.current = null; }
   }, []);
 
   // Cleanup on unmount
@@ -243,7 +250,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const startStuckTimer = useCallback((forState: ConversationState) => {
     if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current);
     stuckTimerRef.current = setTimeout(() => {
-      if (machineStateRef.current === forState && forState !== "IDLE" && forState !== "LISTENING") {
+      if (machineStateRef.current === forState && forState !== "IDLE" && forState !== "LISTENING" && forState !== "SLEEP") {
         console.warn(`[StateMachine] ⚠️ Stuck in ${forState} for ${STUCK_TIMEOUT}ms — auto-recovering`);
         abortRef.current?.abort();
         audioQueue.stopAll();
@@ -257,11 +264,28 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   // TRANSITIONS
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+  // → SLEEP (low power after 2 min idle)
+  const goToSleep = useCallback(() => {
+    console.log("[StateMachine] 💤 Entering SLEEP mode (2min inactivity)");
+    clearAllTimers();
+    conversationActiveRef.current = false;
+    transition("SLEEP");
+    if (sessionStartedRef.current) {
+      session.endSession();
+      eventBus.emit({ type: "SESSION_END" });
+      sessionStartedRef.current = false;
+    }
+  }, [clearAllTimers, session, transition]);
+
   // → IDLE (end conversation)
   const goToIdle = useCallback(async () => {
     clearAllTimers();
     conversationActiveRef.current = false;
     transition("IDLE");
+    // Start sleep timer → SLEEP after 2 minutes
+    sleepTimerRef.current = setTimeout(() => {
+      if (machineStateRef.current === "IDLE") goToSleep();
+    }, SLEEP_TIMEOUT);
     if (sessionStartedRef.current) {
       const messageCount = session.messageCountRef?.current ?? 0;
       const sessionId = await session.endSession();
@@ -272,7 +296,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
         if (messageCount > 0) recorder.triggerAnalysis(sessionId).then(() => undefined);
       }
     }
-  }, [clearAllTimers, recorder, session, transition]);
+  }, [clearAllTimers, goToSleep, recorder, session, transition]);
 
   // → LISTENING (ready for input)
   const goToListening = useCallback(() => {
@@ -522,10 +546,31 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 6. TRANSCRIPT HANDLER
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  const handleTranscript = useCallback((text: string) => {
+  const handleTranscript = useCallback((text: string, confidence?: number) => {
     const trimmed = text.trim();
     if (trimmed.length < 2) return;
-    console.log("[VoiceScreen] Final:", trimmed, "state:", machineStateRef.current);
+    console.log("[VoiceScreen] Final:", trimmed, "state:", machineStateRef.current, "confidence:", confidence);
+
+    // ─── LOW CONFIDENCE: ask to repeat ───
+    if (confidence !== undefined && confidence < LOW_CONFIDENCE_THRESHOLD && !hasWakeWord(trimmed)) {
+      console.log("[VoiceScreen] ⚠️ Low confidence STT — asking to repeat");
+      speakAndListen(FALLBACK_FR.low_confidence);
+      return;
+    }
+
+    // ─── SLEEP: wake word required to wake up ───
+    if (machineStateRef.current === "SLEEP") {
+      if (!hasWakeWord(trimmed)) return;
+      console.log("[VoiceScreen] ☀️ Waking from SLEEP!");
+      eventBus.emit({ type: "WAKE_DETECTED", confidence: 0.9 });
+      ensureSession();
+      if (isJustWakeWord(trimmed)) { speakAndListen(FALLBACK_FR.sleep_wake); return; }
+      const command = stripWakeWord(trimmed);
+      speakAndListen(FALLBACK_FR.sleep_wake);
+      accumulatedTextRef.current = command;
+      scheduleFlush();
+      return;
+    }
 
     // ─── IDLE: wake word or click required ───
     if (machineStateRef.current === "IDLE") {
@@ -575,8 +620,8 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
   const deepgramSTT = useSmartSTT({
     onPartial: useCallback((text: string) => {
       setPartialText(text);
-      // Wake word on partial — instant activation
-      if (machineStateRef.current === "IDLE" && !wakeTriggeredFromPartialRef.current && hasWakeWord(text, true)) {
+      // Wake word on partial — instant activation (IDLE or SLEEP)
+      if ((machineStateRef.current === "IDLE" || machineStateRef.current === "SLEEP") && !wakeTriggeredFromPartialRef.current && hasWakeWord(text, true)) {
         console.log("[VoiceScreen] ⚡ Wake on PARTIAL!");
         wakeTriggeredFromPartialRef.current = true;
         eventBus.emit({ type: "WAKE_DETECTED", confidence: computeWakeConfidence(text) });
@@ -642,11 +687,11 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
       return;
     }
 
-    // IDLE or ERROR → start conversation
+    // IDLE, ERROR, or SLEEP → start conversation
     ensureSession();
     eventBus.emit({ type: "WAKE_TRIGGERED" });
     eventBus.emit({ type: "WAKE_DETECTED", confidence: 1.0 });
-    speakAndListen(FALLBACK_FR.wake_greeting);
+    speakAndListen(s === "SLEEP" ? FALLBACK_FR.sleep_wake : FALLBACK_FR.wake_greeting);
   }, [micArmed, ensureSession, goToIdle, interrupt, speakAndListen]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -691,6 +736,7 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
     PROCESSING: "Je réfléchis…",
     SPEAKING: "Je parle…",
     ERROR: "Dis-moi !",
+    SLEEP: "💤 Bobby dort… dis son nom pour le réveiller !",
   }[machineState];
 
   return (
@@ -772,6 +818,11 @@ const VoiceScreen = ({ childName, childAge, onSwitchToChat, onSwitchToStory, onP
           ) : machineState === "IDLE" && !micArmed ? null : machineState === "SPEAKING" ? (
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100/60 backdrop-blur-sm">
               <span className="text-xs text-blue-600 font-bold">👆 Touche pour interrompre</span>
+            </div>
+          ) : machineState === "SLEEP" ? (
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-100/50 backdrop-blur-sm animate-pulse">
+              <MicOff className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="text-xs text-indigo-500 font-medium">Mode veille</span>
             </div>
           ) : null}
         </div>
