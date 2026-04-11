@@ -66,6 +66,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const leftEyebrowRef = useRef<THREE.Mesh>(null);
   const rightEyebrowRef = useRef<THREE.Mesh>(null);
   const mouthRef = useRef<THREE.Group>(null);
+  const mouthOpenRef = useRef<THREE.Mesh>(null);
   const tongueRef = useRef<THREE.Mesh>(null);
   const leftEyelidRef = useRef<THREE.Mesh>(null);
   const rightEyelidRef = useRef<THREE.Mesh>(null);
@@ -123,6 +124,11 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   // Mouth — #E91E63 (pink)
   const mouthMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("#E91E63"), transparent: true, opacity: 0.9,
+  }), []);
+
+  // Dark mouth interior (visible when mouth opens)
+  const mouthInteriorMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: new THREE.Color("#880E4F"), transparent: true, opacity: 0,
   }), []);
 
   const tongueMat = useMemo(() => new THREE.MeshBasicMaterial({
@@ -244,23 +250,37 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       rightEyebrowRef.current.rotation.z = -0.05 + state.eyebrowTilt * 0.3;
     }
 
-    // Mouth — scale the group for expressions
+    // Mouth — smile curve + opening
     if (mouthRef.current) {
       const curveEffect = state.mouthCurve;
-      const speakScale = 1 + state.mouthOpenness * 0.4 + state.mouthWidth * 0.15;
+      const speakScale = 1 + state.mouthOpenness * 0.3 + state.mouthWidth * 0.15;
       mouthRef.current.scale.x = speakScale * (1 + curveEffect * 0.25);
-      mouthRef.current.scale.y = 1 + Math.abs(curveEffect) * 0.6 + state.mouthOpenness * 0.5;
+      mouthRef.current.scale.y = 1 + Math.abs(curveEffect) * 0.5;
       mouthRef.current.position.y = -0.32 + curveEffect * 0.08;
     }
 
-    // Tongue
+    // Mouth opening (dark ellipse behind smile, visible when speaking)
+    if (mouthOpenRef.current) {
+      const openAmount = state.mouthOpenness;
+      const mMat = mouthOpenRef.current.material as THREE.MeshBasicMaterial;
+      const targetOp = openAmount > 0.05 ? Math.min(0.85, openAmount * 2.5) : 0;
+      mMat.opacity += (targetOp - mMat.opacity) * delta * 10;
+      mouthOpenRef.current.scale.set(
+        0.6 + state.mouthWidth * 0.4 + openAmount * 0.3,
+        0.3 + openAmount * 1.2,
+        1
+      );
+      mouthOpenRef.current.position.y = -0.38 - openAmount * 0.06;
+    }
+
+    // Tongue — appears inside mouth opening
     if (tongueRef.current) {
-      const showTongue = state.mouthOpenness > 0.12;
+      const showTongue = state.mouthOpenness > 0.15;
       const tMat = tongueRef.current.material as THREE.MeshBasicMaterial;
-      const targetOpacity = showTongue ? Math.min(0.7, (state.mouthOpenness - 0.12) * 3) : 0;
+      const targetOpacity = showTongue ? Math.min(0.75, (state.mouthOpenness - 0.15) * 3) : 0;
       tMat.opacity += (targetOpacity - tMat.opacity) * delta * 8;
-      tongueRef.current.position.y = -0.42 - state.mouthOpenness * 0.08;
-      tongueRef.current.scale.x = 0.8 + state.mouthOpenness * 0.5;
+      tongueRef.current.position.y = -0.44 - state.mouthOpenness * 0.06;
+      tongueRef.current.scale.set(0.7 + state.mouthOpenness * 0.5, 0.5 + state.mouthOpenness * 0.8, 1);
     }
 
     // Cheeks
@@ -321,15 +341,20 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={leftEyebrowRef} position={[leftBrowX, leftBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
       <mesh ref={rightEyebrowRef} position={[rightBrowX, rightBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
 
+      {/* ===== MOUTH OPENING — dark ellipse, visible when speaking ===== */}
+      <mesh ref={mouthOpenRef} position={[0, -0.38, 0.005]} material={mouthInteriorMat}>
+        <circleGeometry args={[0.18, 32]} />
+      </mesh>
+
+      {/* ===== TONGUE — inside mouth opening ===== */}
+      <mesh ref={tongueRef} position={[0, -0.44, 0.008]} material={tongueMat}>
+        <circleGeometry args={[0.08, 24]} />
+      </mesh>
+
       {/* ===== MOUTH — bezier curve smile from SVG ===== */}
       <group ref={mouthRef} position={[0, 0, 0.01]}>
         <mesh geometry={smileGeo} material={mouthMat} />
       </group>
-
-      {/* ===== TONGUE ===== */}
-      <mesh ref={tongueRef} position={[0, -0.42, 0.005]} material={tongueMat}>
-        <circleGeometry args={[0.05, 24]} />
-      </mesh>
     </group>
   );
 }
