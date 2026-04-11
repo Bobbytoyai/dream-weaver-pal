@@ -279,29 +279,29 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     const x = side === "left" ? -eyeSpacing : eyeSpacing;
     return (
       <group ref={eyeRef} position={[x, eyeY, 0]} key={side}>
-        {/* Eye white — manga shape */}
-        <mesh geometry={mangaEyeGeo} material={eyeWhiteMat} />
-        {/* Iris — manga shape */}
-        <mesh ref={irisRef} geometry={mangaIrisGeo} position={[0, -0.02, 0.01]} material={irisMat} />
-        {/* Inner iris glow */}
+        {/* Eye white — round */}
+        <mesh geometry={roundEyeGeo} material={eyeWhiteMat} />
+        {/* Iris — round, dark green */}
+        <mesh ref={irisRef} geometry={roundIrisGeo} position={[0, 0, 0.01]} material={irisMat} />
+        {/* Inner iris — lighter green */}
         <mesh position={[0, 0, 0.015]} material={irisInnerMat}>
-          <circleGeometry args={[0.14, 32]} />
+          <circleGeometry args={[0.18, 32]} />
         </mesh>
-        {/* Pupil */}
+        {/* Pupil — black */}
         <mesh ref={pupilRef} position={[0, 0, 0.02]} material={pupilMat}>
           <circleGeometry args={[0.1, 32]} />
         </mesh>
-        {/* Main highlight */}
-        <mesh position={[0.1, 0.14, 0.03]} material={highlightMat}>
-          <circleGeometry args={[0.07, 16]} />
+        {/* Main highlight — top right */}
+        <mesh position={[0.08, 0.1, 0.03]} material={highlightMat}>
+          <circleGeometry args={[0.065, 16]} />
         </mesh>
-        {/* Secondary highlight */}
-        <mesh position={[-0.06, -0.08, 0.03]} material={highlightMat} scale={0.45}>
-          <circleGeometry args={[0.045, 12]} />
+        {/* Secondary highlight — bottom left smaller */}
+        <mesh position={[-0.05, -0.06, 0.03]} material={highlightMat} scale={0.5}>
+          <circleGeometry args={[0.04, 12]} />
         </mesh>
         {/* Eyelid — natural blink */}
         <mesh ref={eyelidRef} position={[0, 0.28, 0.04]} material={eyelidMat}>
-          <planeGeometry args={[0.88, 0.14]} />
+          <planeGeometry args={[0.7, 0.14]} />
         </mesh>
       </group>
     );
@@ -313,30 +313,30 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       {renderEye("left", leftEyeRef, leftPupilRef, leftIrisRef, leftEyelidRef)}
       {renderEye("right", rightEyeRef, rightPupilRef, rightIrisRef, rightEyelidRef)}
 
-      {/* ===== EYEBROWS ===== */}
-      <mesh ref={leftEyebrowRef} position={[-eyeSpacing, 0.58, 0.01]} material={eyebrowMat} rotation={[0, 0, 0.15]}>
-        <planeGeometry args={[0.38, 0.055]} />
+      {/* ===== EYEBROWS — rounded rectangles, brown ===== */}
+      <mesh ref={leftEyebrowRef} position={[-eyeSpacing, 0.58, 0.01]} material={eyebrowMat} rotation={[0, 0, 0]}>
+        <shapeGeometry args={[createRoundedRectShape(0.32, 0.07, 0.035)]} />
       </mesh>
-      <mesh ref={rightEyebrowRef} position={[eyeSpacing, 0.58, 0.01]} material={eyebrowMat} rotation={[0, 0, -0.15]}>
-        <planeGeometry args={[0.38, 0.055]} />
+      <mesh ref={rightEyebrowRef} position={[eyeSpacing, 0.58, 0.01]} material={eyebrowMat} rotation={[0, 0, 0]}>
+        <shapeGeometry args={[createRoundedRectShape(0.32, 0.07, 0.035)]} />
       </mesh>
 
-      {/* ===== MOUTH — curved smile ===== */}
-      <mesh ref={mouthRef} position={[0, -0.55, 0.01]} material={mouthMat} rotation={[0, 0, Math.PI]}>
-        <torusGeometry args={[0.2, 0.028, 8, 32, Math.PI * 0.55]} />
+      {/* ===== MOUTH — curved pink smile ===== */}
+      <mesh ref={mouthRef} position={[0, -0.5, 0.01]} material={mouthMat} rotation={[0, 0, Math.PI]}>
+        <torusGeometry args={[0.18, 0.025, 8, 32, Math.PI * 0.5]} />
       </mesh>
 
       {/* ===== TONGUE — pink, fades in when mouth opens ===== */}
-      <mesh ref={tongueRef} position={[0, -0.62, 0.005]} material={tongueMat}>
+      <mesh ref={tongueRef} position={[0, -0.58, 0.005]} material={tongueMat}>
         <circleGeometry args={[0.06, 24]} />
       </mesh>
 
-      {/* ===== CHEEK BLUSH (behind eyes, z=-0.05) ===== */}
-      <mesh ref={leftCheekRef} position={[-0.7, -0.35, -0.05]} material={blushMat}>
-        <circleGeometry args={[0.22, 32]} />
+      {/* ===== CHEEK BLUSH — pink ovals ===== */}
+      <mesh ref={leftCheekRef} position={[-0.65, -0.3, -0.05]} material={blushMat}>
+        <shapeGeometry args={[createOvalShape(0.26, 0.16)]} />
       </mesh>
-      <mesh ref={rightCheekRef} position={[0.7, -0.35, -0.05]} material={blushMat}>
-        <circleGeometry args={[0.22, 32]} />
+      <mesh ref={rightCheekRef} position={[0.65, -0.3, -0.05]} material={blushMat}>
+        <shapeGeometry args={[createOvalShape(0.26, 0.16)]} />
       </mesh>
     </group>
   );
