@@ -322,7 +322,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       const showTongue = state.mouthOpenness > 0.15;
       const targetOpacity = showTongue ? Math.min(0.75, (state.mouthOpenness - 0.15) * 3) : 0;
       tongueMat.opacity += (targetOpacity - tongueMat.opacity) * delta * 8;
-      tongueRef.current.position.y = -0.55 - state.mouthOpenness * 0.08;
+      tongueRef.current.position.y = -0.70 - state.mouthOpenness * 0.08;
       tongueRef.current.scale.set(0.6 + state.mouthOpenness * 0.5, 0.4 + state.mouthOpenness * 0.6, 1);
     }
 
