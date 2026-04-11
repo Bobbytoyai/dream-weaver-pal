@@ -93,7 +93,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color("#FFFFFF"),
   }), []);
 
-  // Iris gradient layers: outer dark → mid → inner light (from SVG radialGradient)
+  // Iris gradient layers: outer dark → inner light (#1B5E20 → #4CAF50)
   const irisOuterMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("#1B5E20"), transparent: true, opacity: 0.95,
   }), []);
@@ -101,11 +101,11 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color("#388E3C"), transparent: true, opacity: 0.9,
   }), []);
   const irisInnerMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#81C784"), transparent: true, opacity: 0.85,
+    color: new THREE.Color("#4CAF50"), transparent: true, opacity: 0.85,
   }), []);
 
   const pupilMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#0D2B0E"),
+    color: new THREE.Color("#000000"),
   }), []);
 
   const highlightMat = useMemo(() => new THREE.MeshBasicMaterial({
