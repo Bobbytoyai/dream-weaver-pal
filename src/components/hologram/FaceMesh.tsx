@@ -44,30 +44,20 @@ function createRoundedRectShape(w: number, h: number, r: number): THREE.Shape {
 // Returns points for a quadratic bezier curve based on expression state
 const MOUTH_SEGMENTS = 32;
 
-function buildMouthCurvePoints(
-  mouthCurve: number,   // positive = smile, negative = frown
-  mouthWidth: number,   // 0-1, width of mouth
-  mouthOpenness: number, // 0-1, how open
-  mouthRound: number,   // 0-1, roundness (for surprise "O")
-): Float32Array {
-  const points = new Float32Array((MOUTH_SEGMENTS + 1) * 3);
-  
-  // Base mouth width in world coords (SVG: 120→280 = 160px wide)
+function buildMouthTubeGeo(
+  mouthCurve: number,
+  mouthWidth: number,
+  mouthRound: number,
+): THREE.TubeGeometry {
   const halfW = (0.47 + mouthWidth * 0.25) * (1 - mouthRound * 0.5);
-  // Curve depth: positive = smile up, negative = frown down
   const curveDepth = mouthCurve * 0.25;
-  
-  for (let i = 0; i <= MOUTH_SEGMENTS; i++) {
-    const t = i / MOUTH_SEGMENTS;
-    const x = -halfW + t * halfW * 2;
-    // Quadratic bezier: y = curve * 4*t*(1-t)
-    const bezierT = 4 * t * (1 - t);
-    const y = -curveDepth * bezierT;
-    points[i * 3] = x;
-    points[i * 3 + 1] = y;
-    points[i * 3 + 2] = 0;
-  }
-  return points;
+
+  const p0 = new THREE.Vector3(-halfW, 0, 0);
+  const p1 = new THREE.Vector3(0, -curveDepth, 0);
+  const p2 = new THREE.Vector3(halfW, 0, 0);
+
+  const curve = new THREE.QuadraticBezierCurve3(p0, p1, p2);
+  return new THREE.TubeGeometry(curve, 24, 0.028, 6, false);
 }
 
 function buildMouthFillShape(
