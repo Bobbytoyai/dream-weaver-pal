@@ -391,10 +391,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={leftEyebrowRef} position={[leftBrowX, leftBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
       <mesh ref={rightEyebrowRef} position={[rightBrowX, rightBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
 
-      {/* Mouth line — dynamic bezier curve */}
-      <line ref={mouthLineRef} position={[0, -0.50, 0.008]} geometry={mouthLineGeo}>
-        <lineBasicMaterial color="#E91E63" linewidth={2} />
-      </line>
+      {/* Mouth group — contains dynamic THREE.Line + fill mesh */}
+      <group ref={mouthGroupRef} position={[0, -0.50, 0.008]} />
 
       {/* Mouth fill — visible when open */}
       <mesh ref={mouthFillRef} position={[0, -0.50, 0.006]} geometry={mouthFillGeo} material={mouthFillMat} />
