@@ -1,8 +1,8 @@
 /**
- * Bobby Holographic Face — Flat 2D hologram style
- * Manga-shaped eyes, curved smile mouth, tongue on open
+ * Bobby Face — Faithful reproduction of the physical toy
+ * Blue/lavender face disc, sage-green eyes, brown brows, pink cheeks & smile
  */
-import { useRef, useMemo, useEffect } from "react";
+import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { FaceState, useFaceAnimation } from "./useFaceAnimation";
@@ -18,14 +18,8 @@ interface FaceMeshProps {
   bobbyColor?: string;
 }
 
-// Create a manga eye shape — tall oval, slightly pointed at corners
-function createRoundEyeShape(radius: number): THREE.Shape {
-  const shape = new THREE.Shape();
-  shape.absarc(0, 0, radius, 0, Math.PI * 2, false);
-  return shape;
-}
-
-function createOvalShape(w: number, h: number): THREE.Shape {
+// Almond/oval eye shape matching the toy
+function createAlmondEyeShape(w: number, h: number): THREE.Shape {
   const shape = new THREE.Shape();
   shape.absellipse(0, 0, w, h, 0, Math.PI * 2, false, 0);
   return shape;
@@ -45,7 +39,7 @@ function createRoundedRectShape(w: number, h: number, r: number): THREE.Shape {
   return shape;
 }
 
-export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIntensity = 0.7, emotionDuringSpeech, bobbyColor }: FaceMeshProps) {
+export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIntensity = 0.7, emotionDuringSpeech }: FaceMeshProps) {
   const rootRef = useRef<THREE.Group>(null);
   const leftEyeRef = useRef<THREE.Group>(null);
   const rightEyeRef = useRef<THREE.Group>(null);
@@ -64,63 +58,52 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   const animation = useFaceAnimation(faceState, gazeRef, audioAmplitude, viseme, emotionIntensity, emotionDuringSpeech);
 
-  // ─── Bobby canonical colors (green eyes, brown brows, pink mouth/cheeks) ──
-  const _bobbyGreen = useMemo(() => ({ h: 140, s: 55, l: 28 }), []);
+  // ─── Materials matching the physical toy ──────────────────
 
-  // ─── Materials ─────────────────────────────────────────────
+  // Blue/lavender face disc background
+  const faceDiscMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: new THREE.Color("hsl(230, 55%, 72%)"),
+    transparent: true, opacity: 1,
+  }), []);
 
+  // Eye whites
   const eyeWhiteMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("hsl(0, 0%, 100%)"),
     transparent: true, opacity: 1,
   }), []);
 
-  // Outer iris ring — dark green
+  // Outer iris — sage/olive green like the toy
   const irisMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color(`hsl(140, 55%, 22%)`),
+    color: new THREE.Color("hsl(120, 35%, 35%)"),
     transparent: true, opacity: 0.95,
   }), []);
 
-  // Inner iris — lighter green
+  // Inner iris — slightly lighter green
   const irisInnerMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color(`hsl(140, 45%, 32%)`),
+    color: new THREE.Color("hsl(120, 30%, 42%)"),
     transparent: true, opacity: 0.85,
   }), []);
 
-  // Update iris tint when bobbyColor changes (subtle hue shift)
-  useEffect(() => {
-    const colorHSL = (() => {
-      const map: Record<string, { h: number; s: number; l: number }> = {
-        blue:   { h: 155, s: 55, l: 28 },
-        purple: { h: 160, s: 50, l: 26 },
-        green:  { h: 140, s: 55, l: 22 },
-        pink:   { h: 145, s: 50, l: 25 },
-        orange: { h: 148, s: 52, l: 24 },
-        gold:   { h: 150, s: 48, l: 26 },
-      };
-      return map[bobbyColor || "green"] || map.green;
-    })();
-    irisMat.color.set(new THREE.Color(`hsl(${colorHSL.h}, ${colorHSL.s}%, ${colorHSL.l}%)`));
-    irisInnerMat.color.set(new THREE.Color(`hsl(${colorHSL.h}, ${Math.max(0, colorHSL.s - 10)}%, ${colorHSL.l + 10}%)`));
-  }, [bobbyColor, irisMat, irisInnerMat]);
-
+  // Pure black pupil
   const pupilMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("hsl(0, 0%, 5%)"),
   }), []);
 
+  // Single white highlight dot
   const highlightMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("hsl(0, 0%, 100%)"),
     transparent: true, opacity: 0.95,
   }), []);
 
-  // Brown eyebrows matching reference
+  // Brown eyebrows
   const eyebrowMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(25, 45%, 40%)"),
+    color: new THREE.Color("hsl(20, 40%, 42%)"),
     transparent: true, opacity: 0.9,
   }), []);
 
-  // Pink mouth
+  // Pink/coral mouth
   const mouthMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(340, 65%, 50%)"),
+    color: new THREE.Color("hsl(345, 60%, 55%)"),
     transparent: true, opacity: 0.9,
   }), []);
 
@@ -129,52 +112,40 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     transparent: true, opacity: 0,
   }), []);
 
+  // Eyelid matches face disc color for natural blink
   const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(0, 0%, 96%)"),
+    color: new THREE.Color("hsl(230, 55%, 72%)"),
     transparent: true, opacity: 0.97,
   }), []);
 
-  // Light pink blush cheeks — oval
+  // Coral/pink round cheeks
   const blushMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(340, 60%, 80%)"),
-    transparent: true, opacity: 0.55,
+    color: new THREE.Color("hsl(350, 55%, 72%)"),
+    transparent: true, opacity: 0.7,
   }), []);
 
-  // Round eye geometry (circle)
-  const roundEyeGeo = useMemo(() => {
-    const shape = createRoundEyeShape(0.32);
+  // ─── Geometries ───────────────────────────────────────────
+
+  // Almond eye white (wider than tall)
+  const eyeWhiteGeo = useMemo(() => {
+    const shape = createAlmondEyeShape(0.3, 0.34);
     return new THREE.ShapeGeometry(shape, 32);
   }, []);
 
-  // Iris circle (smaller)
-  const roundIrisGeo = useMemo(() => {
-    const shape = createRoundEyeShape(0.26);
-    return new THREE.ShapeGeometry(shape, 32);
-  }, []);
-
-  // Oval cheek geometry
-  const cheekGeo = useMemo(() => {
-    const shape = createOvalShape(0.26, 0.16);
-    return new THREE.ShapeGeometry(shape, 32);
-  }, []);
-
-  // Rounded rectangle eyebrow geometry
-  const eyebrowGeo = useMemo(() => {
-    const shape = createRoundedRectShape(0.32, 0.07, 0.035);
-    return new THREE.ShapeGeometry(shape, 16);
-  }, []);
+  // Iris circle
+  const irisGeo = useMemo(() => new THREE.CircleGeometry(0.24, 32), []);
 
   // ─── Frame Update ──────────────────────────────────────────
   useFrame((_, delta) => {
     const state = animation.update(delta);
     if (!rootRef.current) return;
 
-    // Head — very subtle follow for alignment
+    // Head — very subtle follow
     rootRef.current.rotation.z = state.headTiltZ * 0.3;
     rootRef.current.rotation.y = state.headTiltY * 0.15;
     rootRef.current.rotation.x = state.headTiltX * 0.08;
 
-    // Pupils (black) — strong cursor tracking, the main gaze driver
+    // Pupils — strong cursor tracking
     const t = performance.now() * 0.001;
     const wanderX = Math.sin(t * 0.4) * 0.008 + Math.sin(t * 1.1) * 0.004;
     const wanderY = Math.cos(t * 0.3) * 0.006 + Math.sin(t * 0.8) * 0.003;
@@ -186,7 +157,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         ref.current.position.y = pupilGazeY;
       }
     });
-    // Iris — follows less than pupil for depth parallax
+    // Iris parallax
     const irisGazeX = state.pupilX * 0.4 + wanderX * 0.5;
     const irisGazeY = state.pupilY * 0.3 + wanderY * 0.5;
     [leftIrisRef, rightIrisRef].forEach(ref => {
@@ -200,12 +171,12 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(ps);
     if (rightPupilRef.current) rightPupilRef.current.scale.setScalar(ps);
 
-    // Eyelids (blink) — subtle sweep down
-    const blinkClose = 1 - state.eyeOpenness; // 0 = open, 1 = fully closed
+    // Eyelids (blink) — sweeps down from top, matches face disc color
+    const blinkClose = 1 - state.eyeOpenness;
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
       if (ref.current) {
         ref.current.scale.y = Math.max(0.01, blinkClose * 2.2);
-        ref.current.position.y = 0.28 - blinkClose * 0.12;
+        ref.current.position.y = 0.3 - blinkClose * 0.14;
         ref.current.visible = blinkClose > 0.03;
       }
     });
@@ -220,36 +191,33 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     // Eyebrows
     const browLift = state.eyebrowHeight * 0.15;
     if (leftEyebrowRef.current) {
-      leftEyebrowRef.current.position.y = 0.68 + browLift;
+      leftEyebrowRef.current.position.y = 0.62 + browLift;
       leftEyebrowRef.current.rotation.z = 0.1 - state.eyebrowTilt * 0.3;
     }
     if (rightEyebrowRef.current) {
-      rightEyebrowRef.current.position.y = 0.68 + browLift;
+      rightEyebrowRef.current.position.y = 0.62 + browLift;
       rightEyebrowRef.current.rotation.z = -0.1 + state.eyebrowTilt * 0.3;
     }
 
-    // MOUTH — animate curve, width, and openness visually
+    // Mouth
     if (mouthRef.current) {
-      const curveEffect = state.mouthCurve; // -0.2 to 0.55
+      const curveEffect = state.mouthCurve;
       const speakScale = 1 + state.mouthOpenness * 0.5 + state.mouthWidth * 0.2;
-      // Scale X for width, scale Y for curve emphasis (smile = wider + shorter arc)
       mouthRef.current.scale.x = speakScale * (1 + curveEffect * 0.3);
       mouthRef.current.scale.y = 1 + Math.abs(curveEffect) * 0.8 + state.mouthOpenness * 0.6;
-      // Move mouth up when smiling, down when frowning
-      mouthRef.current.position.y = -0.55 + curveEffect * 0.12;
-      // Rotate slightly for asymmetric quirks
+      mouthRef.current.position.y = -0.48 + curveEffect * 0.1;
       mouthRef.current.rotation.z = Math.PI + state.mouthWidth * 0.02;
       const mat = mouthRef.current.material as THREE.MeshBasicMaterial;
       mat.opacity = 0.75 + state.mouthOpenness * 0.25 + Math.abs(curveEffect) * 0.15;
     }
 
-    // TONGUE — fade in when mouth opens
+    // Tongue
     if (tongueRef.current) {
       const showTongue = state.mouthOpenness > 0.12;
       const tMat = tongueRef.current.material as THREE.MeshBasicMaterial;
       const targetOpacity = showTongue ? Math.min(0.7, (state.mouthOpenness - 0.12) * 3) : 0;
       tMat.opacity += (targetOpacity - tMat.opacity) * delta * 8;
-      tongueRef.current.position.y = -0.62 - state.mouthOpenness * 0.08;
+      tongueRef.current.position.y = -0.56 - state.mouthOpenness * 0.08;
       tongueRef.current.scale.x = 0.8 + state.mouthOpenness * 0.5;
     }
 
@@ -258,7 +226,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     [leftCheekRef, rightCheekRef].forEach(ref => {
       if (ref.current) {
         const mat = ref.current.material as THREE.MeshBasicMaterial;
-        mat.opacity = 0.15 + state.cheekGlow * 0.35 + smile * 0.2;
+        mat.opacity = 0.4 + state.cheekGlow * 0.3 + smile * 0.2;
       }
     });
 
@@ -266,7 +234,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   });
 
   // ─── Layout ────────────────────────────────────────────────
-  const eyeSpacing = 0.55;
+  const eyeSpacing = 0.48;
   const eyeY = 0.1;
 
   const renderEye = (
@@ -278,30 +246,26 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   ) => {
     const x = side === "left" ? -eyeSpacing : eyeSpacing;
     return (
-      <group ref={eyeRef} position={[x, eyeY, 0]} key={side}>
-        {/* Eye white — round */}
-        <mesh geometry={roundEyeGeo} material={eyeWhiteMat} />
-        {/* Iris — round, dark green */}
-        <mesh ref={irisRef} geometry={roundIrisGeo} position={[0, 0, 0.01]} material={irisMat} />
-        {/* Inner iris — lighter green */}
-        <mesh position={[0, 0, 0.015]} material={irisInnerMat}>
-          <circleGeometry args={[0.18, 32]} />
+      <group ref={eyeRef} position={[x, eyeY, 0.01]} key={side}>
+        {/* Eye white — almond oval */}
+        <mesh geometry={eyeWhiteGeo} material={eyeWhiteMat} />
+        {/* Iris — sage green circle */}
+        <mesh ref={irisRef} geometry={irisGeo} position={[0, -0.02, 0.01]} material={irisMat} />
+        {/* Inner iris ring */}
+        <mesh position={[0, -0.02, 0.015]} material={irisInnerMat}>
+          <circleGeometry args={[0.16, 32]} />
         </mesh>
         {/* Pupil — black */}
         <mesh ref={pupilRef} position={[0, 0, 0.02]} material={pupilMat}>
-          <circleGeometry args={[0.1, 32]} />
+          <circleGeometry args={[0.09, 32]} />
         </mesh>
-        {/* Main highlight — top right */}
-        <mesh position={[0.08, 0.1, 0.03]} material={highlightMat}>
-          <circleGeometry args={[0.065, 16]} />
+        {/* Single highlight — top left like the toy */}
+        <mesh position={[-0.06, 0.1, 0.03]} material={highlightMat}>
+          <circleGeometry args={[0.055, 16]} />
         </mesh>
-        {/* Secondary highlight — bottom left smaller */}
-        <mesh position={[-0.05, -0.06, 0.03]} material={highlightMat} scale={0.5}>
-          <circleGeometry args={[0.04, 12]} />
-        </mesh>
-        {/* Eyelid — natural blink */}
-        <mesh ref={eyelidRef} position={[0, 0.28, 0.04]} material={eyelidMat}>
-          <planeGeometry args={[0.7, 0.14]} />
+        {/* Eyelid — matches face disc blue for natural blink */}
+        <mesh ref={eyelidRef} position={[0, 0.3, 0.04]} material={eyelidMat}>
+          <planeGeometry args={[0.68, 0.16]} />
         </mesh>
       </group>
     );
@@ -309,34 +273,39 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   return (
     <group ref={rootRef}>
+      {/* ===== FACE DISC — blue/lavender background ===== */}
+      <mesh position={[0, -0.05, -0.02]} material={faceDiscMat}>
+        <circleGeometry args={[1.35, 64]} />
+      </mesh>
+
       {/* ===== EYES ===== */}
       {renderEye("left", leftEyeRef, leftPupilRef, leftIrisRef, leftEyelidRef)}
       {renderEye("right", rightEyeRef, rightPupilRef, rightIrisRef, rightEyelidRef)}
 
-      {/* ===== EYEBROWS — rounded rectangles, brown ===== */}
+      {/* ===== EYEBROWS — brown rounded rectangles ===== */}
       <mesh ref={leftEyebrowRef} position={[-eyeSpacing, 0.58, 0.01]} material={eyebrowMat} rotation={[0, 0, 0]}>
-        <shapeGeometry args={[createRoundedRectShape(0.32, 0.07, 0.035)]} />
+        <shapeGeometry args={[createRoundedRectShape(0.28, 0.065, 0.03)]} />
       </mesh>
       <mesh ref={rightEyebrowRef} position={[eyeSpacing, 0.58, 0.01]} material={eyebrowMat} rotation={[0, 0, 0]}>
-        <shapeGeometry args={[createRoundedRectShape(0.32, 0.07, 0.035)]} />
+        <shapeGeometry args={[createRoundedRectShape(0.28, 0.065, 0.03)]} />
       </mesh>
 
-      {/* ===== MOUTH — curved pink smile ===== */}
-      <mesh ref={mouthRef} position={[0, -0.5, 0.01]} material={mouthMat} rotation={[0, 0, Math.PI]}>
-        <torusGeometry args={[0.18, 0.025, 8, 32, Math.PI * 0.5]} />
+      {/* ===== MOUTH — small pink curved smile ===== */}
+      <mesh ref={mouthRef} position={[0, -0.48, 0.01]} material={mouthMat} rotation={[0, 0, Math.PI]}>
+        <torusGeometry args={[0.13, 0.022, 8, 32, Math.PI * 0.45]} />
       </mesh>
 
-      {/* ===== TONGUE — pink, fades in when mouth opens ===== */}
-      <mesh ref={tongueRef} position={[0, -0.58, 0.005]} material={tongueMat}>
-        <circleGeometry args={[0.06, 24]} />
+      {/* ===== TONGUE ===== */}
+      <mesh ref={tongueRef} position={[0, -0.56, 0.005]} material={tongueMat}>
+        <circleGeometry args={[0.05, 24]} />
       </mesh>
 
-      {/* ===== CHEEK BLUSH — pink ovals ===== */}
-      <mesh ref={leftCheekRef} position={[-0.65, -0.3, -0.05]} material={blushMat}>
-        <shapeGeometry args={[createOvalShape(0.26, 0.16)]} />
+      {/* ===== CHEEKS — round coral/pink circles ===== */}
+      <mesh ref={leftCheekRef} position={[-0.58, -0.28, 0.005]} material={blushMat}>
+        <circleGeometry args={[0.16, 32]} />
       </mesh>
-      <mesh ref={rightCheekRef} position={[0.65, -0.3, -0.05]} material={blushMat}>
-        <shapeGeometry args={[createOvalShape(0.26, 0.16)]} />
+      <mesh ref={rightCheekRef} position={[0.58, -0.28, 0.005]} material={blushMat}>
+        <circleGeometry args={[0.16, 32]} />
       </mesh>
     </group>
   );
