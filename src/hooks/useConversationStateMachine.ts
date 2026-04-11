@@ -17,7 +17,7 @@ import { useChildMemory } from "@/hooks/useChildMemory";
 import { useConversationRecorder } from "@/hooks/useConversationRecorder";
 import { eventBus } from "@/lib/eventBus";
 import { getCachedResponse, isSimpleGreeting } from "@/lib/responseCache";
-import { hasWakeWord, stripWakeWord, isJustWakeWord, computeWakeConfidence } from "@/lib/wakeWordEngine";
+import { hasWakeWord, stripWakeWord, isJustWakeWord, computeWakeConfidence, WAKE_THRESHOLD_FINAL } from "@/lib/wakeWordEngine";
 import { isOffline, getOfflineResponse } from "@/lib/offlineEngine";
 import { useNetworkMode } from "@/hooks/useNetworkMode";
 import { orchestrate, refineExpression, getSilenceRelaunch } from "@/lib/orchestrator";
@@ -55,7 +55,7 @@ const SLEEP_TIMEOUT = 120000;
 const UTTERANCE_FLUSH_DELAY = 800; // increased for natural child speech pauses
 const SHORT_UTTERANCE_FLUSH = 350;
 const STUCK_TIMEOUT = 3500;
-const AI_RESPONSE_TIMEOUT = 7000; // increased to avoid premature retry race condition
+const AI_RESPONSE_TIMEOUT = 5000; // 5s max — children abandon after 7s
 const MAX_AI_RETRIES = 1;
 const LOW_CONFIDENCE_THRESHOLD = 0.45;
 const MAX_HISTORY_LENGTH = 20;
@@ -68,7 +68,7 @@ export const FALLBACK_FR: Record<string, string> = {
   welcome: "Salut ! Dis Bobby pour me parler !",
   wake_greeting: "Oui? Je t'écoute.",
   recovery: "Je t'écoute 😊",
-  low_confidence: "Je n'ai pas bien compris, tu peux répéter plus fort ?",
+  low_confidence: "Hmm, j'ai pas bien entendu ! Dis-moi encore ?",
   sleep_wake: "Oh ! Me revoilà ! Qu'est-ce que tu veux ?",
 };
 
@@ -206,7 +206,9 @@ export function useConversationStateMachine({
     });
   }, []);
   const [partialText, setPartialText] = useState("");
-  const [micArmed, setMicArmed] = useState(false);
+  // CRITIQUE FIX: mic starts ARMED — Bobby listens immediately on mount.
+  // Previously false → mic never started → child said "Bobby" into silence.
+  const [micArmed, setMicArmed] = useState(true);
   const [lastRecognized, setLastRecognized] = useState("");
   const [lastAiResponse, setLastAiResponse] = useState("");
   const [piperProgress, setPiperProgress] = useState<number>(-1);
@@ -337,7 +339,8 @@ export function useConversationStateMachine({
   const goToIdle = useCallback(async () => {
     clearAllTimers();
     conversationActiveRef.current = false;
-    currentEmotionRef.current = undefined; // Reset emotion state to avoid ghost emotions from previous session
+    currentEmotionRef.current = undefined;
+    recentBobbyTextsRef.current = []; // FIX I6: clear echo buffer on session end (prevent cross-session false echoes)
     transition("IDLE");
     sleepTimerRef.current = setTimeout(() => {
       if (machineStateRef.current === "IDLE") goToSleep();
@@ -839,10 +842,17 @@ export function useConversationStateMachine({
     }
 
     if (machineStateRef.current === "IDLE") {
-      if (!hasWakeWord(trimmed)) return;
-      eventBus.emit({ type: "WAKE_DETECTED", confidence: 0.9 });
+      const wakeConf = computeWakeConfidence(trimmed);
+      if (wakeConf < WAKE_THRESHOLD_FINAL) {
+        // IMPORTANT FIX: Even without wake word, give visual cue so child knows Bobby is alert.
+        // Bobby shows "curious" face to signal "I heard something, say my name!"
+        setBobbyFaceEmotion("curious");
+        setBobbyEmotionIntensity(0.45);
+        return;
+      }
+      eventBus.emit({ type: "WAKE_DETECTED", confidence: wakeConf });
       ensureSession();
-      if (isJustWakeWord(trimmed)) { speakAndListen(FALLBACK_FR.wake_greeting); return; }
+      if (isJustWakeWord(trimmed)) { speakAndListen(getCachedResponse("wake")); return; }
       const command = stripWakeWord(trimmed);
       accumulatedTextRef.current = command;
       scheduleFlush();
@@ -872,18 +882,38 @@ export function useConversationStateMachine({
   const deepgramSTT = useSmartSTT({
     onPartial: useCallback((text: string) => {
       setPartialText(text);
-      if ((machineStateRef.current === "IDLE" || machineStateRef.current === "SLEEP") && !wakeTriggeredFromPartialRef.current && hasWakeWord(text, true)) {
+
+      // FIX I7: Visual feedback in IDLE for ANY speech — Bobby's face reacts even before wake word
+      if (machineStateRef.current === "IDLE" && text.trim().length > 2) {
+        const wakeConf = computeWakeConfidence(text);
+        if (wakeConf >= WAKE_THRESHOLD_PARTIAL) {
+          // Strong wake signal — start activating
+          if (!wakeTriggeredFromPartialRef.current) {
+            wakeTriggeredFromPartialRef.current = true;
+            eventBus.emit({ type: "WAKE_DETECTED", confidence: wakeConf });
+            ensureSession();
+            eventBus.emit({ type: "WAKE_TRIGGERED" });
+          }
+        } else if (wakeConf >= 0.35) {
+          // Weak signal — Bobby tilts head to show "I heard something"
+          setBobbyFaceEmotion("attentive");
+          setBobbyEmotionIntensity(0.35);
+        }
+      }
+
+      if (machineStateRef.current === "SLEEP" && !wakeTriggeredFromPartialRef.current && hasWakeWord(text, true)) {
         wakeTriggeredFromPartialRef.current = true;
         eventBus.emit({ type: "WAKE_DETECTED", confidence: computeWakeConfidence(text) });
         ensureSession();
         eventBus.emit({ type: "WAKE_TRIGGERED" });
       }
-      // v3.9: Emotion anticipation from partials — react WHILE child speaks
+
+      // Emotion anticipation from partials — react WHILE child speaks
       if (machineStateRef.current === "LISTENING" && text.length > 5) {
         const anticipatedEmotion = detectBobbyEmotion(text);
         if (anticipatedEmotion) {
           setBobbyFaceEmotion(anticipatedEmotion);
-          setBobbyEmotionIntensity(0.4); // subtle, not full intensity yet
+          setBobbyEmotionIntensity(0.4);
         }
       }
     }, [ensureSession]),
@@ -987,7 +1017,7 @@ export function useConversationStateMachine({
     ensureSession();
     eventBus.emit({ type: "WAKE_TRIGGERED" });
     eventBus.emit({ type: "WAKE_DETECTED", confidence: 1.0 });
-    speakAndListen(s === "SLEEP" ? FALLBACK_FR.sleep_wake : FALLBACK_FR.wake_greeting);
+    speakAndListen(s === "SLEEP" ? FALLBACK_FR.sleep_wake : getCachedResponse("wake"));
   }, [micArmed, ensureSession, goToIdle, interrupt, speakAndListen]);
 
   const handleParentMode = useCallback(() => {
@@ -1012,6 +1042,8 @@ export function useConversationStateMachine({
     machineStateRef,
     partialText,
     micArmed,
+    setMicArmed,   // exported: VoiceScreen can arm/disarm mic programmatically
+    interrupt,     // exported: VoiceScreen can trigger interrupt externally
     lastRecognized,
     lastAiResponse,
     piperProgress,
