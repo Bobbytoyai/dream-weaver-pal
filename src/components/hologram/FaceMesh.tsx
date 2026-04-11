@@ -335,12 +335,12 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={rightEyebrowRef} position={[rightBrowX, rightBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
 
       {/* ===== MOUTH — ellipse, always visible ===== */}
-      <mesh ref={mouthOpenRef} position={[0, -0.35, 0.008]} material={mouthInteriorMat}>
-        <circleGeometry args={[0.14, 32]} />
+      <mesh ref={mouthOpenRef} position={[0, -0.48, 0.008]} material={mouthInteriorMat}>
+        <circleGeometry args={[0.16, 32]} />
       </mesh>
 
       {/* ===== TONGUE — inside mouth ===== */}
-      <mesh ref={tongueRef} position={[0, -0.42, 0.01]} material={tongueMat}>
+      <mesh ref={tongueRef} position={[0, -0.55, 0.01]} material={tongueMat}>
         <circleGeometry args={[0.07, 24]} />
       </mesh>
     </group>
