@@ -1,5 +1,4 @@
 import { useRef, useEffect, useCallback } from "react";
-
 /**
  * Simplified viseme types derived from frequency analysis.
  * Instead of full phoneme recognition, we use FFT bands to approximate
@@ -14,7 +13,6 @@ import { useRef, useEffect, useCallback } from "react";
  *  - MM:      nasal/bilabial (m, n, b, p) — low amplitude, closed mouth
  */
 export type Viseme = "REST" | "AA" | "EE" | "OO" | "FF" | "MM";
-
 export interface VisemeState {
   viseme: Viseme;
   amplitude: number;      // overall 0-1
@@ -23,12 +21,10 @@ export interface VisemeState {
   mouthRound: number;     // roundness 0-1 (for OO shapes)
   jawDrop: number;        // extra jaw movement 0-1
 }
-
 const VISEME_REST: VisemeState = {
   viseme: "REST", amplitude: 0,
   mouthOpenness: 0, mouthWidth: 0.5, mouthRound: 0, jawDrop: 0,
 };
-
 /** Intonation data for expression changes mid-sentence */
 export interface IntonationState {
   /** Current pitch trend: rising (question), falling (statement), flat */
@@ -38,7 +34,6 @@ export interface IntonationState {
   /** Speaking energy 0-1 (overall energy level) */
   energy: number;
 }
-
 export function useAudioAmplitude() {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const contextRef = useRef<AudioContext | null>(null);
@@ -52,7 +47,6 @@ export function useAudioAmplitude() {
   const intonationRef = useRef<IntonationState>({ pitchTrend: "flat", emphasis: 0, energy: 0 });
   const prevAmplitudes = useRef<number[]>([]);
   const prevLowEnergy = useRef(0);
-
   const getContext = useCallback(() => {
     if (!contextRef.current) {
       contextRef.current = new AudioContext();
@@ -66,19 +60,21 @@ export function useAudioAmplitude() {
     }
     return { context: contextRef.current, analyser: analyserRef.current! };
   }, []);
-
   const connectAudio = useCallback((audioElement: HTMLAudioElement) => {
     if (connectedElements.current.has(audioElement)) return;
     try {
       const { context, analyser } = getContext();
+      // Resume AudioContext — browser suspends it until a user gesture occurs
+      if (context.state === "suspended") {
+        context.resume().catch(() => {});
+      }
       const source = context.createMediaElementSource(audioElement);
       source.connect(analyser);
       connectedElements.current.add(audioElement);
     } catch {
-      // Element may already be connected
+      // Element may already be connected to another context
     }
   }, [getContext]);
-
   /**
    * Analyzes frequency bands and maps them to viseme mouth shapes.
    * 
@@ -90,23 +86,18 @@ export function useAudioAmplitude() {
    */
   const analyzeViseme = useCallback((): VisemeState => {
     if (!analyserRef.current || !freqDataRef.current) return { ...VISEME_REST };
-
     const analyser = analyserRef.current;
     const freqData = freqDataRef.current;
     analyser.getByteFrequencyData(freqData as any);
-
     const sampleRate = contextRef.current?.sampleRate || 44100;
     const binWidth = sampleRate / (analyser.fftSize);
     const binCount = freqData.length;
-
     // Calculate band energies
     const lowEnd = Math.min(Math.floor(500 / binWidth), binCount);
     const midEnd = Math.min(Math.floor(2000 / binWidth), binCount);
     const highEnd = Math.min(Math.floor(4000 / binWidth), binCount);
-
     let lowSum = 0, midSum = 0, highSum = 0, veryHighSum = 0, totalSum = 0;
     let lowCount = 0, midCount = 0, highCount = 0, veryHighCount = 0;
-
     for (let i = 0; i < binCount; i++) {
       const val = freqData[i] / 255;
       totalSum += val;
@@ -115,13 +106,11 @@ export function useAudioAmplitude() {
       else if (i < highEnd) { highSum += val; highCount++; }
       else { veryHighSum += val; veryHighCount++; }
     }
-
     const rawLow = lowCount > 0 ? lowSum / lowCount : 0;
     const rawMid = midCount > 0 ? midSum / midCount : 0;
     const rawHigh = highCount > 0 ? highSum / highCount : 0;
     const rawVeryHigh = veryHighCount > 0 ? veryHighSum / veryHighCount : 0;
     const amplitude = totalSum / binCount;
-
     // Smooth bands to avoid jitter (exponential moving average)
     const sm = smoothedBands.current;
     const smoothing = 0.3;
@@ -129,28 +118,23 @@ export function useAudioAmplitude() {
     sm.mid = sm.mid + (rawMid - sm.mid) * smoothing;
     sm.high = sm.high + (rawHigh - sm.high) * smoothing;
     sm.veryHigh = sm.veryHigh + (rawVeryHigh - sm.veryHigh) * smoothing;
-
     amplitudeRef.current = amplitude;
-
     // Silence threshold
     if (amplitude < 0.02) {
       visemeRef.current = { ...VISEME_REST };
       return visemeRef.current;
     }
-
     // Determine dominant band
     const total = sm.low + sm.mid + sm.high + sm.veryHigh + 0.001;
     const lowRatio = sm.low / total;
     const midRatio = sm.mid / total;
     const highRatio = (sm.high + sm.veryHigh) / total;
-
     // Classify viseme based on frequency distribution
     let viseme: Viseme;
     let mouthOpenness: number;
     let mouthWidth: number;
     let mouthRound: number;
     let jawDrop: number;
-
     if (amplitude < 0.06) {
       // Very quiet — nasal/bilabial (M, N, B, P)
       viseme = "MM";
@@ -197,17 +181,14 @@ export function useAudioAmplitude() {
       mouthRound = lowRatio * 0.4;
       jawDrop = 0.15 + amplitude * 0.5;
     }
-
     // Clamp all values
     mouthOpenness = Math.min(1, Math.max(0, mouthOpenness));
     mouthWidth = Math.min(1, Math.max(0.2, mouthWidth));
     mouthRound = Math.min(1, Math.max(0, mouthRound));
     jawDrop = Math.min(1, Math.max(0, jawDrop));
-
     visemeRef.current = {
       viseme, amplitude, mouthOpenness, mouthWidth, mouthRound, jawDrop,
     };
-
     // v3.0: Intonation analysis — detect emphasis & pitch trends
     prevAmplitudes.current.push(amplitude);
     if (prevAmplitudes.current.length > 8) prevAmplitudes.current.shift();
@@ -226,29 +207,23 @@ export function useAudioAmplitude() {
     else if (lowDelta < -0.05) pitchTrend = "falling";
     
     intonationRef.current = { pitchTrend, emphasis, energy: amplitude };
-
     return visemeRef.current;
   }, []);
-
   // Legacy compatibility
   const getAmplitude = useCallback((): number => {
     analyzeViseme();
     return amplitudeRef.current;
   }, [analyzeViseme]);
-
   const getViseme = useCallback((): VisemeState => {
     return analyzeViseme();
   }, [analyzeViseme]);
-
   const getIntonation = useCallback((): IntonationState => {
     return { ...intonationRef.current };
   }, []);
-
   useEffect(() => {
     return () => {
       contextRef.current?.close();
     };
   }, []);
-
   return { connectAudio, getAmplitude, getViseme, getIntonation, amplitudeRef, visemeRef, intonationRef };
 }
