@@ -570,10 +570,10 @@ export function useFaceAnimation(
       speechHeadNod = Math.sin(breathPhase.current * 6) * audioAmplitude * 0.03;
       speechCheekBoost = audioAmplitude > 0.2 ? audioAmplitude * 0.15 : 0;
     } else {
-      mouthOpenTarget = (targets.mouthOpenness ?? 0) + mouthBreath + mouthQuirkOpenAdd;
-      mouthWidthTarget = (targets.mouthWidth ?? 0.5) + mouthBreathWidth + mouthQuirkWidthAdd;
-      mouthRoundTarget = targets.mouthRound ?? 0;
-      jawDropTarget = (targets.jawDrop ?? 0) + mouthBreath * 0.3;
+      mouthOpenTarget = (targets.mouthOpenness ?? 0) + mouthBreath + mouthQuirkOpenAdd + ohhOpenAdd;
+      mouthWidthTarget = (targets.mouthWidth ?? 0.5) + mouthBreathWidth + mouthQuirkWidthAdd + ohhWidthAdd;
+      mouthRoundTarget = (targets.mouthRound ?? 0) + ohhRoundAdd;
+      jawDropTarget = (targets.jawDrop ?? 0) + mouthBreath * 0.3 + ohhOpenAdd * 0.5;
     }
 
     // --- LERP ALL VALUES ---
