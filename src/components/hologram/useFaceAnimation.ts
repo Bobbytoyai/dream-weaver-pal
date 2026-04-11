@@ -195,9 +195,15 @@ export function useFaceAnimation(
   const nextMouthQuirk = useRef(1 + Math.random() * 2);
   const mouthQuirkPhase = useRef(0); // 0=none, 1=quirking, 2=returning
   const mouthQuirkTarget = useRef({ curve: 0, width: 0, open: 0 });
+  // OHH mouth animation (organic, like blinks)
+  const ohhTimer = useRef(0);
+  const ohhPhase = useRef(0); // 0=waiting, 1=opening, 2=hold, 3=closing
+  const nextOhh = useRef(5 + Math.random() * 8); // every 5-13s
+  const ohhAmount = useRef(0); // current openness 0-1
+  const ohhType = useRef(0); // 0=OHH, 1=small O, 2=wide surprise
   // v3.0: Anticipation/delay buffers
-  const eyebrowAnticipationBuffer = useRef(0); // stores upcoming eyebrow lift
-  const eyeDelayBuffer = useRef({ openness: 1, sparkle: 0.5 }); // delayed eye state
+  const eyebrowAnticipationBuffer = useRef(0);
+  const eyeDelayBuffer = useRef({ openness: 1, sparkle: 0.5 });
   const eyeDelayTimer = useRef(0);
   // v3.0: Performance failsafe
   const frameBudgetExceeded = useRef(0);
