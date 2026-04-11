@@ -19,14 +19,29 @@ interface FaceMeshProps {
 }
 
 // Create a manga eye shape — tall oval, slightly pointed at corners
-function createMangaEyeShape(w: number, h: number): THREE.Shape {
+function createRoundEyeShape(radius: number): THREE.Shape {
   const shape = new THREE.Shape();
-  // Almond shape — wide, pointed at corners, less tall
-  shape.moveTo(-w, 0);
-  shape.bezierCurveTo(-w * 0.7, h * 0.9, -w * 0.2, h, 0, h * 0.95);
-  shape.bezierCurveTo(w * 0.2, h, w * 0.7, h * 0.9, w, 0);
-  shape.bezierCurveTo(w * 0.7, -h * 0.85, w * 0.2, -h * 0.95, 0, -h * 0.9);
-  shape.bezierCurveTo(-w * 0.2, -h * 0.95, -w * 0.7, -h * 0.85, -w, 0);
+  shape.absarc(0, 0, radius, 0, Math.PI * 2, false);
+  return shape;
+}
+
+function createOvalShape(w: number, h: number): THREE.Shape {
+  const shape = new THREE.Shape();
+  shape.absellipse(0, 0, w, h, 0, Math.PI * 2, false, 0);
+  return shape;
+}
+
+function createRoundedRectShape(w: number, h: number, r: number): THREE.Shape {
+  const shape = new THREE.Shape();
+  shape.moveTo(-w / 2 + r, -h / 2);
+  shape.lineTo(w / 2 - r, -h / 2);
+  shape.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r);
+  shape.lineTo(w / 2, h / 2 - r);
+  shape.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2);
+  shape.lineTo(-w / 2 + r, h / 2);
+  shape.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r);
+  shape.lineTo(-w / 2, -h / 2 + r);
+  shape.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
   return shape;
 }
 
@@ -49,18 +64,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   const animation = useFaceAnimation(faceState, gazeRef, audioAmplitude, viseme, emotionIntensity, emotionDuringSpeech);
 
-  // ─── Color theme from parent settings ─────────────────────
-  const colorHSL = useMemo(() => {
-    const map: Record<string, { h: number; s: number; l: number }> = {
-      blue:   { h: 215, s: 80, l: 65 },
-      purple: { h: 270, s: 60, l: 60 },
-      green:  { h: 155, s: 55, l: 50 },
-      pink:   { h: 330, s: 65, l: 65 },
-      orange: { h: 25,  s: 85, l: 58 },
-      gold:   { h: 45,  s: 80, l: 55 },
-    };
-    return map[bobbyColor || "blue"] || map.blue;
-  }, [bobbyColor]);
+  // ─── Bobby canonical colors (green eyes, brown brows, pink mouth/cheeks) ──
+  const _bobbyGreen = useMemo(() => ({ h: 140, s: 55, l: 28 }), []);
 
   // ─── Materials ─────────────────────────────────────────────
 
@@ -69,65 +74,94 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     transparent: true, opacity: 1,
   }), []);
 
+  // Outer iris ring — dark green
   const irisMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color(`hsl(25, 60%, 32%)`),
-    transparent: true, opacity: 0.9,
-  }), []);
-
-  const irisInnerMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color(`hsl(30, 50%, 42%)`),
-    transparent: true, opacity: 0.8,
-  }), []);
-
-  // Update iris colors when bobbyColor changes (no material recreation)
-  useEffect(() => {
-    irisMat.color.set(new THREE.Color(`hsl(${colorHSL.h}, ${colorHSL.s}%, ${colorHSL.l - 15}%)`));
-    irisInnerMat.color.set(new THREE.Color(`hsl(${colorHSL.h}, ${Math.max(0, colorHSL.s - 10)}%, ${colorHSL.l}%)`));
-  }, [colorHSL, irisMat, irisInnerMat]);
-
-  const pupilMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(20, 50%, 8%)"),
-  }), []);
-
-  const highlightMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(200, 100%, 97%)"),
+    color: new THREE.Color(`hsl(140, 55%, 22%)`),
     transparent: true, opacity: 0.95,
   }), []);
 
-  const eyebrowMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(25, 40%, 38%)"),
-    transparent: true, opacity: 0.8,
-  }), []);
-
-  const mouthMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(350, 50%, 60%)"),
+  // Inner iris — lighter green
+  const irisInnerMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: new THREE.Color(`hsl(140, 45%, 32%)`),
     transparent: true, opacity: 0.85,
   }), []);
 
+  // Update iris tint when bobbyColor changes (subtle hue shift)
+  useEffect(() => {
+    const colorHSL = (() => {
+      const map: Record<string, { h: number; s: number; l: number }> = {
+        blue:   { h: 155, s: 55, l: 28 },
+        purple: { h: 160, s: 50, l: 26 },
+        green:  { h: 140, s: 55, l: 22 },
+        pink:   { h: 145, s: 50, l: 25 },
+        orange: { h: 148, s: 52, l: 24 },
+        gold:   { h: 150, s: 48, l: 26 },
+      };
+      return map[bobbyColor || "green"] || map.green;
+    })();
+    irisMat.color.set(new THREE.Color(`hsl(${colorHSL.h}, ${colorHSL.s}%, ${colorHSL.l}%)`));
+    irisInnerMat.color.set(new THREE.Color(`hsl(${colorHSL.h}, ${Math.max(0, colorHSL.s - 10)}%, ${colorHSL.l + 10}%)`));
+  }, [bobbyColor, irisMat, irisInnerMat]);
+
+  const pupilMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: new THREE.Color("hsl(0, 0%, 5%)"),
+  }), []);
+
+  const highlightMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: new THREE.Color("hsl(0, 0%, 100%)"),
+    transparent: true, opacity: 0.95,
+  }), []);
+
+  // Brown eyebrows matching reference
+  const eyebrowMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: new THREE.Color("hsl(25, 45%, 40%)"),
+    transparent: true, opacity: 0.9,
+  }), []);
+
+  // Pink mouth
+  const mouthMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: new THREE.Color("hsl(340, 65%, 50%)"),
+    transparent: true, opacity: 0.9,
+  }), []);
+
   const tongueMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(350, 55%, 68%)"),
+    color: new THREE.Color("hsl(345, 55%, 65%)"),
     transparent: true, opacity: 0,
   }), []);
 
   const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(220, 20%, 85%)"),
+    color: new THREE.Color("hsl(0, 0%, 96%)"),
     transparent: true, opacity: 0.97,
   }), []);
 
+  // Light pink blush cheeks — oval
   const blushMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(340, 65%, 70%)"),
-    transparent: true, opacity: 0.35,
+    color: new THREE.Color("hsl(340, 60%, 80%)"),
+    transparent: true, opacity: 0.55,
   }), []);
 
-  // Manga eye shape geometry
-  const mangaEyeGeo = useMemo(() => {
-    const shape = createMangaEyeShape(0.42, 0.3);
+  // Round eye geometry (circle)
+  const roundEyeGeo = useMemo(() => {
+    const shape = createRoundEyeShape(0.32);
     return new THREE.ShapeGeometry(shape, 32);
   }, []);
 
-  const mangaIrisGeo = useMemo(() => {
-    const shape = createMangaEyeShape(0.26, 0.2);
-    return new THREE.ShapeGeometry(shape, 24);
+  // Iris circle (smaller)
+  const roundIrisGeo = useMemo(() => {
+    const shape = createRoundEyeShape(0.26);
+    return new THREE.ShapeGeometry(shape, 32);
+  }, []);
+
+  // Oval cheek geometry
+  const cheekGeo = useMemo(() => {
+    const shape = createOvalShape(0.26, 0.16);
+    return new THREE.ShapeGeometry(shape, 32);
+  }, []);
+
+  // Rounded rectangle eyebrow geometry
+  const eyebrowGeo = useMemo(() => {
+    const shape = createRoundedRectShape(0.32, 0.07, 0.035);
+    return new THREE.ShapeGeometry(shape, 16);
   }, []);
 
   // ─── Frame Update ──────────────────────────────────────────
