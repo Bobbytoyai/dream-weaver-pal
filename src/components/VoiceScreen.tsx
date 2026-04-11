@@ -1,9 +1,10 @@
 /* v5 — Thin UI shell — logic extracted to useConversationStateMachine */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { eventBus } from "@/lib/eventBus";
-import { Settings, Camera, Mic, MicOff, Gamepad2 } from "lucide-react";
+import { Settings, Camera, Mic, MicOff, Gamepad2, Palette } from "lucide-react";
 import { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
+import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import {
   useConversationStateMachine,
   type ConversationState,
@@ -113,7 +114,9 @@ const VoiceScreen = ({
     onClearGame?.();
   }, [activeGameCategory, childName, sm, onClearGame]);
   const [showDebug, setShowDebug] = useState(false);
-  // Debug toggle (5 taps on parent button)
+  const [showExpressionTest, setShowExpressionTest] = useState(false);
+  const [testEmotion, setTestEmotion] = useState<FaceState | null>(null);
+  const [testIntensity, setTestIntensity] = useState(0.7);
   const debugTapCountRef = useRef(0);
   const debugTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleDebugToggle = useCallback(() => {
@@ -172,6 +175,10 @@ const VoiceScreen = ({
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             </div>
           )}
+          <button onClick={() => setShowExpressionTest(prev => !prev)}
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-full backdrop-blur-sm border text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300 ${showExpressionTest ? 'bg-primary/20 border-primary/40 text-primary' : 'bg-white/70 border-border/50 text-muted-foreground'}`}>
+            <Palette className="w-4 h-4" />
+          </button>
           <button onClick={() => { sm.handleParentMode(); handleDebugToggle(); }}
             className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/50 text-muted-foreground text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300">
             <Settings className="w-4 h-4" />
@@ -191,14 +198,51 @@ const VoiceScreen = ({
         />
         <div className="relative w-80 h-80 md:w-96 md:h-96" onPointerDownCapture={sm.handleTapBobby}>
           <HologramFace
-            voiceState={sm.displayState}
+            voiceState={testEmotion ? "idle" : sm.displayState}
             enableCamera={parentSettings?.enableCamera ?? false}
             onTripleTap={sm.handleParentMode}
             bobbyColor={parentSettings?.bobbyColor}
-            emotionOverride={sm.bobbyFaceEmotion}
-            emotionIntensity={sm.bobbyEmotionIntensity}
+            emotionOverride={testEmotion || sm.bobbyFaceEmotion}
+            emotionIntensity={testEmotion ? testIntensity : sm.bobbyEmotionIntensity}
           />
         </div>
+        {/* Expression tester panel */}
+        {showExpressionTest && (
+          <div className="absolute bottom-0 left-0 right-0 z-30 bg-white/90 backdrop-blur-md rounded-t-2xl border-t border-border/50 p-3 shadow-lg max-h-[45%] overflow-y-auto">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-foreground/70">🎭 Test Expressions</span>
+              <button onClick={() => { setTestEmotion(null); setShowExpressionTest(false); }}
+                className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded-full bg-muted/50">
+                ✕ Fermer
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {(["idle","listening","thinking","speaking","happy","sad","surprised","confused","excited","attentive","calm","reassuring","sleepy","curious","playful","proud","angry","love"] as FaceState[]).map(emotion => (
+                <button key={emotion} onClick={() => setTestEmotion(prev => prev === emotion ? null : emotion)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
+                    testEmotion === emotion
+                      ? 'bg-primary text-primary-foreground shadow-md scale-105'
+                      : 'bg-muted/60 text-foreground/70 hover:bg-muted'
+                  }`}>
+                  {emotion === "happy" ? "😊 joie" : emotion === "sad" ? "😢 triste" : emotion === "surprised" ? "😮 surprise"
+                    : emotion === "confused" ? "🤨 confus" : emotion === "excited" ? "🤩 excité" : emotion === "angry" ? "😠 colère"
+                    : emotion === "love" ? "❤️ amour" : emotion === "calm" ? "😌 calme" : emotion === "sleepy" ? "😴 endormi"
+                    : emotion === "curious" ? "🧐 curieux" : emotion === "playful" ? "😜 espiègle" : emotion === "proud" ? "😤 fier"
+                    : emotion === "attentive" ? "👀 attentif" : emotion === "reassuring" ? "🤗 rassurant"
+                    : emotion === "listening" ? "👂 écoute" : emotion === "thinking" ? "🤔 pense"
+                    : emotion === "speaking" ? "🗣️ parle" : "😐 neutre"}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] text-muted-foreground font-medium">Intensité</span>
+              <input type="range" min="0" max="1" step="0.05" value={testIntensity}
+                onChange={e => setTestIntensity(parseFloat(e.target.value))}
+                className="flex-1 h-1.5 accent-primary" />
+              <span className="text-[10px] text-muted-foreground w-8 text-right">{Math.round(testIntensity * 100)}%</span>
+            </div>
+          </div>
+        )}
         {/* State label */}
         {stateLabel && (
           <p className="mt-4 text-sm font-bold text-foreground/70 tracking-wide text-center px-4">
