@@ -195,12 +195,14 @@ export function useFaceAnimation(
   const nextMouthQuirk = useRef(1 + Math.random() * 2);
   const mouthQuirkPhase = useRef(0); // 0=none, 1=quirking, 2=returning
   const mouthQuirkTarget = useRef({ curve: 0, width: 0, open: 0 });
-  // OHH mouth animation (organic, like blinks)
+  // OHH mouth animation — triggered by sustained gaze to far left/right
   const ohhTimer = useRef(0);
   const ohhPhase = useRef(0); // 0=waiting, 1=opening, 2=hold, 3=closing
-  const nextOhh = useRef(5 + Math.random() * 8); // every 5-13s
   const ohhAmount = useRef(0); // current openness 0-1
-  const ohhType = useRef(0); // 0=OHH, 1=small O, 2=wide surprise
+  const ohhType = useRef(0);
+  // Gaze-hold tracker for OHH trigger
+  const gazeHoldTimer = useRef(0);
+  const gazeHoldTriggered = useRef(false);
   // v3.0: Anticipation/delay buffers
   const eyebrowAnticipationBuffer = useRef(0);
   const eyeDelayBuffer = useRef({ openness: 1, sparkle: 0.5 });
