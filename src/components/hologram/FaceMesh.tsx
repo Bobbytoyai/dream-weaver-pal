@@ -67,7 +67,7 @@ function buildMouthFillShape(
   mouthRound: number,
 ): THREE.Shape {
   const shape = new THREE.Shape();
-  const halfW = (0.47 + mouthWidth * 0.25) * (1 - mouthRound * 0.5);
+  const halfW = (0.30 + mouthWidth * 0.18) * (1 - mouthRound * 0.5);
   const curveDepth = mouthCurve * 0.25;
   const openDepth = mouthOpenness * 0.35 + mouthRound * 0.3;
 
@@ -384,7 +384,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={mouthFillRef} position={[0, -0.65, 0.006]} geometry={mouthFillGeo} material={mouthFillMat} />
 
       {/* Tongue */}
-      <mesh ref={tongueRef} position={[0, -0.60, 0.01]} material={tongueMat}>
+      <mesh ref={tongueRef} position={[0, -0.73, 0.01]} material={tongueMat}>
         <circleGeometry args={[0.07, 24]} />
       </mesh>
     </group>
