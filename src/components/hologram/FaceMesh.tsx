@@ -126,6 +126,11 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color("#E91E63"), transparent: true, opacity: 0.9,
   }), []);
 
+  // Dark mouth interior (visible when mouth opens)
+  const mouthInteriorMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: new THREE.Color("#880E4F"), transparent: true, opacity: 0,
+  }), []);
+
   const tongueMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("#F48FB1"), transparent: true, opacity: 0,
   }), []);
