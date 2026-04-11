@@ -6,6 +6,7 @@ import { useGazeTracker } from "./useGazeTracker";
 import { useAudioAmplitude, type VisemeState } from "./useAudioAmplitude";
 import { FaceState } from "./useFaceAnimation";
 import { eventBus } from "@/lib/eventBus";
+import { registerAudioConnector, unregisterAudioConnector } from "@/lib/voicePipeline";
 
 interface HologramFaceProps {
   voiceState: "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
@@ -39,8 +40,11 @@ export function HologramFace({
   const { connectAudio, getAmplitude, getViseme } = useAudioAmplitude();
   const tapCountRef = useRef(0);
   const tapTimerRef = useRef<number>(0);
-
   const [wakeFlash, setWakeFlash] = useState(false);
+  useEffect(() => {
+    registerAudioConnector(connectAudio);
+    return () => unregisterAudioConnector();
+  }, [connectAudio]);
   useEffect(() => {
     const unsub = eventBus.on("WAKE_DETECTED", () => {
       setWakeFlash(true);
@@ -48,7 +52,6 @@ export function HologramFace({
     });
     return unsub;
   }, []);
-
   const handleTap = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     const now = Date.now();
     if (now - tapTimerRef.current > 600) {
@@ -56,20 +59,17 @@ export function HologramFace({
     }
     tapCountRef.current++;
     tapTimerRef.current = now;
-
     if (tapCountRef.current >= 7) {
       tapCountRef.current = 0;
       eventBus.emit({ type: "TRIPLE_TAP" });
       onTripleTap?.();
     }
   }, [onTripleTap]);
-
   const baseFaceState: FaceState = wakeFlash ? "attentive" : mapToFaceState(voiceState);
   // v3.0: Keep emotion override active DURING speaking for expression coherence
   const faceState: FaceState = emotionOverride && voiceState === "speaking" ? "speaking" : (emotionOverride || baseFaceState);
   // Pass emotion to FaceScene for blending during speech
   const emotionDuringSpeech: FaceState | undefined = voiceState === "speaking" ? emotionOverride : undefined;
-
   return (
     <div
       className="w-full h-full relative cursor-pointer select-none"
@@ -88,7 +88,6 @@ export function HologramFace({
           transition: "background 0.6s ease",
         }}
       />
-
       <Canvas
         camera={{ position: [0, 0, 3.2], fov: 45 }}
         gl={{ antialias: true, alpha: true }}
@@ -115,7 +114,6 @@ export function HologramFace({
           <pointLight position={[0, 2, 1]} intensity={0.22} color="#bbddff" distance={5} />
           {/* Side accent — lavender */}
           <pointLight position={[-2, 0, 2]} intensity={0.15} color="#ccaaff" distance={6} />
-
           <FaceScene
             faceState={faceState}
             gazeRef={gazeRef}
@@ -143,11 +141,15 @@ function FaceScene({ faceState, gazeRef, getViseme, emotionIntensity, emotionDur
   const visemeRef = useRef<VisemeState>({
     viseme: "REST", amplitude: 0, mouthOpenness: 0, mouthWidth: 0.5, mouthRound: 0, jawDrop: 0,
   });
-
   useFrame(() => {
-    visemeRef.current = getViseme();
+    const v = getViseme();
+    visemeRef.current.viseme = v.viseme;
+    visemeRef.current.amplitude = v.amplitude;
+    visemeRef.current.mouthOpenness = v.mouthOpenness;
+    visemeRef.current.mouthWidth = v.mouthWidth;
+    visemeRef.current.mouthRound = v.mouthRound;
+    visemeRef.current.jawDrop = v.jawDrop;
   });
-
   return (
     <FaceMesh
       faceState={faceState}
