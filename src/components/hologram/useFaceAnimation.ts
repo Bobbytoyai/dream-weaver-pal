@@ -69,10 +69,10 @@ const STATE_TARGETS: Record<FaceState, Partial<FaceAnimationState>> = {
     pupilSize: 1.05, cheekGlow: 0.2, irisGlow: 0.55, eyeSparkle: 0.6,
   },
   happy: {
-    eyeOpenness: 0.85, eyebrowHeight: 0.16, eyebrowTilt: 0,
-    mouthOpenness: 0.2, mouthWidth: 0.78, mouthCurve: 0.55, mouthRound: 0, jawDrop: 0.1,
-    headTiltX: 0.04, headTiltZ: 0, glowIntensity: 0.85,
-    pupilSize: 1.2, cheekGlow: 0.65, irisGlow: 0.8, eyeSparkle: 0.9,
+    eyeOpenness: 0.75, eyebrowHeight: 0.18, eyebrowTilt: 0,
+    mouthOpenness: 0.25, mouthWidth: 0.85, mouthCurve: 0.6, mouthRound: 0, jawDrop: 0.12,
+    headTiltX: 0.04, headTiltZ: 0, glowIntensity: 0.9,
+    pupilSize: 1.15, cheekGlow: 0.75, irisGlow: 0.85, eyeSparkle: 0.95,
   },
   confused: {
     eyeOpenness: 1.15, eyebrowHeight: 0.1, eyebrowTilt: 0.25,
@@ -93,8 +93,8 @@ const STATE_TARGETS: Record<FaceState, Partial<FaceAnimationState>> = {
     pupilSize: 1.2, cheekGlow: 0.3, irisGlow: 0.7, eyeSparkle: 0.8,
   },
   surprised: {
-    eyeOpenness: 1.4, eyebrowHeight: 0.32, eyebrowTilt: 0,
-    mouthOpenness: 0.35, mouthWidth: 0.5, mouthCurve: 0, mouthRound: 0.4, jawDrop: 0.3,
+    eyeOpenness: 1.45, eyebrowHeight: 0.35, eyebrowTilt: 0,
+    mouthOpenness: 0.4, mouthWidth: 0.35, mouthCurve: 0, mouthRound: 0.5, jawDrop: 0.35,
     headTiltX: 0, headTiltZ: 0, glowIntensity: 0.75,
     pupilSize: 1.4, cheekGlow: 0.2, irisGlow: 0.85, eyeSparkle: 0.95,
   },
@@ -111,8 +111,8 @@ const STATE_TARGETS: Record<FaceState, Partial<FaceAnimationState>> = {
     pupilSize: 1.1, cheekGlow: 0.25, irisGlow: 0.5, eyeSparkle: 0.6,
   },
   sad: {
-    eyeOpenness: 0.75, eyebrowHeight: -0.05, eyebrowTilt: -0.2,
-    mouthOpenness: 0.02, mouthWidth: 0.4, mouthCurve: -0.2, mouthRound: 0, jawDrop: 0,
+    eyeOpenness: 0.75, eyebrowHeight: -0.08, eyebrowTilt: -0.3,
+    mouthOpenness: 0.02, mouthWidth: 0.4, mouthCurve: -0.3, mouthRound: 0, jawDrop: 0,
     headTiltX: -0.06, headTiltZ: -0.04, glowIntensity: 0.2,
     pupilSize: 0.85, cheekGlow: 0.05, irisGlow: 0.25, eyeSparkle: 0.2,
   },
@@ -139,6 +139,18 @@ const STATE_TARGETS: Record<FaceState, Partial<FaceAnimationState>> = {
     mouthOpenness: 0.08, mouthWidth: 0.62, mouthCurve: 0.32, mouthRound: 0, jawDrop: 0.03,
     headTiltX: -0.06, headTiltZ: 0, glowIntensity: 0.7,
     pupilSize: 1.1, cheekGlow: 0.35, irisGlow: 0.65, eyeSparkle: 0.75,
+  },
+  angry: {
+    eyeOpenness: 0.7, eyebrowHeight: 0.12, eyebrowTilt: -0.3,
+    mouthOpenness: 0, mouthWidth: 0.4, mouthCurve: -0.1, mouthRound: 0, jawDrop: 0,
+    headTiltX: 0.02, headTiltZ: 0, glowIntensity: 0.5,
+    pupilSize: 0.85, cheekGlow: 0.05, irisGlow: 0.4, eyeSparkle: 0.3,
+  },
+  love: {
+    eyeOpenness: 0.88, eyebrowHeight: -0.05, eyebrowTilt: 0,
+    mouthOpenness: 0.1, mouthWidth: 0.7, mouthCurve: 0.35, mouthRound: 0, jawDrop: 0.05,
+    headTiltX: 0.02, headTiltZ: 0.03, glowIntensity: 0.85,
+    pupilSize: 1.15, cheekGlow: 0.9, irisGlow: 0.8, eyeSparkle: 0.9,
   },
 };
 
