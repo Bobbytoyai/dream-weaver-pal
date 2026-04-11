@@ -407,8 +407,8 @@ export function useFaceAnimation(
     const mouthQuirkOpenAdd = 0;
 
     // --- OHH triggered by sustained far gaze (5s left/right) ---
-    // Track if gaze is far left or right (|gazeX| > 0.6)
-    if (Math.abs(gazeX) > 0.6 && faceState !== "speaking") {
+    // Track if gaze is far left or right (|gazeX| > 0.4)
+    if (Math.abs(gazeX) > 0.4 && faceState !== "speaking") {
       gazeHoldTimer.current += delta;
     } else {
       gazeHoldTimer.current = 0;
