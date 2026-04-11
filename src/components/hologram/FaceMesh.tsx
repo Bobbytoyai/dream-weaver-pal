@@ -249,19 +249,17 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       rightEyebrowRef.current.rotation.z = -0.05 + state.eyebrowTilt * 0.3;
     }
 
-    // Mouth — closed by default, opens only when speaking
+    // Mouth — smile C-curve at rest, opens when speaking
     if (mouthOpenRef.current) {
       const openAmount = state.mouthOpenness;
       const mMat = mouthOpenRef.current.material as THREE.MeshBasicMaterial;
       mMat.opacity = 0.8;
       mouthOpenRef.current.visible = true;
-      // Wider stretch + slight downward curve via scaleY squash at rest
       const scaleX = 1.2 + openAmount * 0.25;
       const scaleY = 0.06 + openAmount * 1.4;
       mouthOpenRef.current.scale.set(scaleX, scaleY, 1);
       mouthOpenRef.current.position.y = -0.56 - openAmount * 0.04;
-      // Slight downward curve rotation
-      mouthOpenRef.current.rotation.x = openAmount > 0.05 ? 0 : 0.15;
+      mouthOpenRef.current.rotation.x = 0;
     }
 
     // Tongue — appears inside mouth opening
