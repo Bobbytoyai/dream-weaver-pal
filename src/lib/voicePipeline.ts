@@ -7,11 +7,15 @@
  * - Voice preloading on profile switch (no gap)
  * - Fallback cascade: ElevenLabs → Piper → Browser TTS
  */
-
 import { useCallback, useRef } from "react";
 import { piperSpeak, piperPreview } from "./piperTTS";
 import { isOffline } from "./offlineEngine";
 import { getCachedTTSAudio, makeCacheKey } from "./ttsCache";
+
+// ─── Global audio connector for mouth animation ─────────────
+let _audioConnector: ((el: HTMLAudioElement) => void) | null = null;
+export function registerAudioConnector(fn: (el: HTMLAudioElement) => void) { _audioConnector = fn; }
+export function unregisterAudioConnector() { _audioConnector = null; }
 
 const BOBBY_BRAIN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bobby-brain`;
 const ELEVENLABS_TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`;
@@ -79,19 +83,16 @@ async function fetchElevenLabsTTS(
 ): Promise<string> {
   const spokenText = sanitizeSpokenText(text);
   if (!spokenText) return "__silent__";
-
   // Check cache first
   const cacheKey = getCacheKey(spokenText, voiceProfile, emotion);
   const cached = audioCache.get(cacheKey);
   if (cached) return cached;
-
   // Create a timeout signal (8s max) merged with caller signal
   const timeoutController = new AbortController();
   const timeoutId = setTimeout(() => timeoutController.abort(), 8000);
   const mergedSignal = signal
     ? AbortSignal.any?.([signal, timeoutController.signal]) ?? signal
     : timeoutController.signal;
-
   const response = await fetch(ELEVENLABS_TTS_URL, {
     method: "POST",
     headers: {
@@ -108,11 +109,9 @@ async function fetchElevenLabsTTS(
     signal: mergedSignal,
   });
   clearTimeout(timeoutId);
-
   if (!response.ok) {
     throw new Error(`ElevenLabs TTS error: ${response.status}`);
   }
-
   // Check if the edge function returned a fallback JSON instead of audio
   const contentType = response.headers.get("Content-Type") || "";
   if (contentType.includes("application/json")) {
@@ -122,15 +121,12 @@ async function fetchElevenLabsTTS(
     }
     throw new Error(data.error || "TTS error");
   }
-
   const audioBlob = await response.blob();
   const blobUrl = URL.createObjectURL(audioBlob);
-
   // Cache short phrases (likely to be reused)
   if (spokenText.length < 80) {
     cacheAudio(cacheKey, blobUrl);
   }
-
   return blobUrl;
 }
 
@@ -138,7 +134,6 @@ async function fetchElevenLabsTTS(
 function speakWithBrowserTTS(text: string): Promise<string> {
   const spokenText = sanitizeSpokenText(text);
   if (!spokenText) return Promise.resolve("__browser_tts__");
-
   return new Promise((resolve, reject) => {
     if (!("speechSynthesis" in window)) {
       reject(new Error("Browser TTS not supported"));
@@ -170,10 +165,8 @@ export async function fetchTTSAudio(
   const spokenText = sanitizeSpokenText(text);
   if (!spokenText) return "__silent__";
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-
   const profile = (voiceId as VoiceProfile) || "female";
   const offline = isOffline();
-
   // ─── CHECK PERSISTENT CACHE (IndexedDB) — instant playback ───
   try {
     const persistentCached = await getCachedTTSAudio(spokenText, profile);
@@ -182,7 +175,6 @@ export async function fetchTTSAudio(
       return persistentCached;
     }
   } catch { /* non-critical */ }
-
   // ─── OFFLINE: Skip ElevenLabs entirely → Piper → Browser TTS ───
   if (!offline) {
     try {
@@ -194,14 +186,12 @@ export async function fetchTTSAudio(
   } else {
     console.log("[TTS] ⚡ Offline mode — using Piper TTS directly");
   }
-
   try {
     return await piperSpeak(spokenText, profile, signal);
   } catch (e: any) {
     if (e.name === "AbortError") throw e;
     console.warn("[TTS] Piper failed, falling back to browser TTS:", e.message);
   }
-
   return speakWithBrowserTTS(spokenText);
 }
 
@@ -213,7 +203,6 @@ export async function preloadVoiceProfile(profile: VoiceProfile): Promise<void> 
   const warmupText = "Hmm.";
   const cacheKey = getCacheKey(warmupText, profile);
   if (audioCache.has(cacheKey)) return; // Already warm
-
   try {
     await fetchElevenLabsTTS(warmupText, profile);
   } catch {
@@ -301,29 +290,24 @@ export async function streamVoiceChat({
       body: JSON.stringify({ messages, childName, childAge, mode, parentSettings, memoryContext, cognitiveContext }),
       signal,
     });
-
     if (!resp.ok) {
       const data = await resp.json().catch(() => ({}));
       onError(data.error || "ai_error");
       return;
     }
-
     if (!resp.body) {
       onError("no_response");
       return;
     }
-
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();
     let textBuffer = "";
     let fullText = "";
     let sentenceBuffer = "";
-
     const SENTENCE_RE = /[.!?…]\s*/;
-    const COMMA_MIN_LENGTH = 8;  // Flush on comma very early for ultra-fast first audio (was 12)
+    const COMMA_MIN_LENGTH = 8;
     let isFirstSentence = true;
-    const FIRST_FLUSH_LEN = 20; // Very aggressive first flush for <700ms perception
-
+    const FIRST_FLUSH_LEN = 20;
     const flushSentence = () => {
       const trimmed = sentenceBuffer.trim();
       if (trimmed.length > 0) {
@@ -336,37 +320,28 @@ export async function streamVoiceChat({
       }
       sentenceBuffer = "";
     };
-
     while (true) {
       if (signal?.aborted) break;
       const { done, value } = await reader.read();
       if (done) break;
       textBuffer += decoder.decode(value, { stream: true });
-
       let newlineIndex: number;
       while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
         let line = textBuffer.slice(0, newlineIndex);
         textBuffer = textBuffer.slice(newlineIndex + 1);
-
         if (line.endsWith("\r")) line = line.slice(0, -1);
         if (line.startsWith(":") || line.trim() === "") continue;
         if (!line.startsWith("data: ")) continue;
-
         const jsonStr = line.slice(6).trim();
         if (jsonStr === "[DONE]") break;
-
         try {
           const parsed = JSON.parse(jsonStr);
           const content = parsed.choices?.[0]?.delta?.content as string | undefined;
           if (content) {
             sentenceBuffer += content;
-            // Flush on sentence-ending punctuation
             if (SENTENCE_RE.test(sentenceBuffer)) flushSentence();
-            // Flush on comma/semicolon early (faster first audio)
             else if (sentenceBuffer.length > COMMA_MIN_LENGTH && /[,;:]\s*$/.test(sentenceBuffer)) flushSentence();
-            // Ultra-aggressive first flush — send anything >20 chars for <700ms perception
             else if (isFirstSentence && sentenceBuffer.length > FIRST_FLUSH_LEN) flushSentence();
-            // Also flush if buffer is very long without any punctuation
             else if (sentenceBuffer.length > 35) flushSentence();
           }
         } catch {
@@ -375,7 +350,6 @@ export async function streamVoiceChat({
         }
       }
     }
-
     flushSentence();
     onDone(fullText.trim());
   } catch (e: any) {
@@ -390,44 +364,37 @@ export function useAudioQueue() {
   const isPlayingRef = useRef(false);
   const onAllDoneRef = useRef<(() => void) | null>(null);
   const volumeRef = useRef(1.0);
-
   const playNext = useCallback(() => {
     if (queueRef.current.length === 0) {
       isPlayingRef.current = false;
       onAllDoneRef.current?.();
       return;
     }
-
     const url = queueRef.current.shift()!;
-
     if (url === "__browser_tts__" || url === "__silent__" || url === "__piper_silent__") {
       playNext();
       return;
     }
-
     const audio = new Audio(url);
+    _audioConnector?.(audio); // wire to HologramFace for mouth animation
     audio.volume = volumeRef.current;
     currentAudioRef.current = audio;
-
     audio.onended = () => {
       if (!audioCache.has(url)) URL.revokeObjectURL(url);
       currentAudioRef.current = null;
       playNext();
     };
-
     audio.onerror = () => {
       if (!audioCache.has(url)) URL.revokeObjectURL(url);
       currentAudioRef.current = null;
       playNext();
     };
-
     audio.play().catch(() => {
       if (!audioCache.has(url)) URL.revokeObjectURL(url);
       currentAudioRef.current = null;
       playNext();
     });
   }, []);
-
   const enqueue = useCallback((audioUrl: string) => {
     queueRef.current.push(audioUrl);
     if (!isPlayingRef.current) {
@@ -435,7 +402,6 @@ export function useAudioQueue() {
       playNext();
     }
   }, [playNext]);
-
   const stopAll = useCallback(() => {
     if ("speechSynthesis" in window) speechSynthesis.cancel();
     queueRef.current.forEach(url => {
@@ -451,16 +417,13 @@ export function useAudioQueue() {
     }
     isPlayingRef.current = false;
   }, []);
-
   const setOnAllDone = useCallback((cb: () => void) => {
     onAllDoneRef.current = cb;
   }, []);
-
   /** Set playback volume (0-1). Use 0.4-0.5 for whisper/calm mode */
   const setVolume = useCallback((v: number) => {
     volumeRef.current = Math.max(0, Math.min(1, v));
     if (currentAudioRef.current) currentAudioRef.current.volume = volumeRef.current;
   }, []);
-
   return { enqueue, stopAll, setOnAllDone, setVolume, isPlaying: isPlayingRef };
 }
