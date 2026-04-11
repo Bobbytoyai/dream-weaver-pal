@@ -396,64 +396,13 @@ export function useFaceAnimation(
       proudHeadUp = -0.04 * intensity;
     }
 
-    // --- IDLE MOUTH ANIMATION (natural, like breathing through mouth) ---
-    mouthIdlePhase.current += delta * 1.2;
-    // Breathing-linked mouth movement (amplified)
-    const mouthBreath = Math.sin(mouthIdlePhase.current) * 0.035 + Math.sin(mouthIdlePhase.current * 2.3) * 0.02;
-    const mouthBreathCurve = Math.sin(mouthIdlePhase.current * 0.7) * 0.05;
-    const mouthBreathWidth = Math.sin(mouthIdlePhase.current * 1.1) * 0.025;
-
-    // Occasional mouth quirks (like a small smile, lip purse, or twitch)
-    let mouthQuirkCurveAdd = 0;
-    let mouthQuirkWidthAdd = 0;
-    let mouthQuirkOpenAdd = 0;
-
-    if (faceState !== "speaking") {
-      mouthQuirkTimer.current += delta;
-      if (mouthQuirkPhase.current === 0 && mouthQuirkTimer.current >= nextMouthQuirk.current) {
-        mouthQuirkPhase.current = 1;
-        mouthQuirkTimer.current = 0;
-        // Random quirk type
-        const quirkType = Math.random();
-        if (quirkType < 0.35) {
-          // Smile
-          mouthQuirkTarget.current = { curve: 0.25 + Math.random() * 0.15, width: 0.08, open: 0.02 };
-        } else if (quirkType < 0.55) {
-          // Lip purse / thinking
-          mouthQuirkTarget.current = { curve: -0.08, width: -0.1, open: 0.05 };
-        } else if (quirkType < 0.75) {
-          // Slight open (like about to speak)
-          mouthQuirkTarget.current = { curve: 0.05, width: 0.02, open: 0.08 + Math.random() * 0.05 };
-        } else if (quirkType < 0.9) {
-          // Smirk
-          mouthQuirkTarget.current = { curve: 0.15, width: 0.06, open: 0.02 };
-        } else {
-          // Big grin
-          mouthQuirkTarget.current = { curve: 0.35, width: 0.1, open: 0.04 };
-        }
-      }
-
-      if (mouthQuirkPhase.current === 1) {
-        const progress = Math.min(1, mouthQuirkTimer.current * 3);
-        mouthQuirkCurveAdd = mouthQuirkTarget.current.curve * progress;
-        mouthQuirkWidthAdd = mouthQuirkTarget.current.width * progress;
-        mouthQuirkOpenAdd = mouthQuirkTarget.current.open * progress;
-        if (mouthQuirkTimer.current > 0.6 + Math.random() * 0.5) {
-          mouthQuirkPhase.current = 2;
-          mouthQuirkTimer.current = 0;
-        }
-      } else if (mouthQuirkPhase.current === 2) {
-        const fadeOut = Math.max(0, 1 - mouthQuirkTimer.current * 2);
-        mouthQuirkCurveAdd = mouthQuirkTarget.current.curve * fadeOut;
-        mouthQuirkWidthAdd = mouthQuirkTarget.current.width * fadeOut;
-        mouthQuirkOpenAdd = mouthQuirkTarget.current.open * fadeOut;
-        if (fadeOut <= 0.01) {
-          mouthQuirkPhase.current = 0;
-          mouthQuirkTimer.current = 0;
-          nextMouthQuirk.current = 1.5 + Math.random() * 2.5;
-        }
-      }
-    }
+    // --- IDLE MOUTH — disabled, mouth stays closed ---
+    const mouthBreath = 0;
+    const mouthBreathCurve = 0;
+    const mouthBreathWidth = 0;
+    const mouthQuirkCurveAdd = 0;
+    const mouthQuirkWidthAdd = 0;
+    const mouthQuirkOpenAdd = 0;
 
     // --- OHH disabled — mouth stays closed when not speaking ---
     const ohhOpenAdd = 0;
