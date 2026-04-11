@@ -263,8 +263,10 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (mouthOpenRef.current) {
       const openAmount = state.mouthOpenness;
       const mMat = mouthOpenRef.current.material as THREE.MeshBasicMaterial;
-      const targetOp = openAmount > 0.05 ? Math.min(0.85, openAmount * 2.5) : 0;
-      mMat.opacity += (targetOp - mMat.opacity) * delta * 10;
+      const shouldShow = openAmount > 0.08;
+      const targetOp = shouldShow ? Math.min(0.85, (openAmount - 0.08) * 3) : 0;
+      mMat.opacity += (targetOp - mMat.opacity) * delta * 12;
+      mouthOpenRef.current.visible = mMat.opacity > 0.01;
       mouthOpenRef.current.scale.set(
         0.6 + state.mouthWidth * 0.4 + openAmount * 0.3,
         0.3 + openAmount * 1.2,
