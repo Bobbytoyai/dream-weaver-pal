@@ -250,7 +250,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       const speakScale = 1 + state.mouthOpenness * 0.4 + state.mouthWidth * 0.15;
       mouthRef.current.scale.x = speakScale * (1 + curveEffect * 0.25);
       mouthRef.current.scale.y = 1 + Math.abs(curveEffect) * 0.6 + state.mouthOpenness * 0.5;
-      mouthRef.current.position.y = -0.551 + curveEffect * 0.08;
+      mouthRef.current.position.y = -0.32 + curveEffect * 0.08;
     }
 
     // Tongue
@@ -259,7 +259,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       const tMat = tongueRef.current.material as THREE.MeshBasicMaterial;
       const targetOpacity = showTongue ? Math.min(0.7, (state.mouthOpenness - 0.12) * 3) : 0;
       tMat.opacity += (targetOpacity - tMat.opacity) * delta * 8;
-      tongueRef.current.position.y = -0.6 - state.mouthOpenness * 0.08;
+      tongueRef.current.position.y = -0.42 - state.mouthOpenness * 0.08;
       tongueRef.current.scale.x = 0.8 + state.mouthOpenness * 0.5;
     }
 
@@ -331,7 +331,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       </group>
 
       {/* ===== TONGUE ===== */}
-      <mesh ref={tongueRef} position={[0, -0.6, 0.005]} material={tongueMat}>
+      <mesh ref={tongueRef} position={[0, -0.42, 0.005]} material={tongueMat}>
         <circleGeometry args={[0.05, 24]} />
       </mesh>
     </group>
