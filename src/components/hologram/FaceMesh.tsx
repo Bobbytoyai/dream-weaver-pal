@@ -93,7 +93,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color("#FFFFFF"),
   }), []);
 
-  // Iris gradient layers: outer dark → mid → inner light (from SVG radialGradient)
+  // Iris gradient layers: outer dark → inner light (#1B5E20 → #4CAF50)
   const irisOuterMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("#1B5E20"), transparent: true, opacity: 0.95,
   }), []);
@@ -101,11 +101,11 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color("#388E3C"), transparent: true, opacity: 0.9,
   }), []);
   const irisInnerMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#81C784"), transparent: true, opacity: 0.85,
+    color: new THREE.Color("#4CAF50"), transparent: true, opacity: 0.85,
   }), []);
 
   const pupilMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#0D2B0E"),
+    color: new THREE.Color("#000000"),
   }), []);
 
   const highlightMat = useMemo(() => new THREE.MeshBasicMaterial({
@@ -115,9 +115,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color("#FFFFFF"), transparent: true, opacity: 0.6,
   }), []);
 
-  // Brown eyebrows — #A16B47
+  // Brown eyebrows — #8B6F47
   const eyebrowMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#A16B47"), transparent: true, opacity: 0.9,
+    color: new THREE.Color("#8B6F47"), transparent: true, opacity: 0.9,
   }), []);
 
   // Mouth — #E91E63 (pink)
@@ -125,13 +125,14 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color("#E91E63"), transparent: true, opacity: 0.9,
   }), []);
 
-  // Dark mouth interior (visible when mouth opens)
+  // Dark mouth interior (#C2185B visible when mouth opens)
   const mouthInteriorMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#880E4F"), transparent: true, opacity: 0.85,
+    color: new THREE.Color("#C2185B"), transparent: true, opacity: 0.85,
   }), []);
 
+  // Tongue — #FF80AB
   const tongueMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#F48FB1"), transparent: true, opacity: 0,
+    color: new THREE.Color("#FF80AB"), transparent: true, opacity: 0,
   }), []);
 
   // Eyelid — same as face disc for natural blink
@@ -139,9 +140,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color("hsl(230, 55%, 72%)"), transparent: true, opacity: 0.97,
   }), []);
 
-  // Cheeks — #F48FB1 opacity 0.7
+  // Cheeks — #FF69B4 opacity 0.6
   const blushMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#F48FB1"), transparent: true, opacity: 0.7,
+    color: new THREE.Color("#FF69B4"), transparent: true, opacity: 0.6,
   }), []);
 
   // ─── Geometries ───────────────────────────────────────────
