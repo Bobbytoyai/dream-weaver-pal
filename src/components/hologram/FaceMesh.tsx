@@ -182,13 +182,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const highlightLargeGeo = useMemo(() => new THREE.CircleGeometry(0.07, 16), []);
   const highlightSmallGeo = useMemo(() => new THREE.CircleGeometry(0.047, 12), []);
 
-  // Dynamic mouth line geometry (pre-allocated buffer)
-  const mouthLineGeo = useMemo(() => {
-    const geo = new THREE.BufferGeometry();
-    const positions = buildMouthCurvePoints(0.08, 0.5, 0, 0);
-    geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    return geo;
-  }, []);
+  // Mouth tube geo ref — rebuilt each frame
+  const mouthTubeGeoRef = useRef<THREE.TubeGeometry | null>(null);
 
   // Dynamic mouth fill geometry (will be replaced each frame when open)
   const mouthFillGeo = useMemo(() => {
