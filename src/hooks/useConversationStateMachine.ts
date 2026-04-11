@@ -916,7 +916,19 @@ export function useConversationStateMachine({
   });
 
   useEffect(() => { sttStreamRef.current = deepgramSTT.streamRef?.current ?? null; });
-  useEffect(() => { if (micArmed) deepgramSTT.start(); else deepgramSTT.stop(); }, [micArmed, deepgramSTT]);
+
+  // ─── STT STABLE REFS ─────────────────────────────────────────────────────────
+  // CRITICAL FIX: deepgramSTT is a NEW object reference every render.
+  // Putting it in useEffect deps causes start/stop to fire on EVERY render → loop.
+  // Solution: capture .start/.stop in refs, only depend on micArmed (boolean).
+  const sttStartRef = useRef(deepgramSTT.start);
+  const sttStopRef  = useRef(deepgramSTT.stop);
+  useEffect(() => { sttStartRef.current = deepgramSTT.start; }, [deepgramSTT.start]);
+  useEffect(() => { sttStopRef.current  = deepgramSTT.stop;  }, [deepgramSTT.stop]);
+  useEffect(() => {
+    if (micArmed) sttStartRef.current();
+    else sttStopRef.current();
+  }, [micArmed]); // ← ONLY micArmed — never deepgramSTT object
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // GLOBAL WATCHDOG
