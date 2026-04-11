@@ -1,6 +1,7 @@
 /**
- * Bobby Face — Exact reproduction from kawaii SVG reference
- * Green gradient iris, bezier smile mouth, pink oval cheeks, brown brows
+ * Bobby Face — Dynamic expression system with SVG-matched colors
+ * Green gradient iris (#4CAF50→#1B5E20), black pupils, brown brows (#8B6F47),
+ * pink cheeks (#FF69B4), magenta mouth (#E91E63) with real-time morphing
  */
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
@@ -19,7 +20,7 @@ interface FaceMeshProps {
 }
 
 // SVG is 512x512, center (256,256). Scale factor to map to 3D coords:
-const S = 3.0 / 512; // ≈ 0.00586
+const S = 3.0 / 512;
 const cx = 256, cy = 256;
 function svgToWorld(sx: number, sy: number): [number, number] {
   return [(sx - cx) * S, (cy - sy) * S];
@@ -39,20 +40,44 @@ function createRoundedRectShape(w: number, h: number, r: number): THREE.Shape {
   return shape;
 }
 
-// Build smile curve geometry from SVG bezier: M190,350 C234,376.667 278,376.667 322,350
-function createSmileCurveGeo(widthScale = 1, depthScale = 1): THREE.BufferGeometry {
-  const [x0, y0] = svgToWorld(190, 310);
-  const [x1, y1] = svgToWorld(234, 336);
-  const [x2, y2] = svgToWorld(278, 336);
-  const [x3, y3] = svgToWorld(322, 310);
+// ─── Dynamic mouth curve builder ─────────────────────────────
+// Returns points for a quadratic bezier curve based on expression state
+const MOUTH_SEGMENTS = 32;
 
-  const curve = new THREE.CubicBezierCurve3(
-    new THREE.Vector3(x0 * widthScale, y0 * depthScale, 0),
-    new THREE.Vector3(x1 * widthScale, y1 * depthScale, 0),
-    new THREE.Vector3(x2 * widthScale, y2 * depthScale, 0),
-    new THREE.Vector3(x3 * widthScale, y3 * depthScale, 0),
-  );
-  return new THREE.TubeGeometry(curve, 32, 0.028, 8, false);
+function buildMouthTubeGeo(
+  mouthCurve: number,
+  mouthWidth: number,
+  mouthRound: number,
+): THREE.TubeGeometry {
+  const halfW = (0.47 + mouthWidth * 0.25) * (1 - mouthRound * 0.5);
+  const curveDepth = mouthCurve * 0.25;
+
+  const p0 = new THREE.Vector3(-halfW, 0, 0);
+  const p1 = new THREE.Vector3(0, -curveDepth, 0);
+  const p2 = new THREE.Vector3(halfW, 0, 0);
+
+  const curve = new THREE.QuadraticBezierCurve3(p0, p1, p2);
+  return new THREE.TubeGeometry(curve, 24, 0.028, 6, false);
+}
+
+function buildMouthFillShape(
+  mouthCurve: number,
+  mouthWidth: number,
+  mouthOpenness: number,
+  mouthRound: number,
+): THREE.Shape {
+  const shape = new THREE.Shape();
+  const halfW = (0.47 + mouthWidth * 0.25) * (1 - mouthRound * 0.5);
+  const curveDepth = mouthCurve * 0.25;
+  const openDepth = mouthOpenness * 0.35 + mouthRound * 0.3;
+
+  // Top lip line (same as the curve)
+  shape.moveTo(-halfW, 0);
+  shape.quadraticCurveTo(0, -curveDepth, halfW, 0);
+  // Bottom lip — goes down by openDepth
+  shape.quadraticCurveTo(0, -curveDepth + openDepth, -halfW, 0);
+
+  return shape;
 }
 
 export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIntensity = 0.7, emotionDuringSpeech }: FaceMeshProps) {
@@ -65,7 +90,10 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const rightIrisRef = useRef<THREE.Mesh>(null);
   const leftEyebrowRef = useRef<THREE.Mesh>(null);
   const rightEyebrowRef = useRef<THREE.Mesh>(null);
-  const mouthOpenRef = useRef<THREE.Mesh>(null);
+  const mouthGroupRef = useRef<THREE.Group>(null);
+  const mouthLineObjRef = useRef<THREE.Mesh | null>(null);
+  const mouthFillRef = useRef<THREE.Mesh>(null);
+  const prevMouthState = useRef({ curve: -999, width: -999, round: -999 });
   const tongueRef = useRef<THREE.Mesh>(null);
   const leftEyelidRef = useRef<THREE.Mesh>(null);
   const rightEyelidRef = useRef<THREE.Mesh>(null);
@@ -84,16 +112,10 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   // ─── Materials ────────────────────────────────────────────
 
-  const faceDiscMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(230, 55%, 72%)"),
-    transparent: true, opacity: 1,
-  }), []);
-
   const eyeWhiteMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("#FFFFFF"),
   }), []);
 
-  // Iris gradient layers: outer dark → inner light (#1B5E20 → #4CAF50)
   const irisOuterMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("#1B5E20"), transparent: true, opacity: 0.95,
   }), []);
@@ -120,14 +142,14 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color("#8B6F47"), transparent: true, opacity: 0.9,
   }), []);
 
-  // Mouth — #E91E63 (pink)
-  const mouthMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#E91E63"), transparent: true, opacity: 0.9,
+  // Mouth line material — #E91E63 (magenta)
+  const mouthMeshMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: new THREE.Color("#E91E63"),
   }), []);
 
-  // Dark mouth interior (#C2185B visible when mouth opens)
-  const mouthInteriorMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#C2185B"), transparent: true, opacity: 0.85,
+  // Mouth fill (visible when open) — #C2185B
+  const mouthFillMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: new THREE.Color("#C2185B"), transparent: true, opacity: 0, side: THREE.DoubleSide,
   }), []);
 
   // Tongue — #FF80AB
@@ -135,7 +157,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color("#FF80AB"), transparent: true, opacity: 0,
   }), []);
 
-  // Eyelid — same as face disc for natural blink
+  // Eyelid — match background
   const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("hsl(230, 55%, 72%)"), transparent: true, opacity: 0.97,
   }), []);
@@ -147,48 +169,45 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   // ─── Geometries ───────────────────────────────────────────
 
-  // Eye white — slightly almond-shaped (wider than tall)
+  // Eye white — almond shape
   const eyeWhiteGeo = useMemo(() => {
     const shape = new THREE.Shape();
     shape.absellipse(0, 0, 0.38, 0.32, 0, Math.PI * 2, false, 0);
     return new THREE.ShapeGeometry(shape, 32);
   }, []);
 
-  // Iris outer ring — r=45 in SVG → 45*S ≈ 0.264
   const irisOuterGeo = useMemo(() => new THREE.CircleGeometry(0.264, 32), []);
   const irisMidGeo = useMemo(() => new THREE.CircleGeometry(0.2, 32), []);
   const irisInnerGeo = useMemo(() => new THREE.CircleGeometry(0.12, 32), []);
-
-  // Pupil — r≈29 in SVG → 0.17
   const pupilGeo = useMemo(() => new THREE.CircleGeometry(0.17, 32), []);
-
-  // Highlights from SVG: large r≈12→0.07, small r≈8→0.047
   const highlightLargeGeo = useMemo(() => new THREE.CircleGeometry(0.07, 16), []);
   const highlightSmallGeo = useMemo(() => new THREE.CircleGeometry(0.047, 12), []);
 
-  // Smile curve
-  const smileGeo = useMemo(() => createSmileCurveGeo(), []);
+  // Mouth tube geo ref — rebuilt each frame
+  const mouthTubeGeoRef = useRef<THREE.TubeGeometry | null>(null);
 
-  // Eyebrow — rounded rect, w=90→0.527, h=25→0.146 in SVG, r=12.5→0.073
+  // Dynamic mouth fill geometry (will be replaced each frame when open)
+  const mouthFillGeo = useMemo(() => {
+    const shape = buildMouthFillShape(0.08, 0.5, 0, 0);
+    return new THREE.ShapeGeometry(shape, 16);
+  }, []);
+
+  // Eyebrow
   const eyebrowGeo = useMemo(() => {
     const shape = createRoundedRectShape(0.527 * 0.8, 0.146 * 0.8, 0.073 * 0.8);
     return new THREE.ShapeGeometry(shape, 16);
   }, []);
 
-  // Cheek oval — ~50w x 30h in SVG
+  // Cheek oval
   const cheekGeo = useMemo(() => {
     const shape = new THREE.Shape();
     shape.absellipse(0, 0, 0.29, 0.18, 0, Math.PI * 2, false, 0);
     return new THREE.ShapeGeometry(shape, 32);
   }, []);
 
-  // ─── Highlight positions from SVG (relative to eye center) ─
-  // Left eye: highlight1 at (152.5, 223) → offset from eye(170,240) = (-17.5, -17) → (-0.10, +0.10)
-  // Left eye: highlight2 at (190, 255) → offset (20, 15) → (0.12, -0.088)
+  // Highlight positions
   const hl1Offset: [number, number] = [-0.10, 0.10];
   const hl2Offset: [number, number] = [0.12, -0.088];
-  // Right eye: highlight1 at (359, 223) → offset from eye(342,240) = (17, -17) → (0.10, +0.10)
-  // Right eye: highlight2 at (322, 255) → offset (-20, 15) → (-0.12, -0.088)
   const hl1OffsetR: [number, number] = [0.10, 0.10];
   const hl2OffsetR: [number, number] = [-0.12, -0.088];
 
@@ -236,7 +255,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       }
     });
 
-    // Eye scale + happy squish (no almond distortion on group)
+    // Eye scale + happy squish
     const eyeScale = 0.9 + state.eyeOpenness * 0.15;
     const happySquish = state.mouthCurve > 0.3 ? 1 + (state.mouthCurve - 0.3) * 0.1 : 1;
     [leftEyeRef, rightEyeRef].forEach(ref => {
@@ -254,39 +273,65 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       rightEyebrowRef.current.rotation.z = -0.05 + state.eyebrowTilt * 0.3;
     }
 
-    // Mouth — smile C-curve, opens only when speaking
-    if (mouthOpenRef.current) {
+    // ─── DYNAMIC MOUTH ─────────────────────────────────────
+    // Only rebuild tube when shape changes meaningfully (perf optimization)
+    const mc = state.mouthCurve, mw = state.mouthWidth, mr = state.mouthRound;
+    const prev = prevMouthState.current;
+    const needsRebuild = Math.abs(mc - prev.curve) > 0.005 || Math.abs(mw - prev.width) > 0.005 || Math.abs(mr - prev.round) > 0.005;
+    
+    if (mouthGroupRef.current && needsRebuild) {
+      prev.curve = mc; prev.width = mw; prev.round = mr;
+      // Remove old tube
+      if (mouthLineObjRef.current) {
+        mouthGroupRef.current.remove(mouthLineObjRef.current);
+        mouthLineObjRef.current.geometry.dispose();
+        mouthLineObjRef.current = null;
+      }
+      // Build new tube from current expression
+      const newTubeGeo = buildMouthTubeGeo(mc, mw, mr);
+      const tubeObj = new THREE.Mesh(newTubeGeo, mouthMeshMat);
+      mouthGroupRef.current.add(tubeObj);
+      mouthGroupRef.current.add(tubeObj);
+      mouthLineObjRef.current = tubeObj;
+    }
+
+    // Update mouth fill (visible when mouth is open)
+    if (mouthFillRef.current) {
       const openAmount = state.mouthOpenness;
-      const mMat = mouthOpenRef.current.material as THREE.MeshBasicMaterial;
-      mMat.opacity = 0.85;
-      mouthOpenRef.current.visible = true;
-      if (openAmount > 0.05) {
-        const scaleX = 1.0 + openAmount * 0.15;
-        const scaleY = 1.0 + openAmount * 0.8;
-        mouthOpenRef.current.scale.set(scaleX, scaleY, 1);
-        mouthOpenRef.current.position.y = -0.50 - openAmount * 0.03;
+      const isOpen = openAmount > 0.03 || state.mouthRound > 0.05;
+      
+      if (isOpen) {
+        // Rebuild fill shape geometry
+        const newShape = buildMouthFillShape(
+          state.mouthCurve,
+          state.mouthWidth,
+          state.mouthOpenness,
+          state.mouthRound,
+        );
+        const newGeo = new THREE.ShapeGeometry(newShape, 16);
+        mouthFillRef.current.geometry.dispose();
+        mouthFillRef.current.geometry = newGeo;
+        mouthFillMat.opacity = Math.min(0.9, openAmount * 3 + state.mouthRound * 2);
       } else {
-        mouthOpenRef.current.scale.set(1, 1, 1);
-        mouthOpenRef.current.position.y = -0.50;
+        mouthFillMat.opacity = 0;
       }
     }
 
-    // Tongue — appears inside mouth opening
+    // Tongue — appears inside open mouth
     if (tongueRef.current) {
       const showTongue = state.mouthOpenness > 0.15;
-      const tMat = tongueRef.current.material as THREE.MeshBasicMaterial;
       const targetOpacity = showTongue ? Math.min(0.75, (state.mouthOpenness - 0.15) * 3) : 0;
-      tMat.opacity += (targetOpacity - tMat.opacity) * delta * 8;
-      tongueRef.current.position.y = -0.57 - state.mouthOpenness * 0.06;
-      tongueRef.current.scale.set(0.7 + state.mouthOpenness * 0.5, 0.5 + state.mouthOpenness * 0.8, 1);
+      tongueMat.opacity += (targetOpacity - tongueMat.opacity) * delta * 8;
+      tongueRef.current.position.y = -0.55 - state.mouthOpenness * 0.08;
+      tongueRef.current.scale.set(0.6 + state.mouthOpenness * 0.5, 0.4 + state.mouthOpenness * 0.6, 1);
     }
 
-    // Cheeks
+    // Cheeks — glow with emotion
     const smile = Math.max(0, state.mouthCurve * 2);
     [leftCheekRef, rightCheekRef].forEach(ref => {
       if (ref.current) {
         const mat = ref.current.material as THREE.MeshBasicMaterial;
-        mat.opacity = 0.45 + state.cheekGlow * 0.25 + smile * 0.2;
+        mat.opacity = 0.4 + state.cheekGlow * 0.3 + smile * 0.2;
       }
     });
 
@@ -307,17 +352,11 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     hl2: [number, number],
   ) => (
     <group ref={eyeRef} position={[eyeX, eyeY, 0.01]} key={side}>
-      {/* Eye white */}
       <mesh geometry={eyeWhiteGeo} material={eyeWhiteMat} />
-      {/* Iris — green, follows gaze */}
       <mesh ref={irisRef} geometry={irisOuterGeo} position={[0, -0.03, 0.01]} material={irisOuterMat} />
-      {/* Pupil — very dark green/black */}
       <mesh ref={pupilRef} geometry={pupilGeo} position={[0, -0.02, 0.02]} material={pupilMat} />
-      {/* Main highlight — large, top */}
       <mesh position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
-      {/* Secondary highlight — small, bottom */}
       <mesh position={[hl2[0], hl2[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} />
-      {/* Eyelid — face-disc blue for blink */}
       <mesh ref={eyelidRef} position={[0, 0.32, 0.04]} material={eyelidMat}>
         <planeGeometry args={[0.76, 0.18]} />
       </mesh>
@@ -326,24 +365,26 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   return (
     <group ref={rootRef}>
-
-      {/* ===== CHEEKS — pink ovals (behind eyes) ===== */}
+      {/* Cheeks */}
       <mesh ref={leftCheekRef} position={[leftCheekX, leftCheekY, 0.005]} material={blushMat} geometry={cheekGeo} />
       <mesh ref={rightCheekRef} position={[rightCheekX, rightCheekY, 0.005]} material={blushMat} geometry={cheekGeo} />
 
-      {/* ===== EYES ===== */}
+      {/* Eyes */}
       {renderEye("left", leftEyeRef, leftPupilRef, leftIrisRef, leftEyelidRef, leftEyeX, leftEyeY, hl1Offset, hl2Offset)}
       {renderEye("right", rightEyeRef, rightPupilRef, rightIrisRef, rightEyelidRef, rightEyeX, rightEyeY, hl1OffsetR, hl2OffsetR)}
 
-      {/* ===== EYEBROWS — brown rounded rectangles ===== */}
+      {/* Eyebrows */}
       <mesh ref={leftEyebrowRef} position={[leftBrowX, leftBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
       <mesh ref={rightEyebrowRef} position={[rightBrowX, rightBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
 
-      {/* ===== MOUTH — smile C-curve ===== */}
-      <mesh ref={mouthOpenRef} position={[0, -0.50, 0.008]} geometry={smileGeo} material={mouthInteriorMat} />
+      {/* Mouth group — contains dynamic THREE.Line + fill mesh */}
+      <group ref={mouthGroupRef} position={[0, -0.50, 0.008]} />
 
-      {/* ===== TONGUE — inside mouth ===== */}
-      <mesh ref={tongueRef} position={[0, -0.63, 0.01]} material={tongueMat}>
+      {/* Mouth fill — visible when open */}
+      <mesh ref={mouthFillRef} position={[0, -0.50, 0.006]} geometry={mouthFillGeo} material={mouthFillMat} />
+
+      {/* Tongue */}
+      <mesh ref={tongueRef} position={[0, -0.60, 0.01]} material={tongueMat}>
         <circleGeometry args={[0.07, 24]} />
       </mesh>
     </group>
