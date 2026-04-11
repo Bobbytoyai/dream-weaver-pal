@@ -341,15 +341,20 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={leftEyebrowRef} position={[leftBrowX, leftBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
       <mesh ref={rightEyebrowRef} position={[rightBrowX, rightBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
 
+      {/* ===== MOUTH OPENING — dark ellipse, visible when speaking ===== */}
+      <mesh ref={mouthOpenRef} position={[0, -0.38, 0.005]} material={mouthInteriorMat}>
+        <circleGeometry args={[0.18, 32]} />
+      </mesh>
+
+      {/* ===== TONGUE — inside mouth opening ===== */}
+      <mesh ref={tongueRef} position={[0, -0.44, 0.008]} material={tongueMat}>
+        <circleGeometry args={[0.08, 24]} />
+      </mesh>
+
       {/* ===== MOUTH — bezier curve smile from SVG ===== */}
       <group ref={mouthRef} position={[0, 0, 0.01]}>
         <mesh geometry={smileGeo} material={mouthMat} />
       </group>
-
-      {/* ===== TONGUE ===== */}
-      <mesh ref={tongueRef} position={[0, -0.42, 0.005]} material={tongueMat}>
-        <circleGeometry args={[0.05, 24]} />
-      </mesh>
     </group>
   );
 }
