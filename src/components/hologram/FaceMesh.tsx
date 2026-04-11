@@ -41,10 +41,10 @@ function createRoundedRectShape(w: number, h: number, r: number): THREE.Shape {
 
 // Build smile curve geometry from SVG bezier: M190,350 C234,376.667 278,376.667 322,350
 function createSmileCurveGeo(widthScale = 1, depthScale = 1): THREE.BufferGeometry {
-  const [x0, y0] = svgToWorld(190, 350);
-  const [x1, y1] = svgToWorld(234, 376.667);
-  const [x2, y2] = svgToWorld(278, 376.667);
-  const [x3, y3] = svgToWorld(322, 350);
+  const [x0, y0] = svgToWorld(190, 310);
+  const [x1, y1] = svgToWorld(234, 336);
+  const [x2, y2] = svgToWorld(278, 336);
+  const [x3, y3] = svgToWorld(322, 310);
 
   const curve = new THREE.CubicBezierCurve3(
     new THREE.Vector3(x0 * widthScale, y0 * depthScale, 0),
@@ -312,10 +312,6 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   return (
     <group ref={rootRef}>
-      {/* ===== FACE DISC — blue/lavender ===== */}
-      <mesh position={[0, -0.05, -0.02]} material={faceDiscMat}>
-        <circleGeometry args={[1.4, 64]} />
-      </mesh>
 
       {/* ===== CHEEKS — pink ovals (behind eyes) ===== */}
       <mesh ref={leftCheekRef} position={[leftCheekX, leftCheekY, 0.005]} material={blushMat} geometry={cheekGeo} />
