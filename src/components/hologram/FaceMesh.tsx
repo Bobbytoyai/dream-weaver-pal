@@ -250,23 +250,37 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       rightEyebrowRef.current.rotation.z = -0.05 + state.eyebrowTilt * 0.3;
     }
 
-    // Mouth — scale the group for expressions
+    // Mouth — smile curve + opening
     if (mouthRef.current) {
       const curveEffect = state.mouthCurve;
-      const speakScale = 1 + state.mouthOpenness * 0.4 + state.mouthWidth * 0.15;
+      const speakScale = 1 + state.mouthOpenness * 0.3 + state.mouthWidth * 0.15;
       mouthRef.current.scale.x = speakScale * (1 + curveEffect * 0.25);
-      mouthRef.current.scale.y = 1 + Math.abs(curveEffect) * 0.6 + state.mouthOpenness * 0.5;
+      mouthRef.current.scale.y = 1 + Math.abs(curveEffect) * 0.5;
       mouthRef.current.position.y = -0.32 + curveEffect * 0.08;
     }
 
-    // Tongue
+    // Mouth opening (dark ellipse behind smile, visible when speaking)
+    if (mouthOpenRef.current) {
+      const openAmount = state.mouthOpenness;
+      const mMat = mouthOpenRef.current.material as THREE.MeshBasicMaterial;
+      const targetOp = openAmount > 0.05 ? Math.min(0.85, openAmount * 2.5) : 0;
+      mMat.opacity += (targetOp - mMat.opacity) * delta * 10;
+      mouthOpenRef.current.scale.set(
+        0.6 + state.mouthWidth * 0.4 + openAmount * 0.3,
+        0.3 + openAmount * 1.2,
+        1
+      );
+      mouthOpenRef.current.position.y = -0.38 - openAmount * 0.06;
+    }
+
+    // Tongue — appears inside mouth opening
     if (tongueRef.current) {
-      const showTongue = state.mouthOpenness > 0.12;
+      const showTongue = state.mouthOpenness > 0.15;
       const tMat = tongueRef.current.material as THREE.MeshBasicMaterial;
-      const targetOpacity = showTongue ? Math.min(0.7, (state.mouthOpenness - 0.12) * 3) : 0;
+      const targetOpacity = showTongue ? Math.min(0.75, (state.mouthOpenness - 0.15) * 3) : 0;
       tMat.opacity += (targetOpacity - tMat.opacity) * delta * 8;
-      tongueRef.current.position.y = -0.42 - state.mouthOpenness * 0.08;
-      tongueRef.current.scale.x = 0.8 + state.mouthOpenness * 0.5;
+      tongueRef.current.position.y = -0.44 - state.mouthOpenness * 0.06;
+      tongueRef.current.scale.set(0.7 + state.mouthOpenness * 0.5, 0.5 + state.mouthOpenness * 0.8, 1);
     }
 
     // Cheeks
