@@ -273,25 +273,22 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     }
 
     // ─── DYNAMIC MOUTH ─────────────────────────────────────
-    // Create THREE.Line on first frame if not yet created
-    if (mouthGroupRef.current && !mouthLineObjRef.current) {
-      const lineObj = new THREE.Line(mouthLineGeo, mouthLineMat);
-      mouthGroupRef.current.add(lineObj);
-      mouthLineObjRef.current = lineObj;
-    }
-
-    // Update mouth curve line positions
-    if (mouthLineObjRef.current) {
-      const posAttr = mouthLineGeo.getAttribute("position") as THREE.BufferAttribute;
-      const newPoints = buildMouthCurvePoints(
+    // Rebuild mouth tube geometry each frame
+    if (mouthGroupRef.current) {
+      // Remove old tube
+      if (mouthLineObjRef.current) {
+        mouthGroupRef.current.remove(mouthLineObjRef.current);
+        mouthLineObjRef.current.geometry.dispose();
+      }
+      // Build new tube from current expression
+      const newTubeGeo = buildMouthTubeGeo(
         state.mouthCurve,
         state.mouthWidth,
-        state.mouthOpenness,
         state.mouthRound,
       );
-      posAttr.set(newPoints);
-      posAttr.needsUpdate = true;
-      mouthLineGeo.computeBoundingSphere();
+      const tubeObj = new THREE.Mesh(newTubeGeo, mouthLineMat as unknown as THREE.Material);
+      mouthGroupRef.current.add(tubeObj);
+      mouthLineObjRef.current = tubeObj as unknown as THREE.Line;
     }
 
     // Update mouth fill (visible when mouth is open)
