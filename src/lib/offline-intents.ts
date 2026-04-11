@@ -99,10 +99,14 @@ export function wordOverlap(input: string, target: string): number {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const BLOCKED_PATTERNS = [
-  /\b(mourir|mort|tuer|sang|arme|fusil|couteau|drogue|alcool|sexe|nu[de]?|suicide)\b/i,
+  // FIX BUG-SEC-1: tu[eé]r? catches 'tue/tuer/tués'; BUG-SEC-2: suicid (no \b end) catches 'suicider/suicidaire'
+  /\b(mourir|mort|tu[eé]r?|sang|arme|fusil|couteau|drogue|alcool|sexe|nu[de]?|suicid)/i,
   /\b(gros mot|insulte|merde|putain|connard|con|salope|enculé|nique)\b/i,
   /\b(frapper|battre|violence|blesser|détruire)\b/i,
-  /\b(voleur|voler|cambriol|kidnapp)/i,
+  // FIX BUG-SEC-3: 'voler' removed (false positive: 'voler comme un oiseau' = to fly)
+  // Keep: voleur (thief noun), cambriol, kidnapp. Add contextual theft 'voler de/des/un/une'
+  /\b(voleur|cambriol|kidnapp)/i,
+  /\bvol(?:[eé]e?s?\s+(?:de l'|des |un |une |mon |ton |son |ma |ta |sa |quelque))/i,
 ];
 
 export const SAFE_REDIRECTS = [
@@ -378,7 +382,8 @@ const INTENT_RULES: IntentRule[] = [
       /je t'envoie un bisou/i,
       /bisou (?:sur|dans)/i,
       /\b(t'es (?:trop |vraiment |super |très )?(?:cool|génial|gentil|marrant|super|bien|sympa|mignon|incroyable|formidable))\b/i,
-      /t'es (?:trop |vraiment |super )?(?:drôle|merveilleux)/i,
+      // FIX BUG-COL-1: added 'tu es' alongside t'es for drôle/merveilleux
+      /(?:t'es|tu es) (?:trop |vraiment |super )?(?:drôle|merveilleux)/i,
       /\b(tu es (?:trop |vraiment |super |très )?(?:cool|génial|gentil|sympa|super|bien|mignon|beau|belle|incroyable|merveilleux|formidable))\b/i,
       // NOTE: "meilleure/meilleur" — safe with \b
       /\b(tu es (?:mon|ma) (?:ami|amie|meilleur ami|meilleure amie|copain|copine))\b/i,
