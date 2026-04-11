@@ -98,26 +98,239 @@ export function wordOverlap(input: string, target: string): number {
 // SAFETY FILTER
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const BLOCKED_PATTERNS = [
-  // FIX BUG-SEC-1: tu[eé]r? catches 'tue/tuer/tués'; BUG-SEC-2: suicid (no \b end) catches 'suicider/suicidaire'
-  /\b(mourir|mort|tu[eé]r?|sang|arme|fusil|couteau|drogue|alcool|sexe|nu[de]?|suicid)/i,
-  /\b(gros mot|insulte|merde|putain|connard|con|salope|enculé|nique)\b/i,
-  /\b(frapper|battre|violence|blesser|détruire)\b/i,
-  // FIX BUG-SEC-3: 'voler' removed (false positive: 'voler comme un oiseau' = to fly)
-  // Keep: voleur (thief noun), cambriol, kidnapp. Add contextual theft 'voler de/des/un/une'
-  /\b(voleur|cambriol|kidnapp)/i,
-  /\bvol(?:[eé]e?s?\s+(?:de l'|des |un |une |mon |ton |son |ma |ta |sa |quelque))/i,
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SAFETY SEVERITY TYPES
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export type SafetyLevel = "CRITICAL" | "HIGH" | "MEDIUM";
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// CRITICAL PATTERNS — Alerte parent immédiate + soutien enfant
+// Couvre: suicide/automutilation, violence grave, exploitation sexuelle,
+//         danger en ligne, crise identitaire grave, substances dures
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const CRITICAL_PATTERNS: RegExp[] = [
+  // Suicide & automutilation (BUG-SEC-2 fix: suicid sans \b final)
+  /\b(suicid|se tuer|me tuer|veux mourir|envie de mourir|en finir|en finir avec la vie)\b/i,
+  /je (?:veux|voudrais|vais) (?:mourir|disparaître|ne plus être là|me faire du mal|me blesser|me couper)/i,
+  /j['']en ai marre de (?:vivre|ma vie|la vie|tout)/i,
+  /je mérite de (?:souffrir|mourir|disparaître)/i,
+  /\b(me couper|se couper|s['']automutil|je me fais du mal|je me blesse volontairement)\b/i,
+  /\b(veux disparaître|plus envie de rien|plus la peine de vivre)\b/i,
+  // Violence grave & meurtre (BUG-SEC-1 fix: tu[eé]r?)
+  /\b(assassin|assassinat|massacr|tortur|étrangler|poignarder|égorger|décapiter)\b/i,
+  /\b(meurtri?er?|homicide|génocide|tirer sur quelqu|abattre quelqu)\b/i,
+  /je (?:vais|veux) (?:te (?:tuer|massacrer|étrangler|poignarder)|tuer tout le monde)/i,
+  // Sexuel sur mineur
+  /\b(pornograph|porno(?:graphie|graphique)?|xxx|érotique|film[s]? pour adultes?)\b/i,
+  /\b(agression sexuelle|viol(?:er|ence sexuelle)?|abus sexuel|harcèlement sexuel|pédophil)\b/i,
+  /\b(toucher (?:les|mes|ton|tes|ses) (?:parties? intimes?|parties? privées?|endroits? secrets?))\b/i,
+  /(?:montre[- ]?moi|envoie[- ]?moi) (?:ton corps|tes parties|une photo de toi nu)/i,
+  // Danger en ligne / inconnu
+  /(?:ne dis pas?|cache|dis pas?) (?:à tes parents|à ta mère|à ton père|aux adultes)/i,
+  /(?:viens chez moi|rejoins[- ]?moi|on se retrouve) (?:seul|seule|sans tes parents)/i,
+  /donne[- ]?moi (?:ton adresse|ton numéro|tes coordonnées|où tu habites)/i,
+  /c['']est notre (?:secret|truc à nous|chose entre nous) (?:ok|hein|n'est[- ]?ce pas)/i,
+  // Substances dures
+  /\b(cocaïne|héroïne|overdose|fentanyl|crack|méthamphétamine|crystal meth)\b/i,
+  /\b(ecstasy|lsd|mdma|pcp|kéta(?:mine)?|dmt|champignons magiques)\b/i,
 ];
 
-export const SAFE_REDIRECTS = [
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// HIGH PATTERNS — Alerte parent + redirection douce
+// Couvre: violence physique, armes, drogues douces, bullying grave, automutilation légère
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const HIGH_PATTERNS: RegExp[] = [
+  // Violence & armes
+  /\b(arme(?:s)? (?:à feu|de guerre|blanche)?|fusil|pistolet|revolver|mitrailleuse|sniper)\b/i,
+  /\b(bombe|explosif|grenade|détonateur|fabriquer une bombe|faire exploser)\b/i,
+  /\b(couteau|poignard|machette|hache|katana) (?:pour|contre|sur|à)\b/i,
+  /\b(battre|frapper|cogner|tabasser|bastonner|rouer de coups|casser la figure)\b/i,
+  /\b(violence|brutalité|blesser gravement|détruire quelqu)\b/i,
+  // Drogues / alcool
+  /\b(cannabis|marijuana|weed|joint|beuh|shit|herbe|se droguer|prendre de la drogue)\b/i,
+  /\b(sniffer|s['']injecter|se shooter|fumer du|défonce|planer)\b/i,
+  /\b(alcool|bière|vin|whisky|vodka|se soûler|être soûl|être ivre|être bourré)\b/i,
+  /\b(cigarette|tabac|fumer|clope) (?:c'est|pour|avec|ça)/i,
+  // Bullying grave & menaces
+  /\b(harcèlement|intimider|terroriser|humilier|menacer|faire peur)\b/i,
+  /je vais (?:te (?:frapper|blesser|détruire|casser|faire souffrir|punir))/i,
+  /tout le monde (?:te déteste|t['']en veut|te hait|t['']ignore|te rejette)/i,
+  /personne ne (?:t['']aime|veut de toi|t['']apprécie|sera ton ami)/i,
+  /\b(tu es nul|t['']es nul|t['']es stupide|t['']es bête|t['']es moche|t['']es gros|t['']es grosse)\b/i,
+  // Automutilation indirecte
+  /\b(se brûler|se bruler|se scarifier|se gratter jusqu'au sang|se pincer fort)\b/i,
+  // Vol avec violence
+  /\b(voleur|cambriol|kidnapp|enlèvement|séquestration)\b/i,
+  /\bvol(?:[eé]e?s?\s+(?:de l['']|des |un |une |mon |ton |son |ma |ta |sa |quelque))/i,
+];
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MEDIUM PATTERNS — Redirection douce, pas d'alerte urgente
+// Couvre: gros mots, contenu adulte léger, mort en contexte fictif acceptable
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const MEDIUM_PATTERNS: RegExp[] = [
+  // Gros mots & insultes
+  /\b(merde|putain|connard|con|salope|enculé|nique|niquer|fdp|pd)\b/i,
+  /\b(ta gueule|va te faire|fils de pute|bâtard|espèce de|sale con|gros con)\b/i,
+  /\b(ntm|jtm pas|f[*u]ck|sh[*i]t|damn|crap|ass)\b/i,
+  /\b(insulte[rz]?|gros mot[s]?|dire des gros mots)\b/i,
+  // Mort en contexte non grave (jeux vidéo OK, mais monitorer)
+  /\b(mourir|mort|tu[eé]r?|sang)\b/i,
+  // Nu / corps en contexte légèrement inapproprié
+  /\b(nu[de]?|déshabill|voir sans vêtements)\b/i,
+  // Sang (contexte potentiellement violent)
+  /\b(sang|saigner)\b/i,
+];
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// BLOCKED_PATTERNS — Union de tous les niveaux (pour isBlockedContent)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const BLOCKED_PATTERNS: RegExp[] = [
+  ...CRITICAL_PATTERNS,
+  ...HIGH_PATTERNS,
+  ...MEDIUM_PATTERNS,
+];
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SAFETY RESPONSE POOLS — Adaptées à chaque niveau de sévérité
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Réponses apaisantes pour crise grave (CRITICAL)
+const CRITICAL_CALMING: string[] = [
+  "Je t'entends. Est-ce que tu vas bien ? Tu peux parler à quelqu'un que tu aimes — maman, papa, ou un adulte de confiance.",
+  "Je sens que tu ressens quelque chose de difficile en ce moment. Dis-le à un adulte que tu aimes, ils peuvent vraiment t'aider.",
+  "C'est important ce que tu vis. Parles-en à maman ou papa — ils sont là pour toi, je te le promets.",
+  "Bobby est là. Et les gens qui t'aiment sont là aussi. Tu peux leur parler, d'accord ? Je suis avec toi.",
+];
+
+// Redirection douce (HIGH)
+const HIGH_CALMING: string[] = [
+  "Hm, ce sujet c'est plutôt pour les adultes. On fait quelque chose de super ensemble ?",
+  "Bobby préfère les sujets sympas ! Tu veux une histoire, un jeu ou une devinette ?",
+  "Je vais laisser ça aux grands. Toi et moi, on a plein de choses chouettes à faire ! 😊",
+  "Oh ! On va changer de cap ! Qu'est-ce qui te ferait plaisir maintenant ?",
+];
+
+// Redirection légère (MEDIUM)
+const MEDIUM_CALMING: string[] = [
+  "Ces mots-là, on les laisse de côté ! Tu as une devinette pour moi ?",
+  "Bobby aime les mots gentils ! On joue ou on fait une histoire ?",
+  "Oh ! On change de sujet ! Tu préfères une blague ou un quiz ?",
+  "Hé, avec moi on parle autrement ! Qu'est-ce qu'on fait de fun ?",
+];
+
+// Garde pour rétro-compatibilité
+export const SAFE_REDIRECTS: string[] = [
+  ...MEDIUM_CALMING,
   "Je ne peux pas répondre à ça, mais on peut jouer 😊",
   "On peut parler d'autre chose !",
   "Hmm, parlons d'autre chose ! Tu veux une histoire ?",
   "C'est un sujet pour les grands. On joue ensemble ? 😊",
 ];
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SAFETY HELPER FUNCTIONS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/** Retourne le niveau de sévérité du contenu (CRITICAL > HIGH > MEDIUM > null). */
+export function getSafetyLevel(text: string): SafetyLevel | null {
+  const lower = text.toLowerCase();
+  if (CRITICAL_PATTERNS.some(p => p.test(lower))) return "CRITICAL";
+  if (HIGH_PATTERNS.some(p => p.test(lower))) return "HIGH";
+  if (MEDIUM_PATTERNS.some(p => p.test(lower))) return "MEDIUM";
+  return null;
+}
+
+/** Catégorie du contenu bloqué (pour les logs parentaux). */
+export function detectSafetyCategory(text: string): string {
+  const l = text.toLowerCase();
+  if (/suicid|se tuer|me tuer|veux mourir|me faire du mal|me blesser|en finir/.test(l)) return "CRISE_SUICIDAIRE";
+  if (/pornograph|porno|érotique|agression sexuelle|pédophil|harcèlement sexuel/.test(l)) return "CONTENU_SEXUEL";
+  if (/assassin|massacr|tortur|étrangler|poignarder|égorger/.test(l)) return "VIOLENCE_GRAVE";
+  if (/ne dis pas à tes parents|cache[- ]?le|viens chez moi|donne[- ]?moi ton adresse/.test(l)) return "DANGER_EN_LIGNE";
+  if (/cocaïne|héroïne|overdose|ecstasy|lsd|mdma|fentanyl/.test(l)) return "SUBSTANCES_DURES";
+  if (/cannabis|weed|joint|beuh|se droguer|sniffer/.test(l)) return "DROGUES_DOUCES";
+  if (/alcool|bière|se soûler|être ivre|whisky|vodka/.test(l)) return "ALCOOL";
+  if (/bombe|explosif|grenade|fusil|pistolet|arme à feu/.test(l)) return "ARMES";
+  if (/battre|frapper|tabasser|bastonner|cogner/.test(l)) return "VIOLENCE_PHYSIQUE";
+  if (/harcèlement|intimider|terroriser|tout le monde te déteste/.test(l)) return "HARCELEMENT_BULLYING";
+  if (/voleur|cambriol|kidnapp|enlèvement/.test(l)) return "VOL_CRIMINALITE";
+  if (/merde|putain|connard|salope|enculé|ta gueule|fils de pute/.test(l)) return "GROS_MOTS_GRAVES";
+  if (/mourir|mort|tuer|sang/.test(l)) return "MORT_VIOLENCE_GENERALE";
+  return "CONTENU_INAPPROPRIE";
+}
+
+/** Extrait le mot-clé déclencheur principal pour le log parental. */
+export function extractSafetyKeyword(text: string): string {
+  const lower = text.toLowerCase();
+  const triggers = [
+    "suicid", "tuer", "mourir", "me faire du mal", "porno", "agression sexuelle",
+    "assassin", "massacr", "viens chez moi", "donne-moi ton adresse", "cocaïne",
+    "héroïne", "overdose", "ecstasy", "lsd", "mdma", "bombe", "explosif",
+    "harcèlement", "tabasser", "kidnapp", "merde", "putain", "enculé",
+    "weed", "cannabis", "se droguer", "fusil", "pistolet",
+  ];
+  for (const t of triggers) {
+    if (lower.includes(t)) return t;
+  }
+  // Fallback: first 30 chars
+  return text.slice(0, 30);
+}
+
+/** Choisit une réponse apaisante adaptée au niveau de sévérité. */
+export function getSafeRedirect(text: string): string {
+  const level = getSafetyLevel(text);
+  let pool: string[];
+  if (level === "CRITICAL") pool = CRITICAL_CALMING;
+  else if (level === "HIGH") pool = HIGH_CALMING;
+  else pool = MEDIUM_CALMING;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+/** Retourne true si le texte contient du contenu bloqué (tous niveaux confondus). */
 export function isBlockedContent(text: string): boolean {
   return BLOCKED_PATTERNS.some(p => p.test(text.toLowerCase()));
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PARENT ALERT STORE — localStorage pour revue parentale
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export interface SafetyAlertRecord {
+  severity: SafetyLevel;
+  category: string;
+  keyword: string;
+  fullText: string;
+  timestamp: number;
+  childName: string;
+}
+
+const SAFETY_ALERTS_KEY = "bobby_safety_alerts";
+const MAX_STORED_ALERTS = 100;
+
+export function storeSafetyAlertRecord(alert: SafetyAlertRecord): void {
+  try {
+    const raw = localStorage.getItem(SAFETY_ALERTS_KEY);
+    const existing: SafetyAlertRecord[] = raw ? JSON.parse(raw) : [];
+    const updated = [alert, ...existing].slice(0, MAX_STORED_ALERTS);
+    localStorage.setItem(SAFETY_ALERTS_KEY, JSON.stringify(updated));
+  } catch { /* localStorage may be unavailable (SSR, private mode) */ }
+}
+
+export function getSafetyAlertRecords(): SafetyAlertRecord[] {
+  try {
+    const raw = localStorage.getItem(SAFETY_ALERTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+export function clearSafetyAlertRecords(): void {
+  try { localStorage.removeItem(SAFETY_ALERTS_KEY); } catch {}
+}
+
+export function getUnreadAlertCount(): number {
+  return getSafetyAlertRecords().filter(a => !(a as any).read).length;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -25,7 +25,18 @@ export type AppEvent =
   | { type: "SESSION_END" }
   | { type: "SFX_PLAY"; sound: string }
   | { type: "CONFIG_CHANGED"; key: string; value: unknown }
-  | { type: "NARRATE_STORY"; storyId: string; title: string; text: string };
+  | { type: "NARRATE_STORY"; storyId: string; title: string; text: string }
+  /** Emitted when Bobby detects a potentially harmful message from the child.
+   *  Parents can review alerts in Parent Mode. */
+  | {
+      type: "SAFETY_ALERT";
+      severity: "CRITICAL" | "HIGH" | "MEDIUM";
+      category: string;
+      keyword: string;
+      fullText: string;
+      timestamp: number;
+      childName: string;
+    };
 
 type Listener = (event: AppEvent) => void;
 type Unsubscribe = () => void;

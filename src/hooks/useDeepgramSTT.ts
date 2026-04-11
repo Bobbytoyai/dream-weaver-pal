@@ -142,6 +142,15 @@ export function useDeepgramSTT({ onPartial, onFinal, onError, onUtteranceEnd, on
         
         const audioContext = new AudioContext({ sampleRate: 48000 });
         contextRef.current = audioContext;
+
+        // FIX BUG-AUDIO-1: AudioContext starts suspended in browsers that require
+        // a user gesture before audio processing can begin. Resume it explicitly.
+        if (audioContext.state === "suspended") {
+          await audioContext.resume().catch(e =>
+            console.warn("[DeepgramSTT] AudioContext resume failed:", e)
+          );
+        }
+
         const source = audioContext.createMediaStreamSource(stream);
 
         try {

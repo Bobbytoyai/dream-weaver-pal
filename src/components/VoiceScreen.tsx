@@ -1,19 +1,21 @@
 /* v5 — Thin UI shell — logic extracted to useConversationStateMachine */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { eventBus } from "@/lib/eventBus";
-import { Settings, Camera, Mic, MicOff, Gamepad2, Palette } from "lucide-react";
+import { getUnreadAlertCount } from "@/lib/offlineEngine";
+import { Settings, Camera, Mic, MicOff, Gamepad2 } from "lucide-react";
 import { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
-import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import {
   useConversationStateMachine,
   type ConversationState,
   type PendingNarration,
   FALLBACK_FR,
 } from "@/hooks/useConversationStateMachine";
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // UI COMPONENTS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 const SoundWave = ({ active }: { active: boolean }) => {
   const bars = 5;
   return (
@@ -33,6 +35,7 @@ const SoundWave = ({ active }: { active: boolean }) => {
     </div>
   );
 };
+
 const FloatingParticles = () => {
   const particles = Array.from({ length: 12 }, (_, i) => ({
     id: i, size: 4 + Math.random() * 8, left: Math.random() * 100,
@@ -48,6 +51,7 @@ const FloatingParticles = () => {
     </div>
   );
 };
+
 const DebugOverlay = ({ state, micArmed, micRunning, partialText, lastRecognized, lastAiResponse, sttBackend, offline }: {
   state: ConversationState; micArmed: boolean; micRunning: boolean;
   partialText: string; lastRecognized: string; lastAiResponse: string; sttBackend: string; offline: boolean;
@@ -64,9 +68,11 @@ const DebugOverlay = ({ state, micArmed, micRunning, partialText, lastRecognized
     {lastAiResponse && <div className="text-purple-300 truncate">🤖 AI: "{lastAiResponse.slice(0, 100)}"</div>}
   </div>
 );
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // MAIN COMPONENT
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 interface VoiceScreenProps {
   childName: string;
   childAge: number;
@@ -80,14 +86,17 @@ interface VoiceScreenProps {
   pendingNarration?: PendingNarration | null;
   onNarrationConsumed?: () => void;
 }
+
 const VoiceScreen = ({
   childName, childAge, onSwitchToChat, onSwitchToStory, onParentMode, onActivities,
   parentSettings, activeGameCategory, onClearGame, pendingNarration, onNarrationConsumed,
 }: VoiceScreenProps) => {
+
   const sm = useConversationStateMachine({
     childName, childAge, parentSettings,
     pendingNarration, onNarrationConsumed, onParentMode,
   });
+
   // Launch game activity when selected from Activities menu
   const lastGameRef = useRef<string | null>(null);
   useEffect(() => {
@@ -113,10 +122,18 @@ const VoiceScreen = ({
     }
     onClearGame?.();
   }, [activeGameCategory, childName, sm, onClearGame]);
+
   const [showDebug, setShowDebug] = useState(false);
-  const [showExpressionTest, setShowExpressionTest] = useState(false);
-  const [testEmotion, setTestEmotion] = useState<FaceState | null>(null);
-  const [testIntensity, setTestIntensity] = useState(0.7);
+  const [safetyBadge, setSafetyBadge] = useState(() => getUnreadAlertCount());
+
+  // Refresh safety badge when a new SAFETY_ALERT is emitted
+  useEffect(() => {
+    return eventBus.on("SAFETY_ALERT", () => {
+      setSafetyBadge(getUnreadAlertCount());
+    });
+  }, []);
+
+  // Debug toggle (5 taps on parent button)
   const debugTapCountRef = useRef(0);
   const debugTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleDebugToggle = useCallback(() => {
@@ -128,17 +145,20 @@ const VoiceScreen = ({
       setShowDebug(prev => !prev);
     }
   }, []);
+
   const stateLabel = {
     IDLE: sm.partialText ? `"${sm.partialText}"` : (sm.micArmed ? 'Dis "Bobby" pour me parler !' : 'Touche Bobby pour commencer !'),
-    LISTENING: sm.partialText ? `"${sm.partialText}"` : null,
+    LISTENING: sm.partialText ? `"${sm.partialText}"` : "J'écoute…",
     PROCESSING: "Je réfléchis…",
     SPEAKING: "Je parle…",
     ERROR: "Dis-moi !",
     SLEEP: "💤 Bobby dort… dis son nom pour le réveiller !",
   }[sm.machineState];
+
   return (
     <div className="child-light flex flex-col items-center justify-between h-screen px-4 py-6 max-w-lg mx-auto select-none overflow-hidden relative"
       style={{ background: `linear-gradient(180deg, hsl(220, 25%, 82%) 0%, hsl(230, 22%, 78%) 50%, hsl(240, 20%, 75%) 100%)` }}>
+
       {showDebug && (
         <DebugOverlay
           state={sm.machineState}
@@ -151,12 +171,15 @@ const VoiceScreen = ({
           offline={sm.networkOffline}
         />
       )}
+
       {sm.networkOffline && (
         <div className="fixed top-2 left-2 z-40 px-3 py-1 rounded-full bg-orange-500/90 text-white text-[10px] font-bold animate-pulse">
           ⚡ Mode Offline
         </div>
       )}
+
       <FloatingParticles />
+
       {/* Top bar */}
       <div className="w-full flex items-center justify-between px-2 relative z-10">
         <div>
@@ -175,17 +198,19 @@ const VoiceScreen = ({
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             </div>
           )}
-          <button onClick={() => setShowExpressionTest(prev => !prev)}
-            className={`flex items-center gap-2 px-3 py-2.5 rounded-full backdrop-blur-sm border text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300 ${showExpressionTest ? 'bg-primary/20 border-primary/40 text-primary' : 'bg-white/70 border-border/50 text-muted-foreground'}`}>
-            <Palette className="w-4 h-4" />
-          </button>
-          <button onClick={() => { sm.handleParentMode(); handleDebugToggle(); }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/50 text-muted-foreground text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300">
+          <button onClick={() => { sm.handleParentMode(); handleDebugToggle(); setSafetyBadge(0); }}
+            className="relative flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/50 text-muted-foreground text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300">
             <Settings className="w-4 h-4" />
             Parent
+            {safetyBadge > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold px-1 animate-pulse shadow-sm">
+                {safetyBadge > 9 ? "9+" : safetyBadge}
+              </span>
+            )}
           </button>
         </div>
       </div>
+
       {/* Hologram area */}
       <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 relative z-10">
         <div className="absolute w-96 h-96 rounded-full pointer-events-none transition-all duration-500"
@@ -196,59 +221,23 @@ const VoiceScreen = ({
             animation: sm.partialText && sm.machineState === "LISTENING" ? "glow-voice 1.2s ease-in-out infinite alternate" : undefined,
           }}
         />
+
         <div className="relative w-80 h-80 md:w-96 md:h-96" onPointerDownCapture={sm.handleTapBobby}>
           <HologramFace
-            voiceState={testEmotion ? "idle" : sm.displayState}
+            voiceState={sm.displayState}
             enableCamera={parentSettings?.enableCamera ?? false}
             onTripleTap={sm.handleParentMode}
             bobbyColor={parentSettings?.bobbyColor}
-            emotionOverride={testEmotion || sm.bobbyFaceEmotion}
-            emotionIntensity={testEmotion ? testIntensity : sm.bobbyEmotionIntensity}
+            emotionOverride={sm.bobbyFaceEmotion}
+            emotionIntensity={sm.bobbyEmotionIntensity}
           />
         </div>
-        {/* Expression tester panel */}
-        {showExpressionTest && (
-          <div className="absolute bottom-0 left-0 right-0 z-30 bg-white/90 backdrop-blur-md rounded-t-2xl border-t border-border/50 p-3 shadow-lg max-h-[45%] overflow-y-auto">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-foreground/70">🎭 Test Expressions</span>
-              <button onClick={() => { setTestEmotion(null); setShowExpressionTest(false); }}
-                className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded-full bg-muted/50">
-                ✕ Fermer
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {(["idle","listening","thinking","speaking","happy","sad","surprised","confused","excited","attentive","calm","reassuring","sleepy","curious","playful","proud","angry","love"] as FaceState[]).map(emotion => (
-                <button key={emotion} onClick={() => setTestEmotion(prev => prev === emotion ? null : emotion)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
-                    testEmotion === emotion
-                      ? 'bg-primary text-primary-foreground shadow-md scale-105'
-                      : 'bg-muted/60 text-foreground/70 hover:bg-muted'
-                  }`}>
-                  {emotion === "happy" ? "😊 joie" : emotion === "sad" ? "😢 triste" : emotion === "surprised" ? "😮 surprise"
-                    : emotion === "confused" ? "🤨 confus" : emotion === "excited" ? "🤩 excité" : emotion === "angry" ? "😠 colère"
-                    : emotion === "love" ? "❤️ amour" : emotion === "calm" ? "😌 calme" : emotion === "sleepy" ? "😴 endormi"
-                    : emotion === "curious" ? "🧐 curieux" : emotion === "playful" ? "😜 espiègle" : emotion === "proud" ? "😤 fier"
-                    : emotion === "attentive" ? "👀 attentif" : emotion === "reassuring" ? "🤗 rassurant"
-                    : emotion === "listening" ? "👂 écoute" : emotion === "thinking" ? "🤔 pense"
-                    : emotion === "speaking" ? "🗣️ parle" : "😐 neutre"}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] text-muted-foreground font-medium">Intensité</span>
-              <input type="range" min="0" max="1" step="0.05" value={testIntensity}
-                onChange={e => setTestIntensity(parseFloat(e.target.value))}
-                className="flex-1 h-1.5 accent-primary" />
-              <span className="text-[10px] text-muted-foreground w-8 text-right">{Math.round(testIntensity * 100)}%</span>
-            </div>
-          </div>
-        )}
+
         {/* State label */}
-        {stateLabel && (
-          <p className="mt-4 text-sm font-bold text-foreground/70 tracking-wide text-center px-4">
-            {stateLabel}
-          </p>
-        )}
+        <p className="mt-4 text-sm font-bold text-foreground/70 tracking-wide text-center px-4">
+          {stateLabel}
+        </p>
+
         {/* Mic status */}
         <div className="mt-2 flex flex-col items-center gap-1.5">
           {sm.machineState === "LISTENING" ? (
@@ -276,8 +265,10 @@ const VoiceScreen = ({
           ) : null}
         </div>
       </div>
+
       <div className="pb-4" />
     </div>
   );
 };
+
 export default VoiceScreen;

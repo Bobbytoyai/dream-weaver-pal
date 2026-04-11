@@ -15,6 +15,7 @@ import { preloadVoice as preloadPiperVoice } from "@/lib/piperTTS";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 import { ParentSettings, DEFAULT_PARENT_SETTINGS, BOBBY_COLORS } from "./parentSettings";
+import { getSafetyAlertRecords, clearSafetyAlertRecords, type SafetyAlertRecord } from "@/lib/offlineEngine";
 export type { ParentSettings };
 export { DEFAULT_PARENT_SETTINGS };
 
@@ -215,6 +216,8 @@ const tabs: { id: Tab; icon: any; label: string; emoji?: string }[] = [
 
 const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: ParentModeProps) => {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
+  const [safetyAlerts, setSafetyAlerts] = useState<SafetyAlertRecord[]>([]);
+  const [showSafetyAlerts, setShowSafetyAlerts] = useState(true);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [loading, setLoading] = useState(true);
@@ -253,6 +256,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [noteText, setNoteText] = useState("");
 
   useEffect(() => { loadData(); }, []);
+
+  // Load safety alerts from localStorage on mount + on SAFETY_ALERT event
+  useEffect(() => {
+    setSafetyAlerts(getSafetyAlertRecords());
+    // Listen for new real-time alerts
+    const handleStorage = () => setSafetyAlerts(getSafetyAlertRecords());
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   const updateSetting = <K extends keyof ParentSettings>(key: K, value: ParentSettings[K]) => {
     const next = { ...settings, [key]: value };
@@ -947,6 +959,74 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             ))}
           </div>
         </div>
+      )}
+
+      {/* ═══ ALERTES BOBBY SÉCURITÉ ═══ */}
+      {safetyAlerts.length > 0 && showSafetyAlerts && (
+        <div className="bg-card rounded-2xl p-4 border-2 border-destructive/40 shadow-md">
+          <div className="flex items-center gap-2 mb-3">
+            <Shield className="w-4 h-4 text-destructive" />
+            <h3 className="text-[13px] font-bold text-destructive">Alertes de Sécurité Bobby</h3>
+            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-destructive text-white font-bold">
+              {safetyAlerts.length}
+            </span>
+          </div>
+          <p className="text-[11px] text-muted-foreground mb-3 leading-relaxed">
+            Bobby a détecté des mots ou sujets sensibles pendant la conversation de {childName}.
+            Chaque alerte a été traitée — Bobby a calmé l'enfant et redirigé la discussion.
+          </p>
+          <div className="space-y-2 max-h-56 overflow-y-auto">
+            {safetyAlerts.slice(0, 20).map((alert, i) => (
+              <div key={i} className={`flex items-start gap-2.5 p-2.5 rounded-xl ${
+                alert.severity === "CRITICAL" ? "bg-destructive/15 border border-destructive/30" :
+                alert.severity === "HIGH" ? "bg-orange-50 border border-orange-200 dark:bg-orange-950/20" :
+                "bg-yellow-50 border border-yellow-200 dark:bg-yellow-950/20"
+              }`}>
+                <span className="text-base mt-0.5 shrink-0">
+                  {alert.severity === "CRITICAL" ? "🔴" : alert.severity === "HIGH" ? "🟠" : "🟡"}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                      alert.severity === "CRITICAL" ? "bg-destructive text-white" :
+                      alert.severity === "HIGH" ? "bg-orange-500 text-white" : "bg-yellow-500 text-white"
+                    }`}>{alert.severity}</span>
+                    <span className="text-[10px] font-semibold text-foreground/70">{alert.category.replace(/_/g, " ")}</span>
+                    <span className="text-[9px] text-muted-foreground ml-auto">
+                      {new Date(alert.timestamp).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-foreground/80 mt-1 leading-snug">
+                    Mot détecté : <span className="font-semibold text-destructive">«{alert.keyword}»</span>
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2 mt-3 pt-3 border-t border-border/40">
+            <button
+              onClick={() => { clearSafetyAlertRecords(); setSafetyAlerts([]); }}
+              className="flex-1 text-[11px] font-semibold py-1.5 px-3 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
+            >
+              Effacer tout
+            </button>
+            <button
+              onClick={() => setShowSafetyAlerts(false)}
+              className="flex-1 text-[11px] font-semibold py-1.5 px-3 rounded-full bg-destructive/10 hover:bg-destructive/20 text-destructive transition-colors"
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
+      {safetyAlerts.length > 0 && !showSafetyAlerts && (
+        <button
+          onClick={() => setShowSafetyAlerts(true)}
+          className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-[12px] font-semibold hover:bg-destructive/15 transition-colors"
+        >
+          <Shield className="w-3.5 h-3.5" />
+          Voir {safetyAlerts.length} alerte{safetyAlerts.length > 1 ? "s" : ""} de sécurité
+        </button>
       )}
 
       {/* ═══ 3. ALERTES ═══ */}

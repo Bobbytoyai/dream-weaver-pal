@@ -274,6 +274,52 @@ export function useConversationStateMachine({
   }, [isCalmMode, audioQueue]);
   useEffect(() => { preloadVoiceProfile(currentVoiceId as any); }, [currentVoiceId]);
 
+  // ─── STARTUP WELCOME — greet child after TTS preload ─────────────────────
+  // FIX BUG-STARTUP-1: Bobby était complètement silencieux à l'ouverture.
+  // L'enfant ne savait pas qu'il fallait dire "Bobby" pour commencer.
+  // Fix: parler un message de bienvenue personnalisé 2s après le montage.
+  const welcomeFiredRef = useRef(false);
+  useEffect(() => {
+    if (welcomeFiredRef.current) return;
+    welcomeFiredRef.current = true;
+    const timer = setTimeout(() => {
+      // Only speak if still idle and not already speaking
+      if (machineStateRef.current === "IDLE" && !isSpeakingRef.current) {
+        const greetings = [
+          `Bonjour ${childName} ! Dis mon nom pour me parler !`,
+          `Coucou ${childName} ! Appelle-moi Bobby pour commencer !`,
+          `Salut ${childName} ! Je suis Bobby, dis mon nom quand tu veux jouer !`,
+        ];
+        const msg = greetings[Math.floor(Math.random() * greetings.length)];
+        speakAndListenRef.current?.(msg);
+        eventBus.emit({ type: "SFX_PLAY", sound: "greeting_chime" });
+      }
+    }, 2000); // 2s — laisser le temps au cache TTS de se préchauffer
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // intentional mount-only — childName ne change pas en session
+
+  // ─── SAFETY ALERT HANDLER — mode parent automatique pour alertes CRITICAL ──
+  // Quand Bobby détecte un contenu de niveau CRITICAL (suicide, exploitation, danger),
+  // Bobby calme l'enfant PUIS prévient les parents automatiquement.
+  useEffect(() => {
+    const unsub = eventBus.on("SAFETY_ALERT", (event) => {
+      if (event.type !== "SAFETY_ALERT") return;
+      console.warn(`[Safety] 🚨 Alert ${event.severity} — ${event.category}: "${event.keyword}"`);
+      if (event.severity === "CRITICAL") {
+        // Donner quelques secondes à Bobby pour finir sa réponse apaisante, puis alerter les parents
+        const alertTimer = setTimeout(() => {
+          if (machineStateRef.current !== "SPEAKING" && machineStateRef.current !== "PROCESSING") {
+            console.warn("[Safety] 🚨 CRITICAL alert — switching to parent mode");
+            onParentMode();
+          }
+        }, 6000); // 6s = temps que Bobby finisse de parler à l'enfant
+        return () => clearTimeout(alertTimer);
+      }
+    });
+    return unsub;
+  }, [onParentMode]);
+
   useEffect(() => {
     setPiperProgress(0);
     preloadPiperVoice(currentVoiceId as any, (p) => setPiperProgress(p))

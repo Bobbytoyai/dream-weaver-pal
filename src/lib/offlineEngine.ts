@@ -11,8 +11,11 @@
  */
 
 // ─── Re-exports for backward compatibility ─────────────────
-export { normalizeInput, detectOfflineIntent, isBlockedContent, matchQA, SAFE_REDIRECTS } from "./offline-intents";
-export type { OfflineIntent } from "./offline-intents";
+export { normalizeInput, detectOfflineIntent, isBlockedContent, matchQA, SAFE_REDIRECTS,
+  getSafetyLevel, detectSafetyCategory, extractSafetyKeyword, getSafeRedirect,
+  storeSafetyAlertRecord, getSafetyAlertRecords, clearSafetyAlertRecords, getUnreadAlertCount,
+} from "./offline-intents";
+export type { OfflineIntent, SafetyLevel, SafetyAlertRecord } from "./offline-intents";
 export { detectStoryTheme, LOCAL_STORIES, RESPONSES, RIDDLES, TRUE_FALSE, ANIMAL_QUIZ, TONGUE_TWISTERS, WOULD_YOU_RATHER } from "./offline-stories";
 export type { StoryTheme, MiniGameType } from "./offline-stories";
 export { resetConversationContext, context, updateContext, pickRandom, personalize, detectMoodFromText, buildContextualPrefix, getFollowUp, handleConversationalContext, handleFollowUpAnswer, handleContextualContinuation } from "./offline-context";
@@ -46,7 +49,10 @@ export function onNetworkChange(cb: (mode: NetworkMode) => void): () => void {
 }
 
 // ─── Imports from modules ───────────────────────────────────
-import { normalizeInput, detectOfflineIntent, isBlockedContent, matchQA, SAFE_REDIRECTS } from "./offline-intents";
+import { normalizeInput, detectOfflineIntent, isBlockedContent, matchQA, SAFE_REDIRECTS,
+  getSafetyLevel, detectSafetyCategory, extractSafetyKeyword, getSafeRedirect, storeSafetyAlertRecord,
+} from "./offline-intents";
+import { eventBus } from "./eventBus";
 import { detectStoryTheme, LOCAL_STORIES, RESPONSES, pickMiniGame, TONGUE_TWISTERS, FOLLOW_UPS,
   isAnimalGameActive, isAnimalGameTrigger, startAnimalGame, handleAnimalGameInput,
   isMemoryGameActive, isMemoryGameTrigger, startMemoryGame, handleMemoryGameInput,
@@ -80,9 +86,34 @@ export function getOfflineResponse(
   const detectedMood = detectMoodFromText(text);
   if (detectedMood) context.mood = detectedMood;
 
-  // 1. Safety filter
+  // 1. Safety filter — with severity-aware response + parent alert
   if (isBlockedContent(text)) {
-    const resp = pickRandom(SAFE_REDIRECTS, "BLOCKED");
+    const level = getSafetyLevel(text) ?? "MEDIUM";
+    const category = detectSafetyCategory(text);
+    const keyword = extractSafetyKeyword(text);
+    const resp = getSafeRedirect(text);
+
+    // Store alert for parent review
+    storeSafetyAlertRecord({
+      severity: level, category, keyword,
+      fullText: text.slice(0, 200),
+      timestamp: Date.now(),
+      childName: childName ?? "enfant",
+    });
+
+    // Emit real-time parent alert via event bus
+    try {
+      eventBus.emit({
+        type: "SAFETY_ALERT",
+        severity: level,
+        category,
+        keyword,
+        fullText: text.slice(0, 200),
+        timestamp: Date.now(),
+        childName: childName ?? "enfant",
+      });
+    } catch { /* eventBus unavailable in some test environments */ }
+
     updateContext("BLOCKED", "", resp);
     return { text: resp, intent: "BLOCKED", isOffline: true };
   }
