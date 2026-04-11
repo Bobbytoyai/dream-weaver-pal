@@ -406,63 +406,12 @@ export function useFaceAnimation(
     const mouthQuirkWidthAdd = 0;
     const mouthQuirkOpenAdd = 0;
 
-    // --- OHH triggered by sustained far gaze (5s left/right) ---
-    // Track if gaze is far left or right (|gazeX| > 0.4)
-    if (Math.abs(gazeX) > 0.4 && faceState !== "speaking") {
-      gazeHoldTimer.current += delta;
-    } else {
-      gazeHoldTimer.current = 0;
-      gazeHoldTriggered.current = false;
-    }
-
-    // Trigger OHH when gaze held for 5+ seconds
-    if (gazeHoldTimer.current >= 5 && !gazeHoldTriggered.current && ohhPhase.current === 0) {
-      ohhPhase.current = 1;
-      ohhType.current = Math.floor(Math.random() * 3);
-      gazeHoldTriggered.current = true;
-    }
-
-    // OHH state machine
-    let ohhOpenAdd = 0;
-    let ohhRoundAdd = 0;
-    let ohhWidthAdd = 0;
-    let ohhEyeWiden = 0;
-    let ohhBrowLift = 0;
-
-    if (ohhPhase.current > 0) {
-      const speed = ohhType.current === 1 ? 4 : 3;
-      if (ohhPhase.current === 1) {
-        ohhAmount.current = Math.min(1, ohhAmount.current + delta * speed);
-        if (ohhAmount.current >= 1) { ohhPhase.current = 2; ohhTimer.current = 0; }
-      } else if (ohhPhase.current === 2) {
-        ohhTimer.current += delta;
-        if (ohhTimer.current > 0.4) { ohhPhase.current = 3; }
-      } else if (ohhPhase.current === 3) {
-        ohhAmount.current = Math.max(0, ohhAmount.current - delta * (speed * 0.7));
-        if (ohhAmount.current <= 0) { ohhPhase.current = 0; ohhTimer.current = 0; }
-      }
-      const a = ohhAmount.current;
-      const easeA = a * a * (3 - 2 * a); // smoothstep
-      if (ohhType.current === 0) { // OHH
-        ohhOpenAdd = easeA * 0.5;
-        ohhRoundAdd = easeA * 0.7;
-        ohhWidthAdd = -easeA * 0.15;
-        ohhEyeWiden = easeA * 0.08;
-        ohhBrowLift = easeA * 0.12;
-      } else if (ohhType.current === 1) { // small O
-        ohhOpenAdd = easeA * 0.3;
-        ohhRoundAdd = easeA * 0.5;
-        ohhWidthAdd = -easeA * 0.1;
-        ohhEyeWiden = easeA * 0.04;
-        ohhBrowLift = easeA * 0.06;
-      } else { // wide surprise
-        ohhOpenAdd = easeA * 0.65;
-        ohhRoundAdd = easeA * 0.4;
-        ohhWidthAdd = easeA * 0.15;
-        ohhEyeWiden = easeA * 0.12;
-        ohhBrowLift = easeA * 0.18;
-      }
-    }
+    // --- OHH disabled ---
+    const ohhOpenAdd = 0;
+    const ohhRoundAdd = 0;
+    const ohhWidthAdd = 0;
+    const ohhEyeWiden = 0;
+    const ohhBrowLift = 0;
 
     // --- LIP SYNC + EXPRESSIVE FACE (cartoon-exaggerated viseme mapping) ---
     let mouthOpenTarget: number;

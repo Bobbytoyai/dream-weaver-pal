@@ -253,31 +253,18 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       rightEyebrowRef.current.rotation.z = -0.05 + state.eyebrowTilt * 0.3;
     }
 
-    // Mouth — smile C-curve at rest, round O when mouthRound > 0 (OHH)
+    // Mouth — smile C-curve, opens only when speaking
     if (mouthOpenRef.current) {
       const openAmount = state.mouthOpenness;
-      const roundAmount = state.mouthRound || 0;
       const mMat = mouthOpenRef.current.material as THREE.MeshBasicMaterial;
-      
-      if (roundAmount > 0.1) {
-        // OHH mode — scale into a round O shape
-        mMat.opacity = 0.85;
-        mouthOpenRef.current.visible = true;
-        const oScale = 0.3 + roundAmount * 0.7;
-        mouthOpenRef.current.scale.set(oScale * 0.8, oScale, 1);
-        mouthOpenRef.current.position.y = -0.50 - openAmount * 0.03;
-      } else if (openAmount > 0.05) {
-        // Speaking mode — stretch the curve
-        mMat.opacity = 0.85;
-        mouthOpenRef.current.visible = true;
+      mMat.opacity = 0.85;
+      mouthOpenRef.current.visible = true;
+      if (openAmount > 0.05) {
         const scaleX = 1.0 + openAmount * 0.15;
         const scaleY = 1.0 + openAmount * 0.8;
         mouthOpenRef.current.scale.set(scaleX, scaleY, 1);
         mouthOpenRef.current.position.y = -0.50 - openAmount * 0.03;
       } else {
-        // Idle — thin smile line
-        mMat.opacity = 0.85;
-        mouthOpenRef.current.visible = true;
         mouthOpenRef.current.scale.set(1, 1, 1);
         mouthOpenRef.current.position.y = -0.50;
       }
