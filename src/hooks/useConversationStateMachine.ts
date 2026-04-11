@@ -25,6 +25,7 @@ import { getFailsafeResponse, getLatencyFiller, getSoftResetPhrase, reportModule
 import { recordUserTurn, resetCognitiveState, getReengagePhrase, initFromMemory, getPersistedCognitiveData, recordIntent, type CognitiveHints } from "@/lib/cognitiveEngine";
 import { updateMemory } from "@/lib/memoryService";
 import { cacheAIResponse, updateLocalProfileFromCognitive } from "@/lib/localMemoryStore";
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TYPES
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -32,6 +33,7 @@ export type ConversationState = "IDLE" | "LISTENING" | "PROCESSING" | "SPEAKING"
 export type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
 type AiMsg = { role: "user" | "assistant"; content: string };
 type Intent = "story" | "game" | "emotion_support" | "question" | "chat";
+
 export function toVoiceState(s: ConversationState): VoiceState {
   switch (s) {
     case "IDLE": return "idle";
@@ -42,18 +44,20 @@ export function toVoiceState(s: ConversationState): VoiceState {
     case "SLEEP": return "session_end";
   }
 }
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CONSTANTS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const SILENCE_IDLE_TIMEOUT = 40000;
 const SLEEP_TIMEOUT = 120000;
-const UTTERANCE_FLUSH_DELAY = 200;
-const SHORT_UTTERANCE_FLUSH = 100;
+const UTTERANCE_FLUSH_DELAY = 800; // increased for natural child speech pauses
+const SHORT_UTTERANCE_FLUSH = 350;
 const STUCK_TIMEOUT = 3500;
-const AI_RESPONSE_TIMEOUT = 5000;
+const AI_RESPONSE_TIMEOUT = 7000; // increased to avoid premature retry race condition
 const MAX_AI_RETRIES = 1;
 const LOW_CONFIDENCE_THRESHOLD = 0.45;
 const MAX_HISTORY_LENGTH = 20;
+
 export const FALLBACK_FR: Record<string, string> = {
   not_heard: "Je n'ai pas bien entendu. Tu peux répéter ?",
   thinking: "Une seconde.",
@@ -65,6 +69,7 @@ export const FALLBACK_FR: Record<string, string> = {
   low_confidence: "Je n'ai pas bien compris, tu peux répéter plus fort ?",
   sleep_wake: "Oh ! Me revoilà ! Qu'est-ce que tu veux ?",
 };
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // HELPERS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -76,12 +81,16 @@ function detectIntent(text: string): Intent {
   if (lower.match(/pourquoi|comment|c'est quoi|qu'est-ce que|sais pas|explique/)) return "question";
   return "chat";
 }
+
 // detectEmotion is now just detectEmotionForTTS (centralized in voicePipeline)
+
 // Echo detection
 const recentBobbyTextsRef = { current: [] as string[] };
+
 function normalizeForComparison(text: string): string {
   return text.toLowerCase().replace(/[^a-zàâäéèêëïîôùûüÿç0-9 ]/g, "").replace(/\s+/g, " ").trim();
 }
+
 function isEcho(transcript: string): boolean {
   const normalized = normalizeForComparison(transcript);
   if (normalized.length < 5) return false;
@@ -97,6 +106,7 @@ function isEcho(transcript: string): boolean {
   }
   return false;
 }
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // PENDING NARRATION TYPE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -105,6 +115,7 @@ export interface PendingNarration {
   title: string;
   text: string;
 }
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // HOOK
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -116,6 +127,7 @@ interface UseConversationStateMachineOptions {
   onNarrationConsumed?: () => void;
   onParentMode: () => void;
 }
+
 export function useConversationStateMachine({
   childName, childAge, parentSettings,
   pendingNarration, onNarrationConsumed, onParentMode,
@@ -124,6 +136,7 @@ export function useConversationStateMachine({
   const currentVoiceSpeed = parentSettings?.voiceSpeed || "normal";
   const isCalmMode = parentSettings?.nightMode?.active || parentSettings?.personality === "calm";
   const { isOffline: networkOffline } = useNetworkMode();
+
   // ─── STATE ───
   const [machineState, setMachineState] = useState<ConversationState>("IDLE");
   const machineStateRef = useRef<ConversationState>("IDLE");
@@ -142,6 +155,7 @@ export function useConversationStateMachine({
   const currentEmotionRef = useRef<Emotion | undefined>(undefined);
   const [bobbyFaceEmotion, setBobbyFaceEmotion] = useState<FaceState | undefined>(undefined);
   const [bobbyEmotionIntensity, setBobbyEmotionIntensity] = useState(0.7);
+
   // ─── REFS ───
   const abortRef = useRef<AbortController | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -158,10 +172,12 @@ export function useConversationStateMachine({
   const retryCountRef = useRef(0);
   const narrationAbortRef = useRef<AbortController | null>(null);
   const speakAndListenRef = useRef<((text: string) => void) | null>(null);
+
   const audioQueue = useAudioQueue();
   const session = useSessionTracker(childName, childAge);
   const { memory } = useChildMemory(childName);
   const recorder = useConversationRecorder();
+
   // Initialize cognitive engine from persisted memory
   useEffect(() => {
     if (memory) {
@@ -178,6 +194,7 @@ export function useConversationStateMachine({
       });
     }
   }, [memory]);
+
   // ─── TRANSITION ───
   const transition = useCallback((to: ConversationState) => {
     const from = machineStateRef.current;
@@ -187,6 +204,7 @@ export function useConversationStateMachine({
     setMachineState(to);
     eventBus.emit({ type: "STATE_CHANGED", state: toVoiceState(to), prev: toVoiceState(from) });
   }, []);
+
   // ─── INIT ───
   useEffect(() => { initSfxEventBus(); }, []);
   useEffect(() => { setSfxVolume(parentSettings?.sfxVolume ?? 0.7); }, [parentSettings?.sfxVolume]);
@@ -195,18 +213,21 @@ export function useConversationStateMachine({
     audioQueue.setVolume(isCalmMode ? 0.45 : 1.0);
   }, [isCalmMode, audioQueue]);
   useEffect(() => { preloadVoiceProfile(currentVoiceId as any); }, [currentVoiceId]);
+
   useEffect(() => {
     setPiperProgress(0);
     preloadPiperVoice(currentVoiceId as any, (p) => setPiperProgress(p))
       .then(() => setPiperProgress(1))
       .catch(() => { console.warn("[VoiceScreen] Piper voice preload failed"); setPiperProgress(-1); });
   }, [currentVoiceId]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       preloadOfflineTTSCache(currentVoiceId as any, childName).catch(() => {});
     }, 3000);
     return () => clearTimeout(timer);
   }, [currentVoiceId, childName]);
+
   // ─── TIMER MANAGEMENT ───
   const clearAllTimers = useCallback(() => {
     if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
@@ -214,6 +235,7 @@ export function useConversationStateMachine({
     if (stuckTimerRef.current) { clearTimeout(stuckTimerRef.current); stuckTimerRef.current = null; }
     if (sleepTimerRef.current) { clearTimeout(sleepTimerRef.current); sleepTimerRef.current = null; }
   }, []);
+
   useEffect(() => {
     return () => {
       abortRef.current?.abort();
@@ -225,6 +247,7 @@ export function useConversationStateMachine({
       }
     };
   }, [audioQueue, clearAllTimers, session]);
+
   // ─── STUCK DETECTION ───
   const startStuckTimer = useCallback((forState: ConversationState) => {
     if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current);
@@ -238,6 +261,7 @@ export function useConversationStateMachine({
       }
     }, STUCK_TIMEOUT);
   }, [audioQueue, transition]);
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // TRANSITIONS
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -251,9 +275,11 @@ export function useConversationStateMachine({
       sessionStartedRef.current = false;
     }
   }, [clearAllTimers, session, transition]);
+
   const goToIdle = useCallback(async () => {
     clearAllTimers();
     conversationActiveRef.current = false;
+    currentEmotionRef.current = undefined; // Reset emotion state to avoid ghost emotions from previous session
     transition("IDLE");
     sleepTimerRef.current = setTimeout(() => {
       if (machineStateRef.current === "IDLE") goToSleep();
@@ -263,6 +289,7 @@ export function useConversationStateMachine({
       const sessionId = await session.endSession();
       eventBus.emit({ type: "SESSION_END" });
       sessionStartedRef.current = false;
+
       // Persist cognitive data to memory
       const cogData = getPersistedCognitiveData();
       updateMemory(childName, {
@@ -277,6 +304,7 @@ export function useConversationStateMachine({
         interactionStyle: cogData.interactionStyle,
         preferredTopics: cogData.preferredTopics,
       }).catch(console.error);
+
       // Also persist to localStorage for offline-first intelligence
       updateLocalProfileFromCognitive(childName, {
         engagementTriggers: cogData.engagementTriggers,
@@ -285,20 +313,24 @@ export function useConversationStateMachine({
         interactionStyle: cogData.interactionStyle,
         preferredTopics: cogData.preferredTopics,
       });
+
       if (sessionId) {
         recorder.stopRecording(sessionId).then(() => undefined);
         if (messageCount > 0) recorder.triggerAnalysis(sessionId).then(() => undefined);
       }
     }
   }, [clearAllTimers, goToSleep, recorder, session, transition]);
+
   // ─── BACKCHANNEL ───
   const backchannelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const silenceRelaunchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const backchannelCountRef = useRef(0);
+
   const clearListeningTimers = useCallback(() => {
     if (backchannelTimerRef.current) { clearTimeout(backchannelTimerRef.current); backchannelTimerRef.current = null; }
     if (silenceRelaunchTimerRef.current) { clearTimeout(silenceRelaunchTimerRef.current); silenceRelaunchTimerRef.current = null; }
   }, []);
+
   const goToListening = useCallback(() => {
     clearAllTimers();
     clearListeningTimers();
@@ -311,6 +343,7 @@ export function useConversationStateMachine({
     silenceTimerRef.current = setTimeout(() => {
       if (machineStateRef.current === "LISTENING") goToIdle();
     }, SILENCE_IDLE_TIMEOUT);
+
     // 3s silence soft relaunch — gentle prompt if child said nothing
     silenceRelaunchTimerRef.current = setTimeout(() => {
       if (machineStateRef.current === "LISTENING" && accumulatedTextRef.current.trim().length === 0 && conversationActiveRef.current) {
@@ -321,6 +354,7 @@ export function useConversationStateMachine({
         speakAndListenRef.current?.(relaunch);
       }
     }, 6000);
+
     // Backchannel: visual micro-nod every ~4s during active listening
     const scheduleBackchannel = () => {
       backchannelTimerRef.current = setTimeout(() => {
@@ -342,6 +376,7 @@ export function useConversationStateMachine({
     };
     scheduleBackchannel();
   }, [clearAllTimers, clearListeningTimers, goToIdle, transition]);
+
   const goToSpeaking = useCallback(() => {
     clearAllTimers();
     transition("SPEAKING");
@@ -354,6 +389,7 @@ export function useConversationStateMachine({
       }
     }, 30000);
   }, [audioQueue, clearAllTimers, goToListening, transition]);
+
   const speakAndListen = useCallback(async (text: string) => {
     if (!text) { goToListening(); return; }
     try {
@@ -366,6 +402,7 @@ export function useConversationStateMachine({
     } catch { goToListening(); }
   }, [audioQueue, currentVoiceId, currentVoiceSpeed, goToListening, goToSpeaking, isCalmMode]);
   useEffect(() => { speakAndListenRef.current = speakAndListen; }, [speakAndListen]);
+
   const interrupt = useCallback(() => {
     abortRef.current?.abort();
     narrationAbortRef.current?.abort();
@@ -377,6 +414,7 @@ export function useConversationStateMachine({
     // Use goToListening to properly set silence timer
     goToListening();
   }, [audioQueue, clearAllTimers, goToListening]);
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // PENDING NARRATION
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -391,6 +429,7 @@ export function useConversationStateMachine({
   useEffect(() => { currentVoiceIdRef.current = currentVoiceId; }, [currentVoiceId]);
   useEffect(() => { currentVoiceSpeedRef.current = currentVoiceSpeed; }, [currentVoiceSpeed]);
   useEffect(() => { isCalmModeRef.current = isCalmMode; }, [isCalmMode]);
+
   useEffect(() => {
     if (!pendingNarration) return;
     const timer = setTimeout(async () => {
@@ -420,7 +459,9 @@ export function useConversationStateMachine({
     }, 500);
     return () => clearTimeout(timer);
   }, [pendingNarration, onNarrationConsumed, audioQueue]);
+
   useEffect(() => { return () => { narrationAbortRef.current?.abort(); }; }, []);
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // TTS SENTENCE PROCESSING
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -439,6 +480,7 @@ export function useConversationStateMachine({
       }
     }
   }, [audioQueue, currentVoiceId, currentVoiceSpeed, goToListening, goToSpeaking, isCalmMode]);
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // AI RESPONSE
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -451,12 +493,15 @@ export function useConversationStateMachine({
       return;
     }
     lastAIRequestTimeRef.current = now;
+
     transition("PROCESSING");
     clearAllTimers();
     startStuckTimer("PROCESSING");
     setPartialText("");
+
     // Cognitive engine: record turn & get adaptive hints
     const cognitiveHints = recordUserTurn(userText);
+
     // If child is losing attention or exhausted, re-engage locally first
     if (cognitiveHints.shouldReengage && cognitiveHints.reengageStrategy) {
       const phrase = getReengagePhrase(cognitiveHints.reengageStrategy);
@@ -467,20 +512,24 @@ export function useConversationStateMachine({
         return;
       }
     }
+
     const emotion = orchestratorHints?.childEmotion || detectEmotionForTTS(userText);
     currentEmotionRef.current = emotion;
     session.addMessage("user", userText, emotion);
     eventBus.emit({ type: "VOICE_INPUT", transcript: userText });
     if (emotion) eventBus.emit({ type: "EMOTION_DETECTED", emotion });
     setLastRecognized(userText);
+
     // Use orchestrator hints for face pre-state
     if (orchestratorHints) {
       setBobbyFaceEmotion(orchestratorHints.faceState);
       setBobbyEmotionIntensity(orchestratorHints.faceIntensity);
     }
+
     const detectedIntent = intent || detectIntent(userText);
     recordIntent(detectedIntent);
     const mode = orchestratorHints?.aiMode || (detectedIntent === "story" ? "story" : detectedIntent === "game" ? "game" : "chat");
+
     // History already capped at MAX_HISTORY_LENGTH by setter; trim to last 10 for API speed
     const trimmedHistory = conversationHistory.slice(-10);
     const newHistory: AiMsg[] = [...trimmedHistory, { role: "user", content: userText }];
@@ -488,6 +537,7 @@ export function useConversationStateMachine({
     abortRef.current = abortController;
     allSentencesDoneRef.current = false;
     pendingSentencesRef.current = 0;
+
     // Use orchestrator memory context if available, otherwise build locally
     const memoryContext = orchestratorHints?.memoryContext || (() => {
       const memoryParts: string[] = [];
@@ -501,21 +551,26 @@ export function useConversationStateMachine({
       }
       return memoryParts.length > 0 ? memoryParts.join("\n") : undefined;
     })();
+
     const aiStartTime = Date.now();
+
     // Latency filler: if AI takes >2s, show a micro-reaction
+    // Latency filler: only face animation, NO goToSpeaking to avoid interrupting AI response
+    let latencyFillerFired = false;
     const latencyFillerTimer = setTimeout(() => {
-      if (machineStateRef.current === "PROCESSING") {
-        const filler = getLatencyFiller();
+      if (machineStateRef.current === "PROCESSING" && !latencyFillerFired) {
+        latencyFillerFired = true;
         setBobbyFaceEmotion("thinking");
-        setBobbyEmotionIntensity(0.5);
-        // Speak the filler but don't reset the AI call
-        fetchTTSAudio(filler, abortController.signal, currentVoiceId, undefined, currentVoiceSpeed, isCalmMode)
-          .then(url => { if (!abortController.signal.aborted) { goToSpeaking(); audioQueue.enqueue(url); } })
-          .catch(() => {});
+        setBobbyEmotionIntensity(0.6);
+        // Only animate face - do NOT speak or transition to SPEAKING (would interrupt real response)
       }
-    }, 2000);
+    }, 3500); // Raised from 2000ms: gives AI time to respond before showing "thinking"
+
+    // Race condition guard: prevents double-execution if response arrives just at timeout boundary
+    let isRecovered = false;
     const recoveryTimer = setTimeout(() => {
-      if (machineStateRef.current === "PROCESSING") {
+      if (machineStateRef.current === "PROCESSING" && !isRecovered) {
+        isRecovered = true;
         abortController.abort();
         if (retryCountRef.current < MAX_AI_RETRIES) {
           retryCountRef.current++;
@@ -529,6 +584,7 @@ export function useConversationStateMachine({
         }
       }
     }, AI_RESPONSE_TIMEOUT);
+
     try {
       let gotFirstSentence = false;
       await streamVoiceChat({
@@ -537,6 +593,7 @@ export function useConversationStateMachine({
         cognitiveContext: cognitiveHints.promptContext || undefined,
         signal: abortController.signal,
         onSentence: (sentence) => {
+          isRecovered = true; // prevent recovery timer from firing late
           clearTimeout(recoveryTimer);
           clearTimeout(latencyFillerTimer);
           if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current);
@@ -551,6 +608,7 @@ export function useConversationStateMachine({
           }
         },
         onDone: (text) => {
+          isRecovered = true; // prevent recovery timer from firing late
           clearTimeout(recoveryTimer);
           clearTimeout(latencyFillerTimer);
           if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current);
@@ -602,6 +660,7 @@ export function useConversationStateMachine({
       }
     }
   }, [audioQueue, childAge, childName, clearAllTimers, conversationHistory, currentVoiceId, currentVoiceSpeed, goToListening, goToSpeaking, isCalmMode, memory, parentSettings, processSentenceForTTS, session, speakAndListen, startStuckTimer, transition]);
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // FLUSH ACCUMULATED TEXT
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -610,13 +669,16 @@ export function useConversationStateMachine({
     const text = accumulatedTextRef.current.trim();
     accumulatedTextRef.current = "";
     if (text.length < 3) return;
+
     if (isEcho(text)) { console.log("[VoiceScreen] Echo — ignoring"); return; }
+
     const wake = hasWakeWord(text);
     const cleaned = wake ? stripWakeWord(text) : text;
     if (cleaned.length < 3) {
       if (wake) speakAndListen(FALLBACK_FR.wake_greeting);
       return;
     }
+
     // ─── ORCHESTRATOR ───
     const decision = orchestrate({
       userText: cleaned,
@@ -626,6 +688,7 @@ export function useConversationStateMachine({
       isOffline: isOffline(),
       conversationHistory: [],
     });
+
     // Local response (cached or offline)
     if (decision.response !== null) {
       goToSpeaking();
@@ -642,9 +705,11 @@ export function useConversationStateMachine({
       session.addMessage("assistant", decision.response);
       return;
     }
+
     // AI path — pass orchestrator hints
     getAIResponse(cleaned, undefined, decision);
   }, [audioQueue, childAge, childName, currentVoiceId, currentVoiceSpeed, getAIResponse, goToListening, goToSpeaking, isCalmMode, memory, session, speakAndListen, setConversationHistory]);
+
   const scheduleFlush = useCallback(() => {
     if (utteranceFlushTimerRef.current) clearTimeout(utteranceFlushTimerRef.current);
     const text = accumulatedTextRef.current.trim();
@@ -654,6 +719,7 @@ export function useConversationStateMachine({
       flushAccumulatedText();
     }, delay);
   }, [flushAccumulatedText]);
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // SESSION MANAGEMENT
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -667,16 +733,19 @@ export function useConversationStateMachine({
     }
     conversationActiveRef.current = true;
   }, [recorder, session]);
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // TRANSCRIPT HANDLER
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const handleTranscript = useCallback((text: string, confidence?: number) => {
     const trimmed = text.trim();
     if (trimmed.length < 2) return;
+
     if (confidence !== undefined && confidence < LOW_CONFIDENCE_THRESHOLD && !hasWakeWord(trimmed)) {
       speakAndListen(FALLBACK_FR.low_confidence);
       return;
     }
+
     if (machineStateRef.current === "SLEEP") {
       if (!hasWakeWord(trimmed)) return;
       eventBus.emit({ type: "WAKE_DETECTED", confidence: 0.9 });
@@ -688,6 +757,7 @@ export function useConversationStateMachine({
       scheduleFlush();
       return;
     }
+
     if (machineStateRef.current === "IDLE") {
       if (!hasWakeWord(trimmed)) return;
       eventBus.emit({ type: "WAKE_DETECTED", confidence: 0.9 });
@@ -698,12 +768,14 @@ export function useConversationStateMachine({
       scheduleFlush();
       return;
     }
+
     if (machineStateRef.current === "SPEAKING" || machineStateRef.current === "PROCESSING") {
-      if (isEcho(trimmed)) return; // Ignore Bobby's own TTS echo
       interrupt();
     }
+
     // Ensure session is active for LISTENING state
     ensureSession();
+
     if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
     const wake = hasWakeWord(trimmed);
     const cleaned = wake ? stripWakeWord(trimmed) : trimmed;
@@ -711,10 +783,12 @@ export function useConversationStateMachine({
     accumulatedTextRef.current += (accumulatedTextRef.current ? " " : "") + cleaned;
     scheduleFlush();
   }, [interrupt, scheduleFlush, speakAndListen, ensureSession]);
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // STT SETUP
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   const wakeTriggeredFromPartialRef = useRef(false);
+
   const deepgramSTT = useSmartSTT({
     onPartial: useCallback((text: string) => {
       setPartialText(text);
@@ -760,8 +834,10 @@ export function useConversationStateMachine({
     onError: useCallback((err: string) => { console.warn("[STT] Error:", err); }, []),
     language: "fr",
   });
+
   useEffect(() => { sttStreamRef.current = deepgramSTT.streamRef?.current ?? null; });
   useEffect(() => { if (micArmed) deepgramSTT.start(); else deepgramSTT.stop(); }, [micArmed, deepgramSTT]);
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // GLOBAL WATCHDOG
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -771,6 +847,7 @@ export function useConversationStateMachine({
     let lastTransitionTime = Date.now();
     let lastState = machineStateRef.current;
     let stuckCount = 0;
+
     const watchdog = setInterval(() => {
       const now = Date.now();
       const currentState = machineStateRef.current;
@@ -801,6 +878,7 @@ export function useConversationStateMachine({
     }, WATCHDOG_INTERVAL);
     return () => clearInterval(watchdog);
   }, [audioQueue, transition, speakAndListen, goToListening]);
+
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // CLICK INTERACTIONS (debounced 300ms to prevent child rapid taps)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -809,6 +887,7 @@ export function useConversationStateMachine({
     const now = Date.now();
     if (now - lastTapRef.current < 300) return; // debounce rapid taps
     lastTapRef.current = now;
+
     const s = machineStateRef.current;
     if (!micArmed) { setMicArmed(true); }
     if (s === "LISTENING") { goToIdle(); return; }
@@ -818,6 +897,7 @@ export function useConversationStateMachine({
     eventBus.emit({ type: "WAKE_DETECTED", confidence: 1.0 });
     speakAndListen(s === "SLEEP" ? FALLBACK_FR.sleep_wake : FALLBACK_FR.wake_greeting);
   }, [micArmed, ensureSession, goToIdle, interrupt, speakAndListen]);
+
   const handleParentMode = useCallback(() => {
     conversationActiveRef.current = false;
     audioQueue.stopAll();
@@ -830,6 +910,7 @@ export function useConversationStateMachine({
     transition("IDLE");
     onParentMode();
   }, [audioQueue, clearAllTimers, onParentMode, session, transition]);
+
   return {
     machineState,
     machineStateRef,
