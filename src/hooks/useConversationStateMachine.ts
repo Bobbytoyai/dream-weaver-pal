@@ -25,6 +25,8 @@ import { getFailsafeResponse, getLatencyFiller, getSoftResetPhrase, reportModule
 import { recordUserTurn, resetCognitiveState, getReengagePhrase, initFromMemory, getPersistedCognitiveData, recordIntent, type CognitiveHints } from "@/lib/cognitiveEngine";
 import { updateMemory } from "@/lib/memoryService";
 import { cacheAIResponse, updateLocalProfileFromCognitive } from "@/lib/localMemoryStore";
+import { adaptiveEngine, type AdaptiveContext, type EmotionState } from "@/lib/adaptiveEngine";
+import { invalidateDeepgramTokenCache } from "@/hooks/useDeepgramSTT";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TYPES
@@ -105,6 +107,47 @@ function isEcho(transcript: string): boolean {
     if (transcriptWords.length > 3 && overlap / transcriptWords.length > 0.6) return true;
   }
   return false;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ADAPTIVE HELPERS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/** Map adaptiveEngine animation hints → Bobby FaceState */
+function adaptiveHintToFace(hint: string): FaceState | undefined {
+  const map: Record<string, FaceState | undefined> = {
+    bounce:    "playful",
+    wave:      "happy",
+    hug:       "reassuring",
+    think:     "thinking",
+    celebrate: "excited",
+    comfort:   "calm",
+    default:   undefined,
+  };
+  return map[hint];
+}
+
+/** Ultra-natural Bobby micro-reactions pool — 12 states, no repeat */
+const BOBBY_REACTIONS: Array<{ face: FaceState; intensity: number }> = [
+  { face: "curious",    intensity: 0.60 },
+  { face: "thinking",   intensity: 0.50 },
+  { face: "attentive",  intensity: 0.45 },
+  { face: "happy",      intensity: 0.55 },
+  { face: "playful",    intensity: 0.65 },
+  { face: "surprised",  intensity: 0.50 },
+  { face: "proud",      intensity: 0.55 },
+  { face: "reassuring", intensity: 0.40 },
+  { face: "excited",    intensity: 0.60 },
+  { face: "calm",       intensity: 0.35 },
+  { face: "listening",  intensity: 0.45 },
+  { face: "confused",   intensity: 0.40 },
+];
+let _lastReactionIdx = -1;
+function pickBobbyReaction(): { face: FaceState; intensity: number } {
+  let idx: number;
+  do { idx = Math.floor(Math.random() * BOBBY_REACTIONS.length); } while (idx === _lastReactionIdx);
+  _lastReactionIdx = idx;
+  return BOBBY_REACTIONS[idx];
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -554,17 +597,18 @@ export function useConversationStateMachine({
 
     const aiStartTime = Date.now();
 
-    // Latency filler: if AI takes >2s, show a micro-reaction
-    // Latency filler: only face animation, NO goToSpeaking to avoid interrupting AI response
+    // Latency filler: if AI takes >3.5s, show a random ultra-natural micro-reaction
+    // Only face animation, NO goToSpeaking to avoid interrupting AI response
     let latencyFillerFired = false;
     const latencyFillerTimer = setTimeout(() => {
       if (machineStateRef.current === "PROCESSING" && !latencyFillerFired) {
         latencyFillerFired = true;
-        setBobbyFaceEmotion("thinking");
-        setBobbyEmotionIntensity(0.6);
-        // Only animate face - do NOT speak or transition to SPEAKING (would interrupt real response)
+        const reaction = pickBobbyReaction(); // 🎭 random from 12 states
+        setBobbyFaceEmotion(reaction.face);
+        setBobbyEmotionIntensity(reaction.intensity);
+        // Only animate face - do NOT speak or transition to SPEAKING
       }
-    }, 3500); // Raised from 2000ms: gives AI time to respond before showing "thinking"
+    }, 3500);
 
     // Race condition guard: prevents double-execution if response arrives just at timeout boundary
     let isRecovered = false;
@@ -591,6 +635,7 @@ export function useConversationStateMachine({
         messages: newHistory,
         childName, childAge, mode, parentSettings, memoryContext,
         cognitiveContext: cognitiveHints.promptContext || undefined,
+        difficulty: adaptiveEngine.getCurrentDifficulty(), // 🎯 progressive complexity
         signal: abortController.signal,
         onSentence: (sentence) => {
           isRecovered = true; // prevent recovery timer from firing late
@@ -603,8 +648,17 @@ export function useConversationStateMachine({
           }
           gotFirstSentence = true;
           if (!abortController.signal.aborted) {
+            // 🧠 AdaptiveEngine: adapt sentence to child age/emotion/difficulty
+            const adaptCtx: AdaptiveContext = {
+              childAge,
+              detectedEmotion: (currentEmotionRef.current as EmotionState) || "neutral",
+              sessionInteractionCount: session.messageCountRef?.current ?? 0,
+              confidenceScore: 0.8,
+              isOffline: false,
+            };
+            const adapted = adaptiveEngine.adaptResponse(sentence, adaptCtx, detectedIntent);
             eventBus.emit({ type: "SPEECH_START" });
-            processSentenceForTTS(sentence, abortController.signal);
+            processSentenceForTTS(adapted.text, abortController.signal);
           }
         },
         onDone: (text) => {
@@ -615,14 +669,25 @@ export function useConversationStateMachine({
           allSentencesDoneRef.current = true;
           setLastAiResponse(text || "");
           if (text) {
-            const refined = refineExpression(text);
-            setBobbyFaceEmotion(refined.faceState);
+            // 🧠 AdaptiveEngine: full-response adaptation for face + context
+            const adaptCtx: AdaptiveContext = {
+              childAge,
+              detectedEmotion: (currentEmotionRef.current as EmotionState) || "neutral",
+              sessionInteractionCount: session.messageCountRef?.current ?? 0,
+              confidenceScore: 0.8,
+              isOffline: false,
+            };
+            const adapted = adaptiveEngine.adaptResponse(text, adaptCtx, detectedIntent);
+            const refined = refineExpression(adapted.text);
+            // Priority: adaptive animation hint > orchestrator refined state
+            const adaptiveFace = adaptiveHintToFace(adapted.animationHint);
+            setBobbyFaceEmotion(adaptiveFace || refined.faceState);
             setBobbyEmotionIntensity(refined.faceIntensity);
-            setConversationHistory([...newHistory, { role: "assistant", content: text }]);
-            session.addMessage("assistant", text);
-            eventBus.emit({ type: "RESPONSE_READY", text });
+            setConversationHistory([...newHistory, { role: "assistant", content: adapted.text }]);
+            session.addMessage("assistant", adapted.text);
+            eventBus.emit({ type: "RESPONSE_READY", text: adapted.text });
             // Cache AI response locally for offline reuse
-            cacheAIResponse(userText, text, detectedIntent, refined.faceState, childName);
+            cacheAIResponse(userText, adapted.text, detectedIntent, adaptiveFace || refined.faceState, childName);
           }
           if (pendingSentencesRef.current === 0) {
             audioQueue.setOnAllDone(() => { eventBus.emit({ type: "SPEECH_STOP" }); goToListening(); });
@@ -907,6 +972,10 @@ export function useConversationStateMachine({
       eventBus.emit({ type: "SESSION_END" });
       sessionStartedRef.current = false;
     }
+    // 🔐 Invalidate Deepgram token cache on parent/child logout
+    invalidateDeepgramTokenCache();
+    // 🧠 Reset adaptive engine state for next child session
+    adaptiveEngine.reset();
     transition("IDLE");
     onParentMode();
   }, [audioQueue, clearAllTimers, onParentMode, session, transition]);
