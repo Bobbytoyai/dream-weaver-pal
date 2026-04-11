@@ -25,7 +25,7 @@ import { getFailsafeResponse, getLatencyFiller, getSoftResetPhrase, reportModule
 import { recordUserTurn, resetCognitiveState, getReengagePhrase, initFromMemory, getPersistedCognitiveData, recordIntent, type CognitiveHints } from "@/lib/cognitiveEngine";
 import { updateMemory } from "@/lib/memoryService";
 import { cacheAIResponse, updateLocalProfileFromCognitive } from "@/lib/localMemoryStore";
-import { adaptiveEngine, type AdaptiveContext, type EmotionState } from "@/lib/adaptiveEngine";
+import { adaptiveEngine, type AdaptiveContext } from "@/lib/adaptiveEngine";
 import { invalidateDeepgramTokenCache } from "@/hooks/useDeepgramSTT";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -112,6 +112,21 @@ function isEcho(transcript: string): boolean {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // ADAPTIVE HELPERS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/** Map voicePipeline Emotion → adaptiveEngine EmotionState */
+function toAdaptiveEmotion(e: string | undefined): EmotionState {
+  const map: Record<string, EmotionState> = {
+    happy:   "joy",
+    sad:     "sadness",
+    scared:  "fear",
+    angry:   "anger",
+    excited: "excited",
+    curious: "curious",
+    calm:    "neutral",
+    bored:   "neutral",
+  };
+  return (e && map[e]) || "neutral";
+}
 
 /** Map adaptiveEngine animation hints → Bobby FaceState */
 function adaptiveHintToFace(hint: string): FaceState | undefined {
@@ -651,7 +666,7 @@ export function useConversationStateMachine({
             // 🧠 AdaptiveEngine: adapt sentence to child age/emotion/difficulty
             const adaptCtx: AdaptiveContext = {
               childAge,
-              detectedEmotion: (currentEmotionRef.current as EmotionState) || "neutral",
+              detectedEmotion: toAdaptiveEmotion(currentEmotionRef.current),
               sessionInteractionCount: session.messageCountRef?.current ?? 0,
               confidenceScore: 0.8,
               isOffline: false,
@@ -672,7 +687,7 @@ export function useConversationStateMachine({
             // 🧠 AdaptiveEngine: full-response adaptation for face + context
             const adaptCtx: AdaptiveContext = {
               childAge,
-              detectedEmotion: (currentEmotionRef.current as EmotionState) || "neutral",
+              detectedEmotion: toAdaptiveEmotion(currentEmotionRef.current),
               sessionInteractionCount: session.messageCountRef?.current ?? 0,
               confidenceScore: 0.8,
               isOffline: false,
