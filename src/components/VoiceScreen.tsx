@@ -175,6 +175,10 @@ const VoiceScreen = ({
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             </div>
           )}
+          <button onClick={() => setShowExpressionTest(prev => !prev)}
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-full backdrop-blur-sm border text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300 ${showExpressionTest ? 'bg-primary/20 border-primary/40 text-primary' : 'bg-white/70 border-border/50 text-muted-foreground'}`}>
+            <Palette className="w-4 h-4" />
+          </button>
           <button onClick={() => { sm.handleParentMode(); handleDebugToggle(); }}
             className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/50 text-muted-foreground text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300">
             <Settings className="w-4 h-4" />
