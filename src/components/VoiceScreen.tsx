@@ -4,6 +4,7 @@ import { eventBus } from "@/lib/eventBus";
 import { Settings, Camera, Mic, MicOff, Gamepad2, Palette } from "lucide-react";
 import { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
+import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import {
   useConversationStateMachine,
   type ConversationState,
