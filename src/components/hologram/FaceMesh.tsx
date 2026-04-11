@@ -253,14 +253,15 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (mouthOpenRef.current) {
       const openAmount = state.mouthOpenness;
       const mMat = mouthOpenRef.current.material as THREE.MeshBasicMaterial;
-      // Always visible as a line/closed shape
       mMat.opacity = 0.8;
       mouthOpenRef.current.visible = true;
-      // X = wide line at rest, stretches naturally; Y = only opens when speaking
-      const scaleX = 1.0 + openAmount * 0.2;
-      const scaleY = 0.08 + openAmount * 1.4;
+      // Wider stretch + slight downward curve via scaleY squash at rest
+      const scaleX = 1.2 + openAmount * 0.25;
+      const scaleY = 0.06 + openAmount * 1.4;
       mouthOpenRef.current.scale.set(scaleX, scaleY, 1);
-      mouthOpenRef.current.position.y = -0.48 - openAmount * 0.04;
+      mouthOpenRef.current.position.y = -0.56 - openAmount * 0.04;
+      // Slight downward curve rotation
+      mouthOpenRef.current.rotation.x = openAmount > 0.05 ? 0 : 0.15;
     }
 
     // Tongue — appears inside mouth opening
@@ -269,7 +270,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       const tMat = tongueRef.current.material as THREE.MeshBasicMaterial;
       const targetOpacity = showTongue ? Math.min(0.75, (state.mouthOpenness - 0.15) * 3) : 0;
       tMat.opacity += (targetOpacity - tMat.opacity) * delta * 8;
-      tongueRef.current.position.y = -0.55 - state.mouthOpenness * 0.06;
+      tongueRef.current.position.y = -0.63 - state.mouthOpenness * 0.06;
       tongueRef.current.scale.set(0.7 + state.mouthOpenness * 0.5, 0.5 + state.mouthOpenness * 0.8, 1);
     }
 
@@ -332,12 +333,12 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={rightEyebrowRef} position={[rightBrowX, rightBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
 
       {/* ===== MOUTH — ellipse, always visible ===== */}
-      <mesh ref={mouthOpenRef} position={[0, -0.48, 0.008]} material={mouthInteriorMat}>
-        <circleGeometry args={[0.16, 32]} />
+      <mesh ref={mouthOpenRef} position={[0, -0.56, 0.008]} material={mouthInteriorMat}>
+        <circleGeometry args={[0.18, 32]} />
       </mesh>
 
       {/* ===== TONGUE — inside mouth ===== */}
-      <mesh ref={tongueRef} position={[0, -0.55, 0.01]} material={tongueMat}>
+      <mesh ref={tongueRef} position={[0, -0.63, 0.01]} material={tongueMat}>
         <circleGeometry args={[0.07, 24]} />
       </mesh>
     </group>
