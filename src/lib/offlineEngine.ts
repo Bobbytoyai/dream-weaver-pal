@@ -54,6 +54,8 @@ import { detectStoryTheme, LOCAL_STORIES, RESPONSES, pickMiniGame, TONGUE_TWISTE
 } from "./offline-stories";
 import type { MiniGameType } from "./offline-stories";
 import { context, updateContext, detectMoodFromText, pickRandom, personalize, handleFollowUpAnswer, handleContextualContinuation, handleConversationalContext, buildContextualPrefix, getFollowUp } from "./offline-context";
+import { BOBBY_INTERACTIONS } from "./bobby_interactions_10k";
+import { adaptiveEngine, type AdaptiveContext } from "./adaptiveEngine";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // MAIN RESPONSE ENGINE
@@ -70,6 +72,7 @@ export interface OfflineResponse {
 export function getOfflineResponse(
   text: string,
   childName?: string,
+  childAge = 8,
 ): OfflineResponse {
   const normalized = normalizeInput(text);
 
@@ -157,6 +160,23 @@ export function getOfflineResponse(
     const fullResponse = finalText + followUp;
     updateContext(intent, text, fullResponse);
     return { text: fullResponse, intent, isOffline: true };
+  }
+
+  // 4b. 🧠 Secondary fallback: Bobby 10K interaction database (adaptive match)
+  const adaptCtx: AdaptiveContext = {
+    childAge,
+    detectedEmotion: "neutral",
+    sessionInteractionCount: 0,
+    confidenceScore: 0.7,
+    isOffline: true,
+  };
+  const interactionMatch = adaptiveEngine.findBestMatch(normalized, adaptCtx, BOBBY_INTERACTIONS);
+  if (interactionMatch) {
+    const finalText = personalize(interactionMatch.ai_response, childName);
+    const followUp = getFollowUp(interactionMatch.intent as any);
+    const fullResponse = finalText + followUp;
+    updateContext(interactionMatch.intent as any, text, fullResponse);
+    return { text: fullResponse, intent: interactionMatch.intent, isOffline: true };
   }
 
   // 5. Intent-based fallback
