@@ -106,13 +106,15 @@ export function computeWakeConfidence(transcript: string): number {
     }
 
     // Pass 4: phonetic sliding window
+    // FIX MINEUR: require wakePhonetic.length >= 4 (was 2) to prevent false positives
+    // e.g. "c'est beau" phonetic "cestbi" matched "obi" (3 chars) with 1 diff → false wake
     for (let i = 0; i <= phoneticInput.length - wakePhonetic.length; i++) {
       const slice = phoneticInput.slice(i, i + wakePhonetic.length);
       let diff = 0;
       for (let j = 0; j < wakePhonetic.length; j++) {
         if (slice[j] !== wakePhonetic[j]) diff++;
       }
-      if (diff <= 1 && wakePhonetic.length >= 2) {
+      if (diff <= 1 && wakePhonetic.length >= 4) {
         best = Math.max(best, 0.82);
       }
     }

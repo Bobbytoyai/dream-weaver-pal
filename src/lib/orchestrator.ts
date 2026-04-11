@@ -161,6 +161,12 @@ function selectResponse(
     return { response: getCachedResponse("greeting"), source: "cache" };
   }
 
+  // FIX B4: adventure → treated as story request (offline)
+  if (intent === "adventure" || intent === "boredom") {
+    const offlineResp = getOfflineResponse(input.userText, input.childName);
+    if (offlineResp.text) return { response: offlineResp.text, source: "offline" };
+  }
+
   // Fast path 2: offline engine — smart routing (not just "any recognized intent")
   // Only go offline for: (a) simple intents (greetings, emotions, control) OR
   // (b) QA match with confidence >= 0.80 (specific factual answers)
@@ -299,6 +305,7 @@ export function orchestrate(input: OrchestratorInput): OrchestratorOutput {
   // 6. Follow-up
   const followUpType = suggestFollowUp(intent, childEmotion);
 
+  // FIX B4: ADVENTURE intent → story mode (adventure IS a story request)
   // AI mode mapping
   const aiModeMap: Record<BobbyIntent, string> = {
     story: "story",
@@ -306,7 +313,7 @@ export function orchestrate(input: OrchestratorInput): OrchestratorOutput {
     emotion_support: "chat",
     calm: "chat",
     greeting: "chat",
-    boredom: "chat",
+    boredom: "game",   // boredom → propose a game (more engaging than chat)
     logic: "chat",
     question: "chat",
     chat: "chat",

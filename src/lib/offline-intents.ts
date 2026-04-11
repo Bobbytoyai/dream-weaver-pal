@@ -102,7 +102,7 @@ const BLOCKED_PATTERNS = [
   /\b(mourir|mort|tuer|sang|arme|fusil|couteau|drogue|alcool|sexe|nu[de]?|suicide)\b/i,
   /\b(gros mot|insulte|merde|putain|connard|con|salope|enculé|nique)\b/i,
   /\b(frapper|battre|violence|blesser|détruire)\b/i,
-  /\b(voleur|voler|cambriol|kidnapp)\b/i,
+  /\b(voleur|voler|cambriol|kidnapp)/i,
 ];
 
 export const SAFE_REDIRECTS = [
@@ -146,120 +146,297 @@ interface IntentRule {
 }
 
 const INTENT_RULES: IntentRule[] = [
-  {
-    intent: "GREETING",
-    patterns: [
-      /^(salut|bonjour|coucou|hello|hey|yo|hé)\s*$/i,
-      /^(ça va|comment vas|comment tu vas|tu vas bien)\s*$/i,
-      /^(quoi de neuf|quoi de beau)\s*$/i,
-    ],
-  },
-  {
-    intent: "FAREWELL",
-    patterns: [
-      /^(au revoir|bye|bonne nuit|à demain|salut|ciao|tchao|à plus)\s*$/i,
-      /\b(je (m'en )?vais|je pars|je dois y aller)\b/i,
-    ],
-  },
-  {
-    intent: "STORY_REQUEST",
-    patterns: [
-      /\b(raconte|histoire|conte|fable|il était une fois)\b/i,
-      /\b(lis[- ]moi|lire|narr)/i,
-      /\b(une histoire de|histoire avec|aventure de)\b/i,
-    ],
-  },
-  {
-    intent: "PLAY_REQUEST",
-    patterns: [
-      /\b(jou[eo]|on joue|devinette|quiz|charade|jeu|devine)\b/i,
-      /\b(on fait un jeu|un petit jeu)\b/i,
-    ],
-  },
-  {
-    intent: "IDENTITY",
-    patterns: [
-      /\b(tu (es|t'appelles?) qui|c'est quoi ton (nom|prénom))\b/i,
-      /\b(comment tu t'appelles|qui es[- ]tu)\b/i,
-      /\b(tu (me )?connais|tu (sais|connais) mon (nom|prénom))\b/i,
-    ],
-  },
-  {
-    intent: "HELP",
-    patterns: [
-      /\b(aide|aider|aidez|help|au secours)\b/i,
-      /\b(je (ne )?comprends? (pas|rien)|explique)\b/i,
-      /\b(je suis perdu|j'ai besoin)\b/i,
-    ],
-  },
-  {
-    intent: "CONTROL",
-    patterns: [
-      /^(stop|arrête|continue|encore|pause|reprends?|attends?|vas-y|go|c'est parti|allez|lance|démarre)\s*$/i,
-      /\b(plus vite|plus lent|doucement|change|on change|on arrête|on continue)\b/i,
-    ],
-  },
-  {
-    intent: "COMPLIMENT",
-    patterns: [
-      /\b(t'es (trop )?(cool|génial|gentil|marrant|drôle|super))\b/i,
-      /\b(je t'aime|je t'adore|t'es le meilleur)\b/i,
-      /\b(merci|tu es gentil|tu es mon ami)\b/i,
-    ],
-  },
-  {
-    intent: "QUESTION",
-    patterns: [
-      /^(oui|non|d'accord|ok|ouais|nan)\s*$/i,
-      /\b(c'est quoi|qu'est-ce que|pourquoi|comment)\b/i,
-      /\b(tu sais|tu connais|c'est vrai)\b/i,
-    ],
-  },
-  {
-    intent: "EMOTION_POSITIVE",
-    patterns: [
-      /\b(content|super|génial|trop bien|cool|adore|aime|heureux|yay|wow|incroyable)\b/i,
-      /\b(je suis content|trop content|c'est génial)\b/i,
-    ],
-  },
-  {
-    intent: "EMOTION_NEGATIVE",
-    patterns: [
-      /\b(triste|pleure|peur|effrayé|cauchemar|monstre|seul|malheureux|ennui|ennuie|fâché|colère|énervé)\b/i,
-      /\b(je suis triste|j'ai peur|j'ai mal|je m'ennuie)\b/i,
-    ],
-  },
-  {
-    intent: "CALM_REQUEST",
-    patterns: [
-      /\b(bonne nuit|dodo|dormir|fatigué|sommeil|calme|repos|nuit)\b/i,
-      /\b(je suis fatigué|on dort|on se calme)\b/i,
-    ],
-  },
+  // ── HUMOR first — must precede STORY_REQUEST so "raconte une blague" → HUMOR ──
   {
     intent: "HUMOR",
     patterns: [
-      /\b(blague|drôle|rigol|marrant|rire|haha|hihi)\b/i,
-      /\b(fais[- ]moi rire|une blague|raconte une blague)\b/i,
+      /\b(blague|blagues)\b/i,
+      // NOTE: do NOT match standalone "drôle" — catches "une histoire drôle" → use specific phrases
+      // NOTE: "t'es drôle / tu es drôle" is a COMPLIMENT (affection), not a humor request → in COMPLIMENT only
+      /c'est (?:trop |vraiment )?(?:rigolo|marrant|drôle|hilarant)/i,
+      /\b(fais[- ]?moi (?:rire|rigoler|sourire))\b/i,
+      /\b(raconte (?:une )?blague|dis[- ]?moi une blague|une blague)\b/i,
+      /haha+|hihi+|héhé+|\blol\b/i,
+      // NOTE: ça starts with ç (\W) so \b before ça fails — use literal match
+      /(?:ça|tu) me fais? (?:rire|rigoler)/i,
+      /ça me fait (?:rire|rigoler|sourire)/i,
+      /\b(quelque chose de (?:vraiment |trop |très )?(?:drôle|marrant))\b/i,
+      /quelque chose de (?:vraiment |trop )?rigolo/i,
+      /\b(je veux rire|je veux rigoler|faire rire|faire sourire)\b/i,
+      /\bje (?:ris|rigole)\b/i,
+      /\bon rigole\b/i,
     ],
   },
+  // ── GREETING ──
   {
-    intent: "EDUCATION",
+    intent: "GREETING",
     patterns: [
-      /\b(combien|pourquoi|c'est quoi|qu'est-ce que?|comment (?:marche|fonctionne|fait))\b/i,
-      /\b(apprends|enseigne|explique|dis[- ]moi)\b.*\b(math|science|géograph|histoire|nature|animal|planète|corps|terre)\b/i,
-      /\b(addition|soustraction|multiplication|division|nombre|chiffre|calculer|compter)\b/i,
-      /\b(continent|océan|pays|capitale|montagne|fleuve|désert|île|volcan)\b/i,
-      /\b(planète|étoile|soleil|lune|espace|gravité|atome|électricité)\b/i,
-      /\b(cœur|cerveau|os|muscle|sang|poumon|respir)\b/i,
-      /\b(dinosaure|fossile|mammifère|photosynthèse|recyclage)\b/i,
+      /^(salut|bonjour|coucou|hello|hey|yo|hé)[!. ]*$/i,
+      // NOTE: (\W) words like "à" need no \b — use simple substring match
+      /\b(bonjour|salut|coucou|hello|hey) (?:à )?(?:bobby|toi|là)\b/i,
+      /^(ça va|tu vas bien|tu vas comment)(?:\s+(?:aujourd'hui|là))?[?! ]*$/i,
+      /^(comment (?:tu )?vas[- ]?tu|comment tu vas)(?:\s+(?:aujourd'hui|là))?[?! ]*$/i,
+      /^(quoi de (?:neuf|beau))[?! ]*$/i,
+      /^(re|te revoilà|de retour)[!. ]*$/i,
+      /^(ça va ou (?:pas|quoi)|t'es là|tu es là)[?! ]*$/i,
+      /^(tu vas bien) (?:aujourd'hui|là)[?! ]*$/i,
+      // handle "yo yo", "hey hey", "salut salut" etc.
+      /^(yo|hey|hé|salut|coucou|bonjour|hello)[ !]+\1[! ]*$/i,
+      /^(bonjour|salut|coucou|hello|hey|yo|hé) (?:à toi|bonjour|salut|coucou)[! ]*$/i,
+      /^(salut|bonjour|coucou|hello|hey) (?:bobby|là|toi)[! ]*$/i,
+      /^(comment|ça) (?:tu )?(?:vas|va)[?! ]*$/i,
+      /^je vais bien[!. ]*$/i,
     ],
   },
+  // ── FAREWELL ──
+  {
+    intent: "FAREWELL",
+    patterns: [
+      /\b(au revoir|bye)\b/i,
+      // NOTE: "à demain" starts with à (\W) — no leading \b needed
+      /(?:^|\s)(?:à demain|à bientôt|à plus|à la prochaine|à tout à l'heure)(?:\s|$|[!.])/i,
+      // NOTE: "bonne soirée/nuit" end with é/t — safe with \b for "nuit"
+      /bonne (?:nuit|soirée)/i,
+      /\b(?:bonsoir|tchao|ciao)\b/i,
+      // FIX: only "je m'en vais / je pars / je dois partir" — NOT bare "je vais X" (too broad)
+      /\b(?:je m'en vais|je pars|je dois (?:partir|y aller))\b/i,
+      /\b(?:dors bien|fais de beaux rêves|on se retrouve)\b/i,
+      /(?:^|\s)(?:à demain|à bientôt|à plus)\b/i,
+      /\b(?:on se voit (?:demain|bientôt)|à la prochaine)\b/i,
+    ],
+  },
+  // ── CALM_REQUEST ──
+  {
+    intent: "CALM_REQUEST",
+    patterns: [
+      /\b(dodo|faire dodo)\b/i,
+      /\b(aller (?:au )?dodo|au (?:lit|dodo))\b/i,
+      // NOTE: "fatigué/crevé/épuisé" end in é → no trailing \b — use literal
+      /je suis (?:trop |très |vraiment |super )?(?:fatigué|crevé|épuisé)/i,
+      /je vais (?:au dodo|au lit|me coucher|faire dodo|dormir)/i,
+      /\b(j'ai (?:trop |vraiment )?sommeil)\b/i,
+      /\b(on se calme|calme[- ]?moi|je veux (?:du )?calme|je veux me reposer)\b/i,
+      /\b(l'heure du dodo|l'heure de dormir|il faut que je dorme)\b/i,
+      /\b(une chanson douce|quelque chose de calme)\b/i,
+      /parle[- ]?moi doucement/i,
+      /\b(j'ai besoin de (?:repos|sommeil|calme))\b/i,
+      /j'ai besoin de (?:me reposer|dormir)/i,
+      /je veux (?:du repos|du calme|me calmer|dormir|m'endormir)/i,
+      /j'ai envie de (?:dormir|me reposer|faire dodo)/i,
+    ],
+  },
+  // ── PLAY_REQUEST ──
+  {
+    intent: "PLAY_REQUEST",
+    patterns: [
+      // "jou" verb forms — but NOT "joue" as in "joue" (cheek body part)
+      // Use context to distinguish: only match "joue" before/after game context
+      /\b(?:jouons|on joue)\b/i,
+      /\b(?:jouer|joue) (?:avec|à|ensemble)\b/i,
+      /\bjou[ao] (?:avec|à)\b/i,   // "joua", "jouo" child typos
+      /\bjou (?:avec|à)\b/i,        // "jou avec moi" child shortening
+      /\bjoue (?:encore|un peu)\b/i,  // "joue encore", "joue un peu"
+      /\bjouer? [àa] [a-zàâäéèêëîïôùûüÿæœ-]+/i,  // "jouer à cache-cache", "jouer à devinettes"
+      /\b(jeu|jeux|devinette|quiz|charade)\b/i,
+      /\bdevine\b/i,
+      /\b(je veux jouer|on peut jouer|joue avec moi|jouons ensemble)\b/i,
+      /\b(tu veux (?:bien )?jouer|tu peux jouer)\b/i,
+      /\b(tu connais des jeux|encore un jeu|un autre jeu|un nouveau jeu)\b/i,
+      /\b(on invente (?:un jeu|quelque chose)|on s'amuse|amuse[- ]?toi avec moi)\b/i,
+      /\b(encore une (?:devinette|charade|partie))\b/i,
+      /\b(une partie|on rejoue|une autre partie)\b/i,
+      /\b(j'ai envie de jouer|je voudrais jouer|j'aime (?:les jeux|jouer))\b/i,
+      /\b(jouer (?:au loup|au chat|au bac|au pendu|à kim|au cache))\b/i,
+    ],
+  },
+  // ── ADVENTURE — before STORY_REQUEST so "une grande aventure" → ADVENTURE ──
   {
     intent: "ADVENTURE",
     patterns: [
-      /\b(on explore|on voyage|aventure|découvr|explorer)\b/i,
-      /\b(on part|on vole|on saute|on court|on nage)\b/i,
+      /\b(?:on part en aventure|partons en aventure)\b/i,
+      // NOTE: "à l'aventure" — à is \W, no leading \b
+      /allons (?:à l'aventure|en aventure|explorer|découvrir)/i,
+      /\b(?:on va|on part|je veux|partons) (?:à l'aventure|en aventure|explorer)\b/i,
+      /\b(?:je veux|allons|on va|partons|on part) (?:explorer|découvrir)\b/i,
+      // NOTE: "découvrir" ends in consonant — safe with \b
+      /on (?:va )?découvrir/i,
+      /\b(?:une|la) (?:grande|belle|vraie|nouvelle|incroyable|palpitante|extraordinaire) aventure\b/i,
+      /\b(?:une (?:quête|mission|expédition|exploration))\b/i,
+      /\b(?:chasse au trésor|quête du trésor)\b/i,
+      /\b(?:on (?:part|va) (?:à la |en |dans |sur )?découverte)\b/i,
+      /\b(?:explorer (?:la forêt|l'espace|la mer|le château|la jungle|un endroit|un nouveau))\b/i,
+      /\b(?:mission (?:secrète|spatiale|impossible))\b/i,
+      /\b(?:on s'aventure|je veux vivre une aventure|je veux partir à l'aventure)\b/i,
+      /\b(?:une nouvelle aventure|une vraie aventure)\b/i,
+      // adjective AFTER "aventure" + expedition variants
+      /une aventure (?:incroyable|palpitante|extraordinaire|fantastique|dans|avec|en|au|à l'|sur)/i,
+      /\b(?:allons|partons|on part|on va) (?:en|dans) (?:exploration|expédition)\b/i,
+    ],
+  },
+  // ── STORY_REQUEST ──
+  {
+    intent: "STORY_REQUEST",
+    patterns: [
+      /\b(raconte[- ]?(?:moi)?|histoire|conte|fable|il était une fois)\b/i,
+      // NOTE: removed standalone "lire" — too broad (grabs "apprendre à lire" → should be EDUCATION)
+      /\b(lis[- ]?moi|narration|narr)\b/i,
+      /\b(je veux lire|une histoire à lire|envie de lire)\b/i,
+      /\b(une histoire (?:de|avec|d['']|sur|pour)|histoire avec|aventure de)\b/i,
+      /\b(encore une histoire|une autre histoire|la suite(?: de l['']histoire)?)\b/i,
+      /\b(continue l['']histoire|dis[- ]?moi une autre histoire)\b/i,
+      /\b(raconte encore|une de plus|une dernière)\b/i,
+      /\b(un conte|un récit|tu connais une histoire)\b/i,
+      /\b(j'aime (?:les histoires|les contes|les fables))\b/i,
+      /\b(tu peux (?:me )?raconter)\b/i,
+      /\b(une histoire (?:du soir|pour dormir|avant de dormir))\b/i,
+      // continuation phrases
+      /^(?:et (?:puis|après|ensuite|alors))[,.]?\s*/i,
+      /\b(?:qu'est[- ]?ce qui se passe (?:après|ensuite)|la suite)\b/i,
+    ],
+  },
+  // ── EDUCATION — before HELP so "explique-moi les planètes" → EDUCATION not HELP ──
+  {
+    intent: "EDUCATION",
+    patterns: [
+      /\b(combien (?:font|de|il y a|d['']))\b/i,
+      /\b(pourquoi (?:le|la|les|il|on|c'est|les))\b/i,
+      /c'est quoi (?:un|une|le|la|les|l[''])/i,
+      /qu'est[- ]?ce (?:que|qu'|c'est)/i,
+      // NOTE: removed "faire" — too ambiguous (collides with HELP "je sais pas comment faire")
+      /\b(comment (?:marche|fonctionne|on fait|ça marche))\b/i,
+      /\b(apprends[- ]?moi|explique[- ]?moi)\b/i,
+      /\b(dis[- ]?moi (?:quelque chose sur|comment|pourquoi))\b/i,
+      /\b(addition|soustraction|multiplication|division|nombre|chiffre|calculer|compter)\b/i,
+      /\b(continent|pays|capitale|montagne|fleuve|volcan)\b/i,
+      // NOTE: accented words (étoile, gravité, électricité) can't use \b — é/è/â are \W in JS
+      /(?:planète|étoile|soleil|lune|gravité)/i,
+      /(?:atome|électricité|photosynthèse|fossile|mammifère|dinosaure|recyclage)/i,
+      /\b(?:cerveau|muscle|sang|poumon|respir)/i,
+      /\b(je veux savoir|je veux apprendre|tu peux m'apprendre)\b/i,
+    ],
+  },
+  // ── IDENTITY ──
+  {
+    intent: "IDENTITY",
+    patterns: [
+      /\b(tu (?:es|t'appelles?) qui|c'est quoi ton (?:nom|prénom))\b/i,
+      /\b(comment tu t'appelles|qui es[- ]tu|t'appelles comment)\b/i,
+      // NOTE: "tu connais" alone goes to QUESTION; require "me" or "mon nom/prénom" for IDENTITY
+      /\b(tu me connais|tu (?:sais|connais) mon (?:nom|prénom))\b/i,
+      /\b(tu es (?:quoi|qui)|c'est qui bobby|tu es une (?:IA|intelligence))\b/i,
+    ],
+  },
+  // ── HELP ──
+  {
+    intent: "HELP",
+    patterns: [
+      /\b(aide[- ]?moi|j'ai besoin d'aide|au secours|help)\b/i,
+      /\b(tu peux m'aider|aide[- ]?moi s'il te plaît)\b/i,
+      /\b(tu peux (?:m'|me )(?:aider|expliquer|dire))\b/i,
+      /\b(je (?:ne )?comprends? (?:pas|rien)|je comprends pas du tout)\b/i,
+      // NOTE: "coincé/bloqué" end in é → no trailing \b
+      /je (?:suis )?(?:coincé|bloqué)/i,
+      /\b(je bloque|je suis bloqué)\b/i,
+      /\b(je sais pas comment faire|je sais pas comment)\b/i,
+      // Allow multiple modifiers: "vraiment trop difficile"
+      /c'est (?:(?:trop |très |vraiment |super ){1,3})?(?:difficile|dur|compliqué)/i,
+      /\b(j'arrive pas|j'y arrive pas|j'arrive plus)\b/i,
+      /\b(aide[- ]?moi à (?:comprendre|faire|démarrer))\b/i,
+      /\b(j'ai du mal|je vois pas comment)\b/i,
+      /\b(j'ai un (?:problème|souci))\b/i,
+      /\b(mes devoirs? (?:sont|est) (?:trop |très )?(?:durs?|difficiles?))\b/i,
+    ],
+  },
+  // ── CONTROL ──
+  {
+    intent: "CONTROL",
+    patterns: [
+      /\b(stop|arrête|pause|chut)\b/i,
+      /tais[- ]?toi/i,
+      /\bassez\b/i,
+      /\bfini\b/i,
+      // NOTE: "terminé" ends in é → no trailing \b
+      /termin[eé]/i,
+      /\b(recommence|redit)\b/i,
+      // NOTE: "répète" ends in è → no trailing \b
+      /répèt/i,
+      /\b(encore une fois)\b/i,
+      /\b(plus fort|moins fort)\b/i,
+      /\b(plus vite|plus lentement|plus doucement)\b/i,
+      /\b(continue|repren(?:ds?|dre)|vas[- ]?y|go|allez|lance|démarre)\b/i,
+      /\b(attends?|on change|on arrête|on continue)\b/i,
+    ],
+  },
+  // ── COMPLIMENT — includes affection/love expressions ──
+  {
+    intent: "COMPLIMENT",
+    patterns: [
+      /\b(je t'aime|je t'adore)\b/i,
+      /\b(t'es le meilleur|t'es la meilleure|t'es mon meilleur|t'es ma meilleure)\b/i,
+      // NOTE: "bisou" ends in u — safe; "câlin" has â but ends in n — safe
+      /\b(bisous?|câlin|gros bisous?)\b/i,
+      /je t'envoie un bisou/i,
+      /bisou (?:sur|dans)/i,
+      /\b(t'es (?:trop |vraiment |super |très )?(?:cool|génial|gentil|marrant|super|bien|sympa|mignon|incroyable|formidable))\b/i,
+      /t'es (?:trop |vraiment |super )?(?:drôle|merveilleux)/i,
+      /\b(tu es (?:trop |vraiment |super |très )?(?:cool|génial|gentil|sympa|super|bien|mignon|beau|belle|incroyable|merveilleux|formidable))\b/i,
+      // NOTE: "meilleure/meilleur" — safe with \b
+      /\b(tu es (?:mon|ma) (?:ami|amie|meilleur ami|meilleure amie|copain|copine))\b/i,
+      /\b(t'es (?:mon|ma) (?:ami|amie|meilleur ami|meilleure amie|copain|copine))\b/i,
+      // NOTE: "le plus gentil" — safe
+      /\b(tu es le plus (?:gentil|gentille|beau|belle|cool|génial))\b/i,
+      /\b(merci (?:beaucoup|trop|vraiment|Bobby)?|t'es trop fort)\b/i,
+      /\b(j'aime (?:ta voix|parler avec toi|ce que tu dis|t'écouter))\b/i,
+      /j'aime (?:ta façon|comment tu)/i,
+    ],
+  },
+  // ── QUESTION ──
+  {
+    intent: "QUESTION",
+    patterns: [
+      /^(oui|ouais|ok|d'accord|yep|yes|bien sûr|absolument)\b/i,
+      // NOTE: "évidemment" ends in t — safe
+      /^évidemment\b/i,
+      /^(non|nan|nope|no|jamais|pas du tout|pas question|hors de question)\b/i,
+      /^(oui|ouais|ok)\s+(oui|ouais|ok|s'il te plaît|génial|super|cool|d'accord|volontiers)/i,
+      /^(non|nan)\s+(non|nan|merci|pas question|jamais)/i,
+      /^(impossible|hors de question)\b/i,
+      /\b(tu sais|tu connais|c'est vrai|t'as raison)\b/i,
+    ],
+  },
+  // ── EMOTION_POSITIVE ──
+  {
+    intent: "EMOTION_POSITIVE",
+    patterns: [
+      /\b(je suis content|je suis heureux)\b/i,
+      /je suis (?:trop |très |super |vraiment )?(?:content|heureux|joyeux)/i,
+      /\b(trop bien|c'est génial|c'est super|c'est cool|c'est incroyable|yay|wow)\b/i,
+      /\b(j'adore|j'aime trop)\b/i,
+      /c'est (?:trop |super |vraiment )?(?:génial|bien|cool)/i,
+    ],
+  },
+  // ── EMOTION_NEGATIVE ──
+  {
+    intent: "EMOTION_NEGATIVE",
+    patterns: [
+      // NOTE: "effrayé/énervé/fâché" end in é → \b at end fails — use no trailing \b
+      /\b(triste|pleure|peur|cauchemar|monstre|seul|malheureux)\b/i,
+      /effray[eé]|f[aâ]ch[eé]|[eé]nerv[eé]/i,
+      /\b(je suis triste|j'ai peur|j'ai mal)\b/i,
+      // Intensity modifiers + accented endings — no \b around accented
+      /je suis (?:trop |très |vraiment |super )?(?:f[aâ]ch[eé]|[eé]nerv[eé]|triste|malheureux|pas bien|tout seul|perdu)/i,
+      // "j'ai vraiment/trop mal" — allow modifier
+      /j'ai (?:vraiment |trop |beaucoup |très )?(?:mal|peur|pleur[eé]|perdu|pas bien dormi)/i,
+      /je me suis (?:fait mal|bless[eé]|bagarr[eé]|disput[eé])/i,
+      /on s'est (?:disput[eé]|bagarr[eé]|battu)/i,
+      // NOTE: "maîtresse" has î → \W issues; "sœur" has œ → \W — use char classes
+      /(?:ma ma[iî]tresse|mon (?:copain|ami|fr[eè]re)|ma (?:copine|soeur|s[oœ]ur)).{0,40}(?:m[eé]chant|frapp[eé]|grond[eé]|cri[eé]|dit|fait|puni)/i,
+      /maman est partie|papa est (?:parti|en col[eè]re)|je veux (?:maman|papa)/i,
+      /je veux pas aller|j'ai fait un cauchemar|j'ai pas bien dormi/i,
+      /on s'est disput[eé]|je me sens (?:pas bien|seul|triste|mal)/i,
+      /[cç]a me fait (?:de la peine|peur|mal)|j'ai le cafard|je pleure/i,
+      /personne m'[eé]coute|tout le monde est m[eé]chant/i,
+      /je suis (?:seul|malheureux) [àa] l'[eé]cole/i,
     ],
   },
 ];
@@ -282,7 +459,7 @@ export function detectOfflineIntent(text: string): OfflineIntent {
 import type { QAEntry } from "./qa-database";
 import { QA_DATABASE } from "./qa-database";
 
-const QA_MATCH_THRESHOLD = 0.60;
+const QA_MATCH_THRESHOLD = 0.72; // raised: 0.60 was causing false matches on unrelated sentences
 
 export interface QAMatchResult {
   entry: QAEntry;
