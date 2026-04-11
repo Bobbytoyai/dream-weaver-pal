@@ -47,8 +47,8 @@ export function toVoiceState(s: ConversationState): VoiceState {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const SILENCE_IDLE_TIMEOUT = 40000;
 const SLEEP_TIMEOUT = 120000;
-const UTTERANCE_FLUSH_DELAY = 600;
-const SHORT_UTTERANCE_FLUSH = 350;
+const UTTERANCE_FLUSH_DELAY = 200;
+const SHORT_UTTERANCE_FLUSH = 100;
 const STUCK_TIMEOUT = 3500;
 const AI_RESPONSE_TIMEOUT = 5000;
 const MAX_AI_RETRIES = 1;
