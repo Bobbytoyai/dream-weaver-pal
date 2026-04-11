@@ -330,10 +330,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={leftEyebrowRef} position={[leftBrowX, leftBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
       <mesh ref={rightEyebrowRef} position={[rightBrowX, rightBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
 
-      {/* ===== MOUTH — ellipse, always visible ===== */}
-      <mesh ref={mouthOpenRef} position={[0, -0.56, 0.008]} material={mouthInteriorMat}>
-        <circleGeometry args={[0.18, 32]} />
-      </mesh>
+      {/* ===== MOUTH — smile C-curve ===== */}
+      <mesh ref={mouthOpenRef} position={[0, -0.56, 0.008]} geometry={smileGeo} material={mouthInteriorMat} />
 
       {/* ===== TONGUE — inside mouth ===== */}
       <mesh ref={tongueRef} position={[0, -0.63, 0.01]} material={tongueMat}>
