@@ -40,7 +40,7 @@ function detectIntent(text: string, mode?: string): Intent {
 
 // ─── Prompt builder — voice-optimized, conversational ──────
 
-function buildSystemPrompt(intent: Intent, childName: string, childAge: number, parentSettings: any, memoryContext?: string, cognitiveContext?: string): string {
+function buildSystemPrompt(intent: Intent, childName: string, childAge: number, parentSettings: any, memoryContext?: string, cognitiveContext?: string, difficulty?: number): string {
   const ageGroup = childAge <= 5 ? "3-5 ans" : childAge <= 7 ? "5-7 ans" : childAge <= 10 ? "8-10 ans" : "11-12 ans";
   const personality = parentSettings?.personality || "balanced";
   const contentFilter = parentSettings?.contentFilter || "standard";
@@ -53,6 +53,16 @@ function buildSystemPrompt(intent: Intent, childName: string, childAge: number, 
 
   const memoryBlock = memoryContext ? `\n# Mémoire\n${memoryContext}` : "";
   const cognitiveBlock = cognitiveContext ? `\n# Adaptation comportementale\n${cognitiveContext}` : "";
+
+  // 🎯 Progressive difficulty: adapt vocabulary/complexity to child's current level (1-5)
+  const diffLevel = difficulty ?? 2;
+  const diffLabels = ["", "très simple (mots de base)", "simple (phrases courtes)", "intermédiaire", "avancé", "expert (riche et complexe)"];
+  const diffLabel = diffLabels[Math.min(diffLevel, 5)];
+  const diffBlock = `\n# Niveau de difficulté actuel: ${diffLevel}/5 (${diffLabel})
+- Adapte ton vocabulaire et la complexité de tes phrases à ce niveau.
+- Niveau 1-2: mots très simples, phrases de 5-8 mots max.
+- Niveau 3: phrases normales, quelques mots nouveaux avec explication.
+- Niveau 4-5: vocabulaire riche, concepts plus complexes si pertinent.`;
 
   let safetyBlock = `# Sécurité (non négociable)
 - JAMAIS de contenu violent, effrayant, sexuel, inapproprié
@@ -68,7 +78,7 @@ function buildSystemPrompt(intent: Intent, childName: string, childAge: number, 
 
   const base = `# Rôle
 Tu es Bobby, un petit être vivant dans un jouet. Ami et compagnon de ${childName} (${childAge} ans, ${ageGroup}).
-Tu parles à voix haute — tes réponses seront lues par un synthétiseur vocal.${personalityNote}${memoryBlock}${cognitiveBlock}
+Tu parles à voix haute — tes réponses seront lues par un synthétiseur vocal.${personalityNote}${memoryBlock}${cognitiveBlock}${diffBlock}
 
 # Instructions vocales
 - Sois chaleureux, amical et naturel.
@@ -253,7 +263,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, childName, childAge, mode, parentSettings, memoryContext, cognitiveContext } = await req.json();
+    const { messages, childName, childAge, mode, parentSettings, memoryContext, cognitiveContext, difficulty } = await req.json();
     
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured");
@@ -283,6 +293,7 @@ Deno.serve(async (req) => {
       const emotionMeta = `data: ${JSON.stringify({ choices: [{ delta: { content: "" } }], metadata: { emotion: kbMatch.emotion, source: "kb" } })}\n\n`;
       const sseData = emotionMeta + `data: ${JSON.stringify({ choices: [{ delta: { content: answer } }] })}\n\ndata: [DONE]\n\n`;
 
+      // v4.0: Increment usage_count (fire-and-forget, don't block response)
       const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
       const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
       if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
@@ -302,10 +313,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    const systemPrompt = buildSystemPrompt(intent, childName, childAge, parentSettings, memoryContext, cognitiveContext) + storyContext;
+    const systemPrompt = buildSystemPrompt(intent, childName, childAge, parentSettings, memoryContext, cognitiveContext, difficulty) + storyContext;
 
+    // Keep only recent messages for speed (voice needs fast responses)
     const recentMessages = messages.length > 6 ? messages.slice(-6) : messages;
 
+    // Model selection: gemini-2.0-flash for all intents (fastest next-gen)
+    // Fall back to flash-lite only for ultra-simple calm/chat
     const model = (intent === "chat" || intent === "calm")
       ? "gemini-2.0-flash-lite"
       : "gemini-2.0-flash";
