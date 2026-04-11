@@ -121,8 +121,8 @@ export function computeWakeConfidence(transcript: string): number {
 }
 
 /** Confidence thresholds */
-export const WAKE_THRESHOLD_PARTIAL = 0.72; // interim/partial — slightly higher to avoid false triggers
-export const WAKE_THRESHOLD_FINAL = 0.60;   // final transcript — more tolerant
+export const WAKE_THRESHOLD_PARTIAL = 0.65; // FIX I3: was 0.72 — more sensitive for whispering children
+export const WAKE_THRESHOLD_FINAL = 0.55;   // FIX I2: was 0.60 — more tolerant for childlike pronunciations
 
 /**
  * Quick boolean check — does this text contain a wake word?
