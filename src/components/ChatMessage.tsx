@@ -1,4 +1,4 @@
-import companionAvatar from "@/assets/companion-avatar.png";
+import companionAvatar from "@/assets/bobby-face.png";
 
 interface ChatMessageProps {
   content: string;
