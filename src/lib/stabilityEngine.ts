@@ -20,13 +20,16 @@ const FAILSAFE_RESPONSES = [
   "On continue ensemble ?",
   "Tu veux une histoire ou un jeu ?",
   "Je t'écoute, vas-y !",
+  "Hé ! Je suis là, tu peux me parler !",
+  "C'est reparti ! Qu'est-ce qu'on fait ?",
 ];
 
 const LATENCY_FILLERS = [
   "Hmm, laisse-moi réfléchir…",
-  "Attends une seconde…",
-  "Je réfléchis…",
-  "Bonne question, attends…",
+  "Bonne question, une seconde…",
+  "Je cherche dans ma tête…",
+  "Ooh, intéressant… j'y réfléchis !",
+  "Attends, je cherche la meilleure réponse…",
 ];
 
 const SOFT_RESET_PHRASES = [
@@ -34,6 +37,8 @@ const SOFT_RESET_PHRASES = [
   "Allez, je suis prêt !",
   "C'est reparti !",
   "Je suis là, vas-y !",
+  "Hé, tu es là ? Je t'écoute !",
+  "On y est ! Dis-moi !",
 ];
 
 let failsafeIdx = 0;
