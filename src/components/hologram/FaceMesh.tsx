@@ -49,7 +49,7 @@ function buildMouthTubeGeo(
   mouthWidth: number,
   mouthRound: number,
 ): THREE.TubeGeometry {
-  const halfW = (0.47 + mouthWidth * 0.25) * (1 - mouthRound * 0.5);
+  const halfW = (0.30 + mouthWidth * 0.18) * (1 - mouthRound * 0.5);
   const curveDepth = mouthCurve * 0.25;
 
   const p0 = new THREE.Vector3(-halfW, 0, 0);
@@ -67,7 +67,7 @@ function buildMouthFillShape(
   mouthRound: number,
 ): THREE.Shape {
   const shape = new THREE.Shape();
-  const halfW = (0.47 + mouthWidth * 0.25) * (1 - mouthRound * 0.5);
+  const halfW = (0.30 + mouthWidth * 0.18) * (1 - mouthRound * 0.5);
   const curveDepth = mouthCurve * 0.25;
   const openDepth = mouthOpenness * 0.35 + mouthRound * 0.3;
 
@@ -322,7 +322,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       const showTongue = state.mouthOpenness > 0.15;
       const targetOpacity = showTongue ? Math.min(0.75, (state.mouthOpenness - 0.15) * 3) : 0;
       tongueMat.opacity += (targetOpacity - tongueMat.opacity) * delta * 8;
-      tongueRef.current.position.y = -0.55 - state.mouthOpenness * 0.08;
+      tongueRef.current.position.y = -0.70 - state.mouthOpenness * 0.08;
       tongueRef.current.scale.set(0.6 + state.mouthOpenness * 0.5, 0.4 + state.mouthOpenness * 0.6, 1);
     }
 
@@ -378,13 +378,13 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={rightEyebrowRef} position={[rightBrowX, rightBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
 
       {/* Mouth group — contains dynamic THREE.Line + fill mesh */}
-      <group ref={mouthGroupRef} position={[0, -0.50, 0.008]} />
+      <group ref={mouthGroupRef} position={[0, -0.65, 0.008]} />
 
       {/* Mouth fill — visible when open */}
-      <mesh ref={mouthFillRef} position={[0, -0.50, 0.006]} geometry={mouthFillGeo} material={mouthFillMat} />
+      <mesh ref={mouthFillRef} position={[0, -0.65, 0.006]} geometry={mouthFillGeo} material={mouthFillMat} />
 
       {/* Tongue */}
-      <mesh ref={tongueRef} position={[0, -0.60, 0.01]} material={tongueMat}>
+      <mesh ref={tongueRef} position={[0, -0.73, 0.01]} material={tongueMat}>
         <circleGeometry args={[0.07, 24]} />
       </mesh>
     </group>
