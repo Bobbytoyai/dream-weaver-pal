@@ -16,9 +16,12 @@ const GREETING_RESPONSES: CachedResponse[] = [
 ];
 
 const WAKE_RESPONSES: CachedResponse[] = [
-  { text: "Oui ? Je t'écoute !", intent: "wake" },
+  { text: "Oui ! Je t'écoute !", intent: "wake" },
   { text: "Je suis là ! Dis-moi !", intent: "wake" },
   { text: "Oui oui ! Qu'est-ce qu'il y a ?", intent: "wake" },
+  { text: "Hé ! Je suis là !", intent: "wake" },
+  { text: "Présent ! Tu veux quoi ?", intent: "wake" },
+  { text: "Me voilà ! Parle-moi !", intent: "wake" },
 ];
 
 const REENGAGE_RESPONSES: CachedResponse[] = [
