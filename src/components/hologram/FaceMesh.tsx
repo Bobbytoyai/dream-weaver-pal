@@ -253,13 +253,13 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (mouthOpenRef.current) {
       const openAmount = state.mouthOpenness;
       const mMat = mouthOpenRef.current.material as THREE.MeshBasicMaterial;
-      mMat.opacity = 0.8;
+      mMat.opacity = 0.85;
       mouthOpenRef.current.visible = true;
-      const scaleX = 1.2 + openAmount * 0.25;
-      const scaleY = 0.06 + openAmount * 1.4;
+      // Scale up when speaking
+      const scaleX = 1.0 + openAmount * 0.15;
+      const scaleY = 1.0 + openAmount * 0.8;
       mouthOpenRef.current.scale.set(scaleX, scaleY, 1);
-      mouthOpenRef.current.position.y = -0.56 - openAmount * 0.04;
-      mouthOpenRef.current.rotation.x = 0;
+      mouthOpenRef.current.position.y = -0.56 - openAmount * 0.03;
     }
 
     // Tongue — appears inside mouth opening
