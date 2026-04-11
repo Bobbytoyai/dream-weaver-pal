@@ -28,7 +28,7 @@ interface ShortTermEntry {
 }
 
 const shortTermBuffer: ShortTermEntry[] = [];
-const MAX_SHORT_TERM = 10;
+const MAX_SHORT_TERM = 20; // Increased for longer conversational context
 
 /** Add a message to short-term RAM buffer */
 export function addToShortTerm(role: "user" | "assistant", content: string, emotion?: string): void {
