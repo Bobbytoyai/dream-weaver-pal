@@ -291,12 +291,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     <group ref={eyeRef} position={[eyeX, eyeY, 0.01]} key={side}>
       {/* Eye white */}
       <mesh geometry={eyeWhiteGeo} material={eyeWhiteMat} />
-      {/* Iris outer — dark green edge */}
+      {/* Iris — green, follows gaze */}
       <mesh ref={irisRef} geometry={irisOuterGeo} position={[0, -0.03, 0.01]} material={irisOuterMat} />
-      {/* Iris mid — medium green */}
-      <mesh geometry={irisMidGeo} position={[0, -0.03, 0.015]} material={irisMidMat} />
-      {/* Iris inner — light green center */}
-      <mesh geometry={irisInnerGeo} position={[0, -0.03, 0.018]} material={irisInnerMat} />
       {/* Pupil — very dark green/black */}
       <mesh ref={pupilRef} geometry={pupilGeo} position={[0, -0.02, 0.02]} material={pupilMat} />
       {/* Main highlight — large, top */}
