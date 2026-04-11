@@ -455,6 +455,67 @@ export function useFaceAnimation(
       }
     }
 
+    // --- OHH MOUTH ANIMATION (organic, random like blinks) ---
+    let ohhOpenAdd = 0;
+    let ohhRoundAdd = 0;
+    let ohhWidthAdd = 0;
+    let ohhEyeWiden = 0;
+    let ohhBrowLift = 0;
+
+    if (faceState !== "speaking") {
+      ohhTimer.current += delta;
+
+      // Trigger new OHH
+      if (ohhPhase.current === 0 && ohhTimer.current >= nextOhh.current) {
+        ohhPhase.current = 1;
+        ohhTimer.current = 0;
+        ohhAmount.current = 0;
+        const r = Math.random();
+        ohhType.current = r < 0.45 ? 0 : r < 0.75 ? 1 : 2;
+      }
+
+      const ohhConfig = ohhType.current === 0
+        ? { maxOpen: 0.25, openSpeed: 3.5, holdTime: 0.3, closeSpeed: 2.0, round: 0.3, widthShrink: -0.1, eyeWiden: 0.12, browLift: 0.08 }
+        : ohhType.current === 1
+        ? { maxOpen: 0.12, openSpeed: 4.0, holdTime: 0.15, closeSpeed: 3.0, round: 0.15, widthShrink: -0.05, eyeWiden: 0.05, browLift: 0.03 }
+        : { maxOpen: 0.35, openSpeed: 5.0, holdTime: 0.5, closeSpeed: 1.5, round: 0.5, widthShrink: -0.15, eyeWiden: 0.2, browLift: 0.15 };
+
+      if (ohhPhase.current === 1) {
+        // Opening
+        ohhAmount.current = Math.min(1, ohhAmount.current + delta * ohhConfig.openSpeed);
+        if (ohhAmount.current >= 1) {
+          ohhPhase.current = 2;
+          ohhTimer.current = 0;
+        }
+      } else if (ohhPhase.current === 2) {
+        // Hold open
+        ohhAmount.current = 1;
+        if (ohhTimer.current >= ohhConfig.holdTime) {
+          ohhPhase.current = 3;
+          ohhTimer.current = 0;
+        }
+      } else if (ohhPhase.current === 3) {
+        // Closing
+        ohhAmount.current = Math.max(0, ohhAmount.current - delta * ohhConfig.closeSpeed);
+        if (ohhAmount.current <= 0) {
+          ohhPhase.current = 0;
+          ohhTimer.current = 0;
+          ohhAmount.current = 0;
+          nextOhh.current = 5 + Math.random() * 10;
+        }
+      }
+
+      if (ohhPhase.current > 0) {
+        // Ease curve for smooth animation
+        const ease = ohhAmount.current * ohhAmount.current * (3 - 2 * ohhAmount.current); // smoothstep
+        ohhOpenAdd = ohhConfig.maxOpen * ease;
+        ohhRoundAdd = ohhConfig.round * ease;
+        ohhWidthAdd = ohhConfig.widthShrink * ease;
+        ohhEyeWiden = ohhConfig.eyeWiden * ease;
+        ohhBrowLift = ohhConfig.browLift * ease;
+      }
+    }
+
     // --- LIP SYNC + EXPRESSIVE FACE (cartoon-exaggerated viseme mapping) ---
     let mouthOpenTarget: number;
     let mouthWidthTarget: number;
