@@ -201,7 +201,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   // Cheek oval
   const cheekGeo = useMemo(() => {
     const shape = new THREE.Shape();
-    shape.absellipse(0, 0, 0.29, 0.18, 0, Math.PI * 2, false, 0);
+    shape.absellipse(0, 0, 0.16, 0.12, 0, Math.PI * 2, false, 0);
     return new THREE.ShapeGeometry(shape, 32);
   }, []);
 
