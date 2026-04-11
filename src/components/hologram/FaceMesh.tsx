@@ -101,6 +101,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const leftEyebrowRef = useRef<THREE.Mesh>(null);
   const rightEyebrowRef = useRef<THREE.Mesh>(null);
   const mouthGroupRef = useRef<THREE.Group>(null);
+  const mouthLineObjRef = useRef<THREE.Line | null>(null);
   const mouthFillRef = useRef<THREE.Mesh>(null);
   const tongueRef = useRef<THREE.Mesh>(null);
   const leftEyelidRef = useRef<THREE.Mesh>(null);
