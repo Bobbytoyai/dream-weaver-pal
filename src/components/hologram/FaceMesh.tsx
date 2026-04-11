@@ -231,11 +231,11 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       }
     });
 
-    // Eye scale + happy squish
+    // Eye scale + almond shape (wider than tall)
     const eyeScale = 0.9 + state.eyeOpenness * 0.15;
     const happySquish = state.mouthCurve > 0.3 ? 1 + (state.mouthCurve - 0.3) * 0.1 : 1;
     [leftEyeRef, rightEyeRef].forEach(ref => {
-      if (ref.current) ref.current.scale.set(eyeScale * happySquish, eyeScale / happySquish, 1);
+      if (ref.current) ref.current.scale.set(eyeScale * happySquish * 1.15, eyeScale / happySquish * 0.85, 1);
     });
 
     // Eyebrows
@@ -255,11 +255,10 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       const mMat = mouthOpenRef.current.material as THREE.MeshBasicMaterial;
       mMat.opacity = 0.85;
       mouthOpenRef.current.visible = true;
-      // Scale up when speaking
       const scaleX = 1.0 + openAmount * 0.15;
       const scaleY = 1.0 + openAmount * 0.8;
       mouthOpenRef.current.scale.set(scaleX, scaleY, 1);
-      mouthOpenRef.current.position.y = -0.56 - openAmount * 0.03;
+      mouthOpenRef.current.position.y = -0.50 - openAmount * 0.03;
     }
 
     // Tongue — appears inside mouth opening
@@ -268,7 +267,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       const tMat = tongueRef.current.material as THREE.MeshBasicMaterial;
       const targetOpacity = showTongue ? Math.min(0.75, (state.mouthOpenness - 0.15) * 3) : 0;
       tMat.opacity += (targetOpacity - tMat.opacity) * delta * 8;
-      tongueRef.current.position.y = -0.63 - state.mouthOpenness * 0.06;
+      tongueRef.current.position.y = -0.57 - state.mouthOpenness * 0.06;
       tongueRef.current.scale.set(0.7 + state.mouthOpenness * 0.5, 0.5 + state.mouthOpenness * 0.8, 1);
     }
 
@@ -331,7 +330,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={rightEyebrowRef} position={[rightBrowX, rightBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
 
       {/* ===== MOUTH — smile C-curve ===== */}
-      <mesh ref={mouthOpenRef} position={[0, -0.56, 0.008]} geometry={smileGeo} material={mouthInteriorMat} />
+      <mesh ref={mouthOpenRef} position={[0, -0.50, 0.008]} geometry={smileGeo} material={mouthInteriorMat} />
 
       {/* ===== TONGUE — inside mouth ===== */}
       <mesh ref={tongueRef} position={[0, -0.63, 0.01]} material={tongueMat}>
