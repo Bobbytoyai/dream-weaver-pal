@@ -581,7 +581,7 @@ export function useFaceAnimation(
 
     // v3.0: EYEBROW ANTICIPATION — eyebrows lead speech by ~50ms
     // Buffer the eyebrow target and use it slightly ahead of audio
-    const eyebrowTarget = (targets.eyebrowHeight ?? 0) + microOffset.current.eyebrow + speechEyebrowLift;
+    const eyebrowTarget = (targets.eyebrowHeight ?? 0) + microOffset.current.eyebrow + speechEyebrowLift + ohhBrowLift;
     const anticipatedEyebrow = eyebrowTarget + (eyebrowTarget - eyebrowAnticipationBuffer.current) * 0.3;
     eyebrowAnticipationBuffer.current = eyebrowTarget;
     c.eyebrowHeight = lerp(c.eyebrowHeight, anticipatedEyebrow, delta * (faceState === "speaking" ? baseSpeed * 4 : baseSpeed));
@@ -589,7 +589,7 @@ export function useFaceAnimation(
 
     // v3.0: EYE DELAY — eyes follow with +100ms natural delay
     eyeDelayTimer.current += delta;
-    const eyeTargetOpenness = ((targets.eyeOpenness ?? 1) + sleepyEyeWobble + speechEyeWiden) * blinkMult;
+    const eyeTargetOpenness = ((targets.eyeOpenness ?? 1) + sleepyEyeWobble + speechEyeWiden + ohhEyeWiden) * blinkMult;
     const eyeTargetSparkle = (targets.eyeSparkle ?? 0.5) * (0.7 + sparkleWave * 0.3);
     // Smooth delay: update delayed buffer at ~10Hz for natural lag
     if (eyeDelayTimer.current > 0.1) {
