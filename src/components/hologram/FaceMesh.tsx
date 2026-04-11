@@ -260,10 +260,10 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       mMat.opacity += (Math.min(0.95, targetOp) - mMat.opacity) * delta * 10;
       mouthOpenRef.current.visible = true;
       // Scale: wider when smiling, taller when speaking
-      const scaleX = 0.7 + state.mouthWidth * 0.3 + Math.max(0, curveEffect) * 0.3 + openAmount * 0.15;
-      const scaleY = 0.4 + openAmount * 1.0 + Math.abs(curveEffect) * 0.2;
+      const scaleX = 0.9 + state.mouthWidth * 0.35 + Math.max(0, curveEffect) * 0.35 + openAmount * 0.15;
+      const scaleY = 0.35 + openAmount * 1.0 + Math.abs(curveEffect) * 0.2;
       mouthOpenRef.current.scale.set(scaleX, scaleY, 1);
-      mouthOpenRef.current.position.y = -0.35 + curveEffect * 0.06 - openAmount * 0.04;
+      mouthOpenRef.current.position.y = -0.48 + curveEffect * 0.06 - openAmount * 0.04;
     }
 
     // Tongue — appears inside mouth opening
