@@ -18,7 +18,9 @@ export type FaceState =
   | "sleepy"
   | "curious"
   | "playful"
-  | "proud";
+  | "proud"
+  | "angry"
+  | "love";
 
 export interface FaceAnimationState {
   eyeOpenness: number;
