@@ -146,8 +146,12 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   // ─── Geometries ───────────────────────────────────────────
 
-  // Eye white — circle r≈60 in SVG → 60*S ≈ 0.35
-  const eyeWhiteGeo = useMemo(() => new THREE.CircleGeometry(0.35, 32), []);
+  // Eye white — slightly almond-shaped (wider than tall)
+  const eyeWhiteGeo = useMemo(() => {
+    const shape = new THREE.Shape();
+    shape.absellipse(0, 0, 0.38, 0.32, 0, Math.PI * 2, false, 0);
+    return new THREE.ShapeGeometry(shape, 32);
+  }, []);
 
   // Iris outer ring — r=45 in SVG → 45*S ≈ 0.264
   const irisOuterGeo = useMemo(() => new THREE.CircleGeometry(0.264, 32), []);
@@ -231,11 +235,11 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       }
     });
 
-    // Eye scale + almond shape (wider than tall)
+    // Eye scale + happy squish (no almond distortion on group)
     const eyeScale = 0.9 + state.eyeOpenness * 0.15;
     const happySquish = state.mouthCurve > 0.3 ? 1 + (state.mouthCurve - 0.3) * 0.1 : 1;
     [leftEyeRef, rightEyeRef].forEach(ref => {
-      if (ref.current) ref.current.scale.set(eyeScale * happySquish * 1.15, eyeScale / happySquish * 0.85, 1);
+      if (ref.current) ref.current.scale.set(eyeScale * happySquish, eyeScale / happySquish, 1);
     });
 
     // Eyebrows
