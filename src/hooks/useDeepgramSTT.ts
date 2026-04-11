@@ -240,6 +240,9 @@ export function useDeepgramSTT({ onPartial, onFinal, onError, onUtteranceEnd, on
               connectWebSocket(stream);
             }
           }, 500);
+        } else {
+          // CRITICAL FIX: reset isRunningRef so start() guard doesn't block future restarts
+          isRunningRef.current = false;
         }
       };
     } catch (err: any) {
