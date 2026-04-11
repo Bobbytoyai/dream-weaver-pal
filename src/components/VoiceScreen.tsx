@@ -1,7 +1,7 @@
 /* v5 — Thin UI shell — logic extracted to useConversationStateMachine */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { eventBus } from "@/lib/eventBus";
-import { Settings, Camera, Mic, MicOff, Gamepad2 } from "lucide-react";
+import { Settings, Camera, Mic, MicOff, Gamepad2, Palette } from "lucide-react";
 import { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
 import {
