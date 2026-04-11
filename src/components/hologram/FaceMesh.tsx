@@ -107,8 +107,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const [rightEyeX, rightEyeY] = useMemo(() => svgToWorld(342, 240), []);
   const [leftBrowX, leftBrowY] = useMemo(() => svgToWorld(155, 147.5), []);
   const [rightBrowX, rightBrowY] = useMemo(() => svgToWorld(357, 147.5), []);
-  const [leftCheekX, leftCheekY] = useMemo(() => svgToWorld(130, 330), []);
-  const [rightCheekX, rightCheekY] = useMemo(() => svgToWorld(382, 330), []);
+  const [leftCheekX, leftCheekY] = useMemo(() => svgToWorld(155, 340), []);
+  const [rightCheekX, rightCheekY] = useMemo(() => svgToWorld(357, 340), []);
 
   // ─── Materials ────────────────────────────────────────────
 
