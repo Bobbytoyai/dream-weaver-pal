@@ -289,8 +289,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       }
       // Build new tube from current expression
       const newTubeGeo = buildMouthTubeGeo(mc, mw, mr);
-      const mouthMeshMat = new THREE.MeshBasicMaterial({ color: new THREE.Color("#E91E63") });
       const tubeObj = new THREE.Mesh(newTubeGeo, mouthMeshMat);
+      mouthGroupRef.current.add(tubeObj);
       mouthGroupRef.current.add(tubeObj);
       mouthLineObjRef.current = tubeObj;
     }
