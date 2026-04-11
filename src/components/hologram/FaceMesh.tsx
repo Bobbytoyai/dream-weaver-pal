@@ -251,10 +251,6 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       mouthRef.current.scale.x = speakScale * (1 + curveEffect * 0.25);
       mouthRef.current.scale.y = 1 + Math.abs(curveEffect) * 0.6 + state.mouthOpenness * 0.5;
       mouthRef.current.position.y = -0.551 + curveEffect * 0.08;
-      const mat = mouthRef.current.children[0]?.material as THREE.MeshBasicMaterial | undefined;
-      if (mat?.opacity !== undefined) {
-        (mat as THREE.MeshBasicMaterial).opacity = 0.8 + state.mouthOpenness * 0.2 + Math.abs(curveEffect) * 0.1;
-      }
     }
 
     // Tongue
