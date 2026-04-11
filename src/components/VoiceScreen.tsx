@@ -10,11 +10,9 @@ import {
   type PendingNarration,
   FALLBACK_FR,
 } from "@/hooks/useConversationStateMachine";
-
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // UI COMPONENTS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 const SoundWave = ({ active }: { active: boolean }) => {
   const bars = 5;
   return (
@@ -34,7 +32,6 @@ const SoundWave = ({ active }: { active: boolean }) => {
     </div>
   );
 };
-
 const FloatingParticles = () => {
   const particles = Array.from({ length: 12 }, (_, i) => ({
     id: i, size: 4 + Math.random() * 8, left: Math.random() * 100,
@@ -50,7 +47,6 @@ const FloatingParticles = () => {
     </div>
   );
 };
-
 const DebugOverlay = ({ state, micArmed, micRunning, partialText, lastRecognized, lastAiResponse, sttBackend, offline }: {
   state: ConversationState; micArmed: boolean; micRunning: boolean;
   partialText: string; lastRecognized: string; lastAiResponse: string; sttBackend: string; offline: boolean;
@@ -67,11 +63,9 @@ const DebugOverlay = ({ state, micArmed, micRunning, partialText, lastRecognized
     {lastAiResponse && <div className="text-purple-300 truncate">🤖 AI: "{lastAiResponse.slice(0, 100)}"</div>}
   </div>
 );
-
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // MAIN COMPONENT
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 interface VoiceScreenProps {
   childName: string;
   childAge: number;
@@ -85,17 +79,14 @@ interface VoiceScreenProps {
   pendingNarration?: PendingNarration | null;
   onNarrationConsumed?: () => void;
 }
-
 const VoiceScreen = ({
   childName, childAge, onSwitchToChat, onSwitchToStory, onParentMode, onActivities,
   parentSettings, activeGameCategory, onClearGame, pendingNarration, onNarrationConsumed,
 }: VoiceScreenProps) => {
-
   const sm = useConversationStateMachine({
     childName, childAge, parentSettings,
     pendingNarration, onNarrationConsumed, onParentMode,
   });
-
   // Launch game activity when selected from Activities menu
   const lastGameRef = useRef<string | null>(null);
   useEffect(() => {
@@ -121,9 +112,7 @@ const VoiceScreen = ({
     }
     onClearGame?.();
   }, [activeGameCategory, childName, sm, onClearGame]);
-
   const [showDebug, setShowDebug] = useState(false);
-
   // Debug toggle (5 taps on parent button)
   const debugTapCountRef = useRef(0);
   const debugTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -136,20 +125,17 @@ const VoiceScreen = ({
       setShowDebug(prev => !prev);
     }
   }, []);
-
   const stateLabel = {
     IDLE: sm.partialText ? `"${sm.partialText}"` : (sm.micArmed ? 'Dis "Bobby" pour me parler !' : 'Touche Bobby pour commencer !'),
-    LISTENING: sm.partialText ? `"${sm.partialText}"` : "J'écoute…",
+    LISTENING: sm.partialText ? `"${sm.partialText}"` : null,
     PROCESSING: "Je réfléchis…",
     SPEAKING: "Je parle…",
     ERROR: "Dis-moi !",
     SLEEP: "💤 Bobby dort… dis son nom pour le réveiller !",
   }[sm.machineState];
-
   return (
     <div className="child-light flex flex-col items-center justify-between h-screen px-4 py-6 max-w-lg mx-auto select-none overflow-hidden relative"
       style={{ background: `linear-gradient(180deg, hsl(220, 25%, 82%) 0%, hsl(230, 22%, 78%) 50%, hsl(240, 20%, 75%) 100%)` }}>
-
       {showDebug && (
         <DebugOverlay
           state={sm.machineState}
@@ -162,15 +148,12 @@ const VoiceScreen = ({
           offline={sm.networkOffline}
         />
       )}
-
       {sm.networkOffline && (
         <div className="fixed top-2 left-2 z-40 px-3 py-1 rounded-full bg-orange-500/90 text-white text-[10px] font-bold animate-pulse">
           ⚡ Mode Offline
         </div>
       )}
-
       <FloatingParticles />
-
       {/* Top bar */}
       <div className="w-full flex items-center justify-between px-2 relative z-10">
         <div>
@@ -196,7 +179,6 @@ const VoiceScreen = ({
           </button>
         </div>
       </div>
-
       {/* Hologram area */}
       <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 relative z-10">
         <div className="absolute w-96 h-96 rounded-full pointer-events-none transition-all duration-500"
@@ -207,7 +189,6 @@ const VoiceScreen = ({
             animation: sm.partialText && sm.machineState === "LISTENING" ? "glow-voice 1.2s ease-in-out infinite alternate" : undefined,
           }}
         />
-
         <div className="relative w-80 h-80 md:w-96 md:h-96" onPointerDownCapture={sm.handleTapBobby}>
           <HologramFace
             voiceState={sm.displayState}
@@ -218,12 +199,12 @@ const VoiceScreen = ({
             emotionIntensity={sm.bobbyEmotionIntensity}
           />
         </div>
-
         {/* State label */}
-        <p className="mt-4 text-sm font-bold text-foreground/70 tracking-wide text-center px-4">
-          {stateLabel}
-        </p>
-
+        {stateLabel && (
+          <p className="mt-4 text-sm font-bold text-foreground/70 tracking-wide text-center px-4">
+            {stateLabel}
+          </p>
+        )}
         {/* Mic status */}
         <div className="mt-2 flex flex-col items-center gap-1.5">
           {sm.machineState === "LISTENING" ? (
@@ -251,10 +232,8 @@ const VoiceScreen = ({
           ) : null}
         </div>
       </div>
-
       <div className="pb-4" />
     </div>
   );
 };
-
 export default VoiceScreen;
