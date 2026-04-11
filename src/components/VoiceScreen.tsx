@@ -114,7 +114,9 @@ const VoiceScreen = ({
     onClearGame?.();
   }, [activeGameCategory, childName, sm, onClearGame]);
   const [showDebug, setShowDebug] = useState(false);
-  // Debug toggle (5 taps on parent button)
+  const [showExpressionTest, setShowExpressionTest] = useState(false);
+  const [testEmotion, setTestEmotion] = useState<FaceState | null>(null);
+  const [testIntensity, setTestIntensity] = useState(0.7);
   const debugTapCountRef = useRef(0);
   const debugTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleDebugToggle = useCallback(() => {
