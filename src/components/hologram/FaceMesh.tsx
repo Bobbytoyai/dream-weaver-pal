@@ -41,10 +41,10 @@ function createRoundedRectShape(w: number, h: number, r: number): THREE.Shape {
 
 // Build smile curve geometry from SVG bezier: M190,350 C234,376.667 278,376.667 322,350
 function createSmileCurveGeo(widthScale = 1, depthScale = 1): THREE.BufferGeometry {
-  const [x0, y0] = svgToWorld(190, 350);
-  const [x1, y1] = svgToWorld(234, 376.667);
-  const [x2, y2] = svgToWorld(278, 376.667);
-  const [x3, y3] = svgToWorld(322, 350);
+  const [x0, y0] = svgToWorld(190, 310);
+  const [x1, y1] = svgToWorld(234, 336);
+  const [x2, y2] = svgToWorld(278, 336);
+  const [x3, y3] = svgToWorld(322, 310);
 
   const curve = new THREE.CubicBezierCurve3(
     new THREE.Vector3(x0 * widthScale, y0 * depthScale, 0),
@@ -250,7 +250,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       const speakScale = 1 + state.mouthOpenness * 0.4 + state.mouthWidth * 0.15;
       mouthRef.current.scale.x = speakScale * (1 + curveEffect * 0.25);
       mouthRef.current.scale.y = 1 + Math.abs(curveEffect) * 0.6 + state.mouthOpenness * 0.5;
-      mouthRef.current.position.y = -0.551 + curveEffect * 0.08;
+      mouthRef.current.position.y = -0.32 + curveEffect * 0.08;
     }
 
     // Tongue
@@ -259,7 +259,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       const tMat = tongueRef.current.material as THREE.MeshBasicMaterial;
       const targetOpacity = showTongue ? Math.min(0.7, (state.mouthOpenness - 0.12) * 3) : 0;
       tMat.opacity += (targetOpacity - tMat.opacity) * delta * 8;
-      tongueRef.current.position.y = -0.6 - state.mouthOpenness * 0.08;
+      tongueRef.current.position.y = -0.42 - state.mouthOpenness * 0.08;
       tongueRef.current.scale.x = 0.8 + state.mouthOpenness * 0.5;
     }
 
@@ -312,10 +312,6 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   return (
     <group ref={rootRef}>
-      {/* ===== FACE DISC — blue/lavender ===== */}
-      <mesh position={[0, -0.05, -0.02]} material={faceDiscMat}>
-        <circleGeometry args={[1.4, 64]} />
-      </mesh>
 
       {/* ===== CHEEKS — pink ovals (behind eyes) ===== */}
       <mesh ref={leftCheekRef} position={[leftCheekX, leftCheekY, 0.005]} material={blushMat} geometry={cheekGeo} />
@@ -335,7 +331,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       </group>
 
       {/* ===== TONGUE ===== */}
-      <mesh ref={tongueRef} position={[0, -0.6, 0.005]} material={tongueMat}>
+      <mesh ref={tongueRef} position={[0, -0.42, 0.005]} material={tongueMat}>
         <circleGeometry args={[0.05, 24]} />
       </mesh>
     </group>
