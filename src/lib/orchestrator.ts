@@ -18,11 +18,21 @@ import { detectEmotionForTTS } from "./voicePipeline";
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import type { Emotion } from "./voicePipeline";
 import type { ChildMemory } from "./memoryService";
-import { getOfflineResponse, canHandleOffline } from "./offlineEngine";
+import { getOfflineResponse } from "./offlineEngine";
 import { getCachedResponse, isSimpleGreeting } from "./responseCache";
 import { isHighLatency } from "./stabilityEngine";
 import { lookupCachedAI } from "./localMemoryStore";
-import { matchQAWithConfidence } from "./offline-intents";
+import { matchQAWithConfidence, detectOfflineIntent } from "./offline-intents";
+
+// Intents that are safe to handle offline without QA match
+// (simple, low-information responses work fine here)
+const SIMPLE_OFFLINE_INTENTS = new Set([
+  "GREETING", "FAREWELL", "COMPLIMENT", "CONTROL",
+  "CALM_REQUEST", "HUMOR", "EMOTION_POSITIVE", "EMOTION_NEGATIVE",
+  "IDENTITY", "HELP",
+]);
+// HIGH-CONFIDENCE threshold for routing complex questions offline
+const HIGH_CONFIDENCE_OFFLINE = 0.80;
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TYPES
@@ -151,9 +161,17 @@ function selectResponse(
     return { response: getCachedResponse("greeting"), source: "cache" };
   }
 
-  // Fast path 2: offline engine — ALWAYS TRY FIRST (offline-first priority)
-  // Check if offline engine can handle with good confidence
-  if (canHandleOffline(input.userText)) {
+  // Fast path 2: offline engine — smart routing (not just "any recognized intent")
+  // Only go offline for: (a) simple intents (greetings, emotions, control) OR
+  // (b) QA match with confidence >= 0.80 (specific factual answers)
+  // Complex questions (QUESTION, EDUCATION, ADVENTURE, LOGIC) go to AI for rich answers
+  const qaResult = matchQAWithConfidence(input.userText);
+  if (qaResult && qaResult.confidence >= HIGH_CONFIDENCE_OFFLINE) {
+    const offlineResp = getOfflineResponse(input.userText, input.childName);
+    return { response: offlineResp.text, source: "offline" };
+  }
+  const detectedOfflineIntent = detectOfflineIntent(input.userText);
+  if (SIMPLE_OFFLINE_INTENTS.has(detectedOfflineIntent)) {
     const offlineResp = getOfflineResponse(input.userText, input.childName);
     return { response: offlineResp.text, source: "offline" };
   }
@@ -238,11 +256,16 @@ function suggestFollowUp(intent: BobbyIntent, childEmotion: Emotion | undefined)
 // 7. AUTO-CORRECTION / SILENCE HANDLING
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+// FIX I4: 8 phrases variées — naturelles, amusantes, adaptées enfants
 const SILENCE_RELAUNCHES = [
-  "Tu peux me répéter ? 😊",
-  "Je n'ai pas bien compris, redis-moi ?",
-  "Hmm, tu voulais dire quoi ?",
-  "Je t'écoute, vas-y !",
+  "Je t'écoute !",
+  "Tu peux me parler, je suis là !",
+  "Dis-moi ce que tu veux faire !",
+  "Hé, je suis là ! Tu veux jouer ?",
+  "Je t'entends… tu voulais dire quoi ?",
+  "Tu es là ? Je t'écoute !",
+  "Dis-moi, qu'est-ce qui te ferait plaisir ?",
+  "Une histoire ? Un jeu ? Dis-moi !",
 ];
 
 let silenceRelaunchIdx = 0;
