@@ -288,8 +288,15 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     }
 
     // ─── DYNAMIC MOUTH ─────────────────────────────────────
-    // Update mouth curve line (always visible)
-    if (mouthLineRef.current) {
+    // Create THREE.Line on first frame if not yet created
+    if (mouthGroupRef.current && !mouthLineObjRef.current) {
+      const lineObj = new THREE.Line(mouthLineGeo, mouthLineMat);
+      mouthGroupRef.current.add(lineObj);
+      mouthLineObjRef.current = lineObj;
+    }
+
+    // Update mouth curve line positions
+    if (mouthLineObjRef.current) {
       const posAttr = mouthLineGeo.getAttribute("position") as THREE.BufferAttribute;
       const newPoints = buildMouthCurvePoints(
         state.mouthCurve,
