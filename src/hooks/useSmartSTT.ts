@@ -96,6 +96,19 @@ export function useSmartSTT({ onPartial, onFinal, onError, onUtteranceEnd, onSpe
     language: language === "fr" ? "fr-FR" : language,
   });
 
+  // ─── STT STABLE REFS ─────────────────────────────────────────────────────────
+  // CRITICAL FIX: deepgram and native are NEW objects every render.
+  // Including them in useCallback/useEffect deps causes constant re-fires.
+  // Solution: capture .start/.stop in refs with zero re-render dependency.
+  const deepgramStartRef = useRef(deepgram.start);
+  const deepgramStopRef  = useRef(deepgram.stop);
+  const nativeStartRef   = useRef(native.start);
+  const nativeStopRef    = useRef(native.stop);
+  useEffect(() => { deepgramStartRef.current = deepgram.start; }, [deepgram.start]);
+  useEffect(() => { deepgramStopRef.current  = deepgram.stop;  }, [deepgram.stop]);
+  useEffect(() => { nativeStartRef.current   = native.start;   }, [native.start]);
+  useEffect(() => { nativeStopRef.current    = native.stop;    }, [native.stop]);
+
   const start = useCallback(async () => {
     if (isRunningRef.current) return;
     isRunningRef.current = true;
@@ -104,43 +117,43 @@ export function useSmartSTT({ onPartial, onFinal, onError, onUtteranceEnd, onSpe
     if (isOffline()) {
       activeBackendRef.current = "native";
       setBackend("native");
-      await native.start();
+      await nativeStartRef.current();
       return;
     }
 
     if (activeBackendRef.current === "deepgram") {
       try {
-        await deepgram.start();
+        await deepgramStartRef.current();
       } catch {
         // If Deepgram fails to start, immediately fallback
         console.log("[SmartSTT] Deepgram start failed, using native");
         activeBackendRef.current = "native";
         setBackend("native");
-        await native.start();
+        await nativeStartRef.current();
       }
     } else {
-      await native.start();
+      await nativeStartRef.current();
     }
-  }, [deepgram, native]);
+  }, []); // ← No object deps — uses stable refs only
 
   const stop = useCallback(() => {
     isRunningRef.current = false;
-    deepgram.stop();
-    native.stop();
-  }, [deepgram, native]);
+    deepgramStopRef.current();
+    nativeStopRef.current();
+  }, []); // ← No object deps — uses stable refs only
 
   // When backend changes while running, swap live
+  // CRITICAL FIX: ONLY depends on `backend` state, NOT on deepgram/native objects
   useEffect(() => {
     if (!isRunningRef.current) return;
-
     if (backend === "native") {
-      deepgram.stop();
-      native.start();
+      deepgramStopRef.current();
+      nativeStartRef.current();
     } else {
-      native.stop();
-      deepgram.start();
+      nativeStopRef.current();
+      deepgramStartRef.current();
     }
-  }, [backend, deepgram, native]);
+  }, [backend]); // ← ONLY backend — never deepgram/native objects
 
   const retryDeepgram = useCallback(() => {
     if (isOffline()) return; // Don't retry when offline
