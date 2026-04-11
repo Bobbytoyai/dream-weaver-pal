@@ -3,7 +3,7 @@
  * 
  * Pipeline optimizations:
  * - Parallel KB + story lookups (no sequential blocking)
- * - Fastest model for simple chat (gemini-3-flash-preview)
+ * - Fastest model for simple chat (gemini-2.0-flash)
  * - Ultra-aggressive token limits for voice output
  * - Streaming SSE with immediate passthrough
  */
@@ -13,7 +13,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const LOVABLE_API_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
 
 // ─── Safety filter ─────────────────────────────────────────
 const BLOCKED_INPUT = [
@@ -255,8 +255,8 @@ Deno.serve(async (req) => {
   try {
     const { messages, childName, childAge, mode, parentSettings, memoryContext, cognitiveContext } = await req.json();
     
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured");
 
     // Safety pre-filter
     const lastUserMsg = [...messages].reverse().find((m: any) => m.role === "user");
@@ -283,7 +283,6 @@ Deno.serve(async (req) => {
       const emotionMeta = `data: ${JSON.stringify({ choices: [{ delta: { content: "" } }], metadata: { emotion: kbMatch.emotion, source: "kb" } })}\n\n`;
       const sseData = emotionMeta + `data: ${JSON.stringify({ choices: [{ delta: { content: answer } }] })}\n\ndata: [DONE]\n\n`;
 
-      // v4.0: Increment usage_count (fire-and-forget, don't block response)
       const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
       const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
       if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
@@ -305,19 +304,16 @@ Deno.serve(async (req) => {
 
     const systemPrompt = buildSystemPrompt(intent, childName, childAge, parentSettings, memoryContext, cognitiveContext) + storyContext;
 
-    // Keep only recent messages for speed (voice needs fast responses)
     const recentMessages = messages.length > 6 ? messages.slice(-6) : messages;
 
-    // Model selection: gemini-3-flash-preview for all intents (fastest next-gen)
-    // Fall back to flash-lite only for ultra-simple calm/chat
     const model = (intent === "chat" || intent === "calm")
-      ? "google/gemini-2.5-flash-lite"
-      : "google/gemini-2.5-flash";
+      ? "gemini-2.0-flash-lite"
+      : "gemini-2.0-flash";
 
-    const response = await fetch(LOVABLE_API_URL, {
+    const response = await fetch(GEMINI_API_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${GEMINI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
