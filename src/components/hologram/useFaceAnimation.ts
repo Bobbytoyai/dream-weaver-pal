@@ -195,9 +195,15 @@ export function useFaceAnimation(
   const nextMouthQuirk = useRef(1 + Math.random() * 2);
   const mouthQuirkPhase = useRef(0); // 0=none, 1=quirking, 2=returning
   const mouthQuirkTarget = useRef({ curve: 0, width: 0, open: 0 });
+  // OHH mouth animation (organic, like blinks)
+  const ohhTimer = useRef(0);
+  const ohhPhase = useRef(0); // 0=waiting, 1=opening, 2=hold, 3=closing
+  const nextOhh = useRef(5 + Math.random() * 8); // every 5-13s
+  const ohhAmount = useRef(0); // current openness 0-1
+  const ohhType = useRef(0); // 0=OHH, 1=small O, 2=wide surprise
   // v3.0: Anticipation/delay buffers
-  const eyebrowAnticipationBuffer = useRef(0); // stores upcoming eyebrow lift
-  const eyeDelayBuffer = useRef({ openness: 1, sparkle: 0.5 }); // delayed eye state
+  const eyebrowAnticipationBuffer = useRef(0);
+  const eyeDelayBuffer = useRef({ openness: 1, sparkle: 0.5 });
   const eyeDelayTimer = useRef(0);
   // v3.0: Performance failsafe
   const frameBudgetExceeded = useRef(0);
@@ -449,6 +455,67 @@ export function useFaceAnimation(
       }
     }
 
+    // --- OHH MOUTH ANIMATION (organic, random like blinks) ---
+    let ohhOpenAdd = 0;
+    let ohhRoundAdd = 0;
+    let ohhWidthAdd = 0;
+    let ohhEyeWiden = 0;
+    let ohhBrowLift = 0;
+
+    if (faceState !== "speaking") {
+      ohhTimer.current += delta;
+
+      // Trigger new OHH
+      if (ohhPhase.current === 0 && ohhTimer.current >= nextOhh.current) {
+        ohhPhase.current = 1;
+        ohhTimer.current = 0;
+        ohhAmount.current = 0;
+        const r = Math.random();
+        ohhType.current = r < 0.45 ? 0 : r < 0.75 ? 1 : 2;
+      }
+
+      const ohhConfig = ohhType.current === 0
+        ? { maxOpen: 0.25, openSpeed: 3.5, holdTime: 0.3, closeSpeed: 2.0, round: 0.3, widthShrink: -0.1, eyeWiden: 0.12, browLift: 0.08 }
+        : ohhType.current === 1
+        ? { maxOpen: 0.12, openSpeed: 4.0, holdTime: 0.15, closeSpeed: 3.0, round: 0.15, widthShrink: -0.05, eyeWiden: 0.05, browLift: 0.03 }
+        : { maxOpen: 0.35, openSpeed: 5.0, holdTime: 0.5, closeSpeed: 1.5, round: 0.5, widthShrink: -0.15, eyeWiden: 0.2, browLift: 0.15 };
+
+      if (ohhPhase.current === 1) {
+        // Opening
+        ohhAmount.current = Math.min(1, ohhAmount.current + delta * ohhConfig.openSpeed);
+        if (ohhAmount.current >= 1) {
+          ohhPhase.current = 2;
+          ohhTimer.current = 0;
+        }
+      } else if (ohhPhase.current === 2) {
+        // Hold open
+        ohhAmount.current = 1;
+        if (ohhTimer.current >= ohhConfig.holdTime) {
+          ohhPhase.current = 3;
+          ohhTimer.current = 0;
+        }
+      } else if (ohhPhase.current === 3) {
+        // Closing
+        ohhAmount.current = Math.max(0, ohhAmount.current - delta * ohhConfig.closeSpeed);
+        if (ohhAmount.current <= 0) {
+          ohhPhase.current = 0;
+          ohhTimer.current = 0;
+          ohhAmount.current = 0;
+          nextOhh.current = 5 + Math.random() * 10;
+        }
+      }
+
+      if (ohhPhase.current > 0) {
+        // Ease curve for smooth animation
+        const ease = ohhAmount.current * ohhAmount.current * (3 - 2 * ohhAmount.current); // smoothstep
+        ohhOpenAdd = ohhConfig.maxOpen * ease;
+        ohhRoundAdd = ohhConfig.round * ease;
+        ohhWidthAdd = ohhConfig.widthShrink * ease;
+        ohhEyeWiden = ohhConfig.eyeWiden * ease;
+        ohhBrowLift = ohhConfig.browLift * ease;
+      }
+    }
+
     // --- LIP SYNC + EXPRESSIVE FACE (cartoon-exaggerated viseme mapping) ---
     let mouthOpenTarget: number;
     let mouthWidthTarget: number;
@@ -503,10 +570,10 @@ export function useFaceAnimation(
       speechHeadNod = Math.sin(breathPhase.current * 6) * audioAmplitude * 0.03;
       speechCheekBoost = audioAmplitude > 0.2 ? audioAmplitude * 0.15 : 0;
     } else {
-      mouthOpenTarget = (targets.mouthOpenness ?? 0) + mouthBreath + mouthQuirkOpenAdd;
-      mouthWidthTarget = (targets.mouthWidth ?? 0.5) + mouthBreathWidth + mouthQuirkWidthAdd;
-      mouthRoundTarget = targets.mouthRound ?? 0;
-      jawDropTarget = (targets.jawDrop ?? 0) + mouthBreath * 0.3;
+      mouthOpenTarget = (targets.mouthOpenness ?? 0) + mouthBreath + mouthQuirkOpenAdd + ohhOpenAdd;
+      mouthWidthTarget = (targets.mouthWidth ?? 0.5) + mouthBreathWidth + mouthQuirkWidthAdd + ohhWidthAdd;
+      mouthRoundTarget = (targets.mouthRound ?? 0) + ohhRoundAdd;
+      jawDropTarget = (targets.jawDrop ?? 0) + mouthBreath * 0.3 + ohhOpenAdd * 0.5;
     }
 
     // --- LERP ALL VALUES ---
@@ -514,7 +581,7 @@ export function useFaceAnimation(
 
     // v3.0: EYEBROW ANTICIPATION — eyebrows lead speech by ~50ms
     // Buffer the eyebrow target and use it slightly ahead of audio
-    const eyebrowTarget = (targets.eyebrowHeight ?? 0) + microOffset.current.eyebrow + speechEyebrowLift;
+    const eyebrowTarget = (targets.eyebrowHeight ?? 0) + microOffset.current.eyebrow + speechEyebrowLift + ohhBrowLift;
     const anticipatedEyebrow = eyebrowTarget + (eyebrowTarget - eyebrowAnticipationBuffer.current) * 0.3;
     eyebrowAnticipationBuffer.current = eyebrowTarget;
     c.eyebrowHeight = lerp(c.eyebrowHeight, anticipatedEyebrow, delta * (faceState === "speaking" ? baseSpeed * 4 : baseSpeed));
@@ -522,7 +589,7 @@ export function useFaceAnimation(
 
     // v3.0: EYE DELAY — eyes follow with +100ms natural delay
     eyeDelayTimer.current += delta;
-    const eyeTargetOpenness = ((targets.eyeOpenness ?? 1) + sleepyEyeWobble + speechEyeWiden) * blinkMult;
+    const eyeTargetOpenness = ((targets.eyeOpenness ?? 1) + sleepyEyeWobble + speechEyeWiden + ohhEyeWiden) * blinkMult;
     const eyeTargetSparkle = (targets.eyeSparkle ?? 0.5) * (0.7 + sparkleWave * 0.3);
     // Smooth delay: update delayed buffer at ~10Hz for natural lag
     if (eyeDelayTimer.current > 0.1) {
