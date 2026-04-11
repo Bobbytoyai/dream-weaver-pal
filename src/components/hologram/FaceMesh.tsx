@@ -142,9 +142,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color("#8B6F47"), transparent: true, opacity: 0.9,
   }), []);
 
-  // Mouth line — #E91E63 (magenta)
-  const mouthLineMat = useMemo(() => new THREE.LineBasicMaterial({
-    color: new THREE.Color("#E91E63"), linewidth: 2,
+  // Mouth line material — #E91E63 (magenta)
+  const mouthMeshMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: new THREE.Color("#E91E63"),
   }), []);
 
   // Mouth fill (visible when open) — #C2185B
