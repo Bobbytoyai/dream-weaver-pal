@@ -152,6 +152,7 @@ const TOP_SECTIONS_CONFIG: {
   { id: "chansons", label: "Chansons", icon: Music, color: "text-rose-400", bgColor: "bg-rose-500/20", desc: "Comptines, berceuses, éducatif, activités", emoji: "🎵" },
   { id: "cerveau", label: "Personnalité", icon: Sparkles, color: "text-pink-400", bgColor: "bg-pink-500/20", desc: "Personnalité, réactions, phrases Bobby", emoji: "✨" },
   { id: "cloud", label: "Cloud KB", icon: Globe, color: "text-blue-400", bgColor: "bg-blue-500/20", desc: "Base cloud extensible (ajout via admin)", emoji: "☁️" },
+  { id: "store", label: "Bobby Store", icon: Star, color: "text-emerald-400", bgColor: "bg-emerald-500/20", desc: "Gérer le catalogue du store (CRUD)", emoji: "🛒" },
 ];
 
 // ═══════════════════════════════════════════════════════════════════
