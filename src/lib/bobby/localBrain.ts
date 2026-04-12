@@ -130,6 +130,7 @@ export type LocalIntent =
   | "PERFECTIONNISME" | "COMPARAISON" | "FATIGUE_EMOTIONNELLE"
   | "RETRAIT" | "PEUR_ABANDON" | "PEUR_ECHEC" | "AVERSION" | "PEOPLE_PLEASING"
   | "CURIOSITE" | "CREATION" | "IDENTITE_PEUR" | "MAUVAIS_COMPORTEMENT"
+  | "STRESS" | "PARTAGE_QUOTIDIEN" | "RESISTANCE" | "ENVIE"
   // Catch-all
   | "GENERAL";
 
@@ -270,20 +271,20 @@ const INTENT_RULES: IntentRule[] = [
   { intent: "EXCITATION", priority: 78, patterns: [
     /trop excité|j'ai hâte|vivement|impatient|je peux pas attendre|trop pressé/i,
   ]},
-  { intent: "SANTE", priority: 83, patterns: [
-    /j'ai mal|mal au ventre|mal à la tête|mal aux dents|malade|vomi|fièvre|bobo|ça fait mal/i,
-  ]},
-  { intent: "PERTE", priority: 80, patterns: [
-    /j'ai perdu mon|perdu ma|perdu mes|retrouver|disparu|cassé mon|cassé ma/i,
-  ]},
-  { intent: "REVE_AVENIR", priority: 73, patterns: [
-    /je veux devenir|quand je serai grand|mon rêve c'est|plus tard je|j'aimerais être/i,
-  ]},
-  { intent: "ABANDON", priority: 84, patterns: [
-    /je veux abandonner|j'abandonne|à quoi bon|laisser tomber|ça sert à rien|c'est foutu/i,
-  ]},
   { intent: "MENSONGE", priority: 82, patterns: [
     /j'ai menti|j'ai triché|j'ai pas dit la vérité|j'ai caché/i,
+  ]},
+  { intent: "STRESS", priority: 80, patterns: [
+    /en retard|je suis en retard|pas le temps|dépêcher|vite|pressé.*école/i,
+  ]},
+  { intent: "RESISTANCE", priority: 71, patterns: [
+    /pas envie d'aller|veux pas aller|pas envie.*école|veux pas faire mes devoirs|j'ai pas envie/i,
+  ]},
+  { intent: "PARTAGE_QUOTIDIEN", priority: 55, patterns: [
+    /bonne journée|bien mangé|bien dormi|bien passé|fait un ami|j'ai passé|dessin animé/i,
+  ]},
+  { intent: "ENVIE", priority: 58, patterns: [
+    /je veux regarder|je veux manger|je veux jouer dehors|je veux un|je veux des/i,
   ]},
   { intent: "ANXIETE", priority: 86, patterns: [
     /inquiet|inquiète|tracasse|angoisse|stressé pour demain|peur de demain|anxieux/i,
