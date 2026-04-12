@@ -2,6 +2,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ParentSettings } from "@/components/parentSettings";
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
+import type { ExpressionCombo } from "@/lib/bobby/expressionLibrary";
+import { detectBobbyExpression } from "@/lib/emotionMapper";
+import { resetEmotionPipeline } from "@/lib/bobby/emotionPipeline";
 import { eventBus } from "@/lib/eventBus";
 import { getNetworkMode, onNetworkChange } from "@/lib/offlineEngine";
 import { fetchTTSAudio } from "@/lib/voicePipeline";
@@ -89,6 +92,8 @@ export function useBobbyVoiceCore({
   const [micArmed, setMicArmed] = useState(false);
   const [networkOffline, setNetworkOffline] = useState(() => getNetworkMode() === "OFFLINE");
   const [currentEmotion, setCurrentEmotion] = useState<FaceState>("idle");
+  const [currentExpressionCombo, setCurrentExpressionCombo] = useState<ExpressionCombo | undefined>();
+  const [currentExpressionIntensity, setCurrentExpressionIntensity] = useState<number>(3);
 
   const machineRef = useRef<ConversationState>("IDLE");
   const processingRef = useRef(false);
@@ -209,6 +214,10 @@ export function useBobbyVoiceCore({
     abortRef.current = controller;
 
     setCurrentEmotion(reply.emotion);
+    // Modular expression from new pipeline
+    const exprResult = detectBobbyExpression(reply.text, parentSettings?.childAge ?? 7);
+    setCurrentExpressionCombo(exprResult.expression.combo);
+    setCurrentExpressionIntensity(exprResult.expression.intensity);
     setBobbyText(reply.text);
     setLastAiResponse(reply.text);
     lastAiResponseRef.current = reply.text;
@@ -498,6 +507,7 @@ export function useBobbyVoiceCore({
       stopSttRef.current();
       stopPlayback();
       resetBobbyBrainSession();
+      resetEmotionPipeline();
       void closeSession();
     };
   }, [clearSleepTimer, closeSession, stopPlayback]);
@@ -537,6 +547,8 @@ export function useBobbyVoiceCore({
     currentEmotion: toVoiceState(machineState),
     bobbyFaceEmotion,
     bobbyEmotionIntensity,
+    expressionCombo: currentExpressionCombo,
+    expressionIntensityLevel: currentExpressionIntensity,
     micArmed,
     networkOffline,
     sttIsRunning: smartSTT.isRunning,

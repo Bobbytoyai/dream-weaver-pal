@@ -8,6 +8,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { FaceState, useFaceAnimation } from "./useFaceAnimation";
 import { VisemeState } from "./useAudioAmplitude";
+import type { ExpressionCombo } from "@/lib/bobby/expressionLibrary";
 
 interface FaceMeshProps {
   faceState: FaceState;
@@ -17,6 +18,8 @@ interface FaceMeshProps {
   emotionIntensity?: number;
   emotionDuringSpeech?: FaceState;
   bobbyColor?: string;
+  expressionOverride?: ExpressionCombo;
+  expressionIntensityLevel?: number;
 }
 
 // SVG is 512x512, center (256,256). Scale factor to map to 3D coords:
@@ -80,7 +83,7 @@ function buildMouthFillShape(
   return shape;
 }
 
-export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIntensity = 0.7, emotionDuringSpeech }: FaceMeshProps) {
+export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIntensity = 0.7, emotionDuringSpeech, expressionOverride, expressionIntensityLevel }: FaceMeshProps) {
   const rootRef = useRef<THREE.Group>(null);
   const leftEyeRef = useRef<THREE.Group>(null);
   const rightEyeRef = useRef<THREE.Group>(null);
@@ -100,7 +103,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const leftCheekRef = useRef<THREE.Mesh>(null);
   const rightCheekRef = useRef<THREE.Mesh>(null);
 
-  const animation = useFaceAnimation(faceState, gazeRef, audioAmplitude, viseme, emotionIntensity, emotionDuringSpeech);
+  const animation = useFaceAnimation(faceState, gazeRef, audioAmplitude, viseme, emotionIntensity, emotionDuringSpeech, expressionOverride, expressionIntensityLevel);
 
   // ─── Positions from SVG ───────────────────────────────────
   const [leftEyeX, leftEyeY] = useMemo(() => svgToWorld(170, 240), []);

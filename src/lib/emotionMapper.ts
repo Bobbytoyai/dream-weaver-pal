@@ -1,14 +1,43 @@
 /**
- * Bobby Emotion Mapper v2.4
- * Maps detected emotions (from text/KB) to hologram FaceState expressions.
+ * Bobby Emotion Mapper v3.0 — Unified Pipeline
  * 
- * Emotion sources:
- * 1. knowledge_base `emotion` column (offline KB matches)
- * 2. detectEmotionForTTS (text analysis)
- * 3. AI response tone analysis
+ * Bridges the new modular expression engine with the existing FaceState system.
+ * All emotion detection now goes through the centralized pipeline.
  */
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import type { Emotion } from "@/lib/voicePipeline";
+import {
+  processEmotionPipeline,
+  processBobbyResponseEmotion,
+} from "@/lib/bobby/emotionPipeline";
+import type { BobbyEmotion, ExpressionResult } from "@/lib/bobby/expressionEngine";
+import { resolveExpression } from "@/lib/bobby/expressionLibrary";
+import type { FaceAnimationState } from "@/components/hologram/useFaceAnimation";
+
+// ─── Legacy FaceState mapping (kept for backward compat) ────
+
+const BOBBY_EMOTION_TO_FACE: Record<BobbyEmotion, FaceState> = {
+  joy: "happy",
+  sadness: "sad",
+  fear: "reassuring",
+  anger: "calm",
+  love: "happy",
+  curiosity: "curious",
+  pride: "proud",
+  surprise: "surprised",
+  calm: "calm",
+  excitement: "excited",
+  boredom: "calm",
+  shyness: "calm",
+  embarrassment: "calm",
+  relief: "happy",
+  confusion: "confused",
+  disgust: "calm",
+  jealousy: "reassuring",
+  gratitude: "happy",
+  determination: "attentive",
+  neutral: "idle",
+};
 
 // ─── KB emotion → FaceState mapping ─────────────────────────
 const KB_EMOTION_MAP: Record<string, FaceState> = {
@@ -27,11 +56,11 @@ const KB_EMOTION_MAP: Record<string, FaceState> = {
 const TTS_EMOTION_MAP: Record<string, FaceState> = {
   happy: "happy",
   sad: "sad",
-  scared: "reassuring", // Bobby becomes reassuring when child is scared (not sad)
-  bored: "playful",     // Bobby becomes playful when child is bored (not sleepy)
+  scared: "reassuring",
+  bored: "playful",
   curious: "curious",
   excited: "excited",
-  angry: "calm",        // Bobby stays calm when child is angry (de-escalate)
+  angry: "calm",
   calm: "calm",
 };
 
@@ -52,53 +81,66 @@ export function ttsEmotionToFace(emotion: Emotion | undefined): FaceState | unde
 }
 
 /**
- * Auto-detect emotion from Bobby's response text → FaceState.
- * More comprehensive than detectEmotionForTTS, tuned for Bobby's output.
+ * Auto-detect emotion from Bobby's response text → FaceState (legacy).
+ * Now powered by the new emotion pipeline.
  */
 export function detectBobbyEmotion(text: string): FaceState {
-  const lower = text.toLowerCase();
+  const result = processBobbyResponseEmotion(text);
+  return BOBBY_EMOTION_TO_FACE[result.emotion] ?? "happy";
+}
 
-  // SAD / empathetic
-  if (/triste|pleure|cafard|blessé|seul|incompris|pas bien|mal au|désolé|courage/.test(lower))
-    return "sad";
+/**
+ * Full expression detection from Bobby's response text.
+ * Returns both the legacy FaceState AND the new modular expression data.
+ */
+export function detectBobbyExpression(text: string, childAge: number = 7): {
+  faceState: FaceState;
+  expression: ExpressionResult;
+  targets: Partial<FaceAnimationState>;
+} {
+  const expression = processBobbyResponseEmotion(text, childAge);
+  const faceState = BOBBY_EMOTION_TO_FACE[expression.emotion] ?? "happy";
+  const targets = resolveExpression(expression.combo, expression.intensity);
+  return { faceState, expression, targets };
+}
 
-  // EXCITED / high energy
-  if (/wow|incroyable|génial|super|trop bien|magique|bravo|fête|champion|victoire|yeay|🎉|🎊/.test(lower))
-    return "excited";
+/**
+ * Full expression detection from child's input text.
+ * Bobby's face reacts to the child's emotion (empathetically).
+ */
+export function detectChildExpression(text: string, childAge: number = 7): {
+  faceState: FaceState;
+  expression: ExpressionResult;
+  targets: Partial<FaceAnimationState>;
+} {
+  const pipelineResult = processEmotionPipeline(text, childAge);
+  
+  // Bobby reacts empathetically: mirror positive, comfort negative
+  const bobbyReaction = mapChildEmotionToBobbyReaction(pipelineResult.emotion);
+  const faceState = BOBBY_EMOTION_TO_FACE[bobbyReaction] ?? "attentive";
+  
+  return {
+    faceState,
+    expression: pipelineResult,
+    targets: resolveExpression(pipelineResult.combo, pipelineResult.intensity),
+  };
+}
 
-  // SURPRISED
-  if (/vraiment\s*\?|sérieux|c'est fou|bizarre|impossible|tu savais que|dingue/.test(lower))
-    return "surprised";
-
-  // CURIOUS / questioning
-  if (/pourquoi|comment|c'est quoi|tu penses|explique|qu'en dis|ton avis|\?$/.test(lower))
-    return "curious";
-
-  // THINKING / reflective
-  if (/hmm|réfléchi|imagine|et si|suppose|difficile|dilemme/.test(lower))
-    return "thinking";
-
-  // CALM / reassuring
-  if (/calme|tranquille|dors|nuit|bonsoir|repose|paix|doucement|respire/.test(lower))
-    return "calm";
-
-  // HAPPY (default positive)
-  if (/😊|😄|💛|❤️|aime|content|heureux|sourire|rire|rigol|adore|chouette|sympa/.test(lower))
-    return "happy";
-
-  // PLAYFUL
-  if (/blague|taquin|coquin|farce|😜|😝|😏|haha|hihi|marrant|drôle|rigolo/.test(lower))
-    return "playful";
-
-  // PROUD
-  if (/bravo|fier|champion|réussi|gagné|bien joué|super boulot|tu gères|💪|🏆/.test(lower))
-    return "proud";
-
-  // Reassuring (for emotional support responses)
-  if (/je suis là|t'écoute|ensemble|confiance|normal/.test(lower))
-    return "reassuring";
-
-  return "happy"; // default Bobby is happy
+/**
+ * Map child's detected emotion to Bobby's empathetic reaction.
+ */
+function mapChildEmotionToBobbyReaction(childEmotion: BobbyEmotion): BobbyEmotion {
+  const reactionMap: Partial<Record<BobbyEmotion, BobbyEmotion>> = {
+    sadness: "love",         // Bobby shows love when child is sad
+    fear: "calm",            // Bobby stays calm/reassuring
+    anger: "calm",           // Bobby de-escalates
+    jealousy: "love",        // Bobby shows understanding
+    disgust: "curiosity",    // Bobby redirects
+    boredom: "excitement",   // Bobby energizes
+    embarrassment: "love",   // Bobby comforts
+    confusion: "curiosity",  // Bobby helps explore
+  };
+  return reactionMap[childEmotion] ?? childEmotion;
 }
 
 /**
@@ -111,21 +153,17 @@ export function detectEmotionIntensity(text: string): number {
   const emojis = (text.match(/[\u{1F300}-\u{1F9FF}]/gu) || []).length;
   const caps = (text.match(/[A-ZÀ-ÜÉ]{3,}/g) || []).length;
 
-  // High intensity markers
   if (/trop|super|incroyable|wow|génial|énorme|maximum|JAMAIS/i.test(lower) || exclamations >= 2)
     return Math.min(1.0, 0.8 + emojis * 0.05 + caps * 0.05);
 
-  // Medium intensity
   if (exclamations >= 1 || emojis >= 1)
     return 0.7;
 
-  // Low-medium for questions
   if (/\?/.test(text))
     return 0.55;
 
-  // Calm/soft
   if (/doucement|calme|tranquille|🌙/.test(lower))
     return 0.4;
 
-  return 0.6; // default
+  return 0.6;
 }

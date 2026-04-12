@@ -230,6 +230,8 @@ const VoiceScreen = ({
             bobbyColor={parentSettings?.bobbyColor}
             emotionOverride={sm.bobbyFaceEmotion}
             emotionIntensity={sm.bobbyEmotionIntensity}
+            expressionOverride={sm.expressionCombo}
+            expressionIntensityLevel={sm.expressionIntensityLevel}
           />
         </div>
 
