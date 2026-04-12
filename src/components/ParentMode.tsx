@@ -6,7 +6,7 @@ import {
   Play, Pause, AlertTriangle, TrendingUp, Trash2, ChevronRight, Gamepad2,
   BarChart3, Calendar, User, Zap, Moon, Sun, Hand, Lock, Search,
   Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X,
-  SkipForward, SkipBack, Activity, Bell, ChevronDown, Star, Edit3
+  SkipForward, SkipBack, Activity, Bell, ChevronDown, ChevronLeft, Star, Edit3
 } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { getInterestSnapshot, INTEREST_KEYWORDS_PUBLIC } from "@/lib/bobby/interestTracker";
