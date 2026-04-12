@@ -100,6 +100,7 @@ export function useBobbyVoiceCore({
   const handledNarrationIdRef = useRef<string | null>(null);
   const sessionOpenRef = useRef(false);
   const wakeWordArmedRef = useRef(false);
+  const startListeningRef = useRef<() => Promise<void>>(async () => {});
 
   const { startSession, addMessage, endSession, sessionIdRef } = useSessionTracker(childName, childAge);
 
@@ -153,6 +154,9 @@ export function useBobbyVoiceCore({
     return sessionId;
   }, [sessionIdRef, startSession]);
 
+  // Track consecutive silence timeouts to know when to end conversation
+  const silenceCountRef = useRef(0);
+
   const speakReply = useCallback(async (reply: BobbyBrainReply) => {
     stopPlayback();
 
@@ -179,11 +183,13 @@ export function useBobbyVoiceCore({
 
     if (!controller.signal.aborted) {
       eventBus.emit({ type: "SPEECH_STOP" });
-      go("IDLE");
-      await closeSession();
-      scheduleSleep();
+      // Reset silence counter on successful exchange
+      silenceCountRef.current = 0;
+      // Auto-restart listening to keep the conversation flowing
+      console.log("[BobbyVoiceCore] 🔄 Auto-restarting listening after speaking");
+      void startListeningRef.current();
     }
-  }, [closeSession, go, parentSettings, scheduleSleep, stopPlayback]);
+  }, [go, parentSettings, stopPlayback]);
 
   const handleSttError = useCallback((error: string) => {
     console.warn("[BobbyVoiceCore] STT error:", error);
@@ -276,19 +282,44 @@ export function useBobbyVoiceCore({
     go("LISTENING");
     eventBus.emit({ type: "WAKE_DETECTED", confidence: 1 });
 
-    // 40s silence watchdog — if no final transcript arrives, stop listening
+    // 60s silence watchdog — if no speech, Bobby relaunches the child
     if (listenTimeoutRef.current) clearTimeout(listenTimeoutRef.current);
     listenTimeoutRef.current = setTimeout(() => {
-      if (machineRef.current === "LISTENING") {
-        console.log("[BobbyVoiceCore] 40s silence timeout — stopping listening");
+      if (machineRef.current !== "LISTENING") return;
+      silenceCountRef.current++;
+
+      if (silenceCountRef.current >= 2) {
+        // Already relaunched once — end conversation
+        console.log("[BobbyVoiceCore] 2nd silence timeout — ending conversation");
         stopSttRef.current();
         setMicArmed(false);
         setPartialText("");
         setCurrentEmotion("idle");
         go("IDLE");
+        void closeSession();
         scheduleSleep();
+        return;
       }
-    }, 40_000);
+
+      // First timeout — Bobby relaunches the child
+      console.log("[BobbyVoiceCore] 60s silence — Bobby relaunches child");
+      const relaunches = [
+        `${childName}, tu es toujours là ? Dis-moi quelque chose !`,
+        `Hé ${childName} ! On continue à discuter ? 😊`,
+        `${childName}, Bobby t'attend ! Tu veux jouer ou parler ?`,
+        `Tu es là ${childName} ? Raconte-moi un truc !`,
+      ];
+      const text = relaunches[Math.floor(Math.random() * relaunches.length)];
+      const relaunchReply: BobbyBrainReply = {
+        text,
+        intent: "RELAUNCH",
+        source: "offline_brain",
+        emotion: "curious",
+        confidence: 1,
+        isOffline: true,
+      };
+      void speakReply(relaunchReply);
+    }, 60_000);
 
     try {
       // Native SpeechRecognition manages its own mic — just start it
@@ -297,7 +328,10 @@ export function useBobbyVoiceCore({
     } catch (err: any) {
       handleSttError("STT_START_FAILED");
     }
-  }, [clearSleepTimer, go, handleSttError, smartSTT, stopPlayback]);
+  }, [childName, clearSleepTimer, closeSession, go, handleSttError, scheduleSleep, smartSTT, speakReply, stopPlayback]);
+
+  // Keep the ref in sync so speakReply can call it without circular deps
+  useEffect(() => { startListeningRef.current = startListening; }, [startListening]);
 
   const interrupt = useCallback(() => {
     processingRef.current = false;
