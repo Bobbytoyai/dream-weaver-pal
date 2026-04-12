@@ -617,27 +617,43 @@ const Admin = () => {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // MULTI-RÉPONSES — Category grid + detail
+  // MULTI-RÉPONSES — Category grid + detail with emotion/tag filters
   // ═══════════════════════════════════════════════════════════════════
   if (topSection === "multiresponses") {
-    // If a category is selected
+    const uniqueEmotions = [...new Set(BOBBY_MULTI_RESPONSES.map(e => e.emotion).filter(Boolean))];
+    const uniqueTags = [...new Set(BOBBY_MULTI_RESPONSES.flatMap(e => e.tags || []))].sort();
+
     if (interactionCat) {
       const catEntries = BOBBY_MULTI_RESPONSES.filter(e => e.category === interactionCat);
       const searchLower = search.toLowerCase();
-      const filtered = searchLower
-        ? catEntries.filter(e => e.input.toLowerCase().includes(searchLower) || e.responses.some(r => r.text.toLowerCase().includes(searchLower)))
-        : catEntries;
+      let filtered = catEntries;
+      if (ageFilter) filtered = filtered.filter(e => e.emotion === ageFilter); // reusing ageFilter for emotion
+      if (searchLower) filtered = filtered.filter(e => e.input.toLowerCase().includes(searchLower) || e.responses.some(r => r.text.toLowerCase().includes(searchLower)));
 
       return (
         <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+              <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
               <span className="text-2xl">⚡</span>
               <div>
                 <h1 className="text-xl font-bold text-white capitalize">{interactionCat.replace(/_/g, " ")}</h1>
-                <p className="text-white/40 text-xs">{filtered.length} entrées multi-réponses</p>
+                <p className="text-white/40 text-xs">{filtered.length}/{catEntries.length} entrées</p>
               </div>
+            </div>
+
+            {/* Emotion filter */}
+            <div className="flex gap-2 flex-wrap">
+              <button onClick={() => setAgeFilter(null)}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-all ${!ageFilter ? "bg-orange-500/30 border-orange-400/50 text-orange-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
+                Tous
+              </button>
+              {[...new Set(catEntries.map(e => e.emotion).filter(Boolean))].map(em => (
+                <button key={em} onClick={() => setAgeFilter(ageFilter === em ? null : em!)}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === em ? "bg-pink-500/30 border-pink-400/50 text-pink-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
+                  {em}
+                </button>
+              ))}
             </div>
 
             <div className="relative">
@@ -668,14 +684,27 @@ const Admin = () => {
                   </div>
                 </div>
               ))}
+              {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
             </div>
           </div>
         </div>
       );
     }
 
-    // Category grid
+    // Category grid with search + emotion filter
     const uniqueCats = [...new Set(BOBBY_MULTI_RESPONSES.map(e => e.category))];
+    const searchLower = search.toLowerCase();
+    const emotionFilter = ageFilter;
+    let filteredCats = uniqueCats;
+    if (emotionFilter) {
+      const catsWithEmotion = new Set(BOBBY_MULTI_RESPONSES.filter(e => e.emotion === emotionFilter).map(e => e.category));
+      filteredCats = uniqueCats.filter(c => catsWithEmotion.has(c));
+    }
+    if (searchLower) {
+      const catsWithSearch = new Set(BOBBY_MULTI_RESPONSES.filter(e => e.input.toLowerCase().includes(searchLower) || e.responses.some(r => r.text.toLowerCase().includes(searchLower))).map(e => e.category));
+      filteredCats = filteredCats.filter(c => catsWithSearch.has(c));
+    }
+
     return (
       <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
@@ -684,13 +713,33 @@ const Admin = () => {
             <span className="text-2xl">⚡</span>
             <div>
               <h1 className="text-xl font-bold text-white">Multi-Réponses</h1>
-              <p className="text-white/40 text-xs">{BOBBY_MULTI_RESPONSES.length} entrées • {uniqueCats.length} catégories</p>
+              <p className="text-white/40 text-xs">{BOBBY_MULTI_RESPONSES.length} entrées • {uniqueCats.length} catégories • {uniqueEmotions.length} émotions</p>
             </div>
           </div>
 
+          {/* Emotion filter */}
+          <div className="flex gap-2 flex-wrap">
+            <button onClick={() => setAgeFilter(null)}
+              className={`text-xs px-3 py-1.5 rounded-full border transition-all ${!ageFilter ? "bg-orange-500/30 border-orange-400/50 text-orange-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
+              Toutes émotions
+            </button>
+            {uniqueEmotions.map(em => (
+              <button key={em} onClick={() => setAgeFilter(ageFilter === em ? null : em!)}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === em ? "bg-pink-500/30 border-pink-400/50 text-pink-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
+                {em}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher dans toutes les entrées…"
+              className="bg-white/10 border-white/20 text-white pl-9" />
+          </div>
+
           <div className="grid grid-cols-3 gap-3">
-            {uniqueCats.map(cat => (
-              <button key={cat} onClick={() => { setInteractionCat(cat); setSearch(""); }}
+            {filteredCats.map(cat => (
+              <button key={cat} onClick={() => { setInteractionCat(cat); setSearch(""); setAgeFilter(null); }}
                 className="bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group aspect-square"
               >
                 <span className="text-lg capitalize text-white/70">{cat.replace(/_/g, " ")}</span>
@@ -701,6 +750,7 @@ const Admin = () => {
               </button>
             ))}
           </div>
+          {filteredCats.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucune catégorie pour ce filtre</p>}
         </div>
       </div>
     );
