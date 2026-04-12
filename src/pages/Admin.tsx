@@ -331,12 +331,16 @@ const Admin = () => {
   const cloudEntries = useMemo(() => {
     if (!currentCloudSection) return [];
     let list = entries.filter(e => currentCloudSection.dbCategories.includes(e.category));
+    if (ageFilter) {
+      const ag = AGE_GROUPS.find(a => a.label === ageFilter);
+      if (ag) list = list.filter(e => e.age_min <= ag.max && e.age_max >= ag.min);
+    }
     if (search.trim()) {
       const s = search.toLowerCase();
       list = list.filter(e => e.question.toLowerCase().includes(s) || e.answer.toLowerCase().includes(s));
     }
     return list;
-  }, [entries, currentCloudSection, search]);
+  }, [entries, currentCloudSection, search, ageFilter]);
 
   // Filtered interactions
   const filteredInteractions = useMemo(() => {
