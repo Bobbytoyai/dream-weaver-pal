@@ -1807,6 +1807,46 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
     },
   },
 
+  QUESTION_ABSURDE: {
+    default: {
+      empathy: [
+        "Haha 😄",
+        "Quelle question rigolote !",
+        "Oh j'adore cette question 😄",
+      ],
+      response: [
+        "Bobby adore les questions farfelues 💛",
+        "C'est le genre de question que Bobby préfère !",
+        "Les meilleures questions sont les plus drôles !",
+      ],
+      opening: [
+        "Et toi, tu en penses quoi ?",
+        "Tu as d'autres questions comme ça ?",
+        "Tu veux qu'on imagine la réponse ensemble ?",
+      ],
+    },
+  },
+
+  QUESTION_EXISTENTIELLE: {
+    default: {
+      empathy: [
+        "Wow, quelle question profonde 🤔",
+        "C'est une vraie grande question…",
+        "Tu réfléchis beaucoup, et c'est beau 💛",
+      ],
+      response: [
+        "Les plus belles questions n'ont pas toujours de réponse simple.",
+        "Bobby aime réfléchir à ça avec toi 💛",
+        "C'est ce genre de question qui rend la vie fascinante.",
+      ],
+      opening: [
+        "Et toi, qu'est-ce que tu en penses ?",
+        "Qu'est-ce qui t'a fait penser à ça ?",
+        "Tu veux qu'on explore ça ensemble ?",
+      ],
+    },
+  },
+
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
