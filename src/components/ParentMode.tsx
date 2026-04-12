@@ -3100,7 +3100,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 bg-card border-b border-border">
         <button
-          onClick={selectedSession ? () => { setSelectedSession(null); setSelectedAnalysis(null); setSessionMessages([]); setPlayingAudio(null); setAudioProgress(0); setActiveMessageIdx(-1); if (audioRef.current) audioRef.current.pause(); if (progressInterval.current) clearInterval(progressInterval.current); } : onClose}
+          onClick={selectedSession ? () => { setSelectedSession(null); setSelectedAnalysis(null); setSessionMessages([]); setPlayingAudio(null); setAudioProgress(0); setActiveMessageIdx(-1); if (audioRef.current) audioRef.current.pause(); if (progressInterval.current) clearInterval(progressInterval.current); } : activeTab !== "home" ? () => setActiveTab("home") : onClose}
           className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="w-4.5 h-4.5" />
         </button>
