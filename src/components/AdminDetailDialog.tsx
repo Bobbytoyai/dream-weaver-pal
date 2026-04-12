@@ -1,13 +1,17 @@
 import { useState, useEffect } from "react";
-import { X, Save, Trash2, Copy, Sparkles } from "lucide-react";
+import { X, Save, Trash2, Copy, Sparkles, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // ─── Types ──────────────────────────────────────────────────────
 export type DetailItemType = "interaction" | "store" | "kb" | "qa" | "blague" | "histoire" | "chanson" | "quiz" | "generic";
+
+const AI_GENERATABLE: DetailItemType[] = ["blague", "quiz", "histoire", "qa"];
 
 export interface DetailField {
   key: string;
@@ -39,6 +43,7 @@ export default function AdminDetailDialog({ item, onClose, onSave, onDelete, onD
   const [values, setValues] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     if (!item) return;
@@ -49,6 +54,57 @@ export default function AdminDetailDialog({ item, onClose, onSave, onDelete, onD
   }, [item]);
 
   if (!item) return null;
+
+  const canGenerate = AI_GENERATABLE.includes(item.type);
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    try {
+      const context = values["theme"] || values["category"] || values["tags"]?.join(", ") || "";
+      const { data, error } = await supabase.functions.invoke("generate-content", {
+        body: { type: item.type, context },
+      });
+
+      if (error) throw error;
+      if (data?.error) {
+        if (data.error === "rate_limited") { toast.error("Trop de requêtes, réessaie dans quelques secondes"); return; }
+        if (data.error === "payment_required") { toast.error("Crédits IA épuisés"); return; }
+        throw new Error(data.error);
+      }
+
+      const gen = data.generated;
+      if (!gen) throw new Error("Pas de contenu généré");
+
+      // Map generated fields to dialog fields
+      const fieldMap: Record<string, string[]> = {
+        blague: ["question", "answer", "category", "age_min", "age_max", "tags"],
+        quiz: ["question", "choices", "correct", "explanation", "category", "age_min", "age_max", "tags"],
+        histoire: ["title", "text", "theme", "mood", "age_min", "age_max", "duration", "tags"],
+        qa: ["question", "answer", "category", "keywords", "age_min", "age_max"],
+      };
+
+      const newVals = { ...values };
+      const mappable = fieldMap[item.type] || Object.keys(gen);
+      for (const key of mappable) {
+        if (gen[key] !== undefined && values.hasOwnProperty(key)) {
+          newVals[key] = gen[key];
+        }
+        // Also try mapping to common field names
+        if (key === "text" && values.hasOwnProperty("template_text")) newVals["template_text"] = gen[key];
+        if (key === "text" && values.hasOwnProperty("full_text")) newVals["full_text"] = gen[key];
+        if (key === "text" && values.hasOwnProperty("content")) newVals["content"] = gen[key];
+      }
+
+      setValues(newVals);
+      setDirty(true);
+      toast.success("✨ Contenu généré par IA !");
+    } catch (e: any) {
+      console.error("AI generation error:", e);
+      toast.error("Erreur de génération IA");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const updateValue = (key: string, val: any) => {
     setValues(prev => ({ ...prev, [key]: val }));
@@ -177,6 +233,24 @@ export default function AdminDetailDialog({ item, onClose, onSave, onDelete, onD
 
         {/* Footer */}
         <div className="p-4 border-t border-white/10 flex gap-2 items-center">
+          {canGenerate && (
+            <Button
+              onClick={handleGenerate}
+              disabled={generating}
+              className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-semibold"
+              title="Générer avec IA"
+            >
+              {generating ? (
+                <span className="flex items-center gap-1.5">
+                  <Wand2 className="w-4 h-4 animate-spin" /> Génération…
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5">
+                  <Wand2 className="w-4 h-4" /> IA
+                </span>
+              )}
+            </Button>
+          )}
           {onSave && (
             <Button
               onClick={handleSave}
