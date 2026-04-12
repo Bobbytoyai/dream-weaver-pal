@@ -305,8 +305,15 @@ const Admin = () => {
   }, []);
 
   const fetchStoreItems = useCallback(async () => {
-    const { data } = await supabase.from("store_content").select("*").order("created_at", { ascending: false });
-    setStoreItems((data as unknown as StoreContentItem[]) || []);
+    const [catalogRes, installsRes] = await Promise.all([
+      supabase.from("store_content").select("*").order("created_at", { ascending: false }),
+      supabase.from("installed_content").select("content_id"),
+    ]);
+    setStoreItems((catalogRes.data as unknown as StoreContentItem[]) || []);
+    // Count installs per content_id
+    const counts: Record<string, number> = {};
+    (installsRes.data || []).forEach((r: any) => { counts[r.content_id] = (counts[r.content_id] || 0) + 1; });
+    setLiveInstallCounts(counts);
   }, []);
 
   useEffect(() => {
