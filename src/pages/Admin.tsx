@@ -2069,7 +2069,6 @@ const Admin = () => {
                       {liveInstallCounts[item.id] || 0}
                     </span>
                     <span className="text-[8px] text-white/30">installs</span>
-                    </div>
                   </div>
                   <div className="flex gap-1 shrink-0">
                     <Button variant="ghost" size="sm" onClick={() => setEditingStoreItem(item)} className="text-white/40 hover:text-white h-7 w-7 p-0">
