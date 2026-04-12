@@ -202,9 +202,10 @@ export function getOfflineResponse(
       const finalText = personalize(selected.text, childName);
       const intent = detectOfflineIntent(text);
       recordResponse(finalText, multiMatch.category, selected.type);
+      recordIntent(intent);
+      recordInteraction(text, finalText, multiMatch.emotion);
       updateEngagement(selected.energy === "high" ? 5 : selected.energy === "medium" ? 2 : -1);
       updateContext(intent, text, finalText);
-      // Try to activate a scenario for follow-up conversations
       tryStartScenario(text, childAge);
       return { text: finalText, intent, isOffline: true };
     }
