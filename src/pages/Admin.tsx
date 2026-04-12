@@ -358,6 +358,124 @@ const Admin = () => {
     });
   };
 
+  const openQADetail = (entry: typeof QA_DATABASE[0]) => {
+    setDetailItem({
+      type: "qa",
+      title: entry.triggers[0]?.slice(0, 60) || "QA",
+      emoji: "❓",
+      fields: [
+        { key: "triggers", label: "Déclencheurs", value: entry.triggers, type: "tags" },
+        { key: "responses", label: "Réponses (une par ligne)", value: entry.responses.join("\n"), type: "textarea" },
+        { key: "intent", label: "Intent", value: entry.intent || "OTHER", type: "text" },
+        { key: "keywords", label: "Mots-clés", value: entry.triggers.flatMap(t => t.split(" ")).filter(w => w.length > 3), type: "tags" },
+      ],
+      meta: [
+        { label: "Intent", value: entry.intent || "OTHER", color: "bg-amber-500/20 text-amber-300" },
+        { label: "Réponses", value: `${entry.responses.length}`, color: "bg-green-500/20 text-green-300" },
+      ],
+    });
+  };
+
+  const openBlagueDetail = (blague: typeof BLAGUES[0], index: number) => {
+    setDetailItem({
+      type: "blague",
+      title: blague.question.slice(0, 60),
+      emoji: "😂",
+      fields: [
+        { key: "question", label: "Question", value: blague.question, type: "textarea" },
+        { key: "reponse", label: "Réponse", value: blague.reponse, type: "textarea" },
+        { key: "categorie", label: "Catégorie", value: blague.categorie, type: "select", options: ["animaux", "ecole", "nourriture", "absurde", "famille", "science"] },
+        { key: "ageMin", label: "Âge min", value: blague.ageMin, type: "number" },
+        { key: "ageMax", label: "Âge max", value: blague.ageMax, type: "number" },
+        { key: "difficulte", label: "Difficulté (1-3)", value: blague.difficulte, type: "number" },
+      ],
+      meta: [
+        { label: "Catégorie", value: blague.categorie, color: "bg-green-500/20 text-green-300" },
+        { label: "Âge", value: `${blague.ageMin}-${blague.ageMax}`, color: "bg-blue-500/20 text-blue-300" },
+        { label: "Niv.", value: `${blague.difficulte}`, color: "bg-purple-500/20 text-purple-300" },
+      ],
+    });
+  };
+
+  const openHistoireDetail = (histoire: any) => {
+    const isCloud = histoire.source === "cloud";
+    setDetailItem({
+      type: "histoire",
+      title: histoire.titre?.slice(0, 60) || "Histoire",
+      emoji: "📖",
+      id: isCloud ? histoire.id : undefined,
+      fields: [
+        { key: "titre", label: "Titre", value: histoire.titre, type: "text" },
+        { key: "theme", label: "Thème", value: histoire.theme, type: "select", options: ["espace", "pirate", "magie", "animaux", "dodo", "nature", "amitié", "courage"] },
+        { key: "texte", label: "Texte complet", value: histoire.texte, type: "textarea" },
+        { key: "moralite", label: "Moralité", value: histoire.moralité || "", type: "text" },
+        { key: "ageMin", label: "Âge min", value: histoire.ageMin, type: "number" },
+        { key: "ageMax", label: "Âge max", value: histoire.ageMax, type: "number" },
+        { key: "duree", label: "Durée", value: histoire.duree, type: "select", options: ["courte", "moyenne", "longue"] },
+        { key: "tags", label: "Tags", value: histoire.tags || [], type: "tags" },
+        { key: "source", label: "Source", value: histoire.source, type: "readonly" },
+      ],
+      meta: [
+        { label: "Thème", value: histoire.theme, color: "bg-purple-500/20 text-purple-300" },
+        { label: "Durée", value: histoire.duree, color: "bg-amber-500/20 text-amber-300" },
+        { label: "Source", value: isCloud ? "☁️ Cloud" : "📦 Local", color: isCloud ? "bg-sky-500/20 text-sky-300" : "bg-white/10 text-white/50" },
+      ],
+    });
+  };
+
+  const openQuizDetail = (q: any, type: string) => {
+    if (type === "quiz") {
+      setDetailItem({
+        type: "generic", title: q.question.slice(0, 60), emoji: "🧠",
+        fields: [
+          { key: "question", label: "Question", value: q.question, type: "textarea" },
+          { key: "choices", label: "Choix (virgules)", value: q.choices, type: "tags" },
+          { key: "correctIndex", label: "Index correct (0-based)", value: q.correctIndex, type: "number" },
+          { key: "explanation", label: "Explication", value: q.explanation, type: "textarea" },
+          { key: "category", label: "Catégorie", value: q.category, type: "text" },
+        ],
+        meta: [
+          { label: "Catégorie", value: q.category, color: "bg-cyan-500/20 text-cyan-300" },
+          { label: "Bonne rép.", value: q.choices[q.correctIndex], color: "bg-green-500/20 text-green-300" },
+        ],
+      });
+    } else if (type === "vf") {
+      setDetailItem({
+        type: "generic", title: q.statement.slice(0, 60), emoji: "✅",
+        fields: [
+          { key: "statement", label: "Affirmation", value: q.statement, type: "textarea" },
+          { key: "answer", label: "Vrai ?", value: q.answer, type: "boolean" },
+          { key: "explanation", label: "Explication", value: q.explanation, type: "textarea" },
+          { key: "category", label: "Catégorie", value: q.category, type: "text" },
+        ],
+        meta: [
+          { label: "Réponse", value: q.answer ? "VRAI" : "FAUX", color: q.answer ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300" },
+        ],
+      });
+    } else if (type === "riddle") {
+      setDetailItem({
+        type: "generic", title: q.question.slice(0, 60), emoji: "🤔",
+        fields: [
+          { key: "question", label: "Devinette", value: q.question, type: "textarea" },
+          { key: "choices", label: "Choix", value: q.choices, type: "tags" },
+          { key: "correctIndex", label: "Index correct", value: q.correctIndex, type: "number" },
+          { key: "hint", label: "Indice", value: q.hint, type: "text" },
+        ],
+        meta: [
+          { label: "Bonne rép.", value: q.choices[q.correctIndex], color: "bg-green-500/20 text-green-300" },
+        ],
+      });
+    } else {
+      setDetailItem({
+        type: "generic", title: (q as string).slice(0, 60), emoji: "😂",
+        fields: [
+          { key: "text", label: "Blague", value: q, type: "textarea" },
+        ],
+        meta: [],
+      });
+    }
+  };
+
   const handleDetailSave = async (type: string, id: string | undefined, values: Record<string, any>) => {
     if (type === "interaction") {
       // Save interaction as new KB entry so Bobby remembers
@@ -395,6 +513,54 @@ const Admin = () => {
       } as any).eq("id", id);
       if (error) toast.error(error.message);
       else { toast.success("Mis à jour !"); fetchEntries(); }
+    } else if (type === "qa" || type === "blague" || type === "generic") {
+      // Save local content as new KB entry
+      const question = values.question || values.triggers?.join(", ") || values.statement || values.text || "";
+      const answer = values.reponse || values.responses || values.explanation || values.answer || "";
+      const { error } = await supabase.from("knowledge_base").insert({
+        question: typeof question === "string" ? question : String(question),
+        answer: typeof answer === "string" ? answer : String(answer),
+        category: values.categorie || values.category || values.intent || "général",
+        keywords: values.keywords || values.triggers || [],
+        priority: 5,
+        age_min: values.ageMin || 3,
+        age_max: values.ageMax || 12,
+        emotion: "happy",
+        is_active: true,
+      });
+      if (error) toast.error(error.message);
+      else { toast.success("Sauvegardé dans la base Bobby !"); fetchEntries(); }
+    } else if (type === "histoire" && id) {
+      // Update cloud story
+      const { error } = await supabase.from("story_templates").update({
+        title: values.titre,
+        theme: values.theme,
+        full_text: values.texte,
+        template_text: (values.texte || "").slice(0, 100),
+        summary: values.moralite || null,
+        age_min: values.ageMin || 5,
+        age_max: values.ageMax || 12,
+        duration: values.duree || "courte",
+        category: values.theme,
+      } as any).eq("id", id);
+      if (error) toast.error(error.message);
+      else { toast.success("Histoire mise à jour !"); fetchCloudStories(); }
+    } else if (type === "histoire") {
+      // Save local histoire as new cloud story
+      const { error } = await supabase.from("story_templates").insert({
+        title: values.titre,
+        theme: values.theme,
+        full_text: values.texte,
+        template_text: (values.texte || "").slice(0, 100),
+        summary: values.moralite || null,
+        age_min: values.ageMin || 5,
+        age_max: values.ageMax || 12,
+        duration: values.duree || "courte",
+        category: values.theme,
+        language: "fr",
+      } as any);
+      if (error) toast.error(error.message);
+      else { toast.success("Histoire ajoutée au cloud !"); fetchCloudStories(); }
     }
     setDetailItem(null);
   };
@@ -965,7 +1131,7 @@ const Admin = () => {
                   <h3 className="text-white/60 text-xs font-semibold mb-2 uppercase tracking-wider">{cat} ({questions.length})</h3>
                   <div className="space-y-2">
                     {questions.map((q, i) => (
-                      <div key={i} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                      <div key={i} onClick={() => openQuizDetail(q, "quiz")} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
                         <p className="text-sm text-white/80 font-medium mb-2">{q.question}</p>
                         <div className="grid grid-cols-2 gap-1.5 mb-2">
                           {q.choices.map((c, ci) => (
@@ -1001,7 +1167,7 @@ const Admin = () => {
                   <h3 className="text-white/60 text-xs font-semibold mb-2 uppercase tracking-wider">{cat} ({questions.length})</h3>
                   <div className="space-y-2">
                     {questions.map((q, i) => (
-                      <div key={i} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                      <div key={i} onClick={() => openQuizDetail(q, "vf")} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
                         <div className="flex items-start gap-2">
                           <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${q.answer ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"}`}>
                             {q.answer ? "VRAI" : "FAUX"}
@@ -1026,7 +1192,7 @@ const Admin = () => {
           return (
             <div className="space-y-2">
               {filtered.map((q, i) => (
-                <div key={i} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                <div key={i} onClick={() => openQuizDetail(q, "riddle")} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
                   <p className="text-sm text-white/80 font-medium mb-2">{q.question}</p>
                   <div className="flex gap-1.5 mb-2 flex-wrap">
                     {q.choices.map((c, ci) => (
@@ -1048,7 +1214,7 @@ const Admin = () => {
         return (
           <div className="space-y-2">
             {filtered.map((b, i) => (
-              <div key={i} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+              <div key={i} onClick={() => openQuizDetail(b, "blague")} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
                 <p className="text-sm text-white/70">{b}</p>
               </div>
             ))}
@@ -1058,6 +1224,8 @@ const Admin = () => {
       };
 
       return (
+        <>
+        {detailPortal}
         <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
@@ -1078,6 +1246,7 @@ const Admin = () => {
             {renderItems()}
           </div>
         </div>
+        </>
       );
     }
 
@@ -1134,6 +1303,8 @@ const Admin = () => {
         : intentEntries;
 
       return (
+        <>
+        {detailPortal}
         <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
@@ -1153,7 +1324,7 @@ const Admin = () => {
 
             <div className="space-y-2">
               {filtered.map((entry, idx) => (
-                <div key={idx} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                <div key={idx} onClick={() => openQADetail(entry)} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
                   <p className="text-xs text-white/50 mb-1.5">🎯 {entry.triggers.join(" • ")}</p>
                   <div className="space-y-1">
                     {entry.responses.map((r, i) => (
@@ -1166,6 +1337,7 @@ const Admin = () => {
             </div>
           </div>
         </div>
+        </>
       );
     }
 
@@ -1241,6 +1413,8 @@ const Admin = () => {
         : ageFiltered;
 
       return (
+        <>
+        {detailPortal}
         <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
@@ -1269,7 +1443,7 @@ const Admin = () => {
 
             <div className="space-y-2">
               {filtered.map((b, i) => (
-                <div key={i} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                <div key={i} onClick={() => openBlagueDetail(b, i)} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">{b.ageMin}-{b.ageMax} ans</span>
                     <span className="text-[10px] text-white/30">Niv.{b.difficulte}</span>
@@ -1282,11 +1456,14 @@ const Admin = () => {
             </div>
           </div>
         </div>
+        </>
       );
     }
 
     // Category grid
     return (
+      <>
+      {detailPortal}
       <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
@@ -1307,7 +1484,7 @@ const Admin = () => {
           {searchLower ? (
             <div className="space-y-2">
               {BLAGUES.filter(b => b.question.toLowerCase().includes(searchLower) || b.reponse.toLowerCase().includes(searchLower)).map((b, i) => (
-                <div key={i} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                <div key={i} onClick={() => openBlagueDetail(b, i)} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300 capitalize">{b.categorie}</span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">{b.ageMin}-{b.ageMax} ans</span>
@@ -1337,6 +1514,7 @@ const Admin = () => {
           )}
         </div>
       </div>
+      </>
     );
   }
 
@@ -1649,6 +1827,8 @@ const Admin = () => {
         : ageFiltered;
 
       return (
+        <>
+        {detailPortal}
         <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
@@ -1703,8 +1883,12 @@ const Admin = () => {
                         <div className="flex gap-1 flex-wrap">
                           {h.tags.map((t, i) => <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-white/40">{t}</span>)}
                         </div>
-                        {h.source === "cloud" && (
-                          <div className="flex gap-2 pt-2">
+                        <div className="flex gap-2 pt-2">
+                          <Button size="sm" variant="ghost" className="text-purple-400 text-xs" onClick={() => openHistoireDetail(h)}>
+                            <Eye className="w-3 h-3 mr-1" /> Détail
+                          </Button>
+                          {h.source === "cloud" && (
+                            <>
                             <Button size="sm" variant="ghost" className="text-blue-400 text-xs" onClick={() => setEditingStory({
                               id: h.id, titre: h.titre, theme: h.theme, ageMin: h.ageMin, ageMax: h.ageMax,
                               duree: h.duree, texte: h.texte, moralité: h.moralité, tags: h.tags,
@@ -1719,8 +1903,9 @@ const Admin = () => {
                             }}>
                               <Trash2 className="w-3 h-3 mr-1" /> Supprimer
                             </Button>
-                          </div>
-                        )}
+                            </>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1730,6 +1915,7 @@ const Admin = () => {
             </div>
           </div>
         </div>
+        </>
       );
     }
 
