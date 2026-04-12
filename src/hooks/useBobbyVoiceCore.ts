@@ -214,6 +214,10 @@ export function useBobbyVoiceCore({
     abortRef.current = controller;
 
     setCurrentEmotion(reply.emotion);
+    // Modular expression from new pipeline
+    const exprResult = detectBobbyExpression(reply.text, parentSettings?.childAge ?? 7);
+    setCurrentExpressionCombo(exprResult.expression.combo);
+    setCurrentExpressionIntensity(exprResult.expression.intensity);
     setBobbyText(reply.text);
     setLastAiResponse(reply.text);
     lastAiResponseRef.current = reply.text;
