@@ -173,22 +173,38 @@ export function getOfflineResponse(
   const contextual = handleConversationalContext(text, childName);
   if (contextual) return contextual;
 
+  // 3c. 🧠 Multi-response smart selection (anti-repetition + behavioral adaptation)
+  const multiMatch = findMultiResponse(text);
+  if (multiMatch) {
+    const selected = selectBestResponse(multiMatch.responses);
+    if (selected) {
+      const finalText = personalize(selected.text, childName);
+      const intent = detectOfflineIntent(text);
+      recordResponse(finalText, multiMatch.category, selected.type);
+      updateEngagement(selected.energy === "high" ? 5 : selected.energy === "medium" ? 2 : -1);
+      updateContext(intent, text, finalText);
+      return { text: finalText, intent, isOffline: true };
+    }
+  }
+
   // 4. QA fuzzy match
   const qaMatch = matchQA(normalized);
   if (qaMatch) {
-    const response = pickRandom(qaMatch.responses, `qa_${qaMatch.triggers[0]}`);
+    const response = selectNonRepetitiveResponse(qaMatch.responses);
     const intent = qaMatch.intent || detectOfflineIntent(text);
 
     if (intent === "STORY_REQUEST") {
       const theme = detectStoryTheme(text);
       const story = pickRandom(LOCAL_STORIES[theme], `story_${theme}`);
       const finalText = personalize(story, childName);
+      recordResponse(finalText, "story");
       updateContext(intent, text, finalText);
       return { text: finalText, intent, isOffline: true, theme };
     }
     if (intent === "PLAY_REQUEST") {
       const game = pickMiniGame(pickRandom);
       const finalText = personalize(game.text, childName);
+      recordResponse(finalText, "games");
       updateContext(intent, text, finalText);
       return { text: finalText, intent, isOffline: true, gameType: game.type };
     }
@@ -196,6 +212,7 @@ export function getOfflineResponse(
     const finalText = personalize(response, childName);
     const followUp = getFollowUp(intent);
     const fullResponse = finalText + followUp;
+    recordResponse(fullResponse, "qa");
     updateContext(intent, text, fullResponse);
     return { text: fullResponse, intent, isOffline: true };
   }
