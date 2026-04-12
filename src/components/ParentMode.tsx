@@ -239,7 +239,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     window.addEventListener("storage", handleStorage);
 
     // Real-time alert listener via eventBus
-    const { eventBus } = require("@/lib/eventBus") as { eventBus: any };
     const unsub = eventBus.on("SAFETY_ALERT", (event: any) => {
       // Refresh alerts list
       setSafetyAlerts(getSafetyAlertRecords());
