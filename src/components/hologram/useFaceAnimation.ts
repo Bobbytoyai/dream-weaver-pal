@@ -439,15 +439,15 @@ export function useFaceAnimation(
     let speechCheekBoost = 0;
 
     if (faceState === "speaking" && viseme && viseme.amplitude > 0.01) {
-      // Cartoon exaggeration: amplify all viseme values
-      const exaggeration = 1.4;
-      mouthOpenTarget = viseme.mouthOpenness * exaggeration;
-      mouthWidthTarget = viseme.mouthWidth;
-      mouthRoundTarget = viseme.mouthRound * 1.3;
+      // Cartoon exaggeration: amplify all viseme values significantly
+      const exaggeration = 2.0;
+      mouthOpenTarget = Math.min(1.0, viseme.mouthOpenness * exaggeration + 0.08);
+      mouthWidthTarget = viseme.mouthWidth * 1.1;
+      mouthRoundTarget = viseme.mouthRound * 1.5;
       jawDropTarget = viseme.jawDrop * exaggeration;
 
       // Add micro-variation for liveliness
-      const microVar = Math.sin(breathPhase.current * 10) * 0.04;
+      const microVar = Math.sin(breathPhase.current * 10) * 0.05;
       mouthOpenTarget += microVar;
 
       // Squash & stretch: wider mouth = less tall, taller mouth = less wide
@@ -470,11 +470,11 @@ export function useFaceAnimation(
       speechCheekBoost = mouthWidthTarget > 0.6 ? (mouthWidthTarget - 0.6) * 0.4 : 0;
 
     } else if (faceState === "speaking") {
-      // Fallback amplitude-based (cartoon style)
-      mouthOpenTarget = Math.min(0.85, audioAmplitude * 4);
+      // Fallback amplitude-based (cartoon style) — more visible
+      mouthOpenTarget = Math.min(1.0, audioAmplitude * 5.5 + 0.06);
       mouthWidthTarget = targets.mouthWidth ?? 0.55;
-      mouthRoundTarget = audioAmplitude > 0.3 ? 0.2 : 0;
-      jawDropTarget = audioAmplitude * 2;
+      mouthRoundTarget = audioAmplitude > 0.25 ? 0.25 : 0;
+      jawDropTarget = audioAmplitude * 2.8;
 
       speechEyebrowLift = audioAmplitude > 0.15 ? (audioAmplitude - 0.15) * 0.3 : 0;
       speechEyeWiden = audioAmplitude > 0.12 ? (audioAmplitude - 0.12) * 0.12 : 0;
@@ -488,7 +488,7 @@ export function useFaceAnimation(
     }
 
     // --- LERP ALL VALUES ---
-    const mouthSpeed = faceState === "speaking" ? baseSpeed * 5 : baseSpeed * 3;
+    const mouthSpeed = faceState === "speaking" ? baseSpeed * 7 : baseSpeed * 3;
 
     // v3.0: EYEBROW ANTICIPATION — eyebrows lead speech by ~50ms
     // Buffer the eyebrow target and use it slightly ahead of audio
