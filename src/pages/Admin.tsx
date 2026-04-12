@@ -1748,6 +1748,16 @@ const Admin = () => {
               className="bg-purple-600 hover:bg-purple-700"><Plus className="w-4 h-4 mr-1" /> Ajouter</Button>
           </div>
 
+          {/* Age filter */}
+          <div className="flex gap-2 flex-wrap">
+            {AGE_GROUPS.map(g => (
+              <button key={g.label} onClick={() => setAgeFilter(ageFilter === g.label ? null : g.label)}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === g.label ? "bg-blue-500/30 border-blue-400/50 text-blue-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
+                {g.label}
+              </button>
+            ))}
+          </div>
+
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
             <Input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Rechercher…`}
