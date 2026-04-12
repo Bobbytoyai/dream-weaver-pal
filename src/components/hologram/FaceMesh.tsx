@@ -49,15 +49,15 @@ function buildMouthTubeGeo(
   mouthWidth: number,
   mouthRound: number,
 ): THREE.TubeGeometry {
-  const halfW = (0.15 + mouthWidth * 0.10) * (1 - mouthRound * 0.5);
-  const curveDepth = mouthCurve * 0.18;
+  const halfW = (0.18 + mouthWidth * 0.14) * (1 - mouthRound * 0.5);
+  const curveDepth = mouthCurve * 0.22;
 
   const p0 = new THREE.Vector3(-halfW, 0, 0);
   const p1 = new THREE.Vector3(0, -curveDepth, 0);
   const p2 = new THREE.Vector3(halfW, 0, 0);
 
   const curve = new THREE.QuadraticBezierCurve3(p0, p1, p2);
-  return new THREE.TubeGeometry(curve, 24, 0.022, 6, false);
+  return new THREE.TubeGeometry(curve, 24, 0.032, 8, false);
 }
 
 function buildMouthFillShape(
@@ -67,9 +67,9 @@ function buildMouthFillShape(
   mouthRound: number,
 ): THREE.Shape {
   const shape = new THREE.Shape();
-  const halfW = (0.15 + mouthWidth * 0.10) * (1 - mouthRound * 0.5);
-  const curveDepth = mouthCurve * 0.18;
-  const openDepth = mouthOpenness * 0.22 + mouthRound * 0.2;
+  const halfW = (0.18 + mouthWidth * 0.14) * (1 - mouthRound * 0.5);
+  const curveDepth = mouthCurve * 0.22;
+  const openDepth = mouthOpenness * 0.32 + mouthRound * 0.25;
 
   // Top lip line (same as the curve)
   shape.moveTo(-halfW, 0);
