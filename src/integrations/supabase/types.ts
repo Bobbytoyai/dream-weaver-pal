@@ -261,6 +261,50 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_alerts: {
+        Row: {
+          alert_type: string
+          child_name: string
+          context: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          session_id: string
+          severity: string
+        }
+        Insert: {
+          alert_type?: string
+          child_name: string
+          context?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          session_id: string
+          severity?: string
+        }
+        Update: {
+          alert_type?: string
+          child_name?: string
+          context?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          session_id?: string
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_alerts_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "child_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_messages: {
         Row: {
           content: string

@@ -238,8 +238,35 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [sessionFavFilter, setSessionFavFilter] = useState(false);
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [noteText, setNoteText] = useState("");
+  const [parentAlerts, setParentAlerts] = useState<Array<{ id: string; session_id: string; child_name: string; alert_type: string; severity: string; message: string; context: string | null; is_read: boolean; created_at: string }>>([]);
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
 
-  useEffect(() => { loadData(); }, []);
+  const unreadAlertCount = parentAlerts.filter(a => !a.is_read).length;
+
+  useEffect(() => { loadData(); loadAlerts(); }, []);
+
+  const loadAlerts = async () => {
+    try {
+      const { data } = await supabase
+        .from("parent_alerts")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (data) setParentAlerts(data as any);
+    } catch (e) { console.warn("Failed to load alerts:", e); }
+  };
+
+  const markAlertRead = async (alertId: string) => {
+    await supabase.from("parent_alerts").update({ is_read: true }).eq("id", alertId);
+    setParentAlerts(prev => prev.map(a => a.id === alertId ? { ...a, is_read: true } : a));
+  };
+
+  const markAllRead = async () => {
+    const unread = parentAlerts.filter(a => !a.is_read);
+    if (unread.length === 0) return;
+    await supabase.from("parent_alerts").update({ is_read: true }).in("id", unread.map(a => a.id));
+    setParentAlerts(prev => prev.map(a => ({ ...a, is_read: true })));
+  };
 
   // Load safety alerts from localStorage on mount + real-time via eventBus
   useEffect(() => {
@@ -3006,16 +3033,98 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </div>
         {!selectedSession && (
           <div className="flex items-center gap-1.5">
+            {/* Notification bell */}
+            <button onClick={() => { setShowNotifPanel(!showNotifPanel); }}
+              className="relative w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
+              <Bell className="w-4 h-4" />
+              {unreadAlertCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-destructive text-white text-[10px] font-bold flex items-center justify-center px-1 animate-pulse">
+                  {unreadAlertCount}
+                </span>
+              )}
+            </button>
             <button onClick={toggleLight}
               className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
               {lightMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </button>
-            <button onClick={loadData} className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+            <button onClick={() => { loadData(); loadAlerts(); }} className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
               <RefreshCw className="w-4 h-4" />
             </button>
           </div>
         )}
       </div>
+
+      {/* Notification Panel */}
+      {showNotifPanel && (
+        <div className="absolute top-14 right-2 z-50 w-80 max-h-96 bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4 text-destructive" />
+              <h3 className="text-[13px] font-bold text-foreground">Notifications</h3>
+              {unreadAlertCount > 0 && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/10 text-destructive font-bold">{unreadAlertCount}</span>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              {unreadAlertCount > 0 && (
+                <button onClick={markAllRead} className="text-[10px] text-primary font-semibold hover:underline">
+                  Tout marquer lu
+                </button>
+              )}
+              <button onClick={() => setShowNotifPanel(false)} className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+          <div className="overflow-y-auto max-h-72">
+            {parentAlerts.length === 0 ? (
+              <div className="p-6 text-center">
+                <span className="text-2xl">✅</span>
+                <p className="text-[12px] text-muted-foreground mt-2">Aucune alerte</p>
+              </div>
+            ) : (
+              parentAlerts.slice(0, 20).map(alert => {
+                const severityConfig: Record<string, { icon: string; borderColor: string }> = {
+                  critical: { icon: "🚨", borderColor: "border-l-destructive" },
+                  high: { icon: "⚠️", borderColor: "border-l-destructive/60" },
+                  medium: { icon: "🔔", borderColor: "border-l-accent" },
+                  low: { icon: "ℹ️", borderColor: "border-l-muted-foreground" },
+                };
+                const cfg = severityConfig[alert.severity] || severityConfig.medium;
+                const timeAgo = (() => {
+                  const mins = Math.floor((Date.now() - new Date(alert.created_at).getTime()) / 60000);
+                  if (mins < 60) return `il y a ${mins}min`;
+                  const hrs = Math.floor(mins / 60);
+                  if (hrs < 24) return `il y a ${hrs}h`;
+                  return `il y a ${Math.floor(hrs / 24)}j`;
+                })();
+                return (
+                  <button key={alert.id}
+                    onClick={() => {
+                      markAlertRead(alert.id);
+                      const session = sessions.find(s => s.id === alert.session_id);
+                      if (session) { analyzeSession(session); setShowNotifPanel(false); }
+                    }}
+                    className={`w-full text-left px-4 py-3 border-l-4 ${cfg.borderColor} ${!alert.is_read ? "bg-primary/5" : ""} hover:bg-muted/50 transition-colors border-b border-border/30`}>
+                    <div className="flex items-start gap-2">
+                      <span className="text-sm mt-0.5">{cfg.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className={`text-[12px] ${!alert.is_read ? "font-bold text-foreground" : "font-medium text-muted-foreground"} line-clamp-2`}>
+                            {alert.message}
+                          </p>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{alert.child_name} • {timeAgo}</p>
+                      </div>
+                      {!alert.is_read && <span className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />}
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Tab bar — scrollable pill style */}
       {!selectedSession && (

@@ -162,6 +162,22 @@ Sinon laisse le tableau vide.`;
       detected_emotions: Object.keys(analysis.emotions ?? {}),
     }).eq("id", sessionId);
 
+    // Insert parent alerts if any detected
+    const alerts = analysis.alerts ?? [];
+    if (alerts.length > 0) {
+      const alertRows = alerts.map((a: { type?: string; message?: string }) => ({
+        session_id: sessionId,
+        child_name: childName,
+        alert_type: a.type ?? "warning",
+        severity: a.type === "critical" ? "critical" : a.type === "warning" ? "high" : "medium",
+        message: a.message ?? "Alerte détectée",
+        context: analysis.summary ?? null,
+      }));
+      const { error: alertErr } = await sb.from("parent_alerts").insert(alertRows);
+      if (alertErr) console.error("Alert insert error:", alertErr);
+      else console.log(`Inserted ${alertRows.length} parent alert(s)`);
+    }
+
     return new Response(JSON.stringify({ success: true, analysis }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
