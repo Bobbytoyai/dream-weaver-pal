@@ -230,13 +230,44 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   useEffect(() => { loadData(); }, []);
 
-  // Load safety alerts from localStorage on mount + on SAFETY_ALERT event
+  // Load safety alerts from localStorage on mount + real-time via eventBus
   useEffect(() => {
     setSafetyAlerts(getSafetyAlertRecords());
-    // Listen for new real-time alerts
+
     const handleStorage = () => setSafetyAlerts(getSafetyAlertRecords());
     window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
+
+    // Real-time alert listener via eventBus
+    const { eventBus } = require("@/lib/eventBus") as { eventBus: any };
+    const unsub = eventBus.on("SAFETY_ALERT", (event: any) => {
+      // Refresh alerts list
+      setSafetyAlerts(getSafetyAlertRecords());
+      setShowSafetyAlerts(true);
+
+      // Immediate toast notification
+      const severityLabels: Record<string, string> = {
+        CRITICAL: "🚨 ALERTE CRITIQUE",
+        HIGH: "⚠️ Alerte importante",
+        MEDIUM: "🔔 Alerte",
+      };
+      const label = severityLabels[event.severity] || "🔔 Alerte";
+      toast.error(`${label} — ${event.childName}`, {
+        description: `Catégorie: ${event.category} • "${event.fullText?.slice(0, 80)}…"`,
+        duration: 15000,
+        action: {
+          label: "Voir",
+          onClick: () => {
+            setActiveTab("dashboard");
+            setShowSafetyAlerts(true);
+          },
+        },
+      });
+    });
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      unsub();
+    };
   }, []);
 
   const updateSetting = <K extends keyof ParentSettings>(key: K, value: ParentSettings[K]) => {
