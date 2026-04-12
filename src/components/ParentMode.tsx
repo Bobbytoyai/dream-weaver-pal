@@ -3105,7 +3105,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           <ArrowLeft className="w-4.5 h-4.5" />
         </button>
         <div className="flex-1">
-          <h2 className="text-base font-bold text-foreground">Mode Parent</h2>
+          <h2 className="text-base font-bold text-foreground">
+            {activeTab === "home" ? "Mode Parent" : tabs.find(t => t.id === activeTab)?.label || "Mode Parent"}
+          </h2>
           <p className="text-[11px] text-muted-foreground">
             {selectedSession ? formatDate(selectedSession.started_at) : `${childName}`}
           </p>
