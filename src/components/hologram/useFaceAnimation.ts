@@ -214,7 +214,21 @@ export function useFaceAnimation(
     const gaze = gazeRef.current;
     const gazeX = clamp(gaze.x, -1, 1);
     const gazeY = clamp(gaze.y, -1, 1);
-    const rawTargets = { ...DEFAULT_STATE, ...STATE_TARGETS[faceState] };
+    // Use modular expression override if provided, else fall back to STATE_TARGETS
+    const rawTargets = expressionOverride
+      ? { ...DEFAULT_STATE, ...resolveExpression(expressionOverride, expressionIntensityLevel ?? 3) }
+      : { ...DEFAULT_STATE, ...STATE_TARGETS[faceState] };
+    
+    // Apply oscillations from animation preset if using modular expression
+    if (expressionOverride) {
+      const animPreset = ANIMATIONS[expressionOverride.animation];
+      if (animPreset?.oscillation) {
+        for (const osc of animPreset.oscillation) {
+          const wave = Math.sin(breathPhase.current * osc.frequency * Math.PI * 2) * osc.amplitude;
+          (rawTargets as any)[osc.property] = ((rawTargets as any)[osc.property] ?? 0) + wave;
+        }
+      }
+    }
 
     // v3.0: Blend emotion into speaking state (eyes, eyebrows, cheeks, glow)
     const emotionTargets = emotionDuringSpeech && faceState === "speaking"
