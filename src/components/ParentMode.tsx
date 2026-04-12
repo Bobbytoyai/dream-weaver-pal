@@ -3033,11 +3033,21 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </div>
         {!selectedSession && (
           <div className="flex items-center gap-1.5">
+            {/* Notification bell */}
+            <button onClick={() => { setShowNotifPanel(!showNotifPanel); }}
+              className="relative w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
+              <Bell className="w-4 h-4" />
+              {unreadAlertCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-destructive text-white text-[10px] font-bold flex items-center justify-center px-1 animate-pulse">
+                  {unreadAlertCount}
+                </span>
+              )}
+            </button>
             <button onClick={toggleLight}
               className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
               {lightMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </button>
-            <button onClick={loadData} className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+            <button onClick={() => { loadData(); loadAlerts(); }} className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
               <RefreshCw className="w-4 h-4" />
             </button>
           </div>
