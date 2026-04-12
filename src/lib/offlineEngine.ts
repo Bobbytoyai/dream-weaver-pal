@@ -63,6 +63,7 @@ import { context, updateContext, detectMoodFromText, pickRandom, personalize, ha
 import { BOBBY_INTERACTIONS } from "./bobby_interactions_10k";
 import { adaptiveEngine, type AdaptiveContext } from "./adaptiveEngine";
 import { findMultiResponse, selectBestResponse, recordInput, recordResponse, updateEngagement, setEmotionalState, selectNonRepetitiveResponse } from "./responseSelector";
+import { isScenarioActive, tryStartScenario, handleScenarioStep, resetScenario } from "./scenarioEngine";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // MAIN RESPONSE ENGINE
@@ -169,11 +170,21 @@ export function getOfflineResponse(
     return continuation;
   }
 
-  // 3b. Multi-turn context
+  // 3b. 🎭 Scenario flows (multi-turn emotional conversations)
+  if (isScenarioActive()) {
+    const scenarioResp = handleScenarioStep(text);
+    if (scenarioResp) {
+      const finalText = personalize(scenarioResp.text, childName);
+      updateContext(scenarioResp.intent as any, text, finalText);
+      return { text: finalText, intent: scenarioResp.intent, isOffline: true };
+    }
+  }
+
+  // 3c. Multi-turn context
   const contextual = handleConversationalContext(text, childName);
   if (contextual) return contextual;
 
-  // 3c. 🧠 Multi-response smart selection (anti-repetition + behavioral adaptation)
+  // 3d. 🧠 Multi-response smart selection (anti-repetition + behavioral adaptation)
   const multiMatch = findMultiResponse(text);
   if (multiMatch) {
     const selected = selectBestResponse(multiMatch.responses);
@@ -183,6 +194,8 @@ export function getOfflineResponse(
       recordResponse(finalText, multiMatch.category, selected.type);
       updateEngagement(selected.energy === "high" ? 5 : selected.energy === "medium" ? 2 : -1);
       updateContext(intent, text, finalText);
+      // Try to activate a scenario for follow-up conversations
+      tryStartScenario(text, childAge);
       return { text: finalText, intent, isOffline: true };
     }
   }
