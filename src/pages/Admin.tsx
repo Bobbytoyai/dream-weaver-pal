@@ -2198,6 +2198,10 @@ const Admin = () => {
     return <ExpressionPreview onBack={() => { setTopSection(null); }} />;
   }
 
+  if (topSection === "autolearn") {
+    return <AutoLearnPanel onBack={() => { setTopSection(null); }} />;
+  }
+
   if (topSection === "store") {
     const STORE_CATEGORIES = ["jeux", "educatif", "histoires", "blagues"];
     const storeCatFilter = interactionCat;
