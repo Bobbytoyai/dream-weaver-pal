@@ -611,15 +611,16 @@ const Admin = () => {
     );
   }
 
-  // Detail dialog — rendered as fixed overlay regardless of which section is active
-  const detailDialog = (
+  // Use portal so dialog renders regardless of early returns
+  const detailPortal = detailItem ? createPortal(
     <AdminDetailDialog
       item={detailItem}
       onClose={() => setDetailItem(null)}
       onSave={handleDetailSave}
       onDelete={handleDetailDelete}
-    />
-  );
+    />,
+    document.body
+  ) : null;
 
   // ─── Edit form ─────────────────────────────────────────────────────
   if (editingEntry) {
