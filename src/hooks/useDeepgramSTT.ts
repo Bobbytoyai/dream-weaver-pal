@@ -71,9 +71,9 @@ interface UseDeepgramSTTOptions {
 }
 
 // ─── Reconnection constants ────────────────────────────────
-const MAX_RECONNECT_ATTEMPTS = 5;
+const MAX_RECONNECT_ATTEMPTS = 2; // Reduced from 5 — SmartSTT handles broader fallback
 const BASE_RECONNECT_DELAY = 500; // ms
-const MAX_RECONNECT_DELAY = 8000; // ms
+const MAX_RECONNECT_DELAY = 3000; // ms — faster failover
 
 export function useDeepgramSTT({ onPartial, onFinal, onError, onUtteranceEnd, onSpeechStarted, language = "fr" }: UseDeepgramSTTOptions) {
   const wsRef = useRef<WebSocket | null>(null);
