@@ -243,11 +243,11 @@ const VoiceScreen = ({
         <div className="mt-2 flex flex-col items-center gap-1.5">
           {sm.machineState === "LISTENING" ? (
             <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-primary/10 backdrop-blur-sm">
-              <SoundWave active={sm.partialText.length > 0} />
+              <SoundWave active={sm.machineState === "LISTENING"} />
               <span className="text-xs text-primary font-bold">
                 {sm.partialText ? "Bobby t'entend…" : "J'écoute…"}
               </span>
-              <SoundWave active={sm.partialText.length > 0} />
+              <SoundWave active={sm.machineState === "LISTENING"} />
             </div>
           ) : sm.machineState === "IDLE" && sm.micArmed ? (
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 backdrop-blur-sm">
