@@ -65,6 +65,11 @@ export function useNativeSTT({ onPartial, onFinal, onError, language = "fr-FR" }
     isRunningRef.current = true;
 
     recognition.onresult = (event: any) => {
+      // Guard: ignore results if stop() was already called (race condition)
+      if (!shouldBeRunningRef.current) {
+        console.warn("[NativeSTT] 🔇 Ignoring result after stop()");
+        return;
+      }
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         const transcript = String(result[0]?.transcript || "").trim();

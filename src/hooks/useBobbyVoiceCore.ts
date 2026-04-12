@@ -233,28 +233,32 @@ export function useBobbyVoiceCore({
       return;
     }
 
+    // ─── HARD BLOCK: reject if Bobby is speaking or processing ───
+    if (machineRef.current === "SPEAKING" || machineRef.current === "PROCESSING") {
+      console.warn("[BobbyVoiceCore] 🔇 Rejected transcript during", machineRef.current, "state:", trimmedText.slice(0, 40));
+      return;
+    }
+
+    // ─── Cooldown: reject transcripts arriving too soon after Bobby stopped speaking ───
+    if (Date.now() - lastSpeechEndRef.current < 2000) {
+      console.warn("[BobbyVoiceCore] 🔇 Anti-echo cooldown: rejected transcript arriving", (Date.now() - lastSpeechEndRef.current), "ms after speech end");
+      return;
+    }
+
     // ─── Anti-echo: reject transcript if it matches Bobby's last response ───
     const lastResp = lastAiResponseRef.current.toLowerCase().trim();
     const incoming = trimmedText.toLowerCase();
-    // Check similarity: if >60% of words match Bobby's last response, it's echo
     if (lastResp.length > 10) {
       const lastWords = new Set(lastResp.split(/\s+/));
       const incomingWords = incoming.split(/\s+/);
       const matchCount = incomingWords.filter(w => lastWords.has(w)).length;
       const similarity = matchCount / Math.max(incomingWords.length, 1);
-      if (similarity > 0.6) {
-        console.warn("[BobbyVoiceCore] 🔇 Anti-echo: rejected transcript (similarity:", similarity.toFixed(2), "):", trimmedText.slice(0, 50));
-        // Don't process, just restart listening
+      if (similarity > 0.4) {
+        console.warn("[BobbyVoiceCore] 🔇 Anti-echo: rejected (similarity:", similarity.toFixed(2), "):", trimmedText.slice(0, 50));
         processingRef.current = false;
         void startListeningRef.current();
         return;
       }
-    }
-
-    // ─── Reject if Bobby is currently speaking (STT leak) ───
-    if (machineRef.current === "SPEAKING") {
-      console.warn("[BobbyVoiceCore] 🔇 Rejected transcript during SPEAKING state");
-      return;
     }
 
     if (processingRef.current) return;
