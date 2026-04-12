@@ -154,6 +154,7 @@ export function resetBobbyBrainSession() {
   resetScenario();
   resetInterestTracker();
   clearHistory();
+  resetLocalBrain();
 }
 
 export async function buildBobbyReply({ childName, childAge, userText = "", pendingNarration, parentSettings }: BuildBobbyReplyOptions): Promise<BobbyBrainReply> {
