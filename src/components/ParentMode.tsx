@@ -2959,15 +2959,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   // TAB TRANSITION ANIMATION
   // ═══════════════════════════════════════════════════════════════
 
-  const tabIds = tabs.map(t => t.id);
+  const allTabIds: Tab[] = ["home", ...tabs.map(t => t.id)];
   const prevTabRef = useRef(activeTab);
   const [animClass, setAnimClass] = useState("");
   const [displayedTab, setDisplayedTab] = useState(activeTab);
 
   useEffect(() => {
     if (activeTab === prevTabRef.current) return;
-    const prevIdx = tabIds.indexOf(prevTabRef.current);
-    const nextIdx = tabIds.indexOf(activeTab);
+    const prevIdx = allTabIds.indexOf(prevTabRef.current);
+    const nextIdx = allTabIds.indexOf(activeTab);
     const direction = nextIdx > prevIdx ? "right" : "left";
     setAnimClass(direction === "right" ? "tab-exit-left" : "tab-exit-right");
     const t = setTimeout(() => {
