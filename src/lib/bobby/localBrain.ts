@@ -128,6 +128,8 @@ export type LocalIntent =
   | "FATIGUE" | "ECHEC" | "OBJECTIF" | "SANTE" | "PERTE" | "REVE_AVENIR"
   | "ANXIETE" | "ABANDON" | "MENSONGE" | "EXCITATION" | "AMOUREUX"
   | "PERFECTIONNISME" | "COMPARAISON" | "FATIGUE_EMOTIONNELLE"
+  | "RETRAIT" | "PEUR_ABANDON" | "PEUR_ECHEC" | "AVERSION" | "PEOPLE_PLEASING"
+  | "CURIOSITE" | "CREATION" | "IDENTITE_PEUR" | "MAUVAIS_COMPORTEMENT"
   // Catch-all
   | "GENERAL";
 
@@ -294,6 +296,33 @@ const INTENT_RULES: IntentRule[] = [
   ]},
   { intent: "FATIGUE_EMOTIONNELLE", priority: 87, patterns: [
     /fatigué de tout|j'en peux plus|trop pour moi|épuisé mentalement|ça me pèse|trop lourd/i,
+  ]},
+  { intent: "RETRAIT", priority: 75, patterns: [
+    /rester seul|je veux être seul|laissez-moi tranquille|foutez-moi la paix|envie de rien/i,
+  ]},
+  { intent: "PEUR_ABANDON", priority: 88, patterns: [
+    /peur que personne m'aime|peur qu'on m'abandonne|peur que mes amis|abandonner|plus personne/i,
+  ]},
+  { intent: "PEUR_ECHEC", priority: 85, patterns: [
+    /peur d'échouer|peur de rater|peur de recommencer|encore raté|j'ai encore raté/i,
+  ]},
+  { intent: "AVERSION", priority: 74, patterns: [
+    /je déteste l'école|je déteste|j'aime pas l'école|l'école c'est nul|je hais/i,
+  ]},
+  { intent: "PEOPLE_PLEASING", priority: 77, patterns: [
+    /faire plaisir à tout le monde|plaire à tout le monde|que tout le monde soit content/i,
+  ]},
+  { intent: "CURIOSITE", priority: 72, patterns: [
+    /comment ça fonctionne|comment ça marche|je veux savoir|c'est quoi un|pourquoi le|pourquoi la/i,
+  ]},
+  { intent: "CREATION", priority: 73, patterns: [
+    /je veux créer|je veux construire|je veux fabriquer|inventer|bricoler/i,
+  ]},
+  { intent: "IDENTITE_PEUR", priority: 83, patterns: [
+    /peur d'être différent|pas comme les autres|bizarre|pas normal|je suis pas normal/i,
+  ]},
+  { intent: "MAUVAIS_COMPORTEMENT", priority: 81, patterns: [
+    /cassé quelque chose exprès|j'ai tapé|j'ai poussé|j'ai crié sur|j'ai fait exprès/i,
   ]},
 
   // Requests
@@ -1336,6 +1365,158 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
     },
   },
 
+  RETRAIT: {
+    default: {
+      empathy: [
+        "Parfois on a besoin d'être seul et c'est ok 😔",
+        "C'est normal d'avoir envie de calme.",
+      ],
+      response: [
+        "Mais tu n'es pas obligé de rester seul trop longtemps 💛",
+        "Bobby est là quand tu voudras parler.",
+      ],
+      opening: [
+        "Tu veux un peu de calme ou tu te sens triste ?",
+        "Tu préfères qu'on reste ensemble sans parler ?",
+      ],
+    },
+  },
+
+  PEUR_ABANDON: {
+    default: {
+      empathy: [
+        "Cette peur peut être très difficile 😔",
+        "Avoir peur que personne ne t'aime, ça fait mal…",
+      ],
+      response: [
+        "Mais tu es quelqu'un qui mérite d'être aimé 💛",
+        "Ça ne veut pas dire que ça va arriver.",
+        "Les gens qui t'aiment sont toujours là, même quand on ne les voit pas.",
+      ],
+      opening: [
+        "Qu'est-ce qui te fait penser ça ?",
+        "Tu veux me raconter ce qui s'est passé ?",
+      ],
+    },
+  },
+
+  PEUR_ECHEC: {
+    default: {
+      empathy: [
+        "Après un échec ça peut faire peur de recommencer 😔",
+        "Ça fait plusieurs fois et ça te décourage…",
+      ],
+      response: [
+        "Mais chaque essai t'aide à progresser 💛",
+        "Ça ne veut pas dire que tu n'y arriveras pas.",
+        "Les erreurs font partie du chemin.",
+      ],
+      opening: [
+        "Qu'est-ce qui te pose le plus de difficulté ?",
+        "Tu veux qu'on prépare ça ensemble ?",
+      ],
+    },
+  },
+
+  AVERSION: {
+    default: {
+      empathy: [
+        "On dirait que ça te pèse beaucoup 😔",
+        "Parfois on déteste quelque chose parce que c'est trop dur…",
+      ],
+      response: [
+        "Bobby comprend que ça peut être frustrant 💛",
+        "Ça ne veut pas dire que c'est toujours comme ça.",
+      ],
+      opening: [
+        "Qu'est-ce que tu n'aimes pas le plus là-dedans ?",
+        "Tu veux me dire ce qui te dérange ?",
+      ],
+    },
+  },
+
+  PEOPLE_PLEASING: {
+    default: {
+      empathy: [
+        "Vouloir faire plaisir c'est gentil 💛",
+        "C'est bien de penser aux autres.",
+      ],
+      response: [
+        "Mais tu comptes aussi 😔 pense à toi parfois.",
+        "Tu n'es pas obligé de rendre tout le monde heureux.",
+      ],
+      opening: [
+        "Tu penses à toi parfois ?",
+        "Qu'est-ce qui TE ferait plaisir à toi ?",
+      ],
+    },
+  },
+
+  CURIOSITE: {
+    default: {
+      empathy: ["Bonne question ! 🧠"],
+      response: [
+        "Bobby adore quand tu es curieux 💛",
+        "La curiosité c'est un super-pouvoir !",
+      ],
+      opening: [
+        "Tu veux que je t'explique avec une image simple ?",
+        "Tu veux en savoir plus ?",
+      ],
+    },
+  },
+
+  CREATION: {
+    default: {
+      empathy: [
+        "Créer quelque chose c'est trop cool 🤖",
+        "J'adore les inventeurs !",
+      ],
+      response: [
+        "Tu as beaucoup d'imagination 💛",
+        "C'est comme ça que naissent les meilleures inventions !",
+      ],
+      opening: [
+        "Tu as déjà une idée de ce que ça ferait ?",
+        "Tu veux qu'on imagine ça ensemble ?",
+      ],
+    },
+  },
+
+  IDENTITE_PEUR: {
+    default: {
+      empathy: [
+        "Être différent peut faire peur 😔",
+        "Parfois on a l'impression de ne pas rentrer dans le moule…",
+      ],
+      response: [
+        "Mais c'est aussi ce qui te rend unique 💛",
+        "Être différent c'est une force, même si ça ne semble pas toujours.",
+      ],
+      opening: [
+        "Qu'est-ce qui te fait sentir différent ?",
+        "Tu veux qu'on parle de ce qui te rend spécial ?",
+      ],
+    },
+  },
+
+  MAUVAIS_COMPORTEMENT: {
+    default: {
+      empathy: [
+        "On dirait que tu étais très en colère 😔",
+        "Parfois la colère peut nous faire faire des choses…",
+      ],
+      response: [
+        "Casser ou taper peut être un signe que c'était trop fort 💛",
+        "Bobby ne te juge pas. On peut comprendre ensemble.",
+      ],
+      opening: [
+        "Tu veux me dire ce qui t'a mis dans cet état ?",
+        "Qu'est-ce qui s'est passé juste avant ?",
+      ],
+    },
+  },
+
   // Context-aware responses for YES/NO based on memory handled in assembleResponse
   QUESTION_SIMPLE: {
     default: {
@@ -1715,6 +1896,15 @@ const INTENT_FACE_MAP: Partial<Record<LocalIntent, FaceState>> = {
   PERFECTIONNISME: "reassuring",
   COMPARAISON: "reassuring",
   FATIGUE_EMOTIONNELLE: "reassuring",
+  RETRAIT: "calm",
+  PEUR_ABANDON: "reassuring",
+  PEUR_ECHEC: "reassuring",
+  AVERSION: "reassuring",
+  PEOPLE_PLEASING: "reassuring",
+  CURIOSITE: "excited",
+  CREATION: "excited",
+  IDENTITE_PEUR: "reassuring",
+  MAUVAIS_COMPORTEMENT: "reassuring",
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
