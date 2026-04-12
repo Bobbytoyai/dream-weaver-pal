@@ -986,14 +986,24 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
 
   IMAGINATION: {
     default: {
-      empathy: ["Ooh, on imagine ! 🌈"],
+      empathy: [
+        "Ooh, on imagine ! 🌈",
+        "Wow ton imagination est forte 😄",
+        "Roooar 🦖😄",
+        "Ce serait magique 😄",
+      ],
       response: [
         "L'imagination, c'est le plus beau des pouvoirs !",
+        "Bobby adore imaginer avec toi 💛",
+        "C'est comme ça que naissent les meilleures aventures !",
       ],
       opening: [
         "Si tu pouvais créer un monde, il serait comment ?",
         "Tu inventes le personnage, moi j'invente l'aventure ?",
         "On crée un animal imaginaire ensemble ?",
+        "Tu ferais quoi en premier ?",
+        "Tu serais quoi exactement ?",
+        "Tu parlerais avec qui en premier ?",
       ],
     },
   },
