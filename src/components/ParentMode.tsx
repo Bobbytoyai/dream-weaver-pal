@@ -13,6 +13,14 @@ import StoryLibrary from "@/components/StoryLibrary";
 import ContentCategories from "@/components/ContentCategories";
 import { preloadVoice as preloadPiperVoice } from "@/lib/piperTTS";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import {
+  loadParentDashboardSnapshot,
+  loadParentSessionMessages,
+  requestParentSessionAnalysis,
+  type ParentAnalysis as Analysis,
+  type ParentSession as Session,
+  type ParentSessionMessage,
+} from "@/lib/bobby/parentDashboard";
 
 import { ParentSettings, DEFAULT_PARENT_SETTINGS, BOBBY_COLORS } from "./parentSettings";
 import { getSafetyAlertRecords, clearSafetyAlertRecords, type SafetyAlertRecord } from "@/lib/offlineEngine";
@@ -26,42 +34,6 @@ interface ParentModeProps {
   onClose: () => void;
   parentSettings?: ParentSettings;
   onSettingsChange?: (settings: ParentSettings) => void;
-}
-
-interface Session {
-  id: string;
-  child_name: string;
-  child_age: number;
-  started_at: string;
-  ended_at: string | null;
-  message_count: number;
-  detected_emotions: string[] | null;
-  topics: string[] | null;
-  ai_summary: string | null;
-  duration_seconds: number | null;
-  tags: string[] | null;
-  is_favorite: boolean;
-  parent_note: string | null;
-}
-
-interface Analysis {
-  id: string;
-  session_id: string;
-  audio_path: string | null;
-  full_transcription: string | null;
-  summary: string | null;
-  emotions: Record<string, number>;
-  topics_detected: string[];
-  behavior_insights: string[];
-  engagement_level: string;
-  attention_span: string | null;
-  mood_score: string | null;
-  alerts: Array<{ type: string; message: string }>;
-  created_at: string;
-  sociability_score: number | null;
-  curiosity_score: number | null;
-  emotional_stability_score: number | null;
-  extracted_interests: string[] | null;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────
@@ -224,7 +196,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [selectedAnalysis, setSelectedAnalysis] = useState<Analysis | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const [sessionMessages, setSessionMessages] = useState<Array<{ role: string; content: string; created_at: string; detected_emotion: string | null }>>([]);
+  const [sessionMessages, setSessionMessages] = useState<ParentSessionMessage[]>([]);
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [settings, setSettings] = useState<ParentSettings>(() => ({
     ...DEFAULT_PARENT_SETTINGS,
@@ -288,42 +260,23 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const loadData = async () => {
     setLoading(true);
-    const [sessionsRes, analysesRes] = await Promise.all([
-      supabase.from("child_sessions").select("*").order("started_at", { ascending: false }).limit(50),
-      supabase.from("conversation_analyses").select("*").order("created_at", { ascending: false }).limit(50),
-    ]);
-    if (sessionsRes.data) setSessions(sessionsRes.data as any);
-    if (analysesRes.data) setAnalyses(analysesRes.data as any);
+    const snapshot = await loadParentDashboardSnapshot(50);
+    setSessions(snapshot.sessions);
+    setAnalyses(snapshot.analyses);
     setLoading(false);
   };
 
   const analyzeSession = async (session: Session) => {
     setSelectedSession(session);
-    const { data: msgs } = await supabase
-      .from("session_messages")
-      .select("role, content, created_at, detected_emotion")
-      .eq("session_id", session.id)
-      .order("created_at", { ascending: true });
-    setSessionMessages(msgs || []);
+    setSessionMessages(await loadParentSessionMessages(session.id));
 
     const existing = analyses.find(a => a.session_id === session.id);
     if (existing) { setSelectedAnalysis(existing); return; }
     setAnalyzing(true);
     try {
-      const resp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-conversation`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({ sessionId: session.id }),
-        }
-      );
-      if (resp.ok) {
-        const data = await resp.json();
-        setSelectedAnalysis(data.analysis);
+      const analysis = await requestParentSessionAnalysis(session.id);
+      if (analysis) {
+        setSelectedAnalysis(analysis);
         loadData();
       }
     } catch { /* ignore */ } finally { setAnalyzing(false); }
