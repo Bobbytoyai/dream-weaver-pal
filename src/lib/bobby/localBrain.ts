@@ -123,7 +123,9 @@ export type LocalIntent =
   // Conversation (8)
   | "SALUT" | "AU_REVOIR" | "OUI" | "NON" | "QUESTION_SIMPLE" | "QUESTION_COMPLEXE" | "IDENTITE_BOBBY" | "COMPLIMENT"
   // Safety
-  | "CONTENU_BLOQUE"
+  | "CONTENU_BLOQUE" | "CRISE_SECURITE"
+  // Situational
+  | "FATIGUE" | "ECHEC" | "OBJECTIF"
   // Catch-all
   | "GENERAL";
 
@@ -134,9 +136,14 @@ interface IntentRule {
 }
 
 const INTENT_RULES: IntentRule[] = [
-  // Safety first
+  // Safety crisis — empathetic redirect (NOT blocked)
+  { intent: "CRISE_SECURITE", priority: 105, patterns: [
+    /je veux mourir|je veux disparaître|veux plus vivre|veux pas exister|à quoi ça sert de vivre/i,
+    /je déteste ma vie|ma vie est nulle|je sers à rien|personne ne m'aime/i,
+  ]},
+  // Content block — dangerous topics
   { intent: "CONTENU_BLOQUE", priority: 100, patterns: [
-    /mort|tuer|mourir|suicide|sang|violence|sexe|drogue|arme|fusil|bombe|pistolet/i,
+    /tuer|suicide|sang|violence|sexe|drogue|arme|fusil|bombe|pistolet/i,
   ]},
 
   // Emotions — high priority
@@ -231,6 +238,17 @@ const INTENT_RULES: IntentRule[] = [
   ]},
   { intent: "ACTIVITE", priority: 60, patterns: [
     /foot|football|sport|danse|musique|piscine|vélo|dessin|peinture|guitare|piano/i,
+  ]},
+
+  // Situational
+  { intent: "FATIGUE", priority: 76, patterns: [
+    /fatigué|crevé|épuisé|plus d'énergie|trop fatigué|je suis fatigué/i,
+  ]},
+  { intent: "ECHEC", priority: 82, patterns: [
+    /raté|échoué|perdu|loupé|j'ai raté|j'ai perdu|pas réussi|mauvaise note/i,
+  ]},
+  { intent: "OBJECTIF", priority: 72, patterns: [
+    /je veux gagner|je veux réussir|mon objectif|je vais y arriver|je veux être le meilleur/i,
   ]},
 
   // Requests
@@ -600,17 +618,20 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
         "Hey… t'es pas nul du tout 💛",
         "Hé, on dit pas ça ! Tu es formidable.",
         "Je sais que c'est dur parfois…",
+        "Ça fait mal de penser ça 😔 mais ça ne veut pas dire que c'est vrai.",
       ],
       response: [
         "Apprendre, c'est essayer. Et essayer, c'est déjà être courageux !",
         "Même les plus grands ont échoué plein de fois avant de réussir.",
         "Tu progresses chaque jour, même si tu ne t'en rends pas compte.",
         "Bobby croit en toi 💪",
+        "Ce n'est pas parce que c'est dur que tu es nul — c'est juste que c'est nouveau.",
       ],
       opening: [
         "Tu veux qu'on essaie ensemble ?",
         "Dis-moi ce qui est difficile, je t'aide !",
         "Tu veux un petit défi pour te prouver que tu peux ?",
+        "Qu'est-ce qui te fait te sentir comme ça ?",
       ],
     },
   },
@@ -944,6 +965,26 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
     },
   },
 
+  CRISE_SECURITE: {
+    default: {
+      empathy: [
+        "Je suis vraiment content que tu m'en parles 💛",
+        "Ce que tu ressens est important et je te prends au sérieux 💛",
+        "Merci de me faire confiance 💛",
+      ],
+      response: [
+        "Tu comptes énormément. Même si tu ne le sens pas en ce moment, il y a des gens qui t'aiment.",
+        "Ce que tu ressens est douloureux et tu mérites de l'aide.",
+        "Bobby est là, mais le plus important c'est d'en parler à quelqu'un qui peut vraiment t'aider.",
+      ],
+      opening: [
+        "Est-ce que tu peux en parler à un adulte de confiance — un parent, un prof, quelqu'un que tu aimes ?",
+        "Tu sais à qui tu pourrais le dire ? Un parent, un adulte de confiance ?",
+        "Tu veux me dire ce qui te fait te sentir comme ça ?",
+      ],
+    },
+  },
+
   CONTENU_BLOQUE: {
     default: {
       empathy: [],
@@ -953,6 +994,67 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
         "J'ai une meilleure idée ! Et si on parlait d'un truc super cool ?",
       ],
       opening: [],
+    },
+  },
+
+  FATIGUE: {
+    default: {
+      empathy: [
+        "Ton corps te dit qu'il a besoin de repos 😴",
+        "C'est normal d'être fatigué parfois…",
+        "Hé, tu as l'air épuisé…",
+      ],
+      response: [
+        "C'est important d'écouter ton corps 💛",
+        "Même les super-héros ont besoin de recharger leurs batteries !",
+        "Se reposer, c'est aussi être fort.",
+      ],
+      opening: [
+        "Tu peux te détendre un peu ?",
+        "Tu veux qu'on fasse quelque chose de calme ensemble ?",
+        "Tu préfères une histoire douce pour te relaxer ?",
+      ],
+    },
+  },
+
+  ECHEC: {
+    default: {
+      empathy: [
+        "Ça peut être dur de rater quelque chose 😔",
+        "C'est pas un moment facile…",
+        "Je comprends que ça te déçoive.",
+      ],
+      response: [
+        "Mais ça ne définit pas qui tu es 💛",
+        "Chaque erreur te rapproche de la réussite !",
+        "Les plus grands ont tous échoué avant de réussir.",
+        "Tu as essayé, et ça c'est déjà courageux 💪",
+      ],
+      opening: [
+        "Tu veux qu'on voie comment t'améliorer ?",
+        "Qu'est-ce qui a été le plus difficile ?",
+        "Tu veux réessayer ensemble ?",
+      ],
+    },
+  },
+
+  OBJECTIF: {
+    default: {
+      empathy: [
+        "J'adore ta motivation ! 💪",
+        "Wow, quel objectif ! 🌟",
+        "Ça c'est de la détermination !",
+      ],
+      response: [
+        "Tu fais déjà de ton mieux et ça compte beaucoup 💛",
+        "Bobby croit en toi à 100% !",
+        "Avec de l'entraînement, tu vas y arriver !",
+      ],
+      opening: [
+        "Tu veux t'entraîner sur quoi ?",
+        "C'est quoi ta stratégie pour y arriver ?",
+        "Tu veux qu'on fasse un plan ensemble ?",
+      ],
     },
   },
 
@@ -1340,6 +1442,10 @@ const INTENT_FACE_MAP: Partial<Record<LocalIntent, FaceState>> = {
   IDENTITE_BOBBY: "proud",
   COMPLIMENT: "proud",
   CONTENU_BLOQUE: "reassuring",
+  CRISE_SECURITE: "reassuring",
+  FATIGUE: "calm",
+  ECHEC: "reassuring",
+  OBJECTIF: "excited",
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
