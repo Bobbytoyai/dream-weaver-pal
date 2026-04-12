@@ -61,11 +61,19 @@ const Index = () => {
   }, []);
 
   // Restore parent settings from memory on load
+  // BUT: always keep childName/childAge from localStorage (source of truth)
   useEffect(() => {
     if (!memory?.preferences?.parentSettings) return;
     try {
       const saved = memory.preferences.parentSettings as Record<string, unknown>;
-      setParentSettings((prev) => ({ ...prev, ...saved }));
+      const localProfile = loadProfile();
+      setParentSettings((prev) => ({
+        ...prev,
+        ...saved,
+        // localStorage profile always wins over DB-stored name/age
+        childName: localProfile?.name ?? prev.childName,
+        childAge: localProfile?.age ?? prev.childAge,
+      }));
     } catch { /* ignore */ }
   }, [memory]);
 
