@@ -2,6 +2,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ParentSettings } from "@/components/parentSettings";
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
+import type { ExpressionCombo } from "@/lib/bobby/expressionLibrary";
+import { detectBobbyExpression } from "@/lib/emotionMapper";
+import { resetEmotionPipeline } from "@/lib/bobby/emotionPipeline";
 import { eventBus } from "@/lib/eventBus";
 import { getNetworkMode, onNetworkChange } from "@/lib/offlineEngine";
 import { fetchTTSAudio } from "@/lib/voicePipeline";
