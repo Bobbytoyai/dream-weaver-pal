@@ -474,6 +474,266 @@ export const BOBBY_MULTI_RESPONSES: MultiResponseEntry[] = [
       { text: "Tu veux une histoire ou un défi ? 😊", type: "proposition", energy: "medium" },
     ],
   },
+  // ── École — moqueries ──
+  {
+    category: "ecole",
+    input: "j'ai peur que les autres se moquent de moi",
+    emotion: "peur",
+    tags: ["soutien", "école"],
+    responses: [
+      { text: "Je comprends… ça peut faire peur 😟 mais tu mérites le respect 💛 tu veux m'expliquer ce qui te fait penser ça ?", type: "question", energy: "low" },
+      { text: "Ce n'est pas facile… tu n'es pas seul à ressentir ça", type: "soutien", energy: "low" },
+      { text: "On peut trouver une façon de te sentir plus à l'aise 💪 tu veux essayer ?", type: "proposition", energy: "medium" },
+      { text: "Tu veux qu'on imagine une situation où tu te sens fort ?", type: "imagination", energy: "medium" },
+    ],
+  },
+  // ── École — solitude ──
+  {
+    category: "ecole",
+    input: "personne ne joue avec moi",
+    emotion: "tristesse",
+    tags: ["soutien", "école"],
+    responses: [
+      { text: "Oh… ça doit être difficile 😔 tu veux m'en parler ?", type: "question", energy: "low" },
+      { text: "Tu mérites des amis 💛", type: "soutien", energy: "low" },
+      { text: "On peut trouver des idées pour aller vers les autres", type: "proposition", energy: "medium" },
+      { text: "Je suis là avec toi 💛", type: "soutien", energy: "low" },
+    ],
+  },
+  // ── Jalousie ──
+  {
+    category: "emotions",
+    input: "je suis jaloux",
+    emotion: "jalousie",
+    tags: ["soutien"],
+    responses: [
+      { text: "Ça arrive de ressentir ça 😕 tu veux me dire pourquoi ?", type: "question", energy: "low" },
+      { text: "La jalousie veut dire que quelque chose est important pour toi", type: "soutien", energy: "low" },
+      { text: "Tu veux qu'on transforme ça en motivation ? 💪", type: "proposition", energy: "medium" },
+      { text: "Qu'est-ce que tu aimerais avoir ou faire ?", type: "question", energy: "medium" },
+    ],
+  },
+  // ── Famille — manque de temps ──
+  {
+    category: "famille",
+    input: "mes parents n'ont pas le temps pour moi",
+    emotion: "tristesse",
+    tags: ["soutien", "famille"],
+    responses: [
+      { text: "Ça peut faire mal 😔 tu aimerais passer plus de temps avec eux ?", type: "question", energy: "low" },
+      { text: "Je comprends… tu veux leur dire quelque chose ?", type: "question", energy: "low" },
+      { text: "Tu comptes beaucoup 💛 même s'ils sont occupés", type: "soutien", energy: "low" },
+      { text: "On peut trouver une idée pour passer du temps avec eux", type: "proposition", energy: "medium" },
+    ],
+  },
+  // ── Famille — fierté ──
+  {
+    category: "famille",
+    input: "je suis fier de ma famille",
+    emotion: "fierté",
+    tags: ["famille"],
+    responses: [
+      { text: "C'est beau 😄 qu'est-ce que tu aimes chez eux ?", type: "question", energy: "medium" },
+      { text: "Ta famille compte beaucoup 💛", type: "soutien", energy: "low" },
+      { text: "Tu veux partager un moment avec eux ?", type: "question", energy: "medium" },
+      { text: "Ça te rend heureux 😊", type: "soutien", energy: "medium" },
+    ],
+  },
+  // ── Jeux — gagner ──
+  {
+    category: "jeux",
+    input: "je veux gagner",
+    emotion: "motivation",
+    tags: ["jeu"],
+    responses: [
+      { text: "Nice 😄 on va s'entraîner alors !", type: "jeu", energy: "high" },
+      { text: "Gagner c'est cool, mais apprendre c'est encore mieux 💪", type: "soutien", energy: "medium" },
+      { text: "Tu veux un défi pour progresser ?", type: "jeu", energy: "high" },
+      { text: "On joue en mode entraînement ?", type: "jeu", energy: "high" },
+    ],
+  },
+  // ── Jeux — rapide ──
+  {
+    category: "jeux",
+    input: "jeu rapide",
+    emotion: "excitation",
+    tags: ["jeu"],
+    responses: [
+      { text: "Ok 😄 dis-moi 3 couleurs vite !", type: "jeu", energy: "high" },
+      { text: "Défi : 2 animaux en 2 secondes !", type: "jeu", energy: "high" },
+      { text: "Prêt ? un fruit qui commence par P !", type: "jeu", energy: "high" },
+      { text: "On lance le chrono 😄", type: "jeu", energy: "high" },
+    ],
+  },
+  // ── Imagination — invisible ──
+  {
+    category: "imagination",
+    input: "je suis invisible",
+    emotion: "fun",
+    tags: ["imagination", "fun"],
+    responses: [
+      { text: "Waaah 😄 tu ferais quoi en premier ?", type: "question", energy: "high" },
+      { text: "Tu serais un héros secret !", type: "imagination", energy: "high" },
+      { text: "Tu espionnerais ou tu aiderais les gens ?", type: "question", energy: "high" },
+      { text: "Tu veux une mission invisible ?", type: "jeu", energy: "high" },
+    ],
+  },
+  // ── Imagination — espace ──
+  {
+    category: "imagination",
+    input: "je suis dans l'espace",
+    emotion: "joie",
+    tags: ["imagination"],
+    responses: [
+      { text: "Waaah 🚀 tu vois des planètes ?", type: "question", energy: "high" },
+      { text: "Tu flottes dans l'espace ?", type: "question", energy: "high" },
+      { text: "Tu rencontres des aliens ?", type: "imagination", energy: "high" },
+      { text: "Tu explores où ?", type: "question", energy: "high" },
+    ],
+  },
+  // ── Peurs — rater ──
+  {
+    category: "peurs",
+    input: "j'ai peur de rater",
+    emotion: "peur",
+    tags: ["soutien"],
+    responses: [
+      { text: "C'est normal… rater fait partie d'apprendre 💛", type: "soutien", energy: "low" },
+      { text: "Tu veux qu'on essaye ensemble sans pression ?", type: "proposition", energy: "medium" },
+      { text: "Tu n'as pas besoin d'être parfait", type: "soutien", energy: "low" },
+      { text: "Chaque essai te rend plus fort 💪", type: "soutien", energy: "medium" },
+    ],
+  },
+  // ── Peurs — dormir seul ──
+  {
+    category: "peurs",
+    input: "j'ai peur de dormir seul",
+    emotion: "peur",
+    tags: ["soutien", "peur"],
+    responses: [
+      { text: "Je comprends 💛 je reste avec toi", type: "soutien", energy: "low" },
+      { text: "Tu veux une histoire pour t'aider ?", type: "proposition", energy: "low" },
+      { text: "On imagine une protection magique ✨", type: "imagination", energy: "medium" },
+      { text: "Tu es en sécurité 💛", type: "soutien", energy: "low" },
+    ],
+  },
+  // ── Apprentissage — difficulté ──
+  {
+    category: "apprentissage",
+    input: "c'est difficile",
+    emotion: "frustration",
+    tags: ["soutien", "apprentissage"],
+    responses: [
+      { text: "Oui parfois c'est dur 😔 mais tu peux y arriver", type: "soutien", energy: "low" },
+      { text: "On peut le faire étape par étape 💪", type: "proposition", energy: "medium" },
+      { text: "Dis-moi où ça bloque", type: "question", energy: "low" },
+      { text: "Je t'aide, on le fait ensemble", type: "soutien", energy: "medium" },
+    ],
+  },
+  // ── Animaux — lions ──
+  {
+    category: "animaux",
+    input: "les lions sont dangereux",
+    emotion: "curiosité",
+    tags: ["animaux", "apprentissage"],
+    responses: [
+      { text: "Oui, ce sont des animaux puissants 🦁", type: "fun", energy: "medium" },
+      { text: "Dans la nature ils chassent pour manger", type: "fun", energy: "medium" },
+      { text: "Mais dans les zoos ils sont protégés", type: "fun", energy: "medium" },
+      { text: "Tu trouves les lions impressionnants ?", type: "question", energy: "medium" },
+    ],
+  },
+  // ── Nature — soleil ──
+  {
+    category: "nature",
+    input: "pourquoi le soleil brille",
+    emotion: "curiosité",
+    tags: ["apprentissage", "nature"],
+    responses: [
+      { text: "Le soleil est une énorme boule de feu ☀️", type: "fun", energy: "medium" },
+      { text: "Il produit de la lumière et de la chaleur", type: "fun", energy: "medium" },
+      { text: "C'est lui qui nous éclaire 😊", type: "fun", energy: "medium" },
+      { text: "Tu préfères le soleil ou la lune ?", type: "question", energy: "medium" },
+    ],
+  },
+  // ── Humour — encore ──
+  {
+    category: "humour",
+    input: "encore une autre",
+    emotion: "joie",
+    tags: ["fun"],
+    responses: [
+      { text: "Pourquoi les vaches ferment les yeux ? 😄 pour faire du lait concentré !", type: "fun", energy: "high" },
+      { text: "Pourquoi les stylos sont fatigués ? 😄 parce qu'ils travaillent trop !", type: "fun", energy: "high" },
+      { text: "Pourquoi les oiseaux ne vont pas à l'école ? 😄 ils savent déjà voler !", type: "fun", energy: "high" },
+      { text: "Tu veux une blague encore plus folle ?", type: "question", energy: "high" },
+    ],
+  },
+  // ── Santé — mal-être ──
+  {
+    category: "sante",
+    input: "je me sens pas bien",
+    emotion: "inconfort",
+    tags: ["soutien"],
+    responses: [
+      { text: "Oh 😟 tu veux m'expliquer ce que tu ressens ?", type: "question", energy: "low" },
+      { text: "Tu veux te reposer un peu ?", type: "proposition", energy: "low" },
+      { text: "Parler peut aider 💛", type: "soutien", energy: "low" },
+      { text: "Je suis là avec toi", type: "soutien", energy: "low" },
+    ],
+  },
+  // ── Absurde — nuages ──
+  {
+    category: "absurde",
+    input: "si les nuages tombent",
+    emotion: "fun",
+    tags: ["fun", "imagination"],
+    responses: [
+      { text: "Ce serait comme de la barbe à papa géante 😄", type: "fun", energy: "high" },
+      { text: "On sauterait dessus !", type: "fun", energy: "high" },
+      { text: "Tu construirais une maison en nuage ?", type: "imagination", energy: "high" },
+      { text: "Ça serait drôle 😄", type: "fun", energy: "high" },
+    ],
+  },
+  // ── Sport — courir ──
+  {
+    category: "sport",
+    input: "je veux courir vite",
+    emotion: "motivation",
+    tags: ["sport"],
+    responses: [
+      { text: "On peut s'entraîner 💪 petit à petit", type: "proposition", energy: "medium" },
+      { text: "La vitesse vient avec le temps", type: "soutien", energy: "medium" },
+      { text: "Tu veux un défi de course ?", type: "jeu", energy: "high" },
+      { text: "Tu es déjà sur le bon chemin 💪", type: "soutien", energy: "medium" },
+    ],
+  },
+  // ── Musique — créer ──
+  {
+    category: "musique",
+    input: "je veux créer une chanson",
+    emotion: "créativité",
+    tags: ["imagination", "musique"],
+    responses: [
+      { text: "Trop bien 😄 on commence par les paroles ?", type: "question", energy: "high" },
+      { text: "Quel style tu veux ?", type: "question", energy: "medium" },
+      { text: "On invente un refrain ensemble", type: "imagination", energy: "high" },
+      { text: "Tu veux une chanson drôle ou cool ?", type: "question", energy: "high" },
+    ],
+  },
+  // ── Rêves — fréquents ──
+  {
+    category: "reves",
+    input: "je rêve souvent",
+    emotion: "curiosité",
+    tags: ["imagination"],
+    responses: [
+      { text: "Les rêves sont fascinants 😄", type: "fun", energy: "medium" },
+      { text: "Ton cerveau imagine plein de choses", type: "fun", energy: "medium" },
+      { text: "Tu te souviens de tes rêves ?", type: "question", energy: "medium" },
+      { text: "On peut en inventer un ensemble", type: "imagination", energy: "medium" },
+    ],
+  },
 ];
 
 // ─── Multi-Response Matcher ─────────────────────────────
