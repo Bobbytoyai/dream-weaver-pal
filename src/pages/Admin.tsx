@@ -126,7 +126,7 @@ const TOP_SECTIONS: {
   { id: "interactions", label: "Interactions 10K", icon: MessageSquare, color: "text-cyan-400", bgColor: "bg-cyan-500/20", count: "10 000", desc: "Base d'interactions enfant par âge & catégorie", emoji: "🧠" },
   { id: "jeux", label: "Jeux & Quiz", icon: Gamepad2, color: "text-blue-400", bgColor: "bg-blue-500/20", count: "90", desc: "Quiz animaux, sciences, vrai/faux, devinettes", emoji: "🎮" },
   { id: "qa", label: "QA Database", icon: HelpCircle, color: "text-amber-400", bgColor: "bg-amber-500/20", count: "537", desc: "Questions-réponses offline structurées", emoji: "❓" },
-  { id: "blagues", label: "Blagues", icon: Laugh, color: "text-green-400", bgColor: "bg-green-500/20", count: "47", desc: "Blagues adaptées par âge & catégorie", emoji: "😂" },
+  { id: "blagues", label: "Blagues", icon: Laugh, color: "text-green-400", bgColor: "bg-green-500/20", count: "26", desc: "Blagues adaptées par âge & catégorie", emoji: "😂" },
   { id: "histoires", label: "Histoires", icon: BookOpen, color: "text-purple-400", bgColor: "bg-purple-500/20", count: "6", desc: "Contes & aventures personnalisées", emoji: "📖" },
   { id: "cerveau", label: "Personnalité", icon: Sparkles, color: "text-pink-400", bgColor: "bg-pink-500/20", count: "5", desc: "Personnalité, réactions, phrases Bobby", emoji: "✨" },
   { id: "cloud", label: "Cloud KB", icon: Globe, color: "text-blue-400", bgColor: "bg-blue-500/20", count: "∞", desc: "Base cloud extensible (ajout via admin)", emoji: "☁️" },
@@ -808,7 +808,76 @@ const Admin = () => {
   // BLAGUES
   // ═══════════════════════════════════════════════════════════════════
   if (topSection === "blagues") {
+    const categories = [...new Set(BLAGUES.map(b => b.categorie))];
+    const AGE_GROUPS_BLG = [
+      { label: "Tous", min: 0, max: 99 },
+      { label: "5-6 ans", min: 5, max: 6 },
+      { label: "7-8 ans", min: 7, max: 8 },
+      { label: "9-10 ans", min: 9, max: 10 },
+      { label: "11-12 ans", min: 11, max: 12 },
+    ];
+    const selectedBlagueCat = interactionCat;
+    const searchLower = search.toLowerCase();
 
+    // If a category is selected, show its blagues
+    if (selectedBlagueCat) {
+      const catBlagues = BLAGUES.filter(b => b.categorie === selectedBlagueCat);
+      const ageFiltered = ageFilter
+        ? catBlagues.filter(b => {
+            const ag = AGE_GROUPS_BLG.find(a => a.label === ageFilter);
+            return ag ? b.ageMin <= ag.max && b.ageMax >= ag.min : true;
+          })
+        : catBlagues;
+      const filtered = searchLower
+        ? ageFiltered.filter(b => b.question.toLowerCase().includes(searchLower) || b.reponse.toLowerCase().includes(searchLower))
+        : ageFiltered;
+
+      return (
+        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+          <div className="max-w-4xl mx-auto space-y-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+              <span className="text-2xl">😂</span>
+              <div>
+                <h1 className="text-xl font-bold text-white capitalize">{selectedBlagueCat}</h1>
+                <p className="text-white/40 text-xs">{filtered.length} blagues</p>
+              </div>
+            </div>
+
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
+                className="bg-white/10 border-white/20 text-white pl-9" />
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+              {AGE_GROUPS_BLG.map(ag => (
+                <button key={ag.label} onClick={() => setAgeFilter(ageFilter === ag.label ? null : ag.label)}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === ag.label ? "bg-green-500/30 border-green-400/50 text-green-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
+                  {ag.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-2">
+              {filtered.map((b, i) => (
+                <div key={i} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">{b.ageMin}-{b.ageMax} ans</span>
+                    <span className="text-[10px] text-white/30">Niv.{b.difficulte}</span>
+                  </div>
+                  <p className="text-sm text-white/80 font-medium">{b.question}</p>
+                  <p className="text-sm text-white/50 mt-1">→ {b.reponse}</p>
+                </div>
+              ))}
+              {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Category grid
     return (
       <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
@@ -817,27 +886,47 @@ const Admin = () => {
             <span className="text-2xl">😂</span>
             <div>
               <h1 className="text-xl font-bold text-white">Blagues</h1>
-              <p className="text-white/40 text-xs">{BLAGUES.length} blagues • {blaguesByCategorie.length} catégories</p>
+              <p className="text-white/40 text-xs">{BLAGUES.length} blagues • {categories.length} catégories</p>
             </div>
           </div>
 
-          {blaguesByCategorie.map(([cat, blagues]) => (
-            <div key={cat}>
-              <h3 className="text-white/60 text-xs font-semibold mb-2 uppercase tracking-wider">{cat} ({blagues.length})</h3>
-              <div className="space-y-2">
-                {blagues.map((b, i) => (
-                  <div key={i} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">{b.ageMin}-{b.ageMax} ans</span>
-                      <span className="text-[10px] text-white/30">Niv.{b.difficulte}</span>
-                    </div>
-                    <p className="text-sm text-white/80 font-medium">{b.question}</p>
-                    <p className="text-sm text-white/50 mt-1">→ {b.reponse}</p>
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher dans toutes les blagues…"
+              className="bg-white/10 border-white/20 text-white pl-9" />
+          </div>
+
+          {searchLower ? (
+            <div className="space-y-2">
+              {BLAGUES.filter(b => b.question.toLowerCase().includes(searchLower) || b.reponse.toLowerCase().includes(searchLower)).map((b, i) => (
+                <div key={i} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300 capitalize">{b.categorie}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">{b.ageMin}-{b.ageMax} ans</span>
                   </div>
-                ))}
-              </div>
+                  <p className="text-sm text-white/80 font-medium">{b.question}</p>
+                  <p className="text-sm text-white/50 mt-1">→ {b.reponse}</p>
+                </div>
+              ))}
             </div>
-          ))}
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {categories.map(cat => {
+                const catBlagues = BLAGUES.filter(b => b.categorie === cat);
+                const EMOJIS: Record<string, string> = { animaux: "🐾", ecole: "📚", nourriture: "🍕", absurde: "🤪", famille: "👨‍👩‍👧", science: "🔬" };
+                return (
+                  <button key={cat} onClick={() => { setInteractionCat(cat); setSearch(""); }}
+                    className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between">
+                    <span className="text-3xl">{EMOJIS[cat] || "😂"}</span>
+                    <div>
+                      <p className="text-xl font-bold text-white">{catBlagues.length}</p>
+                      <h3 className="text-xs font-semibold text-white/70 capitalize">{cat}</h3>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     );
