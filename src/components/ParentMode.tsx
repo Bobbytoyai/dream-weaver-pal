@@ -13,6 +13,7 @@ import { getInterestSnapshot, INTEREST_KEYWORDS_PUBLIC } from "@/lib/bobby/inter
 import { supabase } from "@/integrations/supabase/client";
 import StoryLibrary from "@/components/StoryLibrary";
 import ContentCategories from "@/components/ContentCategories";
+import BobbyStore from "@/components/BobbyStore";
 // Piper TTS removed — ElevenLabs only
 import ConfirmDialog from "@/components/ConfirmDialog";
 import {
