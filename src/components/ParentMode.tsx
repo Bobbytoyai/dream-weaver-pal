@@ -238,8 +238,35 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [sessionFavFilter, setSessionFavFilter] = useState(false);
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [noteText, setNoteText] = useState("");
+  const [parentAlerts, setParentAlerts] = useState<Array<{ id: string; session_id: string; child_name: string; alert_type: string; severity: string; message: string; context: string | null; is_read: boolean; created_at: string }>>([]);
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
 
-  useEffect(() => { loadData(); }, []);
+  const unreadAlertCount = parentAlerts.filter(a => !a.is_read).length;
+
+  useEffect(() => { loadData(); loadAlerts(); }, []);
+
+  const loadAlerts = async () => {
+    try {
+      const { data } = await supabase
+        .from("parent_alerts")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (data) setParentAlerts(data as any);
+    } catch (e) { console.warn("Failed to load alerts:", e); }
+  };
+
+  const markAlertRead = async (alertId: string) => {
+    await supabase.from("parent_alerts").update({ is_read: true }).eq("id", alertId);
+    setParentAlerts(prev => prev.map(a => a.id === alertId ? { ...a, is_read: true } : a));
+  };
+
+  const markAllRead = async () => {
+    const unread = parentAlerts.filter(a => !a.is_read);
+    if (unread.length === 0) return;
+    await supabase.from("parent_alerts").update({ is_read: true }).in("id", unread.map(a => a.id));
+    setParentAlerts(prev => prev.map(a => ({ ...a, is_read: true })));
+  };
 
   // Load safety alerts from localStorage on mount + real-time via eventBus
   useEffect(() => {
