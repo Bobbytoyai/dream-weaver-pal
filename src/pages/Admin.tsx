@@ -2320,12 +2320,7 @@ const Admin = () => {
         </div>
 
         <p className="text-[10px] text-white/20 text-center">Les données embarquées (Interactions, QA, Blagues, Histoires, Personnalité) sont en lecture seule. Le Cloud KB est modifiable.</p>
-      <AdminDetailDialog
-        item={detailItem}
-        onClose={() => setDetailItem(null)}
-        onSave={handleDetailSave}
-        onDelete={handleDetailDelete}
-      />
+        {detailPortal}
       </div>
     </div>
   );
