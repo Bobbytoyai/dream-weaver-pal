@@ -279,6 +279,136 @@ const Admin = () => {
   const [editingStoreItem, setEditingStoreItem] = useState<Partial<StoreContentItem> | null>(null);
   const [savingStoreItem, setSavingStoreItem] = useState(false);
   const [liveInstallCounts, setLiveInstallCounts] = useState<Record<string, number>>({});
+  const [detailItem, setDetailItem] = useState<DetailItem | null>(null);
+
+  // ─── Detail dialog helpers ─────────────────────────────────────
+  const openInteractionDetail = (interaction: BobbyInteraction) => {
+    setDetailItem({
+      type: "interaction",
+      title: interaction.child_input.slice(0, 60),
+      emoji: "🧠",
+      fields: [
+        { key: "child_input", label: "Question de l'enfant", value: interaction.child_input, type: "textarea" },
+        { key: "ai_response", label: "Réponse de Bobby", value: interaction.ai_response, type: "textarea" },
+        { key: "category", label: "Catégorie", value: interaction.category, type: "select", options: ALL_DB_CATEGORIES },
+        { key: "emotion", label: "Émotion", value: interaction.emotion, type: "text" },
+        { key: "age", label: "Âge cible", value: interaction.age, type: "number" },
+        { key: "difficulty_level", label: "Niveau difficulté", value: interaction.difficulty_level, type: "number" },
+        { key: "keywords", label: "Mots-clés", value: [interaction.category, interaction.emotion], type: "tags" },
+      ],
+      meta: [
+        { label: "Âge", value: `${interaction.age} ans`, color: "bg-purple-500/20 text-purple-300" },
+        { label: "Émotion", value: interaction.emotion, color: "bg-pink-500/20 text-pink-300" },
+        { label: "Cat.", value: interaction.category, color: "bg-cyan-500/20 text-cyan-300" },
+      ],
+    });
+  };
+
+  const openStoreDetail = (item: StoreContentItem) => {
+    setDetailItem({
+      type: "store",
+      title: item.name,
+      emoji: item.emoji,
+      id: item.id,
+      fields: [
+        { key: "name", label: "Nom", value: item.name, type: "text" },
+        { key: "slug", label: "Slug", value: item.slug, type: "text" },
+        { key: "emoji", label: "Emoji", value: item.emoji, type: "text" },
+        { key: "description", label: "Description", value: item.description, type: "textarea" },
+        { key: "category", label: "Catégorie", value: item.category, type: "select", options: ["jeux", "educatif", "histoires", "blagues"] },
+        { key: "age_min", label: "Âge min", value: item.age_min, type: "number" },
+        { key: "age_max", label: "Âge max", value: item.age_max, type: "number" },
+        { key: "tags", label: "Tags", value: item.tags, type: "tags" },
+        { key: "size_label", label: "Taille", value: item.size_label, type: "text" },
+        { key: "is_new", label: "Nouveau", value: item.is_new, type: "boolean" },
+        { key: "is_popular", label: "Populaire", value: item.is_popular, type: "boolean" },
+        { key: "is_featured", label: "Featured", value: item.is_featured, type: "boolean" },
+        { key: "is_active", label: "Actif", value: item.is_active, type: "boolean" },
+      ],
+      meta: [
+        { label: "Catégorie", value: item.category, color: "bg-emerald-500/20 text-emerald-300" },
+        { label: "Âge", value: `${item.age_min}-${item.age_max}`, color: "bg-blue-500/20 text-blue-300" },
+        { label: "Installs", value: `${liveInstallCounts[item.id] || 0}`, color: "bg-amber-500/20 text-amber-300" },
+      ],
+    });
+  };
+
+  const openKBDetail = (entry: KBEntry) => {
+    setDetailItem({
+      type: "kb",
+      title: entry.question.slice(0, 60),
+      emoji: "☁️",
+      id: entry.id,
+      fields: [
+        { key: "question", label: "Question / Déclencheur", value: entry.question, type: "textarea" },
+        { key: "answer", label: "Réponse de Bobby", value: entry.answer, type: "textarea" },
+        { key: "keywords", label: "Mots-clés", value: entry.keywords, type: "tags" },
+        { key: "category", label: "Catégorie", value: entry.category, type: "select", options: ALL_DB_CATEGORIES },
+        { key: "emotion", label: "Émotion", value: entry.emotion, type: "text" },
+        { key: "priority", label: "Priorité (1-10)", value: entry.priority, type: "number" },
+        { key: "age_min", label: "Âge min", value: entry.age_min, type: "number" },
+        { key: "age_max", label: "Âge max", value: entry.age_max, type: "number" },
+        { key: "is_active", label: "Actif", value: entry.is_active, type: "boolean" },
+      ],
+      meta: [
+        { label: "Priorité", value: `P${entry.priority}`, color: "bg-amber-500/20 text-amber-300" },
+        { label: "Utilisé", value: `${entry.usage_count}×`, color: "bg-green-500/20 text-green-300" },
+      ],
+    });
+  };
+
+  const handleDetailSave = async (type: string, id: string | undefined, values: Record<string, any>) => {
+    if (type === "interaction") {
+      // Save interaction as new KB entry so Bobby remembers
+      const { error } = await supabase.from("knowledge_base").insert({
+        question: values.child_input,
+        answer: values.ai_response,
+        category: values.category || "général",
+        keywords: values.keywords || [],
+        priority: values.difficulty_level || 5,
+        age_min: values.age || 3,
+        age_max: Math.min((values.age || 7) + 3, 12),
+        emotion: values.emotion || "happy",
+        is_active: true,
+      });
+      if (error) toast.error(error.message);
+      else { toast.success("Sauvegardé dans la base Bobby !"); fetchEntries(); }
+    } else if (type === "store" && id) {
+      const { error } = await supabase.from("store_content").update({
+        name: values.name, slug: values.slug, emoji: values.emoji,
+        description: values.description, category: values.category,
+        age_min: values.age_min, age_max: values.age_max,
+        tags: values.tags, size_label: values.size_label,
+        is_new: values.is_new, is_popular: values.is_popular,
+        is_featured: values.is_featured, is_active: values.is_active,
+      }).eq("id", id);
+      if (error) toast.error(error.message);
+      else { toast.success("Store mis à jour !"); fetchStoreItems(); }
+    } else if (type === "kb" && id) {
+      const { error } = await supabase.from("knowledge_base").update({
+        question: values.question, answer: values.answer,
+        keywords: values.keywords, category: values.category,
+        emotion: values.emotion, priority: values.priority,
+        age_min: values.age_min, age_max: values.age_max,
+        is_active: values.is_active,
+      } as any).eq("id", id);
+      if (error) toast.error(error.message);
+      else { toast.success("Mis à jour !"); fetchEntries(); }
+    }
+    setDetailItem(null);
+  };
+
+  const handleDetailDelete = async (type: string, id: string) => {
+    if (!confirm("Supprimer ?")) return;
+    if (type === "store") {
+      await supabase.from("store_content").delete().eq("id", id);
+      toast.success("Supprimé"); fetchStoreItems();
+    } else if (type === "kb") {
+      await supabase.from("knowledge_base").delete().eq("id", id);
+      toast.success("Supprimé"); fetchEntries();
+    }
+    setDetailItem(null);
+  };
 
   // 10K interactions (lazy loaded)
   const [interactions, setInteractions] = useState<BobbyInteraction[] | null>(null);
