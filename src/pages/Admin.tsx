@@ -11,12 +11,62 @@ import {
   ArrowLeft, Plus, Pencil, Trash2, Search, Brain, Lock,
   MessageSquare, BookOpen, Laugh, Gamepad2, Heart, Music,
   Star, Sparkles, Globe, Microscope, TreePine, Dog,
-  GraduationCap, HelpCircle, LayoutGrid, List, ChevronRight,
+  GraduationCap, HelpCircle, LayoutGrid, ChevronRight,
+  Dumbbell, Lightbulb, Home, Utensils, Palette, Cpu,
+  CloudLightning, Eye, Users, Zap,
 } from "lucide-react";
+
+// Lazy import — the 10K file is huge, only load when needed
+import type { BobbyInteraction } from "@/lib/bobby_interactions_10k";
+import { BLAGUES } from "@/lib/bobby-content/blagues";
+import { HISTOIRES } from "@/lib/bobby-content/histoires";
+import { QA_DATABASE } from "@/lib/qa-database";
+import {
+  BOBBY_PERSONALITY,
+  BOBBY_NATURAL_REACTIONS,
+  SILENCE_RELAUNCHES,
+  WELCOME_PHRASES,
+  FAREWELL_PHRASES,
+} from "@/lib/bobby-content/cerveau";
 
 const ACCESS_CODE = "bobby2026";
 
-// ─── Category system ───────────────────────────────────────────────────
+// ─── 10K Interaction categories ─────────────────────────────────────
+const INTERACTION_CATEGORIES: {
+  id: string;
+  label: string;
+  icon: typeof Brain;
+  color: string;
+  bgColor: string;
+  emoji: string;
+}[] = [
+  { id: "emotion", label: "Émotions", icon: Heart, color: "text-pink-400", bgColor: "bg-pink-500/20", emoji: "💛" },
+  { id: "famille", label: "Famille", icon: Home, color: "text-rose-400", bgColor: "bg-rose-500/20", emoji: "👨‍👩‍👧" },
+  { id: "animaux", label: "Animaux", icon: Dog, color: "text-amber-400", bgColor: "bg-amber-500/20", emoji: "🐾" },
+  { id: "nature", label: "Nature", icon: TreePine, color: "text-green-400", bgColor: "bg-green-500/20", emoji: "🌿" },
+  { id: "sport", label: "Sport", icon: Dumbbell, color: "text-blue-400", bgColor: "bg-blue-500/20", emoji: "⚽" },
+  { id: "musique", label: "Musique", icon: Music, color: "text-indigo-400", bgColor: "bg-indigo-500/20", emoji: "🎵" },
+  { id: "humour", label: "Humour", icon: Laugh, color: "text-yellow-400", bgColor: "bg-yellow-500/20", emoji: "😂" },
+  { id: "apprentissage", label: "Apprentissage", icon: GraduationCap, color: "text-cyan-400", bgColor: "bg-cyan-500/20", emoji: "📚" },
+  { id: "ecole", label: "École", icon: GraduationCap, color: "text-teal-400", bgColor: "bg-teal-500/20", emoji: "🏫" },
+  { id: "jeu", label: "Jeux", icon: Gamepad2, color: "text-purple-400", bgColor: "bg-purple-500/20", emoji: "🎮" },
+  { id: "imagination", label: "Imagination", icon: Lightbulb, color: "text-orange-400", bgColor: "bg-orange-500/20", emoji: "💡" },
+  { id: "reve", label: "Rêves", icon: CloudLightning, color: "text-violet-400", bgColor: "bg-violet-500/20", emoji: "🌙" },
+  { id: "peur", label: "Peurs", icon: Eye, color: "text-red-400", bgColor: "bg-red-500/20", emoji: "😨" },
+  { id: "sante", label: "Santé", icon: Heart, color: "text-emerald-400", bgColor: "bg-emerald-500/20", emoji: "🩺" },
+  { id: "questions_absurdes", label: "Questions Absurdes", icon: HelpCircle, color: "text-fuchsia-400", bgColor: "bg-fuchsia-500/20", emoji: "🤪" },
+];
+
+// ─── Age groups ─────────────────────────────────────────────────────
+const AGE_GROUPS = [
+  { label: "Tous", min: 3, max: 12 },
+  { label: "3-5 ans", min: 3, max: 5 },
+  { label: "6-8 ans", min: 6, max: 8 },
+  { label: "9-10 ans", min: 9, max: 10 },
+  { label: "11-12 ans", min: 11, max: 12 },
+];
+
+// ─── Cloud KB categories ────────────────────────────────────────────
 interface CategoryConfig {
   id: string;
   label: string;
@@ -24,78 +74,22 @@ interface CategoryConfig {
   color: string;
   bgColor: string;
   description: string;
-  dbCategories: string[]; // maps to knowledge_base.category values
+  dbCategories: string[];
 }
 
 const BRAIN_SECTIONS: CategoryConfig[] = [
-  {
-    id: "emotions",
-    label: "Émotions",
-    icon: Heart,
-    color: "text-pink-400",
-    bgColor: "bg-pink-500/20",
-    description: "Réponses émotionnelles, réconfort, gestion des sentiments",
-    dbCategories: ["émotion"],
-  },
-  {
-    id: "histoires",
-    label: "Histoires",
-    icon: BookOpen,
-    color: "text-amber-400",
-    bgColor: "bg-amber-500/20",
-    description: "Contes, aventures, histoires interactives",
-    dbCategories: ["histoire"],
-  },
-  {
-    id: "blagues",
-    label: "Blagues",
-    icon: Laugh,
-    color: "text-green-400",
-    bgColor: "bg-green-500/20",
-    description: "Blagues, devinettes, humour pour enfants",
-    dbCategories: ["blague"],
-  },
-  {
-    id: "jeux",
-    label: "Jeux & Quiz",
-    icon: Gamepad2,
-    color: "text-blue-400",
-    bgColor: "bg-blue-500/20",
-    description: "Jeux vocaux, quiz, devinettes interactives",
-    dbCategories: ["jeu", "activité"],
-  },
-  {
-    id: "educatif",
-    label: "Éducatif",
-    icon: GraduationCap,
-    color: "text-cyan-400",
-    bgColor: "bg-cyan-500/20",
-    description: "Sciences, maths, géographie, histoire, nature",
-    dbCategories: ["éducatif"],
-  },
-  {
-    id: "general",
-    label: "Conversations",
-    icon: MessageSquare,
-    color: "text-purple-400",
-    bgColor: "bg-purple-500/20",
-    description: "Salutations, quotidien, discussions libres",
-    dbCategories: ["général"],
-  },
-  {
-    id: "chansons",
-    label: "Chansons",
-    icon: Music,
-    color: "text-indigo-400",
-    bgColor: "bg-indigo-500/20",
-    description: "Comptines, chansons, musique",
-    dbCategories: ["chanson"],
-  },
+  { id: "emotions", label: "Émotions", icon: Heart, color: "text-pink-400", bgColor: "bg-pink-500/20", description: "Réponses émotionnelles, réconfort", dbCategories: ["émotion"] },
+  { id: "histoires", label: "Histoires", icon: BookOpen, color: "text-amber-400", bgColor: "bg-amber-500/20", description: "Contes, aventures interactives", dbCategories: ["histoire"] },
+  { id: "blagues", label: "Blagues", icon: Laugh, color: "text-green-400", bgColor: "bg-green-500/20", description: "Blagues, humour enfants", dbCategories: ["blague"] },
+  { id: "jeux", label: "Jeux & Quiz", icon: Gamepad2, color: "text-blue-400", bgColor: "bg-blue-500/20", description: "Jeux vocaux, quiz", dbCategories: ["jeu", "activité"] },
+  { id: "educatif", label: "Éducatif", icon: GraduationCap, color: "text-cyan-400", bgColor: "bg-cyan-500/20", description: "Sciences, maths, géographie", dbCategories: ["éducatif"] },
+  { id: "general", label: "Conversations", icon: MessageSquare, color: "text-purple-400", bgColor: "bg-purple-500/20", description: "Salutations, discussions", dbCategories: ["général"] },
+  { id: "chansons", label: "Chansons", icon: Music, color: "text-indigo-400", bgColor: "bg-indigo-500/20", description: "Comptines, musique", dbCategories: ["chanson"] },
 ];
 
 const ALL_DB_CATEGORIES = ["général", "jeu", "éducatif", "blague", "histoire", "émotion", "activité", "chanson"];
 
-// ─── Types ─────────────────────────────────────────────────────────────
+// ─── Types ─────────────────────────────────────────────────────────
 interface KBEntry {
   id: string;
   question: string;
@@ -111,77 +105,80 @@ interface KBEntry {
   created_at: string;
 }
 
-// ─── Sub-components ────────────────────────────────────────────────────
+// ─── Top-level brain sections shown as big square cards ─────────────
+type TopSection = "interactions" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud";
 
-function StatCard({ label, value, icon: Icon, color }: { label: string; value: number; icon: typeof Brain; color: string }) {
+const TOP_SECTIONS: {
+  id: TopSection;
+  label: string;
+  icon: typeof Brain;
+  color: string;
+  bgColor: string;
+  count: string;
+  desc: string;
+  emoji: string;
+}[] = [
+  { id: "interactions", label: "Interactions 10K", icon: MessageSquare, color: "text-cyan-400", bgColor: "bg-cyan-500/20", count: "10 000", desc: "Base d'interactions enfant par âge & catégorie", emoji: "🧠" },
+  { id: "qa", label: "QA Database", icon: HelpCircle, color: "text-amber-400", bgColor: "bg-amber-500/20", count: "537", desc: "Questions-réponses offline structurées", emoji: "❓" },
+  { id: "blagues", label: "Blagues", icon: Laugh, color: "text-green-400", bgColor: "bg-green-500/20", count: "47", desc: "Blagues adaptées par âge & catégorie", emoji: "😂" },
+  { id: "histoires", label: "Histoires", icon: BookOpen, color: "text-purple-400", bgColor: "bg-purple-500/20", count: "6", desc: "Contes & aventures personnalisées", emoji: "📖" },
+  { id: "cerveau", label: "Personnalité", icon: Sparkles, color: "text-pink-400", bgColor: "bg-pink-500/20", count: "5", desc: "Personnalité, réactions, phrases Bobby", emoji: "✨" },
+  { id: "cloud", label: "Cloud KB", icon: Globe, color: "text-blue-400", bgColor: "bg-blue-500/20", count: "∞", desc: "Base cloud extensible (ajout via admin)", emoji: "☁️" },
+];
+
+// ═══════════════════════════════════════════════════════════════════
+// SUB-COMPONENTS
+// ═══════════════════════════════════════════════════════════════════
+
+function SquareCard({ label, emoji, count, desc, color, bgColor, onClick }: {
+  label: string; emoji: string; count: string | number; desc: string;
+  color: string; bgColor: string; onClick: () => void;
+}) {
+  return (
+    <button onClick={onClick}
+      className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group"
+    >
+      <div className="flex items-start justify-between">
+        <span className="text-3xl">{emoji}</span>
+        <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors" />
+      </div>
+      <div>
+        <p className="text-xl font-bold text-white">{count}</p>
+        <h3 className={`text-sm font-semibold ${color} mt-0.5`}>{label}</h3>
+        <p className="text-[10px] text-white/40 mt-1 line-clamp-2">{desc}</p>
+      </div>
+    </button>
+  );
+}
+
+function InteractionCard({ interaction }: { interaction: BobbyInteraction }) {
   return (
     <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-      <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-lg ${color} flex items-center justify-center`}>
-          <Icon className="w-5 h-5 text-white" />
+      <div className="flex items-center gap-2 mb-2 flex-wrap">
+        <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-medium">{interaction.category}</span>
+        <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium">{interaction.age} ans</span>
+        <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-medium">{interaction.emotion}</span>
+        <span className="text-[10px] text-white/30 ml-auto">Niv.{interaction.difficulty_level}</span>
+      </div>
+      <div className="space-y-1.5">
+        <div className="flex gap-2">
+          <span className="text-[10px] text-blue-400 shrink-0 mt-0.5">👦</span>
+          <p className="text-sm text-white/80">{interaction.child_input}</p>
         </div>
-        <div>
-          <p className="text-2xl font-bold text-white">{value.toLocaleString()}</p>
-          <p className="text-xs text-white/50">{label}</p>
+        <div className="flex gap-2">
+          <span className="text-[10px] text-green-400 shrink-0 mt-0.5">🤖</span>
+          <p className="text-sm text-white/60">{interaction.ai_response}</p>
         </div>
       </div>
     </div>
   );
 }
 
-function CategoryCard({
-  config,
-  count,
-  activeCount,
-  onClick,
-}: {
-  config: CategoryConfig;
-  count: number;
-  activeCount: number;
-  onClick: () => void;
-}) {
-  const Icon = config.icon;
-  return (
-    <button
-      onClick={onClick}
-      className="bg-white/5 hover:bg-white/10 backdrop-blur rounded-xl p-5 border border-white/10 hover:border-white/20 transition-all duration-200 text-left group"
-    >
-      <div className="flex items-start justify-between mb-3">
-        <div className={`w-12 h-12 rounded-xl ${config.bgColor} flex items-center justify-center`}>
-          <Icon className={`w-6 h-6 ${config.color}`} />
-        </div>
-        <ChevronRight className="w-5 h-5 text-white/20 group-hover:text-white/50 transition-colors" />
-      </div>
-      <h3 className="text-white font-semibold text-sm mb-1">{config.label}</h3>
-      <p className="text-white/40 text-xs mb-3 line-clamp-2">{config.description}</p>
-      <div className="flex items-center gap-3">
-        <span className="text-lg font-bold text-white">{count}</span>
-        <span className="text-[10px] text-white/40">entrées</span>
-        {activeCount < count && (
-          <span className="text-[10px] text-amber-400/70 ml-auto">{count - activeCount} inactives</span>
-        )}
-      </div>
-    </button>
-  );
-}
-
-function EntryRow({
-  entry,
-  onToggle,
-  onEdit,
-  onDelete,
-}: {
-  entry: KBEntry;
-  onToggle: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+function EntryRow({ entry, onToggle, onEdit, onDelete }: {
+  entry: KBEntry; onToggle: () => void; onEdit: () => void; onDelete: () => void;
 }) {
   return (
-    <div
-      className={`bg-white/5 backdrop-blur rounded-xl p-4 border transition-all ${
-        entry.is_active ? "border-white/10" : "border-red-500/30 opacity-50"
-      }`}
-    >
+    <div className={`bg-white/5 backdrop-blur rounded-xl p-4 border transition-all ${entry.is_active ? "border-white/10" : "border-red-500/30 opacity-50"}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -214,30 +211,45 @@ function EntryRow({
   );
 }
 
-// ─── Main component ────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// MAIN ADMIN COMPONENT
+// ═══════════════════════════════════════════════════════════════════
 
 const Admin = () => {
   const navigate = useNavigate();
   const [authenticated, setAuthenticated] = useState(false);
   const [code, setCode] = useState("");
+
+  // Cloud KB
   const [entries, setEntries] = useState<KBEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [activeSection, setActiveSection] = useState<string | null>(null);
   const [editingEntry, setEditingEntry] = useState<Partial<KBEntry> | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Navigation
+  const [topSection, setTopSection] = useState<TopSection | null>(null);
+  const [interactionCat, setInteractionCat] = useState<string | null>(null);
+  const [interactionAge, setInteractionAge] = useState<{ min: number; max: number }>({ min: 3, max: 12 });
+  const [cloudSection, setCloudSection] = useState<string | null>(null);
+
+  // 10K interactions (lazy loaded)
+  const [interactions, setInteractions] = useState<BobbyInteraction[] | null>(null);
+  const [loadingInteractions, setLoadingInteractions] = useState(false);
+
+  const loadInteractions = useCallback(async () => {
+    if (interactions) return;
+    setLoadingInteractions(true);
+    const { BOBBY_INTERACTIONS } = await import("@/lib/bobby_interactions_10k");
+    setInteractions(BOBBY_INTERACTIONS);
+    setLoadingInteractions(false);
+  }, [interactions]);
+
   const fetchEntries = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("knowledge_base")
-      .select("*")
-      .order("priority", { ascending: false });
-    if (error) {
-      toast.error("Erreur chargement: " + error.message);
-    } else {
-      setEntries((data as unknown as KBEntry[]) || []);
-    }
+    const { data, error } = await supabase.from("knowledge_base").select("*").order("priority", { ascending: false });
+    if (error) toast.error("Erreur: " + error.message);
+    else setEntries((data as unknown as KBEntry[]) || []);
     setLoading(false);
   }, []);
 
@@ -245,49 +257,71 @@ const Admin = () => {
     if (authenticated) fetchEntries();
   }, [authenticated, fetchEntries]);
 
-  // ─── Derived data ───
+  // ─── Derived ───
   const categoryCounts = useMemo(() => {
     const counts: Record<string, { total: number; active: number }> = {};
-    for (const section of BRAIN_SECTIONS) {
-      const matching = entries.filter(e => section.dbCategories.includes(e.category));
-      counts[section.id] = {
-        total: matching.length,
-        active: matching.filter(e => e.is_active).length,
-      };
+    for (const s of BRAIN_SECTIONS) {
+      const m = entries.filter(e => s.dbCategories.includes(e.category));
+      counts[s.id] = { total: m.length, active: m.filter(e => e.is_active).length };
     }
     return counts;
   }, [entries]);
 
-  const currentSection = BRAIN_SECTIONS.find(s => s.id === activeSection);
+  // QA grouped by intent
+  const qaByIntent = useMemo(() => {
+    const groups: Record<string, typeof QA_DATABASE> = {};
+    for (const entry of QA_DATABASE) {
+      const intent = entry.intent || "OTHER";
+      if (!groups[intent]) groups[intent] = [];
+      groups[intent].push(entry);
+    }
+    return Object.entries(groups).sort((a, b) => b[1].length - a[1].length);
+  }, []);
 
-  const sectionEntries = useMemo(() => {
-    if (!currentSection) return [];
-    let list = entries.filter(e => currentSection.dbCategories.includes(e.category));
+  // Blagues grouped by category
+  const blaguesByCategorie = useMemo(() => {
+    const groups: Record<string, typeof BLAGUES> = {};
+    for (const b of BLAGUES) {
+      if (!groups[b.categorie]) groups[b.categorie] = [];
+      groups[b.categorie].push(b);
+    }
+    return Object.entries(groups);
+  }, []);
+
+  const currentCloudSection = BRAIN_SECTIONS.find(s => s.id === cloudSection);
+
+  const cloudEntries = useMemo(() => {
+    if (!currentCloudSection) return [];
+    let list = entries.filter(e => currentCloudSection.dbCategories.includes(e.category));
     if (search.trim()) {
       const s = search.toLowerCase();
-      list = list.filter(e =>
-        e.question.toLowerCase().includes(s) ||
-        e.answer.toLowerCase().includes(s) ||
-        e.keywords.some(k => k.toLowerCase().includes(s))
-      );
+      list = list.filter(e => e.question.toLowerCase().includes(s) || e.answer.toLowerCase().includes(s));
     }
     return list;
-  }, [entries, currentSection, search]);
+  }, [entries, currentCloudSection, search]);
 
-  const globalSearchResults = useMemo(() => {
-    if (!search.trim() || activeSection) return [];
-    const s = search.toLowerCase();
-    return entries.filter(e =>
-      e.question.toLowerCase().includes(s) ||
-      e.answer.toLowerCase().includes(s) ||
-      e.keywords.some(k => k.toLowerCase().includes(s))
-    ).slice(0, 50);
-  }, [entries, search, activeSection]);
+  // Filtered interactions
+  const filteredInteractions = useMemo(() => {
+    if (!interactions || !interactionCat) return [];
+    return interactions
+      .filter(i => i.category === interactionCat && i.age >= interactionAge.min && i.age <= interactionAge.max)
+      .slice(0, 100); // paginate to 100
+  }, [interactions, interactionCat, interactionAge]);
+
+  // Interaction category counts
+  const interactionCategoryCounts = useMemo(() => {
+    if (!interactions) return {};
+    const counts: Record<string, number> = {};
+    for (const i of interactions) {
+      counts[i.category] = (counts[i.category] || 0) + 1;
+    }
+    return counts;
+  }, [interactions]);
 
   // ─── Handlers ───
   const handleSave = async () => {
     if (!editingEntry?.question?.trim() || !editingEntry?.answer?.trim()) {
-      toast.error("Question et réponse sont requis");
+      toast.error("Question et réponse requis");
       return;
     }
     setSaving(true);
@@ -301,15 +335,12 @@ const Admin = () => {
       age_min: editingEntry.age_min || 3,
       age_max: editingEntry.age_max || 12,
     };
-
     if (editingEntry.id) {
       const { error } = await supabase.from("knowledge_base").update(payload as any).eq("id", editingEntry.id);
-      if (error) toast.error(error.message);
-      else toast.success("Mis à jour !");
+      if (error) toast.error(error.message); else toast.success("Mis à jour !");
     } else {
       const { error } = await supabase.from("knowledge_base").insert(payload as any);
-      if (error) toast.error(error.message);
-      else toast.success("Ajouté !");
+      if (error) toast.error(error.message); else toast.success("Ajouté !");
     }
     setEditingEntry(null);
     setSaving(false);
@@ -317,13 +348,10 @@ const Admin = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Supprimer cette entrée ?")) return;
+    if (!confirm("Supprimer ?")) return;
     const { error } = await supabase.from("knowledge_base").delete().eq("id", id);
     if (error) toast.error(error.message);
-    else {
-      toast.success("Supprimé");
-      fetchEntries();
-    }
+    else { toast.success("Supprimé"); fetchEntries(); }
   };
 
   const handleToggleActive = async (entry: KBEntry) => {
@@ -331,7 +359,15 @@ const Admin = () => {
     setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, is_active: !e.is_active } : e));
   };
 
-  // ─── Login ──────────────────────────────────────────────────────────
+  const goBack = () => {
+    if (editingEntry) { setEditingEntry(null); return; }
+    if (interactionCat) { setInteractionCat(null); setSearch(""); return; }
+    if (cloudSection) { setCloudSection(null); setSearch(""); return; }
+    if (topSection) { setTopSection(null); setSearch(""); return; }
+    navigate("/");
+  };
+
+  // ─── Login ─────────────────────────────────────────────────────────
   if (!authenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] flex items-center justify-center p-4">
@@ -339,34 +375,18 @@ const Admin = () => {
           <Lock className="w-12 h-12 text-purple-400 mx-auto" />
           <h1 className="text-xl font-bold text-white">Admin Bobby</h1>
           <p className="text-white/60 text-sm">Code d'accès administrateur</p>
-          <Input
-            type="password"
-            value={code}
-            onChange={e => setCode(e.target.value)}
-            placeholder="••••••••"
+          <Input type="password" value={code} onChange={e => setCode(e.target.value)} placeholder="••••••••"
             className="bg-white/10 border-white/20 text-white text-center text-lg tracking-widest"
-            onKeyDown={e => {
-              if (e.key === "Enter") {
-                if (code === ACCESS_CODE) setAuthenticated(true);
-                else toast.error("Code incorrect");
-              }
-            }}
+            onKeyDown={e => { if (e.key === "Enter") { code === ACCESS_CODE ? setAuthenticated(true) : toast.error("Code incorrect"); } }}
           />
-          <Button
-            onClick={() => {
-              if (code === ACCESS_CODE) setAuthenticated(true);
-              else toast.error("Code incorrect");
-            }}
-            className="w-full bg-purple-600 hover:bg-purple-700"
-          >
-            Accéder
-          </Button>
+          <Button onClick={() => { code === ACCESS_CODE ? setAuthenticated(true) : toast.error("Code incorrect"); }}
+            className="w-full bg-purple-600 hover:bg-purple-700">Accéder</Button>
         </div>
       </div>
     );
   }
 
-  // ─── Edit form ──────────────────────────────────────────────────────
+  // ─── Edit form ─────────────────────────────────────────────────────
   if (editingEntry) {
     const kwString = (editingEntry.keywords || []).join(", ");
     return (
@@ -375,97 +395,55 @@ const Admin = () => {
           <Button variant="ghost" onClick={() => setEditingEntry(null)} className="text-white/70">
             <ArrowLeft className="w-4 h-4 mr-2" /> Retour
           </Button>
-          <h2 className="text-xl font-bold text-white">
-            {editingEntry.id ? "Modifier" : "Nouvelle"} interaction
-          </h2>
-
+          <h2 className="text-xl font-bold text-white">{editingEntry.id ? "Modifier" : "Nouvelle"} interaction</h2>
           <div className="space-y-4 bg-white/5 backdrop-blur rounded-xl p-5 border border-white/10">
             <div>
               <label className="text-white/60 text-xs font-medium mb-1 block">Question / Déclencheur</label>
-              <Textarea
-                value={editingEntry.question || ""}
-                onChange={e => setEditingEntry({ ...editingEntry, question: e.target.value })}
-                placeholder="Ex: C'est quoi un dinosaure ?"
-                className="bg-white/10 border-white/20 text-white min-h-[80px]"
-              />
+              <Textarea value={editingEntry.question || ""} onChange={e => setEditingEntry({ ...editingEntry, question: e.target.value })}
+                placeholder="Ex: C'est quoi un dinosaure ?" className="bg-white/10 border-white/20 text-white min-h-[80px]" />
             </div>
-
             <div>
               <label className="text-white/60 text-xs font-medium mb-1 block">Mots-clés (virgules)</label>
-              <Input
-                value={kwString}
-                onChange={e => setEditingEntry({ ...editingEntry, keywords: e.target.value.split(",").map(k => k.trim()).filter(Boolean) })}
-                placeholder="dinosaure, dino, préhistoire"
-                className="bg-white/10 border-white/20 text-white"
-              />
+              <Input value={kwString} onChange={e => setEditingEntry({ ...editingEntry, keywords: e.target.value.split(",").map(k => k.trim()).filter(Boolean) })}
+                placeholder="dinosaure, dino" className="bg-white/10 border-white/20 text-white" />
             </div>
-
             <div>
               <label className="text-white/60 text-xs font-medium mb-1 block">Réponse de Bobby</label>
-              <Textarea
-                value={editingEntry.answer || ""}
-                onChange={e => setEditingEntry({ ...editingEntry, answer: e.target.value })}
-                placeholder="Les dinosaures étaient des animaux géants…"
-                className="bg-white/10 border-white/20 text-white min-h-[100px]"
-              />
+              <Textarea value={editingEntry.answer || ""} onChange={e => setEditingEntry({ ...editingEntry, answer: e.target.value })}
+                placeholder="Les dinosaures étaient…" className="bg-white/10 border-white/20 text-white min-h-[100px]" />
             </div>
-
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-white/60 text-xs font-medium mb-1 block">Catégorie</label>
-                <Select
-                  value={editingEntry.category || "général"}
-                  onValueChange={v => setEditingEntry({ ...editingEntry, category: v })}
-                >
-                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ALL_DB_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                  </SelectContent>
+                <Select value={editingEntry.category || "général"} onValueChange={v => setEditingEntry({ ...editingEntry, category: v })}>
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white"><SelectValue /></SelectTrigger>
+                  <SelectContent>{ALL_DB_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
                 <label className="text-white/60 text-xs font-medium mb-1 block">Priorité (1-10)</label>
-                <Input
-                  type="number" min={1} max={10}
-                  value={editingEntry.priority || 5}
+                <Input type="number" min={1} max={10} value={editingEntry.priority || 5}
                   onChange={e => setEditingEntry({ ...editingEntry, priority: Number(e.target.value) })}
-                  className="bg-white/10 border-white/20 text-white"
-                />
+                  className="bg-white/10 border-white/20 text-white" />
               </div>
             </div>
-
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-white/60 text-xs font-medium mb-1 block">Âge min</label>
-                <Input
-                  type="number" min={3} max={12}
-                  value={editingEntry.age_min || 3}
-                  onChange={e => setEditingEntry({ ...editingEntry, age_min: Number(e.target.value) })}
-                  className="bg-white/10 border-white/20 text-white"
-                />
+                <Input type="number" min={3} max={12} value={editingEntry.age_min || 3}
+                  onChange={e => setEditingEntry({ ...editingEntry, age_min: Number(e.target.value) })} className="bg-white/10 border-white/20 text-white" />
               </div>
               <div>
                 <label className="text-white/60 text-xs font-medium mb-1 block">Âge max</label>
-                <Input
-                  type="number" min={3} max={12}
-                  value={editingEntry.age_max || 12}
-                  onChange={e => setEditingEntry({ ...editingEntry, age_max: Number(e.target.value) })}
-                  className="bg-white/10 border-white/20 text-white"
-                />
+                <Input type="number" min={3} max={12} value={editingEntry.age_max || 12}
+                  onChange={e => setEditingEntry({ ...editingEntry, age_max: Number(e.target.value) })} className="bg-white/10 border-white/20 text-white" />
               </div>
             </div>
-
             <div className="flex items-center gap-2">
-              <Switch
-                checked={editingEntry.is_active !== false}
-                onCheckedChange={v => setEditingEntry({ ...editingEntry, is_active: v })}
-              />
+              <Switch checked={editingEntry.is_active !== false} onCheckedChange={v => setEditingEntry({ ...editingEntry, is_active: v })} />
               <span className="text-white/60 text-sm">Actif</span>
             </div>
           </div>
-
           <Button onClick={handleSave} disabled={saving} className="w-full bg-green-600 hover:bg-green-700 text-white">
             {saving ? "Enregistrement..." : "Enregistrer"}
           </Button>
@@ -474,84 +452,95 @@ const Admin = () => {
     );
   }
 
-  // ─── Category detail view ──────────────────────────────────────────
-  if (activeSection && currentSection) {
-    const Icon = currentSection.icon;
+  // ═══════════════════════════════════════════════════════════════════
+  // INTERACTIONS 10K — Category detail (age filter + list)
+  // ═══════════════════════════════════════════════════════════════════
+  if (topSection === "interactions" && interactionCat) {
+    const catConfig = INTERACTION_CATEGORIES.find(c => c.id === interactionCat);
+    const totalForCat = interactions?.filter(i => i.category === interactionCat).length || 0;
+
     return (
       <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={() => { setActiveSection(null); setSearch(""); }} className="text-white/70 p-2">
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div className={`w-10 h-10 rounded-xl ${currentSection.bgColor} flex items-center justify-center`}>
-                <Icon className={`w-5 h-5 ${currentSection.color}`} />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-white">{currentSection.label}</h1>
-                <p className="text-white/40 text-xs">{sectionEntries.length} entrées</p>
-              </div>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+            <span className="text-2xl">{catConfig?.emoji}</span>
+            <div>
+              <h1 className="text-xl font-bold text-white">{catConfig?.label}</h1>
+              <p className="text-white/40 text-xs">{totalForCat} interactions • {filteredInteractions.length} affichées</p>
             </div>
-            <Button
-              onClick={() => setEditingEntry({
-                keywords: [],
-                category: currentSection.dbCategories[0],
-                priority: 5,
-                is_active: true,
-                age_min: 3,
-                age_max: 12,
-              })}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              <Plus className="w-4 h-4 mr-1" /> Ajouter
-            </Button>
+          </div>
+
+          {/* Age filter */}
+          <div className="flex gap-2 flex-wrap">
+            {AGE_GROUPS.map(g => (
+              <button key={g.label} onClick={() => setInteractionAge({ min: g.min, max: g.max })}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  interactionAge.min === g.min && interactionAge.max === g.max
+                    ? "bg-cyan-500/30 text-cyan-300 border border-cyan-500/40"
+                    : "bg-white/5 text-white/50 border border-white/10 hover:bg-white/10"
+                }`}
+              >{g.label}</button>
+            ))}
           </div>
 
           {/* Search */}
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-            <Input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder={`Rechercher dans ${currentSection.label.toLowerCase()}…`}
-              className="bg-white/10 border-white/20 text-white pl-9"
-            />
+            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
+              className="bg-white/10 border-white/20 text-white pl-9" />
           </div>
 
-          {/* Entries */}
-          {loading ? (
-            <div className="text-center text-white/50 py-12">Chargement…</div>
-          ) : sectionEntries.length === 0 ? (
-            <div className="text-center text-white/40 py-16">
-              <Icon className={`w-12 h-12 mx-auto mb-3 ${currentSection.color} opacity-30`} />
-              <p className="text-sm">Aucune entrée {search ? "trouvée" : "dans cette catégorie"}</p>
-              <Button
-                variant="ghost"
-                className="mt-3 text-purple-400"
-                onClick={() => setEditingEntry({
-                  keywords: [],
-                  category: currentSection.dbCategories[0],
-                  priority: 5,
-                  is_active: true,
-                  age_min: 3,
-                  age_max: 12,
-                })}
-              >
-                <Plus className="w-4 h-4 mr-1" /> Créer la première
-              </Button>
+          {/* Interaction list */}
+          <div className="space-y-2">
+            {(search.trim()
+              ? filteredInteractions.filter(i => i.child_input.toLowerCase().includes(search.toLowerCase()) || i.ai_response.toLowerCase().includes(search.toLowerCase()))
+              : filteredInteractions
+            ).map((interaction, idx) => (
+              <InteractionCard key={idx} interaction={interaction} />
+            ))}
+            {filteredInteractions.length === 0 && (
+              <p className="text-center text-white/40 py-12 text-sm">Aucune interaction pour ce filtre</p>
+            )}
+            {filteredInteractions.length >= 100 && (
+              <p className="text-center text-white/30 text-xs py-2">Affichage limité à 100 résultats</p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // INTERACTIONS 10K — Category grid
+  // ═══════════════════════════════════════════════════════════════════
+  if (topSection === "interactions") {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+            <span className="text-2xl">🧠</span>
+            <div>
+              <h1 className="text-xl font-bold text-white">Interactions 10K</h1>
+              <p className="text-white/40 text-xs">10 000 interactions par catégorie & âge</p>
             </div>
+          </div>
+
+          {loadingInteractions ? (
+            <div className="text-center text-white/50 py-12">Chargement des 10 000 interactions…</div>
           ) : (
-            <div className="space-y-2">
-              {sectionEntries.map(entry => (
-                <EntryRow
-                  key={entry.id}
-                  entry={entry}
-                  onToggle={() => handleToggleActive(entry)}
-                  onEdit={() => setEditingEntry(entry)}
-                  onDelete={() => handleDelete(entry.id)}
-                />
+            <div className="grid grid-cols-3 gap-3">
+              {INTERACTION_CATEGORIES.map(cat => (
+                <button key={cat.id} onClick={() => { setInteractionCat(cat.id); setSearch(""); }}
+                  className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group"
+                >
+                  <span className="text-2xl">{cat.emoji}</span>
+                  <div>
+                    <p className="text-lg font-bold text-white">{interactionCategoryCounts[cat.id] || 0}</p>
+                    <h3 className={`text-[11px] font-semibold ${cat.color}`}>{cat.label}</h3>
+                  </div>
+                </button>
               ))}
             </div>
           )}
@@ -560,109 +549,358 @@ const Admin = () => {
     );
   }
 
-  // ─── Dashboard (main view) ─────────────────────────────────────────
-  const totalActive = entries.filter(e => e.is_active).length;
-  const totalUsage = entries.reduce((sum, e) => sum + (e.usage_count || 0), 0);
+  // ═══════════════════════════════════════════════════════════════════
+  // QA DATABASE
+  // ═══════════════════════════════════════════════════════════════════
+  if (topSection === "qa") {
+    const filteredQA = search.trim()
+      ? QA_DATABASE.filter(e =>
+          e.triggers.some(t => t.toLowerCase().includes(search.toLowerCase())) ||
+          e.responses.some(r => r.toLowerCase().includes(search.toLowerCase()))
+        )
+      : null;
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
-      <div className="max-w-5xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" onClick={() => navigate("/")} className="text-white/70 p-2">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="w-11 h-11 rounded-xl bg-purple-500/20 flex items-center justify-center">
-              <Brain className="w-6 h-6 text-purple-400" />
-            </div>
+            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+            <span className="text-2xl">❓</span>
             <div>
-              <h1 className="text-xl font-bold text-white">Cerveau Bobby</h1>
-              <p className="text-white/40 text-xs">Centre de gestion de l'intelligence</p>
+              <h1 className="text-xl font-bold text-white">QA Database</h1>
+              <p className="text-white/40 text-xs">{QA_DATABASE.length} entrées • {qaByIntent.length} intents</p>
             </div>
           </div>
-          <Button
-            onClick={() => setEditingEntry({ keywords: [], category: "général", priority: 5, is_active: true, age_min: 3, age_max: 12 })}
-            className="bg-purple-600 hover:bg-purple-700"
-          >
-            <Plus className="w-4 h-4 mr-1" /> Ajouter
-          </Button>
-        </div>
 
-        {/* Global search */}
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-          <Input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Rechercher dans tout le cerveau…"
-            className="bg-white/10 border-white/20 text-white pl-9"
-          />
-        </div>
-
-        {/* Global search results */}
-        {globalSearchResults.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-white/50 text-xs font-medium">{globalSearchResults.length} résultats</p>
-            {globalSearchResults.map(entry => (
-              <EntryRow
-                key={entry.id}
-                entry={entry}
-                onToggle={() => handleToggleActive(entry)}
-                onEdit={() => setEditingEntry(entry)}
-                onDelete={() => handleDelete(entry.id)}
-              />
-            ))}
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher dans les QA…"
+              className="bg-white/10 border-white/20 text-white pl-9" />
           </div>
-        )}
 
-        {/* Stats overview */}
-        {!search && (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <StatCard label="Total entrées" value={entries.length} icon={Brain} color="bg-purple-500/30" />
-              <StatCard label="Actives" value={totalActive} icon={Sparkles} color="bg-green-500/30" />
-              <StatCard label="Catégories" value={BRAIN_SECTIONS.length} icon={LayoutGrid} color="bg-blue-500/30" />
-              <StatCard label="Utilisations" value={totalUsage} icon={Star} color="bg-amber-500/30" />
+          {filteredQA ? (
+            <div className="space-y-2">
+              <p className="text-white/50 text-xs">{filteredQA.length} résultats</p>
+              {filteredQA.slice(0, 50).map((entry, idx) => (
+                <div key={idx} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">{entry.intent}</span>
+                  </div>
+                  <p className="text-xs text-white/50 mb-1">Triggers: {entry.triggers.join(", ")}</p>
+                  <p className="text-sm text-white/70">{entry.responses[0]}</p>
+                  {entry.responses.length > 1 && <p className="text-[10px] text-white/30 mt-1">+{entry.responses.length - 1} autres réponses</p>}
+                </div>
+              ))}
             </div>
-
-            {/* Offline brain stats */}
-            <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-              <h3 className="text-white/70 text-xs font-semibold mb-2 uppercase tracking-wider">Cerveau Offline (embarqué)</h3>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="text-center">
-                  <p className="text-lg font-bold text-cyan-400">10 000+</p>
-                  <p className="text-[10px] text-white/40">Interactions 10K</p>
+          ) : (
+            <div className="space-y-3">
+              {qaByIntent.map(([intent, entries]) => (
+                <div key={intent} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold">{intent}</span>
+                      <span className="text-white/40 text-xs">{entries.length} entrées</span>
+                    </div>
+                  </div>
+                  <div className="mt-2 space-y-1">
+                    {entries.slice(0, 2).map((e, i) => (
+                      <p key={i} className="text-xs text-white/50 truncate">• {e.triggers[0]} → {e.responses[0]}</p>
+                    ))}
+                    {entries.length > 2 && <p className="text-[10px] text-white/30">+{entries.length - 2} autres…</p>}
+                  </div>
                 </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-amber-400">538</p>
-                  <p className="text-[10px] text-white/40">QA Database</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-pink-400">300+</p>
-                  <p className="text-[10px] text-white/40">Blagues embarquées</p>
-                </div>
-              </div>
-              <p className="text-[10px] text-white/30 mt-2">Ces données sont embarquées dans l'app et fonctionnent sans internet. Les entrées ci-dessous (cloud) complètent le cerveau offline.</p>
+              ))}
             </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
-            {/* Category grid */}
+  // ═══════════════════════════════════════════════════════════════════
+  // BLAGUES
+  // ═══════════════════════════════════════════════════════════════════
+  if (topSection === "blagues") {
+
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+            <span className="text-2xl">😂</span>
             <div>
-              <h2 className="text-white/60 text-xs font-semibold mb-3 uppercase tracking-wider">Catégories du cerveau cloud</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {BRAIN_SECTIONS.map(section => (
-                  <CategoryCard
-                    key={section.id}
-                    config={section}
-                    count={categoryCounts[section.id]?.total ?? 0}
-                    activeCount={categoryCounts[section.id]?.active ?? 0}
-                    onClick={() => { setActiveSection(section.id); setSearch(""); }}
-                  />
+              <h1 className="text-xl font-bold text-white">Blagues</h1>
+              <p className="text-white/40 text-xs">{BLAGUES.length} blagues • {blaguesByCategorie.length} catégories</p>
+            </div>
+          </div>
+
+          {blaguesByCategorie.map(([cat, blagues]) => (
+            <div key={cat}>
+              <h3 className="text-white/60 text-xs font-semibold mb-2 uppercase tracking-wider">{cat} ({blagues.length})</h3>
+              <div className="space-y-2">
+                {blagues.map((b, i) => (
+                  <div key={i} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">{b.ageMin}-{b.ageMax} ans</span>
+                      <span className="text-[10px] text-white/30">Niv.{b.difficulte}</span>
+                    </div>
+                    <p className="text-sm text-white/80 font-medium">{b.question}</p>
+                    <p className="text-sm text-white/50 mt-1">→ {b.reponse}</p>
+                  </div>
                 ))}
               </div>
             </div>
-          </>
-        )}
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // HISTOIRES
+  // ═══════════════════════════════════════════════════════════════════
+  if (topSection === "histoires") {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+            <span className="text-2xl">📖</span>
+            <div>
+              <h1 className="text-xl font-bold text-white">Histoires</h1>
+              <p className="text-white/40 text-xs">{HISTOIRES.length} histoires embarquées</p>
+            </div>
+          </div>
+
+          {HISTOIRES.map(h => (
+            <div key={h.id} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">{h.theme}</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">{h.ageMin}-{h.ageMax} ans</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">{h.duree}</span>
+              </div>
+              <h3 className="text-white font-semibold text-sm">{h.titre}</h3>
+              <p className="text-white/40 text-xs mt-2 line-clamp-3">{h.texte.replace(/\{child_name\}/g, "[Enfant]")}</p>
+              {h.moralité && <p className="text-white/50 text-[10px] mt-2 italic">💡 {h.moralité}</p>}
+              <div className="flex gap-1 mt-2 flex-wrap">
+                {h.tags.map((t, i) => <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-white/40">{t}</span>)}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // CERVEAU / PERSONNALITÉ
+  // ═══════════════════════════════════════════════════════════════════
+  if (topSection === "cerveau") {
+    const sections = [
+      { title: "Identité", items: [
+        `Nom: ${BOBBY_PERSONALITY.name}`, `Espèce: ${BOBBY_PERSONALITY.species}`,
+        `Meilleur ami: ${BOBBY_PERSONALITY.bestFriend}`,
+        `Peurs: ${BOBBY_PERSONALITY.fears.join(", ")}`, `Passions: ${BOBBY_PERSONALITY.loves.join(", ")}`,
+        `Traits: ${BOBBY_PERSONALITY.quirks.join(", ")}`,
+      ]},
+      { title: "Phrases cultes", items: BOBBY_PERSONALITY.catchphrases },
+      { title: "Réactions positives", items: BOBBY_NATURAL_REACTIONS.goodNews },
+      { title: "Réactions négatives", items: BOBBY_NATURAL_REACTIONS.badNews },
+      { title: "Confusion", items: BOBBY_NATURAL_REACTIONS.confusion },
+      { title: "Encouragements", items: BOBBY_NATURAL_REACTIONS.encouragement },
+      { title: "Curiosité", items: BOBBY_NATURAL_REACTIONS.curiosity },
+      { title: "Transitions", items: BOBBY_NATURAL_REACTIONS.transitions },
+      { title: "Relances silence", items: SILENCE_RELAUNCHES },
+      { title: "Phrases d'accueil", items: WELCOME_PHRASES },
+      { title: "Phrases d'au revoir", items: FAREWELL_PHRASES },
+    ];
+
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+            <span className="text-2xl">✨</span>
+            <div>
+              <h1 className="text-xl font-bold text-white">Personnalité Bobby</h1>
+              <p className="text-white/40 text-xs">Tout ce qui fait Bobby unique</p>
+            </div>
+          </div>
+
+          {sections.map((section, idx) => (
+            <div key={idx} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+              <h3 className="text-white/70 text-xs font-semibold mb-3 uppercase tracking-wider">{section.title}</h3>
+              <div className="space-y-1.5">
+                {section.items.map((item, i) => (
+                  <p key={i} className="text-sm text-white/60">• {item}</p>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // CLOUD KB — Category detail
+  // ═══════════════════════════════════════════════════════════════════
+  if (topSection === "cloud" && cloudSection && currentCloudSection) {
+    const Icon = currentCloudSection.icon;
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+              <div className={`w-10 h-10 rounded-xl ${currentCloudSection.bgColor} flex items-center justify-center`}>
+                <Icon className={`w-5 h-5 ${currentCloudSection.color}`} />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-white">{currentCloudSection.label}</h1>
+                <p className="text-white/40 text-xs">{cloudEntries.length} entrées</p>
+              </div>
+            </div>
+            <Button onClick={() => setEditingEntry({ keywords: [], category: currentCloudSection.dbCategories[0], priority: 5, is_active: true, age_min: 3, age_max: 12 })}
+              className="bg-purple-600 hover:bg-purple-700"><Plus className="w-4 h-4 mr-1" /> Ajouter</Button>
+          </div>
+
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Rechercher…`}
+              className="bg-white/10 border-white/20 text-white pl-9" />
+          </div>
+
+          {loading ? (
+            <div className="text-center text-white/50 py-12">Chargement…</div>
+          ) : cloudEntries.length === 0 ? (
+            <div className="text-center text-white/40 py-16">
+              <Icon className={`w-12 h-12 mx-auto mb-3 ${currentCloudSection.color} opacity-30`} />
+              <p className="text-sm">Aucune entrée</p>
+              <Button variant="ghost" className="mt-3 text-purple-400"
+                onClick={() => setEditingEntry({ keywords: [], category: currentCloudSection.dbCategories[0], priority: 5, is_active: true, age_min: 3, age_max: 12 })}>
+                <Plus className="w-4 h-4 mr-1" /> Créer la première
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {cloudEntries.map(entry => (
+                <EntryRow key={entry.id} entry={entry} onToggle={() => handleToggleActive(entry)}
+                  onEdit={() => setEditingEntry(entry)} onDelete={() => handleDelete(entry.id)} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // CLOUD KB — Category grid
+  // ═══════════════════════════════════════════════════════════════════
+  if (topSection === "cloud") {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+              <span className="text-2xl">☁️</span>
+              <div>
+                <h1 className="text-xl font-bold text-white">Cloud Knowledge Base</h1>
+                <p className="text-white/40 text-xs">{entries.length} entrées cloud modifiables</p>
+              </div>
+            </div>
+            <Button onClick={() => setEditingEntry({ keywords: [], category: "général", priority: 5, is_active: true, age_min: 3, age_max: 12 })}
+              className="bg-purple-600 hover:bg-purple-700"><Plus className="w-4 h-4 mr-1" /> Ajouter</Button>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {BRAIN_SECTIONS.map(section => {
+              const Icon = section.icon;
+              const count = categoryCounts[section.id]?.total ?? 0;
+              return (
+                <button key={section.id} onClick={() => { setCloudSection(section.id); setSearch(""); }}
+                  className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group"
+                >
+                  <div className={`w-10 h-10 rounded-xl ${section.bgColor} flex items-center justify-center`}>
+                    <Icon className={`w-5 h-5 ${section.color}`} />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-white">{count}</p>
+                    <h3 className="text-xs font-semibold text-white/70">{section.label}</h3>
+                    <p className="text-[9px] text-white/40 mt-0.5">{section.description}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // DASHBOARD PRINCIPAL — Square cards grid
+  // ═══════════════════════════════════════════════════════════════════
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" onClick={() => navigate("/")} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+          <div className="w-11 h-11 rounded-xl bg-purple-500/20 flex items-center justify-center">
+            <Brain className="w-6 h-6 text-purple-400" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-white">Cerveau Bobby</h1>
+            <p className="text-white/40 text-xs">Tout le contenu embarqué & cloud</p>
+          </div>
+        </div>
+
+        {/* Stats bar */}
+        <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+          <div className="grid grid-cols-4 gap-3 text-center">
+            <div>
+              <p className="text-lg font-bold text-cyan-400">10 000</p>
+              <p className="text-[9px] text-white/40">Interactions</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-amber-400">{QA_DATABASE.length}</p>
+              <p className="text-[9px] text-white/40">QA Offline</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-green-400">{BLAGUES.length}</p>
+              <p className="text-[9px] text-white/40">Blagues</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-blue-400">{entries.length}</p>
+              <p className="text-[9px] text-white/40">Cloud KB</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Main grid — square cards */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {TOP_SECTIONS.map(section => (
+            <SquareCard
+              key={section.id}
+              label={section.label}
+              emoji={section.emoji}
+              count={section.id === "cloud" ? entries.length : section.count}
+              desc={section.desc}
+              color={section.color}
+              bgColor={section.bgColor}
+              onClick={() => {
+                setTopSection(section.id);
+                setSearch("");
+                if (section.id === "interactions") loadInteractions();
+              }}
+            />
+          ))}
+        </div>
+
+        <p className="text-[10px] text-white/20 text-center">Les données embarquées (Interactions, QA, Blagues, Histoires, Personnalité) sont en lecture seule. Le Cloud KB est modifiable.</p>
       </div>
     </div>
   );
