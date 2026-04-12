@@ -43,6 +43,7 @@ export default function AdminDetailDialog({ item, onClose, onSave, onDelete, onD
   const [values, setValues] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     if (!item) return;
@@ -53,6 +54,57 @@ export default function AdminDetailDialog({ item, onClose, onSave, onDelete, onD
   }, [item]);
 
   if (!item) return null;
+
+  const canGenerate = AI_GENERATABLE.includes(item.type);
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    try {
+      const context = values["theme"] || values["category"] || values["tags"]?.join(", ") || "";
+      const { data, error } = await supabase.functions.invoke("generate-content", {
+        body: { type: item.type, context },
+      });
+
+      if (error) throw error;
+      if (data?.error) {
+        if (data.error === "rate_limited") { toast.error("Trop de requêtes, réessaie dans quelques secondes"); return; }
+        if (data.error === "payment_required") { toast.error("Crédits IA épuisés"); return; }
+        throw new Error(data.error);
+      }
+
+      const gen = data.generated;
+      if (!gen) throw new Error("Pas de contenu généré");
+
+      // Map generated fields to dialog fields
+      const fieldMap: Record<string, string[]> = {
+        blague: ["question", "answer", "category", "age_min", "age_max", "tags"],
+        quiz: ["question", "choices", "correct", "explanation", "category", "age_min", "age_max", "tags"],
+        histoire: ["title", "text", "theme", "mood", "age_min", "age_max", "duration", "tags"],
+        qa: ["question", "answer", "category", "keywords", "age_min", "age_max"],
+      };
+
+      const newVals = { ...values };
+      const mappable = fieldMap[item.type] || Object.keys(gen);
+      for (const key of mappable) {
+        if (gen[key] !== undefined && values.hasOwnProperty(key)) {
+          newVals[key] = gen[key];
+        }
+        // Also try mapping to common field names
+        if (key === "text" && values.hasOwnProperty("template_text")) newVals["template_text"] = gen[key];
+        if (key === "text" && values.hasOwnProperty("full_text")) newVals["full_text"] = gen[key];
+        if (key === "text" && values.hasOwnProperty("content")) newVals["content"] = gen[key];
+      }
+
+      setValues(newVals);
+      setDirty(true);
+      toast.success("✨ Contenu généré par IA !");
+    } catch (e: any) {
+      console.error("AI generation error:", e);
+      toast.error("Erreur de génération IA");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const updateValue = (key: string, val: any) => {
     setValues(prev => ({ ...prev, [key]: val }));
