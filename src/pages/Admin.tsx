@@ -286,9 +286,14 @@ const Admin = () => {
     setLoading(false);
   }, []);
 
+  const fetchCloudStories = useCallback(async () => {
+    const { data } = await supabase.from("story_templates").select("*").order("created_at", { ascending: false });
+    setCloudStories(data || []);
+  }, []);
+
   useEffect(() => {
-    if (authenticated) fetchEntries();
-  }, [authenticated, fetchEntries]);
+    if (authenticated) { fetchEntries(); fetchCloudStories(); }
+  }, [authenticated, fetchEntries, fetchCloudStories]);
 
   // ─── Derived ───
   const categoryCounts = useMemo(() => {
