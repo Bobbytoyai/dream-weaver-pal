@@ -551,7 +551,7 @@ const Admin = () => {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // INTERACTIONS 10K — Category grid
+  // INTERACTIONS — Category grid
   // ═══════════════════════════════════════════════════════════════════
   if (topSection === "interactions") {
     return (
@@ -561,28 +561,122 @@ const Admin = () => {
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
             <span className="text-2xl">🧠</span>
             <div>
-              <h1 className="text-xl font-bold text-white">Interactions 10K</h1>
-              <p className="text-white/40 text-xs">10 000 interactions par catégorie & âge</p>
+              <h1 className="text-xl font-bold text-white">Interactions</h1>
+              <p className="text-white/40 text-xs">{interactions?.length ?? "…"} interactions par catégorie & âge</p>
             </div>
           </div>
 
           {loadingInteractions ? (
-            <div className="text-center text-white/50 py-12">Chargement des 10 000 interactions…</div>
+            <div className="text-center text-white/50 py-12">Chargement des interactions…</div>
           ) : (
             <div className="grid grid-cols-3 gap-3">
-              {INTERACTION_CATEGORIES.map(cat => (
-                <button key={cat.id} onClick={() => { setInteractionCat(cat.id); setSearch(""); }}
-                  className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group"
-                >
-                  <span className="text-2xl">{cat.emoji}</span>
-                  <div>
-                    <p className="text-lg font-bold text-white">{interactionCategoryCounts[cat.id] || 0}</p>
-                    <h3 className={`text-[11px] font-semibold ${cat.color}`}>{cat.label}</h3>
-                  </div>
-                </button>
-              ))}
+              {INTERACTION_CATEGORIES.map(cat => {
+                const count = interactionCategoryCounts[cat.id] || 0;
+                if (count === 0) return null;
+                return (
+                  <button key={cat.id} onClick={() => { setInteractionCat(cat.id); setSearch(""); }}
+                    className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group"
+                  >
+                    <span className="text-2xl">{cat.emoji}</span>
+                    <div>
+                      <p className="text-lg font-bold text-white">{count}</p>
+                      <h3 className={`text-[11px] font-semibold ${cat.color}`}>{cat.label}</h3>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // MULTI-RÉPONSES — Category grid + detail
+  // ═══════════════════════════════════════════════════════════════════
+  if (topSection === "multiresponses") {
+    // If a category is selected
+    if (interactionCat) {
+      const catEntries = BOBBY_MULTI_RESPONSES.filter(e => e.category === interactionCat);
+      const searchLower = search.toLowerCase();
+      const filtered = searchLower
+        ? catEntries.filter(e => e.input.toLowerCase().includes(searchLower) || e.responses.some(r => r.text.toLowerCase().includes(searchLower)))
+        : catEntries;
+
+      return (
+        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+          <div className="max-w-4xl mx-auto space-y-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+              <span className="text-2xl">⚡</span>
+              <div>
+                <h1 className="text-xl font-bold text-white capitalize">{interactionCat.replace(/_/g, " ")}</h1>
+                <p className="text-white/40 text-xs">{filtered.length} entrées multi-réponses</p>
+              </div>
+            </div>
+
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
+                className="bg-white/10 border-white/20 text-white pl-9" />
+            </div>
+
+            <div className="space-y-3">
+              {filtered.map((entry, idx) => (
+                <div key={idx} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300">{entry.category}</span>
+                    {entry.emotion && <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300">{entry.emotion}</span>}
+                    {entry.tags?.map((t, i) => (
+                      <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/40">{t}</span>
+                    ))}
+                  </div>
+                  <p className="text-sm text-white/80 font-medium mb-2">👦 {entry.input}</p>
+                  <div className="space-y-1">
+                    {entry.responses.map((r, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <span className="text-[10px] text-green-400 shrink-0 mt-0.5">🤖</span>
+                        <p className="text-xs text-white/60">{r.text}</p>
+                        <span className="text-[9px] text-white/20 shrink-0 ml-auto">{r.type} • {r.energy}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Category grid
+    const uniqueCats = [...new Set(BOBBY_MULTI_RESPONSES.map(e => e.category))];
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+            <span className="text-2xl">⚡</span>
+            <div>
+              <h1 className="text-xl font-bold text-white">Multi-Réponses</h1>
+              <p className="text-white/40 text-xs">{BOBBY_MULTI_RESPONSES.length} entrées • {uniqueCats.length} catégories</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            {uniqueCats.map(cat => (
+              <button key={cat} onClick={() => { setInteractionCat(cat); setSearch(""); }}
+                className="bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group aspect-square"
+              >
+                <span className="text-lg capitalize text-white/70">{cat.replace(/_/g, " ")}</span>
+                <div>
+                  <p className="text-lg font-bold text-white">{multiResponseCategoryCounts[cat] || 0}</p>
+                  <h3 className="text-[10px] font-semibold text-orange-400">entrées</h3>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     );
