@@ -556,8 +556,189 @@ const Admin = () => {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // QA DATABASE
+  // JEUX & QUIZ — Sub-categories with age filter + search
   // ═══════════════════════════════════════════════════════════════════
+  if (topSection === "jeux") {
+    const GAME_SECTIONS = [
+      { id: "quiz_animaux", label: "Quiz Animaux", emoji: "🐾", data: QUIZ_ANIMAUX, type: "quiz" as const },
+      { id: "quiz_educatif", label: "Quiz Sciences", emoji: "🔬", data: QUIZ_EDUCATIF, type: "quiz" as const },
+      { id: "vrai_faux", label: "Vrai ou Faux", emoji: "✅", data: VRAI_FAUX, type: "vf" as const },
+      { id: "devinettes", label: "Devinettes", emoji: "🤔", data: DEVINETTES, type: "riddle" as const },
+      { id: "blagues_jeu", label: "Blagues Jeu", emoji: "😂", data: GAME_BLAGUES, type: "blague" as const },
+    ];
+
+    // If a sub-category is selected via interactionCat (reusing state)
+    const activeGameSection = interactionCat ? GAME_SECTIONS.find(s => s.id === interactionCat) : null;
+
+    if (activeGameSection) {
+      const searchLower = search.toLowerCase();
+
+      const renderItems = () => {
+        if (activeGameSection.type === "quiz") {
+          const items = activeGameSection.data as QuizQuestion[];
+          const filtered = searchLower
+            ? items.filter(q => q.question.toLowerCase().includes(searchLower) || q.explanation.toLowerCase().includes(searchLower) || q.category.toLowerCase().includes(searchLower))
+            : items;
+          // Group by category
+          const grouped: Record<string, QuizQuestion[]> = {};
+          for (const q of filtered) {
+            if (!grouped[q.category]) grouped[q.category] = [];
+            grouped[q.category].push(q);
+          }
+          return (
+            <div className="space-y-4">
+              {Object.entries(grouped).map(([cat, questions]) => (
+                <div key={cat}>
+                  <h3 className="text-white/60 text-xs font-semibold mb-2 uppercase tracking-wider">{cat} ({questions.length})</h3>
+                  <div className="space-y-2">
+                    {questions.map((q, i) => (
+                      <div key={i} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                        <p className="text-sm text-white/80 font-medium mb-2">{q.question}</p>
+                        <div className="grid grid-cols-2 gap-1.5 mb-2">
+                          {q.choices.map((c, ci) => (
+                            <span key={ci} className={`text-xs px-2 py-1 rounded-lg ${ci === q.correctIndex ? "bg-green-500/20 text-green-300 font-semibold" : "bg-white/5 text-white/50"}`}>
+                              {c}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="text-[11px] text-white/40 italic">{q.explanation}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
+            </div>
+          );
+        }
+        if (activeGameSection.type === "vf") {
+          const items = activeGameSection.data as TrueFalseQuestion[];
+          const filtered = searchLower
+            ? items.filter(q => q.statement.toLowerCase().includes(searchLower) || q.explanation.toLowerCase().includes(searchLower))
+            : items;
+          const grouped: Record<string, TrueFalseQuestion[]> = {};
+          for (const q of filtered) {
+            if (!grouped[q.category]) grouped[q.category] = [];
+            grouped[q.category].push(q);
+          }
+          return (
+            <div className="space-y-4">
+              {Object.entries(grouped).map(([cat, questions]) => (
+                <div key={cat}>
+                  <h3 className="text-white/60 text-xs font-semibold mb-2 uppercase tracking-wider">{cat} ({questions.length})</h3>
+                  <div className="space-y-2">
+                    {questions.map((q, i) => (
+                      <div key={i} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                        <div className="flex items-start gap-2">
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${q.answer ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"}`}>
+                            {q.answer ? "VRAI" : "FAUX"}
+                          </span>
+                          <p className="text-sm text-white/80">{q.statement}</p>
+                        </div>
+                        <p className="text-[11px] text-white/40 italic mt-2 ml-14">{q.explanation}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
+            </div>
+          );
+        }
+        if (activeGameSection.type === "riddle") {
+          const items = activeGameSection.data as Riddle[];
+          const filtered = searchLower
+            ? items.filter(q => q.question.toLowerCase().includes(searchLower) || q.hint.toLowerCase().includes(searchLower))
+            : items;
+          return (
+            <div className="space-y-2">
+              {filtered.map((q, i) => (
+                <div key={i} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                  <p className="text-sm text-white/80 font-medium mb-2">{q.question}</p>
+                  <div className="flex gap-1.5 mb-2 flex-wrap">
+                    {q.choices.map((c, ci) => (
+                      <span key={ci} className={`text-xs px-2 py-1 rounded-lg ${ci === q.correctIndex ? "bg-green-500/20 text-green-300 font-semibold" : "bg-white/5 text-white/50"}`}>
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-white/30">💡 {q.hint}</p>
+                </div>
+              ))}
+              {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
+            </div>
+          );
+        }
+        // blagues
+        const items = activeGameSection.data as string[];
+        const filtered = searchLower ? items.filter(b => b.toLowerCase().includes(searchLower)) : items;
+        return (
+          <div className="space-y-2">
+            {filtered.map((b, i) => (
+              <div key={i} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                <p className="text-sm text-white/70">{b}</p>
+              </div>
+            ))}
+            {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
+          </div>
+        );
+      };
+
+      return (
+        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+          <div className="max-w-4xl mx-auto space-y-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+              <span className="text-2xl">{activeGameSection.emoji}</span>
+              <div>
+                <h1 className="text-xl font-bold text-white">{activeGameSection.label}</h1>
+                <p className="text-white/40 text-xs">{activeGameSection.data.length} entrées</p>
+              </div>
+            </div>
+
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
+                className="bg-white/10 border-white/20 text-white pl-9" />
+            </div>
+
+            {renderItems()}
+          </div>
+        </div>
+      );
+    }
+
+    // Jeux grid
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+            <span className="text-2xl">🎮</span>
+            <div>
+              <h1 className="text-xl font-bold text-white">Jeux & Quiz</h1>
+              <p className="text-white/40 text-xs">Quiz, Vrai/Faux, Devinettes — contenu embarqué</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {GAME_SECTIONS.map(section => (
+              <button key={section.id} onClick={() => { setInteractionCat(section.id); setSearch(""); }}
+                className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group"
+              >
+                <span className="text-3xl">{section.emoji}</span>
+                <div>
+                  <p className="text-xl font-bold text-white">{section.data.length}</p>
+                  <h3 className="text-xs font-semibold text-white/70">{section.label}</h3>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (topSection === "qa") {
     const filteredQA = search.trim()
       ? QA_DATABASE.filter(e =>
