@@ -1930,9 +1930,29 @@ function assembleResponse(
     }
   }
 
-  // Name injection (~30%)
-  if (childName && !text.includes(childName) && Math.random() < 0.3) {
-    text = `${childName}, ${text.charAt(0).toLowerCase() + text.slice(1)}`;
+  // Smart name injection:
+  // - Always on first turn of session
+  // - ~70% for emotional intents (intensity >= 3)
+  // - ~40% for normal conversation
+  // - ~20% for trivial/fun intents
+  if (childName && !text.includes(childName)) {
+    const emotionalIntents: LocalIntent[] = [
+      "PEUR", "TRISTESSE", "COLERE", "HONTE", "SOLITUDE", "HARCELEMENT",
+      "MANQUE_CONFIANCE", "CRISE_SECURITE", "PEUR_ABANDON", "PEUR_ECHEC",
+      "ABANDON", "FATIGUE_EMOTIONNELLE", "ANXIETE", "IDENTITE_PEUR",
+    ];
+    const isEmotional = emotionalIntents.includes(intent) || emotion.intensity >= 3;
+    const isFirstTurn = mem.turnCount <= 2;
+    const nameChance = isFirstTurn ? 1.0 : isEmotional ? 0.7 : 0.35;
+
+    if (Math.random() < nameChance) {
+      // Place name at start with 💛 for emotional, plain for others
+      if (isEmotional) {
+        text = `${childName} 💛 ${text.charAt(0).toLowerCase() + text.slice(1)}`;
+      } else {
+        text = `${childName}, ${text.charAt(0).toLowerCase() + text.slice(1)}`;
+      }
+    }
   }
 
   // Age adaptation
@@ -2098,7 +2118,7 @@ export function getLocalBrainReply(
 
   // 5. Check for active scenario (multi-turn emotional journey)
   if (isScenarioActive()) {
-    const scenarioResp = getScenarioResponse(userText);
+    const scenarioResp = getScenarioResponse(userText, childName);
     if (scenarioResp) {
       addTurn({ role: "bobby", text: scenarioResp.text, intent, timestamp: Date.now() });
       addBobbyResponse(scenarioResp.text);
@@ -2119,7 +2139,7 @@ export function getLocalBrainReply(
   if (emotion.intensity >= 3) {
     tryStartScenario(intent, userText);
     if (isScenarioActive()) {
-      const scenarioResp = getScenarioResponse(userText);
+      const scenarioResp = getScenarioResponse(userText, childName);
       if (scenarioResp) {
         addTurn({ role: "bobby", text: scenarioResp.text, intent, timestamp: Date.now() });
         addBobbyResponse(scenarioResp.text);
