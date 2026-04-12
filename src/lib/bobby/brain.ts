@@ -174,6 +174,11 @@ export function buildBobbyReply({ childName, childAge, userText = "", pendingNar
     return getBlockedTopicReply(childName);
   }
 
+  // ─── Track child interests for smart follow-ups ───
+  if (userText) {
+    trackInterests(userText);
+  }
+
   // ─── 1. Library (stories, jokes) — always high confidence ───
   const libraryReply = getLibraryReply(userText, childName, childAge);
   if (libraryReply) {
@@ -192,6 +197,12 @@ export function buildBobbyReply({ childName, childAge, userText = "", pendingNar
   let adaptedText = simplifyForAge(offlineReply.text, childAge);
   adaptedText = personalizeWithName(adaptedText, childName);
   adaptedText = applyPersonality(adaptedText, personality);
+
+  // ─── Smart follow-up injection (~40% chance after 3+ exchanges) ───
+  const smartFollowUp = getSmartFollowUp(childName);
+  if (smartFollowUp && confidence >= 0.5 && Math.random() < 0.4) {
+    adaptedText = adaptedText.replace(/[.!?…]*$/, ". ") + smartFollowUp;
+  }
 
   return {
     text: adaptedText,
