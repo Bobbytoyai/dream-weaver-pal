@@ -162,7 +162,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   // Eyelid — match background
   const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(230, 55%, 72%)"), transparent: false, opacity: 1.0,
+    color: new THREE.Color("hsl(240, 40%, 18%)"), transparent: false, opacity: 1.0,
     depthWrite: true,
   }), []);
 
@@ -255,11 +255,12 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       if (ref.current) {
         // When fully closed (blinkClose=1), eyelid must cover entire eye
         // Eye ellipse goes from -0.32 to +0.32 (height 0.64)
-        // Eyelid starts above eye and slides down proportionally
-        const coverAmount = blinkClose; // 0=open, 1=fully closed
+        // Eyelid plane is 0.86 wide x 0.80 tall
+        const coverAmount = Math.max(0, Math.min(1, blinkClose));
         ref.current.scale.y = Math.max(0.01, coverAmount * 1.0);
-        // Position: start at top of eye, slide down as closing
-        ref.current.position.y = 0.32 - coverAmount * 0.32;
+        // Position: start above eye (hidden), slide down to center of eye when fully closed
+        // At coverAmount=0: y=0.72 (above, hidden). At coverAmount=1: y=-0.08 (centered over eye)
+        ref.current.position.y = 0.72 - coverAmount * 0.80;
         ref.current.visible = coverAmount > 0.02;
       }
     });
@@ -365,8 +366,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={pupilRef} geometry={pupilGeo} position={[0, -0.02, 0.02]} material={pupilMat} />
       <mesh position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       <mesh position={[hl2[0], hl2[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} />
-      <mesh ref={eyelidRef} position={[0, 0.32, 0.04]} material={eyelidMat}>
-        <planeGeometry args={[0.86, 0.72]} />
+      <mesh ref={eyelidRef} position={[0, 0.72, 0.05]} material={eyelidMat}>
+        <planeGeometry args={[0.86, 0.80]} />
       </mesh>
     </group>
   );

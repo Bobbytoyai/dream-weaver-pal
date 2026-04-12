@@ -218,8 +218,17 @@ export function resolveExpression(
 
   const mix = (neutral: number, target: number) => neutral + (target - neutral) * factor;
 
+  // For properties where we want full range even at low intensity (like closing eyes)
+  // use a stronger factor that ensures the target is reached more completely
+  const strongMix = (neutral: number, target: number) => {
+    // When target is very different from neutral (like closing eyes), use at least 0.7 factor
+    const strongFactor = Math.max(factor, 0.7);
+    return neutral + (target - neutral) * strongFactor;
+  };
+
   return {
-    eyeOpenness: mix(n_eye.openness, eye.openness),
+    // Eyes: use strong mix so closed eyes actually close
+    eyeOpenness: strongMix(n_eye.openness, eye.openness),
     pupilSize: mix(n_eye.pupilSize, eye.pupilSize),
     eyeSparkle: mix(n_eye.sparkle, eye.sparkle),
     irisGlow: mix(n_eye.irisGlow, eye.irisGlow),
