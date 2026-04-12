@@ -161,6 +161,10 @@ export function useBobbyVoiceCore({
   const speakReply = useCallback(async (reply: BobbyBrainReply) => {
     stopPlayback();
 
+    // ─── CRITICAL: Stop STT before Bobby speaks to prevent self-listening ───
+    stopSttRef.current();
+    setMicArmed(false);
+
     const controller = new AbortController();
     abortRef.current = controller;
 
@@ -186,9 +190,12 @@ export function useBobbyVoiceCore({
       eventBus.emit({ type: "SPEECH_STOP" });
       // Reset silence counter on successful exchange
       silenceCountRef.current = 0;
-      // Auto-restart listening to keep the conversation flowing
-      console.log("[BobbyVoiceCore] 🔄 Auto-restarting listening after speaking");
-      void startListeningRef.current();
+      // ─── Wait before restarting STT so mic doesn't pick up Bobby's last audio ───
+      console.log("[BobbyVoiceCore] 🔄 Waiting 800ms before restarting listening");
+      await new Promise(r => setTimeout(r, 800));
+      if (!abortRef.current?.signal.aborted && machineRef.current === "SPEAKING") {
+        void startListeningRef.current();
+      }
     }
   }, [go, parentSettings, stopPlayback]);
 
