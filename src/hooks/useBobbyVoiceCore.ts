@@ -172,6 +172,7 @@ export function useBobbyVoiceCore({
     setCurrentEmotion(reply.emotion);
     setBobbyText(reply.text);
     setLastAiResponse(reply.text);
+    lastAiResponseRef.current = reply.text;
     go("SPEAKING");
     eventBus.emit({ type: "RESPONSE_READY", text: reply.text });
     eventBus.emit({ type: "SPEECH_START" });
@@ -218,6 +219,7 @@ export function useBobbyVoiceCore({
     const recoveryMessage = getBobbyMicRecoveryMessage(networkOffline);
     setBobbyText(recoveryMessage);
     setLastAiResponse(recoveryMessage);
+    lastAiResponseRef.current = recoveryMessage;
     go("ERROR");
 
     void closeSession();
@@ -424,6 +426,7 @@ export function useBobbyVoiceCore({
     setLastRecognized("");
     setBobbyText(welcome);
     setLastAiResponse(welcome);
+    lastAiResponseRef.current = welcome;
     setCurrentEmotion("idle");
     go("IDLE");
     scheduleSleep();
