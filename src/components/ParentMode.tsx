@@ -148,23 +148,32 @@ const Card = ({ title, icon: Icon, children, noPad, className: cx }: { title?: s
   </div>
 );
 
-const ScoreGauge = ({ label, score, emoji, color }: { label: string; score: number; emoji: string; color: string }) => (
-  <div className="flex flex-col items-center gap-1">
-    <div className="relative w-14 h-14">
-      <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-        <path d="M18 2.0845a15.9155 15.9155 0 010 31.831 15.9155 15.9155 0 010-31.831"
-          fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
-        <path d="M18 2.0845a15.9155 15.9155 0 010 31.831 15.9155 15.9155 0 010-31.831"
-          fill="none" stroke={color} strokeWidth="3"
-          strokeDasharray={`${score}, 100`}
-          strokeLinecap="round" />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-base">{emoji}</span>
+const ScoreGauge = ({ label, score, emoji, color, size = "md" }: { label: string; score: number; emoji: string; color: string; size?: "sm" | "md" | "lg" }) => {
+  const dims = size === "lg" ? "w-20 h-20" : size === "sm" ? "w-12 h-12" : "w-14 h-14";
+  const textSize = size === "lg" ? "text-lg" : "text-sm";
+  const labelSize = size === "lg" ? "text-[11px]" : "text-[10px]";
+  const scoreLevel = score >= 75 ? "Excellent" : score >= 50 ? "Bien" : score >= 30 ? "À suivre" : "Faible";
+  const levelColor = score >= 75 ? "text-green-600" : score >= 50 ? "text-primary" : score >= 30 ? "text-orange-500" : "text-destructive";
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div className={`relative ${dims}`}>
+        <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+          <path d="M18 2.0845a15.9155 15.9155 0 010 31.831 15.9155 15.9155 0 010-31.831"
+            fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
+          <path d="M18 2.0845a15.9155 15.9155 0 010 31.831 15.9155 15.9155 0 010-31.831"
+            fill="none" stroke={color} strokeWidth="3"
+            strokeDasharray={`${score}, 100`}
+            strokeLinecap="round"
+            className="transition-all duration-1000 ease-out" />
+        </svg>
+        <span className="absolute inset-0 flex items-center justify-center text-base">{emoji}</span>
+      </div>
+      <span className={`${labelSize} text-muted-foreground font-medium text-center`}>{label}</span>
+      <span className={`${textSize} font-bold text-foreground`}>{score}</span>
+      {size === "lg" && <span className={`text-[9px] font-semibold ${levelColor}`}>{scoreLevel}</span>}
     </div>
-    <span className="text-[10px] text-muted-foreground font-medium text-center">{label}</span>
-    <span className="text-sm font-bold text-foreground">{score}</span>
-  </div>
-);
+  );
+};
 
 const StatPill = ({ emoji, value, label }: { emoji: string; value: string | number; label: string }) => (
   <div className="flex flex-col items-center gap-0.5">
@@ -513,6 +522,34 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       stability: Math.round(scored.reduce((s, a) => s + (a.emotional_stability_score || 0), 0) / scored.length),
     };
   }, [analyses]);
+
+  // Scores evolution over last 7 days for line chart
+  const scoresEvolutionData = useMemo(() => {
+    const scored = analyses.filter(a => a.sociability_score != null);
+    if (scored.length < 2) return [];
+    const days: { name: string; Sociabilité: number | null; Curiosité: number | null; Stabilité: number | null; hasData: boolean }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const label = d.toLocaleDateString("fr-FR", { weekday: "short" }).slice(0, 3);
+      const dayAnalyses = scored.filter(a => {
+        const session = sessions.find(s => s.id === a.session_id);
+        return session?.started_at?.startsWith(key);
+      });
+      if (dayAnalyses.length > 0) {
+        days.push({
+          name: label,
+          Sociabilité: Math.round(dayAnalyses.reduce((s, a) => s + (a.sociability_score || 0), 0) / dayAnalyses.length),
+          Curiosité: Math.round(dayAnalyses.reduce((s, a) => s + (a.curiosity_score || 0), 0) / dayAnalyses.length),
+          Stabilité: Math.round(dayAnalyses.reduce((s, a) => s + (a.emotional_stability_score || 0), 0) / dayAnalyses.length),
+          hasData: true,
+        });
+      } else {
+        days.push({ name: label, Sociabilité: null, Curiosité: null, Stabilité: null, hasData: false });
+      }
+    }
+    return days;
+  }, [analyses, sessions]);
 
   // Real emotion averages from actual analyses only
   const avgEmotions = useMemo(() => {
@@ -1116,13 +1153,71 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         <div className="bg-card rounded-2xl p-4 border border-border/30">
           <div className="flex items-center gap-2 mb-4">
             <Brain className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-[13px] font-bold text-foreground">Développement</h3>
+            <h3 className="text-[13px] font-bold text-foreground">Développement de {childName}</h3>
+            <span className="ml-auto text-[10px] text-muted-foreground">{analyses.filter(a => a.sociability_score != null).length} analyses</span>
           </div>
-          <div className="flex justify-around">
-            <ScoreGauge label="Sociabilité" score={avgScores.sociability} emoji="🤝" color="hsl(var(--primary))" />
-            <ScoreGauge label="Curiosité" score={avgScores.curiosity} emoji="🔍" color="hsl(36, 90%, 50%)" />
-            <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="hsl(145, 65%, 42%)" />
+
+          {/* Large gauges */}
+          <div className="flex justify-around mb-4">
+            <ScoreGauge label="Sociabilité" score={avgScores.sociability} emoji="🤝" color="hsl(var(--primary))" size="lg" />
+            <ScoreGauge label="Curiosité" score={avgScores.curiosity} emoji="🔍" color="hsl(36, 90%, 50%)" size="lg" />
+            <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="hsl(145, 65%, 42%)" size="lg" />
           </div>
+
+          {/* Scores evolution line chart */}
+          {scoresEvolutionData.some(d => d.hasData) && (
+            <div className="mt-3 pt-3 border-t border-border/50">
+              <p className="text-[10px] text-muted-foreground font-medium mb-2">📈 Évolution sur 7 jours</p>
+              <div className="w-full h-40">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={scoresEvolutionData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
+                    <defs>
+                      <linearGradient id="gradSociability" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="gradCuriosity" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(36, 90%, 50%)" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="hsl(36, 90%, 50%)" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="gradStability" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(145, 65%, 42%)" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="hsl(145, 65%, 42%)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                    <Tooltip
+                      content={({ active, payload, label }) => {
+                        if (!active || !payload?.length) return null;
+                        return (
+                          <div className="bg-card border border-border rounded-xl p-2.5 shadow-lg min-w-[120px]">
+                            <p className="text-[11px] font-bold text-foreground mb-1">{label}</p>
+                            {payload.filter(p => p.value != null).map(p => (
+                              <div key={p.name} className="flex items-center gap-1.5 py-0.5">
+                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color as string }} />
+                                <span className="text-[10px] text-foreground flex-1">{p.name}</span>
+                                <span className="text-[11px] font-bold" style={{ color: p.color as string }}>{p.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }}
+                    />
+                    <Area type="monotone" dataKey="Sociabilité" stroke="hsl(var(--primary))" fill="url(#gradSociability)" strokeWidth={2} dot={{ r: 3, fill: "hsl(var(--primary))" }} connectNulls />
+                    <Area type="monotone" dataKey="Curiosité" stroke="hsl(36, 90%, 50%)" fill="url(#gradCuriosity)" strokeWidth={2} dot={{ r: 3, fill: "hsl(36, 90%, 50%)" }} connectNulls />
+                    <Area type="monotone" dataKey="Stabilité" stroke="hsl(145, 65%, 42%)" fill="url(#gradStability)" strokeWidth={2} dot={{ r: 3, fill: "hsl(145, 65%, 42%)" }} connectNulls />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex justify-center gap-4 mt-1">
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><span className="w-2 h-2 rounded-full bg-primary" /> Sociabilité</span>
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: "hsl(36, 90%, 50%)" }} /> Curiosité</span>
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: "hsl(145, 65%, 42%)" }} /> Stabilité</span>
+              </div>
+            </div>
+          )}
 
           {/* Engagement + Mood mini bars */}
           <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-border/50">
@@ -1148,9 +1243,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               <div className="flex gap-1 h-3">
                 {recentAnalyses.length > 0 ? (
                   <>
-                    <div className="rounded-full bg-green-500" style={{ width: `${(moodDist.positive / recentAnalyses.length) * 100}%` }} />
-                    <div className="rounded-full bg-yellow-400" style={{ width: `${(moodDist.neutral / recentAnalyses.length) * 100}%` }} />
-                    <div className="rounded-full bg-red-400" style={{ width: `${(moodDist.low / recentAnalyses.length) * 100}%` }} />
+                    <div className="rounded-full bg-primary/80" style={{ width: `${(moodDist.positive / recentAnalyses.length) * 100}%` }} />
+                    <div className="rounded-full bg-accent" style={{ width: `${(moodDist.neutral / recentAnalyses.length) * 100}%` }} />
+                    <div className="rounded-full bg-destructive/60" style={{ width: `${(moodDist.low / recentAnalyses.length) * 100}%` }} />
                   </>
                 ) : <div className="rounded-full bg-muted w-full" />}
               </div>
@@ -1570,12 +1665,20 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             )}
 
             {analysis.sociability_score != null && (
-              <Card title="Comportement" icon={Activity}>
+              <Card title="Scores comportementaux" icon={Activity}>
                 <div className="flex justify-around py-2">
-                  <ScoreGauge label="Sociabilité" score={analysis.sociability_score || 0} emoji="🤝" color="hsl(var(--primary))" />
-                  <ScoreGauge label="Curiosité" score={analysis.curiosity_score || 0} emoji="🔍" color="hsl(36, 90%, 50%)" />
-                  <ScoreGauge label="Stabilité" score={analysis.emotional_stability_score || 0} emoji="⚖️" color="hsl(var(--success))" />
+                  <ScoreGauge label="Sociabilité" score={analysis.sociability_score || 0} emoji="🤝" color="hsl(var(--primary))" size="lg" />
+                  <ScoreGauge label="Curiosité" score={analysis.curiosity_score || 0} emoji="🔍" color="hsl(36, 90%, 50%)" size="lg" />
+                  <ScoreGauge label="Stabilité" score={analysis.emotional_stability_score || 0} emoji="⚖️" color="hsl(145, 65%, 42%)" size="lg" />
                 </div>
+                {analysis.attention_span && (
+                  <div className="mt-3 pt-2 border-t border-border/50 flex items-center justify-between">
+                    <span className="text-[11px] text-muted-foreground">⏱️ Attention</span>
+                    <span className={`text-[11px] font-bold ${
+                      analysis.attention_span === "long" ? "text-primary" : analysis.attention_span === "moyen" ? "text-accent-foreground" : "text-destructive"
+                    }`}>{analysis.attention_span === "long" ? "Longue 🟢" : analysis.attention_span === "moyen" ? "Moyenne 🟡" : "Courte 🔴"}</span>
+                  </div>
+                )}
               </Card>
             )}
 
