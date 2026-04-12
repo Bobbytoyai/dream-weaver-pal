@@ -624,6 +624,63 @@ export const BOBBY_MULTI_RESPONSES: MultiResponseEntry[] = [
       { text: "Tu crois qu'il y a des aliens sympas ? 👽😄", type: "fun", energy: "high" },
     ],
   },
+  // ── Nourriture ──
+  {
+    category: "nourriture",
+    input: "j'aime les sushis",
+    emotion: "joie",
+    tags: ["nourriture", "interaction"],
+    responses: [
+      { text: "Miam les sushis ! 🍣 tu préfères les saumon ou les thon ?", type: "question", energy: "medium" },
+      { text: "Trop bon les sushis ! 🍣 c'est quoi ton préféré ?", type: "question", energy: "medium" },
+      { text: "Moi si je pouvais manger, j'adorerais les sushis aussi ! 🍣 tu en manges souvent ?", type: "question", energy: "medium" },
+      { text: "Les sushis c'est délicieux ! 🍣 tu sais que ça vient du Japon ? 🇯🇵", type: "fun", energy: "medium" },
+    ],
+  },
+  {
+    category: "nourriture",
+    input: "j'aime le chocolat",
+    emotion: "joie",
+    tags: ["nourriture", "interaction"],
+    responses: [
+      { text: "Miam le chocolat ! 🍫 tu préfères au lait ou noir ?", type: "question", energy: "medium" },
+      { text: "Trop bon ! 🍫 tu savais que le chocolat vient d'une fève de cacao ?", type: "fun", energy: "medium" },
+      { text: "Le chocolat c'est le meilleur ! 🍫 tu en manges quand ? au goûter ?", type: "question", energy: "medium" },
+    ],
+  },
+  {
+    category: "nourriture",
+    input: "j'aime la pizza",
+    emotion: "joie",
+    tags: ["nourriture", "interaction"],
+    responses: [
+      { text: "La pizza c'est trop bon ! 🍕 tu la préfères avec quoi dessus ?", type: "question", energy: "medium" },
+      { text: "Miam ! 🍕 margherita ou 4 fromages ?", type: "question", energy: "medium" },
+      { text: "Moi aussi j'adorerais la pizza ! 🍕 tu sais que ça vient d'Italie ?", type: "fun", energy: "medium" },
+    ],
+  },
+  {
+    category: "nourriture",
+    input: "c'est quoi ton plat préféré",
+    emotion: "curiosité",
+    tags: ["nourriture", "interaction"],
+    responses: [
+      { text: "Si je pouvais manger, j'adorerais goûter des sushis ! 🍣 et toi c'est quoi ?", type: "question", energy: "medium" },
+      { text: "Hmm… je rêverais de manger du chocolat ! 🍫 et toi ton plat préféré c'est quoi ?", type: "question", energy: "medium" },
+      { text: "Je crois que j'aimerais les crêpes ! 🥞 tu aimes quoi toi ?", type: "question", energy: "medium" },
+    ],
+  },
+  {
+    category: "nourriture",
+    input: "j'ai faim",
+    emotion: "neutre",
+    tags: ["nourriture"],
+    responses: [
+      { text: "Oh ! c'est bientôt l'heure du goûter ? 🍪 tu veux manger quoi ?", type: "question", energy: "medium" },
+      { text: "Miam ! va demander un goûter 😊 tu aimes quoi ?", type: "question", energy: "medium" },
+      { text: "C'est quoi ton goûter préféré ? 🍫", type: "question", energy: "medium" },
+    ],
+  },
   // ── Silence / proactif ──
   {
     category: "proactif",
@@ -2438,8 +2495,26 @@ export function findMultiResponse(userInput: string): MultiResponseEntry | null 
     if (criticalEntries.length > 0) return criticalEntries[0];
   }
 
+  // French stop words to ignore in matching
+  const STOP_WORDS = new Set([
+    "je", "tu", "il", "elle", "on", "nous", "vous", "ils", "elles",
+    "le", "la", "les", "un", "une", "des", "du", "de", "au", "aux",
+    "et", "ou", "mais", "donc", "car", "ni", "que", "qui", "dont",
+    "en", "à", "dans", "sur", "sous", "avec", "pour", "par", "sans",
+    "ce", "se", "ne", "pas", "plus", "très", "bien", "trop", "aussi",
+    "mon", "ma", "mes", "ton", "ta", "tes", "son", "sa", "ses",
+    "suis", "est", "es", "ai", "as", "sont", "ont", "été",
+    "j'ai", "j'aime", "c'est", "j'suis", "moi", "toi",
+  ]);
+
+  function contentWords(text: string): string[] {
+    return text.split(/[\s'']+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
+  }
+
   let bestMatch: MultiResponseEntry | null = null;
   let bestScore = 0;
+
+  const userContent = contentWords(normalized);
 
   for (const entry of BOBBY_MULTI_RESPONSES) {
     const entryNorm = entry.input.toLowerCase().trim();
@@ -2447,22 +2522,27 @@ export function findMultiResponse(userInput: string): MultiResponseEntry | null 
     // Exact match
     if (normalized === entryNorm) return entry;
 
-    // Word overlap scoring
-    const userWords = normalized.split(/\s+/).filter(w => w.length > 1);
-    const entryWords = entryNorm.split(/\s+/).filter(w => w.length > 1);
+    // Content word overlap scoring (ignoring stop words)
+    const entryContent = contentWords(entryNorm);
     
+    if (entryContent.length === 0 || userContent.length === 0) continue;
+
     let overlap = 0;
-    for (const uw of userWords) {
-      for (const ew of entryWords) {
-        if (uw === ew || uw.includes(ew) || ew.includes(uw)) {
+    for (const uw of userContent) {
+      for (const ew of entryContent) {
+        if (uw === ew || (uw.length > 3 && ew.length > 3 && (uw.includes(ew) || ew.includes(uw)))) {
           overlap++;
           break;
         }
       }
     }
 
-    const score = entryWords.length > 0 ? overlap / entryWords.length : 0;
-    if (score > bestScore && score >= 0.5) {
+    // Score based on content word overlap (both directions for better accuracy)
+    const entryScore = entryContent.length > 0 ? overlap / entryContent.length : 0;
+    const userScore = userContent.length > 0 ? overlap / userContent.length : 0;
+    const score = (entryScore + userScore) / 2;
+
+    if (score > bestScore && score >= 0.35) {
       bestScore = score;
       bestMatch = entry;
     }

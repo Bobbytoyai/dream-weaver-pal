@@ -62,7 +62,7 @@ const TOPIC_KEYWORDS: Record<string, string[]> = {
   espace: ["espace", "astronaute", "fusée", "étoile", "planète", "lune", "alien"],
   animaux: ["animal", "chat", "chien", "lapin", "ours", "loup", "dragon", "dinosaure"],
   nature: ["forêt", "montagne", "rivière", "fleur", "arbre", "jardin"],
-  nourriture: ["manger", "gâteau", "chocolat", "bonbon", "goûter", "faim"],
+  nourriture: ["manger", "gâteau", "chocolat", "bonbon", "goûter", "faim", "sushi", "pizza", "frite", "pâte", "cuisine", "plat", "recette", "fruit", "légume", "dessert", "fromage", "poulet", "riz", "soupe"],
   famille: ["maman", "papa", "frère", "sœur", "famille", "mamie", "papi"],
   école: ["école", "maîtresse", "copain", "copine", "classe", "apprendre"],
   sport: ["foot", "ballon", "courir", "nager", "vélo", "sport"],
@@ -533,6 +533,8 @@ export function buildContextualPrefix(childName?: string): string | null {
 import { FOLLOW_UPS } from "./offline-stories";
 
 export function getFollowUp(intent: OfflineIntent): string {
+  // Only add follow-ups 30% of the time to keep responses short and natural
+  if (Math.random() > 0.3) return "";
   const pool = FOLLOW_UPS[intent] || [""];
   return pickRandom(pool, `followup_${intent}`);
 }

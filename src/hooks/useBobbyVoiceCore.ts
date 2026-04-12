@@ -15,6 +15,7 @@ import {
 import { toVoiceState, type BobbyBrainReply, type ConversationState, type PendingNarration } from "@/lib/bobby/types";
 import { useSessionTracker } from "./useSessionTracker";
 import { useSmartSTT } from "./useSmartSTT";
+import { useConversationRecorder } from "./useConversationRecorder";
 
 interface UseBobbyVoiceCoreOptions {
   childName: string;
@@ -105,6 +106,7 @@ export function useBobbyVoiceCore({
   const startListeningRef = useRef<() => Promise<void>>(async () => {});
 
   const { startSession, addMessage, endSession, sessionIdRef } = useSessionTracker(childName, childAge);
+  const { startRecording, stopRecording } = useConversationRecorder();
 
   const go = useCallback((nextState: ConversationState) => {
     const previousState = machineRef.current;
@@ -138,10 +140,28 @@ export function useBobbyVoiceCore({
 
   const closeSession = useCallback(async () => {
     if (!sessionOpenRef.current) return;
+    const sid = sessionIdRef.current;
+    // Stop recording and upload audio
+    if (sid) {
+      const audioPath = await stopRecording(sid);
+      if (audioPath) {
+        console.log("[BobbyVoiceCore] 🎙️ Audio saved:", audioPath);
+        // Create analysis entry with audio path so parents can replay
+        try {
+          const { supabase } = await import("@/integrations/supabase/client");
+          await supabase.from("conversation_analyses").insert({
+            session_id: sid,
+            audio_path: audioPath,
+          });
+        } catch (e) {
+          console.warn("[BobbyVoiceCore] Failed to save audio path:", e);
+        }
+      }
+    }
     await endSession();
     sessionOpenRef.current = false;
     eventBus.emit({ type: "SESSION_END" });
-  }, [endSession]);
+  }, [endSession, stopRecording, sessionIdRef]);
 
   const ensureSession = useCallback(async () => {
     if (sessionOpenRef.current && sessionIdRef.current) return sessionIdRef.current;
@@ -150,10 +170,18 @@ export function useBobbyVoiceCore({
     if (sessionId) {
       sessionOpenRef.current = true;
       eventBus.emit({ type: "SESSION_START" });
+      // Start recording the conversation audio
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        await startRecording(stream);
+        console.log("[BobbyVoiceCore] 🎙️ Recording started for session:", sessionId);
+      } catch (e) {
+        console.warn("[BobbyVoiceCore] Could not start recording:", e);
+      }
     }
 
     return sessionId;
-  }, [sessionIdRef, startSession]);
+  }, [sessionIdRef, startSession, startRecording]);
 
   // Track consecutive silence timeouts to know when to end conversation
   const silenceCountRef = useRef(0);
@@ -246,20 +274,21 @@ export function useBobbyVoiceCore({
 
     // ─── Cooldown: reject transcripts arriving too soon after Bobby stopped speaking ───
     const msSinceSpeech = Date.now() - lastSpeechEndRef.current;
-    if (msSinceSpeech < 4000) {
+    if (msSinceSpeech < 1500) {
       console.warn("[BobbyVoiceCore] 🔇 Anti-echo cooldown: rejected transcript", msSinceSpeech, "ms after speech end");
       return;
     }
 
-    // ─── Anti-echo: reject transcript if it matches ANY recent Bobby message ───
+    // ─── Anti-echo: reject transcript if it's nearly identical to Bobby's last message ───
+    // Only reject at very high similarity (>0.7) to avoid blocking legitimate user input
     const incoming = trimmedText.toLowerCase();
-    const incomingWords = incoming.split(/\s+/);
+    const incomingWords = incoming.split(/\s+/).filter(w => w.length > 2); // ignore short words
     for (const recentMsg of recentBobbyMessagesRef.current) {
-      if (recentMsg.length < 10) continue;
-      const bobbyWords = new Set(recentMsg.split(/\s+/));
+      if (recentMsg.length < 15) continue;
+      const bobbyWords = new Set(recentMsg.split(/\s+/).filter(w => w.length > 2));
       const matchCount = incomingWords.filter(w => bobbyWords.has(w)).length;
       const similarity = matchCount / Math.max(incomingWords.length, 1);
-      if (similarity > 0.3) {
+      if (similarity > 0.7) {
         console.warn("[BobbyVoiceCore] 🔇 Anti-echo: rejected (similarity:", similarity.toFixed(2), "):", trimmedText.slice(0, 50));
         processingRef.current = false;
         void startListeningRef.current();
