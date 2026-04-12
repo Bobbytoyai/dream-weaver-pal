@@ -523,6 +523,34 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     };
   }, [analyses]);
 
+  // Scores evolution over last 7 days for line chart
+  const scoresEvolutionData = useMemo(() => {
+    const scored = analyses.filter(a => a.sociability_score != null);
+    if (scored.length < 2) return [];
+    const days: { name: string; Sociabilité: number | null; Curiosité: number | null; Stabilité: number | null; hasData: boolean }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const label = d.toLocaleDateString("fr-FR", { weekday: "short" }).slice(0, 3);
+      const dayAnalyses = scored.filter(a => {
+        const session = sessions.find(s => s.id === a.session_id);
+        return session?.started_at?.startsWith(key);
+      });
+      if (dayAnalyses.length > 0) {
+        days.push({
+          name: label,
+          Sociabilité: Math.round(dayAnalyses.reduce((s, a) => s + (a.sociability_score || 0), 0) / dayAnalyses.length),
+          Curiosité: Math.round(dayAnalyses.reduce((s, a) => s + (a.curiosity_score || 0), 0) / dayAnalyses.length),
+          Stabilité: Math.round(dayAnalyses.reduce((s, a) => s + (a.emotional_stability_score || 0), 0) / dayAnalyses.length),
+          hasData: true,
+        });
+      } else {
+        days.push({ name: label, Sociabilité: null, Curiosité: null, Stabilité: null, hasData: false });
+      }
+    }
+    return days;
+  }, [analyses, sessions]);
+
   // Real emotion averages from actual analyses only
   const avgEmotions = useMemo(() => {
     if (recentAnalyses.length === 0) return {};
