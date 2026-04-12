@@ -30,6 +30,14 @@ const INTENT_EMOTION_MAP: Record<string, FaceState> = {
   JOKE_REQUEST: "playful",
   LIBRARY_OVERVIEW: "proud",
   NARRATION: "curious",
+  // New emotional intents
+  PEUR: "reassuring",
+  TRISTESSE: "reassuring",
+  COLERE: "reassuring",
+  JOIE: "happy",
+  CONFIANCE: "reassuring",
+  JALOUSIE: "reassuring",
+  ENNUI: "playful",
 };
 
 function inferEmotionFromText(text: string): FaceState {

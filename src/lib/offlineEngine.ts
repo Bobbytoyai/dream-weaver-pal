@@ -230,6 +230,27 @@ export function getOfflineResponse(
     case "FAREWELL":
       response = pickRandom(RESPONSES.FAREWELL, "FAREWELL");
       break;
+    case "PEUR":
+      response = pickRandom(RESPONSES.PEUR, "PEUR");
+      break;
+    case "TRISTESSE":
+      response = pickRandom(RESPONSES.TRISTESSE, "TRISTESSE");
+      break;
+    case "COLERE":
+      response = pickRandom(RESPONSES.COLERE, "COLERE");
+      break;
+    case "JOIE":
+      response = pickRandom(RESPONSES.JOIE, "JOIE");
+      break;
+    case "CONFIANCE":
+      response = pickRandom(RESPONSES.CONFIANCE, "CONFIANCE");
+      break;
+    case "JALOUSIE":
+      response = pickRandom(RESPONSES.JALOUSIE, "JALOUSIE");
+      break;
+    case "ENNUI":
+      response = pickRandom(RESPONSES.ENNUI, "ENNUI");
+      break;
     case "STORY_REQUEST": {
       const theme = detectStoryTheme(text);
       const story = pickRandom(LOCAL_STORIES[theme], `story_${theme}`);
