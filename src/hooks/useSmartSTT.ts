@@ -100,7 +100,7 @@ export function useSmartSTT({ onPartial, onFinal, onError, onUtteranceEnd, onSpe
   // CRITICAL FIX: deepgram and native are NEW objects every render.
   // Including them in useCallback/useEffect deps causes constant re-fires.
   // Solution: capture .start/.stop in refs with zero re-render dependency.
-  const deepgramStartRef = useRef(deepgram.start);
+  const deepgramStartRef = useRef<(stream?: MediaStream) => Promise<void>>(deepgram.start);
   const deepgramStopRef  = useRef(deepgram.stop);
   const nativeStartRef   = useRef(native.start);
   const nativeStopRef    = useRef(native.stop);
@@ -109,7 +109,11 @@ export function useSmartSTT({ onPartial, onFinal, onError, onUtteranceEnd, onSpe
   useEffect(() => { nativeStartRef.current   = native.start;   }, [native.start]);
   useEffect(() => { nativeStopRef.current    = native.stop;    }, [native.stop]);
 
-  const start = useCallback(async () => {
+  /**
+   * Start STT. Accepts an optional pre-acquired MediaStream to preserve
+   * the browser gesture chain on mobile.
+   */
+  const start = useCallback(async (externalStream?: MediaStream) => {
     if (isRunningRef.current) return;
     isRunningRef.current = true;
 
@@ -123,7 +127,7 @@ export function useSmartSTT({ onPartial, onFinal, onError, onUtteranceEnd, onSpe
 
     if (activeBackendRef.current === "deepgram") {
       try {
-        await deepgramStartRef.current();
+        await deepgramStartRef.current(externalStream);
       } catch {
         // If Deepgram fails to start, immediately fallback
         console.log("[SmartSTT] Deepgram start failed, using native");
