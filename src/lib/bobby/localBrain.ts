@@ -127,6 +127,7 @@ export type LocalIntent =
   // Situational
   | "FATIGUE" | "ECHEC" | "OBJECTIF" | "SANTE" | "PERTE" | "REVE_AVENIR"
   | "ANXIETE" | "ABANDON" | "MENSONGE" | "EXCITATION" | "AMOUREUX"
+  | "PERFECTIONNISME" | "COMPARAISON" | "FATIGUE_EMOTIONNELLE"
   // Catch-all
   | "GENERAL";
 
@@ -281,6 +282,18 @@ const INTENT_RULES: IntentRule[] = [
   ]},
   { intent: "MENSONGE", priority: 82, patterns: [
     /j'ai menti|j'ai triché|j'ai pas dit la vérité|j'ai caché/i,
+  ]},
+  { intent: "ANXIETE", priority: 86, patterns: [
+    /inquiet|inquiète|tracasse|angoisse|stressé pour demain|peur de demain|anxieux/i,
+  ]},
+  { intent: "PERFECTIONNISME", priority: 78, patterns: [
+    /être parfait|tout bien faire|pas le droit à l'erreur|zéro faute|meilleur en tout/i,
+  ]},
+  { intent: "COMPARAISON", priority: 76, patterns: [
+    /être comme|comme lui|comme elle|lui il est mieux|elle est mieux|pareil que/i,
+  ]},
+  { intent: "FATIGUE_EMOTIONNELLE", priority: 87, patterns: [
+    /fatigué de tout|j'en peux plus|trop pour moi|épuisé mentalement|ça me pèse|trop lourd/i,
   ]},
 
   // Requests
@@ -1246,7 +1259,84 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
     },
   },
 
+  ANXIETE: {
+    default: {
+      empathy: [
+        "L'inquiétude peut rester dans la tête 😔",
+        "Penser à demain peut faire stresser…",
+        "C'est normal d'être inquiet parfois.",
+      ],
+      response: [
+        "Mais tu n'es pas seul face à ça 💛",
+        "Bobby est là pour en parler avec toi.",
+        "Les choses semblent souvent moins graves quand on en parle.",
+      ],
+      opening: [
+        "Tu veux me dire ce qui te tracasse ?",
+        "Qu'est-ce qui t'inquiète le plus ?",
+        "Tu veux qu'on respire ensemble pour se calmer ?",
+      ],
+    },
+  },
 
+  PERFECTIONNISME: {
+    default: {
+      empathy: [
+        "Vouloir être parfait peut mettre beaucoup de pression 😔",
+        "C'est dur de toujours vouloir tout bien faire…",
+      ],
+      response: [
+        "Mais tu as le droit de faire des erreurs 💛 c'est comme ça qu'on grandit.",
+        "Personne n'est parfait, et c'est OK !",
+        "Ce qui compte c'est d'essayer, pas d'être parfait.",
+      ],
+      opening: [
+        "Qu'est-ce qui te fait ressentir cette pression ?",
+        "Tu veux qu'on parle de ce qui te stresse ?",
+      ],
+    },
+  },
+
+  COMPARAISON: {
+    default: {
+      empathy: [
+        "Se comparer aux autres peut faire douter 😔",
+        "C'est normal de regarder les autres parfois…",
+      ],
+      response: [
+        "Mais tu es unique et tu as tes propres talents 💛",
+        "Chacun a ses forces. Toi aussi !",
+        "Ce qui te rend spécial, c'est d'être toi.",
+      ],
+      opening: [
+        "Qu'est-ce que tu admires chez cette personne ?",
+        "Et toi, c'est quoi tes super-pouvoirs ?",
+        "Tu veux qu'on parle de ce qui te rend unique ?",
+      ],
+    },
+  },
+
+  FATIGUE_EMOTIONNELLE: {
+    default: {
+      empathy: [
+        "Ça a l'air vraiment lourd pour toi 😔",
+        "Quand on est épuisé comme ça, tout semble plus dur…",
+        "Je sens que tu portes beaucoup en ce moment.",
+      ],
+      response: [
+        "Tu n'as pas à porter tout ça tout seul 💛",
+        "Parfois il faut s'autoriser à faire une pause.",
+        "Bobby est là. On peut juste être ensemble tranquillement.",
+      ],
+      opening: [
+        "Tu veux m'expliquer ce qui te fatigue autant ?",
+        "Tu veux qu'on fasse quelque chose de calme ?",
+        "Tu préfères qu'on reste juste ensemble sans rien faire ?",
+      ],
+    },
+  },
+
+  // Context-aware responses for YES/NO based on memory handled in assembleResponse
   QUESTION_SIMPLE: {
     default: {
       empathy: ["Hmm 🤔"],
@@ -1621,6 +1711,10 @@ const INTENT_FACE_MAP: Partial<Record<LocalIntent, FaceState>> = {
   EXCITATION: "excited",
   AMOUREUX: "happy",
   MENSONGE: "reassuring",
+  ANXIETE: "reassuring",
+  PERFECTIONNISME: "reassuring",
+  COMPARAISON: "reassuring",
+  FATIGUE_EMOTIONNELLE: "reassuring",
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
