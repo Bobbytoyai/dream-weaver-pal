@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { eventBus } from "@/lib/eventBus";
 import { getUnreadAlertCount } from "@/lib/offlineEngine";
-import { Settings, Camera, Mic, MicOff, Gamepad2 } from "lucide-react";
+import { Settings, Camera, Gamepad2 } from "lucide-react";
 import { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
 
@@ -54,20 +54,20 @@ const FloatingParticles = () => {
   );
 };
 
-const DebugOverlay = ({ state, micArmed, micRunning, partialText, lastRecognized, lastAiResponse, sttBackend, offline }: {
-  state: ConversationState; micArmed: boolean; micRunning: boolean;
-  partialText: string; lastRecognized: string; lastAiResponse: string; sttBackend: string; offline: boolean;
+const DebugOverlay = ({ state, micRunning, partialText, lastRecognized, lastAiResponse, offline }: {
+  state: ConversationState; micRunning: boolean;
+  partialText: string; lastRecognized: string; lastAiResponse: string; offline: boolean;
 }) => (
   <div className="fixed top-0 left-0 right-0 z-50 bg-black/85 text-white p-3 text-[10px] font-mono space-y-1 pointer-events-none max-h-48 overflow-y-auto">
     <div className="flex gap-3 flex-wrap">
       <span>State: <span className={`font-bold ${state === "ERROR" ? "text-red-400" : state === "LISTENING" ? "text-green-400" : state === "SPEAKING" ? "text-blue-400" : state === "PROCESSING" ? "text-yellow-400" : state === "SLEEP" ? "text-indigo-400" : "text-gray-400"}`}>{state}</span></span>
-      <span>Mic: {micArmed ? (micRunning ? "🟢 ON" : "🟡 ARMED") : "🔴 OFF"}</span>
-      <span>STT: {sttBackend}</span>
+      <span>Mic: {micRunning ? "🟢 ON" : "🔴 OFF"}</span>
+      <span>STT: Natif</span>
       <span>Net: {offline ? "🔴 OFFLINE" : "🟢 ONLINE"}</span>
     </div>
-    {partialText && <div className="text-green-300 truncate">📝 Partial: "{partialText}"</div>}
-    {lastRecognized && <div className="text-cyan-300 truncate">✅ Recognized: "{lastRecognized}"</div>}
-    {lastAiResponse && <div className="text-purple-300 truncate">🤖 AI: "{lastAiResponse.slice(0, 100)}"</div>}
+    {partialText && <div className="text-green-300 truncate">📝 "{partialText}"</div>}
+    {lastRecognized && <div className="text-cyan-300 truncate">✅ "{lastRecognized}"</div>}
+    {lastAiResponse && <div className="text-purple-300 truncate">🤖 "{lastAiResponse.slice(0, 100)}"</div>}
   </div>
 );
 
@@ -164,12 +164,10 @@ const VoiceScreen = ({
       {showDebug && (
         <DebugOverlay
           state={sm.machineState}
-          micArmed={sm.micArmed}
-          micRunning={sm.deepgramSTT.isRunning.current}
+          micRunning={sm.sttIsRunning.current}
           partialText={sm.partialText}
           lastRecognized={sm.lastRecognized}
           lastAiResponse={sm.lastAiResponse}
-          sttBackend={sm.deepgramSTT.backend}
           offline={sm.networkOffline}
         />
       )}
@@ -240,28 +238,16 @@ const VoiceScreen = ({
           {stateLabel}
         </p>
 
-        {/* Mic status */}
-        <div className="mt-2 flex flex-col items-center gap-1.5">
-          {sm.machineState === "LISTENING" ? (
-            <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-primary/10 backdrop-blur-sm">
-              <SoundWave active={sm.machineState === "LISTENING"} />
-              <span className="text-xs text-primary font-bold">
-                {sm.partialText ? "Bobby t'entend…" : "J'écoute…"}
-              </span>
-              <SoundWave active={sm.machineState === "LISTENING"} />
-            </div>
-          ) : sm.machineState === "IDLE" && sm.micArmed ? (
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 backdrop-blur-sm">
-              <Mic className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground font-medium">En attente de "Bobby"</span>
-            </div>
-          ) : sm.machineState === "IDLE" && !sm.micArmed ? null : sm.machineState === "SPEAKING" ? (
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100/60 backdrop-blur-sm">
-              <span className="text-xs text-blue-600 font-bold">👆 Touche pour interrompre</span>
-            </div>
-          ) : null}
-
-        </div>
+        {/* Subtle status — only when listening */}
+        {sm.machineState === "LISTENING" && (
+          <div className="mt-3 flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-white/40 backdrop-blur-md transition-all duration-500 animate-in fade-in slide-in-from-bottom-2">
+            <SoundWave active />
+            <span className="text-xs font-semibold text-foreground/60">
+              {sm.partialText ? "Bobby t'entend…" : "J'écoute…"}
+            </span>
+            <SoundWave active />
+          </div>
+        )}
       </div>
 
       <div className="pb-4" />
