@@ -1214,7 +1214,7 @@ const Admin = () => {
         return (
           <div className="space-y-2">
             {filtered.map((b, i) => (
-              <div key={i} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+              <div key={i} onClick={() => openQuizDetail(b, "blague")} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
                 <p className="text-sm text-white/70">{b}</p>
               </div>
             ))}
@@ -1224,6 +1224,8 @@ const Admin = () => {
       };
 
       return (
+        <>
+        {detailPortal}
         <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
