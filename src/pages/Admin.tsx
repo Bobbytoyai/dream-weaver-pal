@@ -277,6 +277,7 @@ const Admin = () => {
   const [storeItems, setStoreItems] = useState<StoreContentItem[]>([]);
   const [editingStoreItem, setEditingStoreItem] = useState<Partial<StoreContentItem> | null>(null);
   const [savingStoreItem, setSavingStoreItem] = useState(false);
+  const [liveInstallCounts, setLiveInstallCounts] = useState<Record<string, number>>({});
 
   // 10K interactions (lazy loaded)
   const [interactions, setInteractions] = useState<BobbyInteraction[] | null>(null);
@@ -304,8 +305,15 @@ const Admin = () => {
   }, []);
 
   const fetchStoreItems = useCallback(async () => {
-    const { data } = await supabase.from("store_content").select("*").order("created_at", { ascending: false });
-    setStoreItems((data as unknown as StoreContentItem[]) || []);
+    const [catalogRes, installsRes] = await Promise.all([
+      supabase.from("store_content").select("*").order("created_at", { ascending: false }),
+      supabase.from("installed_content").select("content_id"),
+    ]);
+    setStoreItems((catalogRes.data as unknown as StoreContentItem[]) || []);
+    // Count installs per content_id
+    const counts: Record<string, number> = {};
+    (installsRes.data || []).forEach((r: any) => { counts[r.content_id] = (counts[r.content_id] || 0) + 1; });
+    setLiveInstallCounts(counts);
   }, []);
 
   useEffect(() => {
@@ -2054,9 +2062,13 @@ const Admin = () => {
                       <span className="text-[9px] text-white/30">{item.age_min}-{item.age_max} ans</span>
                       <span className="text-[9px] text-white/30">•</span>
                       <span className="text-[9px] text-white/30">{item.size_label}</span>
-                      <span className="text-[9px] text-white/30">•</span>
-                      <span className="text-[9px] text-white/30">{item.install_count} installs</span>
                     </div>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 shrink-0 mr-1">
+                    <span className={`text-sm font-extrabold tabular-nums ${(liveInstallCounts[item.id] || 0) > 0 ? "text-emerald-400" : "text-white/20"}`}>
+                      {liveInstallCounts[item.id] || 0}
+                    </span>
+                    <span className="text-[8px] text-white/30">installs</span>
                   </div>
                   <div className="flex gap-1 shrink-0">
                     <Button variant="ghost" size="sm" onClick={() => setEditingStoreItem(item)} className="text-white/40 hover:text-white h-7 w-7 p-0">
