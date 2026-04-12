@@ -213,6 +213,38 @@ export type Database = {
           },
         ]
       }
+      installed_content: {
+        Row: {
+          child_name: string
+          content_id: string
+          id: string
+          installed_at: string
+          is_enabled: boolean
+        }
+        Insert: {
+          child_name: string
+          content_id: string
+          id?: string
+          installed_at?: string
+          is_enabled?: boolean
+        }
+        Update: {
+          child_name?: string
+          content_id?: string
+          id?: string
+          installed_at?: string
+          is_enabled?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "installed_content_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "store_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_base: {
         Row: {
           age_max: number
@@ -339,6 +371,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      store_content: {
+        Row: {
+          age_max: number
+          age_min: number
+          category: string
+          created_at: string
+          description: string
+          emoji: string
+          id: string
+          install_count: number
+          is_active: boolean
+          is_featured: boolean
+          is_new: boolean
+          is_popular: boolean
+          name: string
+          size_label: string
+          slug: string
+          tags: string[]
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          age_max?: number
+          age_min?: number
+          category?: string
+          created_at?: string
+          description?: string
+          emoji?: string
+          id?: string
+          install_count?: number
+          is_active?: boolean
+          is_featured?: boolean
+          is_new?: boolean
+          is_popular?: boolean
+          name: string
+          size_label?: string
+          slug: string
+          tags?: string[]
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          age_max?: number
+          age_min?: number
+          category?: string
+          created_at?: string
+          description?: string
+          emoji?: string
+          id?: string
+          install_count?: number
+          is_active?: boolean
+          is_featured?: boolean
+          is_new?: boolean
+          is_popular?: boolean
+          name?: string
+          size_label?: string
+          slug?: string
+          tags?: string[]
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
       }
       story_templates: {
         Row: {
