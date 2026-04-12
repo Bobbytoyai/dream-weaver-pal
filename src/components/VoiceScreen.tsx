@@ -238,28 +238,16 @@ const VoiceScreen = ({
           {stateLabel}
         </p>
 
-        {/* Mic status */}
-        <div className="mt-2 flex flex-col items-center gap-1.5">
-          {sm.machineState === "LISTENING" ? (
-            <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-primary/10 backdrop-blur-sm">
-              <SoundWave active={sm.machineState === "LISTENING"} />
-              <span className="text-xs text-primary font-bold">
-                {sm.partialText ? "Bobby t'entend…" : "J'écoute…"}
-              </span>
-              <SoundWave active={sm.machineState === "LISTENING"} />
-            </div>
-          ) : sm.machineState === "IDLE" && sm.micArmed ? (
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 backdrop-blur-sm">
-              <Mic className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground font-medium">En attente de "Bobby"</span>
-            </div>
-          ) : sm.machineState === "IDLE" && !sm.micArmed ? null : sm.machineState === "SPEAKING" ? (
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100/60 backdrop-blur-sm">
-              <span className="text-xs text-blue-600 font-bold">👆 Touche pour interrompre</span>
-            </div>
-          ) : null}
-
-        </div>
+        {/* Subtle status — only when listening */}
+        {sm.machineState === "LISTENING" && (
+          <div className="mt-3 flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-white/40 backdrop-blur-md transition-all duration-500 animate-in fade-in slide-in-from-bottom-2">
+            <SoundWave active />
+            <span className="text-xs font-semibold text-foreground/60">
+              {sm.partialText ? "Bobby t'entend…" : "J'écoute…"}
+            </span>
+            <SoundWave active />
+          </div>
+        )}
       </div>
 
       <div className="pb-4" />
