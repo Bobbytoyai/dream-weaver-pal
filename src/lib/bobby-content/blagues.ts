@@ -1,6 +1,6 @@
 /**
  * Bobby AI — Bibliothèque de blagues v1.0
- * 300+ blagues adaptées par tranche d'âge (5-12 ans)
+ * 26 blagues adaptées par tranche d'âge (5-12 ans)
  * Catégories: animaux, école, famille, nourriture, science, absurde
  */
 
