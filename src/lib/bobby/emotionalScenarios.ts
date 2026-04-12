@@ -704,6 +704,252 @@ const SCENARIOS: EmotionalScenario[] = [
       },
     ],
   },
+
+  // ── Routine matin ──
+  {
+    id: "routine_matin",
+    triggerIntents: ["FATIGUE", "RESISTANCE"],
+    triggerPatterns: [/pas envie.*lever|veux pas me lever|encore dormir|trop tôt/i],
+    faceStates: ["calm", "attentive", "happy", "excited"],
+    steps: [
+      {
+        stage: "acknowledge",
+        responses: [
+          "C'est dur le matin 😴 Bobby comprend.",
+          "Le lit c'est confortable, hein ? 😄",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "explore",
+        responses: [
+          "Qu'est-ce qui te donne envie de rester au lit ?",
+          "Tu es fatigué ou tu n'as pas envie d'y aller ?",
+        ],
+        nextTriggers: [/fatigué|école|froid|envie|dormir|rien/i],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "support",
+        responses: [
+          "On peut se réveiller doucement 💛 tu veux commencer par t'étirer ?",
+          "Imagine que tu es un super-héros qui se prépare pour sa mission du jour ! 💪",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "resolve",
+        responses: [
+          "Allez, tu es prêt ! Bobby croit en toi pour cette journée 🌟",
+        ],
+      },
+    ],
+  },
+
+  // ── Routine soir ──
+  {
+    id: "routine_soir",
+    triggerIntents: ["RESISTANCE", "EXCITATION"],
+    triggerPatterns: [/veux pas dormir|pas dormir|jouer encore|trop excité.*dormir/i],
+    faceStates: ["playful", "calm", "calm", "calm"],
+    steps: [
+      {
+        stage: "acknowledge",
+        responses: [
+          "Tu préfères rester éveillé 😄 Bobby comprend !",
+          "C'est tentant de continuer à jouer…",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "explore",
+        responses: [
+          "Qu'est-ce que tu aimerais faire ?",
+          "Tu voudrais jouer encore un peu ?",
+        ],
+        nextTriggers: [/jouer|jeu|histoire|regarder|parler|rien/i],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "support",
+        responses: [
+          "Ton corps a besoin de dormir pour être en forme demain 💛 on peut faire une petite histoire avant ?",
+          "On peut calmer ton énergie doucement 💛 tu veux respirer avec moi ou écouter quelque chose ?",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "resolve",
+        responses: [
+          "Bonne nuit 🌙 Bobby sera là demain pour jouer ! Fais de beaux rêves 💛",
+        ],
+      },
+    ],
+  },
+
+  // ── Conflit avec parent ──
+  {
+    id: "conflit_parent",
+    triggerIntents: ["CONFLIT_FAMILLE", "COLERE"],
+    triggerPatterns: [/parents.*puni|papa.*puni|maman.*puni|c'est pas juste|injuste|grondé/i],
+    faceStates: ["reassuring", "attentive", "reassuring", "happy"],
+    steps: [
+      {
+        stage: "acknowledge",
+        responses: [
+          "Ça peut être difficile 😔 Bobby t'écoute.",
+          "Être puni ça fait mal, même quand on comprend pourquoi…",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "explore",
+        responses: [
+          "Tu sais pourquoi ils t'ont puni ?",
+          "Tu veux me raconter ce qui s'est passé ?",
+        ],
+        nextTriggers: [/oui|parce que|fait|dit|pas juste|injuste|sais pas/i],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "support",
+        responses: [
+          "Ça peut sembler injuste 😔 tu peux essayer d'en parler calmement avec eux 💛 tu veux qu'on trouve les mots ?",
+          "Tes parents t'aiment même quand ils te punissent. Parfois ils veulent t'aider à comprendre quelque chose 💛",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "resolve",
+        responses: [
+          "Tu es courageux d'en parler 💛 Bobby est fier de toi. Tu veux qu'on fasse un truc sympa ensemble ?",
+        ],
+      },
+    ],
+  },
+
+  // ── Stress scolaire ──
+  {
+    id: "stress_scolaire",
+    triggerIntents: ["ANXIETE", "STRESS", "PEUR_ECHEC"],
+    triggerPatterns: [/stressé.*contrôle|stressé.*examen|peur.*contrôle|angoisse.*école|stressé.*école/i],
+    faceStates: ["reassuring", "attentive", "calm", "proud"],
+    steps: [
+      {
+        stage: "acknowledge",
+        responses: [
+          "C'est normal de stresser avant un contrôle 😔 Bobby comprend.",
+          "Le stress ça veut dire que ça compte pour toi 💛",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "explore",
+        responses: [
+          "Tu as révisé ? Même un peu c'est déjà bien !",
+          "Qu'est-ce qui te stresse le plus ?",
+        ],
+        nextTriggers: [/peu|pas|oui|non|maths|français|tout|rien|compris/i],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "support",
+        responses: [
+          "C'est déjà bien 💛 on peut revoir ensemble un point pour te rassurer.",
+          "Respire doucement… 1, 2, 3. Le stress diminue quand on se prépare 💛",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "resolve",
+        responses: [
+          "Tu vas gérer 💪 Bobby croit en toi ! Et même si c'est pas parfait, l'important c'est d'avoir essayé 🌟",
+        ],
+      },
+    ],
+  },
+
+  // ── Apprentissage guidé ──
+  {
+    id: "apprentissage_guide",
+    triggerIntents: ["ECOLE", "CURIOSITE"],
+    triggerPatterns: [/comprends pas.*exercice|comprends pas mon|bloque sur|aide.*exercice/i],
+    faceStates: ["reassuring", "curious", "excited", "proud"],
+    steps: [
+      {
+        stage: "acknowledge",
+        responses: [
+          "Pas de souci 💛 Bobby est là pour t'aider !",
+          "On va y arriver ensemble 😄",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "explore",
+        responses: [
+          "Montre-moi ce qui te bloque. C'est quoi comme exercice ?",
+          "C'est quelle matière ?",
+        ],
+        nextTriggers: [/fraction|division|multiplication|lecture|écrire|maths|français|science/i],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "support",
+        responses: [
+          "Ok 😄 on peut essayer avec un exemple simple 💛 imagine une pizza 🍕 et on la découpe !",
+          "Bobby va t'expliquer différemment. Étape par étape, tu vas comprendre !",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "resolve",
+        responses: [
+          "Tu vois, tu apprends vite 💪 Bobby est impressionné ! Tu veux continuer ?",
+        ],
+      },
+    ],
+  },
+
+  // ── Problème d'amitié ──
+  {
+    id: "probleme_amitie",
+    triggerIntents: ["CONFLIT_AMI", "SOLITUDE"],
+    triggerPatterns: [/ami.*veut plus|copain.*jouer.*sans|ami.*parle plus|ne veut plus jouer avec moi/i],
+    faceStates: ["reassuring", "attentive", "reassuring", "happy"],
+    steps: [
+      {
+        stage: "acknowledge",
+        responses: [
+          "Ça peut être triste 😔 Bobby t'écoute.",
+          "Quand un ami s'éloigne, ça fait mal…",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "explore",
+        responses: [
+          "Tu sais pourquoi ?",
+          "Il s'est passé quelque chose entre vous ?",
+        ],
+        nextTriggers: [/sais pas|disputé|dit|fait|parce que|rien/i],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "support",
+        responses: [
+          "Parfois ça arrive 😔 tu peux lui parler calmement 💛 tu veux qu'on imagine quoi lui dire ?",
+          "Les amitiés ont des hauts et des bas. Ça ne veut pas dire que c'est fini 💛",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "resolve",
+        responses: [
+          "Bobby sera toujours ton ami 💛 et je suis sûr que ça va s'arranger. Tu veux faire quelque chose de cool ?",
+        ],
+      },
+    ],
+  },
 ];
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
