@@ -251,6 +251,417 @@ const SCENARIOS: EmotionalScenario[] = [
     ],
   },
 
+  // ── Colère familiale ──
+  {
+    id: "colere_famille",
+    triggerIntents: ["COLERE", "CONFLIT_FAMILLE", "MAUVAIS_COMPORTEMENT"],
+    triggerPatterns: [/en colère|énervé|frère|sœur|pris mon|m'a tapé|tout casser|cassé.*exprès/i],
+    faceStates: ["calm", "attentive", "reassuring", "happy"],
+    steps: [
+      {
+        stage: "acknowledge",
+        responses: [
+          "Je vois que c'est très fort 😠 Tu as le droit d'être en colère.",
+          "Ça a l'air vraiment énervant… Bobby t'écoute 💛",
+        ],
+        nextTriggers: [/frère|sœur|pris|tapé|fait|dit|parce/i],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "explore",
+        responses: [
+          "Qu'est-ce qui s'est passé exactement ? Raconte-moi.",
+          "Tu peux me dire ce qui t'a mis aussi en colère ?",
+        ],
+        nextTriggers: [/il a|elle a|m'a|volé|cassé|crié|poussé|moqué/i],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "support",
+        responses: [
+          "Ça peut vraiment énerver 😔 Tu as le droit de ressentir ça 💛 Tu veux qu'on trouve une façon de lui dire calmement ce que tu ressens ?",
+          "Quand la colère est trop forte, on peut essayer de respirer : inspire 1, 2, 3… souffle. Ça aide à se calmer avant de réagir.",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "resolve",
+        responses: [
+          "Tu es courageux d'en parler 💛 La colère c'est normal, l'important c'est ce qu'on en fait. Tu veux qu'on fasse quelque chose de cool ensemble ?",
+          "Bobby est fier de toi ! Tu gères super bien tes émotions 💪 On fait un jeu pour se détendre ?",
+        ],
+      },
+    ],
+  },
+
+  // ── Rejet social ──
+  {
+    id: "rejet_social",
+    triggerIntents: ["SOLITUDE", "PEUR_ABANDON"],
+    triggerPatterns: [/personne m'aime|jouent sans moi|m'aiment pas|exclu|mis de côté|abandonné/i],
+    faceStates: ["reassuring", "attentive", "reassuring", "happy"],
+    steps: [
+      {
+        stage: "acknowledge",
+        responses: [
+          "Ça doit faire très mal de ressentir ça 😔 Mais tu comptes beaucoup 💛",
+          "Se sentir mis de côté c'est vraiment dur. Bobby t'écoute.",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "explore",
+        responses: [
+          "Qu'est-ce qui te fait penser ça ? Raconte-moi ce qui s'est passé.",
+          "Tes amis ont fait quelque chose ? Dis-moi, je veux comprendre.",
+        ],
+        nextTriggers: [/jouent|invité|parlent|ignorent|groupe|sans moi|tout seul/i],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "support",
+        responses: [
+          "Ça ne veut pas dire qu'ils ne t'aiment pas 💛 Parfois les gens ne se rendent pas compte. Tu veux qu'on réfléchisse à comment aller vers eux ?",
+          "Tu es quelqu'un de super. Parfois les amitiés ont des hauts et des bas, mais ça ne change pas qui tu es 💛",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "resolve",
+        responses: [
+          "Bobby sera toujours ton ami 💛 Et tu vas voir, les choses vont s'arranger. Tu veux qu'on fasse quelque chose ensemble ?",
+        ],
+      },
+    ],
+  },
+
+  // ── Abandon / Découragement ──
+  {
+    id: "abandon_decourragement",
+    triggerIntents: ["ABANDON", "PEUR_ECHEC"],
+    triggerPatterns: [/abandonner|j'abandonne|arrêter d'essayer|trop dur|à quoi bon|encore raté/i],
+    faceStates: ["reassuring", "attentive", "reassuring", "proud"],
+    steps: [
+      {
+        stage: "acknowledge",
+        responses: [
+          "On dirait que tu es vraiment fatigué d'essayer 😔 Bobby comprend.",
+          "Quand c'est trop dur, c'est normal d'avoir envie d'abandonner…",
+        ],
+        nextTriggers: [/dur|difficile|comprends pas|arrive pas|marre|ras le bol/i],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "explore",
+        responses: [
+          "Qu'est-ce qui te donne envie d'abandonner ? Dis-moi.",
+          "C'est quoi exactement qui est trop difficile ?",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "support",
+        responses: [
+          "Tu n'es pas seul face à ça 💛 On peut faire un petit pas ensemble. Juste un seul. Tu veux ?",
+          "Chaque échec t'apprend quelque chose. Même si ça ne se voit pas encore, tu progresses 💪",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "resolve",
+        responses: [
+          "Bobby croit en toi 💛 Un pas à la fois. Tu veux qu'on essaie ensemble ?",
+          "Tu es plus fort que tu ne le penses 💪 On fait un petit défi facile pour te redonner confiance ?",
+        ],
+      },
+    ],
+  },
+
+  // ── Harcèlement scolaire (moqueries) ──
+  {
+    id: "moqueries_ecole",
+    triggerIntents: ["HARCELEMENT", "PEUR"],
+    triggerPatterns: [/se moque|on se moque|moquent|rigolent de moi|peur.*école.*moque/i],
+    faceStates: ["reassuring", "attentive", "reassuring", "proud"],
+    steps: [
+      {
+        stage: "acknowledge",
+        responses: [
+          "Se faire moquer ça fait très mal 😔 Tu ne mérites pas ça.",
+          "Personne n'a le droit de se moquer de toi. PERSONNE 💛",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "explore",
+        responses: [
+          "Qu'est-ce qu'ils disent ? Ça arrive souvent ?",
+          "Tu peux me raconter, Bobby ne juge jamais.",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "support",
+        responses: [
+          "Ce n'est JAMAIS de ta faute 💛 Les gens qui se moquent ont un problème, pas toi.",
+          "Le plus important c'est d'en parler à un adulte de confiance. Un parent, un prof, quelqu'un qui peut t'aider pour de vrai.",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "resolve",
+        responses: [
+          "Tu es courageux d'en parler 💪 Est-ce que tu peux en parler à un adulte de confiance ? Bobby est fier de toi.",
+        ],
+      },
+    ],
+  },
+
+  // ── Crise critique (disparaître) ──
+  {
+    id: "crise_critique",
+    triggerIntents: ["CRISE_SECURITE"],
+    triggerPatterns: [/disparaître|veux mourir|en finir|plus là|exister/i],
+    faceStates: ["reassuring", "attentive", "reassuring", "reassuring"],
+    steps: [
+      {
+        stage: "acknowledge",
+        responses: [
+          "Je suis vraiment content que tu m'en parles 💛 Tu comptes énormément.",
+          "Bobby t'écoute avec tout son cœur. Ce que tu ressens est important.",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "explore",
+        responses: [
+          "Tu peux me dire ce qui te fait ressentir ça ?",
+          "Qu'est-ce qui se passe pour toi en ce moment ?",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "support",
+        responses: [
+          "Ça a l'air très lourd pour toi 😔 Tu n'as pas à rester seul avec ça 💛",
+          "Ce que tu ressens va passer. Mais tu as besoin d'aide maintenant.",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "resolve",
+        responses: [
+          "Est-ce que tu peux parler à un adulte de confiance maintenant ? Un parent, un prof, quelqu'un ? Bobby reste avec toi pendant que tu le fais 💛",
+        ],
+      },
+    ],
+  },
+
+  // ── Joie partagée ──
+  {
+    id: "joie_partagee",
+    triggerIntents: ["JOIE", "FIERTE"],
+    triggerPatterns: [/trop content|super content|trop heureux|j'ai gagné|fier de moi/i],
+    faceStates: ["happy", "excited", "happy", "happy"],
+    steps: [
+      {
+        stage: "acknowledge",
+        responses: [
+          "On dirait que tu es super heureux 😄 ça se sent !",
+          "Wow ! Ta joie est contagieuse ! 🎉",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "explore",
+        responses: [
+          "Qu'est-ce qui se passe ? Raconte-moi tout !",
+          "Dis-moi, qu'est-ce qui te rend aussi content ?",
+        ],
+        nextTriggers: [/gagné|réussi|eu|fait|fini|trouvé|match|dessin|note/i],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "support",
+        responses: [
+          "Bravo 🎉 Tu peux être fier de toi 💛 C'était difficile ?",
+          "C'est génial ! Tes efforts payent ! 💪",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "resolve",
+        responses: [
+          "Bobby est super content pour toi 😄 Tu veux fêter ça avec un jeu ou une histoire ?",
+        ],
+      },
+    ],
+  },
+
+  // ── Apprentissage / Difficulté scolaire ──
+  {
+    id: "difficulte_scolaire",
+    triggerIntents: ["ECOLE", "ECHEC"],
+    triggerPatterns: [/comprends rien|comprends pas|trop dur|pas compris|bloque/i],
+    faceStates: ["reassuring", "attentive", "curious", "proud"],
+    steps: [
+      {
+        stage: "acknowledge",
+        responses: [
+          "Ça peut être frustrant 😔 Bobby comprend.",
+          "Quand on comprend pas, c'est normal de bloquer un peu.",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "explore",
+        responses: [
+          "Tu bloques sur quoi exactement ?",
+          "C'est quelle matière ? Dis-moi et on regarde ensemble.",
+        ],
+        nextTriggers: [/maths|français|division|multiplication|lecture|écrire|science|histoire|géo/i],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "support",
+        responses: [
+          "On peut essayer avec un exemple simple ? Parfois ça aide à débloquer 💛",
+          "Bobby va t'expliquer différemment. Ça s'apprend petit à petit !",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "resolve",
+        responses: [
+          "Tu vois, c'est pas si terrible ! Tu apprends vite 💪 Tu veux continuer ou faire une pause ?",
+          "Bobby est impressionné ! Tu es super courageux d'essayer 🌟",
+        ],
+      },
+    ],
+  },
+
+  // ── Perfectionnisme ──
+  {
+    id: "perfectionnisme",
+    triggerIntents: ["PERFECTIONNISME"],
+    triggerPatterns: [/être parfait|tout.*bien|pas le droit.*erreur|zéro faute/i],
+    faceStates: ["reassuring", "attentive", "calm", "happy"],
+    steps: [
+      {
+        stage: "acknowledge",
+        responses: [
+          "Vouloir être parfait peut être lourd 😔 Bobby comprend.",
+          "C'est dur de toujours vouloir tout bien faire…",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "explore",
+        responses: [
+          "Pourquoi c'est important pour toi ?",
+          "Qu'est-ce qui te fait ressentir cette pression ?",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "support",
+        responses: [
+          "C'est bien de vouloir bien faire 💛 mais tu as aussi le droit d'être imparfait 😔 Tu es déjà bien comme tu es.",
+          "Personne n'est parfait, et c'est OK. Ce qui compte c'est d'essayer.",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "resolve",
+        responses: [
+          "Bobby t'aime comme tu es, avec tes qualités ET tes petits défauts 💛 C'est ça qui te rend unique !",
+        ],
+      },
+    ],
+  },
+
+  // ── Peur de dormir seul ──
+  {
+    id: "peur_dormir",
+    triggerIntents: ["PEUR"],
+    triggerPatterns: [/peur de dormir|dormir seul|dormir tout seul|le silence.*nuit/i],
+    faceStates: ["reassuring", "attentive", "calm", "calm"],
+    steps: [
+      {
+        stage: "acknowledge",
+        responses: [
+          "Dormir seul peut faire peur 😔 Bobby comprend.",
+          "Le silence de la nuit peut sembler étrange, c'est normal.",
+        ],
+        nextTriggers: [/silence|bruit|noir|seul|tout seul|ombre/i],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "explore",
+        responses: [
+          "Qu'est-ce qui t'inquiète le plus ? Le silence ? Le noir ?",
+          "Tu veux me dire ce qui te fait peur exactement ?",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "support",
+        responses: [
+          "Le silence peut aussi être calme et doux 💛 Tu veux qu'on imagine un bruit rassurant ensemble ?",
+          "Imagine que Bobby est une petite étoile dans ta chambre ✨ Je veille sur toi.",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "resolve",
+        responses: [
+          "Tu es en sécurité 💛 Ferme les yeux doucement et pense à ton moment préféré. Bobby reste avec toi 🌙",
+        ],
+      },
+    ],
+  },
+
+  // ── Tristesse sans raison ──
+  {
+    id: "tristesse_inexpliquee",
+    triggerIntents: ["TRISTESSE", "CONFUSION"],
+    triggerPatterns: [/triste.*sais pas|je sais pas pourquoi.*triste|bizarre aujourd'hui|me sens bizarre/i],
+    faceStates: ["reassuring", "attentive", "calm", "happy"],
+    steps: [
+      {
+        stage: "acknowledge",
+        responses: [
+          "Je suis là avec toi 😔 C'est ok de ne pas savoir pourquoi.",
+          "Parfois la tristesse arrive sans raison claire, et c'est normal 💛",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "explore",
+        responses: [
+          "Tu veux me dire ce que tu ressens ? Même si c'est flou.",
+          "On peut essayer de comprendre doucement ensemble, tu veux ?",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "support",
+        responses: [
+          "C'est ok de ne pas avoir toutes les réponses 💛 Bobby est juste là, avec toi.",
+          "On peut rester tranquille ensemble. Pas besoin de parler si tu ne veux pas.",
+        ],
+        fallbackAdvance: true,
+      },
+      {
+        stage: "resolve",
+        responses: [
+          "Tu veux parler ou juste rester un peu ensemble ? Bobby s'adapte à toi 💛",
+          "Parfois un moment calme, ça aide. Bobby est là quand tu voudras 🌟",
+        ],
+      },
+    ],
+  },
+
   // ── Ennui profond ──
   {
     id: "ennui_profond",
