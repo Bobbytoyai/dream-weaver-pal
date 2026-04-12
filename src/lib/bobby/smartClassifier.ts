@@ -182,6 +182,39 @@ const INTENT_VECTORS: IntentVector[] = [
       comique: 0.7, farce: 0.7, humour: 0.8, tordant: 0.7, hilarant: 0.7,
     },
   },
+  {
+    intent: "CRISE_SECURITE",
+    minConfidence: 0.3,
+    words: {
+      mourir: 1.0, disparaître: 1.0, vivre: 0.5, exister: 0.6, déteste: 0.4,
+      vie: 0.4, nulle: 0.4, sers: 0.5, rien: 0.3, personne: 0.3, aime: 0.3,
+      veux: 0.3, plus: 0.2, mal: 0.4,
+    },
+  },
+  {
+    intent: "FATIGUE",
+    minConfidence: 0.4,
+    words: {
+      fatigué: 1.0, crevé: 0.9, épuisé: 0.9, énergie: 0.6, repos: 0.7,
+      dormir: 0.4, bâiller: 0.7, mou: 0.5, lent: 0.4, lourd: 0.4,
+    },
+  },
+  {
+    intent: "ECHEC",
+    minConfidence: 0.35,
+    words: {
+      raté: 1.0, échoué: 1.0, perdu: 0.7, loupé: 0.9, note: 0.4,
+      mauvaise: 0.5, contrôle: 0.5, examen: 0.5, résultat: 0.4, zéro: 0.6,
+    },
+  },
+  {
+    intent: "OBJECTIF",
+    minConfidence: 0.4,
+    words: {
+      gagner: 0.8, réussir: 0.8, objectif: 1.0, motivation: 0.8, entraîner: 0.7,
+      meilleur: 0.5, champion: 0.6, effort: 0.6, but: 0.5, rêve: 0.4,
+    },
+  },
 ];
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
