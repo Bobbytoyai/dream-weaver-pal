@@ -170,7 +170,17 @@ export function getOfflineResponse(
     return continuation;
   }
 
-  // 3b. Multi-turn context
+  // 3b. 🎭 Scenario flows (multi-turn emotional conversations)
+  if (isScenarioActive()) {
+    const scenarioResp = handleScenarioStep(text);
+    if (scenarioResp) {
+      const finalText = personalize(scenarioResp.text, childName);
+      updateContext(scenarioResp.intent as any, text, finalText);
+      return { text: finalText, intent: scenarioResp.intent, isOffline: true };
+    }
+  }
+
+  // 3c. Multi-turn context
   const contextual = handleConversationalContext(text, childName);
   if (contextual) return contextual;
 
