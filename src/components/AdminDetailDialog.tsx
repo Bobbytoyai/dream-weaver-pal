@@ -294,6 +294,7 @@ export default function AdminDetailDialog({ item, onClose, onSave, onDelete, onD
             )}
           </div>
         </div>
+      </div>
     </div>
   );
 }
