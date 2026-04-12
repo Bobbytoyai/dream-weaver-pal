@@ -1,22 +1,13 @@
 /**
- * Voice Pipeline v3 — Emotional TTS with preloading & caching
+ * Voice Pipeline v4 — 100% Offline TTS
  * 
- * Features:
- * - Emotion-aware TTS (adjusts voice dynamically)
- * - Audio cache for frequent phrases (instant playback)
- * - Voice preloading on profile switch (no gap)
- * - Fallback cascade: ElevenLabs → Piper → Browser TTS
+ * Pipeline: Piper TTS → Browser Web Speech API (fallback)
+ * No external API calls. Zero network dependency.
  */
 
 import { useCallback, useRef } from "react";
 import { piperSpeak, piperPreview } from "./piperTTS";
-import { isOffline } from "./offlineEngine";
 import { getCachedTTSAudio, makeCacheKey } from "./ttsCache";
-
-const BOBBY_BRAIN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bobby-brain`;
-const ELEVENLABS_TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`;
-
-type AiMsg = { role: "user" | "assistant"; content: string };
 
 // ─── Safety filters ─────────────────────────────────────────
 const UNSAFE_PATTERNS = [
@@ -47,10 +38,9 @@ function filterSentence(text: string): string | null {
 export type VoiceProfile = "child" | "female" | "male" | "sister" | "brother";
 export type Emotion = "happy" | "sad" | "scared" | "excited" | "calm" | "curious" | "angry" | "bored";
 
-// ─── TTS Audio Cache ────────────────────────────────────────
-// Cache frequently used phrases to avoid API calls
-const audioCache = new Map<string, string>(); // key → blob URL
-const MAX_CACHE_SIZE = 100; // Increased for better cache hit rate
+// ─── TTS Audio Cache (in-memory) ────────────────────────────
+const audioCache = new Map<string, string>();
+const MAX_CACHE_SIZE = 100;
 
 function getCacheKey(text: string, profile: VoiceProfile, emotion?: Emotion): string {
   return `${profile}:${emotion || "neutral"}:${text.toLowerCase().trim()}`;
@@ -58,7 +48,6 @@ function getCacheKey(text: string, profile: VoiceProfile, emotion?: Emotion): st
 
 function cacheAudio(key: string, blobUrl: string) {
   if (audioCache.size >= MAX_CACHE_SIZE) {
-    // Evict oldest entry
     const first = audioCache.keys().next().value;
     if (first) {
       URL.revokeObjectURL(audioCache.get(first)!);
@@ -68,73 +57,7 @@ function cacheAudio(key: string, blobUrl: string) {
   audioCache.set(key, blobUrl);
 }
 
-// ─── ElevenLabs TTS (primary) ───────────────────────────────
-async function fetchElevenLabsTTS(
-  text: string,
-  voiceProfile: VoiceProfile,
-  signal?: AbortSignal,
-  emotion?: Emotion,
-  speedOverride?: "slow" | "normal" | "fast",
-  calmMode?: boolean
-): Promise<string> {
-  const spokenText = sanitizeSpokenText(text);
-  if (!spokenText) return "__silent__";
-
-  // Check cache first
-  const cacheKey = getCacheKey(spokenText, voiceProfile, emotion);
-  const cached = audioCache.get(cacheKey);
-  if (cached) return cached;
-
-  // Create a timeout signal (8s max) merged with caller signal
-  const timeoutController = new AbortController();
-  const timeoutId = setTimeout(() => timeoutController.abort(), 8000);
-  const mergedSignal = signal
-    ? AbortSignal.any?.([signal, timeoutController.signal]) ?? signal
-    : timeoutController.signal;
-
-  const response = await fetch(ELEVENLABS_TTS_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-    },
-    body: JSON.stringify({
-      text: spokenText,
-      voiceProfile,
-      ...(emotion ? { emotion } : {}),
-      ...(speedOverride && speedOverride !== "normal" ? { speedOverride } : {}),
-      ...(calmMode ? { calmMode: true } : {}),
-    }),
-    signal: mergedSignal,
-  });
-  clearTimeout(timeoutId);
-
-  if (!response.ok) {
-    throw new Error(`ElevenLabs TTS error: ${response.status}`);
-  }
-
-  // Check if the edge function returned a fallback JSON instead of audio
-  const contentType = response.headers.get("Content-Type") || "";
-  if (contentType.includes("application/json")) {
-    const data = await response.json();
-    if (data.fallback) {
-      throw new Error("TTS_SERVICE_UNAVAILABLE");
-    }
-    throw new Error(data.error || "TTS error");
-  }
-
-  const audioBlob = await response.blob();
-  const blobUrl = URL.createObjectURL(audioBlob);
-
-  // Cache short phrases (likely to be reused)
-  if (spokenText.length < 80) {
-    cacheAudio(cacheKey, blobUrl);
-  }
-
-  return blobUrl;
-}
-
-// ─── Browser TTS (last resort fallback) ─────────────────────
+// ─── Browser TTS (fallback) ─────────────────────────────────
 function speakWithBrowserTTS(text: string): Promise<string> {
   const spokenText = sanitizeSpokenText(text);
   if (!spokenText) return Promise.resolve("__browser_tts__");
@@ -156,8 +79,8 @@ function speakWithBrowserTTS(text: string): Promise<string> {
 
 // ─── Public TTS API ─────────────────────────────────────────
 /**
- * Fetch TTS audio with emotion support.
- * Tries: ElevenLabs → Piper → Browser TTS
+ * Fetch TTS audio — 100% offline.
+ * Pipeline: Cache → Piper TTS → Browser TTS
  */
 export async function fetchTTSAudio(
   text: string,
@@ -165,16 +88,20 @@ export async function fetchTTSAudio(
   voiceId?: string,
   emotion?: Emotion,
   speedOverride?: "slow" | "normal" | "fast",
-  calmMode?: boolean
+  _calmMode?: boolean
 ): Promise<string> {
   const spokenText = sanitizeSpokenText(text);
   if (!spokenText) return "__silent__";
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
   const profile = (voiceId as VoiceProfile) || "female";
-  const offline = isOffline();
 
-  // ─── CHECK PERSISTENT CACHE (IndexedDB) — instant playback ───
+  // 1. Check in-memory cache
+  const cacheKey = getCacheKey(spokenText, profile, emotion);
+  const cached = audioCache.get(cacheKey);
+  if (cached) return cached;
+
+  // 2. Check persistent cache (IndexedDB)
   try {
     const persistentCached = await getCachedTTSAudio(spokenText, profile);
     if (persistentCached) {
@@ -183,42 +110,18 @@ export async function fetchTTSAudio(
     }
   } catch { /* non-critical */ }
 
-  // ─── OFFLINE: Skip ElevenLabs entirely → Piper → Browser TTS ───
-  if (!offline) {
-    try {
-      return await fetchElevenLabsTTS(spokenText, profile, signal, emotion, speedOverride, calmMode);
-    } catch (e: any) {
-      if (e.name === "AbortError") throw e;
-      console.warn("[TTS] ElevenLabs failed, trying Piper:", e.message);
-    }
-  } else {
-    console.log("[TTS] ⚡ Offline mode — using Piper TTS directly");
-  }
-
+  // 3. Piper TTS (local WASM)
   try {
-    return await piperSpeak(spokenText, profile, signal);
+    const url = await piperSpeak(spokenText, profile, signal);
+    if (spokenText.length < 80) cacheAudio(cacheKey, url);
+    return url;
   } catch (e: any) {
     if (e.name === "AbortError") throw e;
     console.warn("[TTS] Piper failed, falling back to browser TTS:", e.message);
   }
 
+  // 4. Browser Web Speech API (last resort)
   return speakWithBrowserTTS(spokenText);
-}
-
-/**
- * Preload a voice profile (warm up the ElevenLabs connection)
- * Call on profile switch for instant first response
- */
-export async function preloadVoiceProfile(profile: VoiceProfile): Promise<void> {
-  const warmupText = "Hmm.";
-  const cacheKey = getCacheKey(warmupText, profile);
-  if (audioCache.has(cacheKey)) return; // Already warm
-
-  try {
-    await fetchElevenLabsTTS(warmupText, profile);
-  } catch {
-    // Silent failure — preloading is best-effort
-  }
 }
 
 /**
@@ -234,20 +137,9 @@ export async function previewVoiceProfile(profile: VoiceProfile): Promise<void> 
   };
   const text = previewTexts[profile];
   try {
-    const url = await fetchElevenLabsTTS(text, profile);
-    if (url === "__silent__") return;
-    return new Promise((resolve, reject) => {
-      const audio = new Audio(url);
-      audio.onended = () => resolve();
-      audio.onerror = () => reject(new Error("Playback error"));
-      audio.play().catch(reject);
-    });
+    await piperPreview(profile);
   } catch {
-    try {
-      await piperPreview(profile);
-    } catch {
-      await speakWithBrowserTTS(text);
-    }
+    await speakWithBrowserTTS(text);
   }
 }
 
@@ -263,126 +155,6 @@ export function detectEmotionForTTS(text: string): Emotion | undefined {
   if (/colère|énervé|fâché|énerve|rage|grrr/.test(lower)) return "angry";
   if (/dodo|dormir|nuit|fatigué|sommeil|calme/.test(lower)) return "calm";
   return undefined;
-}
-
-// ─── Stream voice chat (bobby-brain) ────────────────────────
-export async function streamVoiceChat({
-  messages,
-  childName,
-  childAge,
-  mode,
-  parentSettings,
-  memoryContext,
-  cognitiveContext,
-  difficulty,
-  onSentence,
-  onDone,
-  onError,
-  signal,
-}: {
-  messages: AiMsg[];
-  childName: string;
-  childAge: number;
-  mode: string;
-  parentSettings?: any;
-  memoryContext?: string;
-  cognitiveContext?: string;
-  difficulty?: number;
-  onSentence: (sentence: string) => void;
-  onDone: (fullText: string) => void;
-  onError: (error: string) => void;
-  signal?: AbortSignal;
-}) {
-  try {
-    const resp = await fetch(BOBBY_BRAIN_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-      },
-      body: JSON.stringify({ messages, childName, childAge, mode, parentSettings, memoryContext, cognitiveContext, difficulty }),
-      signal,
-    });
-
-    if (!resp.ok) {
-      const data = await resp.json().catch(() => ({}));
-      onError(data.error || "ai_error");
-      return;
-    }
-
-    if (!resp.body) {
-      onError("no_response");
-      return;
-    }
-
-    const reader = resp.body.getReader();
-    const decoder = new TextDecoder();
-    let textBuffer = "";
-    let fullText = "";
-    let sentenceBuffer = "";
-
-    const SENTENCE_RE = /[.!?…]\s*/;
-    const COMMA_MIN_LENGTH = 8;  // Flush on comma very early for ultra-fast first audio (was 12)
-    let isFirstSentence = true;
-    const FIRST_FLUSH_LEN = 20; // Very aggressive first flush for <700ms perception
-
-    const flushSentence = () => {
-      const trimmed = sentenceBuffer.trim();
-      if (trimmed.length > 0) {
-        const safe = filterSentence(trimmed);
-        if (safe) {
-          onSentence(safe);
-          fullText += (fullText ? " " : "") + safe;
-          isFirstSentence = false;
-        }
-      }
-      sentenceBuffer = "";
-    };
-
-    while (true) {
-      if (signal?.aborted) break;
-      const { done, value } = await reader.read();
-      if (done) break;
-      textBuffer += decoder.decode(value, { stream: true });
-
-      let newlineIndex: number;
-      while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-        let line = textBuffer.slice(0, newlineIndex);
-        textBuffer = textBuffer.slice(newlineIndex + 1);
-
-        if (line.endsWith("\r")) line = line.slice(0, -1);
-        if (line.startsWith(":") || line.trim() === "") continue;
-        if (!line.startsWith("data: ")) continue;
-
-        const jsonStr = line.slice(6).trim();
-        if (jsonStr === "[DONE]") break;
-
-        try {
-          const parsed = JSON.parse(jsonStr);
-          const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-          if (content) {
-            sentenceBuffer += content;
-            // Flush on sentence-ending punctuation
-            if (SENTENCE_RE.test(sentenceBuffer)) flushSentence();
-            // Flush on comma/semicolon early (faster first audio)
-            else if (sentenceBuffer.length > COMMA_MIN_LENGTH && /[,;:]\s*$/.test(sentenceBuffer)) flushSentence();
-            // Ultra-aggressive first flush — send anything >20 chars for <700ms perception
-            else if (isFirstSentence && sentenceBuffer.length > FIRST_FLUSH_LEN) flushSentence();
-            // Also flush if buffer is very long without any punctuation
-            else if (sentenceBuffer.length > 35) flushSentence();
-          }
-        } catch {
-          textBuffer = line + "\n" + textBuffer;
-          break;
-        }
-      }
-    }
-
-    flushSentence();
-    onDone(fullText.trim());
-  } catch (e: any) {
-    if (e.name !== "AbortError") onError(e.message || "stream_error");
-  }
 }
 
 // ─── Audio Queue ────────────────────────────────────────────
@@ -458,7 +230,6 @@ export function useAudioQueue() {
     onAllDoneRef.current = cb;
   }, []);
 
-  /** Set playback volume (0-1). Use 0.4-0.5 for whisper/calm mode */
   const setVolume = useCallback((v: number) => {
     volumeRef.current = Math.max(0, Math.min(1, v));
     if (currentAudioRef.current) currentAudioRef.current.volume = volumeRef.current;
