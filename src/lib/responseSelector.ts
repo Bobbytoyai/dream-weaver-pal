@@ -1232,6 +1232,10 @@ export const BOBBY_MULTI_RESPONSES: MultiResponseEntry[] = [
     ],
   },
 ];
+
+// ─── Multi-Response Matcher ─────────────────────────────
+
+export function findMultiResponse(userInput: string): MultiResponseEntry | null {
   const normalized = userInput.toLowerCase().trim();
   if (!normalized || normalized.length < 2) return null;
 
