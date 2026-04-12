@@ -120,6 +120,7 @@ export function HologramFace({
             emotionDuringSpeech={emotionDuringSpeech}
             bobbyColor={bobbyColor}
           />
+          {faceState === "sleepy" && <SleepZzz />}
           <HologramParticles intensity={voiceState === "speaking" ? 0.8 : voiceState === "listening" ? 0.5 : 0.25} />
           <ScanRing />
         </Suspense>
