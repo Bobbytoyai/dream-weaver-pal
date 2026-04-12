@@ -248,13 +248,18 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(ps);
     if (rightPupilRef.current) rightPupilRef.current.scale.setScalar(ps);
 
-    // Eyelids (blink)
+    // Eyelids (blink) — slides down from top to fully cover eye
     const blinkClose = 1 - state.eyeOpenness;
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
       if (ref.current) {
-        ref.current.scale.y = Math.max(0.01, blinkClose * 2.2);
-        ref.current.position.y = 0.32 - blinkClose * 0.14;
-        ref.current.visible = blinkClose > 0.03;
+        // When fully closed (blinkClose=1), eyelid must cover entire eye
+        // Eye ellipse goes from -0.32 to +0.32 (height 0.64)
+        // Eyelid starts above eye and slides down proportionally
+        const coverAmount = blinkClose; // 0=open, 1=fully closed
+        ref.current.scale.y = Math.max(0.01, coverAmount * 1.0);
+        // Position: start at top of eye, slide down as closing
+        ref.current.position.y = 0.32 - coverAmount * 0.32;
+        ref.current.visible = coverAmount > 0.02;
       }
     });
 
@@ -265,15 +270,15 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       if (ref.current) ref.current.scale.set(eyeScale * happySquish, eyeScale / happySquish, 1);
     });
 
-    // Eyebrows
-    const browLift = state.eyebrowHeight * 0.15;
+    // Eyebrows — amplified lift and tilt for visible expressiveness
+    const browLift = state.eyebrowHeight * 0.35;
     if (leftEyebrowRef.current) {
       leftEyebrowRef.current.position.y = leftBrowY + browLift;
-      leftEyebrowRef.current.rotation.z = 0.05 - state.eyebrowTilt * 0.3;
+      leftEyebrowRef.current.rotation.z = 0.05 - state.eyebrowTilt * 0.6;
     }
     if (rightEyebrowRef.current) {
       rightEyebrowRef.current.position.y = rightBrowY + browLift;
-      rightEyebrowRef.current.rotation.z = -0.05 + state.eyebrowTilt * 0.3;
+      rightEyebrowRef.current.rotation.z = -0.05 + state.eyebrowTilt * 0.6;
     }
 
     // ─── DYNAMIC MOUTH ─────────────────────────────────────
@@ -361,7 +366,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       <mesh position={[hl2[0], hl2[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} />
       <mesh ref={eyelidRef} position={[0, 0.32, 0.04]} material={eyelidMat}>
-        <planeGeometry args={[0.76, 0.18]} />
+        <planeGeometry args={[0.86, 0.72]} />
       </mesh>
     </group>
   );
