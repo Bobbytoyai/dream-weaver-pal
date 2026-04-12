@@ -226,7 +226,7 @@ export function useBobbyVoiceCore({
       await ensureSession();
       await addMessage("user", trimmedText);
 
-      const reply = buildBobbyReply({ childName, childAge, userText: trimmedText });
+      const reply = buildBobbyReply({ childName, childAge, userText: trimmedText, parentSettings });
       await addMessage("assistant", reply.text, reply.emotion);
       await speakReply(reply);
     } finally {
