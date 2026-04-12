@@ -234,26 +234,35 @@ export default function AdminDetailDialog({ item, onClose, onSave, onDelete, onD
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-white/10 flex gap-2 items-center">
+        <div className="p-4 border-t border-white/10 space-y-2">
           {canGenerate && (
-            <Button
-              onClick={handleGenerate}
-              disabled={generating}
-              className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-semibold"
-              title="Générer avec IA"
-            >
-              {generating ? (
-                <span className="flex items-center gap-1.5">
-                  <Wand2 className="w-4 h-4 animate-spin" /> Génération…
-                </span>
-              ) : (
-                <span className="flex items-center gap-1.5">
-                  <Wand2 className="w-4 h-4" /> IA
-                </span>
-              )}
-            </Button>
+            <div className="flex gap-2 items-center">
+              <Input
+                value={aiTheme}
+                onChange={e => setAiTheme(e.target.value)}
+                placeholder="Thème IA (ex: animaux marins, espace…)"
+                className="flex-1 bg-white/8 border-white/15 text-white text-xs h-9 placeholder:text-white/30"
+                onKeyDown={e => { if (e.key === "Enter" && !generating) handleGenerate(); }}
+              />
+              <Button
+                onClick={handleGenerate}
+                disabled={generating}
+                className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-semibold h-9 px-3"
+                title="Générer avec IA"
+              >
+                {generating ? (
+                  <span className="flex items-center gap-1.5">
+                    <Wand2 className="w-4 h-4 animate-spin" /> …
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5">
+                    <Wand2 className="w-4 h-4" /> IA
+                  </span>
+                )}
+              </Button>
+            </div>
           )}
-          {onSave && (
+          <div className="flex gap-2 items-center">
             <Button
               onClick={handleSave}
               disabled={saving || !dirty}
