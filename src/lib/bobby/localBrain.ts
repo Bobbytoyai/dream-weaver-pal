@@ -283,6 +283,18 @@ const INTENT_RULES: IntentRule[] = [
   { intent: "MENSONGE", priority: 82, patterns: [
     /j'ai menti|j'ai triché|j'ai pas dit la vérité|j'ai caché/i,
   ]},
+  { intent: "ANXIETE", priority: 86, patterns: [
+    /inquiet|inquiète|tracasse|angoisse|stressé pour demain|peur de demain|anxieux/i,
+  ]},
+  { intent: "PERFECTIONNISME", priority: 78, patterns: [
+    /être parfait|tout bien faire|pas le droit à l'erreur|zéro faute|meilleur en tout/i,
+  ]},
+  { intent: "COMPARAISON", priority: 76, patterns: [
+    /être comme|comme lui|comme elle|lui il est mieux|elle est mieux|pareil que/i,
+  ]},
+  { intent: "FATIGUE_EMOTIONNELLE", priority: 87, patterns: [
+    /fatigué de tout|j'en peux plus|trop pour moi|épuisé mentalement|ça me pèse|trop lourd/i,
+  ]},
 
   // Requests
   { intent: "HISTOIRE", priority: 78, patterns: [
