@@ -86,7 +86,12 @@ async function speakWithElevenLabs(
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-  if (!supabaseUrl || !supabaseKey) throw new Error("Missing Supabase config");
+  if (!supabaseUrl || !supabaseKey) {
+    console.error("[TTS] ❌ Missing VITE_SUPABASE_URL or VITE_SUPABASE_PUBLISHABLE_KEY");
+    throw new Error("Missing Supabase config");
+  }
+
+  console.log(`[TTS] 🔄 Calling ElevenLabs for profile="${profile}", text="${text.slice(0, 40)}..."`);
 
   const response = await fetch(
     `${supabaseUrl}/functions/v1/elevenlabs-tts`,
@@ -103,10 +108,18 @@ async function speakWithElevenLabs(
   );
 
   if (!response.ok) {
+    const errBody = await response.text().catch(() => "");
+    console.error(`[TTS] ❌ ElevenLabs HTTP ${response.status}:`, errBody);
     throw new Error(`ElevenLabs TTS failed: ${response.status}`);
   }
 
   const blob = await response.blob();
+  if (blob.size < 100) {
+    console.error("[TTS] ❌ ElevenLabs returned tiny blob:", blob.size);
+    throw new Error("ElevenLabs returned empty audio");
+  }
+
+  console.log(`[TTS] ✅ ElevenLabs audio received: ${blob.size} bytes`);
   return URL.createObjectURL(blob);
 }
 
@@ -143,15 +156,16 @@ export async function fetchTTSAudio(
   } catch { /* non-critical */ }
 
   // 3. ElevenLabs (cloud — low latency streaming)
-  if (navigator.onLine) {
+  const isOnline = typeof navigator !== "undefined" && navigator.onLine;
+  console.log(`[TTS] 🌐 Online: ${isOnline}, profile: ${profile}, text: "${spokenText.slice(0, 30)}..."`);
+  if (isOnline) {
     try {
       const url = await speakWithElevenLabs(spokenText, profile, signal);
-      console.log("[TTS] ✅ ElevenLabs success");
       if (spokenText.length < 120) cacheAudio(cacheKey, url);
       return url;
     } catch (e: any) {
       if (e.name === "AbortError") throw e;
-      console.warn("[TTS] ElevenLabs failed, falling back to Piper:", e.message);
+      console.warn("[TTS] ⚠️ ElevenLabs failed, falling back to Piper:", e.message);
     }
   }
 
