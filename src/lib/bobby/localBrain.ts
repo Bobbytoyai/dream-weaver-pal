@@ -1336,7 +1336,8 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
     },
   },
 
-
+  // Context-aware responses for YES/NO based on memory handled in assembleResponse
+  QUESTION_SIMPLE: {
     default: {
       empathy: ["Hmm 🤔"],
       response: [
