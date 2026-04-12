@@ -59,6 +59,23 @@ export function useSessionTracker(childName: string, childAge: number) {
           message_count: messageCountRef.current,
         })
         .eq("id", id);
+
+      // ─── Post-session auto-learning: trigger analysis + knowledge extraction ───
+      if (messageCountRef.current >= 4) {
+        // Fire-and-forget: session analysis
+        supabase.functions.invoke("session-analysis", { body: { sessionId: id } })
+          .then(r => { if (r.error) console.warn("[Session] Analysis error:", r.error); })
+          .catch(e => console.warn("[Session] Analysis failed:", e));
+
+        // Fire-and-forget: learn from this conversation
+        supabase.functions.invoke("learn-from-conversations", { body: { mode: "session", sessionId: id } })
+          .then(r => {
+            if (r.data?.total_qa_learned > 0) {
+              console.log(`[AutoLearn] 🧠 Learned ${r.data.total_qa_learned} new Q&A from session`);
+            }
+          })
+          .catch(e => console.warn("[AutoLearn] Learning failed:", e));
+      }
     } catch (e) {
       console.warn("[Session] Failed to end session:", e);
     }
