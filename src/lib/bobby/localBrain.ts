@@ -130,6 +130,7 @@ export type LocalIntent =
   | "PERFECTIONNISME" | "COMPARAISON" | "FATIGUE_EMOTIONNELLE"
   | "RETRAIT" | "PEUR_ABANDON" | "PEUR_ECHEC" | "AVERSION" | "PEOPLE_PLEASING"
   | "CURIOSITE" | "CREATION" | "IDENTITE_PEUR" | "MAUVAIS_COMPORTEMENT"
+  | "STRESS" | "PARTAGE_QUOTIDIEN" | "RESISTANCE" | "ENVIE"
   // Catch-all
   | "GENERAL";
 
@@ -270,20 +271,20 @@ const INTENT_RULES: IntentRule[] = [
   { intent: "EXCITATION", priority: 78, patterns: [
     /trop excité|j'ai hâte|vivement|impatient|je peux pas attendre|trop pressé/i,
   ]},
-  { intent: "SANTE", priority: 83, patterns: [
-    /j'ai mal|mal au ventre|mal à la tête|mal aux dents|malade|vomi|fièvre|bobo|ça fait mal/i,
-  ]},
-  { intent: "PERTE", priority: 80, patterns: [
-    /j'ai perdu mon|perdu ma|perdu mes|retrouver|disparu|cassé mon|cassé ma/i,
-  ]},
-  { intent: "REVE_AVENIR", priority: 73, patterns: [
-    /je veux devenir|quand je serai grand|mon rêve c'est|plus tard je|j'aimerais être/i,
-  ]},
-  { intent: "ABANDON", priority: 84, patterns: [
-    /je veux abandonner|j'abandonne|à quoi bon|laisser tomber|ça sert à rien|c'est foutu/i,
-  ]},
   { intent: "MENSONGE", priority: 82, patterns: [
     /j'ai menti|j'ai triché|j'ai pas dit la vérité|j'ai caché/i,
+  ]},
+  { intent: "STRESS", priority: 80, patterns: [
+    /en retard|je suis en retard|pas le temps|dépêcher|vite|pressé.*école/i,
+  ]},
+  { intent: "RESISTANCE", priority: 71, patterns: [
+    /pas envie d'aller|veux pas aller|pas envie.*école|veux pas faire mes devoirs|j'ai pas envie/i,
+  ]},
+  { intent: "PARTAGE_QUOTIDIEN", priority: 55, patterns: [
+    /bonne journée|bien mangé|bien dormi|bien passé|fait un ami|j'ai passé|dessin animé/i,
+  ]},
+  { intent: "ENVIE", priority: 58, patterns: [
+    /je veux regarder|je veux manger|je veux jouer dehors|je veux un|je veux des/i,
   ]},
   { intent: "ANXIETE", priority: 86, patterns: [
     /inquiet|inquiète|tracasse|angoisse|stressé pour demain|peur de demain|anxieux/i,
@@ -1684,15 +1685,20 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
     default: {
       empathy: [
         "Les devoirs, c'est pas toujours fun 📚",
+        "Les devoirs peuvent être pénibles 😔",
         "Allez, courage !",
       ],
       response: [
         "Bobby peut t'aider à te motiver !",
         "Plus vite c'est fait, plus vite tu peux t'amuser !",
+        "Les faire petit à petit ça aide 💛",
+        "Ça arrive d'oublier 😔 tu peux mieux t'organiser la prochaine fois.",
       ],
       opening: [
         "Tu as besoin d'aide ?",
         "C'est quoi comme matière ?",
+        "Tu veux commencer par le plus facile ?",
+        "Tu veux une astuce pour mieux t'organiser ?",
       ],
     },
   },
@@ -1723,6 +1729,77 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
       ],
     },
   },
+
+  STRESS: {
+    default: {
+      empathy: [
+        "Être en retard peut stresser 😔",
+        "Quand on est pressé, tout semble plus dur…",
+      ],
+      response: [
+        "Respire un peu 💛 tu peux encore t'organiser.",
+        "Bobby est là. On se calme et on y va.",
+      ],
+      opening: [
+        "Tu veux qu'on respire ensemble ?",
+        "Qu'est-ce qui te stresse le plus ?",
+      ],
+    },
+  },
+
+  RESISTANCE: {
+    default: {
+      empathy: [
+        "Parfois on n'a pas envie 😔",
+        "C'est normal de pas toujours avoir envie…",
+      ],
+      response: [
+        "Mais il peut y avoir des moments sympas 💛",
+        "Peut-être qu'on peut rendre ça plus facile.",
+      ],
+      opening: [
+        "Qu'est-ce que tu n'aimes pas exactement ?",
+        "Tu veux commencer par le plus facile ?",
+      ],
+    },
+  },
+
+  PARTAGE_QUOTIDIEN: {
+    default: {
+      empathy: [
+        "C'est super 😄",
+        "J'adore entendre ça !",
+        "Oh chouette !",
+      ],
+      response: [
+        "Bobby aime quand tu partages ta journée 💛",
+        "Ça a l'air d'une bonne journée !",
+      ],
+      opening: [
+        "C'était quoi le meilleur moment ?",
+        "Raconte-moi encore !",
+        "Tu veux me dire autre chose ?",
+      ],
+    },
+  },
+
+  ENVIE: {
+    default: {
+      empathy: [
+        "Bonne idée 😄",
+        "Oh, ça a l'air sympa !",
+      ],
+      response: [
+        "Bobby comprend 💛",
+        "C'est bien d'avoir des envies !",
+      ],
+      opening: [
+        "Tu préfères quoi exactement ?",
+        "Tu veux faire ça maintenant ?",
+      ],
+    },
+  },
+
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1905,6 +1982,10 @@ const INTENT_FACE_MAP: Partial<Record<LocalIntent, FaceState>> = {
   CREATION: "excited",
   IDENTITE_PEUR: "reassuring",
   MAUVAIS_COMPORTEMENT: "reassuring",
+  STRESS: "reassuring",
+  RESISTANCE: "reassuring",
+  PARTAGE_QUOTIDIEN: "happy",
+  ENVIE: "playful",
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
