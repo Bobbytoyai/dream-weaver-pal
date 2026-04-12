@@ -721,7 +721,9 @@ const Admin = () => {
               ? filteredInteractions.filter(i => i.child_input.toLowerCase().includes(search.toLowerCase()) || i.ai_response.toLowerCase().includes(search.toLowerCase()))
               : filteredInteractions
             ).map((interaction, idx) => (
-              <InteractionCard key={idx} interaction={interaction} />
+              <div key={idx} onClick={() => openInteractionDetail(interaction)} className="cursor-pointer">
+                <InteractionCard interaction={interaction} />
+              </div>
             ))}
             {filteredInteractions.length === 0 && (
               <p className="text-center text-white/40 py-12 text-sm">Aucune interaction pour ce filtre</p>
