@@ -102,6 +102,7 @@ export function resetLocalBrain() {
   mem.sessionMood = "neutral";
   mem.turnCount = 0;
   mem.recentResponses = [];
+  resetScenarios();
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
