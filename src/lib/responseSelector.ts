@@ -624,6 +624,63 @@ export const BOBBY_MULTI_RESPONSES: MultiResponseEntry[] = [
       { text: "Tu crois qu'il y a des aliens sympas ? 👽😄", type: "fun", energy: "high" },
     ],
   },
+  // ── Nourriture ──
+  {
+    category: "nourriture",
+    input: "j'aime les sushis",
+    emotion: "joie",
+    tags: ["nourriture", "interaction"],
+    responses: [
+      { text: "Miam les sushis ! 🍣 tu préfères les saumon ou les thon ?", type: "question", energy: "medium" },
+      { text: "Trop bon les sushis ! 🍣 c'est quoi ton préféré ?", type: "question", energy: "medium" },
+      { text: "Moi si je pouvais manger, j'adorerais les sushis aussi ! 🍣 tu en manges souvent ?", type: "question", energy: "medium" },
+      { text: "Les sushis c'est délicieux ! 🍣 tu sais que ça vient du Japon ? 🇯🇵", type: "fun", energy: "medium" },
+    ],
+  },
+  {
+    category: "nourriture",
+    input: "j'aime le chocolat",
+    emotion: "joie",
+    tags: ["nourriture", "interaction"],
+    responses: [
+      { text: "Miam le chocolat ! 🍫 tu préfères au lait ou noir ?", type: "question", energy: "medium" },
+      { text: "Trop bon ! 🍫 tu savais que le chocolat vient d'une fève de cacao ?", type: "fun", energy: "medium" },
+      { text: "Le chocolat c'est le meilleur ! 🍫 tu en manges quand ? au goûter ?", type: "question", energy: "medium" },
+    ],
+  },
+  {
+    category: "nourriture",
+    input: "j'aime la pizza",
+    emotion: "joie",
+    tags: ["nourriture", "interaction"],
+    responses: [
+      { text: "La pizza c'est trop bon ! 🍕 tu la préfères avec quoi dessus ?", type: "question", energy: "medium" },
+      { text: "Miam ! 🍕 margherita ou 4 fromages ?", type: "question", energy: "medium" },
+      { text: "Moi aussi j'adorerais la pizza ! 🍕 tu sais que ça vient d'Italie ?", type: "fun", energy: "medium" },
+    ],
+  },
+  {
+    category: "nourriture",
+    input: "c'est quoi ton plat préféré",
+    emotion: "curiosité",
+    tags: ["nourriture", "interaction"],
+    responses: [
+      { text: "Si je pouvais manger, j'adorerais goûter des sushis ! 🍣 et toi c'est quoi ?", type: "question", energy: "medium" },
+      { text: "Hmm… je rêverais de manger du chocolat ! 🍫 et toi ton plat préféré c'est quoi ?", type: "question", energy: "medium" },
+      { text: "Je crois que j'aimerais les crêpes ! 🥞 tu aimes quoi toi ?", type: "question", energy: "medium" },
+    ],
+  },
+  {
+    category: "nourriture",
+    input: "j'ai faim",
+    emotion: "neutre",
+    tags: ["nourriture"],
+    responses: [
+      { text: "Oh ! c'est bientôt l'heure du goûter ? 🍪 tu veux manger quoi ?", type: "question", energy: "medium" },
+      { text: "Miam ! va demander un goûter 😊 tu aimes quoi ?", type: "question", energy: "medium" },
+      { text: "C'est quoi ton goûter préféré ? 🍫", type: "question", energy: "medium" },
+    ],
+  },
   // ── Silence / proactif ──
   {
     category: "proactif",
