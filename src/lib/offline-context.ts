@@ -130,6 +130,8 @@ export function resetConversationContext() {
   context.mood = "neutral";
   context.interactionCount = 0;
   context.lastResponses = [];
+  context.lastBobbyResponse = "";
+  context.lastResponseTime = 0;
   context.history = [];
   context.mentionedTopics.clear();
   context.childPreferences = {};
