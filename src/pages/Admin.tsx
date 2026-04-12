@@ -1131,7 +1131,7 @@ const Admin = () => {
                   <h3 className="text-white/60 text-xs font-semibold mb-2 uppercase tracking-wider">{cat} ({questions.length})</h3>
                   <div className="space-y-2">
                     {questions.map((q, i) => (
-                      <div key={i} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                      <div key={i} onClick={() => openQuizDetail(q, "quiz")} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
                         <p className="text-sm text-white/80 font-medium mb-2">{q.question}</p>
                         <div className="grid grid-cols-2 gap-1.5 mb-2">
                           {q.choices.map((c, ci) => (
