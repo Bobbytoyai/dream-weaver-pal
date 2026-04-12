@@ -282,19 +282,44 @@ export function useBobbyVoiceCore({
     go("LISTENING");
     eventBus.emit({ type: "WAKE_DETECTED", confidence: 1 });
 
-    // 40s silence watchdog — if no final transcript arrives, stop listening
+    // 60s silence watchdog — if no speech, Bobby relaunches the child
     if (listenTimeoutRef.current) clearTimeout(listenTimeoutRef.current);
     listenTimeoutRef.current = setTimeout(() => {
-      if (machineRef.current === "LISTENING") {
-        console.log("[BobbyVoiceCore] 40s silence timeout — stopping listening");
+      if (machineRef.current !== "LISTENING") return;
+      silenceCountRef.current++;
+
+      if (silenceCountRef.current >= 2) {
+        // Already relaunched once — end conversation
+        console.log("[BobbyVoiceCore] 2nd silence timeout — ending conversation");
         stopSttRef.current();
         setMicArmed(false);
         setPartialText("");
         setCurrentEmotion("idle");
         go("IDLE");
+        void closeSession();
         scheduleSleep();
+        return;
       }
-    }, 40_000);
+
+      // First timeout — Bobby relaunches the child
+      console.log("[BobbyVoiceCore] 60s silence — Bobby relaunches child");
+      const relaunches = [
+        `${childName}, tu es toujours là ? Dis-moi quelque chose !`,
+        `Hé ${childName} ! On continue à discuter ? 😊`,
+        `${childName}, Bobby t'attend ! Tu veux jouer ou parler ?`,
+        `Tu es là ${childName} ? Raconte-moi un truc !`,
+      ];
+      const text = relaunches[Math.floor(Math.random() * relaunches.length)];
+      const relaunchReply: BobbyBrainReply = {
+        text,
+        intent: "RELAUNCH",
+        source: "offline_brain",
+        emotion: "curious",
+        confidence: 1,
+        isOffline: true,
+      };
+      void speakReply(relaunchReply);
+    }, 60_000);
 
     try {
       // Native SpeechRecognition manages its own mic — just start it
