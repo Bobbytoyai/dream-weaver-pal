@@ -20,10 +20,16 @@ export function useConversationRecorder() {
       let stream: MediaStream;
       if (externalStream && externalStream.active) {
         stream = externalStream;
-        ownsStreamRef.current = false;
+        ownsStreamRef.current = true; // Take ownership to stop tracks on end
       } else {
-        console.warn("[Recorder] External STT stream missing — skip recorder start to avoid second mic capture");
-        return false;
+        // Create own stream if none provided
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          ownsStreamRef.current = true;
+        } catch {
+          console.warn("[Recorder] No mic access — skip recording");
+          return false;
+        }
       }
       streamRef.current = stream;
 
