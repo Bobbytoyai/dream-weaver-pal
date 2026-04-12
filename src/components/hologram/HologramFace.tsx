@@ -129,6 +129,89 @@ export function HologramFace({
   );
 }
 
+// ─── Floating "Z z z" sleep animation ─────────────────────────────────
+function SleepZzz() {
+  const groupRef = useRef<THREE.Group>(null);
+  const zLetters = useRef<THREE.Mesh[]>([]);
+  const phases = useRef([0, 0.7, 1.5]); // staggered start
+
+  useFrame((_, delta) => {
+    if (!groupRef.current) return;
+    zLetters.current.forEach((mesh, i) => {
+      if (!mesh) return;
+      phases.current[i] += delta * 0.6;
+      const p = phases.current[i] % 3; // 3s cycle
+      const t = p / 3; // 0→1
+
+      // Float up and right, growing then fading
+      mesh.position.x = 0.6 + t * 0.5 + i * 0.15;
+      mesh.position.y = 0.2 + t * 1.2;
+      mesh.position.z = 0.1;
+
+      const scale = (0.5 + i * 0.25) * (0.3 + Math.sin(t * Math.PI) * 0.7);
+      mesh.scale.setScalar(scale);
+
+      // Gentle wobble
+      mesh.rotation.z = Math.sin(phases.current[i] * 2) * 0.15;
+
+      const mat = mesh.material as THREE.MeshBasicMaterial;
+      // Fade in then out
+      mat.opacity = Math.sin(t * Math.PI) * 0.7;
+    });
+  });
+
+  const zMat = useMemo(() => [
+    new THREE.MeshBasicMaterial({ color: "#8888ff", transparent: true, opacity: 0 }),
+    new THREE.MeshBasicMaterial({ color: "#aaaaff", transparent: true, opacity: 0 }),
+    new THREE.MeshBasicMaterial({ color: "#ccccff", transparent: true, opacity: 0 }),
+  ], []);
+
+  // Simple Z shape using a plane (text would need font loading)
+  const zGeo = useMemo(() => {
+    const shape = new THREE.Shape();
+    // Z letter path
+    shape.moveTo(-0.08, 0.08);
+    shape.lineTo(0.08, 0.08);
+    shape.lineTo(-0.06, -0.08);
+    shape.lineTo(0.08, -0.08);
+    // Thicken with lines
+    const geo = new THREE.ShapeGeometry(shape, 1);
+    return geo;
+  }, []);
+
+  // Use simple text-like planes for Z
+  const planeGeo = useMemo(() => new THREE.PlaneGeometry(0.18, 0.18), []);
+
+  return (
+    <group ref={groupRef}>
+      {[0, 1, 2].map(i => (
+        <mesh
+          key={i}
+          ref={(el) => { if (el) zLetters.current[i] = el; }}
+          material={zMat[i]}
+          position={[0.6 + i * 0.15, 0.2, 0.1]}
+        >
+          {/* Z shape built from 3 thin boxes */}
+          <group>
+            {/* Top bar */}
+            <mesh position={[0, 0.06, 0]} material={zMat[i]}>
+              <boxGeometry args={[0.14, 0.025, 0.01]} />
+            </mesh>
+            {/* Diagonal */}
+            <mesh position={[0, 0, 0]} rotation={[0, 0, -0.65]} material={zMat[i]}>
+              <boxGeometry args={[0.18, 0.02, 0.01]} />
+            </mesh>
+            {/* Bottom bar */}
+            <mesh position={[0, -0.06, 0]} material={zMat[i]}>
+              <boxGeometry args={[0.14, 0.025, 0.01]} />
+            </mesh>
+          </group>
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 function FaceScene({ faceState, gazeRef, getViseme, emotionIntensity, emotionDuringSpeech, bobbyColor }: {
   faceState: FaceState;
   gazeRef: React.MutableRefObject<{ x: number; y: number }>;
