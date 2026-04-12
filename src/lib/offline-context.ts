@@ -533,6 +533,8 @@ export function buildContextualPrefix(childName?: string): string | null {
 import { FOLLOW_UPS } from "./offline-stories";
 
 export function getFollowUp(intent: OfflineIntent): string {
+  // Only add follow-ups 30% of the time to keep responses short and natural
+  if (Math.random() > 0.3) return "";
   const pool = FOLLOW_UPS[intent] || [""];
   return pickRandom(pool, `followup_${intent}`);
 }
