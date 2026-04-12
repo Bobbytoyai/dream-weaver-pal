@@ -19,7 +19,7 @@ import {
 // Lazy import — the 10K file is huge, only load when needed
 import type { BobbyInteraction } from "@/lib/bobby_interactions_10k";
 import { BLAGUES } from "@/lib/bobby-content/blagues";
-import { HISTOIRES } from "@/lib/bobby-content/histoires";
+import { HISTOIRES, type Histoire } from "@/lib/bobby-content/histoires";
 import { CHANSONS, CHANSON_CATEGORIES, type Chanson, type ChansonCategorie } from "@/lib/bobby-content/chansons";
 import { QA_DATABASE } from "@/lib/qa-database";
 import { BOBBY_MULTI_RESPONSES } from "@/lib/responseSelector";
