@@ -215,6 +215,46 @@ const INTENT_VECTORS: IntentVector[] = [
       meilleur: 0.5, champion: 0.6, effort: 0.6, but: 0.5, rêve: 0.4,
     },
   },
+  {
+    intent: "SANTE",
+    minConfidence: 0.4,
+    words: {
+      mal: 0.7, ventre: 0.8, tête: 0.6, dent: 0.7, malade: 1.0,
+      fièvre: 0.9, vomi: 0.9, bobo: 0.8, douleur: 0.8, médecin: 0.6,
+    },
+  },
+  {
+    intent: "PERTE",
+    minConfidence: 0.4,
+    words: {
+      perdu: 0.9, perdre: 0.8, disparu: 0.8, retrouver: 0.6, cassé: 0.7,
+      jouet: 0.5, doudou: 0.6, objet: 0.4, chercher: 0.5,
+    },
+  },
+  {
+    intent: "REVE_AVENIR",
+    minConfidence: 0.4,
+    words: {
+      devenir: 0.9, grand: 0.4, rêve: 0.8, astronaute: 0.7, métier: 0.7,
+      futur: 0.7, pompier: 0.6, docteur: 0.6, inventeur: 0.6,
+    },
+  },
+  {
+    intent: "ABANDON",
+    minConfidence: 0.35,
+    words: {
+      abandonner: 1.0, lâcher: 0.7, arrêter: 0.5, foutu: 0.7, inutile: 0.6,
+      tomber: 0.4, décourager: 0.8, sert: 0.4, rien: 0.3,
+    },
+  },
+  {
+    intent: "EXCITATION",
+    minConfidence: 0.45,
+    words: {
+      excité: 1.0, hâte: 0.9, impatient: 0.9, vivement: 0.8, pressé: 0.6,
+      énergie: 0.5, attendre: 0.4, demain: 0.3,
+    },
+  },
 ];
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
