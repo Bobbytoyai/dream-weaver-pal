@@ -125,7 +125,8 @@ export type LocalIntent =
   // Safety
   | "CONTENU_BLOQUE" | "CRISE_SECURITE"
   // Situational
-  | "FATIGUE" | "ECHEC" | "OBJECTIF"
+  | "FATIGUE" | "ECHEC" | "OBJECTIF" | "SANTE" | "PERTE" | "REVE_AVENIR"
+  | "ANXIETE" | "ABANDON" | "MENSONGE" | "EXCITATION" | "AMOUREUX"
   // Catch-all
   | "GENERAL";
 
@@ -149,7 +150,8 @@ const INTENT_RULES: IntentRule[] = [
   // Emotions — high priority
   { intent: "PEUR", priority: 90, patterns: [
     /j'ai peur|fait peur|effrayé|terrifié|cauchemar|monstre|angoiss|j'ose pas|me fait peur/i,
-    /peur du noir|peur de|peur quand|peur que/i,
+    /peur du noir|peur de|peur quand|peur que|peur d'être puni|peur de mourir|peur de parler/i,
+    /stressé|stress|anxieux|anxiété|inquiet/i,
   ]},
   { intent: "TRISTESSE", priority: 90, patterns: [
     /je suis triste|je pleure|pas bien|malheureux|je me sens mal|j'ai le cafard|personne m'aime/i,
@@ -165,7 +167,7 @@ const INTENT_RULES: IntentRule[] = [
     /je m'ennuie|m'ennuie|rien à faire|c'est nul|bof|chiant|ennuie|sais pas quoi faire/i,
   ]},
   { intent: "HONTE", priority: 85, patterns: [
-    /honte|ridicule|la honte|embarrass|j'ai fait une bêtise|tout le monde a ri/i,
+    /honte|ridicule|la honte|embarrass|j'ai fait une bêtise|tout le monde a ri|j'ai menti|j'ai triché/i,
   ]},
   { intent: "JALOUSIE", priority: 85, patterns: [
     /jaloux|jalouse|pourquoi pas moi|lui il a|elle elle a|c'est injuste/i,
@@ -177,7 +179,7 @@ const INTENT_RULES: IntentRule[] = [
     /fier|fière|j'ai réussi|j'ai gagné|champion|regarde ce que|bien joué/i,
   ]},
   { intent: "AMOUR", priority: 80, patterns: [
-    /je t'aime|t'adore|câlin|bisou|tu es mon ami|meilleur ami|aime bobby/i,
+    /je t'aime|t'adore|câlin|bisou|tu es mon ami|meilleur ami|aime bobby|amoureux|amoureuse/i,
   ]},
   { intent: "TIMIDITE", priority: 80, patterns: [
     /timide|j'ose pas|gêné|rouge|devant tout le monde/i,
@@ -189,7 +191,7 @@ const INTENT_RULES: IntentRule[] = [
   // Social situations
   { intent: "CONFLIT_FAMILLE", priority: 88, patterns: [
     /parents crient|papa crie|maman crie|disputé avec|frère m'énerve|sœur m'énerve|parents séparés|divorce/i,
-    /punition|puni|grondé|engueulé/i,
+    /punition|puni|grondé|engueulé|parents se disputent|parents se battent/i,
   ]},
   { intent: "CONFLIT_AMI", priority: 88, patterns: [
     /copain m'a|copine m'a|ami m'a|plus mon ami|disputé avec mon copain|il m'a tapé|elle m'a tapé/i,
@@ -249,6 +251,36 @@ const INTENT_RULES: IntentRule[] = [
   ]},
   { intent: "OBJECTIF", priority: 72, patterns: [
     /je veux gagner|je veux réussir|mon objectif|je vais y arriver|je veux être le meilleur/i,
+  ]},
+  { intent: "SANTE", priority: 83, patterns: [
+    /j'ai mal|mal au ventre|mal à la tête|mal aux dents|malade|vomi|fièvre|bobo|ça fait mal/i,
+  ]},
+  { intent: "PERTE", priority: 80, patterns: [
+    /j'ai perdu mon|perdu ma|perdu mes|plus retrouver|disparu|cassé mon|cassé ma/i,
+  ]},
+  { intent: "REVE_AVENIR", priority: 72, patterns: [
+    /je veux devenir|quand je serai grand|mon rêve c'est|plus tard je|j'aimerais être/i,
+  ]},
+  { intent: "ABANDON", priority: 84, patterns: [
+    /je veux abandonner|j'abandonne|à quoi bon|laisser tomber|ça sert à rien|c'est foutu/i,
+  ]},
+  { intent: "EXCITATION", priority: 78, patterns: [
+    /trop excité|j'ai hâte|vivement|impatient|je peux pas attendre|trop pressé/i,
+  ]},
+  { intent: "SANTE", priority: 83, patterns: [
+    /j'ai mal|mal au ventre|mal à la tête|mal aux dents|malade|vomi|fièvre|bobo|ça fait mal/i,
+  ]},
+  { intent: "PERTE", priority: 80, patterns: [
+    /j'ai perdu mon|perdu ma|perdu mes|retrouver|disparu|cassé mon|cassé ma/i,
+  ]},
+  { intent: "REVE_AVENIR", priority: 73, patterns: [
+    /je veux devenir|quand je serai grand|mon rêve c'est|plus tard je|j'aimerais être/i,
+  ]},
+  { intent: "ABANDON", priority: 84, patterns: [
+    /je veux abandonner|j'abandonne|à quoi bon|laisser tomber|ça sert à rien|c'est foutu/i,
+  ]},
+  { intent: "MENSONGE", priority: 82, patterns: [
+    /j'ai menti|j'ai triché|j'ai pas dit la vérité|j'ai caché/i,
   ]},
 
   // Requests
@@ -1078,7 +1110,143 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
     },
   },
 
-  // Context-aware responses for YES/NO based on memory handled in assembleResponse
+  SANTE: {
+    default: {
+      empathy: [
+        "Oh mince, ça ne doit pas être agréable 😔",
+        "Aïe… Bobby est avec toi 💛",
+        "Oh non, pas cool…",
+      ],
+      response: [
+        "Tu devrais le dire à un adulte pour qu'il t'aide 💛",
+        "C'est important d'écouter son corps.",
+        "Un adulte pourra t'aider à te sentir mieux.",
+      ],
+      opening: [
+        "Tu sais depuis quand ça te fait mal ?",
+        "Tu en as parlé à maman ou papa ?",
+        "Tu veux te reposer un peu ?",
+      ],
+    },
+  },
+
+  PERTE: {
+    default: {
+      empathy: [
+        "Oh non, ça doit être vraiment triste 😔",
+        "C'est dur de perdre quelque chose qu'on aime…",
+        "Ça fait de la peine…",
+      ],
+      response: [
+        "Ce qui comptait pour toi compte aussi pour Bobby 💛",
+        "Les objets qu'on aime ont une place spéciale dans notre cœur.",
+        "Parfois on retrouve les choses quand on s'y attend le moins.",
+      ],
+      opening: [
+        "Tu veux qu'on cherche une idée pour le retrouver ?",
+        "Tu veux me raconter ce que c'était ?",
+        "C'était quoi de spécial pour toi ?",
+      ],
+    },
+  },
+
+  REVE_AVENIR: {
+    default: {
+      empathy: [
+        "C'est un rêve incroyable ! 🚀",
+        "Wow, quel beau projet ! 🌟",
+        "Bobby adore tes rêves !",
+      ],
+      response: [
+        "Tu as déjà beaucoup d'imagination et de motivation 💛",
+        "Les grands rêves commencent comme ça !",
+        "Bobby croit en toi à fond ! 💪",
+      ],
+      opening: [
+        "Qu'est-ce qui te plaît le plus dans ce rêve ?",
+        "Tu ferais quoi en premier ?",
+        "C'est quoi qui t'a donné cette idée ?",
+      ],
+    },
+  },
+
+  ABANDON: {
+    default: {
+      empathy: [
+        "Quand c'est difficile, on peut avoir envie d'abandonner 😔",
+        "Je comprends que tu sois découragé…",
+        "C'est dur en ce moment, hein ?",
+      ],
+      response: [
+        "Mais tu es capable, même si tu ne le sens pas maintenant 💛",
+        "Chaque petit pas compte, même les tout petits.",
+        "Les moments difficiles font partie du chemin — tu es courageux d'être allé aussi loin 💪",
+      ],
+      opening: [
+        "Qu'est-ce qui te bloque en ce moment ?",
+        "Tu veux qu'on découpe le problème en petits morceaux ?",
+        "Et si on faisait une pause avant de réessayer ?",
+      ],
+    },
+  },
+
+  EXCITATION: {
+    default: {
+      empathy: [
+        "On dirait que tu débordes d'énergie ! 😄",
+        "Woohoo ! Tu es super excité !",
+        "Ça pétille ! 🎉",
+      ],
+      response: [
+        "C'est génial de ressentir ça 💛",
+        "Bobby adore te voir aussi enthousiaste !",
+        "L'excitation, c'est le meilleur carburant !",
+      ],
+      opening: [
+        "Qu'est-ce qui te rend aussi excité ?",
+        "Raconte-moi tout ! 😄",
+        "C'est pour quand ?",
+      ],
+    },
+  },
+
+  AMOUREUX: {
+    default: {
+      empathy: [
+        "Oh, c'est une belle émotion 💛",
+        "Ah, l'amour ! 😊",
+      ],
+      response: [
+        "C'est normal de ressentir des papillons dans le ventre.",
+        "L'amour c'est un sentiment magnifique.",
+      ],
+      opening: [
+        "Ça fait quoi dans ton cœur quand tu penses à cette personne ?",
+        "Tu veux m'en parler ?",
+      ],
+    },
+  },
+
+  MENSONGE: {
+    default: {
+      empathy: [
+        "Merci d'être honnête avec moi 💛",
+        "C'est courageux de le dire.",
+      ],
+      response: [
+        "Mentir peut arriver, mais on peut toujours réparer 😔",
+        "L'important c'est que tu reconnais ce qui s'est passé.",
+        "Dire la vérité, même après, c'est déjà un acte de courage.",
+      ],
+      opening: [
+        "Tu veux me dire pourquoi tu l'as fait ?",
+        "Tu penses que tu pourrais en parler à la personne concernée ?",
+        "Comment tu te sens maintenant ?",
+      ],
+    },
+  },
+
+
   QUESTION_SIMPLE: {
     default: {
       empathy: ["Hmm 🤔"],
@@ -1446,6 +1614,13 @@ const INTENT_FACE_MAP: Partial<Record<LocalIntent, FaceState>> = {
   FATIGUE: "calm",
   ECHEC: "reassuring",
   OBJECTIF: "excited",
+  SANTE: "reassuring",
+  PERTE: "reassuring",
+  REVE_AVENIR: "excited",
+  ABANDON: "reassuring",
+  EXCITATION: "excited",
+  AMOUREUX: "happy",
+  MENSONGE: "reassuring",
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
