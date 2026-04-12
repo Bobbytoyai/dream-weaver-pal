@@ -1387,10 +1387,14 @@ const Admin = () => {
 
         {/* Stats bar */}
         <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-          <div className="grid grid-cols-4 gap-3 text-center">
+          <div className="grid grid-cols-5 gap-3 text-center">
             <div>
-              <p className="text-lg font-bold text-cyan-400">10 000</p>
+              <p className="text-lg font-bold text-cyan-400">{sectionCounts.interactions}</p>
               <p className="text-[9px] text-white/40">Interactions</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-orange-400">{BOBBY_MULTI_RESPONSES.length}</p>
+              <p className="text-[9px] text-white/40">Multi-Réponses</p>
             </div>
             <div>
               <p className="text-lg font-bold text-amber-400">{QA_DATABASE.length}</p>
@@ -1409,12 +1413,12 @@ const Admin = () => {
 
         {/* Main grid — square cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {TOP_SECTIONS.map(section => (
+          {TOP_SECTIONS_CONFIG.map(section => (
             <SquareCard
               key={section.id}
               label={section.label}
               emoji={section.emoji}
-              count={section.id === "cloud" ? entries.length : section.count}
+              count={sectionCounts[section.id] ?? "…"}
               desc={section.desc}
               color={section.color}
               bgColor={section.bgColor}
