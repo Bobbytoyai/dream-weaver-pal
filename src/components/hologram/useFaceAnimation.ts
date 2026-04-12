@@ -547,7 +547,7 @@ export function useFaceAnimation(
 
     c.headTiltX = lerp(
       c.headTiltX,
-      (targets.headTiltX ?? 0) - gazeY * 0.18 + breathX + microOffset.current.headX + speechHeadNod + playfulBounce + proudHeadUp + confusedShakeX,
+      (targets.headTiltX ?? 0) - gazeY * 0.18 + breathX + microOffset.current.headX + speechHeadNod + playfulBounce + proudHeadUp + confusedShakeX + sleepyHeadBob,
       delta * gazeSpeed * 0.7 * surprisedFreeze
     );
     // v3.9: Speaking gaze — 70% focus on user, 30% natural drift
