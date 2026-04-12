@@ -610,6 +610,16 @@ const Admin = () => {
     );
   }
 
+  // Detail dialog — rendered as fixed overlay regardless of which section is active
+  const detailDialog = (
+    <AdminDetailDialog
+      item={detailItem}
+      onClose={() => setDetailItem(null)}
+      onSave={handleDetailSave}
+      onDelete={handleDetailDelete}
+    />
+  );
+
   // ─── Edit form ─────────────────────────────────────────────────────
   if (editingEntry) {
     const kwString = (editingEntry.keywords || []).join(", ");
