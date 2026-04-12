@@ -868,6 +868,7 @@ export function useConversationStateMachine({
       session.startSession();
       sessionStartedRef.current = true;
       resetCognitiveState();
+
       recorder.startRecording(sttStreamRef.current ?? undefined);
       eventBus.emit({ type: "SESSION_START" });
     }
