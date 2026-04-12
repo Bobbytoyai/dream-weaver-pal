@@ -4,6 +4,7 @@ import StoryMode from "@/components/StoryMode";
 import ContentCategories from "@/components/ContentCategories";
 import ParentMode from "@/components/ParentMode";
 import OnboardingScreen from "@/components/OnboardingScreen";
+import type { PendingNarration } from "@/hooks/useConversationStateMachine";
 
 import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/parentSettings";
 import { useChildMemory } from "@/hooks/useChildMemory";
@@ -23,12 +24,6 @@ function loadProfile(): { name: string; age: number } | null {
 
 function saveProfile(name: string, age: number) {
   localStorage.setItem(PROFILE_KEY, JSON.stringify({ name, age }));
-}
-
-interface PendingNarration {
-  storyId: string;
-  title: string;
-  text: string;
 }
 
 const Index = () => {

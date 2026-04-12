@@ -22,7 +22,11 @@ import type { FaceState } from "@/components/hologram/useFaceAnimation";
 // ── Types exportés (compatibilité VoiceScreen) ─────────────
 export type ConversationState = "IDLE" | "LISTENING" | "PROCESSING" | "SPEAKING" | "ERROR" | "SLEEP";
 export type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
-export type PendingNarration = null;
+export interface PendingNarration {
+  storyId: string;
+  title: string;
+  text: string;
+}
 
 export const FALLBACK_FR = {
   not_heard: "Je n'ai pas bien entendu. Réessaie !",
@@ -167,7 +171,7 @@ export function useConversationStateMachine(options: {
   childName: string;
   childAge: number;
   parentSettings?: any;
-  pendingNarration?: any;
+  pendingNarration?: PendingNarration | null;
   onNarrationConsumed?: () => void;
   onParentMode?: () => void;
 }) {
