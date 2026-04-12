@@ -3054,6 +3054,78 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         )}
       </div>
 
+      {/* Notification Panel */}
+      {showNotifPanel && (
+        <div className="absolute top-14 right-2 z-50 w-80 max-h-96 bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4 text-destructive" />
+              <h3 className="text-[13px] font-bold text-foreground">Notifications</h3>
+              {unreadAlertCount > 0 && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/10 text-destructive font-bold">{unreadAlertCount}</span>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              {unreadAlertCount > 0 && (
+                <button onClick={markAllRead} className="text-[10px] text-primary font-semibold hover:underline">
+                  Tout marquer lu
+                </button>
+              )}
+              <button onClick={() => setShowNotifPanel(false)} className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+          <div className="overflow-y-auto max-h-72">
+            {parentAlerts.length === 0 ? (
+              <div className="p-6 text-center">
+                <span className="text-2xl">✅</span>
+                <p className="text-[12px] text-muted-foreground mt-2">Aucune alerte</p>
+              </div>
+            ) : (
+              parentAlerts.slice(0, 20).map(alert => {
+                const severityConfig: Record<string, { icon: string; borderColor: string }> = {
+                  critical: { icon: "🚨", borderColor: "border-l-destructive" },
+                  high: { icon: "⚠️", borderColor: "border-l-destructive/60" },
+                  medium: { icon: "🔔", borderColor: "border-l-accent" },
+                  low: { icon: "ℹ️", borderColor: "border-l-muted-foreground" },
+                };
+                const cfg = severityConfig[alert.severity] || severityConfig.medium;
+                const timeAgo = (() => {
+                  const mins = Math.floor((Date.now() - new Date(alert.created_at).getTime()) / 60000);
+                  if (mins < 60) return `il y a ${mins}min`;
+                  const hrs = Math.floor(mins / 60);
+                  if (hrs < 24) return `il y a ${hrs}h`;
+                  return `il y a ${Math.floor(hrs / 24)}j`;
+                })();
+                return (
+                  <button key={alert.id}
+                    onClick={() => {
+                      markAlertRead(alert.id);
+                      const session = sessions.find(s => s.id === alert.session_id);
+                      if (session) { analyzeSession(session); setShowNotifPanel(false); }
+                    }}
+                    className={`w-full text-left px-4 py-3 border-l-4 ${cfg.borderColor} ${!alert.is_read ? "bg-primary/5" : ""} hover:bg-muted/50 transition-colors border-b border-border/30`}>
+                    <div className="flex items-start gap-2">
+                      <span className="text-sm mt-0.5">{cfg.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className={`text-[12px] ${!alert.is_read ? "font-bold text-foreground" : "font-medium text-muted-foreground"} line-clamp-2`}>
+                            {alert.message}
+                          </p>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{alert.child_name} • {timeAgo}</p>
+                      </div>
+                      {!alert.is_read && <span className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />}
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Tab bar — scrollable pill style */}
       {!selectedSession && (
         <div className="flex gap-1.5 px-4 py-2.5 bg-card border-b border-border overflow-x-auto scrollbar-hide">
