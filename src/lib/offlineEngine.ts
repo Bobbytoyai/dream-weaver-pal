@@ -83,9 +83,15 @@ export function getOfflineResponse(
 ): OfflineResponse {
   const normalized = normalizeInput(text);
 
+  // Record input in behavioral memory
+  recordInput(text);
+
   // Update mood from text
   const detectedMood = detectMoodFromText(text);
-  if (detectedMood) context.mood = detectedMood;
+  if (detectedMood) {
+    context.mood = detectedMood;
+    setEmotionalState(detectedMood);
+  }
 
   // 1. Safety filter — with severity-aware response + parent alert
   if (isBlockedContent(text)) {
