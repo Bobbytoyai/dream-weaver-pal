@@ -17,7 +17,7 @@ import { useChildMemory } from "@/hooks/useChildMemory";
 import { useConversationRecorder } from "@/hooks/useConversationRecorder";
 import { eventBus } from "@/lib/eventBus";
 import { getCachedResponse, isSimpleGreeting } from "@/lib/responseCache";
-import { hasWakeWord, stripWakeWord, isJustWakeWord, computeWakeConfidence, WAKE_THRESHOLD_FINAL } from "@/lib/wakeWordEngine";
+import { hasWakeWord, stripWakeWord, isJustWakeWord, computeWakeConfidence, WAKE_THRESHOLD_FINAL, WAKE_THRESHOLD_PARTIAL } from "@/lib/wakeWordEngine";
 import { isOffline, getOfflineResponse } from "@/lib/offlineEngine";
 import { useNetworkMode } from "@/hooks/useNetworkMode";
 import { orchestrate, refineExpression, getSilenceRelaunch } from "@/lib/orchestrator";
@@ -114,6 +114,7 @@ function isEcho(transcript: string): boolean {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /** Map voicePipeline Emotion → adaptiveEngine EmotionState */
+type EmotionState = import("@/lib/adaptiveEngine").EmotionState;
 function toAdaptiveEmotion(e: string | undefined): EmotionState {
   const map: Record<string, EmotionState> = {
     happy:   "joy",

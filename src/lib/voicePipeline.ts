@@ -274,6 +274,7 @@ export async function streamVoiceChat({
   parentSettings,
   memoryContext,
   cognitiveContext,
+  difficulty,
   onSentence,
   onDone,
   onError,
