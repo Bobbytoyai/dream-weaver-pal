@@ -2183,103 +2183,127 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   // ═══════════════════════════════════════════════════════════════
 
   const renderProfil = () => (
-    <div className="p-4 space-y-3">
-      <Card title="Profil de l'enfant" icon={User}>
-        <div className="space-y-3">
-          <div>
-            <p className="text-[11px] text-muted-foreground mb-1">Prénom</p>
+    <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
+      {/* Avatar + Name + Age — compact hero card */}
+      <div className="bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/10 rounded-3xl p-4 border border-primary/10">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-primary/15 flex items-center justify-center text-4xl shrink-0">
+            👤
+          </div>
+          <div className="flex-1 min-w-0">
             <input type="text" value={settings.childName}
               onChange={(e) => updateSetting("childName", e.target.value)}
-              placeholder="Prénom de l'enfant"
-              className="w-full bg-muted rounded-xl px-4 py-2.5 text-base font-bold text-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
-          </div>
-          <div>
-            <p className="text-[11px] text-muted-foreground mb-1">Âge</p>
-            <div className="flex gap-2">
-              {[5, 6, 7, 8, 9, 10, 11, 12].map(age => (
-                <button key={age} onClick={() => updateSetting("childAge", age)}
-                  className={`w-9 h-9 rounded-xl text-[13px] font-bold transition-all ${
-                    settings.childAge === age ? "bg-primary text-primary-foreground" : "bg-muted text-foreground hover:bg-primary/10"
-                  }`}>{age}</button>
-              ))}
-            </div>
+              placeholder="Prénom"
+              className="w-full bg-transparent text-xl font-extrabold text-foreground outline-none placeholder:text-muted-foreground/50 border-b border-primary/20 pb-1 focus:border-primary transition-colors" />
+            <p className="text-[11px] text-muted-foreground mt-1">Profil enfant</p>
           </div>
         </div>
-      </Card>
+        {/* Age selector — pills */}
+        <div className="flex gap-1.5 mt-3 overflow-x-auto">
+          {[4, 5, 6, 7, 8, 9, 10, 11, 12].map(age => (
+            <button key={age} onClick={() => updateSetting("childAge", age)}
+              className={`shrink-0 w-10 h-10 rounded-xl text-[13px] font-extrabold transition-all duration-200 active:scale-90 ${
+                settings.childAge === age
+                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/30 scale-105"
+                  : "bg-card/60 text-foreground/60 hover:bg-card"
+              }`}>{age}</button>
+          ))}
+          <span className="self-center text-[10px] text-muted-foreground ml-1 shrink-0">ans</span>
+        </div>
+      </div>
 
-      <Card title="Personnalité de Bobby" icon={Sparkles}>
-        <div className="grid grid-cols-3 gap-2">
-          {([
-            ["calm", "😌", "Calme", "Doux et rassurant"],
-            ["energetic", "⚡", "Énergique", "Vif et enthousiaste"],
-            ["educational", "📚", "Éducatif", "Curieux et pédagogue"],
-          ] as const).map(([val, emoji, label, desc]) => (
-            <button key={val} onClick={() => updateSetting("personality", val)}
-              className={`p-3 rounded-xl text-center transition-all ${
-                settings.personality === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
-              }`}>
-              <span className="text-lg block">{emoji}</span>
-              <span className={`text-[11px] font-semibold block ${settings.personality === val ? "text-primary" : "text-foreground"}`}>{label}</span>
-              <span className="text-[9px] text-muted-foreground">{desc}</span>
+      {/* Personality — square cards grid */}
+      <div className="grid grid-cols-2 gap-2.5">
+        {([
+          ["calm", "😌", "Calme", "Doux et rassurant", "from-blue-400/15 to-blue-300/5"],
+          ["energetic", "⚡", "Énergique", "Vif et enthousiaste", "from-amber-400/15 to-amber-300/5"],
+          ["educational", "📚", "Éducatif", "Curieux et savant", "from-emerald-400/15 to-emerald-300/5"],
+          ["balanced", "🎯", "Équilibré", "Un peu de tout", "from-purple-400/15 to-purple-300/5"],
+        ] as const).map(([val, emoji, label, desc, gradient]) => (
+          <button key={val} onClick={() => updateSetting("personality", val)}
+            className={`bg-gradient-to-br ${gradient} rounded-2xl p-3 text-center transition-all duration-200 active:scale-95 border-2 ${
+              settings.personality === val
+                ? "border-primary shadow-md shadow-primary/15 scale-[1.02]"
+                : "border-transparent hover:border-primary/15"
+            }`}>
+            <span className="text-2xl block mb-1">{emoji}</span>
+            <span className={`text-[12px] font-extrabold block ${settings.personality === val ? "text-primary" : "text-foreground"}`}>{label}</span>
+            <span className="text-[9px] text-muted-foreground leading-tight">{desc}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Interests — compact colored pills */}
+      <div className="bg-card rounded-2xl p-3 border border-border/20">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-base">💡</span>
+          <h4 className="text-[12px] font-extrabold text-foreground">Centres d'intérêt détectés</h4>
+        </div>
+        {allInterests.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {allInterests.map(([interest], i) => {
+              const colors = [
+                "bg-blue-400/15 text-blue-700", "bg-pink-400/15 text-pink-700",
+                "bg-emerald-400/15 text-emerald-700", "bg-amber-400/15 text-amber-700",
+                "bg-purple-400/15 text-purple-700", "bg-cyan-400/15 text-cyan-700",
+              ];
+              return (
+                <span key={interest} className={`px-2.5 py-1 rounded-xl ${colors[i % colors.length]} text-[10px] font-bold`}>
+                  {interest}
+                </span>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-[10px] text-muted-foreground italic">Détection auto pendant les sessions 🔍</p>
+        )}
+      </div>
+
+      {/* Blocked topics — compact */}
+      <div className="bg-card rounded-2xl p-3 border border-border/20">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-base">🚫</span>
+          <h4 className="text-[12px] font-extrabold text-foreground">Sujets bloqués</h4>
+        </div>
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {settings.blockedTopics.map(t => (
+            <button key={t} onClick={() => updateSetting("blockedTopics", settings.blockedTopics.filter(x => x !== t))}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-destructive/10 text-destructive text-[10px] font-bold hover:bg-destructive/20 transition-all active:scale-95">
+              {t} <X className="w-2.5 h-2.5" />
             </button>
           ))}
+          {settings.blockedTopics.length === 0 && (
+            <span className="text-[10px] text-muted-foreground italic">Aucun sujet bloqué</span>
+          )}
         </div>
-      </Card>
-
-      <Card title="Centres d'intérêt" icon={Heart}>
-        <div className="space-y-2">
-          <div className="flex flex-wrap gap-2">
-            {allInterests.map(([interest]) => (
-              <span key={interest} className="px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[11px] font-medium">
-                {interest}
-              </span>
-            ))}
-            {allInterests.length === 0 && (
-              <p className="text-[11px] text-muted-foreground">Les intérêts seront détectés automatiquement pendant les sessions.</p>
-            )}
-          </div>
-        </div>
-      </Card>
-
-      <Card title="Sujets à éviter" icon={Shield}>
-        <div className="space-y-2">
-          <div className="flex flex-wrap gap-2">
-            {settings.blockedTopics.map(t => (
-              <button key={t} onClick={() => updateSetting("blockedTopics", settings.blockedTopics.filter(x => x !== t))}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-destructive/10 text-destructive text-[11px] font-medium hover:bg-destructive/20 transition-all">
-                🚫 {t} <X className="w-3 h-3" />
-              </button>
-            ))}
-          </div>
-          <input type="text" value={newBlockedTopic}
-            onChange={(e) => setNewBlockedTopic(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && newBlockedTopic.trim()) {
-                if (!settings.blockedTopics.includes(newBlockedTopic.trim())) {
-                  updateSetting("blockedTopics", [...settings.blockedTopics, newBlockedTopic.trim()]);
-                }
-                setNewBlockedTopic("");
+        <input type="text" value={newBlockedTopic}
+          onChange={(e) => setNewBlockedTopic(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && newBlockedTopic.trim()) {
+              if (!settings.blockedTopics.includes(newBlockedTopic.trim())) {
+                updateSetting("blockedTopics", [...settings.blockedTopics, newBlockedTopic.trim()]);
               }
-            }}
-            placeholder="Ex: violence, mort…"
-            className="w-full px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
-        </div>
-      </Card>
+              setNewBlockedTopic("");
+            }
+          }}
+          placeholder="Ajouter un sujet…"
+          className="w-full px-3 py-2 rounded-xl bg-muted text-[11px] text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
+      </div>
 
-      {/* Save confirmation button */}
-      <div className="sticky bottom-0 p-4 bg-gradient-to-t from-card via-card to-transparent">
+      {/* Save button */}
+      <div className="pt-1 pb-2">
         <button
           onClick={() => {
             onSettingsChange?.(settings);
             setSettingsSaved(true);
             setTimeout(() => setSettingsSaved(false), 2000);
           }}
-          className={`w-full py-3.5 rounded-2xl text-[14px] font-bold transition-all active:scale-95 ${
+          className={`w-full py-3 rounded-2xl text-[13px] font-extrabold transition-all active:scale-95 ${
             settingsSaved
-              ? "bg-success text-success-foreground"
-              : "bg-primary text-primary-foreground hover:opacity-90"
+              ? "bg-emerald-500/15 text-emerald-700 border-2 border-emerald-500/30"
+              : "bg-primary text-primary-foreground hover:opacity-90 shadow-md shadow-primary/20"
           }`}>
-          {settingsSaved ? "✅ Préférences enregistrées !" : "💾 Enregistrer les préférences"}
+          {settingsSaved ? "✅ Enregistré !" : "💾 Enregistrer"}
         </button>
       </div>
     </div>
