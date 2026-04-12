@@ -1393,6 +1393,93 @@ export const BOBBY_MULTI_RESPONSES: MultiResponseEntry[] = [
       { text: "Je suis là avec toi", type: "soutien", energy: "low" },
     ],
   },
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // INTERACTIONS DU QUOTIDIEN
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    category: "meteo",
+    input: "il fait quel temps",
+    emotion: "curiosité",
+    tags: ["quotidien"],
+    responses: [
+      { text: "Tu peux regarder dehors 😄 il fait soleil ou nuageux ?", type: "question", energy: "medium" },
+      { text: "Tu préfères quand il fait chaud ou froid ?", type: "question", energy: "medium" },
+      { text: "On peut imaginer la météo ensemble 🌤️", type: "imagination", energy: "medium" },
+      { text: "Tu veux jouer à deviner le temps ?", type: "jeu", energy: "medium" },
+    ],
+  },
+  {
+    category: "ecole",
+    input: "j'ai des devoirs",
+    emotion: "ennui",
+    tags: ["quotidien", "apprentissage"],
+    responses: [
+      { text: "Ok 💪 on peut les faire ensemble", type: "proposition", energy: "medium" },
+      { text: "Tu veux commencer par quoi ?", type: "question", energy: "medium" },
+      { text: "On fait petit à petit 😊", type: "soutien", energy: "medium" },
+      { text: "Je suis là pour t'aider", type: "soutien", energy: "low" },
+    ],
+  },
+  {
+    category: "amitie",
+    input: "mon ami est fâché",
+    emotion: "tristesse",
+    tags: ["quotidien", "soutien"],
+    responses: [
+      { text: "Oh 😔 tu sais pourquoi ?", type: "question", energy: "low" },
+      { text: "On peut essayer de comprendre ce qu'il ressent", type: "proposition", energy: "medium" },
+      { text: "Tu peux lui parler calmement", type: "soutien", energy: "medium" },
+      { text: "Tu veux que je t'aide à trouver les mots ?", type: "question", energy: "medium" },
+    ],
+  },
+  {
+    category: "routine",
+    input: "je veux pas dormir",
+    emotion: "resistance",
+    tags: ["quotidien"],
+    responses: [
+      { text: "Je comprends 😄 mais dormir aide ton corps", type: "soutien", energy: "low" },
+      { text: "On peut faire une histoire avant", type: "proposition", energy: "low" },
+      { text: "Tu veux un moment calme ?", type: "question", energy: "low" },
+      { text: "On se prépare doucement 😊", type: "soutien", energy: "low" },
+    ],
+  },
+  {
+    category: "routine",
+    input: "je veux jouer",
+    emotion: "joie",
+    tags: ["quotidien", "jeu"],
+    responses: [
+      { text: "Oui 😄 tu veux un jeu rapide ou une histoire ?", type: "question", energy: "high" },
+      { text: "On lance un défi ? 😄", type: "jeu", energy: "high" },
+      { text: "Je suis prêt 😄", type: "fun", energy: "high" },
+      { text: "Tu choisis le jeu !", type: "question", energy: "high" },
+    ],
+  },
+  {
+    category: "apprentissage",
+    input: "aide moi",
+    emotion: "besoin",
+    tags: ["quotidien", "soutien"],
+    responses: [
+      { text: "Bien sûr 💛 dis-moi ce dont tu as besoin", type: "question", energy: "medium" },
+      { text: "On va y arriver ensemble", type: "soutien", energy: "medium" },
+      { text: "Explique-moi 😊", type: "question", energy: "medium" },
+      { text: "Je suis là", type: "soutien", energy: "low" },
+    ],
+  },
+  {
+    category: "vie",
+    input: "je suis content",
+    emotion: "joie",
+    tags: ["quotidien"],
+    responses: [
+      { text: "Trop bien 😄 qu'est-ce qui te rend heureux ?", type: "question", energy: "high" },
+      { text: "J'adore ça 💛", type: "soutien", energy: "medium" },
+      { text: "Tu veux partager ?", type: "question", energy: "medium" },
+      { text: "Ça fait plaisir 😊", type: "fun", energy: "medium" },
+    ],
+  },
 ];
 
 // ─── Multi-Response Matcher ─────────────────────────────
