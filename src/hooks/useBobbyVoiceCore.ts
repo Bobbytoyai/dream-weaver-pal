@@ -15,6 +15,7 @@ import {
 import { toVoiceState, type BobbyBrainReply, type ConversationState, type PendingNarration } from "@/lib/bobby/types";
 import { useSessionTracker } from "./useSessionTracker";
 import { useSmartSTT } from "./useSmartSTT";
+import { useWakeWord } from "./useWakeWord";
 
 interface UseBobbyVoiceCoreOptions {
   childName: string;
@@ -98,6 +99,7 @@ export function useBobbyVoiceCore({
   const abortRef = useRef<AbortController | null>(null);
   const handledNarrationIdRef = useRef<string | null>(null);
   const sessionOpenRef = useRef(false);
+  const wakeWordArmedRef = useRef(false);
 
   const { startSession, addMessage, endSession, sessionIdRef } = useSessionTracker(childName, childAge);
 
@@ -329,14 +331,36 @@ export function useBobbyVoiceCore({
     scheduleSleep();
   }, [go, scheduleSleep, stopPlayback]);
 
+  // ─── Wake word: listen continuously when IDLE or SLEEP ───
+  const wakeWordEnabled = machineState === "IDLE" || machineState === "SLEEP";
+
+  const handleWakeDetected = useCallback((transcript: string) => {
+    console.log("[BobbyVoiceCore] 🎤 Wake word detected:", transcript);
+    void startListening();
+  }, [startListening]);
+
+  const wakeWord = useWakeWord({
+    enabled: wakeWordEnabled,
+    onWake: handleWakeDetected,
+    sensitivity: "high",
+  });
+
   const handleTapBobby = useCallback(async () => {
+    // Arm wake word on first user gesture (browser mic policy)
+    if (!wakeWordArmedRef.current) {
+      wakeWordArmedRef.current = true;
+      wakeWord.startListening({ fromUserGesture: true });
+    }
+
     if (machineRef.current === "SPEAKING" || machineRef.current === "PROCESSING" || machineRef.current === "LISTENING") {
       interrupt();
       return;
     }
 
+    // Stop wake word while we do active STT
+    wakeWord.stopListening();
     await startListening();
-  }, [interrupt, startListening]);
+  }, [interrupt, startListening, wakeWord]);
 
   useEffect(() => {
     const welcome = getBobbyWelcomeMessage(childName);
@@ -449,5 +473,6 @@ export function useBobbyVoiceCore({
     processTranscript: handleFinalTranscript,
     sendMessage: handleFinalTranscript,
     interrupt,
+    wakeWordEnabled,
   };
 }
