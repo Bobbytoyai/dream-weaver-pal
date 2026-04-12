@@ -507,6 +507,7 @@ export function useBobbyVoiceCore({
       stopSttRef.current();
       stopPlayback();
       resetBobbyBrainSession();
+      resetEmotionPipeline();
       void closeSession();
     };
   }, [clearSleepTimer, closeSession, stopPlayback]);
