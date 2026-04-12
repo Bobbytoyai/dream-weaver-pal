@@ -176,6 +176,11 @@ export function useBobbyVoiceCore({
     setBobbyText(reply.text);
     setLastAiResponse(reply.text);
     lastAiResponseRef.current = reply.text;
+    // Track last 5 Bobby messages for multi-message anti-echo
+    recentBobbyMessagesRef.current = [
+      reply.text.toLowerCase(),
+      ...recentBobbyMessagesRef.current.slice(0, 4),
+    ];
     go("SPEAKING");
     eventBus.emit({ type: "RESPONSE_READY", text: reply.text });
     eventBus.emit({ type: "SPEECH_START" });
@@ -244,20 +249,21 @@ export function useBobbyVoiceCore({
     }
 
     // ─── Cooldown: reject transcripts arriving too soon after Bobby stopped speaking ───
-    if (Date.now() - lastSpeechEndRef.current < 2000) {
-      console.warn("[BobbyVoiceCore] 🔇 Anti-echo cooldown: rejected transcript arriving", (Date.now() - lastSpeechEndRef.current), "ms after speech end");
+    const msSinceSpeech = Date.now() - lastSpeechEndRef.current;
+    if (msSinceSpeech < 4000) {
+      console.warn("[BobbyVoiceCore] 🔇 Anti-echo cooldown: rejected transcript", msSinceSpeech, "ms after speech end");
       return;
     }
 
-    // ─── Anti-echo: reject transcript if it matches Bobby's last response ───
-    const lastResp = lastAiResponseRef.current.toLowerCase().trim();
+    // ─── Anti-echo: reject transcript if it matches ANY recent Bobby message ───
     const incoming = trimmedText.toLowerCase();
-    if (lastResp.length > 10) {
-      const lastWords = new Set(lastResp.split(/\s+/));
-      const incomingWords = incoming.split(/\s+/);
-      const matchCount = incomingWords.filter(w => lastWords.has(w)).length;
+    const incomingWords = incoming.split(/\s+/);
+    for (const recentMsg of recentBobbyMessagesRef.current) {
+      if (recentMsg.length < 10) continue;
+      const bobbyWords = new Set(recentMsg.split(/\s+/));
+      const matchCount = incomingWords.filter(w => bobbyWords.has(w)).length;
       const similarity = matchCount / Math.max(incomingWords.length, 1);
-      if (similarity > 0.4) {
+      if (similarity > 0.3) {
         console.warn("[BobbyVoiceCore] 🔇 Anti-echo: rejected (similarity:", similarity.toFixed(2), "):", trimmedText.slice(0, 50));
         processingRef.current = false;
         void startListeningRef.current();
