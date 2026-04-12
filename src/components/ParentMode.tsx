@@ -185,7 +185,7 @@ const StatPill = ({ emoji, value, label }: { emoji: string; value: string | numb
 
 // ─── Tab config (6 tabs) ────────────────────────────────────────
 
-type Tab = "dashboard" | "sessions" | "activites" | "profil" | "reglages" | "confidentialite";
+type Tab = "home" | "dashboard" | "sessions" | "activites" | "profil" | "reglages" | "confidentialite";
 
 const tabs: { id: Tab; icon: any; label: string; emoji?: string }[] = [
   { id: "dashboard", icon: BarChart3, label: "Tableau", emoji: "📊" },
@@ -199,7 +199,7 @@ const tabs: { id: Tab; icon: any; label: string; emoji?: string }[] = [
 // ─── Main Component ───────────────────────────────────────────────
 
 const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: ParentModeProps) => {
-  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
+  const [activeTab, setActiveTab] = useState<Tab>("home");
   const [safetyAlerts, setSafetyAlerts] = useState<SafetyAlertRecord[]>([]);
   const [showSafetyAlerts, setShowSafetyAlerts] = useState(true);
   const [sessions, setSessions] = useState<Session[]>([]);
