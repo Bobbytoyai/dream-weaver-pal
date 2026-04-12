@@ -160,14 +160,20 @@ export async function fetchTTSAudio(
   }
 
   // 3. ElevenLabs (cloud — low latency streaming)
-  console.log(`[TTS] 🌐 Online: ${isOnline}, profile: ${profile}, text: "${spokenText.slice(0, 30)}..."`);
+  console.log(`[TTS] 🌐 Online: ${isOnline}, SUPABASE_URL: ${!!import.meta.env.VITE_SUPABASE_URL}, profile: ${profile}, text: "${spokenText.slice(0, 30)}..."`);
   if (isOnline) {
     try {
-      const url = await speakWithElevenLabs(spokenText, profile, signal);
+      // Add a 10s timeout to avoid hanging forever
+      const timeoutSignal = AbortSignal.timeout(10_000);
+      const combinedSignal = signal 
+        ? AbortSignal.any([signal, timeoutSignal])
+        : timeoutSignal;
+      const url = await speakWithElevenLabs(spokenText, profile, combinedSignal);
       if (spokenText.length < 120) cacheAudio(cacheKey, url);
+      console.log("[TTS] ✅ Using ElevenLabs audio");
       return url;
     } catch (e: any) {
-      if (e.name === "AbortError") throw e;
+      if (e.name === "AbortError" && signal?.aborted) throw e;
       console.warn("[TTS] ⚠️ ElevenLabs failed, falling back to Piper:", e.message);
     }
   }
