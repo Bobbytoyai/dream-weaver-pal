@@ -2013,18 +2013,19 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           ))}
         </div>
 
-        {/* Mini calendar */}
-        <div className="bg-card rounded-2xl p-3 border border-border/20">
-          <h4 className="text-[12px] font-bold text-foreground mb-2 capitalize">{monthName}</h4>
-          <div className="grid grid-cols-7 gap-1">
+        {/* Mini calendar — compact */}
+        <div className="bg-card rounded-2xl px-3 py-2 border border-border/20">
+          <div className="flex items-center justify-between mb-1">
+            <h4 className="text-[11px] font-extrabold text-foreground capitalize">{monthName}</h4>
+            <span className="text-[8px] text-muted-foreground">📅</span>
+          </div>
+          <div className="grid grid-cols-7 gap-px">
             {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
-              <span key={i} className="text-[8px] font-bold text-muted-foreground text-center">{d}</span>
+              <span key={i} className="text-[7px] font-bold text-muted-foreground text-center py-0.5">{d}</span>
             ))}
-            {/* Empty cells for start offset */}
             {Array.from({ length: startDow }, (_, i) => (
               <div key={`e-${i}`} />
             ))}
-            {/* Day cells */}
             {Array.from({ length: daysInMonth }, (_, i) => {
               const dayNum = i + 1;
               const dayData = calendarDays.find(c => c.date.getDate() === dayNum && c.date.getMonth() === calMonth);
@@ -2049,15 +2050,14 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                       }
                     }
                   }}
-                  className={`aspect-square rounded-lg flex flex-col items-center justify-center text-[10px] transition-all ${
+                  className={`w-full aspect-square rounded-md flex items-center justify-center text-[9px] transition-all ${
                     dayData
                       ? "bg-primary/15 text-primary font-bold hover:bg-primary/25 cursor-pointer active:scale-90"
                       : isToday
                         ? "bg-muted ring-1 ring-primary/30 text-foreground font-bold"
-                        : "text-muted-foreground cursor-default"
+                        : "text-muted-foreground/60 cursor-default"
                   }`}>
                   {dayNum}
-                  {dayData && <span className="text-[7px] -mt-0.5">{dayData.mood}</span>}
                 </button>
               );
             })}
