@@ -197,7 +197,7 @@ export function getOfflineResponse(
   const adaptCtx: AdaptiveContext = {
     childAge,
     detectedEmotion: context.mood === "happy" ? "joy" : context.mood === "sad" ? "sadness" : "neutral",
-    sessionInteractionCount: context.turnCount,
+    sessionInteractionCount: context.interactionCount,
     lastCategory: context.lastTopic,
     confidenceScore: 0.7,
     isOffline: true,
