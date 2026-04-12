@@ -800,7 +800,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     try {
       const { fetchTTSAudio } = await import("@/lib/voicePipeline");
       const url = await fetchTTSAudio(text.slice(0, 500), undefined, "female");
-      if (url === "__silent__" || url === "__browser_tts__" || url === "__piper_silent__") {
+      if (url === "__silent__") {
         setTtsPlaying(null);
         return;
       }

@@ -118,7 +118,7 @@ export default function StoryNarrationPlayer({
       status: i < index ? "done" : i === index ? "playing" : s.status,
     })));
 
-    if (!seg.audioUrl || seg.audioUrl === "__silent__" || seg.audioUrl === "__browser_tts__") {
+    if (!seg.audioUrl || seg.audioUrl === "__silent__") {
       // Skip to next after a brief pause
       setTimeout(() => playSegment(index + 1), 300);
       return;
