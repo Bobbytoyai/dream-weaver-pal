@@ -347,7 +347,8 @@ export type OfflineIntent =
   | "MATH" | "GEOGRAPHY" | "HISTORY" | "HEALTH" | "EMOTIONS" | "FRIENDSHIP"
   | "SCHOOL" | "FOOD" | "FAMILY" | "SPORT" | "MUSIC" | "ART" | "TECHNOLOGY"
   | "CULTURE" | "PHILOSOPHY" | "JOBS" | "TRANSPORT" | "TIME" | "FANTASY"
-  | "ENCOURAGEMENT" | "NEUTRAL" | "REPEAT" | "STORY" | "VOLUME" | "TRANSITION";
+  | "ENCOURAGEMENT" | "NEUTRAL" | "REPEAT" | "STORY" | "VOLUME" | "TRANSITION"
+  | "PEUR" | "TRISTESSE" | "COLERE" | "JOIE" | "CONFIANCE" | "JALOUSIE" | "ENNUI";
 
 interface IntentRule {
   intent: OfflineIntent;
@@ -614,32 +615,119 @@ const INTENT_RULES: IntentRule[] = [
       /\b(tu sais|tu connais|c'est vrai|t'as raison)\b/i,
     ],
   },
-  // ── EMOTION_POSITIVE ──
+  // ── PEUR (specific fear emotion — before generic EMOTION_NEGATIVE) ──
+  {
+    intent: "PEUR" as OfflineIntent,
+    patterns: [
+      /j'ai (?:très |trop |vraiment |super )?peur/i,
+      /j'ai peur (?:du |de |des |d[''])/i,
+      /\b(cauchemar|monstre|fantôme|loup|noir)\b/i,
+      /effray[eé]/i,
+      /(?:ça|il|elle) (?:me )?fait (?:trop |très |vraiment )?peur/i,
+      /je suis (?:trop |très |vraiment )?(?:effray[eé]|terrifi[eé]|angoiss[eé]|anxieux|inqui[eè]t)/i,
+      /j'ai peur (?:tout seul|la nuit|le soir|quand|dans)/i,
+      /j'ose pas|j'ai pas le courage/i,
+    ],
+  },
+  // ── TRISTESSE (specific sadness — before generic EMOTION_NEGATIVE) ──
+  {
+    intent: "TRISTESSE" as OfflineIntent,
+    patterns: [
+      /je suis (?:trop |très |vraiment |super )?triste/i,
+      /je me sens (?:pas bien|mal|triste|seul)/i,
+      /[cç]a va pas/i,
+      /j'ai (?:le cafard|de la peine|envie de pleurer)/i,
+      /je pleure/i,
+      /je suis (?:malheureux|malheureuse)/i,
+      /personne (?:m'aime|ne m'aime|me comprend|m'[eé]coute)/i,
+      /je me sens (?:tout )?seul/i,
+      /[cç]a me rend triste/i,
+    ],
+  },
+  // ── COLERE (specific anger — before generic EMOTION_NEGATIVE) ──
+  {
+    intent: "COLERE" as OfflineIntent,
+    patterns: [
+      /je suis (?:trop |très |vraiment |super )?(?:en col[eè]re|[eé]nerv[eé]|f[aâ]ch[eé]|furieux|furieuse)/i,
+      /[cç]a m'[eé]nerve/i,
+      /j'en ai (?:marre|ras le bol|assez)/i,
+      /je suis (?:trop |très )?(?:agac[eé]|irrit[eé]|exasp[eé]r[eé])/i,
+      /[cç]a me rend (?:fou|folle|dingue)/i,
+      /je suis (?:pas content|pas contente)/i,
+      /c'est pas juste|c'est injuste/i,
+    ],
+  },
+  // ── JOIE (specific joy — before generic EMOTION_POSITIVE) ──
+  {
+    intent: "JOIE" as OfflineIntent,
+    patterns: [
+      /je suis (?:trop |très |vraiment |super )?(?:content|contente|heureux|heureuse|joyeux|joyeuse)/i,
+      /\b(trop bien|c'est génial|c'est super|c'est cool|c'est incroyable|yay|wow|youpi|hourra)\b/i,
+      /j'adore|j'aime trop/i,
+      /c'est (?:trop |super |vraiment )?(?:génial|bien|cool|top|parfait|magnifique|merveilleux)/i,
+      /je suis (?:trop |super )?(?:excit[eé]|ravi|ravie)/i,
+      /quelle (?:super |belle |bonne )?journ[eé]e/i,
+    ],
+  },
+  // ── CONFIANCE (self-doubt — before HELP) ──
+  {
+    intent: "CONFIANCE" as OfflineIntent,
+    patterns: [
+      /je suis (?:trop )?nul/i,
+      /j'y arrive pas|j'arrive pas/i,
+      /je suis (?:pas )?(?:bon|bonne|capable|assez)/i,
+      /je suis (?:trop )?(?:b[eê]te|stupide|idiot|idiote)/i,
+      /c'est trop (?:dur|difficile) pour moi/i,
+      /je (?:vais|peux) (?:jamais|pas) (?:y arriver|réussir)/i,
+      /j'ai (?:pas|aucune?) confiance/i,
+      /je sers [àa] rien/i,
+      /je suis (?:moins bien|pas aussi bien) que/i,
+    ],
+  },
+  // ── JALOUSIE ──
+  {
+    intent: "JALOUSIE" as OfflineIntent,
+    patterns: [
+      /je suis (?:trop )?jaloux|je suis (?:trop )?jalouse/i,
+      /je veux (?:le |la )?(?:même|pareil)/i,
+      /c'est pas juste.{0,20}(?:il|elle|mon|ma|les autres)/i,
+      /pourquoi (?:lui|elle|eux|elles) (?:et pas moi|ont|a)/i,
+      /(?:il|elle) a (?:tout|plus|mieux)/i,
+      /je veux (?:aussi|ce qu)/i,
+    ],
+  },
+  // ── ENNUI ──
+  {
+    intent: "ENNUI" as OfflineIntent,
+    patterns: [
+      /je m'ennuie|je m'embête/i,
+      /c'est (?:trop )?(?:ennuyeux|chiant|nul|barbant)/i,
+      /je sais pas quoi faire/i,
+      /j'ai rien [àa] faire/i,
+      /c'est (?:pas |plus )?(?:amusant|marrant|dr[oô]le|int[eé]ressant)/i,
+      /je m'amuse (?:pas|plus)/i,
+      /on fait rien/i,
+    ],
+  },
+  // ── EMOTION_POSITIVE (generic fallback) ──
   {
     intent: "EMOTION_POSITIVE",
     patterns: [
       /\b(je suis content|je suis heureux)\b/i,
-      /je suis (?:trop |très |super |vraiment )?(?:content|heureux|joyeux)/i,
-      /\b(trop bien|c'est génial|c'est super|c'est cool|c'est incroyable|yay|wow)\b/i,
       /\b(j'adore|j'aime trop)\b/i,
-      /c'est (?:trop |super |vraiment )?(?:génial|bien|cool)/i,
     ],
   },
-  // ── EMOTION_NEGATIVE ──
+  // ── EMOTION_NEGATIVE (generic fallback) ──
   {
     intent: "EMOTION_NEGATIVE",
     patterns: [
-      // NOTE: "effrayé/énervé/fâché" end in é → \b at end fails — use no trailing \b
       /\b(triste|pleure|peur|cauchemar|monstre|seul|malheureux)\b/i,
       /effray[eé]|f[aâ]ch[eé]|[eé]nerv[eé]/i,
       /\b(je suis triste|j'ai peur|j'ai mal)\b/i,
-      // Intensity modifiers + accented endings — no \b around accented
-      /je suis (?:trop |très |vraiment |super )?(?:f[aâ]ch[eé]|[eé]nerv[eé]|triste|malheureux|pas bien|tout seul|perdu)/i,
-      // "j'ai vraiment/trop mal" — allow modifier
+      /je suis (?:trop |très |vraiment |super )?(?:triste|malheureux|pas bien|tout seul|perdu)/i,
       /j'ai (?:vraiment |trop |beaucoup |très )?(?:mal|peur|pleur[eé]|perdu|pas bien dormi)/i,
       /je me suis (?:fait mal|bless[eé]|bagarr[eé]|disput[eé])/i,
       /on s'est (?:disput[eé]|bagarr[eé]|battu)/i,
-      // NOTE: "maîtresse" has î → \W issues; "sœur" has œ → \W — use char classes
       /(?:ma ma[iî]tresse|mon (?:copain|ami|fr[eè]re)|ma (?:copine|soeur|s[oœ]ur)).{0,40}(?:m[eé]chant|frapp[eé]|grond[eé]|cri[eé]|dit|fait|puni)/i,
       /maman est partie|papa est (?:parti|en col[eè]re)|je veux (?:maman|papa)/i,
       /je veux pas aller|j'ai fait un cauchemar|j'ai pas bien dormi/i,
