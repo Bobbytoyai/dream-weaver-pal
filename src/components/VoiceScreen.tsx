@@ -150,9 +150,9 @@ const VoiceScreen = ({
 
   const stateLabel = {
     IDLE: sm.partialText ? `"${sm.partialText}"` : (sm.micArmed ? 'Dis "Bobby" pour me parler !' : 'Touche Bobby pour commencer !'),
-    LISTENING: sm.partialText ? `"${sm.partialText}"` : "J'écoute…",
+    LISTENING: sm.partialText ? `"${sm.partialText}"` : "",
     PROCESSING: "Je réfléchis…",
-    SPEAKING: "Je parle…",
+    SPEAKING: "",
     ERROR: "Dis-moi !",
     SLEEP: "💤 Bobby dort… dis son nom pour le réveiller !",
   }[sm.machineState];
@@ -233,18 +233,18 @@ const VoiceScreen = ({
           />
         </div>
 
-        {/* State label */}
-        <p className="mt-4 text-sm font-bold text-foreground/70 tracking-wide text-center px-4">
-          {stateLabel}
-        </p>
+        {/* State label — only shown when there's text to display */}
+        {stateLabel && (
+          <p className="mt-4 text-sm font-bold text-foreground/70 tracking-wide text-center px-4">
+            {stateLabel}
+          </p>
+        )}
 
-        {/* Subtle status — only when listening */}
+        {/* Listening animation — no text, just visual feedback */}
         {sm.machineState === "LISTENING" && (
-          <div className="mt-3 flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-white/40 backdrop-blur-md transition-all duration-500 animate-in fade-in slide-in-from-bottom-2">
+          <div className="mt-3 flex items-center gap-3 px-6 py-3 rounded-full bg-white/40 backdrop-blur-md transition-all duration-500 animate-in fade-in slide-in-from-bottom-2">
             <SoundWave active />
-            <span className="text-xs font-semibold text-foreground/60">
-              {sm.partialText ? "Bobby t'entend…" : "J'écoute…"}
-            </span>
+            <div className="w-2 h-2 rounded-full bg-primary/60 animate-pulse" />
             <SoundWave active />
           </div>
         )}
