@@ -3170,39 +3170,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
     return (
       <div className="p-4 space-y-4">
-        {/* Welcome banner */}
-        <div className="bg-card rounded-2xl p-4 border border-border/30">
-          <h2 className="text-lg font-bold text-foreground">👋 Bonjour !</h2>
-          <p className="text-[12px] text-muted-foreground mt-1">
-            {sessions.length > 0
-              ? `${childName} a eu ${sessions.length} session${sessions.length > 1 ? "s" : ""} au total.`
-              : `Aucune session enregistrée pour ${childName} pour le moment.`}
-          </p>
-          {dailySummary && (
-            <p className="text-[12px] text-foreground mt-2 bg-primary/5 rounded-xl px-3 py-2">
-              💡 {dailySummary}
-            </p>
-          )}
-        </div>
-
-        {/* Category cards grid */}
-        <div className="grid grid-cols-2 gap-3">
-          {categoryCards.map(card => (
-            <button key={card.id}
-              onClick={() => setActiveTab(card.id)}
-              className={`relative bg-gradient-to-br ${card.color} rounded-2xl p-4 text-left border border-border/20 hover:border-primary/30 hover:shadow-md transition-all duration-200 active:scale-[0.97]`}>
-              <span className="text-3xl">{card.emoji}</span>
-              <h3 className="text-[13px] font-bold text-foreground mt-2">{card.label}</h3>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{card.desc}</p>
-              {card.badge && card.badge > 0 && (
-                <span className="absolute top-2 right-2 min-w-[20px] h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
-                  {card.badge}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-
         {/* Quick alerts preview */}
         {unreadAlertCount > 0 && (
           <button onClick={() => setShowNotifPanel(true)}
@@ -3215,6 +3182,25 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             <ChevronRight className="w-4 h-4 text-destructive" />
           </button>
         )}
+
+        {/* Category cards grid — toy style */}
+        <div className="grid grid-cols-2 gap-4">
+          {categoryCards.map(card => (
+            <button key={card.id}
+              onClick={() => setActiveTab(card.id)}
+              className={`relative bg-gradient-to-br ${card.color} rounded-3xl aspect-square flex flex-col items-center justify-center border-2 border-border/20 hover:border-primary/40 hover:shadow-lg transition-all duration-200 active:scale-[0.95] group`}
+              style={{ fontFamily: "'Nunito', 'Comic Sans MS', 'Baloo 2', sans-serif" }}>
+              <span className="text-5xl mb-2 group-hover:scale-110 transition-transform duration-200">{card.emoji}</span>
+              <h3 className="text-[15px] font-extrabold text-foreground leading-tight tracking-tight">{card.label}</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">{card.desc}</p>
+              {card.badge && card.badge > 0 && (
+                <span className="absolute top-2.5 right-2.5 min-w-[22px] h-[22px] px-1.5 rounded-full bg-destructive text-destructive-foreground text-[11px] font-bold flex items-center justify-center shadow-md">
+                  {card.badge}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
 
         {/* Quick scores preview if available */}
         {avgScores && (
