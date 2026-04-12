@@ -175,9 +175,14 @@ export function useBobbyVoiceCore({
     eventBus.emit({ type: "RESPONSE_READY", text: reply.text });
     eventBus.emit({ type: "SPEECH_START" });
 
+    // Double-stop STT to be absolutely sure it's off during playback
+    stopSttRef.current();
+
     try {
       const audioUrl = await fetchTTSAudio(reply.text, controller.signal, resolveVoiceProfile(parentSettings));
       if (!controller.signal.aborted) {
+        // Stop STT again right before playback (belt and suspenders)
+        stopSttRef.current();
         await playGeneratedAudio(audioUrl, controller.signal);
       }
     } catch (error) {
@@ -188,11 +193,12 @@ export function useBobbyVoiceCore({
 
     if (!controller.signal.aborted) {
       eventBus.emit({ type: "SPEECH_STOP" });
-      // Reset silence counter on successful exchange
       silenceCountRef.current = 0;
-      // ─── Wait before restarting STT so mic doesn't pick up Bobby's last audio ───
-      console.log("[BobbyVoiceCore] 🔄 Waiting 800ms before restarting listening");
-      await new Promise(r => setTimeout(r, 800));
+      // ─── Wait 1.5s after Bobby finishes before restarting STT ───
+      // This ensures the speaker audio fully dissipates before mic listens
+      console.log("[BobbyVoiceCore] 🔄 Waiting 1500ms before restarting listening");
+      await new Promise(r => setTimeout(r, 1500));
+      // Verify we're still in SPEAKING state (user hasn't interrupted)
       if (!abortRef.current?.signal.aborted && machineRef.current === "SPEAKING") {
         void startListeningRef.current();
       }
