@@ -3114,8 +3114,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         case "sessions": return renderSessionsList();
         case "activites": return (
           <BobbyStore
-            installedIds={installedContent}
-            onToggleInstall={toggleInstallContent}
+            childName={settings.childName}
             childAge={settings.childAge}
           />
         );
