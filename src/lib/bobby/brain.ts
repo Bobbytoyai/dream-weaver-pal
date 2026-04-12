@@ -7,6 +7,7 @@ import { simplifyForAge } from "@/lib/adaptiveEngine";
 import { resetMemory } from "@/lib/responseSelector";
 import { resetScenario } from "@/lib/scenarioEngine";
 import { trackInterests, getSmartFollowUp, resetInterestTracker } from "./interestTracker";
+import { getLLMReply, clearHistory } from "./llmBrain";
 
 interface BuildBobbyReplyOptions {
   childName: string;
@@ -151,9 +152,10 @@ export function resetBobbyBrainSession() {
   resetMemory();
   resetScenario();
   resetInterestTracker();
+  clearHistory();
 }
 
-export function buildBobbyReply({ childName, childAge, userText = "", pendingNarration, parentSettings }: BuildBobbyReplyOptions): BobbyBrainReply {
+export async function buildBobbyReply({ childName, childAge, userText = "", pendingNarration, parentSettings }: BuildBobbyReplyOptions): Promise<BobbyBrainReply> {
   const personality = parentSettings?.personality ?? "balanced";
   const blockedTopics = parentSettings?.blockedTopics ?? [];
 
@@ -188,7 +190,20 @@ export function buildBobbyReply({ childName, childAge, userText = "", pendingNar
     return { ...libraryReply, text };
   }
 
-  // ─── 2. Offline brain (QA 1623 + 10K interactions) ───
+  // ─── 2. LLM Brain (Gemini via Lovable AI Gateway) ───
+  if (userText) {
+    try {
+      const llmReply = await getLLMReply(childName, childAge, userText, personality);
+      if (llmReply) {
+        console.log("[BobbyBrain] ✅ LLM reply:", llmReply.text.slice(0, 60));
+        return llmReply;
+      }
+    } catch (e) {
+      console.warn("[BobbyBrain] LLM failed, falling back to offline:", e);
+    }
+  }
+
+  // ─── 3. Offline brain fallback (QA 1623 + 10K interactions) ───
   const offlineReply = getOfflineResponse(userText, childName, childAge);
 
   const realConfidence = (offlineReply as any)._confidence as number | undefined;
