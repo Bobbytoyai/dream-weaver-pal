@@ -3157,11 +3157,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         case "dashboard": return renderDashboard();
         case "sessions": return renderSessionsList();
         case "activites": return (
-          <ContentCategories
-            childName={childName}
-            onSelectCategory={(sub) => toast.info(`L'activité "${sub}" sera lancée depuis le mode enfant 🎮`)}
-            onBack={() => setActiveTab("home")}
-            voiceProfile={settings.voiceType || "female"}
+          <BobbyStore
+            installedIds={installedContent}
+            onToggleInstall={toggleInstallContent}
+            childAge={settings.childAge}
           />
         );
         case "profil": return renderProfil();
