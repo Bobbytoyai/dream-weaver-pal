@@ -1353,8 +1353,9 @@ export function getLocalBrainReply(
 ): BobbyBrainReply {
   const startTime = performance.now();
 
-  // 1. Detect intent
-  const intent = detectLocalIntent(userText);
+  // 1. Detect intent (regex first, then vector classifier fallback)
+  const regexIntent = detectLocalIntent(userText);
+  const { intent, confidence: classifConfidence, source: classifSource } = smartClassify(userText, regexIntent);
 
   // 2. Detect emotion
   const emotion = detectEmotion(userText);
@@ -1390,22 +1391,63 @@ export function getLocalBrainReply(
     timestamp: Date.now(),
   });
 
-  // 5. Generate response
+  // 5. Check for active scenario (multi-turn emotional journey)
+  if (isScenarioActive()) {
+    const scenarioResp = getScenarioResponse(userText);
+    if (scenarioResp) {
+      addTurn({ role: "bobby", text: scenarioResp.text, intent, timestamp: Date.now() });
+      addBobbyResponse(scenarioResp.text);
+      const latency = performance.now() - startTime;
+      console.log(`[LocalBrain] 🎭 Scenario response ${latency.toFixed(1)}ms`);
+      return {
+        text: scenarioResp.text,
+        intent,
+        source: "local_brain",
+        emotion: (scenarioResp.faceState as FaceState) || "reassuring",
+        confidence: 0.95,
+        isOffline: true,
+      };
+    }
+  }
+
+  // 5b. Try to start a new scenario for strong emotions
+  if (emotion.intensity >= 3) {
+    tryStartScenario(intent, userText);
+    if (isScenarioActive()) {
+      const scenarioResp = getScenarioResponse(userText);
+      if (scenarioResp) {
+        addTurn({ role: "bobby", text: scenarioResp.text, intent, timestamp: Date.now() });
+        addBobbyResponse(scenarioResp.text);
+        const latency = performance.now() - startTime;
+        console.log(`[LocalBrain] 🎭 New scenario started ${latency.toFixed(1)}ms | ${intent}`);
+        return {
+          text: scenarioResp.text,
+          intent,
+          source: "local_brain",
+          emotion: (scenarioResp.faceState as FaceState) || "reassuring",
+          confidence: 0.95,
+          isOffline: true,
+        };
+      }
+    }
+  }
+
+  // 6. Generate response via template engine
   const responseText = assembleResponse(intent, emotion, childName, childAge);
 
-  // 6. Record bobby's turn
+  // 7. Record bobby's turn
   addTurn({ role: "bobby", text: responseText, intent, timestamp: Date.now() });
   addBobbyResponse(responseText);
 
   const latency = performance.now() - startTime;
-  console.log(`[LocalBrain] ⚡ ${latency.toFixed(1)}ms | intent=${intent} | emotion=${emotion.type}(${emotion.intensity}) | topic=${topic || "—"}`);
+  console.log(`[LocalBrain] ⚡ ${latency.toFixed(1)}ms | intent=${intent} (${classifSource}) | emotion=${emotion.type}(${emotion.intensity}) | topic=${topic || "—"}`);
 
   return {
     text: responseText,
     intent,
     source: "local_brain",
     emotion: INTENT_FACE_MAP[intent] || "attentive",
-    confidence: intent === "GENERAL" ? 0.5 : 0.85,
+    confidence: intent === "GENERAL" ? 0.5 : classifConfidence,
     isOffline: true,
   };
 }
