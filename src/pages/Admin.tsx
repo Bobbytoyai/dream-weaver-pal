@@ -134,7 +134,7 @@ interface KBEntry {
 }
 
 // ─── Top-level brain sections shown as big square cards ─────────────
-type TopSection = "interactions" | "multiresponses" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons" | "store" | "expressions";
+type TopSection = "interactions" | "multiresponses" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons" | "store" | "expressions" | "autolearn";
 
 // Counts are computed dynamically below in the component
 const TOP_SECTIONS_CONFIG: {
@@ -157,6 +157,7 @@ const TOP_SECTIONS_CONFIG: {
   { id: "cloud", label: "Cloud KB", icon: Globe, color: "text-blue-400", bgColor: "bg-blue-500/20", desc: "Base cloud extensible (ajout via admin)", emoji: "☁️" },
   { id: "store", label: "Bobby Store", icon: Star, color: "text-emerald-400", bgColor: "bg-emerald-500/20", desc: "Gérer le catalogue du store (CRUD)", emoji: "🛒" },
   { id: "expressions", label: "Expressions", icon: Eye, color: "text-fuchsia-400", bgColor: "bg-fuchsia-500/20", desc: "Preview & test des expressions faciales", emoji: "🎭" },
+  { id: "autolearn", label: "Auto-Learning", icon: Microscope, color: "text-lime-400", bgColor: "bg-lime-500/20", desc: "IA auto-complétion depuis les conversations", emoji: "🧬" },
 ];
 
 // ═══════════════════════════════════════════════════════════════════
