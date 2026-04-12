@@ -354,10 +354,12 @@ export function useFaceAnimation(
       curiousTiltZ = Math.sin(breathPhase.current * 1.5) * 0.03;
     }
 
-    // --- SLEEPY: slow eye drift + occasional heavy blink ---
+    // --- SLEEPY: eyes fully closed, slow breathing head bob ---
     let sleepyEyeWobble = 0;
+    let sleepyHeadBob = 0;
     if (faceState === "sleepy") {
-      sleepyEyeWobble = Math.sin(breathPhase.current * 0.5) * 0.08;
+      sleepyEyeWobble = -0.2; // Force eyes shut
+      sleepyHeadBob = Math.sin(breathPhase.current * 0.4) * 0.03; // slow nod
     }
 
     // --- CONFUSED: rapid micro head shake ---
