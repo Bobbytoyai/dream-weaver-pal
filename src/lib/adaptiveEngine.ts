@@ -1,10 +1,12 @@
 /**
- * Bobby AI — Adaptive Intelligence Engine v2.0
- * Adapts responses based on age, emotion, difficulty level
- * Uses the 10001-interaction database for context-aware responses
+ * Bobby AI — Adaptive Intelligence Engine v3.0
+ * Real confidence scoring with fuzzy matching, synonym expansion,
+ * age-weighted filtering, and response simplification by age group.
  */
 
 import type { BobbyInteraction } from './bobby_interactions_10k';
+import { similarity, wordOverlap, expandWithSynonyms, normalizeInput } from './offline-intents';
+import { getAgeRules } from './bobby-content/contenu';
 
 // ─────────────────────────────────────────────
 // TYPES
@@ -15,11 +17,17 @@ export type AdaptationMode = 'simplified' | 'standard' | 'enriched';
 
 export interface AdaptiveContext {
   childAge: number;
-  detectedEmotion: EmotionState;
+  detectedEmotion: string;
   sessionInteractionCount: number;
   lastCategory?: string;
-  confidenceScore: number; // 0-1 from STT
+  confidenceScore: number;
   isOffline: boolean;
+}
+
+export interface ScoredMatch {
+  interaction: BobbyInteraction;
+  confidence: number; // 0-1 real score
+  matchType: 'exact' | 'fuzzy' | 'keyword' | 'category';
 }
 
 export interface AdaptedResponse {
@@ -64,16 +72,34 @@ const COMPLEX_WORDS: Record<string, Record<AgeGroup, string>> = {
 
 export function simplifyForAge(text: string, age: number): string {
   const group = getAgeGroup(age);
+  const rules = getAgeRules(age);
   let result = text;
+
+  // Replace complex vocabulary
   for (const [complex, replacements] of Object.entries(COMPLEX_WORDS)) {
     result = result.replace(new RegExp(complex, 'gi'), replacements[group]);
   }
-  // For very young children, shorten sentences (keep only first 2 sentences)
-  if (age <= 6) {
+
+  // Enforce max response length by age
+  if (result.length > rules.maxResponseLength) {
+    // Keep only complete sentences within the limit
+    const sentences = result.match(/[^.!?]+[.!?]+/g) || [result];
+    let trimmed = '';
+    for (const sentence of sentences) {
+      if ((trimmed + sentence).length <= rules.maxResponseLength + 20) {
+        trimmed += sentence;
+      } else break;
+    }
+    result = trimmed || sentences[0];
+  }
+
+  // For very young children, shorten further
+  if (age <= 5) {
     const sentences = result.match(/[^.!?]+[.!?]+/g) || [result];
     result = sentences.slice(0, 2).join(' ');
   }
-  return result;
+
+  return result.trim();
 }
 
 // ─────────────────────────────────────────────
@@ -107,46 +133,14 @@ export function getSpeakingSpeed(age: number, emotion: EmotionState): AdaptedRes
 // FOLLOW-UP SUGGESTIONS BY CATEGORY
 // ─────────────────────────────────────────────
 const FOLLOW_UPS: Record<string, string[]> = {
-  jeu: [
-    'Tu veux qu\'on invente un jeu ensemble ? 🎮',
-    'C\'est quoi ton jeu préféré ?',
-    'On peut jouer à autre chose si tu veux !',
-  ],
-  emotion: [
-    'Tu veux me parler de comment tu te sens ?',
-    'Je suis là pour toi ! 💙',
-    'Qu\'est-ce qui te ferait du bien là ?',
-  ],
-  ecole: [
-    'Tu veux qu\'on révise ensemble ?',
-    'C\'est quoi ta matière préférée ?',
-    'Tu veux qu\'on fasse un quiz ?',
-  ],
-  imagination: [
-    'Continuons l\'histoire ! Qu\'est-ce qui se passe ensuite ?',
-    'Si tu avais un super-pouvoir, ce serait lequel ?',
-    'Invente un personnage pour notre histoire !',
-  ],
-  peur: [
-    'Tu veux qu\'on allume une petite lumière ensemble ?',
-    'Je suis là avec toi, pas de panique ! 🤗',
-    'Tu veux qu\'on chante une chanson pour se rassurer ?',
-  ],
-  humour: [
-    'Tu en connais une autre, blague ? 😄',
-    'J\'ai une charade pour toi !',
-    'Tu veux qu\'on invente une blague ensemble ?',
-  ],
-  animaux: [
-    'C\'est quoi ton animal préféré ?',
-    'Tu veux qu\'on parle des dinosaures ? 🦕',
-    'Si tu étais un animal, tu serais lequel ?',
-  ],
-  apprentissage: [
-    'Tu veux qu\'on fasse un exercice ?',
-    'J\'ai une devinette sur ce sujet !',
-    'Tu veux en apprendre encore plus ?',
-  ],
+  jeu: ['Tu veux qu\'on invente un jeu ensemble ? 🎮', 'C\'est quoi ton jeu préféré ?', 'On peut jouer à autre chose si tu veux !'],
+  emotion: ['Tu veux me parler de comment tu te sens ?', 'Je suis là pour toi ! 💙', 'Qu\'est-ce qui te ferait du bien là ?'],
+  ecole: ['Tu veux qu\'on révise ensemble ?', 'C\'est quoi ta matière préférée ?', 'Tu veux qu\'on fasse un quiz ?'],
+  imagination: ['Continuons l\'histoire ! Qu\'est-ce qui se passe ensuite ?', 'Si tu avais un super-pouvoir, ce serait lequel ?', 'Invente un personnage pour notre histoire !'],
+  peur: ['Tu veux qu\'on allume une petite lumière ensemble ?', 'Je suis là avec toi, pas de panique ! 🤗', 'Tu veux qu\'on chante une chanson pour se rassurer ?'],
+  humour: ['Tu en connais une autre, blague ? 😄', 'J\'ai une charade pour toi !', 'Tu veux qu\'on invente une blague ensemble ?'],
+  animaux: ['C\'est quoi ton animal préféré ?', 'Tu veux qu\'on parle des dinosaures ? 🦕', 'Si tu étais un animal, tu serais lequel ?'],
+  apprentissage: ['Tu veux qu\'on fasse un exercice ?', 'J\'ai une devinette sur ce sujet !', 'Tu veux en apprendre encore plus ?'],
 };
 
 export function getFollowUpSuggestion(category: string, age: number): string | undefined {
@@ -157,6 +151,17 @@ export function getFollowUpSuggestion(category: string, age: number): string | u
 }
 
 // ─────────────────────────────────────────────
+// CONFIDENCE SCORING CONSTANTS
+// ─────────────────────────────────────────────
+const CONFIDENCE_THRESHOLDS = {
+  EXACT: 0.95,    // Near-perfect string match
+  HIGH: 0.78,     // Strong fuzzy + keyword match
+  MEDIUM: 0.55,   // Decent keyword overlap
+  LOW: 0.35,      // Weak match, fallback territory
+  MIN: 0.25,      // Below this = no match
+};
+
+// ─────────────────────────────────────────────
 // MAIN ADAPTIVE ENGINE
 // ─────────────────────────────────────────────
 export class AdaptiveIntelligenceEngine {
@@ -164,44 +169,22 @@ export class AdaptiveIntelligenceEngine {
   private currentDifficultyLevel = 2;
   private successStreak = 0;
 
-  /**
-   * Adapt a raw Bobby response to match the child's age, emotion, and context
-   */
   adaptResponse(rawText: string, ctx: AdaptiveContext, category: string = 'general'): AdaptedResponse {
-    // 1. Simplify vocabulary for age
     const simplifiedText = simplifyForAge(rawText, ctx.childAge);
-
-    // 2. Adapt difficulty over time (progressive)
     this.updateDifficultyLevel(ctx);
-
-    // 3. Get emotion & animation
-    const dominantEmotion = ctx.detectedEmotion;
+    const dominantEmotion = (ctx.detectedEmotion || 'neutral') as EmotionState;
     const animationHint = getAnimationForEmotion(dominantEmotion);
-
-    // 4. Get speaking speed
     const speakingSpeed = getSpeakingSpeed(ctx.childAge, dominantEmotion);
-
-    // 5. Follow-up suggestion (only after first few interactions)
     const followUpSuggestion = ctx.sessionInteractionCount >= 2
       ? getFollowUpSuggestion(category, ctx.childAge)
       : undefined;
 
-    // 6. Record interaction for history
     this.interactionHistory.push({ category, emotion: dominantEmotion, timestamp: Date.now() });
-    if (this.interactionHistory.length > 50) this.interactionHistory.shift(); // Keep last 50
+    if (this.interactionHistory.length > 50) this.interactionHistory.shift();
 
-    return {
-      text: simplifiedText,
-      emotion: dominantEmotion,
-      animationHint,
-      speakingSpeed,
-      followUpSuggestion,
-    };
+    return { text: simplifiedText, emotion: dominantEmotion, animationHint, speakingSpeed, followUpSuggestion };
   }
 
-  /**
-   * Progressive difficulty: if child keeps engaging, increase complexity
-   */
   private updateDifficultyLevel(ctx: AdaptiveContext): void {
     const maxDifficulty = getMaxDifficultyForAge(ctx.childAge);
     if (ctx.confidenceScore > 0.8) {
@@ -217,34 +200,96 @@ export class AdaptiveIntelligenceEngine {
   }
 
   /**
-   * Find the best matching interaction from the 10K database (offline use)
+   * Find the best matching interaction from the 10K database with REAL confidence scoring.
+   *
+   * Scoring formula:
+   *   confidence = (stringSimilarity * 0.35) + (wordOverlap * 0.35) + (ageBonus * 0.15) + (emotionBonus * 0.10) + (categoryBonus * 0.05)
+   *
+   * Returns null if best score < MIN threshold.
    */
   findBestMatch(
     userInput: string,
     ctx: AdaptiveContext,
     interactions: BobbyInteraction[]
-  ): BobbyInteraction | null {
-    const ageGroup = getAgeGroup(ctx.childAge);
-    const maxDiff = getMaxDifficultyForAge(ctx.childAge);
-    const userWords = userInput.toLowerCase().split(/\s+/);
+  ): (BobbyInteraction & { _confidence: number }) | null {
+    const normalized = normalizeInput(userInput);
+    if (!normalized || normalized.length < 2) return null;
 
-    // Filter by age and difficulty
+    const maxDiff = getMaxDifficultyForAge(ctx.childAge);
+    const userWords = normalized.split(/\s+/).filter(w => w.length > 1);
+
+    // Expand user words with synonyms for broader matching
+    const expandedUserWords = new Set<string>();
+    for (const w of userWords) {
+      for (const syn of expandWithSynonyms(w)) {
+        expandedUserWords.add(syn);
+      }
+    }
+
+    // Pre-filter: age ±3, difficulty within range
     const candidates = interactions.filter(
-      (i) => Math.abs(i.age - ctx.childAge) <= 2 && i.difficulty_level <= maxDiff
+      (i) => Math.abs(i.age - ctx.childAge) <= 3 && i.difficulty_level <= maxDiff + 1
     );
 
     if (candidates.length === 0) return null;
 
-    // Score by keyword overlap
-    const scored = candidates.map((i) => {
-      const inputWords = i.child_input.toLowerCase().split(/\s+/);
-      const overlap = userWords.filter((w) => w.length > 3 && inputWords.some((iw) => iw.includes(w))).length;
-      const emotionBonus = i.emotion === ctx.detectedEmotion ? 2 : 0;
-      return { interaction: i, score: overlap + emotionBonus };
-    });
+    let bestScore = 0;
+    let bestMatch: BobbyInteraction | null = null;
+    let bestType: ScoredMatch['matchType'] = 'keyword';
 
-    scored.sort((a, b) => b.score - a.score);
-    return scored[0]?.score > 0 ? scored[0].interaction : null;
+    // Sample large databases for performance (score top candidates from random sample)
+    const sampleSize = Math.min(candidates.length, 3000);
+    const sampled = candidates.length <= sampleSize
+      ? candidates
+      : shuffleSample(candidates, sampleSize);
+
+    for (const candidate of sampled) {
+      const candidateNorm = normalizeInput(candidate.child_input);
+
+      // 1. String similarity (Levenshtein-based, 0-1)
+      const strSim = similarity(normalized, candidateNorm);
+
+      // 2. Word overlap with synonym expansion (0-1)
+      const candidateWords = candidateNorm.split(/\s+/).filter(w => w.length > 1);
+      let overlapCount = 0;
+      for (const cw of candidateWords) {
+        const cwExpanded = expandWithSynonyms(cw);
+        if (cwExpanded.some(e => expandedUserWords.has(e))) {
+          overlapCount++;
+        }
+      }
+      const wOverlap = candidateWords.length > 0 ? overlapCount / candidateWords.length : 0;
+
+      // 3. Age proximity bonus (0-1, perfect age match = 1)
+      const ageDiff = Math.abs(candidate.age - ctx.childAge);
+      const ageBonus = ageDiff === 0 ? 1.0 : ageDiff === 1 ? 0.8 : ageDiff === 2 ? 0.5 : 0.2;
+
+      // 4. Emotion match bonus
+      const emotionBonus = candidate.emotion === ctx.detectedEmotion ? 1.0
+        : (candidate.emotion === 'neutral' || ctx.detectedEmotion === 'neutral') ? 0.5
+        : 0.0;
+
+      // 5. Category continuity bonus (if same category as last interaction)
+      const categoryBonus = ctx.lastCategory && candidate.category === ctx.lastCategory ? 1.0 : 0.0;
+
+      // Weighted score
+      const score = (strSim * 0.35) + (wOverlap * 0.35) + (ageBonus * 0.15) + (emotionBonus * 0.10) + (categoryBonus * 0.05);
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = candidate;
+        bestType = strSim > 0.85 ? 'exact' : strSim > 0.6 ? 'fuzzy' : wOverlap > 0.5 ? 'keyword' : 'category';
+      }
+    }
+
+    if (!bestMatch || bestScore < CONFIDENCE_THRESHOLDS.MIN) return null;
+
+    // Clamp confidence to 0-1 range
+    const confidence = Math.min(1, Math.max(0, bestScore));
+
+    console.log(`[AdaptiveEngine] Match: "${bestMatch.child_input}" (conf=${confidence.toFixed(2)}, type=${bestType}, age=${bestMatch.age})`);
+
+    return { ...bestMatch, _confidence: confidence };
   }
 
   getCurrentDifficulty(): number {
@@ -260,6 +305,16 @@ export class AdaptiveIntelligenceEngine {
     this.currentDifficultyLevel = 2;
     this.successStreak = 0;
   }
+}
+
+/** Fisher-Yates sample without mutating the original */
+function shuffleSample<T>(arr: T[], size: number): T[] {
+  const copy = arr.slice();
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, size);
 }
 
 // Singleton export
