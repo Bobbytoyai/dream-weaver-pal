@@ -936,8 +936,156 @@ const Admin = () => {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // HISTOIRES
+  // CHANSONS — By category, age, search
   // ═══════════════════════════════════════════════════════════════════
+  if (topSection === "chansons") {
+    const selectedChansonCat = interactionCat as ChansonCategorie | null;
+    const searchLower = search.toLowerCase();
+    const AGE_GROUPS_CH = [
+      { label: "Tous", min: 0, max: 99 },
+      { label: "3-5 ans", min: 3, max: 5 },
+      { label: "6-8 ans", min: 6, max: 8 },
+      { label: "9-12 ans", min: 9, max: 12 },
+    ];
+
+    if (selectedChansonCat) {
+      const catChansons = CHANSONS.filter(c => c.categorie === selectedChansonCat);
+      const ageFiltered = ageFilter
+        ? catChansons.filter(c => {
+            const ag = AGE_GROUPS_CH.find(a => a.label === ageFilter);
+            return ag ? c.ageMin <= ag.max && c.ageMax >= ag.min : true;
+          })
+        : catChansons;
+      const filtered = searchLower
+        ? ageFiltered.filter(c => c.titre.toLowerCase().includes(searchLower) || c.description.toLowerCase().includes(searchLower) || c.tags.some(t => t.includes(searchLower)))
+        : ageFiltered;
+
+      // Group by sous-catégorie if exists
+      const grouped: Record<string, Chanson[]> = {};
+      for (const c of filtered) {
+        const key = c.sousCategorie || "général";
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(c);
+      }
+
+      const catInfo = CHANSON_CATEGORIES.find(cc => cc.id === selectedChansonCat);
+
+      return (
+        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+          <div className="max-w-4xl mx-auto space-y-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+              <span className="text-2xl">{catInfo?.emoji || "🎵"}</span>
+              <div>
+                <h1 className="text-xl font-bold text-white">{catInfo?.label || selectedChansonCat}</h1>
+                <p className="text-white/40 text-xs">{filtered.length} chansons</p>
+              </div>
+            </div>
+
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
+                className="bg-white/10 border-white/20 text-white pl-9" />
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+              {AGE_GROUPS_CH.map(ag => (
+                <button key={ag.label} onClick={() => setAgeFilter(ageFilter === ag.label ? null : ag.label)}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === ag.label ? "bg-rose-500/30 border-rose-400/50 text-rose-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
+                  {ag.label}
+                </button>
+              ))}
+            </div>
+
+            {Object.entries(grouped).map(([sub, chansons]) => (
+              <div key={sub}>
+                {Object.keys(grouped).length > 1 && (
+                  <h3 className="text-white/60 text-xs font-semibold mb-2 uppercase tracking-wider">{sub} ({chansons.length})</h3>
+                )}
+                <div className="space-y-2">
+                  {chansons.map(c => (
+                    <div key={c.id} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300">{c.ageMin}-{c.ageMax} ans</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/40">⏱ {c.duree}</span>
+                        {c.audioUrl && <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">🔊 Audio</span>}
+                        {!c.audioUrl && <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">⏳ À uploader</span>}
+                      </div>
+                      <p className="text-sm text-white/80 font-medium">{c.titre}</p>
+                      <p className="text-xs text-white/40 mt-1">{c.description}</p>
+                      <div className="flex gap-1 mt-2 flex-wrap">
+                        {c.tags.map((t, i) => (
+                          <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-white/30">#{t}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
+          </div>
+        </div>
+      );
+    }
+
+    // Category grid
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+            <span className="text-2xl">🎵</span>
+            <div>
+              <h1 className="text-xl font-bold text-white">Chansons</h1>
+              <p className="text-white/40 text-xs">{CHANSONS.length} chansons • {CHANSON_CATEGORIES.length} catégories</p>
+            </div>
+          </div>
+
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher dans toutes les chansons…"
+              className="bg-white/10 border-white/20 text-white pl-9" />
+          </div>
+
+          {searchLower ? (
+            <div className="space-y-2">
+              {CHANSONS.filter(c => c.titre.toLowerCase().includes(searchLower) || c.description.toLowerCase().includes(searchLower) || c.tags.some(t => t.includes(searchLower))).map(c => (
+                <div key={c.id} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 capitalize">{c.categorie}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">{c.ageMin}-{c.ageMax} ans</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/40">⏱ {c.duree}</span>
+                  </div>
+                  <p className="text-sm text-white/80 font-medium">{c.titre}</p>
+                  <p className="text-xs text-white/40 mt-1">{c.description}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {CHANSON_CATEGORIES.map(cat => {
+                const count = CHANSONS.filter(c => c.categorie === cat.id).length;
+                return (
+                  <button key={cat.id} onClick={() => { setInteractionCat(cat.id); setSearch(""); }}
+                    className={`aspect-square ${cat.color} hover:opacity-90 backdrop-blur rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between`}>
+                    <span className="text-3xl">{cat.emoji}</span>
+                    <div>
+                      <p className="text-xl font-bold text-white">{count}</p>
+                      <h3 className="text-xs font-semibold text-white/70">{cat.label}</h3>
+                      <p className="text-[10px] text-white/40 mt-0.5">{cat.desc}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+
   if (topSection === "histoires") {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
