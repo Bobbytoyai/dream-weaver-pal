@@ -1,3 +1,4 @@
+// @refresh reset
 /* v5 — Thin UI shell — logic extracted to useConversationStateMachine */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { eventBus } from "@/lib/eventBus";

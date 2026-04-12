@@ -1,3 +1,4 @@
+// @refresh reset
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ParentSettings } from "@/components/parentSettings";
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
