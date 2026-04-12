@@ -1937,8 +1937,10 @@ const Admin = () => {
           ) : (
             <div className="space-y-2">
               {cloudEntries.map(entry => (
-                <EntryRow key={entry.id} entry={entry} onToggle={() => handleToggleActive(entry)}
-                  onEdit={() => setEditingEntry(entry)} onDelete={() => handleDelete(entry.id)} />
+                <div key={entry.id} onClick={() => openKBDetail(entry)} className="cursor-pointer">
+                  <EntryRow entry={entry} onToggle={() => handleToggleActive(entry)}
+                    onEdit={() => setEditingEntry(entry)} onDelete={() => handleDelete(entry.id)} />
+                </div>
               ))}
             </div>
           )}
@@ -2176,7 +2178,7 @@ const Admin = () => {
           {/* Items list */}
           <div className="space-y-2">
             {filteredStore.map(item => (
-              <div key={item.id} className={`bg-white/5 backdrop-blur rounded-xl p-3 border transition-all ${item.is_active ? "border-white/10" : "border-red-500/20 opacity-50"}`}>
+              <div key={item.id} onClick={() => openStoreDetail(item)} className={`bg-white/5 backdrop-blur rounded-xl p-3 border transition-all cursor-pointer hover:bg-white/8 ${item.is_active ? "border-white/10" : "border-red-500/20 opacity-50"}`}>
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{item.emoji}</span>
                   <div className="flex-1 min-w-0">
