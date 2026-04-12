@@ -140,10 +140,17 @@ export function useBobbyVoiceCore({
 
   const closeSession = useCallback(async () => {
     if (!sessionOpenRef.current) return;
+    // Stop recording and upload audio
+    if (sessionIdRef.current) {
+      const audioPath = await stopRecording(sessionIdRef.current);
+      if (audioPath) {
+        console.log("[BobbyVoiceCore] 🎙️ Audio saved:", audioPath);
+      }
+    }
     await endSession();
     sessionOpenRef.current = false;
     eventBus.emit({ type: "SESSION_END" });
-  }, [endSession]);
+  }, [endSession, stopRecording, sessionIdRef]);
 
   const ensureSession = useCallback(async () => {
     if (sessionOpenRef.current && sessionIdRef.current) return sessionIdRef.current;
@@ -152,10 +159,18 @@ export function useBobbyVoiceCore({
     if (sessionId) {
       sessionOpenRef.current = true;
       eventBus.emit({ type: "SESSION_START" });
+      // Start recording the conversation audio
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        await startRecording(stream);
+        console.log("[BobbyVoiceCore] 🎙️ Recording started for session:", sessionId);
+      } catch (e) {
+        console.warn("[BobbyVoiceCore] Could not start recording:", e);
+      }
     }
 
     return sessionId;
-  }, [sessionIdRef, startSession]);
+  }, [sessionIdRef, startSession, startRecording]);
 
   // Track consecutive silence timeouts to know when to end conversation
   const silenceCountRef = useRef(0);
