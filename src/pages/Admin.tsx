@@ -106,7 +106,7 @@ interface KBEntry {
 }
 
 // ─── Top-level brain sections shown as big square cards ─────────────
-type TopSection = "interactions" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud";
+type TopSection = "interactions" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux";
 
 const TOP_SECTIONS: {
   id: TopSection;
@@ -119,6 +119,7 @@ const TOP_SECTIONS: {
   emoji: string;
 }[] = [
   { id: "interactions", label: "Interactions 10K", icon: MessageSquare, color: "text-cyan-400", bgColor: "bg-cyan-500/20", count: "10 000", desc: "Base d'interactions enfant par âge & catégorie", emoji: "🧠" },
+  { id: "jeux", label: "Jeux & Quiz", icon: Gamepad2, color: "text-blue-400", bgColor: "bg-blue-500/20", count: "90", desc: "Quiz animaux, sciences, vrai/faux, devinettes", emoji: "🎮" },
   { id: "qa", label: "QA Database", icon: HelpCircle, color: "text-amber-400", bgColor: "bg-amber-500/20", count: "537", desc: "Questions-réponses offline structurées", emoji: "❓" },
   { id: "blagues", label: "Blagues", icon: Laugh, color: "text-green-400", bgColor: "bg-green-500/20", count: "47", desc: "Blagues adaptées par âge & catégorie", emoji: "😂" },
   { id: "histoires", label: "Histoires", icon: BookOpen, color: "text-purple-400", bgColor: "bg-purple-500/20", count: "6", desc: "Contes & aventures personnalisées", emoji: "📖" },
