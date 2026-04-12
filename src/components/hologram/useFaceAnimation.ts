@@ -115,10 +115,10 @@ const STATE_TARGETS: Record<FaceState, Partial<FaceAnimationState>> = {
     pupilSize: 0.85, cheekGlow: 0.05, irisGlow: 0.25, eyeSparkle: 0.2,
   },
   sleepy: {
-    eyeOpenness: 0.4, eyebrowHeight: -0.08, eyebrowTilt: 0,
-    mouthOpenness: 0, mouthWidth: 0.42, mouthCurve: 0.03, mouthRound: 0, jawDrop: 0,
-    headTiltX: -0.04, headTiltZ: 0.06, glowIntensity: 0.15,
-    pupilSize: 0.8, cheekGlow: 0.08, irisGlow: 0.2, eyeSparkle: 0.15,
+    eyeOpenness: 0.0, eyebrowHeight: -0.12, eyebrowTilt: 0,
+    mouthOpenness: 0, mouthWidth: 0.38, mouthCurve: 0.02, mouthRound: 0, jawDrop: 0,
+    headTiltX: -0.06, headTiltZ: 0.08, glowIntensity: 0.08,
+    pupilSize: 0.5, cheekGlow: 0.05, irisGlow: 0.1, eyeSparkle: 0.05,
   },
   curious: {
     eyeOpenness: 1.3, eyebrowHeight: 0.22, eyebrowTilt: 0.08,
@@ -354,10 +354,12 @@ export function useFaceAnimation(
       curiousTiltZ = Math.sin(breathPhase.current * 1.5) * 0.03;
     }
 
-    // --- SLEEPY: slow eye drift + occasional heavy blink ---
+    // --- SLEEPY: eyes fully closed, slow breathing head bob ---
     let sleepyEyeWobble = 0;
+    let sleepyHeadBob = 0;
     if (faceState === "sleepy") {
-      sleepyEyeWobble = Math.sin(breathPhase.current * 0.5) * 0.08;
+      sleepyEyeWobble = -0.2; // Force eyes shut
+      sleepyHeadBob = Math.sin(breathPhase.current * 0.4) * 0.03; // slow nod
     }
 
     // --- CONFUSED: rapid micro head shake ---
@@ -461,47 +463,48 @@ export function useFaceAnimation(
     let speechCheekBoost = 0;
 
     if (faceState === "speaking" && viseme && viseme.amplitude > 0.01) {
-      // Cartoon exaggeration: amplify all viseme values significantly
-      const exaggeration = 2.0;
-      mouthOpenTarget = Math.min(1.0, viseme.mouthOpenness * exaggeration + 0.08);
-      mouthWidthTarget = viseme.mouthWidth * 1.1;
-      mouthRoundTarget = viseme.mouthRound * 1.5;
+      // Cartoon exaggeration: amplify all viseme values for expressiveness
+      const exaggeration = 2.8;
+      mouthOpenTarget = Math.min(1.0, viseme.mouthOpenness * exaggeration + 0.1);
+      mouthWidthTarget = viseme.mouthWidth * 1.3;
+      mouthRoundTarget = viseme.mouthRound * 1.8;
       jawDropTarget = viseme.jawDrop * exaggeration;
 
-      // Add micro-variation for liveliness
-      const microVar = Math.sin(breathPhase.current * 10) * 0.05;
+      // Rhythmic micro-variation for liveliness
+      const microVar = Math.sin(breathPhase.current * 12) * 0.06 + Math.sin(breathPhase.current * 7.3) * 0.03;
       mouthOpenTarget += microVar;
 
       // Squash & stretch: wider mouth = less tall, taller mouth = less wide
       if (mouthOpenTarget > 0.3) {
-        mouthWidthTarget *= 0.85;
+        mouthWidthTarget *= 0.82;
       }
       if (mouthWidthTarget > 0.65) {
-        mouthOpenTarget *= 0.9;
+        mouthOpenTarget *= 0.88;
       }
 
-      // ── Sync eyes/eyebrows/head with speech intensity ──
+      // Sync eyes/eyebrows/head with speech intensity
       const amp = viseme.amplitude;
-      // Eyebrows rise on emphasis (loud syllables)
-      speechEyebrowLift = amp > 0.15 ? (amp - 0.15) * 0.35 : 0;
-      // Eyes widen slightly on emphasis
-      speechEyeWiden = amp > 0.12 ? (amp - 0.12) * 0.15 : 0;
-      // Subtle head nod on rhythm
-      speechHeadNod = Math.sin(breathPhase.current * 6) * amp * 0.04;
-      // Cheeks glow more when smiling/speaking enthusiastically
-      speechCheekBoost = mouthWidthTarget > 0.6 ? (mouthWidthTarget - 0.6) * 0.4 : 0;
+      speechEyebrowLift = amp > 0.1 ? (amp - 0.1) * 0.5 : 0;
+      speechEyeWiden = amp > 0.08 ? (amp - 0.08) * 0.2 : 0;
+      speechHeadNod = Math.sin(breathPhase.current * 5) * amp * 0.06;
+      speechCheekBoost = mouthWidthTarget > 0.5 ? (mouthWidthTarget - 0.5) * 0.5 : 0;
 
     } else if (faceState === "speaking") {
-      // Fallback amplitude-based (cartoon style) — more visible
-      mouthOpenTarget = Math.min(1.0, audioAmplitude * 5.5 + 0.06);
-      mouthWidthTarget = targets.mouthWidth ?? 0.55;
-      mouthRoundTarget = audioAmplitude > 0.25 ? 0.25 : 0;
-      jawDropTarget = audioAmplitude * 2.8;
+      // Fallback amplitude-based (no viseme data) — very visible
+      const ampFactor = Math.min(1.0, audioAmplitude * 6.5 + 0.08);
+      mouthOpenTarget = ampFactor;
+      mouthWidthTarget = (targets.mouthWidth ?? 0.55) + audioAmplitude * 0.3;
+      mouthRoundTarget = audioAmplitude > 0.2 ? 0.35 : audioAmplitude * 0.5;
+      jawDropTarget = audioAmplitude * 3.2;
 
-      speechEyebrowLift = audioAmplitude > 0.15 ? (audioAmplitude - 0.15) * 0.3 : 0;
-      speechEyeWiden = audioAmplitude > 0.12 ? (audioAmplitude - 0.12) * 0.12 : 0;
-      speechHeadNod = Math.sin(breathPhase.current * 6) * audioAmplitude * 0.03;
-      speechCheekBoost = audioAmplitude > 0.2 ? audioAmplitude * 0.15 : 0;
+      // Add syllable-like oscillation even with raw amplitude
+      const syllableOsc = Math.sin(breathPhase.current * 14) * 0.08 * audioAmplitude;
+      mouthOpenTarget += syllableOsc;
+
+      speechEyebrowLift = audioAmplitude > 0.1 ? (audioAmplitude - 0.1) * 0.45 : 0;
+      speechEyeWiden = audioAmplitude > 0.08 ? (audioAmplitude - 0.08) * 0.18 : 0;
+      speechHeadNod = Math.sin(breathPhase.current * 5) * audioAmplitude * 0.05;
+      speechCheekBoost = audioAmplitude > 0.15 ? audioAmplitude * 0.2 : 0;
     } else {
       mouthOpenTarget = (targets.mouthOpenness ?? 0) + mouthBreath + mouthQuirkOpenAdd;
       mouthWidthTarget = (targets.mouthWidth ?? 0.5) + mouthBreathWidth + mouthQuirkWidthAdd;
@@ -510,7 +513,7 @@ export function useFaceAnimation(
     }
 
     // --- LERP ALL VALUES ---
-    const mouthSpeed = faceState === "speaking" ? baseSpeed * 7 : baseSpeed * 3;
+    const mouthSpeed = faceState === "speaking" ? baseSpeed * 10 : baseSpeed * 3;
 
     // v3.0: EYEBROW ANTICIPATION — eyebrows lead speech by ~50ms
     // Buffer the eyebrow target and use it slightly ahead of audio
@@ -544,7 +547,7 @@ export function useFaceAnimation(
 
     c.headTiltX = lerp(
       c.headTiltX,
-      (targets.headTiltX ?? 0) - gazeY * 0.18 + breathX + microOffset.current.headX + speechHeadNod + playfulBounce + proudHeadUp + confusedShakeX,
+      (targets.headTiltX ?? 0) - gazeY * 0.18 + breathX + microOffset.current.headX + speechHeadNod + playfulBounce + proudHeadUp + confusedShakeX + sleepyHeadBob,
       delta * gazeSpeed * 0.7 * surprisedFreeze
     );
     // v3.9: Speaking gaze — 70% focus on user, 30% natural drift
