@@ -116,26 +116,27 @@ interface KBEntry {
 }
 
 // ─── Top-level brain sections shown as big square cards ─────────────
-type TopSection = "interactions" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons";
+type TopSection = "interactions" | "multiresponses" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons";
 
-const TOP_SECTIONS: {
+// Counts are computed dynamically below in the component
+const TOP_SECTIONS_CONFIG: {
   id: TopSection;
   label: string;
   icon: typeof Brain;
   color: string;
   bgColor: string;
-  count: string;
   desc: string;
   emoji: string;
 }[] = [
-  { id: "interactions", label: "Interactions 10K", icon: MessageSquare, color: "text-cyan-400", bgColor: "bg-cyan-500/20", count: "10 000", desc: "Base d'interactions enfant par âge & catégorie", emoji: "🧠" },
-  { id: "jeux", label: "Jeux & Quiz", icon: Gamepad2, color: "text-blue-400", bgColor: "bg-blue-500/20", count: "90", desc: "Quiz animaux, sciences, vrai/faux, devinettes", emoji: "🎮" },
-  { id: "qa", label: "QA Database", icon: HelpCircle, color: "text-amber-400", bgColor: "bg-amber-500/20", count: "537", desc: "Questions-réponses offline structurées", emoji: "❓" },
-  { id: "blagues", label: "Blagues", icon: Laugh, color: "text-green-400", bgColor: "bg-green-500/20", count: "26", desc: "Blagues adaptées par âge & catégorie", emoji: "😂" },
-  { id: "histoires", label: "Histoires", icon: BookOpen, color: "text-purple-400", bgColor: "bg-purple-500/20", count: "6", desc: "Contes & aventures personnalisées", emoji: "📖" },
-  { id: "chansons", label: "Chansons", icon: Music, color: "text-rose-400", bgColor: "bg-rose-500/20", count: String(CHANSONS.length), desc: "Comptines, berceuses, éducatif, activités", emoji: "🎵" },
-  { id: "cerveau", label: "Personnalité", icon: Sparkles, color: "text-pink-400", bgColor: "bg-pink-500/20", count: "5", desc: "Personnalité, réactions, phrases Bobby", emoji: "✨" },
-  { id: "cloud", label: "Cloud KB", icon: Globe, color: "text-blue-400", bgColor: "bg-blue-500/20", count: "∞", desc: "Base cloud extensible (ajout via admin)", emoji: "☁️" },
+  { id: "interactions", label: "Interactions", icon: MessageSquare, color: "text-cyan-400", bgColor: "bg-cyan-500/20", desc: "Base d'interactions enfant par âge & catégorie", emoji: "🧠" },
+  { id: "multiresponses", label: "Multi-Réponses", icon: Zap, color: "text-orange-400", bgColor: "bg-orange-500/20", desc: "Réponses adaptatives multi-tags (offline)", emoji: "⚡" },
+  { id: "jeux", label: "Jeux & Quiz", icon: Gamepad2, color: "text-blue-400", bgColor: "bg-blue-500/20", desc: "Quiz animaux, sciences, vrai/faux, devinettes", emoji: "🎮" },
+  { id: "qa", label: "QA Database", icon: HelpCircle, color: "text-amber-400", bgColor: "bg-amber-500/20", desc: "Questions-réponses offline structurées", emoji: "❓" },
+  { id: "blagues", label: "Blagues", icon: Laugh, color: "text-green-400", bgColor: "bg-green-500/20", desc: "Blagues adaptées par âge & catégorie", emoji: "😂" },
+  { id: "histoires", label: "Histoires", icon: BookOpen, color: "text-purple-400", bgColor: "bg-purple-500/20", desc: "Contes & aventures personnalisées", emoji: "📖" },
+  { id: "chansons", label: "Chansons", icon: Music, color: "text-rose-400", bgColor: "bg-rose-500/20", desc: "Comptines, berceuses, éducatif, activités", emoji: "🎵" },
+  { id: "cerveau", label: "Personnalité", icon: Sparkles, color: "text-pink-400", bgColor: "bg-pink-500/20", desc: "Personnalité, réactions, phrases Bobby", emoji: "✨" },
+  { id: "cloud", label: "Cloud KB", icon: Globe, color: "text-blue-400", bgColor: "bg-blue-500/20", desc: "Base cloud extensible (ajout via admin)", emoji: "☁️" },
 ];
 
 // ═══════════════════════════════════════════════════════════════════
