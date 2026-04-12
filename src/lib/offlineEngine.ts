@@ -184,7 +184,7 @@ export function getOfflineResponse(
   const contextual = handleConversationalContext(text, childName);
   if (contextual) return contextual;
 
-  // 3c. 🧠 Multi-response smart selection (anti-repetition + behavioral adaptation)
+  // 3d. 🧠 Multi-response smart selection (anti-repetition + behavioral adaptation)
   const multiMatch = findMultiResponse(text);
   if (multiMatch) {
     const selected = selectBestResponse(multiMatch.responses);
@@ -194,6 +194,8 @@ export function getOfflineResponse(
       recordResponse(finalText, multiMatch.category, selected.type);
       updateEngagement(selected.energy === "high" ? 5 : selected.energy === "medium" ? 2 : -1);
       updateContext(intent, text, finalText);
+      // Try to activate a scenario for follow-up conversations
+      tryStartScenario(text, childAge);
       return { text: finalText, intent, isOffline: true };
     }
   }
