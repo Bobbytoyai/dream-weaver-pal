@@ -231,6 +231,8 @@ export function getOfflineResponse(
     const finalText = personalize(interactionMatch.ai_response, childName);
     const followUp = getFollowUp(interactionMatch.intent as any);
     const fullResponse = finalText + followUp;
+    recordResponse(fullResponse, interactionMatch.category, interactionMatch.intent);
+    updateEngagement(3);
     updateContext(interactionMatch.intent as any, text, fullResponse);
     return {
       text: fullResponse,
