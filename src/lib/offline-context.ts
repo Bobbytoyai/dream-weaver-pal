@@ -28,6 +28,8 @@ interface ConversationContext {
   mood: Mood;
   interactionCount: number;
   lastResponses: string[];
+  lastBobbyResponse: string;
+  lastResponseTime: number;
   history: ConversationTurn[];
   mentionedTopics: Set<string>;
   childPreferences: Record<string, number>;
