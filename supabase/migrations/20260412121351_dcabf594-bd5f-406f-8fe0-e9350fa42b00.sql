@@ -1,0 +1,1 @@
+DELETE FROM child_memories WHERE child_name = 'batiste';
