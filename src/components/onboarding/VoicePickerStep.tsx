@@ -83,7 +83,8 @@ export default function VoicePickerStep({ childName, selectedVoice, onSelect, on
               <span className={`text-2xl transition-transform duration-300 ${isSelected ? "scale-110" : ""}`}>{v.emoji}</span>
               <div className="flex-1 text-left">
                 <div className="font-bold text-foreground text-base leading-tight">{v.label}</div>
-                <div className="text-muted-foreground text-xs">{v.desc}</div>
+                <div className="text-muted-foreground text-[11px]">{v.voiceName}</div>
+                <div className="text-muted-foreground/70 text-xs">{v.desc}</div>
               </div>
               <button
                 onClick={(e) => {

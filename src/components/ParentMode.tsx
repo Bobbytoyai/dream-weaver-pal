@@ -1976,6 +1976,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                       className="w-full p-3 text-left">
                       <div className="text-xl mb-1">{info.emoji}</div>
                       <h4 className="text-[12px] font-semibold text-foreground">{info.label}</h4>
+                      {info.voiceName && <p className="text-[10px] text-primary/70 font-medium">{info.voiceName}</p>}
                       <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{info.desc}</p>
                     </button>
                     {!isCustom && (
