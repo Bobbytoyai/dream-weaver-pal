@@ -12,6 +12,7 @@ import {
   getBobbyWelcomeMessage,
   resetBobbyBrainSession,
 } from "@/lib/bobby/brain";
+import { getInterestBasedRelaunch } from "@/lib/bobby/interestTracker";
 import { toVoiceState, type BobbyBrainReply, type ConversationState, type PendingNarration } from "@/lib/bobby/types";
 import { useSessionTracker } from "./useSessionTracker";
 import { useSmartSTT } from "./useSmartSTT";
