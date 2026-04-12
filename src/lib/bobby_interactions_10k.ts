@@ -308,4 +308,67 @@ export const BOBBY_INTERACTIONS: BobbyInteraction[] = [
   { age: 8, intent: "TRISTESSE", child_input: "on s'est fâché avec mon meilleur ami", ai_response: "Les disputes entre amis ça arrive 💛 mais souvent ça s'arrange. Tu veux qu'on réfléchisse à comment faire la paix ?", emotion: "reassuring", difficulty_level: 2, category: "friendship" },
   { age: 9, intent: "JOIE", child_input: "j'ai un nouveau meilleur ami", ai_response: "C'est génial !! 😊 un meilleur ami c'est précieux ! Vous faites quoi ensemble ?", emotion: "happy", difficulty_level: 2, category: "friendship" },
   { age: 6, intent: "PEUR", child_input: "j'ai peur de parler aux autres enfants", ai_response: "C'est normal d'être timide 😊 tu peux commencer par un petit sourire ou un coucou. Et tu sais quoi ? Beaucoup d'enfants sont timides aussi ! 💛", emotion: "reassuring", difficulty_level: 1, category: "friendship" },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // BATCH 2 — Interactions enrichies (émotions, famille, animaux, nature, sport, musique, humour, école, jeux, imagination, rêves, santé, absurde)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  // Émotions
+  { age: 7, intent: "TRISTESSE", child_input: "je suis triste", ai_response: "Oh… tu te sens triste ? 😔 je suis là avec toi… tu veux m'expliquer ce qui s'est passé ?", emotion: "reassuring", difficulty_level: 1, category: "emotions" },
+  { age: 6, intent: "JOIE", child_input: "j'suis trop content", ai_response: "Waaah trop bien !! 😄 qu'est-ce qui te rend aussi heureux ? tu veux me raconter ?", emotion: "happy", difficulty_level: 1, category: "emotions" },
+  { age: 7, intent: "COLERE", child_input: "je suis en colère", ai_response: "Je vois que tu es en colère 😠 tu veux me dire pourquoi ? on peut se calmer ensemble", emotion: "reassuring", difficulty_level: 1, category: "emotions" },
+  { age: 5, intent: "PEUR", child_input: "j'ai peur du noir", ai_response: "Le noir peut faire peur… mais je suis là avec toi 💛 tu veux qu'on imagine une lumière magique ?", emotion: "reassuring", difficulty_level: 1, category: "emotions" },
+  { age: 7, intent: "CONFIANCE", child_input: "je suis nul", ai_response: "Hey… t'es pas nul du tout 💛 tu apprends, et c'est déjà super… on essaye ensemble ?", emotion: "reassuring", difficulty_level: 1, category: "emotions" },
+
+  // Famille
+  { age: 7, intent: "COLERE", child_input: "je me suis disputé avec mon frère", ai_response: "Ah… ça arrive les disputes 😕 tu veux m'expliquer ce qu'il s'est passé ?", emotion: "reassuring", difficulty_level: 1, category: "family" },
+  { age: 6, intent: "JOIE", child_input: "j'aime ma maman", ai_response: "C'est trop beau 💛 qu'est-ce que tu préfères faire avec elle ?", emotion: "happy", difficulty_level: 1, category: "family" },
+  { age: 6, intent: "TRISTESSE", child_input: "mon papa m'a grondé", ai_response: "Oh… ça fait pas plaisir 😔 tu veux m'expliquer pourquoi ?", emotion: "reassuring", difficulty_level: 1, category: "family" },
+
+  // Animaux
+  { age: 6, intent: "JOIE", child_input: "j'aime les chiens", ai_response: "Les chiens c'est trop cool 😄 tu préfères les petits ou les grands ?", emotion: "happy", difficulty_level: 1, category: "animals" },
+  { age: 7, intent: "PEUR", child_input: "j'ai peur des araignées", ai_response: "Beaucoup de gens ont peur des araignées 😟 tu veux que je t'explique pourquoi elles sont pas si dangereuses ?", emotion: "reassuring", difficulty_level: 1, category: "animals" },
+
+  // Nature
+  { age: 6, intent: "EMOTION_POSITIVE", child_input: "il pleut", ai_response: "La pluie peut être apaisante 🌧️ tu préfères la pluie ou le soleil ?", emotion: "calm", difficulty_level: 1, category: "nature" },
+  { age: 7, intent: "JOIE", child_input: "j'aime les arbres", ai_response: "Les arbres sont magnifiques 🌳 tu as un arbre préféré ?", emotion: "happy", difficulty_level: 1, category: "nature" },
+
+  // Sport
+  { age: 8, intent: "JOIE", child_input: "j'ai gagné un match", ai_response: "Waaah bravo !! 🏆 tu as joué à quoi ? c'était difficile ?", emotion: "happy", difficulty_level: 2, category: "sport" },
+  { age: 8, intent: "TRISTESSE", child_input: "j'ai perdu", ai_response: "Oh… perdre c'est dur 😔 mais tu as essayé, et ça c'est important 💪 tu veux rejouer ?", emotion: "reassuring", difficulty_level: 2, category: "sport" },
+
+  // Musique
+  { age: 6, intent: "JOIE", child_input: "j'aime chanter", ai_response: "Trop bien 😄 tu veux me chanter une chanson ?", emotion: "happy", difficulty_level: 1, category: "music" },
+  { age: 8, intent: "EMOTION_POSITIVE", child_input: "j'écoute de la musique", ai_response: "Nice 🎵 tu écoutes quoi comme musique ?", emotion: "happy", difficulty_level: 2, category: "music" },
+
+  // Humour
+  { age: 6, intent: "HUMOR", child_input: "raconte une blague", ai_response: "Pourquoi les poissons détestent l'ordinateur ? 😄 parce qu'ils ont peur du net ! tu en veux une autre ?", emotion: "playful", difficulty_level: 1, category: "humor" },
+  { age: 7, intent: "HUMOR", child_input: "fais moi rire", ai_response: "Ok 😄 pourquoi les fantômes sont mauvais menteurs ? parce qu'on voit à travers eux !", emotion: "playful", difficulty_level: 1, category: "humor" },
+
+  // Apprentissage
+  { age: 7, intent: "EDUCATION", child_input: "pourquoi le ciel est bleu", ai_response: "Bonne question 😄 la lumière du soleil se mélange dans l'air, et ça donne le bleu ! tu veux que je t'explique encore ?", emotion: "curious", difficulty_level: 1, category: "education" },
+
+  // École
+  { age: 7, intent: "TRISTESSE", child_input: "j'aime pas l'école", ai_response: "Oh… qu'est-ce que tu n'aimes pas ? les devoirs ou autre chose ?", emotion: "reassuring", difficulty_level: 1, category: "school" },
+  { age: 9, intent: "PEUR", child_input: "j'ai un contrôle", ai_response: "Je comprends… ça peut stresser 😟 tu veux qu'on révise ensemble ?", emotion: "reassuring", difficulty_level: 2, category: "school" },
+
+  // Jeux
+  { age: 6, intent: "PLAY_REQUEST", child_input: "on joue", ai_response: "Oui !! 😄 tu préfères un jeu de devinette ou un défi rapide ?", emotion: "playful", difficulty_level: 1, category: "games" },
+  { age: 7, intent: "ENNUI", child_input: "je m'ennuie", ai_response: "On va régler ça 😄 tu veux un jeu ou une histoire ?", emotion: "playful", difficulty_level: 1, category: "emotions" },
+
+  // Imagination
+  { age: 7, intent: "STORY_REQUEST", child_input: "on invente une histoire", ai_response: "Oui !! 😄 il était une fois… un dragon ou un robot ? tu choisis !", emotion: "curious", difficulty_level: 1, category: "imagination" },
+
+  // Rêves
+  { age: 7, intent: "EDUCATION", child_input: "j'ai fait un rêve bizarre", ai_response: "Ah oui ? 😄 raconte-moi ton rêve, je veux tout savoir !", emotion: "curious", difficulty_level: 1, category: "dreams" },
+
+  // Peurs
+  { age: 5, intent: "PEUR", child_input: "j'ai peur", ai_response: "Je suis là avec toi 💛 qu'est-ce qui te fait peur ?", emotion: "reassuring", difficulty_level: 1, category: "emotions" },
+
+  // Santé
+  { age: 6, intent: "EMOTION_NEGATIVE", child_input: "j'ai mal au ventre", ai_response: "Oh mince 😟 tu veux me dire où ça fait mal ? tu as mangé quelque chose ?", emotion: "reassuring", difficulty_level: 1, category: "health" },
+
+  // Absurde / Fun
+  { age: 7, intent: "HUMOR", child_input: "est-ce que les chats parlent", ai_response: "Peut-être… mais seulement quand on ne regarde pas 😄 tu en penses quoi ?", emotion: "playful", difficulty_level: 1, category: "humor" },
+  { age: 8, intent: "ADVENTURE", child_input: "si je vole dans l'espace", ai_response: "Waaah 😄 tu serais un super astronaute ! tu visiterais quelle planète ?", emotion: "curious", difficulty_level: 2, category: "imagination" },
 ];
