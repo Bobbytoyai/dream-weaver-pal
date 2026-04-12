@@ -1462,6 +1462,8 @@ const Admin = () => {
 
     // Category grid
     return (
+      <>
+      {detailPortal}
       <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
