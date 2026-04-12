@@ -88,16 +88,31 @@ interface CategoryConfig {
 }
 
 const BRAIN_SECTIONS: CategoryConfig[] = [
-  { id: "emotions", label: "Émotions", icon: Heart, color: "text-pink-400", bgColor: "bg-pink-500/20", description: "Réponses émotionnelles, réconfort", dbCategories: ["émotion"] },
-  { id: "histoires", label: "Histoires", icon: BookOpen, color: "text-amber-400", bgColor: "bg-amber-500/20", description: "Contes, aventures interactives", dbCategories: ["histoire"] },
-  { id: "blagues", label: "Blagues", icon: Laugh, color: "text-green-400", bgColor: "bg-green-500/20", description: "Blagues, humour enfants", dbCategories: ["blague"] },
-  { id: "jeux", label: "Jeux & Quiz", icon: Gamepad2, color: "text-blue-400", bgColor: "bg-blue-500/20", description: "Jeux vocaux, quiz", dbCategories: ["jeu", "activité"] },
-  { id: "educatif", label: "Éducatif", icon: GraduationCap, color: "text-cyan-400", bgColor: "bg-cyan-500/20", description: "Sciences, maths, géographie", dbCategories: ["éducatif"] },
-  { id: "general", label: "Conversations", icon: MessageSquare, color: "text-purple-400", bgColor: "bg-purple-500/20", description: "Salutations, discussions", dbCategories: ["général"] },
-  { id: "chansons", label: "Chansons", icon: Music, color: "text-indigo-400", bgColor: "bg-indigo-500/20", description: "Comptines, musique", dbCategories: ["chanson"] },
+  { id: "educatif", label: "Éducatif", icon: GraduationCap, color: "text-cyan-400", bgColor: "bg-cyan-500/20", description: "Sciences, maths, géographie, espace", dbCategories: ["éducatif"] },
+  { id: "emotions", label: "Émotions", icon: Heart, color: "text-pink-400", bgColor: "bg-pink-500/20", description: "Réponses émotionnelles, réconfort", dbCategories: ["émotions"] },
+  { id: "general", label: "Conversations", icon: MessageSquare, color: "text-purple-400", bgColor: "bg-purple-500/20", description: "Salutations, discussions, méta", dbCategories: ["général", "méta"] },
+  { id: "memoire", label: "Mémoire", icon: Brain, color: "text-violet-400", bgColor: "bg-violet-500/20", description: "Mémoire, rappels, souvenirs", dbCategories: ["mémoire"] },
+  { id: "imagination", label: "Imagination", icon: Lightbulb, color: "text-orange-400", bgColor: "bg-orange-500/20", description: "Créativité, histoires inventées", dbCategories: ["imagination"] },
+  { id: "logique", label: "Logique", icon: Cpu, color: "text-teal-400", bgColor: "bg-teal-500/20", description: "Raisonnement, puzzles, décision", dbCategories: ["logique", "décision"] },
+  { id: "animaux", label: "Animaux", icon: Dog, color: "text-amber-400", bgColor: "bg-amber-500/20", description: "Animaux, nature", dbCategories: ["animaux", "nature"] },
+  { id: "famille", label: "Famille", icon: Home, color: "text-rose-400", bgColor: "bg-rose-500/20", description: "Famille, social, amitié", dbCategories: ["famille", "social"] },
+  { id: "nourriture", label: "Nourriture", icon: Utensils, color: "text-green-400", bgColor: "bg-green-500/20", description: "Repas, goûts, alimentation", dbCategories: ["nourriture"] },
+  { id: "opinion", label: "Opinions", icon: Star, color: "text-yellow-400", bgColor: "bg-yellow-500/20", description: "Avis, préférences, goûts", dbCategories: ["opinion", "Tu préfères lequel ?"] },
+  { id: "quotidien", label: "Quotidien", icon: Home, color: "text-blue-400", bgColor: "bg-blue-500/20", description: "Routine, journée, habitudes", dbCategories: ["quotidien", "routine"] },
+  { id: "jeux", label: "Jeux & Activités", icon: Gamepad2, color: "text-blue-400", bgColor: "bg-blue-500/20", description: "Jeux, activités ludiques", dbCategories: ["jeux", "activité", "ludique"] },
+  { id: "motivation", label: "Motivation", icon: Zap, color: "text-emerald-400", bgColor: "bg-emerald-500/20", description: "Encouragement, motivation", dbCategories: ["motivation"] },
+  { id: "ecole", label: "École", icon: GraduationCap, color: "text-teal-400", bgColor: "bg-teal-500/20", description: "École, apprentissage scolaire", dbCategories: ["école"] },
+  { id: "espace", label: "Espace", icon: Globe, color: "text-indigo-400", bgColor: "bg-indigo-500/20", description: "Espace, astronomie, planètes", dbCategories: ["espace"] },
+  { id: "humour", label: "Humour", icon: Laugh, color: "text-yellow-400", bgColor: "bg-yellow-500/20", description: "Blagues, rires", dbCategories: ["humour"] },
+  { id: "securite", label: "Sécurité", icon: Eye, color: "text-red-400", bgColor: "bg-red-500/20", description: "Protection, sécurité enfant", dbCategories: ["sécurité"] },
 ];
 
-const ALL_DB_CATEGORIES = ["général", "jeu", "éducatif", "blague", "histoire", "émotion", "activité", "chanson"];
+const ALL_DB_CATEGORIES = [
+  "général", "éducatif", "émotions", "mémoire", "imagination", "logique", "décision",
+  "animaux", "nature", "famille", "social", "nourriture", "opinion", "Tu préfères lequel ?",
+  "quotidien", "routine", "jeux", "activité", "ludique", "motivation", "école", "espace",
+  "humour", "sécurité", "méta",
+];
 
 // ─── Types ─────────────────────────────────────────────────────────
 interface KBEntry {
