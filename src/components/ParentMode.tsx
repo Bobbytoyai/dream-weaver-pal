@@ -2335,22 +2335,22 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   };
 
   const renderReglages = () => (
-    <div className="p-4 space-y-3">
-      {/* Section selector — card pills */}
-      <div className="grid grid-cols-3 gap-2">
+    <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
+      {/* Section selector — compact pills */}
+      <div className="flex gap-1.5">
         {([
           ["voix", "🎤", "Voix"],
           ["contenu", "📚", "Contenu"],
           ["limites", "⏱️", "Limites"],
         ] as const).map(([key, emoji, label]) => (
           <button key={key} onClick={() => setReglagesSection(key)}
-            className={`p-3 rounded-2xl text-center transition-all duration-200 border ${
+            className={`flex-1 py-2.5 rounded-2xl text-center transition-all duration-200 border ${
               reglagesSection === key
                 ? "bg-primary/10 border-primary/30 shadow-sm"
-                : "bg-card border-border/30 hover:bg-muted/50"
+                : "bg-card border-border/20 hover:bg-muted/50"
             }`}>
-            <span className="text-xl block mb-1">{emoji}</span>
-            <span className={`text-[11px] font-semibold block ${
+            <span className="text-lg block">{emoji}</span>
+            <span className={`text-[10px] font-extrabold block ${
               reglagesSection === key ? "text-primary" : "text-muted-foreground"
             }`}>{label}</span>
           </button>
@@ -2360,384 +2360,315 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       {/* Voix section */}
       {reglagesSection === "voix" && (
         <>
-          <Card title="Type de voix" icon={Mic}>
-            <div className="grid grid-cols-2 gap-2">
+          {/* Voice type — compact grid */}
+          <div className="bg-card rounded-2xl p-3 border border-border/20">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-base">🎤</span>
+              <h4 className="text-[12px] font-extrabold text-foreground">Type de voix</h4>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
               {(["child", "female", "male", "sister", "brother", "custom"] as const).map((type) => {
                 const info = VOICE_MAP[type];
                 const isCustom = type === "custom";
                 const selected = settings.voiceType === type;
                 const isThisPlaying = previewPlaying === type;
                 return (
-                  <div key={type} className={`relative rounded-xl transition-all duration-200 ${
-                    isCustom ? "opacity-40 cursor-not-allowed bg-muted/30" :
-                    selected ? "bg-primary/10 ring-2 ring-primary/40" : "bg-muted/50 hover:bg-muted"
-                  }`}>
-                    <button
-                      onClick={() => !isCustom && updateSetting("voiceType", type)}
-                      disabled={isCustom}
-                      className="w-full p-3 text-left">
-                      <div className="text-xl mb-1">{info.emoji}</div>
-                      <h4 className="text-[12px] font-semibold text-foreground">{info.label}</h4>
-                      {info.voiceName && <p className="text-[10px] text-primary/70 font-medium">{info.voiceName}</p>}
-                      <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{info.desc}</p>
-                    </button>
-                    {!isCustom && (
+                  <button key={type}
+                    onClick={() => !isCustom && updateSetting("voiceType", type)}
+                    disabled={isCustom}
+                    className={`relative p-2 rounded-xl text-center transition-all duration-200 ${
+                      isCustom ? "opacity-30 cursor-not-allowed bg-muted/20" :
+                      selected ? "bg-primary/10 ring-2 ring-primary/40" : "bg-muted/40 hover:bg-muted/60"
+                    }`}>
+                    <span className="text-lg block">{info.emoji}</span>
+                    <span className={`text-[9px] font-extrabold block mt-0.5 ${selected ? "text-primary" : "text-foreground/70"}`}>{info.label}</span>
+                    {!isCustom && selected && (
                       <button
-                        onClick={() => previewVoice(type)}
+                        onClick={(e) => { e.stopPropagation(); previewVoice(type); }}
                         disabled={!!previewPlaying}
-                        className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                          isThisPlaying
-                            ? "bg-primary text-primary-foreground animate-pulse"
-                            : "bg-primary/15 text-primary hover:bg-primary hover:text-primary-foreground"
-                        } disabled:opacity-40`}>
-                        {isThisPlaying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+                        className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                        {isThisPlaying ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
                       </button>
                     )}
-                    {isCustom && <Lock className="absolute top-3 right-3 w-4 h-4 text-muted-foreground" />}
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
-
-          <Card title="Vitesse de la voix" icon={Zap}>
-            <div className="grid grid-cols-3 gap-2">
-              {([["slow", "🐢", "Lent"], ["normal", "🔊", "Normal"], ["fast", "⚡", "Rapide"]] as const).map(([val, emoji, label]) => (
-                <button key={val} onClick={() => updateSetting("voiceSpeed", val)}
-                  className={`p-3 rounded-xl text-center transition-all ${
-                    settings.voiceSpeed === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
-                  }`}>
-                  <span className="text-lg block">{emoji}</span>
-                  <span className={`text-[11px] font-semibold block ${settings.voiceSpeed === val ? "text-primary" : "text-foreground"}`}>{label}</span>
-                </button>
-              ))}
-            </div>
-          </Card>
-
-          <Card title="Couleur de Bobby" icon={Sparkles}>
-            <div className="grid grid-cols-3 gap-2">
-              {BOBBY_COLORS.map((c) => {
-                const selected = settings.bobbyColor === c.id;
-                return (
-                  <button key={c.id} onClick={() => updateSetting("bobbyColor", c.id)}
-                    className={`flex items-center gap-2 p-3 rounded-xl transition-all ${
-                      selected ? "ring-2 ring-primary/50 bg-primary/10" : "bg-muted/50 hover:bg-muted"
-                    }`}>
-                    <div className="w-6 h-6 rounded-full shrink-0 shadow-inner"
-                      style={{ backgroundColor: `hsl(${c.hsl})` }} />
-                    <span className={`text-[11px] font-semibold ${selected ? "text-primary" : "text-foreground"}`}>{c.label}</span>
+                    {isCustom && <Lock className="absolute top-1 right-1 w-3 h-3 text-muted-foreground" />}
                   </button>
                 );
               })}
             </div>
-          </Card>
+          </div>
 
-          <Card>
-            <SettingRow icon={Camera} title="Suivi du visage" desc="Bobby suit le visage de l'enfant">
-              <Toggle value={settings.enableCamera} onChange={async (v) => {
-                if (v) {
-                  try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 320, height: 240 } });
-                    stream.getTracks().forEach(t => t.stop());
-                    updateSetting("enableCamera", true);
-                  } catch { alert("Impossible d'accéder à la caméra."); }
-                } else { updateSetting("enableCamera", false); }
-              }} />
-            </SettingRow>
-          </Card>
-
-          <Card title="Effets sonores" icon={settings.sfxVolume === 0 ? VolumeX : Volume2}>
-            <div className="flex items-center gap-3">
-              <button onClick={() => updateSetting("sfxVolume", settings.sfxVolume === 0 ? 0.7 : 0)}
-                className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${settings.sfxVolume === 0 ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
-                {settings.sfxVolume === 0 ? "Off" : "On"}
-              </button>
-              <input type="range" min="0" max="100" value={Math.round(settings.sfxVolume * 100)}
-                onChange={(e) => updateSetting("sfxVolume", Number(e.target.value) / 100)}
-                className="flex-1 h-1.5 rounded-full appearance-none bg-muted accent-primary" />
-              <span className="text-[11px] text-muted-foreground w-10 text-right">{Math.round(settings.sfxVolume * 100)}%</span>
+          {/* Voice speed — inline */}
+          <div className="bg-card rounded-2xl p-3 border border-border/20">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-base">⚡</span>
+              <h4 className="text-[12px] font-extrabold text-foreground">Vitesse</h4>
             </div>
-          </Card>
-
-          <Card title="Stockage Cloud & Offline" icon={Download}>
-            <p className="text-[11px] text-muted-foreground mb-3 leading-tight">
-              Téléchargez du contenu pour l'utiliser sans internet. Chaque contenu est stocké dans votre cloud personnel.
-            </p>
-
-            {/* Storage gauge */}
-            <div className="p-3 rounded-xl bg-muted/40 mb-3">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[11px] font-semibold text-foreground">Espace utilisé</span>
-                <span className="text-[10px] text-muted-foreground font-mono">0 Mo / 2 Go</span>
-              </div>
-              <div className="w-full h-2.5 rounded-full bg-muted overflow-hidden">
-                <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: "0%" }} />
-              </div>
-              <p className="text-[9px] text-muted-foreground mt-1.5">🎁 2 Go offerts</p>
-            </div>
-
-            {/* Downloadable content categories */}
-            <div className="space-y-2 mb-3">
-              {[
-                { emoji: "🎤", label: "Voix Bobby", desc: "Toutes les voix (Maman, Papa, Frère…)", size: "~200 Mo", available: true },
-                { emoji: "📚", label: "Bibliothèque d'histoires", desc: "Contes, aventures, éducatif", size: "~150 Mo", available: true },
-                { emoji: "🎮", label: "Jeux & Quiz", desc: "Quiz animaux, devinettes, vrai/faux", size: "~50 Mo", available: true },
-                { emoji: "🧠", label: "Cerveau offline", desc: "Réponses intelligentes sans internet", size: "~30 Mo", available: true },
-                { emoji: "🎵", label: "Effets sonores", desc: "Sons, musiques, ambiances", size: "~80 Mo", available: false },
-              ].map((item) => (
-                <div key={item.label} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                  item.available ? "bg-card border-border/30" : "bg-muted/20 border-border/10 opacity-50"
-                }`}>
-                  <span className="text-xl shrink-0">{item.emoji}</span>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-[12px] font-semibold text-foreground">{item.label}</h4>
-                    <p className="text-[9px] text-muted-foreground leading-tight">{item.desc}</p>
-                    <span className="text-[9px] text-muted-foreground/60">{item.size}</span>
-                  </div>
-                  {item.available ? (
-                    <button
-                      onClick={async () => {
-                        if (item.label === "Voix Bobby") {
-                          // ElevenLabs voices are cloud-based, no download needed
-                          setPiperDone(true);
-                        }
-                      }}
-                      className="shrink-0 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-[10px] font-semibold hover:bg-primary/20 transition-all">
-                      {item.label === "Voix Bobby" && piperDone ? "✅" : "⬇️ Télécharger"}
-                    </button>
-                  ) : (
-                    <span className="shrink-0 text-[9px] px-2 py-1 rounded-full bg-muted text-muted-foreground font-medium">Bientôt</span>
-                  )}
-                </div>
+            <div className="flex gap-1.5">
+              {([["slow", "🐢", "Lent"], ["normal", "🔊", "Normal"], ["fast", "⚡", "Rapide"]] as const).map(([val, emoji, label]) => (
+                <button key={val} onClick={() => updateSetting("voiceSpeed", val)}
+                  className={`flex-1 py-2 rounded-xl text-center transition-all ${
+                    settings.voiceSpeed === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/40 hover:bg-muted/60"
+                  }`}>
+                  <span className="text-base block">{emoji}</span>
+                  <span className={`text-[9px] font-extrabold block ${settings.voiceSpeed === val ? "text-primary" : "text-foreground/70"}`}>{label}</span>
+                </button>
               ))}
             </div>
+          </div>
 
-            {/* Piper download progress */}
-            {piperDownloading && (
-              <div className="p-3 rounded-xl bg-primary/5 border border-primary/10 space-y-2 mb-3">
-                {(["female", "male", "child", "sister", "brother"] as const).map((profile) => {
-                  const pct = piperProgress[profile] ?? 0;
-                  const labels: Record<string, string> = { female: "Maman", male: "Papa", child: "Enfant", sister: "Sœur", brother: "Frère" };
-                  return (
-                    <div key={profile} className="flex items-center gap-2">
-                      <span className="text-[10px] font-medium text-foreground w-14 shrink-0">{labels[profile]}</span>
-                      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                        <div className="h-full rounded-full bg-primary transition-all duration-300"
-                          style={{ width: `${Math.round(pct * 100)}%` }} />
-                      </div>
-                      <span className="text-[9px] text-muted-foreground w-8 text-right">
-                        {pct >= 1 ? "✅" : `${Math.round(pct * 100)}%`}
-                      </span>
-                    </div>
-                  );
-                })}
-                <div className="flex items-center gap-2">
-                  <Loader2 className="w-3 h-3 animate-spin text-primary" />
-                  <span className="text-[10px] text-muted-foreground">Téléchargement…</span>
-                </div>
-              </div>
-            )}
-
-            {/* Upgrade storage */}
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/15">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg">☁️</span>
-                <h4 className="text-[13px] font-bold text-foreground">Augmenter le stockage</h4>
-              </div>
-              <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
-                Passez à un plan supérieur pour stocker plus de contenu offline.
-              </p>
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                {[
-                  { size: "5 Go", price: "1,99€/mois", popular: false },
-                  { size: "20 Go", price: "4,99€/mois", popular: true },
-                  { size: "100 Go", price: "9,99€/mois", popular: false },
-                ].map((plan) => (
-                  <div key={plan.size} className={`relative p-3 rounded-xl text-center border transition-all ${
-                    plan.popular ? "border-primary/40 bg-primary/5" : "border-border/30 bg-card"
-                  }`}>
-                    {plan.popular && (
-                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[8px] px-2 py-0.5 rounded-full bg-primary text-primary-foreground font-bold">
-                        Populaire
-                      </span>
-                    )}
-                    <span className="text-[14px] font-bold text-foreground block">{plan.size}</span>
-                    <span className="text-[9px] text-muted-foreground block mt-0.5">{plan.price}</span>
-                  </div>
-                ))}
-              </div>
-              <button className="w-full py-2.5 rounded-xl bg-muted/50 text-muted-foreground text-[11px] font-semibold cursor-not-allowed">
-                🔒 Bientôt disponible
-              </button>
+          {/* Bobby color — compact */}
+          <div className="bg-card rounded-2xl p-3 border border-border/20">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-base">🎨</span>
+              <h4 className="text-[12px] font-extrabold text-foreground">Couleur de Bobby</h4>
             </div>
-          </Card>
+            <div className="flex gap-2 flex-wrap">
+              {BOBBY_COLORS.map((c) => {
+                const selected = settings.bobbyColor === c.id;
+                return (
+                  <button key={c.id} onClick={() => updateSetting("bobbyColor", c.id)}
+                    className={`w-10 h-10 rounded-xl transition-all duration-200 active:scale-90 border-2 ${
+                      selected ? "border-primary shadow-md shadow-primary/30 scale-110" : "border-transparent hover:scale-105"
+                    }`}
+                    style={{ backgroundColor: `hsl(${c.hsl})` }}
+                    title={c.label} />
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Face tracking + SFX — compact row */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-card rounded-2xl p-3 border border-border/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-base block">📷</span>
+                  <span className="text-[9px] font-extrabold text-foreground block mt-1">Suivi visage</span>
+                </div>
+                <Toggle value={settings.enableCamera} onChange={async (v) => {
+                  if (v) {
+                    try {
+                      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 320, height: 240 } });
+                      stream.getTracks().forEach(t => t.stop());
+                      updateSetting("enableCamera", true);
+                    } catch { alert("Impossible d'accéder à la caméra."); }
+                  } else { updateSetting("enableCamera", false); }
+                }} />
+              </div>
+            </div>
+            <div className="bg-card rounded-2xl p-3 border border-border/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-base block">{settings.sfxVolume === 0 ? "🔇" : "🔊"}</span>
+                  <span className="text-[9px] font-extrabold text-foreground block mt-1">Sons</span>
+                </div>
+                <Toggle value={settings.sfxVolume > 0} onChange={(v) => updateSetting("sfxVolume", v ? 0.7 : 0)} />
+              </div>
+              {settings.sfxVolume > 0 && (
+                <input type="range" min="0" max="100" value={Math.round(settings.sfxVolume * 100)}
+                  onChange={(e) => updateSetting("sfxVolume", Number(e.target.value) / 100)}
+                  className="w-full h-1 rounded-full appearance-none bg-muted accent-primary mt-2" />
+              )}
+            </div>
+          </div>
         </>
       )}
 
       {/* Contenu section */}
       {reglagesSection === "contenu" && (
         <>
-          <Card title="Modes de contenu" icon={BookOpen}>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="bg-card rounded-2xl p-3 border border-border/20">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-base">💬</span>
+              <h4 className="text-[12px] font-extrabold text-foreground">Modes de contenu</h4>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
               {([
-                ["freeChat", "💬", "Discussion libre", "Bobby bavarde librement"],
+                ["freeChat", "💬", "Discussion", "Bavardage libre"],
                 ["educational", "📚", "Éducatif", "Apprentissage ludique"],
-                ["games", "🎮", "Jeux", "Quiz, devinettes, défis"],
+                ["games", "🎮", "Jeux", "Quiz et défis"],
                 ["stories", "📖", "Histoires", "Contes et aventures"],
               ] as const).map(([key, emoji, label, desc]) => {
                 const active = settings.contentModes[key as keyof typeof settings.contentModes];
                 return (
                   <button key={key}
                     onClick={() => updateNested("contentModes", key, !active)}
-                    className={`relative p-3 rounded-xl text-left transition-all duration-200 ${
-                      active ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
+                    className={`relative p-2.5 rounded-xl text-center transition-all duration-200 ${
+                      active ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/40 hover:bg-muted/60"
                     }`}>
-                    <div className="text-xl mb-1">{emoji}</div>
-                    <h4 className="text-[12px] font-semibold text-foreground">{label}</h4>
-                    <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{desc}</p>
-                    <div className={`absolute top-3 right-3 w-5 h-5 rounded-full flex items-center justify-center transition-all ${
-                      active ? "bg-primary text-primary-foreground" : "bg-muted-foreground/20"
-                    }`}>
-                      {active && <span className="text-[10px] font-bold">✓</span>}
-                    </div>
+                    <span className="text-lg block">{emoji}</span>
+                    <span className={`text-[10px] font-extrabold block mt-0.5 ${active ? "text-primary" : "text-foreground/70"}`}>{label}</span>
+                    <span className="text-[8px] text-muted-foreground">{desc}</span>
+                    {active && <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[8px] font-bold">✓</div>}
                   </button>
                 );
               })}
             </div>
-          </Card>
+          </div>
 
-          <Card title="Thèmes d'histoires" icon={Sparkles}>
-            <div className="grid grid-cols-3 gap-2">
+          <div className="bg-card rounded-2xl p-3 border border-border/20">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-base">✨</span>
+              <h4 className="text-[12px] font-extrabold text-foreground">Thèmes d'histoires</h4>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5">
               {ALL_THEMES.map(theme => {
                 const active = settings.enabledThemes.includes(theme.id);
                 return (
                   <button key={theme.id} onClick={() => toggleTheme(theme.id)}
-                    className={`p-3 rounded-xl text-center transition-all ${
-                      active ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
+                    className={`p-2 rounded-xl text-center transition-all ${
+                      active ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/30 hover:bg-muted/50"
                     }`}>
-                    <span className="text-xl block mb-1">{theme.label.split(" ")[0]}</span>
-                    <span className={`text-[10px] font-medium ${active ? "text-primary" : "text-muted-foreground"}`}>
+                    <span className="text-base block">{theme.label.split(" ")[0]}</span>
+                    <span className={`text-[8px] font-bold ${active ? "text-primary" : "text-muted-foreground"}`}>
                       {theme.label.split(" ").slice(1).join(" ") || theme.label}
                     </span>
                   </button>
                 );
               })}
             </div>
-          </Card>
+          </div>
 
-          <Card title="Durée des histoires" icon={Clock}>
-            <div className="grid grid-cols-3 gap-2">
-              {([["courte", "⚡", "Courte", "~3 min"], ["moyenne", "📖", "Moyenne", "~7 min"], ["longue", "📚", "Longue", "~12 min"]] as const).map(([val, emoji, label, sub]) => (
-                <button key={val} onClick={() => updateSetting("storyDuration", val)}
-                  className={`p-3 rounded-xl text-center transition-all ${
-                    settings.storyDuration === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
-                  }`}>
-                  <span className="text-lg block">{emoji}</span>
-                  <span className={`text-[11px] font-semibold block ${settings.storyDuration === val ? "text-primary" : "text-foreground"}`}>{label}</span>
-                  <span className="text-[9px] text-muted-foreground">{sub}</span>
-                </button>
-              ))}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-card rounded-2xl p-3 border border-border/20">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-base">⏱️</span>
+                <h4 className="text-[11px] font-extrabold text-foreground">Durée</h4>
+              </div>
+              <div className="space-y-1">
+                {([["courte", "⚡", "~3 min"], ["moyenne", "📖", "~7 min"], ["longue", "📚", "~12 min"]] as const).map(([val, emoji, sub]) => (
+                  <button key={val} onClick={() => updateSetting("storyDuration", val)}
+                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-all ${
+                      settings.storyDuration === val ? "bg-primary/10" : "hover:bg-muted/40"
+                    }`}>
+                    <span className="text-sm">{emoji}</span>
+                    <span className={`text-[9px] font-bold flex-1 ${settings.storyDuration === val ? "text-primary" : "text-foreground/70"}`}>{sub}</span>
+                    {settings.storyDuration === val && <span className="text-[8px] text-primary">●</span>}
+                  </button>
+                ))}
+              </div>
             </div>
-          </Card>
-
-          <Card>
-            <SettingRow icon={Sparkles} title="Histoires interactives" desc="L'enfant fait des choix dans l'histoire">
+            <div className="bg-card rounded-2xl p-3 border border-border/20 flex flex-col items-center justify-center text-center">
+              <span className="text-2xl mb-1">🎭</span>
+              <span className="text-[10px] font-extrabold text-foreground mb-2">Interactif</span>
               <Toggle value={settings.storyInteractive} onChange={(v) => updateSetting("storyInteractive", v)} />
-            </SettingRow>
-          </Card>
+              <span className="text-[8px] text-muted-foreground mt-1">Choix dans l'histoire</span>
+            </div>
+          </div>
         </>
       )}
 
       {/* Limites section */}
       {reglagesSection === "limites" && (
         <>
-          <Card title="Limite journalière" icon={Timer}>
-            <div className="space-y-3">
+          <div className="bg-card rounded-2xl p-3 border border-border/20">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-base">⏳</span>
+              <h4 className="text-[12px] font-extrabold text-foreground">Limite journalière</h4>
+              <span className="ml-auto text-sm font-extrabold text-primary">{settings.timeLimitMinutes || 60} min</span>
+            </div>
+            <input type="range" min="10" max="120" step="5" value={settings.timeLimitMinutes || 60}
+              onChange={(e) => updateSetting("timeLimitMinutes", Number(e.target.value))}
+              className="w-full h-2 rounded-full appearance-none bg-muted accent-primary" />
+            <div className="flex justify-between text-[8px] text-muted-foreground mt-1">
+              <span>10 min</span><span>1h</span><span>2h</span>
+            </div>
+            {todayDuration > 0 && (
+              <div className="mt-2 pt-2 border-t border-border/20">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-[9px] text-muted-foreground">Aujourd'hui</span>
+                  <span className="text-[9px] font-mono text-foreground">{formatDuration(todayDuration)}</span>
+                </div>
+                <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full transition-all ${todayDuration / 60 > (settings.timeLimitMinutes || 60) ? "bg-destructive" : "bg-primary"}`}
+                    style={{ width: `${Math.min(100, (todayDuration / 60 / (settings.timeLimitMinutes || 60)) * 100)}%` }} />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-card rounded-2xl p-3 border border-border/20">
               <div className="flex items-center justify-between">
-                <span className="text-[12px] text-foreground font-medium">Durée max par jour</span>
-                <span className="text-lg font-bold text-primary">{settings.timeLimitMinutes || 60} min</span>
-              </div>
-              <input type="range" min="10" max="120" step="5" value={settings.timeLimitMinutes || 60}
-                onChange={(e) => updateSetting("timeLimitMinutes", Number(e.target.value))}
-                className="w-full h-2 rounded-full appearance-none bg-muted accent-primary" />
-              <div className="flex justify-between text-[9px] text-muted-foreground">
-                <span>10 min</span><span>60 min</span><span>120 min</span>
-              </div>
-              {todayDuration > 0 && (
-                <div className="mt-2 pt-2 border-t border-border">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] text-muted-foreground">Aujourd'hui</span>
-                    <span className="text-[10px] font-mono text-foreground">{formatDuration(todayDuration)} / {settings.timeLimitMinutes || 60} min</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full transition-all ${todayDuration / 60 > (settings.timeLimitMinutes || 60) ? "bg-destructive" : "bg-primary"}`}
-                      style={{ width: `${Math.min(100, (todayDuration / 60 / (settings.timeLimitMinutes || 60)) * 100)}%` }} />
-                  </div>
+                <div>
+                  <span className="text-base block">🛑</span>
+                  <span className="text-[9px] font-extrabold text-foreground block mt-1">Arrêt auto</span>
                 </div>
-              )}
+                <Toggle value={settings.autoStop} onChange={(v) => updateSetting("autoStop", v)} />
+              </div>
             </div>
-          </Card>
-          <Card>
-            <SettingRow icon={Timer} title="Arrêt automatique" desc="Bobby s'arrête quand la limite est atteinte">
-              <Toggle value={settings.autoStop} onChange={(v) => updateSetting("autoStop", v)} />
-            </SettingRow>
-          </Card>
-          <Card title="Mode nuit" icon={Moon}>
-            <div className="space-y-3">
-              <SettingRow icon={Moon} title="Activer le mode nuit" desc="Bobby ne répond plus pendant la nuit">
+            <div className="bg-card rounded-2xl p-3 border border-border/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-base block">🌙</span>
+                  <span className="text-[9px] font-extrabold text-foreground block mt-1">Mode nuit</span>
+                </div>
                 <Toggle value={settings.nightMode.active} onChange={(v) => updateNested("nightMode", "active", v)} />
-              </SettingRow>
-              {settings.nightMode.active && (
-                <div className="flex items-center gap-3 pt-1 px-1">
-                  <div className="flex-1">
-                    <p className="text-[10px] text-muted-foreground mb-1 font-medium">Début</p>
-                    <input type="time" value={settings.nightMode.startHour}
-                      onChange={(e) => updateNested("nightMode", "startHour", e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-muted text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
-                  </div>
-                  <Sun className="w-4 h-4 text-muted-foreground mt-4" />
-                  <div className="flex-1">
-                    <p className="text-[10px] text-muted-foreground mb-1 font-medium">Fin</p>
-                    <input type="time" value={settings.nightMode.endHour}
-                      onChange={(e) => updateNested("nightMode", "endHour", e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-muted text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
-          </Card>
-          <Card title="Interactions" icon={Hand}>
-            <div className="space-y-0.5">
+          </div>
+
+          {settings.nightMode.active && (
+            <div className="bg-card rounded-2xl p-3 border border-border/20">
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <p className="text-[9px] text-muted-foreground mb-1 font-bold">Début</p>
+                  <input type="time" value={settings.nightMode.startHour}
+                    onChange={(e) => updateNested("nightMode", "startHour", e.target.value)}
+                    className="w-full px-2 py-1.5 rounded-xl bg-muted text-[12px] text-foreground outline-none focus:ring-2 focus:ring-primary/30" />
+                </div>
+                <Sun className="w-4 h-4 text-muted-foreground mt-3" />
+                <div className="flex-1">
+                  <p className="text-[9px] text-muted-foreground mb-1 font-bold">Fin</p>
+                  <input type="time" value={settings.nightMode.endHour}
+                    onChange={(e) => updateNested("nightMode", "endHour", e.target.value)}
+                    className="w-full px-2 py-1.5 rounded-xl bg-muted text-[12px] text-foreground outline-none focus:ring-2 focus:ring-primary/30" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-card rounded-2xl p-3 border border-border/20">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-base">👆</span>
+              <h4 className="text-[12px] font-extrabold text-foreground">Interactions</h4>
+            </div>
+            <div className="space-y-1">
               {([
-                ["wakeWord", Mic, "Mot de réveil", "Dire \"Bobby\" pour activer"],
-                ["tap", Hand, "Toucher", "Toucher l'écran pour activer"],
-                ["interruption", AlertTriangle, "Interruption", "L'enfant peut interrompre Bobby"],
-              ] as const).map(([key, IconComp, label, desc]) => (
-                <SettingRow key={key} icon={IconComp} title={label} desc={desc}>
+                ["wakeWord", "🎤", "Mot de réveil"],
+                ["tap", "👆", "Toucher l'écran"],
+                ["interruption", "⚠️", "Interruption"],
+              ] as const).map(([key, emoji, label]) => (
+                <div key={key} className="flex items-center justify-between py-1.5 px-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">{emoji}</span>
+                    <span className="text-[10px] font-bold text-foreground">{label}</span>
+                  </div>
                   <Toggle
                     value={settings.interactions[key as keyof typeof settings.interactions]}
                     onChange={(v) => updateNested("interactions", key, v)}
                   />
-                </SettingRow>
+                </div>
               ))}
             </div>
-          </Card>
+          </div>
         </>
       )}
-      {/* Save confirmation button */}
-      <div className="sticky bottom-0 p-4 bg-gradient-to-t from-card via-card to-transparent">
+
+      {/* Save button */}
+      <div className="pt-1 pb-2">
         <button
           onClick={() => {
             onSettingsChange?.(settings);
             setSettingsSaved(true);
             setTimeout(() => setSettingsSaved(false), 2000);
           }}
-          className={`w-full py-3.5 rounded-2xl text-[14px] font-bold transition-all active:scale-95 ${
+          className={`w-full py-3 rounded-2xl text-[13px] font-extrabold transition-all active:scale-95 ${
             settingsSaved
-              ? "bg-success text-success-foreground"
-              : "bg-primary text-primary-foreground hover:opacity-90"
+              ? "bg-emerald-500/15 text-emerald-700 border-2 border-emerald-500/30"
+              : "bg-primary text-primary-foreground hover:opacity-90 shadow-md shadow-primary/20"
           }`}>
-          {settingsSaved ? "✅ Réglages enregistrés !" : "💾 Enregistrer les réglages"}
+          {settingsSaved ? "✅ Enregistré !" : "💾 Enregistrer"}
         </button>
       </div>
     </div>
