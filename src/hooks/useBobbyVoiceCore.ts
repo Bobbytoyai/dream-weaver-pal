@@ -146,7 +146,6 @@ export function useBobbyVoiceCore({
       const audioPath = await stopRecording(sid);
       if (audioPath) {
         console.log("[BobbyVoiceCore] 🎙️ Audio saved:", audioPath);
-        // Create analysis entry with audio path so parents can replay
         try {
           const { supabase } = await import("@/integrations/supabase/client");
           await supabase.from("conversation_analyses").insert({
@@ -161,6 +160,19 @@ export function useBobbyVoiceCore({
     await endSession();
     sessionOpenRef.current = false;
     eventBus.emit({ type: "SESSION_END" });
+
+    // Trigger AI analysis in background (fire & forget)
+    if (sid) {
+      console.log("[BobbyVoiceCore] 🧠 Triggering AI session analysis for:", sid);
+      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/session-analysis`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ sessionId: sid }),
+      }).catch((e) => console.warn("[BobbyVoiceCore] AI analysis failed:", e));
+    }
   }, [endSession, stopRecording, sessionIdRef]);
 
   const ensureSession = useCallback(async () => {
