@@ -241,17 +241,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [noteText, setNoteText] = useState("");
   const [parentAlerts, setParentAlerts] = useState<Array<{ id: string; session_id: string; child_name: string; alert_type: string; severity: string; message: string; context: string | null; is_read: boolean; created_at: string }>>([]);
   const [showNotifPanel, setShowNotifPanel] = useState(false);
-  const [installedContent, setInstalledContent] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("bobby-installed-content") || "[]"); } catch { return []; }
-  });
-  const toggleInstallContent = (id: string) => {
-    setInstalledContent(prev => {
-      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
-      localStorage.setItem("bobby-installed-content", JSON.stringify(next));
-      toast.success(next.includes(id) ? "Contenu installé ✅" : "Contenu désinstallé");
-      return next;
-    });
-  };
+  // Bobby Store now manages its own state via Supabase (see BobbyStore.tsx)
 
   const unreadAlertCount = parentAlerts.filter(a => !a.is_read).length;
 
