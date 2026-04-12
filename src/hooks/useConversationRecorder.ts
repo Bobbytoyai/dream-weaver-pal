@@ -22,8 +22,8 @@ export function useConversationRecorder() {
         stream = externalStream;
         ownsStreamRef.current = false;
       } else {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        ownsStreamRef.current = true;
+        console.warn("[Recorder] External STT stream missing — skip recorder start to avoid second mic capture");
+        return false;
       }
       streamRef.current = stream;
 

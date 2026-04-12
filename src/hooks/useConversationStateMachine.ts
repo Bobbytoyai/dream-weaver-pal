@@ -869,22 +869,11 @@ export function useConversationStateMachine({
       sessionStartedRef.current = true;
       resetCognitiveState();
 
-      // IMPORTANT: always read the live STT stream ref at call time.
-      // On mobile, the previous stale ref path could be null during session start,
-      // which made the recorder request a second microphone stream and break STT.
-      const activeSttStream = deepgramSTT.streamRef?.current ?? null;
-      sttStreamRef.current = activeSttStream;
-
-      if (activeSttStream?.active) {
-        recorder.startRecording(activeSttStream);
-      } else {
-        console.warn("[Session] STT stream not ready yet — skip recorder fallback to avoid second mic capture");
-      }
-
+      recorder.startRecording(sttStreamRef.current ?? undefined);
       eventBus.emit({ type: "SESSION_START" });
     }
     conversationActiveRef.current = true;
-  }, [deepgramSTT.streamRef, recorder, session]);
+  }, [recorder, session]);
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // TRANSCRIPT HANDLER
