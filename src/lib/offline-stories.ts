@@ -279,7 +279,7 @@ export const RESPONSES: Record<string, string[]> = {
 export const LOCAL_STORIES: Record<StoryTheme, string[]> = {
   pirate: [
     "Il était une fois un petit pirate nommé {name}. Il naviguait sur son grand bateau à la recherche d'un trésor magique. Après avoir traversé une mer d'étoiles, il trouva un coffre rempli de bonbons ! 🏴‍☠️🍬",
-    "Le capitaine {name} était le plus courageux des pirates. Un jour, un dauphin rigolo lui montra le chemin vers une île secrète. Sur l'île, il y avait un perroquet qui racontait des blagues ! 🦜😄",
+    "{name} le pirate navigua un jour vers une île secrète grâce à un dauphin rigolo. Sur l'île, il y avait un perroquet qui racontait des blagues ! 🦜😄",
     "{name} le pirate trouva une bouteille avec un message dedans. Le message disait : Tourne trois fois sur toi-même et tape dans tes mains. {name} le fit et paf ! Un trésor de chocolat apparut ! 🍫✨",
     "Sur l'île des pirates, {name} rencontra un crabe géant qui parlait français. Le crabe dit : Si tu me fais rire, je te donne mon trésor ! {name} raconta une blague tellement drôle que le crabe en pleura de rire ! 🦀😂",
     "Le bateau de {name} pouvait voler ! Quand il hissa les voiles arc-en-ciel, le bateau décolla au-dessus des nuages. En haut, il y avait un océan de limonade avec des îles en gâteau ! ⛵🌈",
