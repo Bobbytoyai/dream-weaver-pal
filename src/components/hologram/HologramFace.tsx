@@ -6,6 +6,7 @@ import { HologramParticles, ScanRing } from "./HologramEffects";
 import { useGazeTracker } from "./useGazeTracker";
 import { useAudioAmplitude, type VisemeState } from "./useAudioAmplitude";
 import { FaceState } from "./useFaceAnimation";
+import type { ExpressionCombo } from "@/lib/bobby/expressionLibrary";
 import { eventBus } from "@/lib/eventBus";
 // Audio connector managed externally
 
@@ -16,6 +17,8 @@ interface HologramFaceProps {
   emotionOverride?: FaceState;
   emotionIntensity?: number;
   bobbyColor?: string;
+  expressionOverride?: ExpressionCombo;
+  expressionIntensityLevel?: number;
 }
 
 function mapToFaceState(voiceState: HologramFaceProps["voiceState"]): FaceState {
@@ -36,6 +39,8 @@ export function HologramFace({
   emotionOverride,
   emotionIntensity = 0.7,
   bobbyColor,
+  expressionOverride,
+  expressionIntensityLevel,
 }: HologramFaceProps) {
   const { gazeRef, cameraActive } = useGazeTracker(enableCamera);
   const { connectAudio, getAmplitude, getViseme } = useAudioAmplitude();
@@ -119,6 +124,8 @@ export function HologramFace({
             emotionIntensity={emotionIntensity}
             emotionDuringSpeech={emotionDuringSpeech}
             bobbyColor={bobbyColor}
+            expressionOverride={expressionOverride}
+            expressionIntensityLevel={expressionIntensityLevel}
           />
           {faceState === "sleepy" && <SleepZzz />}
           <HologramParticles intensity={voiceState === "speaking" ? 0.8 : voiceState === "listening" ? 0.5 : 0.25} />
@@ -212,13 +219,15 @@ function SleepZzz() {
   );
 }
 
-function FaceScene({ faceState, gazeRef, getViseme, emotionIntensity, emotionDuringSpeech, bobbyColor }: {
+function FaceScene({ faceState, gazeRef, getViseme, emotionIntensity, emotionDuringSpeech, bobbyColor, expressionOverride, expressionIntensityLevel }: {
   faceState: FaceState;
   gazeRef: React.MutableRefObject<{ x: number; y: number }>;
   getViseme: () => VisemeState;
   emotionIntensity: number;
   emotionDuringSpeech?: FaceState;
   bobbyColor?: string;
+  expressionOverride?: ExpressionCombo;
+  expressionIntensityLevel?: number;
 }) {
   const visemeRef = useRef<VisemeState>({
     viseme: "REST", amplitude: 0, mouthOpenness: 0, mouthWidth: 0.5, mouthRound: 0, jawDrop: 0,
@@ -241,6 +250,8 @@ function FaceScene({ faceState, gazeRef, getViseme, emotionIntensity, emotionDur
       emotionIntensity={emotionIntensity}
       emotionDuringSpeech={emotionDuringSpeech}
       bobbyColor={bobbyColor}
+      expressionOverride={expressionOverride}
+      expressionIntensityLevel={expressionIntensityLevel}
     />
   );
 }
