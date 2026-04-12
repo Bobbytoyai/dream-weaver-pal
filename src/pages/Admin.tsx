@@ -303,9 +303,14 @@ const Admin = () => {
     setCloudStories(data || []);
   }, []);
 
+  const fetchStoreItems = useCallback(async () => {
+    const { data } = await supabase.from("store_content").select("*").order("created_at", { ascending: false });
+    setStoreItems((data as unknown as StoreContentItem[]) || []);
+  }, []);
+
   useEffect(() => {
-    if (authenticated) { fetchEntries(); fetchCloudStories(); }
-  }, [authenticated, fetchEntries, fetchCloudStories]);
+    if (authenticated) { fetchEntries(); fetchCloudStories(); fetchStoreItems(); }
+  }, [authenticated, fetchEntries, fetchCloudStories, fetchStoreItems]);
 
   // ─── Derived ───
   const categoryCounts = useMemo(() => {
