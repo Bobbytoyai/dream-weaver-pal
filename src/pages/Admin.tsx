@@ -2062,8 +2062,13 @@ const Admin = () => {
                       <span className="text-[9px] text-white/30">{item.age_min}-{item.age_max} ans</span>
                       <span className="text-[9px] text-white/30">•</span>
                       <span className="text-[9px] text-white/30">{item.size_label}</span>
-                      <span className="text-[9px] text-white/30">•</span>
-                      <span className="text-[9px] text-white/30">{item.install_count} installs</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 shrink-0 mr-1">
+                    <span className={`text-sm font-extrabold tabular-nums ${(liveInstallCounts[item.id] || 0) > 0 ? "text-emerald-400" : "text-white/20"}`}>
+                      {liveInstallCounts[item.id] || 0}
+                    </span>
+                    <span className="text-[8px] text-white/30">installs</span>
                     </div>
                   </div>
                   <div className="flex gap-1 shrink-0">
