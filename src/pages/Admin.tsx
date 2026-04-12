@@ -267,6 +267,27 @@ const Admin = () => {
     return counts;
   }, [entries]);
 
+  // QA grouped by intent
+  const qaByIntent = useMemo(() => {
+    const groups: Record<string, typeof QA_DATABASE> = {};
+    for (const entry of QA_DATABASE) {
+      const intent = entry.intent || "OTHER";
+      if (!groups[intent]) groups[intent] = [];
+      groups[intent].push(entry);
+    }
+    return Object.entries(groups).sort((a, b) => b[1].length - a[1].length);
+  }, []);
+
+  // Blagues grouped by category
+  const blaguesByCategorie = useMemo(() => {
+    const groups: Record<string, typeof BLAGUES> = {};
+    for (const b of BLAGUES) {
+      if (!groups[b.categorie]) groups[b.categorie] = [];
+      groups[b.categorie].push(b);
+    }
+    return Object.entries(groups);
+  }, []);
+
   const currentCloudSection = BRAIN_SECTIONS.find(s => s.id === cloudSection);
 
   const cloudEntries = useMemo(() => {
