@@ -185,7 +185,7 @@ const StatPill = ({ emoji, value, label }: { emoji: string; value: string | numb
 
 // ─── Tab config (6 tabs) ────────────────────────────────────────
 
-type Tab = "dashboard" | "sessions" | "activites" | "profil" | "reglages" | "confidentialite";
+type Tab = "home" | "dashboard" | "sessions" | "activites" | "profil" | "reglages" | "confidentialite";
 
 const tabs: { id: Tab; icon: any; label: string; emoji?: string }[] = [
   { id: "dashboard", icon: BarChart3, label: "Tableau", emoji: "📊" },
@@ -199,7 +199,7 @@ const tabs: { id: Tab; icon: any; label: string; emoji?: string }[] = [
 // ─── Main Component ───────────────────────────────────────────────
 
 const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: ParentModeProps) => {
-  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
+  const [activeTab, setActiveTab] = useState<Tab>("home");
   const [safetyAlerts, setSafetyAlerts] = useState<SafetyAlertRecord[]>([]);
   const [showSafetyAlerts, setShowSafetyAlerts] = useState(true);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -2959,15 +2959,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   // TAB TRANSITION ANIMATION
   // ═══════════════════════════════════════════════════════════════
 
-  const tabIds = tabs.map(t => t.id);
+  const allTabIds: Tab[] = ["home", ...tabs.map(t => t.id)];
   const prevTabRef = useRef(activeTab);
   const [animClass, setAnimClass] = useState("");
   const [displayedTab, setDisplayedTab] = useState(activeTab);
 
   useEffect(() => {
     if (activeTab === prevTabRef.current) return;
-    const prevIdx = tabIds.indexOf(prevTabRef.current);
-    const nextIdx = tabIds.indexOf(activeTab);
+    const prevIdx = allTabIds.indexOf(prevTabRef.current);
+    const nextIdx = allTabIds.indexOf(activeTab);
     const direction = nextIdx > prevIdx ? "right" : "left";
     setAnimClass(direction === "right" ? "tab-exit-left" : "tab-exit-right");
     const t = setTimeout(() => {
@@ -2986,22 +2986,101 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const renderTabContent = () => {
     if (selectedSession) return renderSessionDetail();
-    switch (displayedTab) {
-      case "dashboard": return renderDashboard();
-      case "sessions": return renderSessionsList();
-      case "activites": return (
-        <ContentCategories
-          childName={childName}
-          onSelectCategory={() => {}}
-          onBack={() => setActiveTab("dashboard")}
-          voiceProfile={settings.voiceType || "female"}
-        />
-      );
-      case "profil": return renderProfil();
-      case "reglages": return renderReglages();
-      case "confidentialite": return renderConfidentialite();
-      default: return renderDashboard();
+    // If a category is selected, render that category
+    if (activeTab !== "home") {
+      switch (activeTab) {
+        case "dashboard": return renderDashboard();
+        case "sessions": return renderSessionsList();
+        case "activites": return (
+          <ContentCategories
+            childName={childName}
+            onSelectCategory={() => {}}
+            onBack={() => setActiveTab("home")}
+            voiceProfile={settings.voiceType || "female"}
+          />
+        );
+        case "profil": return renderProfil();
+        case "reglages": return renderReglages();
+        case "confidentialite": return renderConfidentialite();
+        default: return renderDashboard();
+      }
     }
+
+    // ─── HOME: Card Grid ───
+    const categoryCards: { id: Tab; emoji: string; label: string; desc: string; color: string; badge?: number }[] = [
+      { id: "dashboard", emoji: "📊", label: "Tableau de bord", desc: "Vue d'ensemble", color: "from-primary/20 to-primary/5" },
+      { id: "sessions", emoji: "💬", label: "Sessions", desc: `${sessions.length} conversations`, color: "from-accent/30 to-accent/5", badge: sessions.filter(s => !analyses.some(a => a.session_id === s.id)).length || undefined },
+      { id: "activites", emoji: "🎮", label: "Activités", desc: "Histoires & jeux", color: "from-secondary/30 to-secondary/5" },
+      { id: "profil", emoji: "👤", label: "Profil enfant", desc: "Intérêts & mémoire", color: "from-primary/15 to-primary/3" },
+      { id: "reglages", emoji: "⚙️", label: "Réglages", desc: "Voix, contenu, limites", color: "from-muted to-muted/30" },
+      { id: "confidentialite", emoji: "🔒", label: "Confidentialité", desc: "Données & sécurité", color: "from-destructive/10 to-destructive/3" },
+    ];
+
+    return (
+      <div className="p-4 space-y-4">
+        {/* Welcome banner */}
+        <div className="bg-card rounded-2xl p-4 border border-border/30">
+          <h2 className="text-lg font-bold text-foreground">👋 Bonjour !</h2>
+          <p className="text-[12px] text-muted-foreground mt-1">
+            {sessions.length > 0
+              ? `${childName} a eu ${sessions.length} session${sessions.length > 1 ? "s" : ""} au total.`
+              : `Aucune session enregistrée pour ${childName} pour le moment.`}
+          </p>
+          {dailySummary && (
+            <p className="text-[12px] text-foreground mt-2 bg-primary/5 rounded-xl px-3 py-2">
+              💡 {dailySummary}
+            </p>
+          )}
+        </div>
+
+        {/* Category cards grid */}
+        <div className="grid grid-cols-2 gap-3">
+          {categoryCards.map(card => (
+            <button key={card.id}
+              onClick={() => setActiveTab(card.id)}
+              className={`relative bg-gradient-to-br ${card.color} rounded-2xl p-4 text-left border border-border/20 hover:border-primary/30 hover:shadow-md transition-all duration-200 active:scale-[0.97]`}>
+              <span className="text-3xl">{card.emoji}</span>
+              <h3 className="text-[13px] font-bold text-foreground mt-2">{card.label}</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{card.desc}</p>
+              {card.badge && card.badge > 0 && (
+                <span className="absolute top-2 right-2 min-w-[20px] h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
+                  {card.badge}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Quick alerts preview */}
+        {unreadAlertCount > 0 && (
+          <button onClick={() => setShowNotifPanel(true)}
+            className="w-full bg-destructive/5 border border-destructive/20 rounded-2xl p-3 flex items-center gap-3 hover:bg-destructive/10 transition-colors">
+            <span className="text-xl">🔔</span>
+            <div className="flex-1 text-left">
+              <p className="text-[12px] font-bold text-destructive">{unreadAlertCount} alerte{unreadAlertCount > 1 ? "s" : ""} non lue{unreadAlertCount > 1 ? "s" : ""}</p>
+              <p className="text-[10px] text-muted-foreground">Touchez pour voir les détails</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-destructive" />
+          </button>
+        )}
+
+        {/* Quick scores preview if available */}
+        {avgScores && (
+          <div className="bg-card rounded-2xl p-4 border border-border/30">
+            <div className="flex items-center gap-2 mb-3">
+              <Brain className="w-4 h-4 text-muted-foreground" />
+              <h3 className="text-[13px] font-bold text-foreground">Développement</h3>
+              <button onClick={() => setActiveTab("dashboard")} className="ml-auto text-[10px] text-primary font-semibold">Voir tout →</button>
+            </div>
+            <div className="flex justify-around">
+              <ScoreGauge label="Sociabilité" score={avgScores.sociability} emoji="🤝" color="hsl(var(--primary))" />
+              <ScoreGauge label="Curiosité" score={avgScores.curiosity} emoji="🔍" color="hsl(36, 90%, 50%)" />
+              <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="hsl(145, 65%, 42%)" />
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   const [lightMode, setLightMode] = useState(() => {
@@ -3021,12 +3100,14 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 bg-card border-b border-border">
         <button
-          onClick={selectedSession ? () => { setSelectedSession(null); setSelectedAnalysis(null); setSessionMessages([]); setPlayingAudio(null); setAudioProgress(0); setActiveMessageIdx(-1); if (audioRef.current) audioRef.current.pause(); if (progressInterval.current) clearInterval(progressInterval.current); } : onClose}
+          onClick={selectedSession ? () => { setSelectedSession(null); setSelectedAnalysis(null); setSessionMessages([]); setPlayingAudio(null); setAudioProgress(0); setActiveMessageIdx(-1); if (audioRef.current) audioRef.current.pause(); if (progressInterval.current) clearInterval(progressInterval.current); } : activeTab !== "home" ? () => setActiveTab("home") : onClose}
           className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="w-4.5 h-4.5" />
         </button>
         <div className="flex-1">
-          <h2 className="text-base font-bold text-foreground">Mode Parent</h2>
+          <h2 className="text-base font-bold text-foreground">
+            {activeTab === "home" ? "Mode Parent" : tabs.find(t => t.id === activeTab)?.label || "Mode Parent"}
+          </h2>
           <p className="text-[11px] text-muted-foreground">
             {selectedSession ? formatDate(selectedSession.started_at) : `${childName}`}
           </p>
@@ -3126,32 +3207,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </div>
       )}
 
-      {/* Tab bar — scrollable pill style */}
-      {!selectedSession && (
-        <div className="flex gap-1.5 px-4 py-2.5 bg-card border-b border-border overflow-x-auto scrollbar-hide">
-          {tabs.map(tab => {
-            const unanalyzedCount = tab.id === "sessions"
-              ? sessions.filter(s => !analyses.some(a => a.session_id === s.id)).length
-              : 0;
-            return (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-semibold whitespace-nowrap transition-all duration-200 shrink-0 ${
-                  activeTab === tab.id
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}>
-                <tab.icon className="w-3.5 h-3.5" />
-                {tab.label}
-                {unanalyzedCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
-                    {unanalyzedCount}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {/* No tab bar — using card grid on home */}
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
