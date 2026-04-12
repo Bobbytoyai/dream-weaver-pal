@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import ExpressionPreview from "@/components/ExpressionPreview";
 import AdminDetailDialog, { type DetailItem, type DetailField } from "@/components/AdminDetailDialog";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
@@ -133,7 +134,7 @@ interface KBEntry {
 }
 
 // ─── Top-level brain sections shown as big square cards ─────────────
-type TopSection = "interactions" | "multiresponses" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons" | "store";
+type TopSection = "interactions" | "multiresponses" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons" | "store" | "expressions";
 
 // Counts are computed dynamically below in the component
 const TOP_SECTIONS_CONFIG: {
@@ -155,6 +156,7 @@ const TOP_SECTIONS_CONFIG: {
   { id: "cerveau", label: "Personnalité", icon: Sparkles, color: "text-pink-400", bgColor: "bg-pink-500/20", desc: "Personnalité, réactions, phrases Bobby", emoji: "✨" },
   { id: "cloud", label: "Cloud KB", icon: Globe, color: "text-blue-400", bgColor: "bg-blue-500/20", desc: "Base cloud extensible (ajout via admin)", emoji: "☁️" },
   { id: "store", label: "Bobby Store", icon: Star, color: "text-emerald-400", bgColor: "bg-emerald-500/20", desc: "Gérer le catalogue du store (CRUD)", emoji: "🛒" },
+  { id: "expressions", label: "Expressions", icon: Eye, color: "text-fuchsia-400", bgColor: "bg-fuchsia-500/20", desc: "Preview & test des expressions faciales", emoji: "🎭" },
 ];
 
 // ═══════════════════════════════════════════════════════════════════
@@ -2191,6 +2193,10 @@ const Admin = () => {
   // ═══════════════════════════════════════════════════════════════════
   // BOBBY STORE — CRUD catalog management
   // ═══════════════════════════════════════════════════════════════════
+  if (topSection === "expressions") {
+    return <ExpressionPreview onBack={() => { setTopSection(null); }} />;
+  }
+
   if (topSection === "store") {
     const STORE_CATEGORIES = ["jeux", "educatif", "histoires", "blagues"];
     const storeCatFilter = interactionCat;
