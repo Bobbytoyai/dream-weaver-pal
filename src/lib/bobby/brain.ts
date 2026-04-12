@@ -146,6 +146,7 @@ export function getBobbySleepMessage(): string {
 
 export function resetBobbyBrainSession() {
   resetConversationContext();
+  resetMemory();
 }
 
 export function buildBobbyReply({ childName, childAge, userText = "", pendingNarration, parentSettings }: BuildBobbyReplyOptions): BobbyBrainReply {
