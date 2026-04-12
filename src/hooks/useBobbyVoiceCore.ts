@@ -153,6 +153,9 @@ export function useBobbyVoiceCore({
     return sessionId;
   }, [sessionIdRef, startSession]);
 
+  // Track consecutive silence timeouts to know when to end conversation
+  const silenceCountRef = useRef(0);
+
   const speakReply = useCallback(async (reply: BobbyBrainReply) => {
     stopPlayback();
 
@@ -179,11 +182,13 @@ export function useBobbyVoiceCore({
 
     if (!controller.signal.aborted) {
       eventBus.emit({ type: "SPEECH_STOP" });
-      go("IDLE");
-      await closeSession();
-      scheduleSleep();
+      // Reset silence counter on successful exchange
+      silenceCountRef.current = 0;
+      // Auto-restart listening to keep the conversation flowing
+      console.log("[BobbyVoiceCore] 🔄 Auto-restarting listening after speaking");
+      void startListeningRef.current();
     }
-  }, [closeSession, go, parentSettings, scheduleSleep, stopPlayback]);
+  }, [go, parentSettings, stopPlayback]);
 
   const handleSttError = useCallback((error: string) => {
     console.warn("[BobbyVoiceCore] STT error:", error);
