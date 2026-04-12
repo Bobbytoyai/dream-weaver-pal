@@ -148,23 +148,32 @@ const Card = ({ title, icon: Icon, children, noPad, className: cx }: { title?: s
   </div>
 );
 
-const ScoreGauge = ({ label, score, emoji, color }: { label: string; score: number; emoji: string; color: string }) => (
-  <div className="flex flex-col items-center gap-1">
-    <div className="relative w-14 h-14">
-      <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-        <path d="M18 2.0845a15.9155 15.9155 0 010 31.831 15.9155 15.9155 0 010-31.831"
-          fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
-        <path d="M18 2.0845a15.9155 15.9155 0 010 31.831 15.9155 15.9155 0 010-31.831"
-          fill="none" stroke={color} strokeWidth="3"
-          strokeDasharray={`${score}, 100`}
-          strokeLinecap="round" />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-base">{emoji}</span>
+const ScoreGauge = ({ label, score, emoji, color, size = "md" }: { label: string; score: number; emoji: string; color: string; size?: "sm" | "md" | "lg" }) => {
+  const dims = size === "lg" ? "w-20 h-20" : size === "sm" ? "w-12 h-12" : "w-14 h-14";
+  const textSize = size === "lg" ? "text-lg" : "text-sm";
+  const labelSize = size === "lg" ? "text-[11px]" : "text-[10px]";
+  const scoreLevel = score >= 75 ? "Excellent" : score >= 50 ? "Bien" : score >= 30 ? "À suivre" : "Faible";
+  const levelColor = score >= 75 ? "text-green-600" : score >= 50 ? "text-primary" : score >= 30 ? "text-orange-500" : "text-destructive";
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div className={`relative ${dims}`}>
+        <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+          <path d="M18 2.0845a15.9155 15.9155 0 010 31.831 15.9155 15.9155 0 010-31.831"
+            fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
+          <path d="M18 2.0845a15.9155 15.9155 0 010 31.831 15.9155 15.9155 0 010-31.831"
+            fill="none" stroke={color} strokeWidth="3"
+            strokeDasharray={`${score}, 100`}
+            strokeLinecap="round"
+            className="transition-all duration-1000 ease-out" />
+        </svg>
+        <span className="absolute inset-0 flex items-center justify-center text-base">{emoji}</span>
+      </div>
+      <span className={`${labelSize} text-muted-foreground font-medium text-center`}>{label}</span>
+      <span className={`${textSize} font-bold text-foreground`}>{score}</span>
+      {size === "lg" && <span className={`text-[9px] font-semibold ${levelColor}`}>{scoreLevel}</span>}
     </div>
-    <span className="text-[10px] text-muted-foreground font-medium text-center">{label}</span>
-    <span className="text-sm font-bold text-foreground">{score}</span>
-  </div>
-);
+  );
+};
 
 const StatPill = ({ emoji, value, label }: { emoji: string; value: string | number; label: string }) => (
   <div className="flex flex-col items-center gap-0.5">
