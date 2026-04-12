@@ -399,8 +399,9 @@ const Admin = () => {
       chansons: CHANSONS.length,
       cerveau: "16",
       cloud: entries.length,
+      store: storeItems.length,
     } as Record<string, string | number>;
-  }, [interactions, entries, cloudStories]);
+  }, [interactions, entries, cloudStories, storeItems]);
 
   // ─── Handlers ───
   const handleSave = async () => {
