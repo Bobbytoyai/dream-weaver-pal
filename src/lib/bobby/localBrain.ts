@@ -267,6 +267,21 @@ const INTENT_RULES: IntentRule[] = [
   { intent: "EXCITATION", priority: 78, patterns: [
     /trop excité|j'ai hâte|vivement|impatient|je peux pas attendre|trop pressé/i,
   ]},
+  { intent: "SANTE", priority: 83, patterns: [
+    /j'ai mal|mal au ventre|mal à la tête|mal aux dents|malade|vomi|fièvre|bobo|ça fait mal/i,
+  ]},
+  { intent: "PERTE", priority: 80, patterns: [
+    /j'ai perdu mon|perdu ma|perdu mes|retrouver|disparu|cassé mon|cassé ma/i,
+  ]},
+  { intent: "REVE_AVENIR", priority: 73, patterns: [
+    /je veux devenir|quand je serai grand|mon rêve c'est|plus tard je|j'aimerais être/i,
+  ]},
+  { intent: "ABANDON", priority: 84, patterns: [
+    /je veux abandonner|j'abandonne|à quoi bon|laisser tomber|ça sert à rien|c'est foutu/i,
+  ]},
+  { intent: "MENSONGE", priority: 82, patterns: [
+    /j'ai menti|j'ai triché|j'ai pas dit la vérité|j'ai caché/i,
+  ]},
 
   // Requests
   { intent: "HISTOIRE", priority: 78, patterns: [
