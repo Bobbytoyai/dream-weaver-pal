@@ -28,7 +28,7 @@ const profile: InterestProfile = {
   currentTopicChain: null,
 };
 
-const INTEREST_KEYWORDS: Record<string, { keywords: string[]; emoji: string }> = {
+export const INTEREST_KEYWORDS_PUBLIC: Record<string, { keywords: string[]; emoji: string }> = {
   animaux:    { keywords: ["animal", "animaux", "chat", "chien", "lapin", "ours", "loup", "dragon", "dinosaure", "cheval", "poisson", "oiseau", "tortue", "hamster", "serpent", "requin", "dauphin", "baleine", "lion", "tigre", "éléphant", "girafe", "singe", "perroquet", "papillon", "fourmi", "araignée", "abeille"], emoji: "🐾" },
   espace:     { keywords: ["espace", "astronaute", "fusée", "étoile", "planète", "lune", "soleil", "galaxie", "alien", "mars", "jupiter", "satellite", "comète", "trou noir", "nasa", "cosmonaute"], emoji: "🚀" },
   nature:     { keywords: ["forêt", "montagne", "rivière", "fleur", "arbre", "jardin", "mer", "océan", "plage", "volcan", "lac", "île", "cascade", "grotte", "désert", "jungle", "savane"], emoji: "🌿" },
@@ -198,7 +198,7 @@ export function trackInterests(text: string): string[] {
   const lower = text.toLowerCase();
   const detected: string[] = [];
 
-  for (const [topic, { keywords }] of Object.entries(INTEREST_KEYWORDS)) {
+  for (const [topic, { keywords }] of Object.entries(INTEREST_KEYWORDS_PUBLIC)) {
     if (keywords.some(kw => lower.includes(kw))) {
       detected.push(topic);
       profile.scores[topic] = (profile.scores[topic] || 0) + 1;
@@ -229,7 +229,7 @@ export function getTopInterests(n = 3): { topic: string; score: number; emoji: s
     .map(([topic, score]) => ({
       topic,
       score,
-      emoji: INTEREST_KEYWORDS[topic]?.emoji || "📌",
+      emoji: INTEREST_KEYWORDS_PUBLIC[topic]?.emoji || "📌",
     }));
 }
 
@@ -296,7 +296,7 @@ export function getSmartFollowUp(childName?: string): string | null {
       const discoveryTopic = unexplored[Math.floor(Math.random() * unexplored.length)];
       const discoveryQs = FOLLOW_UP_QUESTIONS[discoveryTopic];
       if (discoveryQs && discoveryQs.length > 0) {
-        const emoji = INTEREST_KEYWORDS[discoveryTopic]?.emoji || "✨";
+        const emoji = INTEREST_KEYWORDS_PUBLIC[discoveryTopic]?.emoji || "✨";
         question = `${emoji} Dis, ${name || "toi"}, ${discoveryQs[0].charAt(0).toLowerCase() + discoveryQs[0].slice(1)}`;
         profile.lastFollowUpTopic = discoveryTopic;
       }
