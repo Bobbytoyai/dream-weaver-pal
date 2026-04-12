@@ -1948,34 +1948,101 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       return { ...group, totalMessages, totalDuration, topEmotions, topTopics, uniqueTags, hasFavorite, mood, daySummary, avgSociability, avgCuriosity, avgStability, dayAnalyses, daySessions };
     });
 
+    // Build calendar data — which days have sessions
+    const calendarDays: { date: Date; count: number; mood: string }[] = dailySummaries.map(d => ({
+      date: new Date(d.daySessions[0].started_at),
+      count: d.daySessions.length,
+      mood: d.mood.emoji,
+    }));
+
+    // Current month view
+    const now = new Date();
+    const calMonth = now.getMonth();
+    const calYear = now.getFullYear();
+    const firstDay = new Date(calYear, calMonth, 1);
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const startDow = (firstDay.getDay() + 6) % 7; // Monday=0
+    const monthName = firstDay.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+
+    const categoryCards: { key: string; emoji: string; label: string; bg: string; active: boolean; onClick: () => void }[] = [
+      { key: "all", emoji: "📋", label: "Tous", bg: "from-primary/20 to-primary/10", active: !tagFilter && !sessionFavFilter, onClick: () => { setTagFilter(null); setSessionFavFilter(false); } },
+      { key: "fav", emoji: "⭐", label: "Favoris", bg: "from-yellow-400/25 to-yellow-300/10", active: sessionFavFilter, onClick: () => setSessionFavFilter(!sessionFavFilter) },
+      ...Object.entries(tagLabels).map(([key, info]) => ({
+        key,
+        emoji: info.emoji,
+        label: info.label,
+        bg: key === "fun" ? "from-pink-400/20 to-pink-300/10" : key === "learning" ? "from-blue-400/20 to-blue-300/10" : key === "emotion" ? "from-amber-400/20 to-amber-300/10" : "from-muted to-muted/50",
+        active: tagFilter === key,
+        onClick: () => setTagFilter(tagFilter === key ? null : key),
+      })),
+    ];
+
     return (
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-4">
         {/* Search bar */}
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input type="text" value={sessionSearch} onChange={e => setSessionSearch(e.target.value)}
-            placeholder="Rechercher par sujet, mot-clé…"
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-muted text-[13px] text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
+            placeholder="Rechercher…"
+            className="w-full pl-9 pr-4 py-2 rounded-xl bg-muted text-[13px] text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
         </div>
 
-        {/* Filters */}
+        {/* Category cards — small square colored cards on one row */}
         <div className="flex gap-2 overflow-x-auto pb-1">
-          <button onClick={() => { setTagFilter(null); setSessionFavFilter(false); }}
-            className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${!tagFilter && !sessionFavFilter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-            Tous
-          </button>
-          <button onClick={() => setSessionFavFilter(!sessionFavFilter)}
-            className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${sessionFavFilter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-            ⭐ Favoris
-          </button>
-          {Object.entries(tagLabels).map(([key, info]) => (
-            <button key={key} onClick={() => setTagFilter(tagFilter === key ? null : key)}
-              className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${tagFilter === key ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-              {info.emoji} {info.label}
+          {categoryCards.map(card => (
+            <button key={card.key} onClick={card.onClick}
+              className={`shrink-0 w-[72px] h-[72px] rounded-2xl bg-gradient-to-br ${card.bg} flex flex-col items-center justify-center gap-1 border-2 transition-all duration-200 active:scale-95 ${
+                card.active ? "border-primary shadow-md shadow-primary/20 scale-[1.03]" : "border-transparent hover:border-primary/20"
+              }`}>
+              <span className="text-xl">{card.emoji}</span>
+              <span className={`text-[9px] font-bold ${card.active ? "text-primary" : "text-foreground/70"}`}>{card.label}</span>
             </button>
           ))}
         </div>
 
+        {/* Mini calendar */}
+        <div className="bg-card rounded-2xl p-3 border border-border/20">
+          <h4 className="text-[12px] font-bold text-foreground mb-2 capitalize">{monthName}</h4>
+          <div className="grid grid-cols-7 gap-1">
+            {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
+              <span key={i} className="text-[8px] font-bold text-muted-foreground text-center">{d}</span>
+            ))}
+            {/* Empty cells for start offset */}
+            {Array.from({ length: startDow }, (_, i) => (
+              <div key={`e-${i}`} />
+            ))}
+            {/* Day cells */}
+            {Array.from({ length: daysInMonth }, (_, i) => {
+              const dayNum = i + 1;
+              const dayData = calendarDays.find(c => c.date.getDate() === dayNum && c.date.getMonth() === calMonth);
+              const isToday = dayNum === now.getDate();
+              return (
+                <button key={dayNum}
+                  onClick={() => {
+                    if (dayData) {
+                      const target = dailySummaries.find(d => new Date(d.daySessions[0].started_at).getDate() === dayNum);
+                      if (target) {
+                        const el = document.getElementById(`day-${target.day}`);
+                        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      }
+                    }
+                  }}
+                  className={`aspect-square rounded-lg flex flex-col items-center justify-center text-[10px] transition-all ${
+                    dayData
+                      ? "bg-primary/15 text-primary font-bold hover:bg-primary/25 cursor-pointer"
+                      : isToday
+                        ? "bg-muted ring-1 ring-primary/30 text-foreground font-bold"
+                        : "text-muted-foreground"
+                  }`}>
+                  {dayNum}
+                  {dayData && <span className="text-[7px] -mt-0.5">{dayData.mood}</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Daily summaries list */}
         {loading ? (
           <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
         ) : dailySummaries.length === 0 ? (
@@ -1983,7 +2050,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         ) : (
           <div className="space-y-3">
             {dailySummaries.map(day => (
-              <div key={day.day} className="bg-card rounded-2xl p-4 border border-border/20 space-y-3">
+              <div key={day.day} id={`day-${day.day}`} className="bg-card rounded-2xl p-4 border border-border/20 space-y-3">
                 {/* Day header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -1995,18 +2062,18 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 </div>
 
                 {/* KPIs row */}
-                <div className="flex gap-3">
-                  <div className="flex-1 bg-muted/50 rounded-xl p-2.5 text-center">
-                    <p className="text-[16px] font-bold text-foreground">{day.daySessions.length}</p>
-                    <p className="text-[9px] text-muted-foreground">session{day.daySessions.length > 1 ? "s" : ""}</p>
+                <div className="flex gap-2">
+                  <div className="flex-1 bg-muted/50 rounded-xl p-2 text-center">
+                    <p className="text-[15px] font-bold text-foreground">{day.daySessions.length}</p>
+                    <p className="text-[8px] text-muted-foreground">session{day.daySessions.length > 1 ? "s" : ""}</p>
                   </div>
-                  <div className="flex-1 bg-muted/50 rounded-xl p-2.5 text-center">
-                    <p className="text-[16px] font-bold text-foreground">{day.totalMessages}</p>
-                    <p className="text-[9px] text-muted-foreground">messages</p>
+                  <div className="flex-1 bg-muted/50 rounded-xl p-2 text-center">
+                    <p className="text-[15px] font-bold text-foreground">{day.totalMessages}</p>
+                    <p className="text-[8px] text-muted-foreground">messages</p>
                   </div>
-                  <div className="flex-1 bg-muted/50 rounded-xl p-2.5 text-center">
-                    <p className="text-[16px] font-bold text-foreground">{formatDuration(day.totalDuration)}</p>
-                    <p className="text-[9px] text-muted-foreground">durée</p>
+                  <div className="flex-1 bg-muted/50 rounded-xl p-2 text-center">
+                    <p className="text-[15px] font-bold text-foreground">{formatDuration(day.totalDuration)}</p>
+                    <p className="text-[8px] text-muted-foreground">durée</p>
                   </div>
                 </div>
 
@@ -2038,7 +2105,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   </div>
                 )}
 
-                {/* Topics & emotions */}
+                {/* Tags */}
                 {(day.topTopics.length > 0 || day.topEmotions.length > 0) && (
                   <div className="flex flex-wrap gap-1.5">
                     {day.topTopics.map(t => (
@@ -2047,19 +2114,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     {day.topEmotions.map(e => (
                       <span key={e} className="px-2 py-0.5 rounded-full bg-accent/30 text-accent-foreground text-[9px] font-medium">{e}</span>
                     ))}
-                    {day.uniqueTags.map(tag => {
-                      const info = tagLabels[tag];
-                      return info ? <span key={tag} className={`px-2 py-0.5 rounded-full text-[9px] font-medium ${info.color}`}>{info.emoji} {info.label}</span> : null;
-                    })}
                   </div>
                 )}
 
-                {/* Expand to see individual sessions */}
+                {/* Expand sessions */}
                 <div className="border-t border-border/20 pt-2">
                   <details className="group">
                     <summary className="text-[11px] text-primary font-semibold cursor-pointer flex items-center gap-1 hover:underline">
                       <ChevronRight className="w-3 h-3 transition-transform group-open:rotate-90" />
-                      Voir les {day.daySessions.length} session{day.daySessions.length > 1 ? "s" : ""} détaillée{day.daySessions.length > 1 ? "s" : ""}
+                      Voir les {day.daySessions.length} session{day.daySessions.length > 1 ? "s" : ""}
                     </summary>
                     <div className="mt-2 space-y-1.5">
                       {day.daySessions.map(session => {
