@@ -1,6 +1,8 @@
 import { useRef, useCallback } from "react";
 import { eventBus } from "@/lib/eventBus";
 import type { VisemeState } from "./useAudioAmplitude";
+import type { ExpressionCombo } from "@/lib/bobby/expressionLibrary";
+import { resolveExpression, ANIMATIONS } from "@/lib/bobby/expressionLibrary";
 
 export type FaceState =
   | "idle"
