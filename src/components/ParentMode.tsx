@@ -941,46 +941,46 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     const hasAnalysis = recentAnalyses.length > 0;
 
     return (
-    <div className="p-4 space-y-3">
+    <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
 
-      {/* ═══ 1. KPI HERO CARDS ═══ */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* ═══ 1. KPI HERO — 2x2 colorful square cards ═══ */}
+      <div className="grid grid-cols-2 gap-2.5">
         {[
-          { value: totalSessions, label: "Sessions", emoji: "💬", gradient: "from-blue-500/15 to-blue-600/5" },
-          { value: totalMessages, label: "Messages", emoji: "📝", gradient: "from-emerald-500/15 to-emerald-600/5" },
-          { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", gradient: "from-purple-500/15 to-purple-600/5" },
-          { value: todaySessions.length, label: "Aujourd'hui", emoji: "📅", gradient: "from-orange-500/15 to-orange-600/5" },
+          { value: totalSessions, label: "Sessions", emoji: "💬", gradient: "from-blue-400/20 to-blue-300/5" },
+          { value: totalMessages, label: "Messages", emoji: "📝", gradient: "from-emerald-400/20 to-emerald-300/5" },
+          { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", gradient: "from-purple-400/20 to-purple-300/5" },
+          { value: todaySessions.length, label: "Aujourd'hui", emoji: "📅", gradient: "from-amber-400/20 to-amber-300/5" },
         ].map((kpi) => (
-          <div key={kpi.label} className={`bg-gradient-to-br ${kpi.gradient} rounded-xl p-2.5 border border-border/30 flex flex-col items-center justify-center`}>
-            <span className="text-lg block mb-1">{kpi.emoji}</span>
-            <p className="text-base font-extrabold text-foreground">{kpi.value}</p>
-            <p className="text-[9px] text-muted-foreground font-medium mt-0.5">{kpi.label}</p>
+          <div key={kpi.label} className={`bg-gradient-to-br ${kpi.gradient} rounded-2xl p-3 border border-border/20 text-center`}>
+            <span className="text-2xl block mb-1">{kpi.emoji}</span>
+            <p className="text-xl font-extrabold text-foreground">{kpi.value}</p>
+            <p className="text-[10px] text-muted-foreground font-bold mt-0.5">{kpi.label}</p>
           </div>
         ))}
       </div>
 
-      {/* ═══ 2b. RÉSUMÉ DU JOUR ═══ */}
+      {/* ═══ 2. RÉSUMÉ DU JOUR ═══ */}
       {dailySummary && (
-        <div className="bg-card rounded-2xl p-4 border border-border/30">
-          <div className="flex items-center gap-2 mb-2">
-            <Calendar className="w-4 h-4 text-primary" />
-            <h3 className="text-[13px] font-bold text-foreground">Résumé du jour</h3>
+        <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-3 border border-primary/15">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-lg">📋</span>
+            <h3 className="text-[14px] font-extrabold text-foreground">Résumé du jour</h3>
           </div>
           <p className="text-[12px] text-foreground/80 leading-relaxed">{dailySummary}</p>
         </div>
       )}
 
-      {/* ═══ 2c. RECOMMANDATIONS PARENT ═══ */}
+      {/* ═══ 3. RECOMMANDATIONS ═══ */}
       {parentRecommendations.length > 0 && (
-        <div className="bg-card rounded-2xl p-4 border border-primary/15">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <h3 className="text-[13px] font-bold text-foreground">Recommandations</h3>
+        <div className="bg-card rounded-2xl p-3 border border-border/20">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg">✨</span>
+            <h3 className="text-[14px] font-extrabold text-foreground">Recommandations</h3>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {parentRecommendations.map((rec, i) => (
-              <div key={i} className="flex items-start gap-2.5 p-2.5 rounded-xl bg-primary/5">
-                <span className="text-sm mt-0.5">{rec.emoji}</span>
+              <div key={i} className="flex items-start gap-2 p-2 rounded-xl bg-primary/5">
+                <span className="text-base mt-0.5">{rec.emoji}</span>
                 <p className="text-[12px] text-foreground/80 leading-relaxed">{rec.text}</p>
               </div>
             ))}
@@ -988,31 +988,24 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </div>
       )}
 
-      {/* ═══ 2d-bis. CENTRES D'INTÉRÊT (RADAR) ═══ */}
+      {/* ═══ CENTRES D'INTÉRÊT RADAR ═══ */}
       {(() => {
-        // Combine DB interests + live tracker
         const liveSnapshot = getInterestSnapshot();
         const dbCounts: Record<string, number> = {};
         analyses.forEach(a => {
           (a.extracted_interests || []).forEach((interest: string) => {
-            const normalized = interest.toLowerCase();
-            dbCounts[normalized] = (dbCounts[normalized] || 0) + 1;
+            dbCounts[interest.toLowerCase()] = (dbCounts[interest.toLowerCase()] || 0) + 1;
           });
           (a.topics_detected || []).forEach((topic: string) => {
-            const normalized = topic.toLowerCase();
-            dbCounts[normalized] = (dbCounts[normalized] || 0) + 0.5;
+            dbCounts[topic.toLowerCase()] = (dbCounts[topic.toLowerCase()] || 0) + 0.5;
           });
         });
-
-        // Map to interest categories
         const categoryScores: Record<string, number> = {};
         const kwMap = INTEREST_KEYWORDS_PUBLIC;
         Object.entries(kwMap).forEach(([cat, info]) => {
           let score = 0;
-          // From live tracker
           const live = liveSnapshot.topInterests.find(t => t.topic === cat);
           if (live) score += live.score;
-          // From DB
           info.keywords.forEach(kw => {
             Object.entries(dbCounts).forEach(([dbKey, count]) => {
               if (dbKey.includes(kw) || kw.includes(dbKey)) score += count;
@@ -1020,156 +1013,82 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           });
           if (score > 0) categoryScores[cat] = Math.round(score * 10) / 10;
         });
-
         const radarData = Object.entries(categoryScores)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 8)
+          .sort((a, b) => b[1] - a[1]).slice(0, 8)
           .map(([cat, score]) => ({
             subject: `${kwMap[cat]?.emoji || "📌"} ${cat.charAt(0).toUpperCase() + cat.slice(1)}`,
             score: Math.min(score, 100),
             fullMark: Math.max(...Object.values(categoryScores), 10),
           }));
-
         if (radarData.length < 3) return null;
-
         return (
-          <div className="bg-card rounded-2xl p-4 border border-border/30">
-            <div className="flex items-center gap-2 mb-2">
-              <Activity className="w-4 h-4 text-primary" />
-              <h3 className="text-[13px] font-bold text-foreground">Centres d'intérêt de {childName}</h3>
+          <div className="bg-card rounded-2xl p-3 border border-border/20">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg">🎯</span>
+              <h3 className="text-[14px] font-extrabold text-foreground">Intérêts de {childName}</h3>
             </div>
-            <p className="text-[10px] text-muted-foreground mb-3">
-              Sujets les plus abordés lors des conversations avec Bobby
-            </p>
-            <ResponsiveContainer width="100%" height={220}>
-              <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
-                <PolarGrid stroke="hsl(var(--border))" strokeOpacity={0.5} />
-                <PolarAngleAxis
-                  dataKey="subject"
-                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                />
+            <ResponsiveContainer width="100%" height={180}>
+              <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="65%">
+                <PolarGrid stroke="hsl(var(--border))" strokeOpacity={0.4} />
+                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
                 <PolarRadiusAxis tick={false} axisLine={false} />
-                <Radar
-                  name="Intérêt"
-                  dataKey="score"
-                  stroke="hsl(var(--primary))"
-                  fill="hsl(var(--primary))"
-                  fillOpacity={0.25}
-                  strokeWidth={2}
-                />
+                <Radar name="Intérêt" dataKey="score" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} strokeWidth={2} />
               </RadarChart>
             </ResponsiveContainer>
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {radarData.slice(0, 5).map((d, i) => (
-                <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                  {d.subject}
-                </span>
-              ))}
-            </div>
           </div>
         );
       })()}
 
-      {/* ═══ 2d. ANALYSE SEMAINE ═══ */}
-      {dailyInsights.length > 0 && (
-        <div className="bg-card rounded-2xl p-4 border border-border/30">
-          <div className="flex items-center gap-2 mb-3">
-            <Star className="w-4 h-4 text-primary" />
-            <h3 className="text-[13px] font-bold text-foreground">Analyse de la semaine</h3>
-          </div>
-          <div className="space-y-2">
-            {dailyInsights.map((insight, i) => (
-              <p key={i} className="text-[12px] text-foreground/80 leading-relaxed pl-2 border-l-2 border-primary/20">
-                {insight}
-              </p>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* ═══ ALERTES BOBBY SÉCURITÉ ═══ */}
       {safetyAlerts.length > 0 && showSafetyAlerts && (
-        <div className="bg-card rounded-2xl p-4 border-2 border-destructive/40 shadow-md">
-          <div className="flex items-center gap-2 mb-3">
-            <Shield className="w-4 h-4 text-destructive" />
-            <h3 className="text-[13px] font-bold text-destructive">Alertes de Sécurité Bobby</h3>
-            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-destructive text-white font-bold">
-              {safetyAlerts.length}
-            </span>
+        <div className="bg-card rounded-2xl p-3 border-2 border-destructive/30">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg">🛡️</span>
+            <h3 className="text-[14px] font-extrabold text-destructive">Alertes Sécurité</h3>
+            <span className="ml-auto text-[9px] px-2 py-0.5 rounded-full bg-destructive text-destructive-foreground font-bold">{safetyAlerts.length}</span>
           </div>
-          <p className="text-[11px] text-muted-foreground mb-3 leading-relaxed">
-            Bobby a détecté des mots ou sujets sensibles pendant la conversation de {childName}.
-            Chaque alerte a été traitée — Bobby a calmé l'enfant et redirigé la discussion.
-          </p>
-          <div className="space-y-2 max-h-56 overflow-y-auto">
-            {safetyAlerts.slice(0, 20).map((alert, i) => (
-              <div key={i} className={`flex items-start gap-2.5 p-2.5 rounded-xl ${
-                alert.severity === "CRITICAL" ? "bg-destructive/15 border border-destructive/30" :
-                alert.severity === "HIGH" ? "bg-orange-50 border border-orange-200 dark:bg-orange-950/20" :
-                "bg-yellow-50 border border-yellow-200 dark:bg-yellow-950/20"
+          <div className="space-y-1.5 max-h-40 overflow-y-auto">
+            {safetyAlerts.slice(0, 10).map((alert, i) => (
+              <div key={i} className={`flex items-start gap-2 p-2 rounded-xl ${
+                alert.severity === "CRITICAL" ? "bg-destructive/10" : "bg-amber-400/10"
               }`}>
-                <span className="text-base mt-0.5 shrink-0">
-                  {alert.severity === "CRITICAL" ? "🔴" : alert.severity === "HIGH" ? "🟠" : "🟡"}
-                </span>
+                <span className="text-sm mt-0.5">{alert.severity === "CRITICAL" ? "🔴" : "🟡"}</span>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                      alert.severity === "CRITICAL" ? "bg-destructive text-white" :
-                      alert.severity === "HIGH" ? "bg-orange-500 text-white" : "bg-yellow-500 text-white"
-                    }`}>{alert.severity}</span>
-                    <span className="text-[10px] font-semibold text-foreground/70">{alert.category.replace(/_/g, " ")}</span>
-                    <span className="text-[9px] text-muted-foreground ml-auto">
-                      {new Date(alert.timestamp).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-foreground/80 mt-1 leading-snug">
-                    Mot détecté : <span className="font-semibold text-destructive">«{alert.keyword}»</span>
-                  </p>
+                  <span className="text-[10px] font-bold text-foreground">{alert.category.replace(/_/g, " ")}</span>
+                  <p className="text-[10px] text-foreground/70">«{alert.keyword}»</p>
                 </div>
               </div>
             ))}
           </div>
-          <div className="flex gap-2 mt-3 pt-3 border-t border-border/40">
-            <button
-              onClick={() => { clearSafetyAlertRecords(); setSafetyAlerts([]); }}
-              className="flex-1 text-[11px] font-semibold py-1.5 px-3 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
-            >
-              Effacer tout
-            </button>
-            <button
-              onClick={() => setShowSafetyAlerts(false)}
-              className="flex-1 text-[11px] font-semibold py-1.5 px-3 rounded-full bg-destructive/10 hover:bg-destructive/20 text-destructive transition-colors"
-            >
-              Fermer
-            </button>
+          <div className="flex gap-2 mt-2">
+            <button onClick={() => { clearSafetyAlertRecords(); setSafetyAlerts([]); }}
+              className="flex-1 text-[10px] font-bold py-1.5 rounded-xl bg-muted text-muted-foreground">Effacer</button>
+            <button onClick={() => setShowSafetyAlerts(false)}
+              className="flex-1 text-[10px] font-bold py-1.5 rounded-xl bg-destructive/10 text-destructive">Fermer</button>
           </div>
         </div>
       )}
       {safetyAlerts.length > 0 && !showSafetyAlerts && (
-        <button
-          onClick={() => setShowSafetyAlerts(true)}
-          className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-[12px] font-semibold hover:bg-destructive/15 transition-colors"
-        >
-          <Shield className="w-3.5 h-3.5" />
-          Voir {safetyAlerts.length} alerte{safetyAlerts.length > 1 ? "s" : ""} de sécurité
+        <button onClick={() => setShowSafetyAlerts(true)}
+          className="w-full flex items-center justify-center gap-2 py-2 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-[12px] font-extrabold">
+          🛡️ {safetyAlerts.length} alerte{safetyAlerts.length > 1 ? "s" : ""}
         </button>
       )}
 
-      {/* ═══ 3. ALERTES ═══ */}
+      {/* ═══ ALERTES SMART ═══ */}
       {smartAlerts.length > 0 && (
-        <div className="bg-card rounded-2xl p-4 border border-destructive/20">
-          <div className="flex items-center gap-2 mb-3">
-            <Bell className="w-4 h-4 text-destructive" />
-            <h3 className="text-[13px] font-bold text-foreground">Alertes</h3>
-            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-destructive/10 text-destructive font-bold">{smartAlerts.length}</span>
+        <div className="bg-card rounded-2xl p-3 border border-destructive/15">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg">🔔</span>
+            <h3 className="text-[14px] font-extrabold text-foreground">Alertes</h3>
+            <span className="ml-auto text-[9px] px-2 py-0.5 rounded-full bg-destructive/10 text-destructive font-bold">{smartAlerts.length}</span>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {smartAlerts.map((alert, i) => (
-              <div key={i} className={`flex items-start gap-2.5 p-2.5 rounded-xl ${
-                alert.severity === "critical" ? "bg-destructive/10" :
-                alert.severity === "warning" ? "bg-destructive/5" : "bg-muted/50"
+              <div key={i} className={`flex items-start gap-2 p-2 rounded-xl ${
+                alert.severity === "critical" ? "bg-destructive/10" : "bg-muted/40"
               }`}>
-                <span className="text-sm mt-0.5">{alert.severity === "critical" ? "🔴" : alert.severity === "warning" ? "🟡" : "🔵"}</span>
+                <span className="text-sm">{alert.severity === "critical" ? "🔴" : "🟡"}</span>
                 <p className="text-[12px] text-foreground leading-relaxed">{alert.message}</p>
               </div>
             ))}
@@ -1177,137 +1096,77 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </div>
       )}
 
-      {/* ═══ 4. SCORES COMPORTEMENTAUX ═══ */}
+      {/* ═══ SCORES COMPORTEMENTAUX — compact ═══ */}
       {avgScores && (
-        <div className="bg-card rounded-2xl p-4 border border-border/30">
-          <div className="flex items-center gap-2 mb-4">
-            <Brain className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-[13px] font-bold text-foreground">Développement de {childName}</h3>
-            <span className="ml-auto text-[10px] text-muted-foreground">{analyses.filter(a => a.sociability_score != null).length} analyses</span>
+        <div className="bg-card rounded-2xl p-3 border border-border/20">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">🧠</span>
+            <h3 className="text-[14px] font-extrabold text-foreground">Développement</h3>
           </div>
-
-          {/* Large gauges */}
-          <div className="flex justify-around mb-4">
+          <div className="flex justify-around mb-3">
             <ScoreGauge label="Sociabilité" score={avgScores.sociability} emoji="🤝" color="hsl(var(--primary))" size="lg" />
             <ScoreGauge label="Curiosité" score={avgScores.curiosity} emoji="🔍" color="hsl(36, 90%, 50%)" size="lg" />
             <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="hsl(145, 65%, 42%)" size="lg" />
           </div>
-
-          {/* Scores evolution line chart */}
-          {scoresEvolutionData.some(d => d.hasData) && (
-            <div className="mt-3 pt-3 border-t border-border/50">
-              <p className="text-[10px] text-muted-foreground font-medium mb-2">📈 Évolution sur 7 jours</p>
-              <div className="w-full h-40">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={scoresEvolutionData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
-                    <defs>
-                      <linearGradient id="gradSociability" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="gradCuriosity" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(36, 90%, 50%)" stopOpacity={0.3} />
-                        <stop offset="100%" stopColor="hsl(36, 90%, 50%)" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="gradStability" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(145, 65%, 42%)" stopOpacity={0.3} />
-                        <stop offset="100%" stopColor="hsl(145, 65%, 42%)" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
-                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                    <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                    <Tooltip
-                      content={({ active, payload, label }) => {
-                        if (!active || !payload?.length) return null;
-                        return (
-                          <div className="bg-card border border-border rounded-xl p-2.5 shadow-lg min-w-[120px]">
-                            <p className="text-[11px] font-bold text-foreground mb-1">{label}</p>
-                            {payload.filter(p => p.value != null).map(p => (
-                              <div key={p.name} className="flex items-center gap-1.5 py-0.5">
-                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color as string }} />
-                                <span className="text-[10px] text-foreground flex-1">{p.name}</span>
-                                <span className="text-[11px] font-bold" style={{ color: p.color as string }}>{p.value}</span>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      }}
-                    />
-                    <Area type="monotone" dataKey="Sociabilité" stroke="hsl(var(--primary))" fill="url(#gradSociability)" strokeWidth={2} dot={{ r: 3, fill: "hsl(var(--primary))" }} connectNulls />
-                    <Area type="monotone" dataKey="Curiosité" stroke="hsl(36, 90%, 50%)" fill="url(#gradCuriosity)" strokeWidth={2} dot={{ r: 3, fill: "hsl(36, 90%, 50%)" }} connectNulls />
-                    <Area type="monotone" dataKey="Stabilité" stroke="hsl(145, 65%, 42%)" fill="url(#gradStability)" strokeWidth={2} dot={{ r: 3, fill: "hsl(145, 65%, 42%)" }} connectNulls />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex justify-center gap-4 mt-1">
-                <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><span className="w-2 h-2 rounded-full bg-primary" /> Sociabilité</span>
-                <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: "hsl(36, 90%, 50%)" }} /> Curiosité</span>
-                <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: "hsl(145, 65%, 42%)" }} /> Stabilité</span>
-              </div>
-            </div>
-          )}
-
-          {/* Engagement + Mood mini bars */}
-          <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-border/50">
+          {/* Engagement + Mood mini */}
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/20">
             <div>
-              <p className="text-[10px] text-muted-foreground font-medium mb-1.5">Engagement</p>
-              <div className="flex gap-1 h-3">
+              <p className="text-[10px] text-muted-foreground font-bold mb-1">Engagement</p>
+              <div className="flex gap-0.5 h-2.5 rounded-full overflow-hidden">
                 {recentAnalyses.length > 0 ? (
                   <>
-                    <div className="rounded-full bg-primary" style={{ width: `${(engagementDist.high / recentAnalyses.length) * 100}%` }} title={`Élevé: ${engagementDist.high}`} />
-                    <div className="rounded-full bg-primary/40" style={{ width: `${(engagementDist.medium / recentAnalyses.length) * 100}%` }} title={`Moyen: ${engagementDist.medium}`} />
-                    <div className="rounded-full bg-muted" style={{ width: `${(engagementDist.low / recentAnalyses.length) * 100}%` }} title={`Faible: ${engagementDist.low}`} />
+                    <div className="bg-primary rounded-l-full" style={{ width: `${(engagementDist.high / recentAnalyses.length) * 100}%` }} />
+                    <div className="bg-primary/40" style={{ width: `${(engagementDist.medium / recentAnalyses.length) * 100}%` }} />
+                    <div className="bg-muted rounded-r-full" style={{ width: `${(engagementDist.low / recentAnalyses.length) * 100}%` }} />
                   </>
-                ) : <div className="rounded-full bg-muted w-full" />}
+                ) : <div className="bg-muted w-full rounded-full" />}
               </div>
-              <div className="flex justify-between mt-1">
-                <span className="text-[9px] text-muted-foreground">🔥 {engagementDist.high}</span>
-                <span className="text-[9px] text-muted-foreground">👍 {engagementDist.medium}</span>
-                <span className="text-[9px] text-muted-foreground">💤 {engagementDist.low}</span>
+              <div className="flex justify-between mt-0.5">
+                <span className="text-[8px] text-muted-foreground">🔥{engagementDist.high}</span>
+                <span className="text-[8px] text-muted-foreground">👍{engagementDist.medium}</span>
+                <span className="text-[8px] text-muted-foreground">💤{engagementDist.low}</span>
               </div>
             </div>
             <div>
-              <p className="text-[10px] text-muted-foreground font-medium mb-1.5">Humeur</p>
-              <div className="flex gap-1 h-3">
+              <p className="text-[10px] text-muted-foreground font-bold mb-1">Humeur</p>
+              <div className="flex gap-0.5 h-2.5 rounded-full overflow-hidden">
                 {recentAnalyses.length > 0 ? (
                   <>
-                    <div className="rounded-full bg-primary/80" style={{ width: `${(moodDist.positive / recentAnalyses.length) * 100}%` }} />
-                    <div className="rounded-full bg-accent" style={{ width: `${(moodDist.neutral / recentAnalyses.length) * 100}%` }} />
-                    <div className="rounded-full bg-destructive/60" style={{ width: `${(moodDist.low / recentAnalyses.length) * 100}%` }} />
+                    <div className="bg-primary/80 rounded-l-full" style={{ width: `${(moodDist.positive / recentAnalyses.length) * 100}%` }} />
+                    <div className="bg-accent" style={{ width: `${(moodDist.neutral / recentAnalyses.length) * 100}%` }} />
+                    <div className="bg-destructive/60 rounded-r-full" style={{ width: `${(moodDist.low / recentAnalyses.length) * 100}%` }} />
                   </>
-                ) : <div className="rounded-full bg-muted w-full" />}
+                ) : <div className="bg-muted w-full rounded-full" />}
               </div>
-              <div className="flex justify-between mt-1">
-                <span className="text-[9px] text-muted-foreground">🟢 {moodDist.positive}</span>
-                <span className="text-[9px] text-muted-foreground">🟡 {moodDist.neutral}</span>
-                <span className="text-[9px] text-muted-foreground">🔴 {moodDist.low}</span>
+              <div className="flex justify-between mt-0.5">
+                <span className="text-[8px] text-muted-foreground">🟢{moodDist.positive}</span>
+                <span className="text-[8px] text-muted-foreground">🟡{moodDist.neutral}</span>
+                <span className="text-[8px] text-muted-foreground">🔴{moodDist.low}</span>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ═══ 5. ÉMOTIONS MOYENNES ═══ */}
+      {/* ═══ ÉMOTIONS — compact bars ═══ */}
       {Object.keys(avgEmotions).length > 0 && (
-        <div className="bg-card rounded-2xl p-4 border border-border/30">
-          <div className="flex items-center gap-2 mb-3">
-            <Heart className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-[13px] font-bold text-foreground">Émotions</h3>
-            <span className="ml-auto text-[10px] text-muted-foreground">{recentAnalyses.length} sessions analysées</span>
+        <div className="bg-card rounded-2xl p-3 border border-border/20">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg">💖</span>
+            <h3 className="text-[14px] font-extrabold text-foreground">Émotions</h3>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {Object.entries(avgEmotions).filter(([, v]) => v > 0).sort(([, a], [, b]) => b - a).map(([key, value]) => {
               const info = emotionScoreLabels[key] || { label: key, emoji: "❓" };
-              const barColor = key === "joy" ? "bg-green-500" : key === "curiosity" ? "bg-blue-500" : key === "excitement" ? "bg-orange-400" : key === "frustration" ? "bg-red-400" : key === "fear" ? "bg-purple-400" : "bg-gray-400";
+              const barColor = key === "joy" ? "bg-emerald-500" : key === "curiosity" ? "bg-blue-500" : key === "excitement" ? "bg-amber-400" : key === "frustration" ? "bg-red-400" : key === "fear" ? "bg-purple-400" : "bg-muted-foreground";
               return (
-                <div key={key} className="flex items-center gap-2.5">
-                  <span className="text-base w-6 text-center">{info.emoji}</span>
-                  <span className="text-[12px] text-foreground w-20 font-semibold">{info.label}</span>
-                  <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
+                <div key={key} className="flex items-center gap-2">
+                  <span className="text-base w-5 text-center">{info.emoji}</span>
+                  <span className="text-[11px] text-foreground w-16 font-extrabold">{info.label}</span>
+                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                     <div className={`h-full ${barColor} rounded-full transition-all duration-700`} style={{ width: `${value}%` }} />
                   </div>
-                  <span className="text-[12px] text-foreground w-10 text-right font-bold">{value}%</span>
+                  <span className="text-[11px] text-foreground w-8 text-right font-extrabold">{value}%</span>
                 </div>
               );
             })}
@@ -1315,19 +1174,19 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </div>
       )}
 
-      {/* ═══ 6. GRAPHIQUE ÉVOLUTION ═══ */}
+      {/* ═══ ÉVOLUTION 7 JOURS — compact chart ═══ */}
       {emotionChartData.some(d => d.hasData) && (
-        <div className="bg-card rounded-2xl p-4 border border-border/30">
-          <div className="flex items-center gap-2 mb-3">
-            <TrendingUp className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-[13px] font-bold text-foreground">Évolution (7 jours)</h3>
+        <div className="bg-card rounded-2xl p-3 border border-border/20">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg">📈</span>
+            <h3 className="text-[14px] font-extrabold text-foreground">Évolution (7j)</h3>
           </div>
-          <div className="w-full h-56">
+          <div className="w-full h-44">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={emotionChartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }} barCategoryGap="20%">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} domain={[0, 100]} axisLine={false} tickLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                 <Tooltip
                   cursor={{ fill: "hsl(var(--muted))", opacity: 0.3, radius: 6 }}
                   content={({ active, payload, label }) => {
@@ -1335,15 +1194,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     const dataPoint = emotionChartData.find(d => d.name === label);
                     if (!dataPoint?.hasData) return null;
                     return (
-                      <div className="bg-card border border-border rounded-xl p-2.5 shadow-lg min-w-[130px]">
-                        <p className="text-[11px] font-bold text-foreground mb-1.5">{label}</p>
+                      <div className="bg-card border border-border rounded-xl p-2 shadow-lg">
+                        <p className="text-[10px] font-extrabold text-foreground mb-1">{label}</p>
                         {payload.filter(p => p.dataKey !== "hasData" && (p.value as number) > 0).sort((a, b) => (b.value as number) - (a.value as number)).map(p => {
                           const cfg = emotionConfig[p.name as string] || { emoji: "❓", color: "#888" };
                           return (
-                            <div key={p.name} className="flex items-center gap-1.5 py-0.5">
-                              <span className="text-xs">{cfg.emoji}</span>
-                              <span className="text-[10px] text-foreground flex-1">{p.name}</span>
-                              <span className="text-[11px] font-bold" style={{ color: cfg.color }}>{p.value}%</span>
+                            <div key={p.name} className="flex items-center gap-1 py-0.5">
+                              <span className="text-[9px]">{cfg.emoji}</span>
+                              <span className="text-[9px] text-foreground flex-1">{p.name}</span>
+                              <span className="text-[10px] font-bold" style={{ color: cfg.color }}>{p.value}%</span>
                             </div>
                           );
                         })}
@@ -1351,126 +1210,79 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     );
                   }}
                 />
-                <Bar dataKey="Joie" fill="hsl(145, 65%, 42%)" radius={[4, 4, 0, 0]} maxBarSize={12} />
-                <Bar dataKey="Curiosité" fill="hsl(210, 80%, 55%)" radius={[4, 4, 0, 0]} maxBarSize={12} />
-                <Bar dataKey="Excitation" fill="hsl(36, 90%, 50%)" radius={[4, 4, 0, 0]} maxBarSize={12} />
-                <Bar dataKey="Frustration" fill="hsl(0, 75%, 55%)" radius={[4, 4, 0, 0]} maxBarSize={12} />
-                <Bar dataKey="Peur" fill="hsl(260, 45%, 58%)" radius={[4, 4, 0, 0]} maxBarSize={12} />
-                <Bar dataKey="Tristesse" fill="hsl(0, 0%, 55%)" radius={[4, 4, 0, 0]} maxBarSize={12} />
+                <Bar dataKey="Joie" fill="hsl(145, 65%, 42%)" radius={[4, 4, 0, 0]} maxBarSize={10} />
+                <Bar dataKey="Curiosité" fill="hsl(210, 80%, 55%)" radius={[4, 4, 0, 0]} maxBarSize={10} />
+                <Bar dataKey="Excitation" fill="hsl(36, 90%, 50%)" radius={[4, 4, 0, 0]} maxBarSize={10} />
+                <Bar dataKey="Frustration" fill="hsl(0, 75%, 55%)" radius={[4, 4, 0, 0]} maxBarSize={10} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {Object.entries(emotionConfig).map(([label, cfg]) => (
-              <span key={label} className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cfg.color }} />
-                {cfg.emoji} {label}
+          <div className="flex flex-wrap gap-2 mt-1">
+            {Object.entries(emotionConfig).slice(0, 4).map(([label, cfg]) => (
+              <span key={label} className="flex items-center gap-1 text-[9px] text-muted-foreground font-bold">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cfg.color }} /> {cfg.emoji} {label}
               </span>
             ))}
           </div>
         </div>
       )}
 
-      {/* ═══ 6b. TEMPS DE SESSION PAR JOUR ═══ */}
+      {/* ═══ TEMPS DE SESSION ═══ */}
       {sessionDurationChartData.some(d => d.hasData) && (
-        <div className="bg-card rounded-2xl p-4 border border-border/30">
-          <div className="flex items-center gap-2 mb-3">
-            <Timer className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-[13px] font-bold text-foreground">Temps de session (7 jours)</h3>
+        <div className="bg-card rounded-2xl p-3 border border-border/20">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg">⏱️</span>
+            <h3 className="text-[14px] font-extrabold text-foreground">Temps (7j)</h3>
           </div>
-          <div className="w-full h-48">
+          <div className="w-full h-36">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={sessionDurationChartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} unit=" min" />
-                <Tooltip
-                  cursor={{ stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray: "4 4" }}
-                  content={({ active, payload, label }) => {
-                    if (!active || !payload?.length) return null;
-                    const d = payload[0]?.payload;
-                    if (!d?.hasData) return null;
-                    return (
-                      <div className="bg-card border border-border rounded-xl p-2.5 shadow-lg min-w-[120px]">
-                        <p className="text-[11px] font-bold text-foreground mb-1">{label}</p>
-                        <p className="text-[11px] text-muted-foreground">⏱ {d.minutes} min</p>
-                        <p className="text-[11px] text-muted-foreground">💬 {d.sessions} session{d.sessions > 1 ? "s" : ""}</p>
-                      </div>
-                    );
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="minutes"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2.5}
-                  dot={{ r: 4, fill: "hsl(var(--primary))", stroke: "hsl(var(--background))", strokeWidth: 2 }}
-                  activeDot={{ r: 6, fill: "hsl(var(--primary))", stroke: "hsl(var(--background))", strokeWidth: 2 }}
-                  connectNulls={false}
-                />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} unit=" min" />
+                <Line type="monotone" dataKey="minutes" stroke="hsl(var(--primary))" strokeWidth={2.5}
+                  dot={{ r: 3, fill: "hsl(var(--primary))", stroke: "hsl(var(--background))", strokeWidth: 2 }} connectNulls={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1.5 text-center">⏱ Durée totale par jour en minutes</p>
         </div>
       )}
 
-      {/* ═══ 7. CENTRES D'INTÉRÊT ═══ */}
-      {allInterests.length > 0 && (
-        <div className="bg-card rounded-2xl p-4 border border-border/30">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-[13px] font-bold text-foreground">Centres d'intérêt</h3>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {allInterests.map(([interest, count]) => (
-              <span key={interest} className="px-2.5 py-1 rounded-full bg-primary/8 text-primary text-[11px] font-medium border border-primary/10">
-                {interest} <span className="opacity-40 text-[9px]">×{count}</span>
-              </span>
-            ))}
-          </div>
+      {/* ═══ STATS DÉTAILLÉES — compact grid ═══ */}
+      <div className="bg-card rounded-2xl p-3 border border-border/20">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-lg">📊</span>
+          <h3 className="text-[14px] font-extrabold text-foreground">Statistiques</h3>
         </div>
-      )}
-
-      {/* ═══ 8. STATISTIQUES DÉTAILLÉES ═══ */}
-      <div className="bg-card rounded-2xl p-4 border border-border/30">
-        <div className="flex items-center gap-2 mb-4">
-          <BarChart3 className="w-4 h-4 text-muted-foreground" />
-          <h3 className="text-[13px] font-bold text-foreground">Statistiques détaillées</h3>
-        </div>
-        <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-2">
           {[
-            { label: "Durée moyenne / session", value: formatDuration(avgSessionDuration), icon: "⏱️" },
-            { label: "Messages / session", value: avgMessagesPerSession, icon: "💬" },
-            { label: "Sessions analysées", value: `${recentAnalyses.length} / ${totalSessions}`, icon: "🔬" },
-            { label: "Durée aujourd'hui", value: formatDuration(todayDuration), icon: "📅" },
+            { label: "Moy. / session", value: formatDuration(avgSessionDuration), emoji: "⏱️" },
+            { label: "Msg / session", value: avgMessagesPerSession, emoji: "💬" },
+            { label: "Analysées", value: `${recentAnalyses.length}/${totalSessions}`, emoji: "🔬" },
+            { label: "Aujourd'hui", value: formatDuration(todayDuration), emoji: "📅" },
           ].map((stat) => (
-            <div key={stat.label} className="flex items-center justify-between py-1">
-              <div className="flex items-center gap-2">
-                <span className="text-sm">{stat.icon}</span>
-                <span className="text-[12px] text-muted-foreground">{stat.label}</span>
+            <div key={stat.label} className="flex items-center gap-2 p-2 rounded-xl bg-muted/30">
+              <span className="text-base">{stat.emoji}</span>
+              <div className="min-w-0">
+                <p className="text-[13px] font-extrabold text-foreground">{stat.value}</p>
+                <p className="text-[8px] text-muted-foreground font-bold">{stat.label}</p>
               </div>
-              <span className="text-[13px] font-bold text-foreground">{stat.value}</span>
             </div>
           ))}
         </div>
-
-        {/* Activité par jour */}
+        {/* Activity per day mini bar */}
         {hasData && (
-          <div className="mt-4 pt-3 border-t border-border/50">
-            <p className="text-[10px] text-muted-foreground font-medium mb-2">Activité par jour</p>
-            <div className="flex items-end gap-1 h-12">
+          <div className="mt-2 pt-2 border-t border-border/20">
+            <div className="flex items-end gap-1 h-10">
               {weeklyActivity.map((day) => {
                 const maxCount = Math.max(...weeklyActivity.map(d => d.count), 1);
                 const height = (day.count / maxCount) * 100;
                 return (
                   <div key={day.label} className="flex-1 flex flex-col items-center gap-0.5">
-                    <div className="w-full rounded-t-sm bg-primary/20 relative" style={{ height: `${Math.max(height, 4)}%` }}>
-                      {day.count > 0 && (
-                        <div className="absolute inset-0 rounded-t-sm bg-primary" style={{ height: `${height}%` }} />
-                      )}
+                    <div className="w-full rounded-t-md bg-primary/20 relative" style={{ height: `${Math.max(height, 4)}%` }}>
+                      {day.count > 0 && <div className="absolute inset-0 rounded-t-md bg-primary" style={{ height: `${height}%` }} />}
                     </div>
-                    <span className="text-[8px] text-muted-foreground">{day.label}</span>
+                    <span className="text-[7px] text-muted-foreground font-bold">{day.label}</span>
                   </div>
                 );
               })}
@@ -1479,55 +1291,49 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         )}
       </div>
 
-      {/* ═══ 9. DERNIÈRE SESSION ═══ */}
+      {/* ═══ DERNIÈRE SESSION — compact ═══ */}
       {lastSession && (
-        <div className="bg-card rounded-2xl p-4 border border-border/30">
-          <div className="flex items-center gap-2 mb-3">
-            <Clock className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-[13px] font-bold text-foreground">Dernière session</h3>
-            <span className="ml-auto text-[10px] text-muted-foreground">{formatDate(lastSession.started_at)}</span>
+        <div className="bg-card rounded-2xl p-3 border border-border/20">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg">🕐</span>
+            <h3 className="text-[14px] font-extrabold text-foreground">Dernière session</h3>
+            <span className="ml-auto text-[9px] text-muted-foreground font-bold">{formatDate(lastSession.started_at)}</span>
           </div>
-          <div className="grid grid-cols-3 gap-2 mb-3">
-            <div className="text-center p-2 rounded-lg bg-muted/30">
-              <p className="text-sm font-bold text-foreground">{lastSession.message_count}</p>
-              <p className="text-[9px] text-muted-foreground">messages</p>
-            </div>
-            <div className="text-center p-2 rounded-lg bg-muted/30">
-              <p className="text-sm font-bold text-foreground">{formatDuration(lastSession.duration_seconds)}</p>
-              <p className="text-[9px] text-muted-foreground">durée</p>
-            </div>
-            <div className="text-center p-2 rounded-lg bg-muted/30">
-              <p className="text-sm font-bold text-foreground">
-                {lastAnalysis ? (lastAnalysis.engagement_level === "high" ? "🔥" : lastAnalysis.engagement_level === "medium" ? "👍" : "💤") : "—"}
-              </p>
-              <p className="text-[9px] text-muted-foreground">engagement</p>
-            </div>
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            {[
+              { v: lastSession.message_count, l: "messages" },
+              { v: formatDuration(lastSession.duration_seconds), l: "durée" },
+              { v: lastAnalysis ? (lastAnalysis.engagement_level === "high" ? "🔥" : "👍") : "—", l: "engagement" },
+            ].map(s => (
+              <div key={s.l} className="text-center p-2 rounded-xl bg-muted/30">
+                <p className="text-[14px] font-extrabold text-foreground">{s.v}</p>
+                <p className="text-[8px] text-muted-foreground font-bold">{s.l}</p>
+              </div>
+            ))}
           </div>
           {lastAnalysis?.summary && (
-            <p className="text-[11px] text-foreground/70 leading-relaxed bg-muted/20 rounded-lg p-2.5">
-              {lastAnalysis.summary}
-            </p>
+            <p className="text-[11px] text-foreground/70 leading-relaxed bg-muted/20 rounded-xl p-2">{lastAnalysis.summary}</p>
           )}
         </div>
       )}
 
-      {/* ═══ 10. MODES RAPIDES ═══ */}
-      <div className="bg-card rounded-2xl p-4 border border-border/30">
-        <div className="flex items-center gap-2 mb-3">
-          <Zap className="w-4 h-4 text-muted-foreground" />
-          <h3 className="text-[13px] font-bold text-foreground">Modes rapides</h3>
+      {/* ═══ MODES RAPIDES — colorful square cards ═══ */}
+      <div className="bg-card rounded-2xl p-3 border border-border/20">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-lg">⚡</span>
+          <h3 className="text-[14px] font-extrabold text-foreground">Modes rapides</h3>
         </div>
         <div className="grid grid-cols-4 gap-2">
           {[
-            { id: "calm", emoji: "😌", label: "Calme" },
-            { id: "game", emoji: "🎮", label: "Jeu" },
-            { id: "night", emoji: "🌙", label: "Nuit" },
-            { id: "education", emoji: "📚", label: "Éducatif" },
+            { id: "calm", emoji: "😌", label: "Calme", gradient: "from-blue-400/15 to-blue-300/5" },
+            { id: "game", emoji: "🎮", label: "Jeu", gradient: "from-pink-400/15 to-pink-300/5" },
+            { id: "night", emoji: "🌙", label: "Nuit", gradient: "from-purple-400/15 to-purple-300/5" },
+            { id: "education", emoji: "📚", label: "Éducatif", gradient: "from-emerald-400/15 to-emerald-300/5" },
           ].map(preset => (
             <button key={preset.id} onClick={() => applyPreset(preset.id)}
-              className="flex flex-col items-center p-2.5 rounded-xl bg-muted/40 hover:bg-primary/10 transition-all active:scale-95">
-              <span className="text-xl">{preset.emoji}</span>
-              <span className="text-[10px] font-semibold text-foreground mt-1">{preset.label}</span>
+              className={`flex flex-col items-center p-2.5 rounded-2xl bg-gradient-to-br ${preset.gradient} transition-all active:scale-95 border border-transparent hover:border-primary/15`}>
+              <span className="text-2xl">{preset.emoji}</span>
+              <span className="text-[10px] font-extrabold text-foreground mt-1">{preset.label}</span>
             </button>
           ))}
         </div>
@@ -1535,9 +1341,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ ÉTAT VIDE ═══ */}
       {!hasData && (
-        <div className="bg-card rounded-2xl p-8 text-center border border-border/30">
-          <span className="text-4xl block mb-3">🎙️</span>
-          <h3 className="text-base font-bold text-foreground mb-1">Pas encore de sessions</h3>
+        <div className="bg-card rounded-2xl p-6 text-center border border-border/20">
+          <span className="text-5xl block mb-2">🎙️</span>
+          <h3 className="text-lg font-extrabold text-foreground mb-1">Pas encore de sessions</h3>
           <p className="text-[12px] text-muted-foreground">Les métriques apparaîtront après la première conversation de {childName} avec Bobby.</p>
         </div>
       )}
