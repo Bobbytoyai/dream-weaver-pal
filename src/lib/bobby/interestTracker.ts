@@ -28,7 +28,7 @@ const profile: InterestProfile = {
   currentTopicChain: null,
 };
 
-const INTEREST_KEYWORDS: Record<string, { keywords: string[]; emoji: string }> = {
+export const INTEREST_KEYWORDS_PUBLIC: Record<string, { keywords: string[]; emoji: string }> = {
   animaux:    { keywords: ["animal", "animaux", "chat", "chien", "lapin", "ours", "loup", "dragon", "dinosaure", "cheval", "poisson", "oiseau", "tortue", "hamster", "serpent", "requin", "dauphin", "baleine", "lion", "tigre", "éléphant", "girafe", "singe", "perroquet", "papillon", "fourmi", "araignée", "abeille"], emoji: "🐾" },
   espace:     { keywords: ["espace", "astronaute", "fusée", "étoile", "planète", "lune", "soleil", "galaxie", "alien", "mars", "jupiter", "satellite", "comète", "trou noir", "nasa", "cosmonaute"], emoji: "🚀" },
   nature:     { keywords: ["forêt", "montagne", "rivière", "fleur", "arbre", "jardin", "mer", "océan", "plage", "volcan", "lac", "île", "cascade", "grotte", "désert", "jungle", "savane"], emoji: "🌿" },
