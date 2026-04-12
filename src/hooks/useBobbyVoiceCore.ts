@@ -212,6 +212,7 @@ export function useBobbyVoiceCore({
     processingRef.current = true;
 
     try {
+      if (listenTimeoutRef.current) { clearTimeout(listenTimeoutRef.current); listenTimeoutRef.current = null; }
       stopSttRef.current();
       setMicArmed(false);
       setPartialText("");
@@ -318,6 +319,7 @@ export function useBobbyVoiceCore({
 
   const interrupt = useCallback(() => {
     processingRef.current = false;
+    if (listenTimeoutRef.current) { clearTimeout(listenTimeoutRef.current); listenTimeoutRef.current = null; }
     stopSttRef.current();
     setMicArmed(false);
     setPartialText("");
@@ -390,6 +392,7 @@ export function useBobbyVoiceCore({
   useEffect(() => {
     return () => {
       clearSleepTimer();
+      if (listenTimeoutRef.current) clearTimeout(listenTimeoutRef.current);
       stopSttRef.current();
       stopPlayback();
       resetBobbyBrainSession();
