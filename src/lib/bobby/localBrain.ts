@@ -1599,6 +1599,13 @@ const INTENT_FACE_MAP: Partial<Record<LocalIntent, FaceState>> = {
   FATIGUE: "calm",
   ECHEC: "reassuring",
   OBJECTIF: "excited",
+  SANTE: "reassuring",
+  PERTE: "reassuring",
+  REVE_AVENIR: "excited",
+  ABANDON: "reassuring",
+  EXCITATION: "excited",
+  AMOUREUX: "happy",
+  MENSONGE: "reassuring",
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
