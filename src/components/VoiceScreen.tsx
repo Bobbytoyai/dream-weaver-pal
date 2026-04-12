@@ -149,12 +149,12 @@ const VoiceScreen = ({
   }, []);
 
   const stateLabel = {
-    IDLE: sm.partialText ? `"${sm.partialText}"` : (sm.micArmed ? 'Dis "Bobby" pour me parler !' : 'Touche Bobby pour commencer !'),
+    IDLE: sm.partialText ? `"${sm.partialText}"` : 'Touche Bobby pour parler !',
     LISTENING: sm.partialText ? `"${sm.partialText}"` : "",
     PROCESSING: "Je réfléchis…",
     SPEAKING: "",
     ERROR: "Dis-moi !",
-    SLEEP: "💤 Bobby dort… dis son nom pour le réveiller !",
+    SLEEP: "💤 Bobby dort… touche Bobby pour le réveiller !",
   }[sm.machineState];
 
   return (
