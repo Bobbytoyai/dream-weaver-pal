@@ -1,12 +1,11 @@
 /**
- * Voice Pipeline v4 — 100% Offline TTS
+ * Voice Pipeline v5 — ElevenLabs Only
  * 
- * Pipeline: Piper TTS → Browser Web Speech API (fallback)
- * No external API calls. Zero network dependency.
+ * Pipeline: ElevenLabs (cloud) → Browser Web Speech API (last resort fallback)
+ * No Piper TTS. No WASM dependency.
  */
 
 import { useCallback, useRef } from "react";
-import { piperSpeak, piperPreview } from "./piperTTS";
 import { getCachedTTSAudio, makeCacheKey } from "./ttsCache";
 
 // ─── Safety filters ─────────────────────────────────────────
@@ -178,17 +177,8 @@ export async function fetchTTSAudio(
     }
   }
 
-  // 4. Piper TTS (local WASM — offline fallback)
-  try {
-    const url = await piperSpeak(spokenText, profile, signal);
-    if (spokenText.length < 80) cacheAudio(cacheKey, url);
-    return url;
-  } catch (e: any) {
-    if (e.name === "AbortError") throw e;
-    console.warn("[TTS] Piper failed, falling back to browser TTS:", e.message);
-  }
-
-  // 5. Browser Web Speech API (last resort)
+  // 4. Browser Web Speech API (last resort — only if ElevenLabs failed)
+  console.warn("[TTS] ⚠️ ElevenLabs unavailable, using browser TTS fallback");
   return speakWithBrowserTTS(spokenText);
 }
 
@@ -217,16 +207,12 @@ export async function previewVoiceProfile(profile: VoiceProfile): Promise<void> 
       });
       return;
     } catch (e) {
-      console.warn("[Preview] ElevenLabs failed, trying Piper:", e);
+      console.warn("[Preview] ElevenLabs failed:", e);
     }
   }
 
-  // Fallback to Piper
-  try {
-    await piperPreview(profile);
-  } catch {
-    await speakWithBrowserTTS(text);
-  }
+  // Fallback to browser TTS
+  await speakWithBrowserTTS(text);
 }
 
 // ─── Emotion detection from text (for TTS modulation) ───────
