@@ -338,32 +338,16 @@ export function getUnreadAlertCount(): number {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export type OfflineIntent =
-  | "GREETING"
-  | "STORY_REQUEST"
-  | "PLAY_REQUEST"
-  | "QUESTION"
-  | "QUESTION_SIMPLE"
-  | "EMOTION_POSITIVE"
-  | "EMOTION_NEGATIVE"
-  | "FAREWELL"
-  | "IDENTITY"
-  | "COMPLIMENT"
-  | "CALM_REQUEST"
-  | "HUMOR"
-  | "ADVENTURE"
-  | "HELP"
-  | "CONTROL"
-  | "EDUCATION"
-  | "BLOCKED"
-  | "UNKNOWN"
-  | "GRATITUDE"
-  | "POSITIVE"
-  | "RIDDLE"
-  | "JOKE"
-  | "QUIZ"
-  | "ANIMALS"
-  | "DINOSAUR"
-  | "SPACE";
+  | "GREETING" | "STORY_REQUEST" | "PLAY_REQUEST" | "QUESTION" | "QUESTION_SIMPLE"
+  | "EMOTION_POSITIVE" | "EMOTION_NEGATIVE" | "FAREWELL" | "IDENTITY" | "COMPLIMENT"
+  | "CALM_REQUEST" | "HUMOR" | "ADVENTURE" | "HELP" | "CONTROL" | "EDUCATION"
+  | "BLOCKED" | "UNKNOWN"
+  | "GRATITUDE" | "POSITIVE" | "RIDDLE" | "JOKE" | "QUIZ"
+  | "ANIMALS" | "DINOSAUR" | "SPACE" | "NATURE" | "ECOLOGY" | "SCIENCE"
+  | "MATH" | "GEOGRAPHY" | "HISTORY" | "HEALTH" | "EMOTIONS" | "FRIENDSHIP"
+  | "SCHOOL" | "FOOD" | "FAMILY" | "SPORT" | "MUSIC" | "ART" | "TECHNOLOGY"
+  | "CULTURE" | "PHILOSOPHY" | "JOBS" | "TRANSPORT" | "TIME" | "FANTASY"
+  | "ENCOURAGEMENT" | "NEUTRAL" | "REPEAT" | "STORY" | "VOLUME" | "TRANSITION";
 
 interface IntentRule {
   intent: OfflineIntent;
