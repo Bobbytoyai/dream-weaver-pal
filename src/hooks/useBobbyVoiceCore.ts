@@ -547,6 +547,8 @@ export function useBobbyVoiceCore({
     currentEmotion: toVoiceState(machineState),
     bobbyFaceEmotion,
     bobbyEmotionIntensity,
+    expressionCombo: currentExpressionCombo,
+    expressionIntensityLevel: currentExpressionIntensity,
     micArmed,
     networkOffline,
     sttIsRunning: smartSTT.isRunning,
