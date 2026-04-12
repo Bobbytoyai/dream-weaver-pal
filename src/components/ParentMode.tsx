@@ -1153,13 +1153,71 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         <div className="bg-card rounded-2xl p-4 border border-border/30">
           <div className="flex items-center gap-2 mb-4">
             <Brain className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-[13px] font-bold text-foreground">Développement</h3>
+            <h3 className="text-[13px] font-bold text-foreground">Développement de {childName}</h3>
+            <span className="ml-auto text-[10px] text-muted-foreground">{analyses.filter(a => a.sociability_score != null).length} analyses</span>
           </div>
-          <div className="flex justify-around">
-            <ScoreGauge label="Sociabilité" score={avgScores.sociability} emoji="🤝" color="hsl(var(--primary))" />
-            <ScoreGauge label="Curiosité" score={avgScores.curiosity} emoji="🔍" color="hsl(36, 90%, 50%)" />
-            <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="hsl(145, 65%, 42%)" />
+
+          {/* Large gauges */}
+          <div className="flex justify-around mb-4">
+            <ScoreGauge label="Sociabilité" score={avgScores.sociability} emoji="🤝" color="hsl(var(--primary))" size="lg" />
+            <ScoreGauge label="Curiosité" score={avgScores.curiosity} emoji="🔍" color="hsl(36, 90%, 50%)" size="lg" />
+            <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="hsl(145, 65%, 42%)" size="lg" />
           </div>
+
+          {/* Scores evolution line chart */}
+          {scoresEvolutionData.some(d => d.hasData) && (
+            <div className="mt-3 pt-3 border-t border-border/50">
+              <p className="text-[10px] text-muted-foreground font-medium mb-2">📈 Évolution sur 7 jours</p>
+              <div className="w-full h-40">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={scoresEvolutionData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
+                    <defs>
+                      <linearGradient id="gradSociability" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="gradCuriosity" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(36, 90%, 50%)" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="hsl(36, 90%, 50%)" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="gradStability" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(145, 65%, 42%)" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="hsl(145, 65%, 42%)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                    <Tooltip
+                      content={({ active, payload, label }) => {
+                        if (!active || !payload?.length) return null;
+                        return (
+                          <div className="bg-card border border-border rounded-xl p-2.5 shadow-lg min-w-[120px]">
+                            <p className="text-[11px] font-bold text-foreground mb-1">{label}</p>
+                            {payload.filter(p => p.value != null).map(p => (
+                              <div key={p.name} className="flex items-center gap-1.5 py-0.5">
+                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color as string }} />
+                                <span className="text-[10px] text-foreground flex-1">{p.name}</span>
+                                <span className="text-[11px] font-bold" style={{ color: p.color as string }}>{p.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }}
+                    />
+                    <Area type="monotone" dataKey="Sociabilité" stroke="hsl(var(--primary))" fill="url(#gradSociability)" strokeWidth={2} dot={{ r: 3, fill: "hsl(var(--primary))" }} connectNulls />
+                    <Area type="monotone" dataKey="Curiosité" stroke="hsl(36, 90%, 50%)" fill="url(#gradCuriosity)" strokeWidth={2} dot={{ r: 3, fill: "hsl(36, 90%, 50%)" }} connectNulls />
+                    <Area type="monotone" dataKey="Stabilité" stroke="hsl(145, 65%, 42%)" fill="url(#gradStability)" strokeWidth={2} dot={{ r: 3, fill: "hsl(145, 65%, 42%)" }} connectNulls />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex justify-center gap-4 mt-1">
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><span className="w-2 h-2 rounded-full bg-primary" /> Sociabilité</span>
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: "hsl(36, 90%, 50%)" }} /> Curiosité</span>
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: "hsl(145, 65%, 42%)" }} /> Stabilité</span>
+              </div>
+            </div>
+          )}
 
           {/* Engagement + Mood mini bars */}
           <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-border/50">
@@ -1185,9 +1243,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               <div className="flex gap-1 h-3">
                 {recentAnalyses.length > 0 ? (
                   <>
-                    <div className="rounded-full bg-green-500" style={{ width: `${(moodDist.positive / recentAnalyses.length) * 100}%` }} />
-                    <div className="rounded-full bg-yellow-400" style={{ width: `${(moodDist.neutral / recentAnalyses.length) * 100}%` }} />
-                    <div className="rounded-full bg-red-400" style={{ width: `${(moodDist.low / recentAnalyses.length) * 100}%` }} />
+                    <div className="rounded-full bg-primary/80" style={{ width: `${(moodDist.positive / recentAnalyses.length) * 100}%` }} />
+                    <div className="rounded-full bg-accent" style={{ width: `${(moodDist.neutral / recentAnalyses.length) * 100}%` }} />
+                    <div className="rounded-full bg-destructive/60" style={{ width: `${(moodDist.low / recentAnalyses.length) * 100}%` }} />
                   </>
                 ) : <div className="rounded-full bg-muted w-full" />}
               </div>
