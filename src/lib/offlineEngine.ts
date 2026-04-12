@@ -193,11 +193,12 @@ export function getOfflineResponse(
     return { text: fullResponse, intent, isOffline: true };
   }
 
-  // 4b. 🧠 Secondary fallback: Bobby 10K interaction database (adaptive match)
+  // 4b. 🧠 Secondary fallback: Bobby 10K interaction database (adaptive match with real confidence)
   const adaptCtx: AdaptiveContext = {
     childAge,
-    detectedEmotion: "neutral",
-    sessionInteractionCount: 0,
+    detectedEmotion: context.mood === "happy" ? "joy" : context.mood === "sad" ? "sadness" : "neutral",
+    sessionInteractionCount: context.interactionCount,
+    lastCategory: context.lastTopic,
     confidenceScore: 0.7,
     isOffline: true,
   };
@@ -207,7 +208,12 @@ export function getOfflineResponse(
     const followUp = getFollowUp(interactionMatch.intent as any);
     const fullResponse = finalText + followUp;
     updateContext(interactionMatch.intent as any, text, fullResponse);
-    return { text: fullResponse, intent: interactionMatch.intent, isOffline: true };
+    return {
+      text: fullResponse,
+      intent: interactionMatch.intent,
+      isOffline: true,
+      _confidence: interactionMatch._confidence,
+    } as OfflineResponse & { _confidence: number };
   }
 
   // 5. Intent-based fallback
