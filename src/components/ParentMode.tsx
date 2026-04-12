@@ -3174,7 +3174,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     const categoryCards: { id: Tab; emoji: string; label: string; desc: string; color: string; badge?: number }[] = [
       { id: "dashboard", emoji: "📊", label: "Tableau de bord", desc: "Vue d'ensemble", color: "from-primary/20 to-primary/5" },
       { id: "sessions", emoji: "💬", label: "Sessions", desc: `${sessions.length} conversations`, color: "from-accent/30 to-accent/5", badge: sessions.filter(s => !analyses.some(a => a.session_id === s.id)).length || undefined },
-      { id: "activites", emoji: "🎮", label: "Activités", desc: "Histoires & jeux", color: "from-secondary/30 to-secondary/5" },
+      { id: "activites", emoji: "🛒", label: "Bobby Store", desc: `${installedContent.length} installés`, color: "from-secondary/30 to-secondary/5", badge: undefined },
       { id: "profil", emoji: "👤", label: "Profil enfant", desc: "Intérêts & mémoire", color: "from-primary/15 to-primary/3" },
       { id: "reglages", emoji: "⚙️", label: "Réglages", desc: "Voix, contenu, limites", color: "from-muted to-muted/30" },
       { id: "confidentialite", emoji: "🔒", label: "Confidentialité", desc: "Données & sécurité", color: "from-destructive/10 to-destructive/3" },
