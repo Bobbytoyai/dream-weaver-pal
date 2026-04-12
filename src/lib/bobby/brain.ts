@@ -205,28 +205,32 @@ export async function buildBobbyReply({ childName, childAge, userText = "", pend
     }
   }
 
-  // ─── 3. Offline brain fallback (QA 1623 + 10K interactions) ───
-  const offlineReply = getOfflineResponse(userText, childName, childAge);
+  // ─── 3. Local Brain (intelligent template-based engine) ───
+  if (userText) {
+    const localReply = getLocalBrainReply(userText, childName, childAge);
+    
+    // Apply personality
+    let text = applyPersonality(localReply.text, personality);
+    
+    // Smart follow-up injection (~30% chance after 3+ exchanges)
+    const smartFollowUp = getSmartFollowUp(childName);
+    if (smartFollowUp && localReply.confidence >= 0.5 && Math.random() < 0.3) {
+      text = text.replace(/[.!?…]*$/, ". ") + smartFollowUp;
+    }
 
-  const realConfidence = (offlineReply as any)._confidence as number | undefined;
-  const confidence = realConfidence ?? (offlineReply.intent === "UNKNOWN" ? 0.3 : 0.75);
-
-  let adaptedText = simplifyForAge(offlineReply.text, childAge);
-  adaptedText = personalizeWithName(adaptedText, childName);
-  adaptedText = applyPersonality(adaptedText, personality);
-
-  // ─── Smart follow-up injection (~40% chance after 3+ exchanges) ───
-  const smartFollowUp = getSmartFollowUp(childName);
-  if (smartFollowUp && confidence >= 0.5 && Math.random() < 0.4) {
-    adaptedText = adaptedText.replace(/[.!?…]*$/, ". ") + smartFollowUp;
+    return {
+      ...localReply,
+      text,
+    };
   }
 
+  // ─── 4. Absolute fallback ───
   return {
-    text: adaptedText,
-    intent: offlineReply.intent,
-    source: "offline_brain",
-    emotion: resolveEmotion(offlineReply.intent, adaptedText),
-    confidence,
+    text: personalizeWithName(`Je suis là ! Dis-moi ce que tu veux faire 😊`, childName),
+    intent: "GENERAL",
+    source: "local_brain",
+    emotion: "attentive" as FaceState,
+    confidence: 0.4,
     isOffline: true,
   };
 }
