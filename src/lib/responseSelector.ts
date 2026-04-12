@@ -278,36 +278,49 @@ export function selectBestResponse(responses: TaggedResponse[]): TaggedResponse 
 
   // Filter out recently used
   const fresh = responses.filter(r => !isRecentlyUsed(r.text));
-  const pool = fresh.length > 0 ? fresh : responses; // fallback to all if everything used
+  const pool = fresh.length > 0 ? fresh : responses;
 
   if (pool.length === 1) return pool[0];
 
   // Score each response
   const targetEnergy = getTargetEnergy();
   const preferredType = getPreferredType();
+  const dominantEmo = getDominantEmotion();
 
   const scored = pool.map(r => {
-    let score = Math.random() * 0.3; // random base for variety
+    let score = Math.random() * 0.2; // random base for variety
 
     // Energy match bonus
-    if (r.energy === targetEnergy) score += 0.4;
-    else if (
-      (r.energy === "medium") ||
-      (targetEnergy === "medium")
-    ) score += 0.2;
+    if (r.energy === targetEnergy) score += 0.3;
+    else if (r.energy === "medium" || targetEnergy === "medium") score += 0.15;
 
     // Type preference bonus
-    if (preferredType && r.type === preferredType) score += 0.2;
+    if (preferredType && r.type === preferredType) score += 0.15;
 
-    // Emotion-appropriate type bonus
-    if (memory.emotionalState === "sad" || memory.emotionalState === "scared") {
-      if (r.type === "soutien") score += 0.3;
+    // Emotion-appropriate type bonus (enhanced with dominant emotion)
+    const emoState = memory.emotionalState;
+    if (emoState === "sad" || emoState === "scared" || emoState === "tristesse" || emoState === "peur" || dominantEmo === "tristesse") {
+      if (r.type === "soutien") score += 0.35;
     }
-    if (memory.emotionalState === "happy" || memory.emotionalState === "excited") {
+    if (emoState === "happy" || emoState === "excited" || emoState === "joie" || dominantEmo === "joie") {
       if (r.type === "jeu" || r.type === "fun") score += 0.2;
     }
-    if (memory.emotionalState === "bored") {
+    if (emoState === "bored" || emoState === "ennui" || dominantEmo === "ennui") {
       if (r.type === "jeu" || r.type === "proposition") score += 0.3;
+    }
+
+    // Confidence-based adaptation: low confidence → favor soutien
+    if (memory.confidenceLevel < 30 && r.type === "soutien") score += 0.2;
+
+    // Learning loop: boost responses with high effectiveness scores
+    const learnScore = getResponseScore(r.text);
+    score += Math.max(-0.2, Math.min(0.3, learnScore * 0.05));
+
+    // Emotional variation: avoid same emotion type in consecutive responses
+    if (memory.emotionHistory.length >= 3) {
+      const lastEmos = memory.emotionHistory.slice(-3);
+      const allSame = lastEmos.every(e => e === lastEmos[0]);
+      if (allSame && r.type !== "question") score += 0.1; // favor topic change
     }
 
     return { response: r, score };
