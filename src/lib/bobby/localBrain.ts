@@ -1993,6 +1993,8 @@ const INTENT_FACE_MAP: Partial<Record<LocalIntent, FaceState>> = {
   RESISTANCE: "reassuring",
   PARTAGE_QUOTIDIEN: "happy",
   ENVIE: "playful",
+  QUESTION_ABSURDE: "playful",
+  QUESTION_EXISTENTIELLE: "curious",
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
