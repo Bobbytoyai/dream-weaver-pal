@@ -1880,8 +1880,12 @@ const Admin = () => {
                         <div className="flex gap-1 flex-wrap">
                           {h.tags.map((t, i) => <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-white/40">{t}</span>)}
                         </div>
-                        {h.source === "cloud" && (
-                          <div className="flex gap-2 pt-2">
+                        <div className="flex gap-2 pt-2">
+                          <Button size="sm" variant="ghost" className="text-purple-400 text-xs" onClick={() => openHistoireDetail(h)}>
+                            <Eye className="w-3 h-3 mr-1" /> Détail
+                          </Button>
+                          {h.source === "cloud" && (
+                            <>
                             <Button size="sm" variant="ghost" className="text-blue-400 text-xs" onClick={() => setEditingStory({
                               id: h.id, titre: h.titre, theme: h.theme, ageMin: h.ageMin, ageMax: h.ageMax,
                               duree: h.duree, texte: h.texte, moralité: h.moralité, tags: h.tags,
@@ -1896,8 +1900,9 @@ const Admin = () => {
                             }}>
                               <Trash2 className="w-3 h-3 mr-1" /> Supprimer
                             </Button>
-                          </div>
-                        )}
+                            </>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
