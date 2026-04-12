@@ -45,7 +45,7 @@ export const HISTOIRES: Histoire[] = [
     theme: "pirate",
     ageMin: 6, ageMax: 12,
     duree: "moyenne",
-    texte: `Ahoy ! {child_name} était le meilleur capitaine de la mer des Caraïbes. Un matin, une bouteille échoua sur le pont avec une carte au trésor à l'intérieur ! L'île Cachée était à trois jours de navigation. Des dauphins accompagnèrent le bateau, des vagues énormes tentèrent de l'arrêter, mais {child_name} tint bon la barre. Sur l'île, derrière un vieux cocotier, le coffre au trésor attendait. À l'intérieur ? Pas d'or... mais des milliers de livres d'aventures ! "Le vrai trésor, c'est l'imagination," lut {child_name} sur le couvercle, en souriant.`,
+    texte: `Ahoy ! {child_name} embarqua un jour sur un vieux bateau avec une carte au trésor trouvée dans une bouteille. L'île Cachée était à trois jours de navigation. Des dauphins accompagnèrent le bateau, des vagues énormes tentèrent de l'arrêter, mais {child_name} tint bon la barre. Sur l'île, derrière un vieux cocotier, le coffre au trésor attendait. À l'intérieur ? Pas d'or... mais des milliers de livres d'aventures ! "Le vrai trésor, c'est l'imagination," lut {child_name} sur le couvercle, en souriant.`,
     moralité: "Le plus grand trésor est celui de l'imagination.",
     tags: ["pirate", "trésor", "aventure", "mer", "lecture"]
   },
