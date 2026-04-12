@@ -2438,8 +2438,26 @@ export function findMultiResponse(userInput: string): MultiResponseEntry | null 
     if (criticalEntries.length > 0) return criticalEntries[0];
   }
 
+  // French stop words to ignore in matching
+  const STOP_WORDS = new Set([
+    "je", "tu", "il", "elle", "on", "nous", "vous", "ils", "elles",
+    "le", "la", "les", "un", "une", "des", "du", "de", "au", "aux",
+    "et", "ou", "mais", "donc", "car", "ni", "que", "qui", "dont",
+    "en", "à", "dans", "sur", "sous", "avec", "pour", "par", "sans",
+    "ce", "se", "ne", "pas", "plus", "très", "bien", "trop", "aussi",
+    "mon", "ma", "mes", "ton", "ta", "tes", "son", "sa", "ses",
+    "suis", "est", "es", "ai", "as", "sont", "ont", "été",
+    "j'ai", "j'aime", "c'est", "j'suis", "moi", "toi",
+  ]);
+
+  function contentWords(text: string): string[] {
+    return text.split(/[\s'']+/).filter(w => w.length > 2 && !STOP_WORDS.has(w));
+  }
+
   let bestMatch: MultiResponseEntry | null = null;
   let bestScore = 0;
+
+  const userContent = contentWords(normalized);
 
   for (const entry of BOBBY_MULTI_RESPONSES) {
     const entryNorm = entry.input.toLowerCase().trim();
@@ -2447,22 +2465,27 @@ export function findMultiResponse(userInput: string): MultiResponseEntry | null 
     // Exact match
     if (normalized === entryNorm) return entry;
 
-    // Word overlap scoring
-    const userWords = normalized.split(/\s+/).filter(w => w.length > 1);
-    const entryWords = entryNorm.split(/\s+/).filter(w => w.length > 1);
+    // Content word overlap scoring (ignoring stop words)
+    const entryContent = contentWords(entryNorm);
     
+    if (entryContent.length === 0 || userContent.length === 0) continue;
+
     let overlap = 0;
-    for (const uw of userWords) {
-      for (const ew of entryWords) {
-        if (uw === ew || uw.includes(ew) || ew.includes(uw)) {
+    for (const uw of userContent) {
+      for (const ew of entryContent) {
+        if (uw === ew || (uw.length > 3 && ew.length > 3 && (uw.includes(ew) || ew.includes(uw)))) {
           overlap++;
           break;
         }
       }
     }
 
-    const score = entryWords.length > 0 ? overlap / entryWords.length : 0;
-    if (score > bestScore && score >= 0.5) {
+    // Score based on content word overlap (both directions for better accuracy)
+    const entryScore = entryContent.length > 0 ? overlap / entryContent.length : 0;
+    const userScore = userContent.length > 0 ? overlap / userContent.length : 0;
+    const score = (entryScore + userScore) / 2;
+
+    if (score > bestScore && score >= 0.35) {
       bestScore = score;
       bestMatch = entry;
     }
