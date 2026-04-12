@@ -207,6 +207,29 @@ export function getOfflineResponse(
       updateEngagement(selected.energy === "high" ? 5 : selected.energy === "medium" ? 2 : -1);
       updateContext(intent, text, finalText);
       tryStartScenario(text, childAge);
+
+      // 🚨 Auto-alert for securite categories with danger/detresse emotions
+      if (multiMatch.category.startsWith("securite") || multiMatch.category === "protection_active") {
+        const severity = multiMatch.emotion === "danger" ? "CRITICAL" as const
+          : multiMatch.emotion === "detresse" ? "HIGH" as const
+          : "MEDIUM" as const;
+        const alertRecord = {
+          severity,
+          category: multiMatch.category,
+          keyword: multiMatch.input,
+          fullText: text.slice(0, 200),
+          timestamp: Date.now(),
+          childName: childName ?? "enfant",
+        };
+        storeSafetyAlertRecord(alertRecord);
+        try {
+          eventBus.emit({
+            type: "SAFETY_ALERT",
+            ...alertRecord,
+          });
+        } catch { /* eventBus unavailable */ }
+      }
+
       return { text: finalText, intent, isOffline: true };
     }
   }
