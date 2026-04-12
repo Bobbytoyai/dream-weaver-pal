@@ -355,7 +355,15 @@ export type OfflineIntent =
   | "CONTROL"
   | "EDUCATION"
   | "BLOCKED"
-  | "UNKNOWN";
+  | "UNKNOWN"
+  | "GRATITUDE"
+  | "POSITIVE"
+  | "RIDDLE"
+  | "JOKE"
+  | "QUIZ"
+  | "ANIMALS"
+  | "DINOSAUR"
+  | "SPACE";
 
 interface IntentRule {
   intent: OfflineIntent;

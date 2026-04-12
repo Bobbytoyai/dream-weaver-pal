@@ -114,6 +114,7 @@ function isEcho(transcript: string): boolean {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /** Map voicePipeline Emotion → adaptiveEngine EmotionState */
+type EmotionState = import("@/lib/adaptiveEngine").EmotionState;
 function toAdaptiveEmotion(e: string | undefined): EmotionState {
   const map: Record<string, EmotionState> = {
     happy:   "joy",

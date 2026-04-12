@@ -6,7 +6,7 @@ import { useGazeTracker } from "./useGazeTracker";
 import { useAudioAmplitude, type VisemeState } from "./useAudioAmplitude";
 import { FaceState } from "./useFaceAnimation";
 import { eventBus } from "@/lib/eventBus";
-import { registerAudioConnector, unregisterAudioConnector } from "@/lib/voicePipeline";
+// Audio connector managed externally
 
 interface HologramFaceProps {
   voiceState: "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
@@ -41,10 +41,7 @@ export function HologramFace({
   const tapCountRef = useRef(0);
   const tapTimerRef = useRef<number>(0);
   const [wakeFlash, setWakeFlash] = useState(false);
-  useEffect(() => {
-    registerAudioConnector(connectAudio);
-    return () => unregisterAudioConnector();
-  }, [connectAudio]);
+  // Audio connector is now managed by VoiceScreen
   useEffect(() => {
     const unsub = eventBus.on("WAKE_DETECTED", () => {
       setWakeFlash(true);

@@ -162,7 +162,7 @@ function selectResponse(
   }
 
   // FIX B4: adventure → treated as story request (offline)
-  if (intent === "adventure" || intent === "boredom") {
+  if ((intent as string) === "adventure" || intent === "boredom") {
     const offlineResp = getOfflineResponse(input.userText, input.childName);
     if (offlineResp.text) return { response: offlineResp.text, source: "offline" };
   }
