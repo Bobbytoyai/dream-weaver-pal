@@ -1,4 +1,5 @@
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
+import type { ParentSettings } from "@/components/parentSettings";
 import { getOfflineResponse, resetConversationContext } from "@/lib/offlineEngine";
 import { getLibraryReply, getNarrationText } from "./library";
 import type { BobbyBrainReply, PendingNarration } from "./types";
@@ -9,6 +10,7 @@ interface BuildBobbyReplyOptions {
   childAge: number;
   userText?: string;
   pendingNarration?: PendingNarration | null;
+  parentSettings?: ParentSettings;
 }
 
 const INTENT_EMOTION_MAP: Record<string, FaceState> = {
@@ -32,7 +34,6 @@ const INTENT_EMOTION_MAP: Record<string, FaceState> = {
 
 function inferEmotionFromText(text: string): FaceState {
   const normalized = text.toLowerCase();
-
   if (/bravo|génial|genial|super|youpi|cool|haha|hihi/.test(normalized)) return "happy";
   if (/calme|respire|doucement|nuit|dodo/.test(normalized)) return "calm";
   if (/peur|triste|pas grave|je suis là|je suis la/.test(normalized)) return "reassuring";
@@ -44,8 +45,84 @@ function resolveEmotion(intent: string, text: string): FaceState {
   return INTENT_EMOTION_MAP[intent] ?? inferEmotionFromText(text);
 }
 
+// ─── Personality modifiers ──────────────────────────────────────────────
+// Adjusts Bobby's tone based on the parent-chosen personality profile.
+const PERSONALITY_PREFIXES: Record<string, string[]> = {
+  calm: [
+    "Doucement… ",
+    "Tranquillement, ",
+    "Tout en douceur, ",
+  ],
+  energetic: [
+    "Oh wow ! ",
+    "Génial ! ",
+    "Trop bien ! ",
+  ],
+  educational: [
+    "Bonne question ! ",
+    "Intéressant ! ",
+    "Tu sais quoi ? ",
+  ],
+  balanced: [],
+};
+
+function applyPersonality(text: string, personality: string): string {
+  const prefixes = PERSONALITY_PREFIXES[personality];
+  if (!prefixes?.length) return text;
+  // Add a personality prefix ~40% of the time to keep it natural
+  if (Math.random() > 0.4) return text;
+  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+  return prefix + text.charAt(0).toLowerCase() + text.slice(1);
+}
+
+// ─── Content filtering ──────────────────────────────────────────────────
+function isTopicBlocked(text: string, blockedTopics: string[]): boolean {
+  if (!blockedTopics.length) return false;
+  const normalized = text.toLowerCase();
+  return blockedTopics.some(topic => normalized.includes(topic.toLowerCase()));
+}
+
+function getBlockedTopicReply(childName: string): BobbyBrainReply {
+  const responses = [
+    `${childName}, parlons d'autre chose ! Tu veux qu'on joue ou que je te raconte une histoire ?`,
+    `Hmm, j'ai une meilleure idée ${childName} ! Et si on parlait d'un truc super cool ?`,
+    `${childName}, Bobby préfère qu'on parle d'aventures et de découvertes ! 🚀`,
+  ];
+  return {
+    text: responses[Math.floor(Math.random() * responses.length)],
+    intent: "BLOCKED",
+    source: "safety_filter",
+    emotion: "reassuring",
+    confidence: 1,
+    isOffline: true,
+  };
+}
+
+// ─── Personalized name injection ────────────────────────────────────────
+// Makes Bobby say the child's name naturally in ~30% of responses
+function personalizeWithName(text: string, childName: string): string {
+  // Don't double-inject if the name is already present
+  if (text.includes(childName)) return text;
+  // Only inject ~30% of the time
+  if (Math.random() > 0.3) return text;
+
+  const injections = [
+    () => `${childName}, ${text.charAt(0).toLowerCase() + text.slice(1)}`,
+    () => `${text} ${childName} !`.replace(/ !$/, ` ${childName} !`),
+    () => text.replace(/\.$/, ` ${childName}.`),
+  ];
+  return injections[Math.floor(Math.random() * injections.length)]();
+}
+
+// ─── Public API ─────────────────────────────────────────────────────────
+
 export function getBobbyWelcomeMessage(childName: string): string {
-  return `Salut ${childName} ! Touche Bobby et parle près du micro. Je peux discuter, raconter des histoires et répondre même hors ligne grâce à Bobby Brain.`;
+  const greetings = [
+    `Salut ${childName} ! Touche Bobby pour me parler. Je suis là rien que pour toi ! 🌟`,
+    `Hey ${childName} ! C'est Bobby ! Touche-moi et dis-moi ce que tu veux faire aujourd'hui !`,
+    `Coucou ${childName} ! Bobby est prêt à jouer, discuter ou raconter des histoires ! Touche-moi !`,
+  ];
+  return greetings[Math.floor(Math.random() * greetings.length)];
 }
 
 export function getBobbyMicRecoveryMessage(isOffline: boolean): string {
@@ -62,7 +139,11 @@ export function resetBobbyBrainSession() {
   resetConversationContext();
 }
 
-export function buildBobbyReply({ childName, childAge, userText = "", pendingNarration }: BuildBobbyReplyOptions): BobbyBrainReply {
+export function buildBobbyReply({ childName, childAge, userText = "", pendingNarration, parentSettings }: BuildBobbyReplyOptions): BobbyBrainReply {
+  const personality = parentSettings?.personality ?? "balanced";
+  const blockedTopics = parentSettings?.blockedTopics ?? [];
+
+  // ─── Narration passthrough ───
   if (pendingNarration) {
     return {
       text: simplifyForAge(getNarrationText(pendingNarration, childName), childAge),
@@ -74,25 +155,29 @@ export function buildBobbyReply({ childName, childAge, userText = "", pendingNar
     };
   }
 
-  // 1. Library (stories, jokes) — always high confidence
-  const libraryReply = getLibraryReply(userText, childName, childAge);
-  if (libraryReply) {
-    return {
-      ...libraryReply,
-      text: simplifyForAge(libraryReply.text, childAge),
-    };
+  // ─── Safety: blocked topics ───
+  if (userText && isTopicBlocked(userText, blockedTopics)) {
+    return getBlockedTopicReply(childName);
   }
 
-  // 2. Offline brain (QA 1623 + 10K interactions with real scoring)
+  // ─── 1. Library (stories, jokes) — always high confidence ───
+  const libraryReply = getLibraryReply(userText, childName, childAge);
+  if (libraryReply) {
+    let text = simplifyForAge(libraryReply.text, childAge);
+    text = personalizeWithName(text, childName);
+    text = applyPersonality(text, personality);
+    return { ...libraryReply, text };
+  }
+
+  // ─── 2. Offline brain (QA 1623 + 10K interactions) ───
   const offlineReply = getOfflineResponse(userText, childName, childAge);
 
-  // The offline engine now returns _confidence from the adaptive engine
-  // Use the real confidence if available, otherwise estimate from intent
   const realConfidence = (offlineReply as any)._confidence as number | undefined;
   const confidence = realConfidence ?? (offlineReply.intent === "UNKNOWN" ? 0.3 : 0.75);
 
-  // Apply age-appropriate simplification to the response
-  const adaptedText = simplifyForAge(offlineReply.text, childAge);
+  let adaptedText = simplifyForAge(offlineReply.text, childAge);
+  adaptedText = personalizeWithName(adaptedText, childName);
+  adaptedText = applyPersonality(adaptedText, personality);
 
   return {
     text: adaptedText,
