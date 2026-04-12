@@ -15,6 +15,7 @@ import {
 import { toVoiceState, type BobbyBrainReply, type ConversationState, type PendingNarration } from "@/lib/bobby/types";
 import { useSessionTracker } from "./useSessionTracker";
 import { useSmartSTT } from "./useSmartSTT";
+import { useWakeWord } from "./useWakeWord";
 
 interface UseBobbyVoiceCoreOptions {
   childName: string;
@@ -98,6 +99,7 @@ export function useBobbyVoiceCore({
   const abortRef = useRef<AbortController | null>(null);
   const handledNarrationIdRef = useRef<string | null>(null);
   const sessionOpenRef = useRef(false);
+  const wakeWordArmedRef = useRef(false);
 
   const { startSession, addMessage, endSession, sessionIdRef } = useSessionTracker(childName, childAge);
 
