@@ -1095,7 +1095,143 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
     },
   },
 
-  // Context-aware responses for YES/NO based on memory handled in assembleResponse
+  SANTE: {
+    default: {
+      empathy: [
+        "Oh mince, ça ne doit pas être agréable 😔",
+        "Aïe… Bobby est avec toi 💛",
+        "Oh non, pas cool…",
+      ],
+      response: [
+        "Tu devrais le dire à un adulte pour qu'il t'aide 💛",
+        "C'est important d'écouter son corps.",
+        "Un adulte pourra t'aider à te sentir mieux.",
+      ],
+      opening: [
+        "Tu sais depuis quand ça te fait mal ?",
+        "Tu en as parlé à maman ou papa ?",
+        "Tu veux te reposer un peu ?",
+      ],
+    },
+  },
+
+  PERTE: {
+    default: {
+      empathy: [
+        "Oh non, ça doit être vraiment triste 😔",
+        "C'est dur de perdre quelque chose qu'on aime…",
+        "Ça fait de la peine…",
+      ],
+      response: [
+        "Ce qui comptait pour toi compte aussi pour Bobby 💛",
+        "Les objets qu'on aime ont une place spéciale dans notre cœur.",
+        "Parfois on retrouve les choses quand on s'y attend le moins.",
+      ],
+      opening: [
+        "Tu veux qu'on cherche une idée pour le retrouver ?",
+        "Tu veux me raconter ce que c'était ?",
+        "C'était quoi de spécial pour toi ?",
+      ],
+    },
+  },
+
+  REVE_AVENIR: {
+    default: {
+      empathy: [
+        "C'est un rêve incroyable ! 🚀",
+        "Wow, quel beau projet ! 🌟",
+        "Bobby adore tes rêves !",
+      ],
+      response: [
+        "Tu as déjà beaucoup d'imagination et de motivation 💛",
+        "Les grands rêves commencent comme ça !",
+        "Bobby croit en toi à fond ! 💪",
+      ],
+      opening: [
+        "Qu'est-ce qui te plaît le plus dans ce rêve ?",
+        "Tu ferais quoi en premier ?",
+        "C'est quoi qui t'a donné cette idée ?",
+      ],
+    },
+  },
+
+  ABANDON: {
+    default: {
+      empathy: [
+        "Quand c'est difficile, on peut avoir envie d'abandonner 😔",
+        "Je comprends que tu sois découragé…",
+        "C'est dur en ce moment, hein ?",
+      ],
+      response: [
+        "Mais tu es capable, même si tu ne le sens pas maintenant 💛",
+        "Chaque petit pas compte, même les tout petits.",
+        "Les moments difficiles font partie du chemin — tu es courageux d'être allé aussi loin 💪",
+      ],
+      opening: [
+        "Qu'est-ce qui te bloque en ce moment ?",
+        "Tu veux qu'on découpe le problème en petits morceaux ?",
+        "Et si on faisait une pause avant de réessayer ?",
+      ],
+    },
+  },
+
+  EXCITATION: {
+    default: {
+      empathy: [
+        "On dirait que tu débordes d'énergie ! 😄",
+        "Woohoo ! Tu es super excité !",
+        "Ça pétille ! 🎉",
+      ],
+      response: [
+        "C'est génial de ressentir ça 💛",
+        "Bobby adore te voir aussi enthousiaste !",
+        "L'excitation, c'est le meilleur carburant !",
+      ],
+      opening: [
+        "Qu'est-ce qui te rend aussi excité ?",
+        "Raconte-moi tout ! 😄",
+        "C'est pour quand ?",
+      ],
+    },
+  },
+
+  AMOUREUX: {
+    default: {
+      empathy: [
+        "Oh, c'est une belle émotion 💛",
+        "Ah, l'amour ! 😊",
+      ],
+      response: [
+        "C'est normal de ressentir des papillons dans le ventre.",
+        "L'amour c'est un sentiment magnifique.",
+      ],
+      opening: [
+        "Ça fait quoi dans ton cœur quand tu penses à cette personne ?",
+        "Tu veux m'en parler ?",
+      ],
+    },
+  },
+
+  MENSONGE: {
+    default: {
+      empathy: [
+        "Merci d'être honnête avec moi 💛",
+        "C'est courageux de le dire.",
+      ],
+      response: [
+        "Mentir peut arriver, mais on peut toujours réparer 😔",
+        "L'important c'est que tu reconnais ce qui s'est passé.",
+        "Dire la vérité, même après, c'est déjà un acte de courage.",
+      ],
+      opening: [
+        "Tu veux me dire pourquoi tu l'as fait ?",
+        "Tu penses que tu pourrais en parler à la personne concernée ?",
+        "Comment tu te sens maintenant ?",
+      ],
+    },
+  },
+
+
   QUESTION_SIMPLE: {
     default: {
       empathy: ["Hmm 🤔"],
