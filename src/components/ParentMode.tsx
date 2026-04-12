@@ -1919,99 +1919,179 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   // RENDER: SESSIONS LIST (grouped by day)
   // ═══════════════════════════════════════════════════════════════
 
-  const renderSessionsList = () => (
-    <div className="p-4 space-y-3">
-      {/* v4.2: Search bar */}
-      <div className="relative">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <input
-          type="text"
-          value={sessionSearch}
-          onChange={e => setSessionSearch(e.target.value)}
-          placeholder="Rechercher par sujet, mot-clé…"
-          className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-muted text-[13px] text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all"
-        />
-      </div>
+  const renderSessionsList = () => {
+    // Build daily summaries
+    const dailySummaries = groupedSessions.map(group => {
+      const daySessions = group.sessions;
+      const dayAnalyses = daySessions.map(s => analyses.find(a => a.session_id === s.id)).filter(Boolean) as Analysis[];
+      const totalMessages = daySessions.reduce((sum, s) => sum + s.message_count, 0);
+      const totalDuration = daySessions.reduce((sum, s) => sum + (s.duration_seconds || 0), 0);
+      const allEmotions = daySessions.flatMap(s => s.detected_emotions || []);
+      const topEmotions = [...new Set(allEmotions)].slice(0, 4);
+      const allTopics = daySessions.flatMap(s => s.topics || []);
+      const topTopics = [...new Set(allTopics)].slice(0, 5);
+      const allTags = daySessions.flatMap(s => s.tags || []);
+      const uniqueTags = [...new Set(allTags)];
+      const hasFavorite = daySessions.some(s => s.is_favorite);
+      const avgMood = dayAnalyses.length > 0
+        ? dayAnalyses.map(a => a.mood_score || "neutral").reduce((best, m) => {
+            const order = ["very_positive", "positive", "neutral", "negative", "very_negative"];
+            return order.indexOf(m) < order.indexOf(best) ? m : best;
+          }, "neutral" as string)
+        : "neutral";
+      const mood = moodLabels[avgMood] || moodLabels.neutral;
+      const daySummary = dayAnalyses.map(a => a.summary).filter(Boolean).join(" • ");
+      const avgSociability = dayAnalyses.length > 0 ? Math.round(dayAnalyses.reduce((s, a) => s + (a.sociability_score ?? 0), 0) / dayAnalyses.length) : null;
+      const avgCuriosity = dayAnalyses.length > 0 ? Math.round(dayAnalyses.reduce((s, a) => s + (a.curiosity_score ?? 0), 0) / dayAnalyses.length) : null;
+      const avgStability = dayAnalyses.length > 0 ? Math.round(dayAnalyses.reduce((s, a) => s + (a.emotional_stability_score ?? 0), 0) / dayAnalyses.length) : null;
 
-      {/* Filters row */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        <button onClick={() => { setTagFilter(null); setSessionFavFilter(false); }}
-          className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${!tagFilter && !sessionFavFilter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-          Tous
-        </button>
-        <button onClick={() => setSessionFavFilter(!sessionFavFilter)}
-          className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${sessionFavFilter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-          ⭐ Favoris
-        </button>
-        {Object.entries(tagLabels).map(([key, info]) => (
-          <button key={key} onClick={() => setTagFilter(tagFilter === key ? null : key)}
-            className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${tagFilter === key ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-            {info.emoji} {info.label}
+      return { ...group, totalMessages, totalDuration, topEmotions, topTopics, uniqueTags, hasFavorite, mood, daySummary, avgSociability, avgCuriosity, avgStability, dayAnalyses, daySessions };
+    });
+
+    return (
+      <div className="p-4 space-y-3">
+        {/* Search bar */}
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input type="text" value={sessionSearch} onChange={e => setSessionSearch(e.target.value)}
+            placeholder="Rechercher par sujet, mot-clé…"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-muted text-[13px] text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
+        </div>
+
+        {/* Filters */}
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          <button onClick={() => { setTagFilter(null); setSessionFavFilter(false); }}
+            className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${!tagFilter && !sessionFavFilter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+            Tous
           </button>
-        ))}
-      </div>
-
-      {loading ? (
-        <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
-      ) : groupedSessions.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground"><p className="text-sm">Aucune session{tagFilter || sessionSearch || sessionFavFilter ? " trouvée" : " enregistrée"}.</p></div>
-      ) : (
-        <div className="space-y-4">
-          {groupedSessions.map(group => (
-            <div key={group.day}>
-              <div className="flex items-center gap-2 mb-2">
-                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-                <h4 className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  {formatDayHeader(group.sessions[0].started_at)}
-                </h4>
-                <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                  {group.sessions.length}
-                </span>
-              </div>
-              <div className="space-y-2">
-                {group.sessions.map(session => {
-                  const hasAnalysis = analyses.some(a => a.session_id === session.id);
-                  const analysis = analyses.find(a => a.session_id === session.id);
-                  const mood = moodLabels[(analysis?.mood_score || "neutral")] || moodLabels.neutral;
-                  return (
-                    <div key={session.id} className="bg-card rounded-2xl p-4 hover:bg-muted/50 transition-all text-left relative">
-                      <button onClick={() => analyzeSession(session)} className="w-full text-left">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <div className="flex items-center gap-2">
-                            {session.is_favorite && <span className="text-xs">⭐</span>}
-                            <span className="text-[13px] font-semibold text-foreground">
-                              {new Date(session.started_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[11px] text-muted-foreground">{formatDuration(session.duration_seconds)}</span>
-                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[11px] text-muted-foreground">{session.message_count} msg</span>
-                          {hasAnalysis && <span className="text-sm">{mood.emoji}</span>}
-                          {session.tags?.map(tag => {
-                            const info = tagLabels[tag];
-                            return info ? (
-                              <span key={tag} className={`px-1.5 py-0.5 rounded-full text-[9px] font-medium ${info.color}`}>{info.emoji}</span>
-                            ) : null;
-                          })}
-                          {hasAnalysis && <Brain className="w-3 h-3 text-primary ml-auto" />}
-                        </div>
-                        {analysis?.summary && <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2">{analysis.summary}</p>}
-                        {session.parent_note && <p className="text-[10px] text-primary/70 mt-1 italic">📝 {session.parent_note}</p>}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+          <button onClick={() => setSessionFavFilter(!sessionFavFilter)}
+            className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${sessionFavFilter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+            ⭐ Favoris
+          </button>
+          {Object.entries(tagLabels).map(([key, info]) => (
+            <button key={key} onClick={() => setTagFilter(tagFilter === key ? null : key)}
+              className={`px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${tagFilter === key ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+              {info.emoji} {info.label}
+            </button>
           ))}
         </div>
-      )}
-    </div>
-  );
+
+        {loading ? (
+          <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+        ) : dailySummaries.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground"><p className="text-sm">Aucune session{tagFilter || sessionSearch || sessionFavFilter ? " trouvée" : " enregistrée"}.</p></div>
+        ) : (
+          <div className="space-y-3">
+            {dailySummaries.map(day => (
+              <div key={day.day} className="bg-card rounded-2xl p-4 border border-border/20 space-y-3">
+                {/* Day header */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-primary" />
+                    <h4 className="text-[13px] font-bold text-foreground">{formatDayHeader(day.daySessions[0].started_at)}</h4>
+                    {day.hasFavorite && <span className="text-xs">⭐</span>}
+                  </div>
+                  <span className="text-2xl">{day.mood.emoji}</span>
+                </div>
+
+                {/* KPIs row */}
+                <div className="flex gap-3">
+                  <div className="flex-1 bg-muted/50 rounded-xl p-2.5 text-center">
+                    <p className="text-[16px] font-bold text-foreground">{day.daySessions.length}</p>
+                    <p className="text-[9px] text-muted-foreground">session{day.daySessions.length > 1 ? "s" : ""}</p>
+                  </div>
+                  <div className="flex-1 bg-muted/50 rounded-xl p-2.5 text-center">
+                    <p className="text-[16px] font-bold text-foreground">{day.totalMessages}</p>
+                    <p className="text-[9px] text-muted-foreground">messages</p>
+                  </div>
+                  <div className="flex-1 bg-muted/50 rounded-xl p-2.5 text-center">
+                    <p className="text-[16px] font-bold text-foreground">{formatDuration(day.totalDuration)}</p>
+                    <p className="text-[9px] text-muted-foreground">durée</p>
+                  </div>
+                </div>
+
+                {/* Summary */}
+                {day.daySummary && (
+                  <p className="text-[11px] text-muted-foreground leading-relaxed bg-muted/30 rounded-xl px-3 py-2">
+                    💡 {day.daySummary}
+                  </p>
+                )}
+
+                {/* Scores mini */}
+                {day.avgSociability !== null && (
+                  <div className="flex gap-2">
+                    {[
+                      { label: "Sociabilité", score: day.avgSociability, emoji: "🤝" },
+                      { label: "Curiosité", score: day.avgCuriosity, emoji: "🔍" },
+                      { label: "Stabilité", score: day.avgStability, emoji: "⚖️" },
+                    ].map(s => (
+                      <div key={s.label} className="flex-1 flex items-center gap-1.5 bg-muted/30 rounded-lg px-2 py-1.5">
+                        <span className="text-[11px]">{s.emoji}</span>
+                        <div className="flex-1">
+                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div className="h-full rounded-full bg-primary/60 transition-all" style={{ width: `${s.score}%` }} />
+                          </div>
+                        </div>
+                        <span className="text-[9px] font-bold text-muted-foreground">{s.score}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Topics & emotions */}
+                {(day.topTopics.length > 0 || day.topEmotions.length > 0) && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {day.topTopics.map(t => (
+                      <span key={t} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] font-medium">#{t}</span>
+                    ))}
+                    {day.topEmotions.map(e => (
+                      <span key={e} className="px-2 py-0.5 rounded-full bg-accent/30 text-accent-foreground text-[9px] font-medium">{e}</span>
+                    ))}
+                    {day.uniqueTags.map(tag => {
+                      const info = tagLabels[tag];
+                      return info ? <span key={tag} className={`px-2 py-0.5 rounded-full text-[9px] font-medium ${info.color}`}>{info.emoji} {info.label}</span> : null;
+                    })}
+                  </div>
+                )}
+
+                {/* Expand to see individual sessions */}
+                <div className="border-t border-border/20 pt-2">
+                  <details className="group">
+                    <summary className="text-[11px] text-primary font-semibold cursor-pointer flex items-center gap-1 hover:underline">
+                      <ChevronRight className="w-3 h-3 transition-transform group-open:rotate-90" />
+                      Voir les {day.daySessions.length} session{day.daySessions.length > 1 ? "s" : ""} détaillée{day.daySessions.length > 1 ? "s" : ""}
+                    </summary>
+                    <div className="mt-2 space-y-1.5">
+                      {day.daySessions.map(session => {
+                        const analysis = analyses.find(a => a.session_id === session.id);
+                        const sMood = moodLabels[(analysis?.mood_score || "neutral")] || moodLabels.neutral;
+                        return (
+                          <button key={session.id} onClick={() => analyzeSession(session)}
+                            className="w-full text-left bg-muted/30 rounded-xl p-3 hover:bg-muted/60 transition-all flex items-center gap-3">
+                            <span className="text-[13px]">{sMood.emoji}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[12px] font-semibold text-foreground">
+                                  {new Date(session.started_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground">{formatDuration(session.duration_seconds)} • {session.message_count} msg</span>
+                              </div>
+                              {analysis?.summary && <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{analysis.summary}</p>}
+                            </div>
+                            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </details>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // ═══════════════════════════════════════════════════════════════
   // RENDER: PROFIL
