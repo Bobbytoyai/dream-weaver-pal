@@ -44,6 +44,7 @@ export default function AdminDetailDialog({ item, onClose, onSave, onDelete, onD
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [aiTheme, setAiTheme] = useState("");
 
   useEffect(() => {
     if (!item) return;
@@ -51,6 +52,7 @@ export default function AdminDetailDialog({ item, onClose, onSave, onDelete, onD
     item.fields.forEach(f => { v[f.key] = f.value; });
     setValues(v);
     setDirty(false);
+    setAiTheme("");
   }, [item]);
 
   if (!item) return null;
@@ -60,7 +62,7 @@ export default function AdminDetailDialog({ item, onClose, onSave, onDelete, onD
   const handleGenerate = async () => {
     setGenerating(true);
     try {
-      const context = values["theme"] || values["category"] || values["tags"]?.join(", ") || "";
+      const context = aiTheme.trim() || values["theme"] || values["category"] || values["tags"]?.join(", ") || "";
       const { data, error } = await supabase.functions.invoke("generate-content", {
         body: { type: item.type, context },
       });
