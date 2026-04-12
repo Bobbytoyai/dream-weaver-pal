@@ -136,13 +136,23 @@ function getPriorityPhrases(childName: string): string[] {
   ];
 }
 
-// ─── Fetch TTS audio (raw, for caching) — uses Piper TTS locally ───
+// ─── Fetch TTS audio (raw, for caching) — uses ElevenLabs ───
 async function fetchRawTTS(text: string, voiceProfile: VoiceProfile): Promise<ArrayBuffer> {
-  // Import piperSpeak dynamically to avoid circular deps
-  const { piperSpeak } = await import("./piperTTS");
-  const blobUrl = await piperSpeak(text, voiceProfile);
-  const response = await fetch(blobUrl);
-  URL.revokeObjectURL(blobUrl);
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (!supabaseUrl || !supabaseKey) throw new Error("Missing Supabase config");
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/elevenlabs-tts`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: supabaseKey,
+      Authorization: `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify({ text, voiceProfile }),
+  });
+
+  if (!response.ok) throw new Error(`ElevenLabs TTS failed: ${response.status}`);
   return response.arrayBuffer();
 }
 
