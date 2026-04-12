@@ -131,6 +131,7 @@ export type LocalIntent =
   | "RETRAIT" | "PEUR_ABANDON" | "PEUR_ECHEC" | "AVERSION" | "PEOPLE_PLEASING"
   | "CURIOSITE" | "CREATION" | "IDENTITE_PEUR" | "MAUVAIS_COMPORTEMENT"
   | "STRESS" | "PARTAGE_QUOTIDIEN" | "RESISTANCE" | "ENVIE"
+  | "QUESTION_ABSURDE" | "QUESTION_EXISTENTIELLE"
   // Catch-all
   | "GENERAL";
 
@@ -343,10 +344,16 @@ const INTENT_RULES: IntentRule[] = [
     /aventure|pirate|trésor|mission|super-héros|chevalier|magie|ninja/i,
   ]},
   { intent: "IMAGINATION", priority: 72, patterns: [
-    /imagine|si on|et si|on invente|on crée|monde imaginaire|faire semblant/i,
+    /imagine|si on|et si|on invente|on crée|monde imaginaire|faire semblant|je peux voler|je peux être|devenir un dinosaure|parler aux animaux|battre le vent|invisible vraiment|créer un monde/i,
+  ]},
+  { intent: "QUESTION_ABSURDE", priority: 68, patterns: [
+    /pourquoi les poules|pourquoi l'eau mouille|nuages.*coton|si je mange beaucoup|lune.*me suit|si je saute.*voler|si je cours.*vent/i,
+  ]},
+  { intent: "QUESTION_EXISTENTIELLE", priority: 66, patterns: [
+    /pourquoi le temps passe|pourquoi j'ai des émotions|pourquoi on existe|c'est quoi la vie|pourquoi on meurt|pourquoi on respire|pourquoi on doit dormir/i,
   ]},
   { intent: "APPRENDRE", priority: 70, patterns: [
-    /apprendre|c'est quoi|pourquoi|comment ça marche|explique|sais-tu|tu connais/i,
+    /apprendre|c'est quoi|comment ça marche|explique|sais-tu|tu connais|pourquoi le ciel|pourquoi les poissons|je veux savoir tout/i,
   ]},
   { intent: "CHANSON", priority: 72, patterns: [
     /chanson|chante|chanter|fredonne|musique/i,
