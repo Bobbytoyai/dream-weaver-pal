@@ -374,7 +374,7 @@ const Admin = () => {
       jeux: totalGameItems,
       qa: QA_DATABASE.length,
       blagues: BLAGUES.length,
-      histoires: HISTOIRES.length,
+      histoires: HISTOIRES.length + cloudStories.length,
       chansons: CHANSONS.length,
       cerveau: "16",
       cloud: entries.length,
