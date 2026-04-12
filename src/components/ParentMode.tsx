@@ -3146,7 +3146,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         case "activites": return (
           <ContentCategories
             childName={childName}
-            onSelectCategory={() => {}}
+            onSelectCategory={(sub) => toast.info(`L'activité "${sub}" sera lancée depuis le mode enfant 🎮`)}
             onBack={() => setActiveTab("home")}
             voiceProfile={settings.voiceType || "female"}
           />
