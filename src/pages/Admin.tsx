@@ -1189,6 +1189,41 @@ const Admin = () => {
             </div>
           </div>
 
+          {/* Emotions grid */}
+          <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+            <h3 className="text-white/70 text-xs font-semibold mb-3 uppercase tracking-wider">🎭 États émotionnels ({BOBBY_EMOTIONS.length})</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {BOBBY_EMOTIONS.map(e => (
+                <div key={e.state} className="bg-white/5 rounded-xl p-3 border border-white/10">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-xl">{e.emoji}</span>
+                    <span className="text-xs font-bold text-white/80 uppercase">{e.state}</span>
+                  </div>
+                  <p className="text-[11px] text-white/50 mb-1">{e.desc}</p>
+                  <p className="text-[10px] text-white/30">🎯 {e.triggers}</p>
+                  <p className="text-[10px] text-white/25 mt-0.5">👁 {e.response}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Emotion triggers QA */}
+          <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+            <h3 className="text-white/70 text-xs font-semibold mb-3 uppercase tracking-wider">💬 Réponses émotionnelles ({EMOTION_TRIGGERS_QA.length})</h3>
+            <div className="space-y-2">
+              {EMOTION_TRIGGERS_QA.map((eq, i) => (
+                <div key={i} className="bg-white/5 rounded-xl p-3 border border-white/10">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-semibold">{eq.emotion}</span>
+                  </div>
+                  <p className="text-[10px] text-white/40">Déclencheurs: {eq.triggers.join(", ")}</p>
+                  <p className="text-[11px] text-white/60 mt-1">→ {eq.response}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Personality sections */}
           {sections.map((section, idx) => (
             <div key={idx} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
               <h3 className="text-white/70 text-xs font-semibold mb-3 uppercase tracking-wider">{section.title}</h3>
