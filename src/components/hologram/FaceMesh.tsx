@@ -162,7 +162,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   // Eyelid — match background
   const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(230, 55%, 72%)"), transparent: false, opacity: 1.0,
+    color: new THREE.Color("hsl(240, 40%, 18%)"), transparent: false, opacity: 1.0,
     depthWrite: true,
   }), []);
 
