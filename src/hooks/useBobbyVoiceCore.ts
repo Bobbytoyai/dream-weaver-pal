@@ -100,6 +100,8 @@ export function useBobbyVoiceCore({
   const listenTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const lastSpeechEndRef = useRef(0);
+  // Track ALL recent Bobby messages for anti-echo (not just the last one)
+  const recentBobbyMessagesRef = useRef<string[]>([]);
   const handledNarrationIdRef = useRef<string | null>(null);
   const sessionOpenRef = useRef(false);
   const wakeWordArmedRef = useRef(false);
