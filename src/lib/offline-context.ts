@@ -28,6 +28,8 @@ interface ConversationContext {
   mood: Mood;
   interactionCount: number;
   lastResponses: string[];
+  lastBobbyResponse: string;
+  lastResponseTime: number;
   history: ConversationTurn[];
   mentionedTopics: Set<string>;
   childPreferences: Record<string, number>;
@@ -43,6 +45,8 @@ export const context: ConversationContext = {
   mood: "neutral",
   interactionCount: 0,
   lastResponses: [],
+  lastBobbyResponse: "",
+  lastResponseTime: 0,
   history: [],
   mentionedTopics: new Set(),
   childPreferences: {},
@@ -84,6 +88,10 @@ export function updateContext(intent: OfflineIntent, topic: string, response: st
   context.lastResponses.push(response);
   if (context.lastResponses.length > 5) context.lastResponses.shift();
 
+  // Track for learning loop
+  context.lastBobbyResponse = response;
+  context.lastResponseTime = Date.now();
+
   context.history.push(
     { role: "user", text: topic, intent, topic, timestamp: Date.now() },
     { role: "bobby", text: response, intent, topic, timestamp: Date.now() },
@@ -122,6 +130,8 @@ export function resetConversationContext() {
   context.mood = "neutral";
   context.interactionCount = 0;
   context.lastResponses = [];
+  context.lastBobbyResponse = "";
+  context.lastResponseTime = 0;
   context.history = [];
   context.mentionedTopics.clear();
   context.childPreferences = {};

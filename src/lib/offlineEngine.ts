@@ -62,7 +62,7 @@ import type { MiniGameType } from "./offline-stories";
 import { context, updateContext, detectMoodFromText, pickRandom, personalize, handleFollowUpAnswer, handleContextualContinuation, handleConversationalContext, buildContextualPrefix, getFollowUp } from "./offline-context";
 import { BOBBY_INTERACTIONS } from "./bobby_interactions_10k";
 import { adaptiveEngine, type AdaptiveContext } from "./adaptiveEngine";
-import { findMultiResponse, selectBestResponse, recordInput, recordResponse, updateEngagement, setEmotionalState, selectNonRepetitiveResponse } from "./responseSelector";
+import { findMultiResponse, selectBestResponse, recordInput, recordResponse, updateEngagement, setEmotionalState, selectNonRepetitiveResponse, recordIntent, recordInteraction, boostResponseScore, penalizeResponseScore, getConversationalRebond, getDominantEmotion } from "./responseSelector";
 import { isScenarioActive, tryStartScenario, handleScenarioStep, resetScenario } from "./scenarioEngine";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -86,6 +86,16 @@ export function getOfflineResponse(
 
   // Record input in behavioral memory
   recordInput(text);
+
+  // Learning loop: if child responds quickly after Bobby's last message, boost it
+  if (context.lastBobbyResponse && context.interactionCount > 1) {
+    const timeSinceLast = Date.now() - (context.lastResponseTime || 0);
+    if (timeSinceLast < 10000) { // replied within 10s → good engagement
+      boostResponseScore(context.lastBobbyResponse, 2);
+    } else if (timeSinceLast > 60000) { // took > 60s → low engagement
+      penalizeResponseScore(context.lastBobbyResponse, 1);
+    }
+  }
 
   // Update mood from text
   const detectedMood = detectMoodFromText(text);
@@ -192,9 +202,10 @@ export function getOfflineResponse(
       const finalText = personalize(selected.text, childName);
       const intent = detectOfflineIntent(text);
       recordResponse(finalText, multiMatch.category, selected.type);
+      recordIntent(intent);
+      recordInteraction(text, finalText, multiMatch.emotion);
       updateEngagement(selected.energy === "high" ? 5 : selected.energy === "medium" ? 2 : -1);
       updateContext(intent, text, finalText);
-      // Try to activate a scenario for follow-up conversations
       tryStartScenario(text, childAge);
       return { text: finalText, intent, isOffline: true };
     }

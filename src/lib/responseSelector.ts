@@ -1,6 +1,7 @@
 /**
- * Bobby AI — Smart Response Selector v1.0
+ * Bobby AI — Smart Response Selector v2.0
  * Anti-repetition + behavioral memory + energy-based selection
+ * + emotion history + confidence tracking + learning loop + conversational rebond
  */
 
 // ─── Types ──────────────────────────────────────────────
@@ -24,23 +25,36 @@ export interface MultiResponseEntry {
 export interface BehavioralMemory {
   lastInputs: string[];
   lastResponseTexts: string[];
-  favoriteTopics: Record<string, number>;   // topic → interaction count
-  preferredTypes: Record<string, number>;    // response type → engagement count
+  lastIntents: string[];                    // track last 20 intents
+  favoriteTopics: Record<string, number>;
+  preferredTypes: Record<string, number>;
   emotionalState: string;
-  engagementLevel: number;                   // 0-100
+  emotionHistory: string[];                 // last 20 detected emotions
+  engagementLevel: number;                  // 0-100
+  confidenceLevel: number;                  // 0-100 — child confidence score
+  responseScores: Record<string, number>;   // learning loop: response text hash → effectiveness score
+  topicsHistory: string[];                  // all discussed topics for rebond
+  lastInteractions: { input: string; response: string; emotion: string; timestamp: number }[];
 }
 
 // ─── Singleton Memory ───────────────────────────────────
 const memory: BehavioralMemory = {
   lastInputs: [],
   lastResponseTexts: [],
+  lastIntents: [],
   favoriteTopics: {},
   preferredTypes: {},
   emotionalState: "neutral",
+  emotionHistory: [],
   engagementLevel: 50,
+  confidenceLevel: 50,
+  responseScores: {},
+  topicsHistory: [],
+  lastInteractions: [],
 };
 
-const MAX_HISTORY = 15;
+const MAX_HISTORY = 20;
+const MAX_INTERACTIONS = 50;
 
 // ─── Public API ─────────────────────────────────────────
 
@@ -51,10 +65,16 @@ export function getMemory(): Readonly<BehavioralMemory> {
 export function resetMemory(): void {
   memory.lastInputs = [];
   memory.lastResponseTexts = [];
+  memory.lastIntents = [];
   memory.favoriteTopics = {};
   memory.preferredTypes = {};
   memory.emotionalState = "neutral";
+  memory.emotionHistory = [];
   memory.engagementLevel = 50;
+  memory.confidenceLevel = 50;
+  memory.responseScores = {};
+  memory.topicsHistory = [];
+  memory.lastInteractions = [];
 }
 
 /** Record that the child said something */
@@ -70,10 +90,41 @@ export function recordResponse(text: string, category?: string, type?: string): 
 
   if (category) {
     memory.favoriteTopics[category] = (memory.favoriteTopics[category] || 0) + 1;
+    if (!memory.topicsHistory.includes(category)) {
+      memory.topicsHistory.push(category);
+      if (memory.topicsHistory.length > 30) memory.topicsHistory.shift();
+    }
   }
   if (type) {
     memory.preferredTypes[type] = (memory.preferredTypes[type] || 0) + 1;
   }
+}
+
+/** Record intent for anti-repetition */
+export function recordIntent(intent: string): void {
+  memory.lastIntents.push(intent);
+  if (memory.lastIntents.length > MAX_HISTORY) memory.lastIntents.shift();
+}
+
+/** Record emotion detection */
+export function recordEmotion(emotion: string): void {
+  memory.emotionHistory.push(emotion);
+  if (memory.emotionHistory.length > MAX_HISTORY) memory.emotionHistory.shift();
+
+  // Adjust confidence based on emotions
+  const negativeEmotions = ["tristesse", "peur", "colere", "detresse", "honte", "danger"];
+  const positiveEmotions = ["joie", "excitation", "confiance"];
+  if (negativeEmotions.includes(emotion)) {
+    memory.confidenceLevel = Math.max(0, memory.confidenceLevel - 3);
+  } else if (positiveEmotions.includes(emotion)) {
+    memory.confidenceLevel = Math.min(100, memory.confidenceLevel + 2);
+  }
+}
+
+/** Record full interaction for memory-based rebond */
+export function recordInteraction(input: string, response: string, emotion: string): void {
+  memory.lastInteractions.push({ input, response, emotion, timestamp: Date.now() });
+  if (memory.lastInteractions.length > MAX_INTERACTIONS) memory.lastInteractions.shift();
 }
 
 /** Update engagement level based on child behavior */
@@ -83,24 +134,124 @@ export function updateEngagement(delta: number): void {
 
 export function setEmotionalState(emotion: string): void {
   memory.emotionalState = emotion;
+  recordEmotion(emotion);
 }
 
-// ─── Anti-Repetition Check ──────────────────────────────
+// ─── Learning Loop ──────────────────────────────────────
+// After each interaction, boost or decrease response effectiveness scores
+
+function hashResponse(text: string): string {
+  // Simple hash for tracking
+  return text.slice(0, 60).toLowerCase().replace(/\s+/g, "_");
+}
+
+/** Boost a response that got engagement (child replied quickly / positively) */
+export function boostResponseScore(responseText: string, delta = 1): void {
+  const key = hashResponse(responseText);
+  memory.responseScores[key] = (memory.responseScores[key] || 0) + delta;
+}
+
+/** Decrease a response score (child ignored or changed topic) */
+export function penalizeResponseScore(responseText: string, delta = 1): void {
+  const key = hashResponse(responseText);
+  memory.responseScores[key] = (memory.responseScores[key] || 0) - delta;
+}
+
+function getResponseScore(text: string): number {
+  return memory.responseScores[hashResponse(text)] || 0;
+}
+
+// ─── Conversational Rebond (Memory-Based) ───────────────
+
+/** Generate a memory-based rebond to re-engage the child */
+export function getConversationalRebond(childName?: string): string | null {
+  if (memory.topicsHistory.length === 0) return null;
+
+  const topicRebonds: Record<string, string[]> = {
+    jeux: [
+      `Tu voulais rejouer tout à l'heure 😄 on y va ?`,
+      `On avait bien rigolé avec le jeu, tu veux recommencer ?`,
+    ],
+    peurs: [
+      `Tu te sens mieux par rapport à ce qui te faisait peur ? 💛`,
+    ],
+    ecole: [
+      `Comment ça se passe à l'école en ce moment ?`,
+    ],
+    famille: [
+      `Tu veux me reparler de ta famille ?`,
+    ],
+    curiosite: [
+      `Tu avais une question super intéressante tout à l'heure 😄`,
+    ],
+    emotions: [
+      `Comment tu te sens maintenant ? 💛`,
+    ],
+    imagination: [
+      `Tu veux qu'on continue notre histoire imaginaire ? 🚀`,
+    ],
+    animaux: [
+      `Tu m'avais dit que tu aimais les animaux 🐾 tu veux en parler ?`,
+    ],
+  };
+
+  // Pick from recent topics
+  const recentTopics = memory.topicsHistory.slice(-5);
+  for (const topic of recentTopics.reverse()) {
+    const rebonds = topicRebonds[topic];
+    if (rebonds) {
+      const fresh = rebonds.filter(r => !isRecentlyUsed(r));
+      if (fresh.length > 0) {
+        let text = fresh[Math.floor(Math.random() * fresh.length)];
+        if (childName && !text.includes(childName) && Math.random() > 0.5) {
+          text = `${childName}, ${text.charAt(0).toLowerCase() + text.slice(1)}`;
+        }
+        return text;
+      }
+    }
+  }
+  return null;
+}
+
+// ─── Dominant Emotion Detection ─────────────────────────
+
+/** Returns the dominant recent emotion for tone adaptation */
+export function getDominantEmotion(): string {
+  if (memory.emotionHistory.length < 3) return "neutral";
+  const recent = memory.emotionHistory.slice(-5);
+  const counts: Record<string, number> = {};
+  for (const e of recent) counts[e] = (counts[e] || 0) + 1;
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  return sorted[0]?.[0] ?? "neutral";
+}
+
+// ─── Anti-Repetition Check (Enhanced) ───────────────────
 
 function isRecentlyUsed(text: string): boolean {
   const normalized = text.toLowerCase().trim();
   return memory.lastResponseTexts.some(r => {
     const rNorm = r.toLowerCase().trim();
-    // Exact match or very similar (>85% overlap)
+    // Exact match
     if (rNorm === normalized) return true;
-    // Check significant word overlap
+    // Word overlap > 80%
     const words1 = new Set(normalized.split(/\s+/).filter(w => w.length > 2));
     const words2 = new Set(rNorm.split(/\s+/).filter(w => w.length > 2));
     if (words1.size === 0 || words2.size === 0) return false;
     let overlap = 0;
     for (const w of words1) if (words2.has(w)) overlap++;
-    return overlap / Math.max(words1.size, words2.size) > 0.85;
+    if (overlap / Math.max(words1.size, words2.size) > 0.80) return true;
+    // Structural similarity: same sentence start (first 4 words)
+    const start1 = normalized.split(/\s+/).slice(0, 4).join(" ");
+    const start2 = rNorm.split(/\s+/).slice(0, 4).join(" ");
+    if (start1.length > 8 && start1 === start2) return true;
+    return false;
   });
+}
+
+/** Check if intent was used too recently (avoid same intent < 3 turns) */
+export function isIntentRepeated(intent: string): boolean {
+  const recent = memory.lastIntents.slice(-3);
+  return recent.filter(i => i === intent).length >= 2;
 }
 
 // ─── Energy Matching ────────────────────────────────────
@@ -127,36 +278,49 @@ export function selectBestResponse(responses: TaggedResponse[]): TaggedResponse 
 
   // Filter out recently used
   const fresh = responses.filter(r => !isRecentlyUsed(r.text));
-  const pool = fresh.length > 0 ? fresh : responses; // fallback to all if everything used
+  const pool = fresh.length > 0 ? fresh : responses;
 
   if (pool.length === 1) return pool[0];
 
   // Score each response
   const targetEnergy = getTargetEnergy();
   const preferredType = getPreferredType();
+  const dominantEmo = getDominantEmotion();
 
   const scored = pool.map(r => {
-    let score = Math.random() * 0.3; // random base for variety
+    let score = Math.random() * 0.2; // random base for variety
 
     // Energy match bonus
-    if (r.energy === targetEnergy) score += 0.4;
-    else if (
-      (r.energy === "medium") ||
-      (targetEnergy === "medium")
-    ) score += 0.2;
+    if (r.energy === targetEnergy) score += 0.3;
+    else if (r.energy === "medium" || targetEnergy === "medium") score += 0.15;
 
     // Type preference bonus
-    if (preferredType && r.type === preferredType) score += 0.2;
+    if (preferredType && r.type === preferredType) score += 0.15;
 
-    // Emotion-appropriate type bonus
-    if (memory.emotionalState === "sad" || memory.emotionalState === "scared") {
-      if (r.type === "soutien") score += 0.3;
+    // Emotion-appropriate type bonus (enhanced with dominant emotion)
+    const emoState = memory.emotionalState;
+    if (emoState === "sad" || emoState === "scared" || emoState === "tristesse" || emoState === "peur" || dominantEmo === "tristesse") {
+      if (r.type === "soutien") score += 0.35;
     }
-    if (memory.emotionalState === "happy" || memory.emotionalState === "excited") {
+    if (emoState === "happy" || emoState === "excited" || emoState === "joie" || dominantEmo === "joie") {
       if (r.type === "jeu" || r.type === "fun") score += 0.2;
     }
-    if (memory.emotionalState === "bored") {
+    if (emoState === "bored" || emoState === "ennui" || dominantEmo === "ennui") {
       if (r.type === "jeu" || r.type === "proposition") score += 0.3;
+    }
+
+    // Confidence-based adaptation: low confidence → favor soutien
+    if (memory.confidenceLevel < 30 && r.type === "soutien") score += 0.2;
+
+    // Learning loop: boost responses with high effectiveness scores
+    const learnScore = getResponseScore(r.text);
+    score += Math.max(-0.2, Math.min(0.3, learnScore * 0.05));
+
+    // Emotional variation: avoid same emotion type in consecutive responses
+    if (memory.emotionHistory.length >= 3) {
+      const lastEmos = memory.emotionHistory.slice(-3);
+      const allSame = lastEmos.every(e => e === lastEmos[0]);
+      if (allSame && r.type !== "question") score += 0.1; // favor topic change
     }
 
     return { response: r, score };
@@ -1482,11 +1646,52 @@ export const BOBBY_MULTI_RESPONSES: MultiResponseEntry[] = [
   },
 ];
 
-// ─── Multi-Response Matcher ─────────────────────────────
+// ─── DETRESSE Priority Keywords ─────────────────────────
+
+const DETRESSE_KEYWORDS = [
+  "mourir", "disparaître", "me faire mal", "personne m'aime",
+  "je veux mourir", "je veux disparaître", "je veux me faire mal",
+  "me tuer", "plus envie de vivre", "je veux plus être là",
+  "je suis inutile", "personne ne m'aime",
+];
+
+function isDetresseInput(text: string): boolean {
+  const lower = text.toLowerCase();
+  return DETRESSE_KEYWORDS.some(kw => lower.includes(kw));
+}
+
+// ─── Multi-Response Matcher (with DETRESSE priority) ────
 
 export function findMultiResponse(userInput: string): MultiResponseEntry | null {
   const normalized = userInput.toLowerCase().trim();
   if (!normalized || normalized.length < 2) return null;
+
+  // 🚨 PRIORITÉ ABSOLUE: DÉTRESSE → route vers securite_critique
+  if (isDetresseInput(normalized)) {
+    const criticalEntries = BOBBY_MULTI_RESPONSES.filter(
+      e => e.category === "securite_critique" || e.category === "securite"
+    );
+    // Find best match among critical entries
+    let bestCritical: MultiResponseEntry | null = null;
+    let bestScore = 0;
+    for (const entry of criticalEntries) {
+      const entryNorm = entry.input.toLowerCase().trim();
+      if (normalized === entryNorm) return entry;
+      const userWords = normalized.split(/\s+/).filter(w => w.length > 1);
+      const entryWords = entryNorm.split(/\s+/).filter(w => w.length > 1);
+      let overlap = 0;
+      for (const uw of userWords) {
+        for (const ew of entryWords) {
+          if (uw === ew || uw.includes(ew) || ew.includes(uw)) { overlap++; break; }
+        }
+      }
+      const score = entryWords.length > 0 ? overlap / entryWords.length : 0;
+      if (score > bestScore) { bestScore = score; bestCritical = entry; }
+    }
+    if (bestCritical) return bestCritical;
+    // Fallback: return first securite_critique entry
+    if (criticalEntries.length > 0) return criticalEntries[0];
+  }
 
   let bestMatch: MultiResponseEntry | null = null;
   let bestScore = 0;
@@ -1521,9 +1726,15 @@ export function findMultiResponse(userInput: string): MultiResponseEntry | null 
   return bestMatch;
 }
 
-// ─── Proactive Relance ──────────────────────────────────
+// ─── Proactive Relance (with Conversational Rebond) ─────
 
-export function getProactiveRelance(): string {
+export function getProactiveRelance(childName?: string): string {
+  // Try conversational rebond first (~40% of time for natural feel)
+  if (Math.random() < 0.4) {
+    const rebond = getConversationalRebond(childName);
+    if (rebond) return rebond;
+  }
+
   const silenceEntry = BOBBY_MULTI_RESPONSES.find(e => e.input === "__silence__");
   if (!silenceEntry) return "Tu es là ? 😊";
 
