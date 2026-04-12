@@ -291,31 +291,11 @@ export function useBobbyVoiceCore({
     }, 40_000);
 
     try {
-      // CRITICAL: Acquire mic stream DIRECTLY in the tap gesture handler
-      // to preserve the browser gesture chain (required on mobile Safari/Chrome).
-      // This MUST happen before any other async operation.
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      });
-      console.log("[BobbyVoiceCore] ✅ Mic acquired in gesture handler");
-
-      // Pass the pre-acquired stream to STT so it doesn't need to call getUserMedia again
-      await smartSTT.start(stream);
+      // Native SpeechRecognition manages its own mic — just start it
+      await smartSTT.start();
+      console.log("[BobbyVoiceCore] ✅ Native STT started");
     } catch (err: any) {
-      const errorName = err?.name || "";
-      if (errorName === "NotAllowedError") {
-        handleSttError("MIC_PERMISSION_DENIED");
-      } else if (errorName === "NotFoundError") {
-        handleSttError("MIC_NOT_FOUND");
-      } else if (errorName === "NotReadableError") {
-        handleSttError("MIC_IN_USE");
-      } else {
-        handleSttError("STT_START_FAILED");
-      }
+      handleSttError("STT_START_FAILED");
     }
   }, [clearSleepTimer, go, handleSttError, smartSTT, stopPlayback]);
 
