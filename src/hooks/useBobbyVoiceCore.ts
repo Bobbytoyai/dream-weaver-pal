@@ -302,15 +302,16 @@ export function useBobbyVoiceCore({
         return;
       }
 
-      // First timeout — Bobby relaunches the child
+      // First timeout — Bobby relaunches the child with interest-based question
       console.log("[BobbyVoiceCore] 60s silence — Bobby relaunches child");
-      const relaunches = [
+      const interestRelaunch = getInterestBasedRelaunch(childName);
+      const genericRelaunches = [
         `${childName}, tu es toujours là ? Dis-moi quelque chose !`,
         `Hé ${childName} ! On continue à discuter ? 😊`,
         `${childName}, Bobby t'attend ! Tu veux jouer ou parler ?`,
         `Tu es là ${childName} ? Raconte-moi un truc !`,
       ];
-      const text = relaunches[Math.floor(Math.random() * relaunches.length)];
+      const text = interestRelaunch || genericRelaunches[Math.floor(Math.random() * genericRelaunches.length)];
       const relaunchReply: BobbyBrainReply = {
         text,
         intent: "RELAUNCH",
