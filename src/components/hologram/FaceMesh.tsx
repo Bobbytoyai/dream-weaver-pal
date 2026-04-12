@@ -300,7 +300,6 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       const newTubeGeo = buildMouthTubeGeo(mc, mw, mr);
       const tubeObj = new THREE.Mesh(newTubeGeo, mouthMeshMat);
       mouthGroupRef.current.add(tubeObj);
-      mouthGroupRef.current.add(tubeObj);
       mouthLineObjRef.current = tubeObj;
     }
 
