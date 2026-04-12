@@ -382,6 +382,7 @@ export function useBobbyVoiceCore({
           childName,
           childAge,
           pendingNarration,
+          parentSettings,
         });
 
         await addMessage("assistant", reply.text, reply.emotion);
