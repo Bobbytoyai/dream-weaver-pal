@@ -260,21 +260,18 @@ const VoiceScreen = ({
               <span className="text-xs text-blue-600 font-bold">👆 Touche pour interrompre</span>
             </div>
           ) : sm.machineState === "SLEEP" ? (
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-100/50 backdrop-blur-sm animate-pulse">
-              <MicOff className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="text-xs text-indigo-500 font-medium">Mode veille</span>
-            </div>
           ) : null}
 
-          {/* Detailed mic/STT status indicator */}
-          <MicStatusIndicator
-            machineState={sm.machineState}
-            micArmed={sm.micArmed}
-            sttRunning={sm.sttIsRunning.current}
-            sttBackend={sm.sttBackend}
-            networkOffline={sm.networkOffline}
-            partialText={sm.partialText}
-          />
+          {sm.machineState !== "SLEEP" && (
+            <MicStatusIndicator
+              machineState={sm.machineState}
+              micArmed={sm.micArmed}
+              sttRunning={sm.sttIsRunning.current}
+              sttBackend={sm.sttBackend}
+              networkOffline={sm.networkOffline}
+              partialText={sm.partialText}
+            />
+          )}
         </div>
       </div>
 
