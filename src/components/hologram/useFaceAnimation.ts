@@ -511,7 +511,7 @@ export function useFaceAnimation(
     }
 
     // --- LERP ALL VALUES ---
-    const mouthSpeed = faceState === "speaking" ? baseSpeed * 7 : baseSpeed * 3;
+    const mouthSpeed = faceState === "speaking" ? baseSpeed * 10 : baseSpeed * 3;
 
     // v3.0: EYEBROW ANTICIPATION — eyebrows lead speech by ~50ms
     // Buffer the eyebrow target and use it slightly ahead of audio
