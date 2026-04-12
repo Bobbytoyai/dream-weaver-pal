@@ -1145,5 +1145,8 @@ export function useConversationStateMachine({
     handleParentMode,
     bobbyFaceEmotion,
     bobbyEmotionIntensity,
+    /** Expose STT running status and backend for mic indicator */
+    sttIsRunning: deepgramSTT.isRunning,
+    sttBackend: deepgramSTT.backend,
   };
 }

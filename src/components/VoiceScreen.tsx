@@ -5,6 +5,7 @@ import { getUnreadAlertCount } from "@/lib/offlineEngine";
 import { Settings, Camera, Mic, MicOff, Gamepad2 } from "lucide-react";
 import { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
+import { MicStatusIndicator } from "@/components/MicStatusIndicator";
 import {
   useConversationStateMachine,
   type ConversationState,
@@ -263,6 +264,16 @@ const VoiceScreen = ({
               <span className="text-xs text-indigo-500 font-medium">Mode veille</span>
             </div>
           ) : null}
+
+          {/* Detailed mic/STT status indicator */}
+          <MicStatusIndicator
+            machineState={sm.machineState}
+            micArmed={sm.micArmed}
+            sttRunning={sm.sttIsRunning.current}
+            sttBackend={sm.sttBackend}
+            networkOffline={sm.networkOffline}
+            partialText={sm.partialText}
+          />
         </div>
       </div>
 
