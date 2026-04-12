@@ -259,7 +259,6 @@ const VoiceScreen = ({
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100/60 backdrop-blur-sm">
               <span className="text-xs text-blue-600 font-bold">👆 Touche pour interrompre</span>
             </div>
-          ) : sm.machineState === "SLEEP" ? (
           ) : null}
 
           {sm.machineState !== "SLEEP" && (
