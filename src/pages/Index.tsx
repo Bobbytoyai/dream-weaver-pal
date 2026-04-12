@@ -61,16 +61,19 @@ const Index = () => {
   }, []);
 
   // Restore parent settings from memory on load
-  // BUT: always keep childName/childAge from localStorage (source of truth)
+  // CRITICAL: localStorage profile is the ONLY source of truth for childName/childAge
+  // The DB may contain stale names from old sessions — never trust it for the name.
   useEffect(() => {
     if (!memory?.preferences?.parentSettings) return;
     try {
       const saved = memory.preferences.parentSettings as Record<string, unknown>;
       const localProfile = loadProfile();
+      // Strip childName/childAge from DB settings — only use non-identity fields
+      const { childName: _dbName, childAge: _dbAge, ...safeSettings } = saved;
       setParentSettings((prev) => ({
         ...prev,
-        ...saved,
-        // localStorage profile always wins over DB-stored name/age
+        ...safeSettings,
+        // localStorage profile ALWAYS wins — never overwritten by DB
         childName: localProfile?.name ?? prev.childName,
         childAge: localProfile?.age ?? prev.childAge,
       }));
