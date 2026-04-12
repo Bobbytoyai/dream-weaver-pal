@@ -133,7 +133,7 @@ interface KBEntry {
 }
 
 // ─── Top-level brain sections shown as big square cards ─────────────
-type TopSection = "interactions" | "multiresponses" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons" | "store";
+type TopSection = "interactions" | "multiresponses" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons" | "store" | "expressions";
 
 // Counts are computed dynamically below in the component
 const TOP_SECTIONS_CONFIG: {
