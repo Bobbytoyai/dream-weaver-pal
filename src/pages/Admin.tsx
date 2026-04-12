@@ -277,6 +277,7 @@ const Admin = () => {
   const [storeItems, setStoreItems] = useState<StoreContentItem[]>([]);
   const [editingStoreItem, setEditingStoreItem] = useState<Partial<StoreContentItem> | null>(null);
   const [savingStoreItem, setSavingStoreItem] = useState(false);
+  const [liveInstallCounts, setLiveInstallCounts] = useState<Record<string, number>>({});
 
   // 10K interactions (lazy loaded)
   const [interactions, setInteractions] = useState<BobbyInteraction[] | null>(null);
