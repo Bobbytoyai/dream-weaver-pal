@@ -1987,15 +1987,16 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             className="w-full pl-9 pr-4 py-2 rounded-xl bg-muted text-[13px] text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
         </div>
 
-        {/* Category cards — small square colored cards on one row */}
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        {/* Category cards — toy style on one row */}
+        <div className="flex gap-2.5 overflow-x-auto pb-1">
           {categoryCards.map(card => (
             <button key={card.key} onClick={card.onClick}
-              className={`shrink-0 w-[72px] h-[72px] rounded-2xl bg-gradient-to-br ${card.bg} flex flex-col items-center justify-center gap-1 border-2 transition-all duration-200 active:scale-95 ${
-                card.active ? "border-primary shadow-md shadow-primary/20 scale-[1.03]" : "border-transparent hover:border-primary/20"
-              }`}>
-              <span className="text-xl">{card.emoji}</span>
-              <span className={`text-[9px] font-bold ${card.active ? "text-primary" : "text-foreground/70"}`}>{card.label}</span>
+              className={`shrink-0 w-[80px] h-[80px] rounded-3xl bg-gradient-to-br ${card.bg} flex flex-col items-center justify-center gap-1.5 border-2 transition-all duration-200 active:scale-90 ${
+                card.active ? "border-primary shadow-lg shadow-primary/25 scale-[1.05]" : "border-transparent hover:border-primary/20"
+              }`}
+              style={{ fontFamily: "'Nunito', sans-serif" }}>
+              <span className="text-2xl">{card.emoji}</span>
+              <span className={`text-[10px] font-extrabold leading-tight ${card.active ? "text-primary" : "text-foreground/70"}`}>{card.label}</span>
             </button>
           ))}
         </div>
