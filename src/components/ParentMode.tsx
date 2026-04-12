@@ -2613,6 +2613,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   // RENDER: CONFIDENTIALITÉ (merged: Sécurité + Données)
   // ═══════════════════════════════════════════════════════════════
 
+  const [confSection, setConfSection] = useState<"securite" | "donnees" | "rgpd" | null>(null);
+
   const renderConfidentialite = () => {
     const dataCategories = [
       { id: "conversations", emoji: "💬", label: "Conversations", desc: "Messages texte", count: sessions.reduce((s, x) => s + x.message_count, 0) },
@@ -2621,13 +2623,14 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       { id: "memories", emoji: "🧠", label: "Mémoire", desc: "Préférences", count: 1 },
     ];
 
-    return (
+    // ── Sub-section: Sécurité ──
+    if (confSection === "securite") return (
       <div className="p-4 space-y-3">
-        {/* ── PIN ── */}
+        <button onClick={() => setConfSection(null)} className="flex items-center gap-2 text-primary text-[13px] font-extrabold mb-1" style={{ fontFamily: "'Nunito', sans-serif" }}>
+          <ChevronLeft className="w-4 h-4" /> Confidentialité
+        </button>
         <Card title="Code PIN parental" icon={Lock}>
-          <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
-            Protège l'accès au Mode Parent avec un code à 4 chiffres
-          </p>
+          <p className="text-[10px] text-muted-foreground mb-3 leading-tight">Protège l'accès au Mode Parent avec un code à 4 chiffres</p>
           <div className="flex gap-2 items-center">
             <input type="password" maxLength={4} inputMode="numeric" pattern="[0-9]*"
               value={settings.parentPin}
@@ -2639,13 +2642,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             )}
           </div>
           {settings.parentPin.length === 4 && (
-            <button onClick={() => updateSetting("parentPin", "")} className="mt-2 text-[11px] text-destructive hover:underline">
-              Supprimer le code PIN
-            </button>
+            <button onClick={() => updateSetting("parentPin", "")} className="mt-2 text-[11px] text-destructive hover:underline">Supprimer le code PIN</button>
           )}
         </Card>
-
-        {/* ── Filtrage ── */}
         <Card title="Niveau de filtrage" icon={Shield}>
           <div className="space-y-2">
             {([
@@ -2653,9 +2652,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               ["strict", "🔒", "Strict", "Filtre renforcé, exclusivement positif"],
             ] as const).map(([val, emoji, label, desc]) => (
               <button key={val} onClick={() => updateSetting("contentFilter", val)}
-                className={`w-full p-3 rounded-xl text-left transition-all ${
-                  settings.contentFilter === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
-                }`}>
+                className={`w-full p-3 rounded-xl text-left transition-all ${settings.contentFilter === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"}`}>
                 <div className="flex items-center gap-3">
                   <span className="text-xl">{emoji}</span>
                   <div>
@@ -2667,8 +2664,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             ))}
           </div>
         </Card>
-
-        {/* ── Protections ── */}
         <Card title="Protections" icon={Shield}>
           <div className="space-y-1">
             <SettingRow icon={Shield} title="Mode ultra-safe" desc="Protection maximale activée">
@@ -2682,12 +2677,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             </SettingRow>
           </div>
         </Card>
-
-        {/* ── Mot de sécurité ── */}
         <Card title="Mot de sécurité" icon={AlertTriangle}>
-          <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
-            Si l'enfant dit ce mot, Bobby réagit immédiatement
-          </p>
+          <p className="text-[10px] text-muted-foreground mb-3 leading-tight">Si l'enfant dit ce mot, Bobby réagit immédiatement</p>
           <input type="text" value={settings.safeWord}
             onChange={(e) => updateSetting("safeWord", e.target.value.slice(0, 30))}
             placeholder="Ex: 'au secours', 'aide-moi'…"
@@ -2700,9 +2691,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 ["stop", "🛑", "Stop"],
               ] as const).map(([val, emoji, label]) => (
                 <button key={val} onClick={() => updateSetting("safeWordAction", val)}
-                  className={`p-3 rounded-xl text-center transition-all ${
-                    settings.safeWordAction === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
-                  }`}>
+                  className={`p-3 rounded-xl text-center transition-all ${settings.safeWordAction === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"}`}>
                   <span className="text-lg block">{emoji}</span>
                   <span className={`text-[10px] font-semibold ${settings.safeWordAction === val ? "text-primary" : "text-foreground"}`}>{label}</span>
                 </button>
@@ -2710,8 +2699,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             </div>
           )}
         </Card>
+      </div>
+    );
 
-        {/* ── Collecte ── */}
+    // ── Sub-section: Données ──
+    if (confSection === "donnees") return (
+      <div className="p-4 space-y-3">
+        <button onClick={() => setConfSection(null)} className="flex items-center gap-2 text-primary text-[13px] font-extrabold mb-1" style={{ fontFamily: "'Nunito', sans-serif" }}>
+          <ChevronLeft className="w-4 h-4" /> Confidentialité
+        </button>
         <Card title="Collecte de données" icon={Eye}>
           <div className="space-y-1">
             <SettingRow icon={Mic} title="Enregistrer les conversations" desc="Sauvegarde audio pour réécoute">
@@ -2722,8 +2718,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             </SettingRow>
           </div>
         </Card>
-
-        {/* ── Données stockées ── */}
         <Card title="Données stockées" icon={BarChart3}>
           <div className="grid grid-cols-2 gap-2">
             {dataCategories.map(cat => (
@@ -2738,8 +2732,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             ))}
           </div>
         </Card>
-
-        {/* ── Conservation ── */}
         <Card title="Conservation" icon={Calendar}>
           <div className="grid grid-cols-2 gap-2">
             {([
@@ -2749,17 +2741,56 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               ["forever", "♾️", "Indéfini"],
             ] as const).map(([val, emoji, label]) => (
               <button key={val} onClick={() => updateSetting("dataRetention", val)}
-                className={`p-3 rounded-xl text-center transition-all ${
-                  settings.dataRetention === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"
-                }`}>
+                className={`p-3 rounded-xl text-center transition-all ${settings.dataRetention === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"}`}>
                 <span className="text-xl block mb-1">{emoji}</span>
                 <span className={`text-[11px] font-semibold ${settings.dataRetention === val ? "text-primary" : "text-foreground"}`}>{label}</span>
               </button>
             ))}
           </div>
         </Card>
+        <Card title="Suppression sélective" icon={Trash2}>
+          <div className="space-y-2">
+            {[
+              { emoji: "🎙️", label: "Supprimer les audio", desc: "Garde les analyses", action: () => {
+                setConfirmDialog({ title: "Supprimer les enregistrements ?", description: "Tous les fichiers audio seront supprimés. Les analyses textuelles seront conservées.", confirmLabel: "Supprimer", variant: "danger" as const, onConfirm: () => {
+                  supabase.storage.from("conversation-audio").list().then(({ data }) => { if (data?.length) supabase.storage.from("conversation-audio").remove(data.map(f => f.name)); });
+                  setConfirmDialog(null);
+                }});
+              }},
+              { emoji: "📊", label: "Supprimer les analyses", desc: "Garde les sessions", action: () => {
+                setConfirmDialog({ title: "Supprimer les analyses ?", description: "Toutes les analyses IA seront supprimées.", confirmLabel: "Supprimer", variant: "danger" as const, onConfirm: () => {
+                  supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000").then(() => loadData());
+                  setConfirmDialog(null);
+                }});
+              }},
+              { emoji: "🧠", label: "Réinitialiser la mémoire", desc: "Bobby oublie les préférences", action: () => {
+                setConfirmDialog({ title: "Réinitialiser la mémoire ?", description: "Bobby oubliera toutes les préférences et intérêts.", confirmLabel: "Réinitialiser", variant: "warning" as const, onConfirm: () => {
+                  supabase.from("child_memories").delete().eq("child_name", childName).then(() => loadData());
+                  setConfirmDialog(null);
+                }});
+              }},
+            ].map(item => (
+              <button key={item.label} onClick={item.action}
+                className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-destructive/5 transition-all text-left">
+                <span className="text-lg">{item.emoji}</span>
+                <div className="flex-1">
+                  <h4 className="text-[12px] font-semibold text-foreground">{item.label}</h4>
+                  <p className="text-[9px] text-muted-foreground">{item.desc}</p>
+                </div>
+                <Trash2 className="w-4 h-4 text-destructive" />
+              </button>
+            ))}
+          </div>
+        </Card>
+      </div>
+    );
 
-        {/* ── Droits RGPD ── */}
+    // ── Sub-section: RGPD ──
+    if (confSection === "rgpd") return (
+      <div className="p-4 space-y-3">
+        <button onClick={() => setConfSection(null)} className="flex items-center gap-2 text-primary text-[13px] font-extrabold mb-1" style={{ fontFamily: "'Nunito', sans-serif" }}>
+          <ChevronLeft className="w-4 h-4" /> Confidentialité
+        </button>
         <Card title="Vos droits (RGPD)" icon={FileText}>
           <div className="grid grid-cols-2 gap-2">
             {([
@@ -2816,62 +2847,29 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             ))}
           </div>
         </Card>
+      </div>
+    );
 
-        {/* ── Suppression sélective ── */}
-        <Card title="Suppression sélective" icon={Trash2}>
-          <div className="space-y-2">
-            {[
-              { emoji: "🎙️", label: "Supprimer les audio", desc: "Garde les analyses", action: () => {
-                setConfirmDialog({
-                  title: "Supprimer les enregistrements ?",
-                  description: "Tous les fichiers audio seront supprimés. Les analyses textuelles seront conservées.",
-                  confirmLabel: "Supprimer",
-                  variant: "danger",
-                  onConfirm: () => {
-                    supabase.storage.from("conversation-audio").list().then(({ data }) => {
-                      if (data?.length) supabase.storage.from("conversation-audio").remove(data.map(f => f.name));
-                    });
-                    setConfirmDialog(null);
-                  },
-                });
-              }},
-              { emoji: "📊", label: "Supprimer les analyses", desc: "Garde les sessions", action: () => {
-                setConfirmDialog({
-                  title: "Supprimer les analyses ?",
-                  description: "Toutes les analyses IA seront supprimées. Les sessions et messages seront conservés.",
-                  confirmLabel: "Supprimer",
-                  variant: "danger",
-                  onConfirm: () => {
-                    supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000").then(() => loadData());
-                    setConfirmDialog(null);
-                  },
-                });
-              }},
-              { emoji: "🧠", label: "Réinitialiser la mémoire", desc: "Bobby oublie les préférences", action: () => {
-                setConfirmDialog({
-                  title: "Réinitialiser la mémoire ?",
-                  description: "Bobby oubliera toutes les préférences et intérêts de l'enfant qu'il a appris.",
-                  confirmLabel: "Réinitialiser",
-                  variant: "warning",
-                  onConfirm: () => {
-                    supabase.from("child_memories").delete().eq("child_name", childName).then(() => loadData());
-                    setConfirmDialog(null);
-                  },
-                });
-              }},
-            ].map(item => (
-              <button key={item.label} onClick={item.action}
-                className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-destructive/5 transition-all text-left">
-                <span className="text-lg">{item.emoji}</span>
-                <div className="flex-1">
-                  <h4 className="text-[12px] font-semibold text-foreground">{item.label}</h4>
-                  <p className="text-[9px] text-muted-foreground">{item.desc}</p>
-                </div>
-                <Trash2 className="w-4 h-4 text-destructive" />
-              </button>
-            ))}
-          </div>
-        </Card>
+    // ── Grid of cards ──
+    const confCards = [
+      { id: "securite" as const, emoji: "🛡️", label: "Sécurité", desc: "PIN, filtrage, protections", color: "from-red-400/20 to-orange-400/10" },
+      { id: "donnees" as const, emoji: "💾", label: "Données", desc: "Collecte, stockage, suppression", color: "from-blue-400/20 to-cyan-400/10" },
+      { id: "rgpd" as const, emoji: "📜", label: "RGPD", desc: "Accès, export, effacement", color: "from-emerald-400/20 to-green-400/10" },
+    ];
+
+    return (
+      <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
+        <h2 className="text-[16px] font-extrabold text-foreground">🔒 Confidentialité</h2>
+        <div className="grid grid-cols-2 gap-3">
+          {confCards.map(card => (
+            <button key={card.id} onClick={() => setConfSection(card.id)}
+              className={`bg-gradient-to-br ${card.color} rounded-2xl p-4 text-left border border-border/20 hover:border-primary/20 hover:shadow-lg transition-all active:scale-95`}>
+              <span className="text-3xl block mb-2">{card.emoji}</span>
+              <h3 className="text-[14px] font-extrabold text-foreground leading-tight">{card.label}</h3>
+              <p className="text-[10px] text-muted-foreground mt-1 leading-snug">{card.desc}</p>
+            </button>
+          ))}
+        </div>
       </div>
     );
   };
