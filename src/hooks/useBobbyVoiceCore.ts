@@ -230,6 +230,30 @@ export function useBobbyVoiceCore({
       return;
     }
 
+    // ─── Anti-echo: reject transcript if it matches Bobby's last response ───
+    const lastResp = lastAiResponse.toLowerCase().trim();
+    const incoming = trimmedText.toLowerCase();
+    // Check similarity: if >60% of words match Bobby's last response, it's echo
+    if (lastResp.length > 10) {
+      const lastWords = new Set(lastResp.split(/\s+/));
+      const incomingWords = incoming.split(/\s+/);
+      const matchCount = incomingWords.filter(w => lastWords.has(w)).length;
+      const similarity = matchCount / Math.max(incomingWords.length, 1);
+      if (similarity > 0.6) {
+        console.warn("[BobbyVoiceCore] 🔇 Anti-echo: rejected transcript (similarity:", similarity.toFixed(2), "):", trimmedText.slice(0, 50));
+        // Don't process, just restart listening
+        processingRef.current = false;
+        void startListeningRef.current();
+        return;
+      }
+    }
+
+    // ─── Reject if Bobby is currently speaking (STT leak) ───
+    if (machineRef.current === "SPEAKING") {
+      console.warn("[BobbyVoiceCore] 🔇 Rejected transcript during SPEAKING state");
+      return;
+    }
+
     if (processingRef.current) return;
     processingRef.current = true;
 
