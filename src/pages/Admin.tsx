@@ -22,6 +22,7 @@ import { BLAGUES } from "@/lib/bobby-content/blagues";
 import { HISTOIRES } from "@/lib/bobby-content/histoires";
 import { CHANSONS, CHANSON_CATEGORIES, type Chanson, type ChansonCategorie } from "@/lib/bobby-content/chansons";
 import { QA_DATABASE } from "@/lib/qa-database";
+import { BOBBY_MULTI_RESPONSES } from "@/lib/responseSelector";
 import {
   QUIZ_ANIMAUX, QUIZ_EDUCATIF, VRAI_FAUX, DEVINETTES,
   BLAGUES as GAME_BLAGUES,
@@ -37,7 +38,7 @@ import {
 
 const ACCESS_CODE = "bobby2026";
 
-// ─── 10K Interaction categories ─────────────────────────────────────
+// ─── 10K Interaction categories (matching actual data) ───────────────
 const INTERACTION_CATEGORIES: {
   id: string;
   label: string;
@@ -46,21 +47,24 @@ const INTERACTION_CATEGORIES: {
   bgColor: string;
   emoji: string;
 }[] = [
-  { id: "emotion", label: "Émotions", icon: Heart, color: "text-pink-400", bgColor: "bg-pink-500/20", emoji: "💛" },
-  { id: "famille", label: "Famille", icon: Home, color: "text-rose-400", bgColor: "bg-rose-500/20", emoji: "👨‍👩‍👧" },
-  { id: "animaux", label: "Animaux", icon: Dog, color: "text-amber-400", bgColor: "bg-amber-500/20", emoji: "🐾" },
+  { id: "emotions", label: "Émotions", icon: Heart, color: "text-pink-400", bgColor: "bg-pink-500/20", emoji: "💛" },
+  { id: "social", label: "Social", icon: Users, color: "text-rose-400", bgColor: "bg-rose-500/20", emoji: "👥" },
+  { id: "family", label: "Famille", icon: Home, color: "text-orange-400", bgColor: "bg-orange-500/20", emoji: "👨‍👩‍👧" },
+  { id: "animals", label: "Animaux", icon: Dog, color: "text-amber-400", bgColor: "bg-amber-500/20", emoji: "🐾" },
   { id: "nature", label: "Nature", icon: TreePine, color: "text-green-400", bgColor: "bg-green-500/20", emoji: "🌿" },
   { id: "sport", label: "Sport", icon: Dumbbell, color: "text-blue-400", bgColor: "bg-blue-500/20", emoji: "⚽" },
-  { id: "musique", label: "Musique", icon: Music, color: "text-indigo-400", bgColor: "bg-indigo-500/20", emoji: "🎵" },
-  { id: "humour", label: "Humour", icon: Laugh, color: "text-yellow-400", bgColor: "bg-yellow-500/20", emoji: "😂" },
-  { id: "apprentissage", label: "Apprentissage", icon: GraduationCap, color: "text-cyan-400", bgColor: "bg-cyan-500/20", emoji: "📚" },
-  { id: "ecole", label: "École", icon: GraduationCap, color: "text-teal-400", bgColor: "bg-teal-500/20", emoji: "🏫" },
-  { id: "jeu", label: "Jeux", icon: Gamepad2, color: "text-purple-400", bgColor: "bg-purple-500/20", emoji: "🎮" },
+  { id: "music", label: "Musique", icon: Music, color: "text-indigo-400", bgColor: "bg-indigo-500/20", emoji: "🎵" },
+  { id: "humor", label: "Humour", icon: Laugh, color: "text-yellow-400", bgColor: "bg-yellow-500/20", emoji: "😂" },
+  { id: "education", label: "Éducation", icon: GraduationCap, color: "text-cyan-400", bgColor: "bg-cyan-500/20", emoji: "📚" },
+  { id: "school", label: "École", icon: GraduationCap, color: "text-teal-400", bgColor: "bg-teal-500/20", emoji: "🏫" },
+  { id: "games", label: "Jeux", icon: Gamepad2, color: "text-purple-400", bgColor: "bg-purple-500/20", emoji: "🎮" },
   { id: "imagination", label: "Imagination", icon: Lightbulb, color: "text-orange-400", bgColor: "bg-orange-500/20", emoji: "💡" },
-  { id: "reve", label: "Rêves", icon: CloudLightning, color: "text-violet-400", bgColor: "bg-violet-500/20", emoji: "🌙" },
-  { id: "peur", label: "Peurs", icon: Eye, color: "text-red-400", bgColor: "bg-red-500/20", emoji: "😨" },
-  { id: "sante", label: "Santé", icon: Heart, color: "text-emerald-400", bgColor: "bg-emerald-500/20", emoji: "🩺" },
-  { id: "questions_absurdes", label: "Questions Absurdes", icon: HelpCircle, color: "text-fuchsia-400", bgColor: "bg-fuchsia-500/20", emoji: "🤪" },
+  { id: "dreams", label: "Rêves", icon: CloudLightning, color: "text-violet-400", bgColor: "bg-violet-500/20", emoji: "🌙" },
+  { id: "stories", label: "Histoires", icon: BookOpen, color: "text-purple-400", bgColor: "bg-purple-500/20", emoji: "📖" },
+  { id: "support", label: "Soutien", icon: Heart, color: "text-red-400", bgColor: "bg-red-500/20", emoji: "🤗" },
+  { id: "wellbeing", label: "Bien-être", icon: Zap, color: "text-emerald-400", bgColor: "bg-emerald-500/20", emoji: "🌈" },
+  { id: "health", label: "Santé", icon: Heart, color: "text-emerald-400", bgColor: "bg-emerald-500/20", emoji: "🩺" },
+  { id: "friendship", label: "Amitié", icon: Users, color: "text-pink-400", bgColor: "bg-pink-500/20", emoji: "🤝" },
 ];
 
 // ─── Age groups ─────────────────────────────────────────────────────
@@ -112,26 +116,27 @@ interface KBEntry {
 }
 
 // ─── Top-level brain sections shown as big square cards ─────────────
-type TopSection = "interactions" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons";
+type TopSection = "interactions" | "multiresponses" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons";
 
-const TOP_SECTIONS: {
+// Counts are computed dynamically below in the component
+const TOP_SECTIONS_CONFIG: {
   id: TopSection;
   label: string;
   icon: typeof Brain;
   color: string;
   bgColor: string;
-  count: string;
   desc: string;
   emoji: string;
 }[] = [
-  { id: "interactions", label: "Interactions 10K", icon: MessageSquare, color: "text-cyan-400", bgColor: "bg-cyan-500/20", count: "10 000", desc: "Base d'interactions enfant par âge & catégorie", emoji: "🧠" },
-  { id: "jeux", label: "Jeux & Quiz", icon: Gamepad2, color: "text-blue-400", bgColor: "bg-blue-500/20", count: "90", desc: "Quiz animaux, sciences, vrai/faux, devinettes", emoji: "🎮" },
-  { id: "qa", label: "QA Database", icon: HelpCircle, color: "text-amber-400", bgColor: "bg-amber-500/20", count: "537", desc: "Questions-réponses offline structurées", emoji: "❓" },
-  { id: "blagues", label: "Blagues", icon: Laugh, color: "text-green-400", bgColor: "bg-green-500/20", count: "26", desc: "Blagues adaptées par âge & catégorie", emoji: "😂" },
-  { id: "histoires", label: "Histoires", icon: BookOpen, color: "text-purple-400", bgColor: "bg-purple-500/20", count: "6", desc: "Contes & aventures personnalisées", emoji: "📖" },
-  { id: "chansons", label: "Chansons", icon: Music, color: "text-rose-400", bgColor: "bg-rose-500/20", count: String(CHANSONS.length), desc: "Comptines, berceuses, éducatif, activités", emoji: "🎵" },
-  { id: "cerveau", label: "Personnalité", icon: Sparkles, color: "text-pink-400", bgColor: "bg-pink-500/20", count: "5", desc: "Personnalité, réactions, phrases Bobby", emoji: "✨" },
-  { id: "cloud", label: "Cloud KB", icon: Globe, color: "text-blue-400", bgColor: "bg-blue-500/20", count: "∞", desc: "Base cloud extensible (ajout via admin)", emoji: "☁️" },
+  { id: "interactions", label: "Interactions", icon: MessageSquare, color: "text-cyan-400", bgColor: "bg-cyan-500/20", desc: "Base d'interactions enfant par âge & catégorie", emoji: "🧠" },
+  { id: "multiresponses", label: "Multi-Réponses", icon: Zap, color: "text-orange-400", bgColor: "bg-orange-500/20", desc: "Réponses adaptatives multi-tags (offline)", emoji: "⚡" },
+  { id: "jeux", label: "Jeux & Quiz", icon: Gamepad2, color: "text-blue-400", bgColor: "bg-blue-500/20", desc: "Quiz animaux, sciences, vrai/faux, devinettes", emoji: "🎮" },
+  { id: "qa", label: "QA Database", icon: HelpCircle, color: "text-amber-400", bgColor: "bg-amber-500/20", desc: "Questions-réponses offline structurées", emoji: "❓" },
+  { id: "blagues", label: "Blagues", icon: Laugh, color: "text-green-400", bgColor: "bg-green-500/20", desc: "Blagues adaptées par âge & catégorie", emoji: "😂" },
+  { id: "histoires", label: "Histoires", icon: BookOpen, color: "text-purple-400", bgColor: "bg-purple-500/20", desc: "Contes & aventures personnalisées", emoji: "📖" },
+  { id: "chansons", label: "Chansons", icon: Music, color: "text-rose-400", bgColor: "bg-rose-500/20", desc: "Comptines, berceuses, éducatif, activités", emoji: "🎵" },
+  { id: "cerveau", label: "Personnalité", icon: Sparkles, color: "text-pink-400", bgColor: "bg-pink-500/20", desc: "Personnalité, réactions, phrases Bobby", emoji: "✨" },
+  { id: "cloud", label: "Cloud KB", icon: Globe, color: "text-blue-400", bgColor: "bg-blue-500/20", desc: "Base cloud extensible (ajout via admin)", emoji: "☁️" },
 ];
 
 // ═══════════════════════════════════════════════════════════════════
@@ -327,6 +332,31 @@ const Admin = () => {
     return counts;
   }, [interactions]);
 
+  // Multi-response category counts
+  const multiResponseCategoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const entry of BOBBY_MULTI_RESPONSES) {
+      counts[entry.category] = (counts[entry.category] || 0) + 1;
+    }
+    return counts;
+  }, []);
+
+  // Dynamic section counts
+  const sectionCounts = useMemo(() => {
+    const totalGameItems = QUIZ_ANIMAUX.length + QUIZ_EDUCATIF.length + VRAI_FAUX.length + DEVINETTES.length + GAME_BLAGUES.length;
+    return {
+      interactions: interactions?.length ?? "…",
+      multiresponses: BOBBY_MULTI_RESPONSES.length,
+      jeux: totalGameItems,
+      qa: QA_DATABASE.length,
+      blagues: BLAGUES.length,
+      histoires: HISTOIRES.length,
+      chansons: CHANSONS.length,
+      cerveau: "16",
+      cloud: entries.length,
+    } as Record<string, string | number>;
+  }, [interactions, entries]);
+
   // ─── Handlers ───
   const handleSave = async () => {
     if (!editingEntry?.question?.trim() || !editingEntry?.answer?.trim()) {
@@ -521,7 +551,7 @@ const Admin = () => {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // INTERACTIONS 10K — Category grid
+  // INTERACTIONS — Category grid
   // ═══════════════════════════════════════════════════════════════════
   if (topSection === "interactions") {
     return (
@@ -531,28 +561,122 @@ const Admin = () => {
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
             <span className="text-2xl">🧠</span>
             <div>
-              <h1 className="text-xl font-bold text-white">Interactions 10K</h1>
-              <p className="text-white/40 text-xs">10 000 interactions par catégorie & âge</p>
+              <h1 className="text-xl font-bold text-white">Interactions</h1>
+              <p className="text-white/40 text-xs">{interactions?.length ?? "…"} interactions par catégorie & âge</p>
             </div>
           </div>
 
           {loadingInteractions ? (
-            <div className="text-center text-white/50 py-12">Chargement des 10 000 interactions…</div>
+            <div className="text-center text-white/50 py-12">Chargement des interactions…</div>
           ) : (
             <div className="grid grid-cols-3 gap-3">
-              {INTERACTION_CATEGORIES.map(cat => (
-                <button key={cat.id} onClick={() => { setInteractionCat(cat.id); setSearch(""); }}
-                  className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group"
-                >
-                  <span className="text-2xl">{cat.emoji}</span>
-                  <div>
-                    <p className="text-lg font-bold text-white">{interactionCategoryCounts[cat.id] || 0}</p>
-                    <h3 className={`text-[11px] font-semibold ${cat.color}`}>{cat.label}</h3>
-                  </div>
-                </button>
-              ))}
+              {INTERACTION_CATEGORIES.map(cat => {
+                const count = interactionCategoryCounts[cat.id] || 0;
+                if (count === 0) return null;
+                return (
+                  <button key={cat.id} onClick={() => { setInteractionCat(cat.id); setSearch(""); }}
+                    className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group"
+                  >
+                    <span className="text-2xl">{cat.emoji}</span>
+                    <div>
+                      <p className="text-lg font-bold text-white">{count}</p>
+                      <h3 className={`text-[11px] font-semibold ${cat.color}`}>{cat.label}</h3>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // MULTI-RÉPONSES — Category grid + detail
+  // ═══════════════════════════════════════════════════════════════════
+  if (topSection === "multiresponses") {
+    // If a category is selected
+    if (interactionCat) {
+      const catEntries = BOBBY_MULTI_RESPONSES.filter(e => e.category === interactionCat);
+      const searchLower = search.toLowerCase();
+      const filtered = searchLower
+        ? catEntries.filter(e => e.input.toLowerCase().includes(searchLower) || e.responses.some(r => r.text.toLowerCase().includes(searchLower)))
+        : catEntries;
+
+      return (
+        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+          <div className="max-w-4xl mx-auto space-y-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+              <span className="text-2xl">⚡</span>
+              <div>
+                <h1 className="text-xl font-bold text-white capitalize">{interactionCat.replace(/_/g, " ")}</h1>
+                <p className="text-white/40 text-xs">{filtered.length} entrées multi-réponses</p>
+              </div>
+            </div>
+
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
+                className="bg-white/10 border-white/20 text-white pl-9" />
+            </div>
+
+            <div className="space-y-3">
+              {filtered.map((entry, idx) => (
+                <div key={idx} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300">{entry.category}</span>
+                    {entry.emotion && <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300">{entry.emotion}</span>}
+                    {entry.tags?.map((t, i) => (
+                      <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/40">{t}</span>
+                    ))}
+                  </div>
+                  <p className="text-sm text-white/80 font-medium mb-2">👦 {entry.input}</p>
+                  <div className="space-y-1">
+                    {entry.responses.map((r, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <span className="text-[10px] text-green-400 shrink-0 mt-0.5">🤖</span>
+                        <p className="text-xs text-white/60">{r.text}</p>
+                        <span className="text-[9px] text-white/20 shrink-0 ml-auto">{r.type} • {r.energy}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Category grid
+    const uniqueCats = [...new Set(BOBBY_MULTI_RESPONSES.map(e => e.category))];
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+            <span className="text-2xl">⚡</span>
+            <div>
+              <h1 className="text-xl font-bold text-white">Multi-Réponses</h1>
+              <p className="text-white/40 text-xs">{BOBBY_MULTI_RESPONSES.length} entrées • {uniqueCats.length} catégories</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            {uniqueCats.map(cat => (
+              <button key={cat} onClick={() => { setInteractionCat(cat); setSearch(""); }}
+                className="bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group aspect-square"
+              >
+                <span className="text-lg capitalize text-white/70">{cat.replace(/_/g, " ")}</span>
+                <div>
+                  <p className="text-lg font-bold text-white">{multiResponseCategoryCounts[cat] || 0}</p>
+                  <h3 className="text-[10px] font-semibold text-orange-400">entrées</h3>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -1357,10 +1481,14 @@ const Admin = () => {
 
         {/* Stats bar */}
         <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-          <div className="grid grid-cols-4 gap-3 text-center">
+          <div className="grid grid-cols-5 gap-3 text-center">
             <div>
-              <p className="text-lg font-bold text-cyan-400">10 000</p>
+              <p className="text-lg font-bold text-cyan-400">{sectionCounts.interactions}</p>
               <p className="text-[9px] text-white/40">Interactions</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-orange-400">{BOBBY_MULTI_RESPONSES.length}</p>
+              <p className="text-[9px] text-white/40">Multi-Réponses</p>
             </div>
             <div>
               <p className="text-lg font-bold text-amber-400">{QA_DATABASE.length}</p>
@@ -1379,12 +1507,12 @@ const Admin = () => {
 
         {/* Main grid — square cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {TOP_SECTIONS.map(section => (
+          {TOP_SECTIONS_CONFIG.map(section => (
             <SquareCard
               key={section.id}
               label={section.label}
               emoji={section.emoji}
-              count={section.id === "cloud" ? entries.length : section.count}
+              count={sectionCounts[section.id] ?? "…"}
               desc={section.desc}
               color={section.color}
               bgColor={section.bgColor}
