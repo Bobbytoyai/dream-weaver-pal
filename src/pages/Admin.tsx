@@ -1479,28 +1479,52 @@ const Admin = () => {
           </div>
         </div>
 
+        {/* Total counter */}
+        {(() => {
+          const intCount = typeof sectionCounts.interactions === "number" ? sectionCounts.interactions : 0;
+          const total = intCount + BOBBY_MULTI_RESPONSES.length + QA_DATABASE.length + BLAGUES.length + HISTOIRES.length + CHANSONS.length + (sectionCounts.jeux as number) + entries.length;
+          return (
+            <div className="bg-gradient-to-r from-purple-500/20 to-cyan-500/20 backdrop-blur rounded-xl p-4 border border-purple-500/30 text-center">
+              <p className="text-3xl font-extrabold text-white">{total.toLocaleString("fr-FR")}</p>
+              <p className="text-xs text-white/50 mt-1">contenus totaux dans le cerveau de Bobby</p>
+            </div>
+          );
+        })()}
+
         {/* Stats bar */}
         <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-          <div className="grid grid-cols-5 gap-3 text-center">
+          <div className="grid grid-cols-4 md:grid-cols-8 gap-3 text-center">
             <div>
-              <p className="text-lg font-bold text-cyan-400">{sectionCounts.interactions}</p>
-              <p className="text-[9px] text-white/40">Interactions</p>
+              <p className="text-sm font-bold text-cyan-400">{sectionCounts.interactions}</p>
+              <p className="text-[8px] text-white/40">Interactions</p>
             </div>
             <div>
-              <p className="text-lg font-bold text-orange-400">{BOBBY_MULTI_RESPONSES.length}</p>
-              <p className="text-[9px] text-white/40">Multi-Réponses</p>
+              <p className="text-sm font-bold text-orange-400">{BOBBY_MULTI_RESPONSES.length}</p>
+              <p className="text-[8px] text-white/40">Multi-Rép.</p>
             </div>
             <div>
-              <p className="text-lg font-bold text-amber-400">{QA_DATABASE.length}</p>
-              <p className="text-[9px] text-white/40">QA Offline</p>
+              <p className="text-sm font-bold text-amber-400">{QA_DATABASE.length}</p>
+              <p className="text-[8px] text-white/40">QA Offline</p>
             </div>
             <div>
-              <p className="text-lg font-bold text-green-400">{BLAGUES.length}</p>
-              <p className="text-[9px] text-white/40">Blagues</p>
+              <p className="text-sm font-bold text-green-400">{BLAGUES.length}</p>
+              <p className="text-[8px] text-white/40">Blagues</p>
             </div>
             <div>
-              <p className="text-lg font-bold text-blue-400">{entries.length}</p>
-              <p className="text-[9px] text-white/40">Cloud KB</p>
+              <p className="text-sm font-bold text-purple-400">{HISTOIRES.length}</p>
+              <p className="text-[8px] text-white/40">Histoires</p>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-rose-400">{CHANSONS.length}</p>
+              <p className="text-[8px] text-white/40">Chansons</p>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-blue-400">{sectionCounts.jeux}</p>
+              <p className="text-[8px] text-white/40">Jeux</p>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-sky-400">{entries.length}</p>
+              <p className="text-[8px] text-white/40">Cloud KB</p>
             </div>
           </div>
         </div>
