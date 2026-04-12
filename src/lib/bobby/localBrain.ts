@@ -127,6 +127,7 @@ export type LocalIntent =
   // Situational
   | "FATIGUE" | "ECHEC" | "OBJECTIF" | "SANTE" | "PERTE" | "REVE_AVENIR"
   | "ANXIETE" | "ABANDON" | "MENSONGE" | "EXCITATION" | "AMOUREUX"
+  | "PERFECTIONNISME" | "COMPARAISON" | "FATIGUE_EMOTIONNELLE"
   // Catch-all
   | "GENERAL";
 
