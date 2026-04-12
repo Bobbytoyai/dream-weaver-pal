@@ -1911,13 +1911,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   // RENDER: RÉGLAGES (merged: Voix + Contenu + Limites)
   // ═══════════════════════════════════════════════════════════════
 
-  const VOICE_MAP: Record<string, { label: string; emoji: string; desc: string }> = {
-    child: { label: "Enfant", emoji: "🧒", desc: "Voix douce d'enfant" },
-    female: { label: "Maman", emoji: "👩", desc: "Voix féminine chaleureuse" },
-    male: { label: "Papa", emoji: "👨", desc: "Voix grave et rassurante" },
-    sister: { label: "Sœur", emoji: "👧", desc: "Ado bienveillante, complice" },
-    brother: { label: "Frère", emoji: "👦", desc: "Ado cool, encourageant" },
-    custom: { label: "Personnaliser", emoji: "🎨", desc: "Bientôt disponible" },
+  const VOICE_MAP: Record<string, { label: string; emoji: string; desc: string; voiceName: string }> = {
+    child: { label: "Mélodie", emoji: "🧒", voiceName: "Enfant", desc: "Voix fun et dynamique" },
+    female: { label: "Mila", emoji: "👩", voiceName: "Maman", desc: "Voix douce et rassurante" },
+    male: { label: "Vincent", emoji: "👨", voiceName: "Papa", desc: "Voix calme et chaleureuse" },
+    sister: { label: "Marine", emoji: "👧", voiceName: "Grande Sœur", desc: "Cool et complice" },
+    brother: { label: "Yanis", emoji: "👦", voiceName: "Grand Frère", desc: "Aventurier et drôle" },
+    custom: { label: "Personnaliser", emoji: "🎨", voiceName: "", desc: "Bientôt disponible" },
   };
 
   const [previewPlaying, setPreviewPlaying] = useState<string | false>(false);
@@ -1976,6 +1976,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                       className="w-full p-3 text-left">
                       <div className="text-xl mb-1">{info.emoji}</div>
                       <h4 className="text-[12px] font-semibold text-foreground">{info.label}</h4>
+                      {info.voiceName && <p className="text-[10px] text-primary/70 font-medium">{info.voiceName}</p>}
                       <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{info.desc}</p>
                     </button>
                     {!isCustom && (

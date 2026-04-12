@@ -10,12 +10,12 @@ interface VoicePickerStepProps {
   onNext: () => void;
 }
 
-const VOICE_OPTIONS: { id: VoiceProfile; label: string; emoji: string; desc: string }[] = [
-  { id: "child", label: "Cartoon", emoji: "🧒", desc: "Voix fun et dynamique" },
-  { id: "sister", label: "Grande Sœur", emoji: "👧", desc: "Cool et complice" },
-  { id: "brother", label: "Grand Frère", emoji: "🧑", desc: "Aventurier et drôle" },
-  { id: "female", label: "Maman", emoji: "👩", desc: "Douce et rassurante" },
-  { id: "male", label: "Papa", emoji: "👨", desc: "Calme et chaleureuse" },
+const VOICE_OPTIONS: { id: VoiceProfile; label: string; emoji: string; desc: string; voiceName: string }[] = [
+  { id: "child", label: "Mélodie", emoji: "🧒", voiceName: "Voix Enfant", desc: "Voix fun et dynamique" },
+  { id: "sister", label: "Marine", emoji: "👧", voiceName: "Grande Sœur", desc: "Cool et complice" },
+  { id: "brother", label: "Yanis", emoji: "🧑", voiceName: "Grand Frère", desc: "Aventurier et drôle" },
+  { id: "female", label: "Mila", emoji: "👩", voiceName: "Maman", desc: "Douce et rassurante" },
+  { id: "male", label: "Vincent", emoji: "👨", voiceName: "Papa", desc: "Calme et chaleureuse" },
 ];
 
 const PREVIEW_TEXT_FN = (name: string) =>
@@ -83,7 +83,8 @@ export default function VoicePickerStep({ childName, selectedVoice, onSelect, on
               <span className={`text-2xl transition-transform duration-300 ${isSelected ? "scale-110" : ""}`}>{v.emoji}</span>
               <div className="flex-1 text-left">
                 <div className="font-bold text-foreground text-base leading-tight">{v.label}</div>
-                <div className="text-muted-foreground text-xs">{v.desc}</div>
+                <div className="text-muted-foreground text-[11px]">{v.voiceName}</div>
+                <div className="text-muted-foreground/70 text-xs">{v.desc}</div>
               </div>
               <button
                 onClick={(e) => {
