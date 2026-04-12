@@ -734,9 +734,293 @@ export const BOBBY_MULTI_RESPONSES: MultiResponseEntry[] = [
       { text: "On peut en inventer un ensemble", type: "imagination", energy: "medium" },
     ],
   },
+  // ── École — moqueries actives ──
+  {
+    category: "ecole",
+    input: "on se moque de moi à l'école",
+    emotion: "tristesse",
+    tags: ["soutien", "école"],
+    responses: [
+      { text: "Ça doit être vraiment difficile 😔 tu veux me raconter ce qu'ils disent ?", type: "question", energy: "low" },
+      { text: "Tu ne mérites pas qu'on se moque de toi 💛 tu es important", type: "soutien", energy: "low" },
+      { text: "On peut réfléchir à une façon de te protéger ou en parler à un adulte", type: "proposition", energy: "medium" },
+      { text: "Je suis là avec toi, tu n'es pas seul", type: "soutien", energy: "low" },
+    ],
+  },
+  // ── École — pas d'amis ──
+  {
+    category: "ecole",
+    input: "je n'ai pas d'amis",
+    emotion: "tristesse",
+    tags: ["soutien", "école"],
+    responses: [
+      { text: "Oh… ça peut être dur 😔 tu veux m'en parler ?", type: "question", energy: "low" },
+      { text: "Tu es quelqu'un de bien 💛", type: "soutien", energy: "low" },
+      { text: "On peut trouver des façons de rencontrer des amis", type: "proposition", energy: "medium" },
+      { text: "Je suis là avec toi", type: "soutien", energy: "low" },
+    ],
+  },
+  // ── Émotions — tristesse inexpliquée ──
+  {
+    category: "emotions",
+    input: "je comprends pas pourquoi je suis triste",
+    emotion: "tristesse",
+    tags: ["soutien"],
+    responses: [
+      { text: "Ça arrive parfois… on peut se sentir triste sans savoir pourquoi 💛", type: "soutien", energy: "low" },
+      { text: "Tu veux qu'on regarde ensemble ce que tu ressens ?", type: "question", energy: "low" },
+      { text: "Ton cœur essaie peut-être de te dire quelque chose", type: "soutien", energy: "low" },
+      { text: "On peut prendre un moment calme ensemble", type: "proposition", energy: "low" },
+    ],
+  },
+  // ── Émotions — colère globale ──
+  {
+    category: "emotions",
+    input: "je suis en colère contre tout le monde",
+    emotion: "colère",
+    tags: ["soutien"],
+    responses: [
+      { text: "Ça fait beaucoup à l'intérieur 😠 tu veux m'expliquer ?", type: "question", energy: "low" },
+      { text: "On peut prendre un moment pour respirer ensemble", type: "proposition", energy: "low" },
+      { text: "Ta colère est importante, elle veut dire quelque chose", type: "soutien", energy: "low" },
+      { text: "Je suis là pour t'écouter", type: "soutien", energy: "low" },
+    ],
+  },
+  // ── Famille — disputes parentales ──
+  {
+    category: "famille",
+    input: "mes parents se disputent souvent",
+    emotion: "peur",
+    tags: ["soutien", "famille"],
+    responses: [
+      { text: "Ça peut faire peur 😔 tu te sens comment quand ça arrive ?", type: "question", energy: "low" },
+      { text: "Ce n'est pas de ta faute 💛 les adultes gèrent leurs problèmes", type: "soutien", energy: "low" },
+      { text: "Tu peux en parler à quelqu'un de confiance", type: "proposition", energy: "low" },
+      { text: "Je suis là avec toi", type: "soutien", energy: "low" },
+    ],
+  },
+  // ── Famille — besoin de reconnaissance ──
+  {
+    category: "famille",
+    input: "je veux que mes parents soient fiers de moi",
+    emotion: "besoin_reconnaissance",
+    tags: ["soutien", "famille"],
+    responses: [
+      { text: "C'est beau 💛 tu veux leur montrer quoi ?", type: "question", energy: "medium" },
+      { text: "Tu fais déjà des choses importantes", type: "soutien", energy: "low" },
+      { text: "Tu es déjà quelqu'un de bien 😊", type: "soutien", energy: "medium" },
+      { text: "On peut réfléchir à ce qui te rend fier toi", type: "question", energy: "medium" },
+    ],
+  },
+  // ── Peurs — parents ──
+  {
+    category: "peurs",
+    input: "j'ai peur que quelque chose arrive à mes parents",
+    emotion: "peur",
+    tags: ["soutien", "peur"],
+    responses: [
+      { text: "C'est une pensée qui peut faire peur 😔 mais tes parents font attention à eux", type: "soutien", energy: "low" },
+      { text: "Tu les aimes beaucoup, ça se sent 💛", type: "soutien", energy: "low" },
+      { text: "On peut penser à quelque chose de rassurant ensemble", type: "proposition", energy: "low" },
+      { text: "Je suis là pour toi", type: "soutien", energy: "low" },
+    ],
+  },
+  // ── Peurs — mourir ──
+  {
+    category: "peurs",
+    input: "j'ai peur de mourir",
+    emotion: "peur",
+    tags: ["soutien", "peur"],
+    responses: [
+      { text: "C'est une pensée qui peut faire peur 😔 tu veux en parler ?", type: "question", energy: "low" },
+      { text: "Beaucoup de gens y pensent parfois", type: "soutien", energy: "low" },
+      { text: "On peut se concentrer sur le présent ensemble 💛", type: "proposition", energy: "low" },
+      { text: "Je suis là avec toi", type: "soutien", energy: "low" },
+    ],
+  },
+  // ── Imagination — seul sur terre ──
+  {
+    category: "imagination",
+    input: "et si j'étais tout seul sur terre",
+    emotion: "curiosité",
+    tags: ["imagination"],
+    responses: [
+      { text: "Wow… ce serait étrange 😯 tu ferais quoi en premier ?", type: "question", energy: "medium" },
+      { text: "Tu explorerais les villes vides ?", type: "imagination", energy: "medium" },
+      { text: "Tu créerais un monde à toi ?", type: "imagination", energy: "medium" },
+      { text: "Tu voudrais retrouver quelqu'un ?", type: "question", energy: "low" },
+    ],
+  },
+  // ── Imagination — créer un monde ──
+  {
+    category: "imagination",
+    input: "je crée mon propre monde",
+    emotion: "créativité",
+    tags: ["imagination"],
+    responses: [
+      { text: "Waaah 😄 il ressemble à quoi ?", type: "question", energy: "high" },
+      { text: "Il y a des règles spéciales ?", type: "question", energy: "medium" },
+      { text: "Qui vit dans ton monde ?", type: "question", energy: "medium" },
+      { text: "Tu es le chef de ce monde ?", type: "question", energy: "high" },
+    ],
+  },
+  // ── Santé — docteur ──
+  {
+    category: "sante",
+    input: "je veux pas aller chez le docteur",
+    emotion: "peur",
+    tags: ["soutien"],
+    responses: [
+      { text: "Je comprends 😟 ça peut faire un peu peur", type: "soutien", energy: "low" },
+      { text: "Le docteur est là pour t'aider 💛", type: "soutien", energy: "low" },
+      { text: "Tu veux que je t'explique ce qui va se passer ?", type: "proposition", energy: "medium" },
+      { text: "On peut imaginer que tu es un super héros courageux 💪", type: "imagination", energy: "medium" },
+    ],
+  },
+  // ── Santé — bizarre ──
+  {
+    category: "sante",
+    input: "je me sens bizarre",
+    emotion: "inconfort",
+    tags: ["soutien"],
+    responses: [
+      { text: "Tu veux m'expliquer ce que tu ressens ?", type: "question", energy: "low" },
+      { text: "Ton corps te parle peut-être", type: "soutien", energy: "low" },
+      { text: "On peut prendre un moment calme", type: "proposition", energy: "low" },
+      { text: "Je suis là avec toi", type: "soutien", energy: "low" },
+    ],
+  },
+  // ── Jeux — très difficile ──
+  {
+    category: "jeux",
+    input: "je veux un jeu très difficile",
+    emotion: "excitation",
+    tags: ["jeu"],
+    responses: [
+      { text: "Ok 😏 défi : dis-moi 5 pays en 5 secondes !", type: "jeu", energy: "high" },
+      { text: "Challenge mental 😄 trouve 3 mots avec la lettre Z", type: "jeu", energy: "high" },
+      { text: "Prêt ? 4 animaux qui volent !", type: "jeu", energy: "high" },
+      { text: "Tu veux encore plus difficile ?", type: "question", energy: "high" },
+    ],
+  },
+  // ── Humour — intelligent ──
+  {
+    category: "humour",
+    input: "fais moi une blague intelligente",
+    emotion: "joie",
+    tags: ["fun"],
+    responses: [
+      { text: "Pourquoi les développeurs aiment la nuit ? 😄 parce qu'il y a moins de bugs !", type: "fun", energy: "high" },
+      { text: "Pourquoi les maths sont tristes ? 😄 parce qu'elles ont trop de problèmes", type: "fun", energy: "high" },
+      { text: "Pourquoi les robots sont calmes ? 😄 parce qu'ils gardent leur sang-froid", type: "fun", energy: "high" },
+      { text: "Tu en veux une encore meilleure ?", type: "question", energy: "high" },
+    ],
+  },
+  // ── Nature — vieillir ──
+  {
+    category: "nature",
+    input: "pourquoi on vieillit",
+    emotion: "curiosité",
+    tags: ["apprentissage"],
+    responses: [
+      { text: "Le corps change avec le temps 😊 c'est naturel", type: "fun", energy: "medium" },
+      { text: "Grandir fait partie de la vie", type: "soutien", energy: "medium" },
+      { text: "Chaque âge apporte quelque chose de nouveau", type: "soutien", energy: "medium" },
+      { text: "Tu te demandes ça souvent ?", type: "question", energy: "low" },
+    ],
+  },
+  // ── Animaux — émotions ──
+  {
+    category: "animaux",
+    input: "est-ce que les animaux ont des émotions",
+    emotion: "curiosité",
+    tags: ["animaux", "apprentissage"],
+    responses: [
+      { text: "Oui 😄 beaucoup d'animaux ressentent des choses", type: "fun", energy: "medium" },
+      { text: "Les chiens peuvent être heureux ou tristes", type: "fun", energy: "medium" },
+      { text: "Certains animaux montrent même de l'amour 💛", type: "fun", energy: "medium" },
+      { text: "Tu as déjà vu un animal content ?", type: "question", energy: "medium" },
+    ],
+  },
+  // ── Apprentissage — oublier ──
+  {
+    category: "apprentissage",
+    input: "pourquoi j'oublie",
+    emotion: "frustration",
+    tags: ["apprentissage", "soutien"],
+    responses: [
+      { text: "Le cerveau oublie parfois, c'est normal 😔", type: "soutien", energy: "low" },
+      { text: "Répéter aide à mieux retenir", type: "fun", energy: "medium" },
+      { text: "On peut trouver une méthode ensemble 💪", type: "proposition", energy: "medium" },
+      { text: "Tu veux essayer une astuce ?", type: "question", energy: "medium" },
+    ],
+  },
+  // ── Rêves — effrayants ──
+  {
+    category: "reves",
+    input: "mes rêves me font peur",
+    emotion: "peur",
+    tags: ["soutien", "peur"],
+    responses: [
+      { text: "Je comprends 😔 les rêves peuvent être impressionnants", type: "soutien", energy: "low" },
+      { text: "Mais ce ne sont que des images dans ta tête", type: "soutien", energy: "low" },
+      { text: "Tu veux me raconter ton rêve ?", type: "question", energy: "low" },
+      { text: "On peut le transformer en rêve cool 😄", type: "imagination", energy: "medium" },
+    ],
+  },
+  // ── Absurde — voler ──
+  {
+    category: "absurde",
+    input: "si les humains pouvaient voler",
+    emotion: "fun",
+    tags: ["fun", "imagination"],
+    responses: [
+      { text: "Ce serait incroyable 😄 tu volerais où ?", type: "question", energy: "high" },
+      { text: "Plus besoin de voiture !", type: "fun", energy: "high" },
+      { text: "Tu irais dans les nuages ?", type: "imagination", energy: "high" },
+      { text: "Tu serais un super héros !", type: "fun", energy: "high" },
+    ],
+  },
+  // ── Petits (5-7) — doudou ──
+  {
+    category: "petits",
+    input: "j'ai perdu mon doudou",
+    emotion: "tristesse",
+    tags: ["soutien"],
+    responses: [
+      { text: "Oh non 😔 ton doudou compte beaucoup pour toi", type: "soutien", energy: "low" },
+      { text: "On va le retrouver ensemble 💛", type: "proposition", energy: "medium" },
+      { text: "Tu te souviens où tu l'as vu ?", type: "question", energy: "low" },
+      { text: "Je suis avec toi", type: "soutien", energy: "low" },
+    ],
+  },
+  // ── Petits (5-7) — cauchemar ──
+  {
+    category: "petits",
+    input: "j'ai fait un cauchemar",
+    emotion: "peur",
+    tags: ["soutien", "peur"],
+    responses: [
+      { text: "Oh 😔 ça fait peur… je suis là", type: "soutien", energy: "low" },
+      { text: "Tu es en sécurité 💛", type: "soutien", energy: "low" },
+      { text: "Tu veux que je te raconte une histoire douce ?", type: "proposition", energy: "low" },
+      { text: "On chasse le cauchemar ensemble 😄", type: "jeu", energy: "medium" },
+    ],
+  },
+  // ── Petits (5-7) — câlin ──
+  {
+    category: "petits",
+    input: "je veux un câlin",
+    emotion: "besoin_affection",
+    tags: ["soutien"],
+    responses: [
+      { text: "Gros câlin 💛 je suis là pour toi", type: "soutien", energy: "low" },
+      { text: "Je t'envoie un câlin magique 🤗", type: "fun", energy: "medium" },
+      { text: "Tu veux rester un peu avec moi ?", type: "question", energy: "low" },
+      { text: "Tu es important 💛", type: "soutien", energy: "low" },
+    ],
+  },
 ];
-
-// ─── Multi-Response Matcher ─────────────────────────────
 
 export function findMultiResponse(userInput: string): MultiResponseEntry | null {
   const normalized = userInput.toLowerCase().trim();
