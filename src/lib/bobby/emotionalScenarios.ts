@@ -984,7 +984,7 @@ export function isScenarioActive(): boolean {
 }
 
 /** Get the current scenario response and advance */
-export function getScenarioResponse(userText: string): {
+export function getScenarioResponse(userText: string, childName?: string): {
   text: string;
   faceState: string;
   isComplete: boolean;
@@ -1000,8 +1000,17 @@ export function getScenarioResponse(userText: string): {
 
   // Pick a response
   const responses = step.responses;
-  const text = responses[Math.floor(Math.random() * responses.length)];
+  let text = responses[Math.floor(Math.random() * responses.length)];
   const faceState = scenario.faceStates[currentStep] || "attentive";
+
+  // Inject child name at acknowledge stage (~80%) or support stage (~50%)
+  if (childName && !text.includes(childName)) {
+    const isEmotionalStage = step.stage === "acknowledge" || step.stage === "support";
+    const nameChance = step.stage === "acknowledge" ? 0.8 : isEmotionalStage ? 0.5 : 0.2;
+    if (Math.random() < nameChance) {
+      text = `${childName} 💛 ${text.charAt(0).toLowerCase() + text.slice(1)}`;
+    }
+  }
 
   // Determine if we should advance
   let shouldAdvance = false;

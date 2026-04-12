@@ -2118,7 +2118,7 @@ export function getLocalBrainReply(
 
   // 5. Check for active scenario (multi-turn emotional journey)
   if (isScenarioActive()) {
-    const scenarioResp = getScenarioResponse(userText);
+    const scenarioResp = getScenarioResponse(userText, childName);
     if (scenarioResp) {
       addTurn({ role: "bobby", text: scenarioResp.text, intent, timestamp: Date.now() });
       addBobbyResponse(scenarioResp.text);
@@ -2139,7 +2139,7 @@ export function getLocalBrainReply(
   if (emotion.intensity >= 3) {
     tryStartScenario(intent, userText);
     if (isScenarioActive()) {
-      const scenarioResp = getScenarioResponse(userText);
+      const scenarioResp = getScenarioResponse(userText, childName);
       if (scenarioResp) {
         addTurn({ role: "bobby", text: scenarioResp.text, intent, timestamp: Date.now() });
         addBobbyResponse(scenarioResp.text);
