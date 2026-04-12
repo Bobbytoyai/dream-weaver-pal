@@ -509,21 +509,32 @@ export function useFaceAnimation(
       speechCheekBoost = mouthWidthTarget > 0.5 ? (mouthWidthTarget - 0.5) * 0.5 : 0;
 
     } else if (faceState === "speaking") {
-      // Fallback amplitude-based (no viseme data) — very visible
-      const ampFactor = Math.min(1.0, audioAmplitude * 6.5 + 0.08);
+      // Fallback amplitude-based (no viseme data or low amplitude)
+      // Use viseme amplitude if available, otherwise fall back to audioAmplitude prop
+      const rawAmp = (viseme?.amplitude ?? 0) > 0.005 ? viseme!.amplitude : audioAmplitude;
+      const ampFactor = Math.min(1.0, rawAmp * 6.5 + 0.15);
       mouthOpenTarget = ampFactor;
-      mouthWidthTarget = (targets.mouthWidth ?? 0.55) + audioAmplitude * 0.3;
-      mouthRoundTarget = audioAmplitude > 0.2 ? 0.35 : audioAmplitude * 0.5;
-      jawDropTarget = audioAmplitude * 3.2;
+      mouthWidthTarget = (targets.mouthWidth ?? 0.55) + rawAmp * 0.3;
+      mouthRoundTarget = rawAmp > 0.2 ? 0.35 : rawAmp * 0.5;
+      jawDropTarget = rawAmp * 3.2;
 
       // Add syllable-like oscillation even with raw amplitude
-      const syllableOsc = Math.sin(breathPhase.current * 14) * 0.08 * audioAmplitude;
+      const syllableOsc = Math.sin(breathPhase.current * 14) * 0.08 * rawAmp;
       mouthOpenTarget += syllableOsc;
 
-      speechEyebrowLift = audioAmplitude > 0.1 ? (audioAmplitude - 0.1) * 0.45 : 0;
-      speechEyeWiden = audioAmplitude > 0.08 ? (audioAmplitude - 0.08) * 0.18 : 0;
-      speechHeadNod = Math.sin(breathPhase.current * 5) * audioAmplitude * 0.05;
-      speechCheekBoost = audioAmplitude > 0.15 ? audioAmplitude * 0.2 : 0;
+      // Even with zero amplitude in speaking state, keep a small mouth movement
+      // so Bobby doesn't look frozen while talking
+      if (rawAmp < 0.01) {
+        const idleSpeak = Math.sin(breathPhase.current * 8) * 0.12 + 0.15;
+        mouthOpenTarget = idleSpeak;
+        mouthWidthTarget = 0.5 + Math.sin(breathPhase.current * 6) * 0.05;
+        jawDropTarget = idleSpeak * 0.4;
+      }
+
+      speechEyebrowLift = rawAmp > 0.1 ? (rawAmp - 0.1) * 0.45 : 0;
+      speechEyeWiden = rawAmp > 0.08 ? (rawAmp - 0.08) * 0.18 : 0;
+      speechHeadNod = Math.sin(breathPhase.current * 5) * Math.max(rawAmp, 0.05) * 0.05;
+      speechCheekBoost = rawAmp > 0.15 ? rawAmp * 0.2 : 0;
     } else {
       mouthOpenTarget = (targets.mouthOpenness ?? 0) + mouthBreath + mouthQuirkOpenAdd;
       mouthWidthTarget = (targets.mouthWidth ?? 0.5) + mouthBreathWidth + mouthQuirkWidthAdd;
