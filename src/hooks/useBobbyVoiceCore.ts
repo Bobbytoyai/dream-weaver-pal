@@ -473,5 +473,6 @@ export function useBobbyVoiceCore({
     processTranscript: handleFinalTranscript,
     sendMessage: handleFinalTranscript,
     interrupt,
+    wakeWordEnabled,
   };
 }
