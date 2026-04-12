@@ -44,6 +44,7 @@ export default function AdminDetailDialog({ item, onClose, onSave, onDelete, onD
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [aiTheme, setAiTheme] = useState("");
 
   useEffect(() => {
     if (!item) return;
@@ -51,6 +52,7 @@ export default function AdminDetailDialog({ item, onClose, onSave, onDelete, onD
     item.fields.forEach(f => { v[f.key] = f.value; });
     setValues(v);
     setDirty(false);
+    setAiTheme("");
   }, [item]);
 
   if (!item) return null;
@@ -60,7 +62,7 @@ export default function AdminDetailDialog({ item, onClose, onSave, onDelete, onD
   const handleGenerate = async () => {
     setGenerating(true);
     try {
-      const context = values["theme"] || values["category"] || values["tags"]?.join(", ") || "";
+      const context = aiTheme.trim() || values["theme"] || values["category"] || values["tags"]?.join(", ") || "";
       const { data, error } = await supabase.functions.invoke("generate-content", {
         body: { type: item.type, context },
       });
@@ -232,54 +234,65 @@ export default function AdminDetailDialog({ item, onClose, onSave, onDelete, onD
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-white/10 flex gap-2 items-center">
+        <div className="p-4 border-t border-white/10 space-y-2">
           {canGenerate && (
-            <Button
-              onClick={handleGenerate}
-              disabled={generating}
-              className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-semibold"
-              title="Générer avec IA"
-            >
-              {generating ? (
-                <span className="flex items-center gap-1.5">
-                  <Wand2 className="w-4 h-4 animate-spin" /> Génération…
-                </span>
-              ) : (
-                <span className="flex items-center gap-1.5">
-                  <Wand2 className="w-4 h-4" /> IA
-                </span>
-              )}
-            </Button>
+            <div className="flex gap-2 items-center">
+              <Input
+                value={aiTheme}
+                onChange={e => setAiTheme(e.target.value)}
+                placeholder="Thème IA (ex: animaux marins, espace…)"
+                className="flex-1 bg-white/8 border-white/15 text-white text-xs h-9 placeholder:text-white/30"
+                onKeyDown={e => { if (e.key === "Enter" && !generating) handleGenerate(); }}
+              />
+              <Button
+                onClick={handleGenerate}
+                disabled={generating}
+                className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-semibold h-9 px-3"
+                title="Générer avec IA"
+              >
+                {generating ? (
+                  <span className="flex items-center gap-1.5">
+                    <Wand2 className="w-4 h-4 animate-spin" /> …
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5">
+                    <Wand2 className="w-4 h-4" /> IA
+                  </span>
+                )}
+              </Button>
+            </div>
           )}
-          {onSave && (
-            <Button
-              onClick={handleSave}
-              disabled={saving || !dirty}
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
-            >
-              {saving ? "…" : <><Save className="w-4 h-4 mr-1.5" /> Enregistrer</>}
-            </Button>
-          )}
-          {onDuplicate && (
-            <Button
-              variant="ghost"
-              onClick={() => onDuplicate(item.type, values)}
-              className="text-white/40 hover:text-white"
-              title="Dupliquer"
-            >
-              <Copy className="w-4 h-4" />
-            </Button>
-          )}
-          {onDelete && item.id && (
-            <Button
-              variant="ghost"
-              onClick={() => onDelete(item.type, item.id!)}
-              className="text-red-400/50 hover:text-red-400"
-              title="Supprimer"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          )}
+          <div className="flex gap-2 items-center">
+            {onSave && (
+              <Button
+                onClick={handleSave}
+                disabled={saving || !dirty}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+              >
+                {saving ? "…" : <><Save className="w-4 h-4 mr-1.5" /> Enregistrer</>}
+              </Button>
+            )}
+            {onDuplicate && (
+              <Button
+                variant="ghost"
+                onClick={() => onDuplicate(item.type, values)}
+                className="text-white/40 hover:text-white"
+                title="Dupliquer"
+              >
+                <Copy className="w-4 h-4" />
+              </Button>
+            )}
+            {onDelete && item.id && (
+              <Button
+                variant="ghost"
+                onClick={() => onDelete(item.type, item.id!)}
+                className="text-red-400/50 hover:text-red-400"
+                title="Supprimer"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>
