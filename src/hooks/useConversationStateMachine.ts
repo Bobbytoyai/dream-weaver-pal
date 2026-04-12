@@ -1,3 +1,4 @@
+// @refresh reset
 import type { ParentSettings } from "@/components/parentSettings";
 import { useBobbyVoiceCore } from "./useBobbyVoiceCore";
 import type { ConversationState, PendingNarration, VoiceState } from "@/lib/bobby/types";
