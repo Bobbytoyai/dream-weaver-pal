@@ -461,47 +461,48 @@ export function useFaceAnimation(
     let speechCheekBoost = 0;
 
     if (faceState === "speaking" && viseme && viseme.amplitude > 0.01) {
-      // Cartoon exaggeration: amplify all viseme values significantly
-      const exaggeration = 2.0;
-      mouthOpenTarget = Math.min(1.0, viseme.mouthOpenness * exaggeration + 0.08);
-      mouthWidthTarget = viseme.mouthWidth * 1.1;
-      mouthRoundTarget = viseme.mouthRound * 1.5;
+      // Cartoon exaggeration: amplify all viseme values for expressiveness
+      const exaggeration = 2.8;
+      mouthOpenTarget = Math.min(1.0, viseme.mouthOpenness * exaggeration + 0.1);
+      mouthWidthTarget = viseme.mouthWidth * 1.3;
+      mouthRoundTarget = viseme.mouthRound * 1.8;
       jawDropTarget = viseme.jawDrop * exaggeration;
 
-      // Add micro-variation for liveliness
-      const microVar = Math.sin(breathPhase.current * 10) * 0.05;
+      // Rhythmic micro-variation for liveliness
+      const microVar = Math.sin(breathPhase.current * 12) * 0.06 + Math.sin(breathPhase.current * 7.3) * 0.03;
       mouthOpenTarget += microVar;
 
       // Squash & stretch: wider mouth = less tall, taller mouth = less wide
       if (mouthOpenTarget > 0.3) {
-        mouthWidthTarget *= 0.85;
+        mouthWidthTarget *= 0.82;
       }
       if (mouthWidthTarget > 0.65) {
-        mouthOpenTarget *= 0.9;
+        mouthOpenTarget *= 0.88;
       }
 
-      // ── Sync eyes/eyebrows/head with speech intensity ──
+      // Sync eyes/eyebrows/head with speech intensity
       const amp = viseme.amplitude;
-      // Eyebrows rise on emphasis (loud syllables)
-      speechEyebrowLift = amp > 0.15 ? (amp - 0.15) * 0.35 : 0;
-      // Eyes widen slightly on emphasis
-      speechEyeWiden = amp > 0.12 ? (amp - 0.12) * 0.15 : 0;
-      // Subtle head nod on rhythm
-      speechHeadNod = Math.sin(breathPhase.current * 6) * amp * 0.04;
-      // Cheeks glow more when smiling/speaking enthusiastically
-      speechCheekBoost = mouthWidthTarget > 0.6 ? (mouthWidthTarget - 0.6) * 0.4 : 0;
+      speechEyebrowLift = amp > 0.1 ? (amp - 0.1) * 0.5 : 0;
+      speechEyeWiden = amp > 0.08 ? (amp - 0.08) * 0.2 : 0;
+      speechHeadNod = Math.sin(breathPhase.current * 5) * amp * 0.06;
+      speechCheekBoost = mouthWidthTarget > 0.5 ? (mouthWidthTarget - 0.5) * 0.5 : 0;
 
     } else if (faceState === "speaking") {
-      // Fallback amplitude-based (cartoon style) — more visible
-      mouthOpenTarget = Math.min(1.0, audioAmplitude * 5.5 + 0.06);
-      mouthWidthTarget = targets.mouthWidth ?? 0.55;
-      mouthRoundTarget = audioAmplitude > 0.25 ? 0.25 : 0;
-      jawDropTarget = audioAmplitude * 2.8;
+      // Fallback amplitude-based (no viseme data) — very visible
+      const ampFactor = Math.min(1.0, audioAmplitude * 6.5 + 0.08);
+      mouthOpenTarget = ampFactor;
+      mouthWidthTarget = (targets.mouthWidth ?? 0.55) + audioAmplitude * 0.3;
+      mouthRoundTarget = audioAmplitude > 0.2 ? 0.35 : audioAmplitude * 0.5;
+      jawDropTarget = audioAmplitude * 3.2;
 
-      speechEyebrowLift = audioAmplitude > 0.15 ? (audioAmplitude - 0.15) * 0.3 : 0;
-      speechEyeWiden = audioAmplitude > 0.12 ? (audioAmplitude - 0.12) * 0.12 : 0;
-      speechHeadNod = Math.sin(breathPhase.current * 6) * audioAmplitude * 0.03;
-      speechCheekBoost = audioAmplitude > 0.2 ? audioAmplitude * 0.15 : 0;
+      // Add syllable-like oscillation even with raw amplitude
+      const syllableOsc = Math.sin(breathPhase.current * 14) * 0.08 * audioAmplitude;
+      mouthOpenTarget += syllableOsc;
+
+      speechEyebrowLift = audioAmplitude > 0.1 ? (audioAmplitude - 0.1) * 0.45 : 0;
+      speechEyeWiden = audioAmplitude > 0.08 ? (audioAmplitude - 0.08) * 0.18 : 0;
+      speechHeadNod = Math.sin(breathPhase.current * 5) * audioAmplitude * 0.05;
+      speechCheekBoost = audioAmplitude > 0.15 ? audioAmplitude * 0.2 : 0;
     } else {
       mouthOpenTarget = (targets.mouthOpenness ?? 0) + mouthBreath + mouthQuirkOpenAdd;
       mouthWidthTarget = (targets.mouthWidth ?? 0.5) + mouthBreathWidth + mouthQuirkWidthAdd;
