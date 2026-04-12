@@ -694,16 +694,18 @@ const Admin = () => {
     const totalForCat = interactions?.filter(i => i.category === interactionCat).length || 0;
 
     return (
-      <>{detailDialog}
+      <>
+      {detailDialog}
       <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
             <span className="text-2xl">{catConfig?.emoji}</span>
             <div>
               <h1 className="text-xl font-bold text-white">{catConfig?.label}</h1>
               <p className="text-white/40 text-xs">{totalForCat} interactions • {filteredInteractions.length} affichées</p>
             </div>
           </div>
-
-          {/* Age filter */}
           <div className="flex gap-2 flex-wrap">
             {AGE_GROUPS.map(g => (
               <button key={g.label} onClick={() => setInteractionAge({ min: g.min, max: g.max })}
@@ -715,15 +717,11 @@ const Admin = () => {
               >{g.label}</button>
             ))}
           </div>
-
-          {/* Search */}
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
             <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
               className="bg-white/10 border-white/20 text-white pl-9" />
           </div>
-
-          {/* Interaction list */}
           <div className="space-y-2">
             {(search.trim()
               ? filteredInteractions.filter(i => i.child_input.toLowerCase().includes(search.toLowerCase()) || i.ai_response.toLowerCase().includes(search.toLowerCase()))
