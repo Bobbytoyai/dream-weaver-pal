@@ -240,6 +240,17 @@ const INTENT_RULES: IntentRule[] = [
     /foot|football|sport|danse|musique|piscine|vélo|dessin|peinture|guitare|piano/i,
   ]},
 
+  // Situational
+  { intent: "FATIGUE", priority: 76, patterns: [
+    /fatigué|crevé|épuisé|plus d'énergie|trop fatigué|je suis fatigué/i,
+  ]},
+  { intent: "ECHEC", priority: 82, patterns: [
+    /raté|échoué|perdu|loupé|j'ai raté|j'ai perdu|pas réussi|mauvaise note/i,
+  ]},
+  { intent: "OBJECTIF", priority: 72, patterns: [
+    /je veux gagner|je veux réussir|mon objectif|je vais y arriver|je veux être le meilleur/i,
+  ]},
+
   // Requests
   { intent: "HISTOIRE", priority: 78, patterns: [
     /raconte|histoire|conte|il était une fois|raconte-moi/i,
