@@ -122,7 +122,7 @@ export function useBobbyVoiceCore({
         setBobbyText(getBobbySleepMessage());
         go("SLEEP");
       }
-    }, 45000);
+    }, 120_000);
   }, [clearSleepTimer, go]);
 
   const stopPlayback = useCallback(() => {
