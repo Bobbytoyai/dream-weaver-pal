@@ -146,14 +146,16 @@ export async function fetchTTSAudio(
   const cached = audioCache.get(cacheKey);
   if (cached) return cached;
 
-  // 2. Check persistent cache (IndexedDB)
-  try {
-    const persistentCached = await getCachedTTSAudio(spokenText, profile);
-    if (persistentCached) {
-      console.log("[TTS] ⚡ Persistent cache hit!");
-      return persistentCached;
-    }
-  } catch { /* non-critical */ }
+  // 2. Check persistent cache (IndexedDB) — SKIP if online (prefer ElevenLabs quality)
+  if (!isOnline) {
+    try {
+      const persistentCached = await getCachedTTSAudio(spokenText, profile);
+      if (persistentCached) {
+        console.log("[TTS] ⚡ Persistent cache hit (offline)!");
+        return persistentCached;
+      }
+    } catch { /* non-critical */ }
+  }
 
   // 3. ElevenLabs (cloud — low latency streaming)
   const isOnline = typeof navigator !== "undefined" && navigator.onLine;

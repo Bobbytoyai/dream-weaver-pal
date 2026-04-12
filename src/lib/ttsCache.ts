@@ -15,7 +15,7 @@
 import type { VoiceProfile, Emotion } from "./voicePipeline";
 
 const DB_NAME = "bobby-tts-cache";
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Bumped to invalidate old Piper-only cache
 const STORE_NAME = "audio";
 
 // ─── IndexedDB helpers ──────────────────────────────────────
