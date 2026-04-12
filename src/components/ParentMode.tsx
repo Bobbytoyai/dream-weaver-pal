@@ -1923,7 +1923,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     // Build daily summaries
     const dailySummaries = groupedSessions.map(group => {
       const daySessions = group.sessions;
-      const dayAnalyses = daySessions.map(s => analyses.find(a => a.session_id === s.id)).filter(Boolean) as ParentAnalysis[];
+      const dayAnalyses = daySessions.map(s => analyses.find(a => a.session_id === s.id)).filter(Boolean) as Analysis[];
       const totalMessages = daySessions.reduce((sum, s) => sum + s.message_count, 0);
       const totalDuration = daySessions.reduce((sum, s) => sum + (s.duration_seconds || 0), 0);
       const allEmotions = daySessions.flatMap(s => s.detected_emotions || []);
