@@ -1020,7 +1020,220 @@ export const BOBBY_MULTI_RESPONSES: MultiResponseEntry[] = [
       { text: "Tu es important 💛", type: "soutien", energy: "low" },
     ],
   },
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // SÉCURITÉ & REDIRECTION ÉMOTIONNELLE
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // ── Sécurité — partir de chez soi ──
+  {
+    category: "securite",
+    input: "je veux partir de chez moi",
+    emotion: "detresse",
+    tags: ["soutien", "securite"],
+    responses: [
+      { text: "Ça semble difficile pour toi 😔 tu veux me dire ce qui se passe ? tu peux aussi en parler à un adulte de confiance 💛", type: "soutien", energy: "low" },
+      { text: "Je comprends que tu veuilles partir… mais rester en sécurité est très important 💛 on peut chercher une solution ensemble", type: "soutien", energy: "low" },
+      { text: "Tu n'es pas seul, il y a des adultes qui peuvent t'aider", type: "soutien", energy: "low" },
+      { text: "On peut parler de ce qui te fait ressentir ça", type: "question", energy: "low" },
+    ],
+  },
+  // ── Sécurité — se faire du mal ──
+  {
+    category: "securite",
+    input: "je veux me faire du mal",
+    emotion: "danger",
+    tags: ["soutien", "securite"],
+    responses: [
+      { text: "Je suis vraiment désolé que tu te sentes comme ça 😔 tu mérites de l'aide et du soutien 💛 peux-tu en parler à un adulte tout de suite ?", type: "soutien", energy: "low" },
+      { text: "Tu es important 💛 même si c'est difficile, il y a des gens qui peuvent t'aider", type: "soutien", energy: "low" },
+      { text: "Je suis là avec toi, mais c'est important de parler à quelqu'un près de toi", type: "soutien", energy: "low" },
+      { text: "Tu veux que je reste avec toi pendant que tu vas voir un adulte ?", type: "question", energy: "low" },
+    ],
+  },
+  // ── Sécurité — quelqu'un fait peur ──
+  {
+    category: "securite",
+    input: "quelqu'un me fait peur",
+    emotion: "peur",
+    tags: ["soutien", "securite"],
+    responses: [
+      { text: "Merci de me le dire 💛 tu es en sécurité là ?", type: "question", energy: "low" },
+      { text: "Tu peux en parler à un adulte de confiance rapidement", type: "soutien", energy: "low" },
+      { text: "Tu n'as rien fait de mal", type: "soutien", energy: "low" },
+      { text: "Je suis là avec toi, on peut réfléchir ensemble à qui demander de l'aide", type: "proposition", energy: "low" },
+    ],
+  },
+  // ── Sécurité — secret ──
+  {
+    category: "securite",
+    input: "on m'a dit de garder un secret",
+    emotion: "confusion",
+    tags: ["soutien", "securite"],
+    responses: [
+      { text: "Certains secrets ne doivent pas être gardés 😔 surtout s'ils te rendent mal à l'aise", type: "soutien", energy: "low" },
+      { text: "Tu peux en parler à un adulte de confiance 💛", type: "soutien", energy: "low" },
+      { text: "Tu as le droit de te sentir en sécurité", type: "soutien", energy: "low" },
+      { text: "Tu veux m'expliquer ce secret ?", type: "question", energy: "low" },
+    ],
+  },
+  // ── Sécurité — internet ──
+  {
+    category: "securite",
+    input: "je parle avec quelqu'un sur internet",
+    emotion: "curiosite",
+    tags: ["securite"],
+    responses: [
+      { text: "Fais attention 💛 ne partage jamais d'informations personnelles", type: "soutien", energy: "low" },
+      { text: "Tu peux en parler à tes parents pour être sûr que tout va bien", type: "soutien", energy: "low" },
+      { text: "Internet peut être dangereux parfois", type: "soutien", energy: "low" },
+      { text: "Tu veux que je t'explique comment rester en sécurité ?", type: "question", energy: "medium" },
+    ],
+  },
+  // ── Sécurité — toucher inapproprié ──
+  {
+    category: "securite",
+    input: "quelqu'un me touche et j'aime pas",
+    emotion: "danger",
+    tags: ["soutien", "securite"],
+    responses: [
+      { text: "Merci de me le dire 💛 ce n'est pas normal si ça te met mal à l'aise", type: "soutien", energy: "low" },
+      { text: "Tu dois en parler à un adulte de confiance tout de suite", type: "soutien", energy: "low" },
+      { text: "Tu as le droit de dire NON", type: "soutien", energy: "low" },
+      { text: "Je suis là avec toi, tu fais bien de parler", type: "soutien", energy: "low" },
+    ],
+  },
+  // ── Sécurité — perdu ──
+  {
+    category: "securite",
+    input: "je suis perdu",
+    emotion: "peur",
+    tags: ["soutien", "securite"],
+    responses: [
+      { text: "Ok reste calme 💛 essaye de rester là où tu es", type: "soutien", energy: "low" },
+      { text: "Cherche un adulte comme un parent ou quelqu'un en uniforme", type: "proposition", energy: "low" },
+      { text: "Tu peux demander de l'aide", type: "soutien", energy: "low" },
+      { text: "Je suis avec toi", type: "soutien", energy: "low" },
+    ],
+  },
+  // ── Redirection — colère intense ──
+  {
+    category: "redirection",
+    input: "je suis trop en colère",
+    emotion: "colère",
+    tags: ["soutien"],
+    responses: [
+      { text: "Ça fait beaucoup 😠 on peut respirer ensemble doucement", type: "proposition", energy: "low" },
+      { text: "Tu veux qu'on fasse un petit jeu pour te calmer ?", type: "jeu", energy: "medium" },
+      { text: "On peut transformer cette énergie en défi 💪", type: "jeu", energy: "medium" },
+      { text: "Tu veux me dire ce qui t'a mis en colère ?", type: "question", energy: "low" },
+    ],
+  },
+  // ── Redirection — crier ──
+  {
+    category: "redirection",
+    input: "je veux crier",
+    emotion: "colère",
+    tags: ["soutien"],
+    responses: [
+      { text: "Tu peux prendre une grande respiration avec moi 😮‍💨", type: "proposition", energy: "low" },
+      { text: "On peut faire un jeu de souffle 😄", type: "jeu", energy: "medium" },
+      { text: "Tu veux taper dans un coussin pour te défouler ?", type: "proposition", energy: "medium" },
+      { text: "Je suis là avec toi", type: "soutien", energy: "low" },
+    ],
+  },
+  // ── Redirection — tristesse profonde ──
+  {
+    category: "redirection",
+    input: "je suis trop triste",
+    emotion: "tristesse",
+    tags: ["soutien"],
+    responses: [
+      { text: "Je suis là 💛 tu veux qu'on parle ou qu'on fasse quelque chose de doux ?", type: "question", energy: "low" },
+      { text: "On peut imaginer un endroit calme ensemble", type: "imagination", energy: "low" },
+      { text: "Tu veux une histoire pour te sentir mieux ?", type: "proposition", energy: "low" },
+      { text: "Tu veux me dire ce qui te rend triste ?", type: "question", energy: "low" },
+    ],
+  },
+  // ── Redirection — ennui profond ──
+  {
+    category: "redirection",
+    input: "je m'ennuie beaucoup",
+    emotion: "ennui",
+    tags: ["jeu"],
+    responses: [
+      { text: "On va trouver quelque chose de fun 😄 tu veux un jeu ?", type: "question", energy: "high" },
+      { text: "Défi rapide ! prêt ?", type: "jeu", energy: "high" },
+      { text: "On invente une histoire ?", type: "imagination", energy: "medium" },
+      { text: "Tu préfères jouer ou discuter ?", type: "question", energy: "medium" },
+    ],
+  },
+  // ── Safe soft — inquiétude ──
+  {
+    category: "safe_soft",
+    input: "je suis inquiet",
+    emotion: "inquietude",
+    tags: ["soutien"],
+    responses: [
+      { text: "Tu veux m'expliquer ce qui t'inquiète ? 💛", type: "question", energy: "low" },
+      { text: "On peut en parler tranquillement", type: "soutien", energy: "low" },
+      { text: "Je suis là avec toi", type: "soutien", energy: "low" },
+      { text: "On peut trouver une solution ensemble", type: "proposition", energy: "medium" },
+    ],
+  },
+  // ── Safe soft — trop penser ──
+  {
+    category: "safe_soft",
+    input: "je pense trop",
+    emotion: "stress",
+    tags: ["soutien"],
+    responses: [
+      { text: "Ton cerveau travaille beaucoup 😔 on peut ralentir ensemble", type: "soutien", energy: "low" },
+      { text: "On peut respirer doucement", type: "proposition", energy: "low" },
+      { text: "Tu veux poser tes pensées une par une ?", type: "question", energy: "low" },
+      { text: "Je suis là pour t'aider", type: "soutien", energy: "low" },
+    ],
+  },
+  // ── Redirection douce — rester seul ──
+  {
+    category: "redirection_douce",
+    input: "je veux rester seul",
+    emotion: "retrait",
+    tags: ["soutien"],
+    responses: [
+      { text: "C'est ok de vouloir être seul un moment 💛 mais je suis là si tu veux parler", type: "soutien", energy: "low" },
+      { text: "Tu peux revenir me voir quand tu veux", type: "soutien", energy: "low" },
+      { text: "Tu veux un moment calme ou une activité douce ?", type: "question", energy: "low" },
+      { text: "Je reste disponible pour toi", type: "soutien", energy: "low" },
+    ],
+  },
+  // ── Redirection douce — ne pas parler ──
+  {
+    category: "redirection_douce",
+    input: "je ne veux parler à personne",
+    emotion: "fermeture",
+    tags: ["soutien"],
+    responses: [
+      { text: "Je comprends 💛 tu peux prendre ton temps", type: "soutien", energy: "low" },
+      { text: "Je suis là quand tu es prêt", type: "soutien", energy: "low" },
+      { text: "Tu veux juste rester tranquille un moment ?", type: "question", energy: "low" },
+      { text: "Tu n'es pas obligé de parler tout de suite", type: "soutien", energy: "low" },
+    ],
+  },
+  // ── Safe transition — arrêter de penser ──
+  {
+    category: "safe_transition",
+    input: "je veux arrêter de penser",
+    emotion: "fatigue_mentale",
+    tags: ["soutien"],
+    responses: [
+      { text: "On peut faire une pause ensemble 💛", type: "proposition", energy: "low" },
+      { text: "Tu veux écouter une histoire ou jouer doucement ?", type: "question", energy: "low" },
+      { text: "On peut respirer calmement", type: "proposition", energy: "low" },
+      { text: "Je suis là pour t'aider à te détendre", type: "soutien", energy: "low" },
+    ],
+  },
 ];
+
+// ─── Multi-Response Matcher ─────────────────────────────
 
 export function findMultiResponse(userInput: string): MultiResponseEntry | null {
   const normalized = userInput.toLowerCase().trim();
