@@ -765,20 +765,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     setTtsPlaying(text);
 
     try {
-      const resp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts-stream`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({ text: text.slice(0, 500), voiceProfile: "female" }),
-        }
-      );
-      if (!resp.ok) throw new Error("TTS failed");
-      const blob = await resp.blob();
-      const url = URL.createObjectURL(blob);
+      const { fetchTTSAudio } = await import("@/lib/voicePipeline");
+      const url = await fetchTTSAudio(text.slice(0, 500), undefined, "female");
+      if (url === "__silent__" || url === "__browser_tts__" || url === "__piper_silent__") {
+        setTtsPlaying(null);
+        return;
+      }
       const audio = new Audio(url);
       ttsAudioRef.current = audio;
       audio.onended = () => {
