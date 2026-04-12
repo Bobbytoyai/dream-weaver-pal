@@ -7,11 +7,10 @@
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import type { Emotion } from "@/lib/voicePipeline";
 import {
-  type BobbyEmotion,
   processEmotionPipeline,
   processBobbyResponseEmotion,
-  type ExpressionResult,
 } from "@/lib/bobby/emotionPipeline";
+import type { BobbyEmotion, ExpressionResult } from "@/lib/bobby/expressionEngine";
 import { resolveExpression } from "@/lib/bobby/expressionLibrary";
 import type { FaceAnimationState } from "@/components/hologram/useFaceAnimation";
 
