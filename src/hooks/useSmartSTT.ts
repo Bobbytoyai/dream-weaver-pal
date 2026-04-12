@@ -69,11 +69,14 @@ export function useSmartSTT({ onPartial, onFinal, onError, onUtteranceEnd, onSpe
     deepgramFailCountRef.current++;
     console.warn(`[SmartSTT] Deepgram error #${deepgramFailCountRef.current}: ${err}`);
 
-    if (deepgramFailCountRef.current >= MAX_DEEPGRAM_FAILURES) {
+    // STT_MAX_RETRIES means Deepgram exhausted all its internal retries — switch immediately
+    const shouldSwitch = err === "STT_MAX_RETRIES" || deepgramFailCountRef.current >= MAX_DEEPGRAM_FAILURES;
+
+    if (shouldSwitch) {
       console.log("[SmartSTT] ⚠️ Switching to native STT fallback");
       activeBackendRef.current = "native";
       setBackend("native");
-      onErrorRef.current?.("Deepgram indisponible, mode fallback activé");
+      // Don't propagate the error to the UI — we're recovering via native
     }
   }, []);
 
