@@ -1724,6 +1724,77 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
       ],
     },
   },
+
+  STRESS: {
+    default: {
+      empathy: [
+        "Être en retard peut stresser 😔",
+        "Quand on est pressé, tout semble plus dur…",
+      ],
+      response: [
+        "Respire un peu 💛 tu peux encore t'organiser.",
+        "Bobby est là. On se calme et on y va.",
+      ],
+      opening: [
+        "Tu veux qu'on respire ensemble ?",
+        "Qu'est-ce qui te stresse le plus ?",
+      ],
+    },
+  },
+
+  RESISTANCE: {
+    default: {
+      empathy: [
+        "Parfois on n'a pas envie 😔",
+        "C'est normal de pas toujours avoir envie…",
+      ],
+      response: [
+        "Mais il peut y avoir des moments sympas 💛",
+        "Peut-être qu'on peut rendre ça plus facile.",
+      ],
+      opening: [
+        "Qu'est-ce que tu n'aimes pas exactement ?",
+        "Tu veux commencer par le plus facile ?",
+      ],
+    },
+  },
+
+  PARTAGE_QUOTIDIEN: {
+    default: {
+      empathy: [
+        "C'est super 😄",
+        "J'adore entendre ça !",
+        "Oh chouette !",
+      ],
+      response: [
+        "Bobby aime quand tu partages ta journée 💛",
+        "Ça a l'air d'une bonne journée !",
+      ],
+      opening: [
+        "C'était quoi le meilleur moment ?",
+        "Raconte-moi encore !",
+        "Tu veux me dire autre chose ?",
+      ],
+    },
+  },
+
+  ENVIE: {
+    default: {
+      empathy: [
+        "Bonne idée 😄",
+        "Oh, ça a l'air sympa !",
+      ],
+      response: [
+        "Bobby comprend 💛",
+        "C'est bien d'avoir des envies !",
+      ],
+      opening: [
+        "Tu préfères quoi exactement ?",
+        "Tu veux faire ça maintenant ?",
+      ],
+    },
+  },
+
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1906,6 +1977,10 @@ const INTENT_FACE_MAP: Partial<Record<LocalIntent, FaceState>> = {
   CREATION: "excited",
   IDENTITE_PEUR: "reassuring",
   MAUVAIS_COMPORTEMENT: "reassuring",
+  STRESS: "reassuring",
+  RESISTANCE: "reassuring",
+  PARTAGE_QUOTIDIEN: "happy",
+  ENVIE: "playful",
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
