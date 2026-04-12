@@ -3138,9 +3138,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     const t = setTimeout(() => {
       setDisplayedTab(activeTab);
       setAnimClass(direction === "right" ? "tab-enter-right" : "tab-enter-left");
-      const t2 = setTimeout(() => setAnimClass(""), 280);
+      const t2 = setTimeout(() => setAnimClass(""), 300);
       return () => clearTimeout(t2);
-    }, 150);
+    }, 160);
     prevTabRef.current = activeTab;
     return () => clearTimeout(t);
   }, [activeTab]);
@@ -3151,9 +3151,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const renderTabContent = () => {
     if (selectedSession) return renderSessionDetail();
+    const tab = displayedTab;
     // If a category is selected, render that category
-    if (activeTab !== "home") {
-      switch (activeTab) {
+    if (tab !== "home") {
+      switch (tab) {
         case "dashboard": return renderDashboard();
         case "sessions": return renderSessionsList();
         case "activites": return (
