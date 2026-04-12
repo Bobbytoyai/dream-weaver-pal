@@ -87,6 +87,16 @@ export function getOfflineResponse(
   // Record input in behavioral memory
   recordInput(text);
 
+  // Learning loop: if child responds quickly after Bobby's last message, boost it
+  if (context.lastBobbyResponse && context.interactionCount > 1) {
+    const timeSinceLast = Date.now() - (context.lastResponseTime || 0);
+    if (timeSinceLast < 10000) { // replied within 10s → good engagement
+      boostResponseScore(context.lastBobbyResponse, 2);
+    } else if (timeSinceLast > 60000) { // took > 60s → low engagement
+      penalizeResponseScore(context.lastBobbyResponse, 1);
+    }
+  }
+
   // Update mood from text
   const detectedMood = detectMoodFromText(text);
   if (detectedMood) {
