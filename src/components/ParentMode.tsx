@@ -224,7 +224,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [audioDuration, setAudioDuration] = useState(0);
   const [newBlockedTopic, setNewBlockedTopic] = useState("");
   const [activeMessageIdx, setActiveMessageIdx] = useState<number>(-1);
-  const [reglagesSection, setReglagesSection] = useState<"voix" | "contenu" | "limites">("voix");
+  const [reglagesSection, setReglagesSection] = useState<"voix" | "contenu" | "limites" | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string; description: string; confirmLabel?: string;
     variant?: "danger" | "warning"; onConfirm: () => void;
