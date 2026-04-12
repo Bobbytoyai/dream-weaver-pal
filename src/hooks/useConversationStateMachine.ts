@@ -233,6 +233,7 @@ export function useConversationStateMachine({
   const retryCountRef = useRef(0);
   const narrationAbortRef = useRef<AbortController | null>(null);
   const speakAndListenRef = useRef<((text: string) => void) | null>(null);
+  const heardSpeechDuringListeningRef = useRef(false);
 
   const audioQueue = useAudioQueue();
   const session = useSessionTracker(childName, childAge);
@@ -386,6 +387,7 @@ export function useConversationStateMachine({
   const goToIdle = useCallback(async () => {
     clearAllTimers();
     conversationActiveRef.current = false;
+    heardSpeechDuringListeningRef.current = false;
     currentEmotionRef.current = undefined;
     recentBobbyTextsRef.current = []; // FIX I6: clear echo buffer on session end (prevent cross-session false echoes)
     transition("IDLE");
@@ -443,6 +445,7 @@ export function useConversationStateMachine({
     clearAllTimers();
     clearListeningTimers();
     accumulatedTextRef.current = "";
+    heardSpeechDuringListeningRef.current = false;
     isSpeakingRef.current = false;
     retryCountRef.current = 0;
     backchannelCountRef.current = 0;
@@ -452,9 +455,16 @@ export function useConversationStateMachine({
       if (machineStateRef.current === "LISTENING") goToIdle();
     }, SILENCE_IDLE_TIMEOUT);
 
-    // 3s silence soft relaunch — gentle prompt if child said nothing
+    // Gentle relaunch only if actual speech/noise was heard during this turn.
+    // This prevents Bobby from looping "je parle / j'écoute" by himself when
+    // the mic failed to start or the child stayed silent.
     silenceRelaunchTimerRef.current = setTimeout(() => {
-      if (machineStateRef.current === "LISTENING" && accumulatedTextRef.current.trim().length === 0 && conversationActiveRef.current) {
+      if (
+        machineStateRef.current === "LISTENING" &&
+        accumulatedTextRef.current.trim().length === 0 &&
+        conversationActiveRef.current &&
+        heardSpeechDuringListeningRef.current
+      ) {
         const relaunch = getSilenceRelaunch();
         setBobbyFaceEmotion("curious");
         setBobbyEmotionIntensity(0.5);
@@ -871,6 +881,10 @@ export function useConversationStateMachine({
     const trimmed = text.trim();
     if (trimmed.length < 2) return;
 
+    if (machineStateRef.current === "LISTENING") {
+      heardSpeechDuringListeningRef.current = true;
+    }
+
     if (confidence !== undefined && confidence < LOW_CONFIDENCE_THRESHOLD && !hasWakeWord(trimmed)) {
       speakAndListen(FALLBACK_FR.low_confidence);
       return;
@@ -930,6 +944,10 @@ export function useConversationStateMachine({
     onPartial: useCallback((text: string) => {
       setPartialText(text);
 
+      if (machineStateRef.current === "LISTENING" && text.trim().length > 0) {
+        heardSpeechDuringListeningRef.current = true;
+      }
+
       // FIX I7: Visual feedback in IDLE for ANY speech — Bobby's face reacts even before wake word
       if (machineStateRef.current === "IDLE" && text.trim().length > 2) {
         const wakeConf = computeWakeConfidence(text);
@@ -967,6 +985,9 @@ export function useConversationStateMachine({
     onFinal: useCallback((text: string) => {
       wakeTriggeredFromPartialRef.current = false;
       if (text.trim().length > 2) {
+        if (machineStateRef.current === "LISTENING") {
+          heardSpeechDuringListeningRef.current = true;
+        }
         setPartialText("");
         handleTranscript(text.trim());
       }
@@ -980,6 +1001,9 @@ export function useConversationStateMachine({
     }, [flushAccumulatedText]),
     onSpeechStarted: useCallback(() => {
       isSpeakingRef.current = true;
+      if (machineStateRef.current === "LISTENING") {
+        heardSpeechDuringListeningRef.current = true;
+      }
       if (utteranceFlushTimerRef.current) {
         clearTimeout(utteranceFlushTimerRef.current);
         utteranceFlushTimerRef.current = setTimeout(() => {
@@ -1058,14 +1082,32 @@ export function useConversationStateMachine({
     lastTapRef.current = now;
 
     const s = machineStateRef.current;
-    if (!micArmed) { setMicArmed(true); }
-    if (s === "LISTENING") { goToIdle(); return; }
+    const sttRunning = deepgramSTT.isRunning.current;
+
+    // Mobile browsers often reject the first getUserMedia call if it didn't come
+    // directly from a user gesture. Retry STT start inside the tap handler so
+    // Bobby can actually hear after the child taps him.
+    if (!sttRunning) {
+      setMicArmed(true);
+      void sttStartRef.current();
+    } else if (!micArmed) {
+      setMicArmed(true);
+    }
+
+    if (s === "LISTENING") {
+      if (!sttRunning) {
+        ensureSession();
+        return;
+      }
+      goToIdle();
+      return;
+    }
     if (s === "SPEAKING" || s === "PROCESSING") { interrupt(); return; }
     ensureSession();
     eventBus.emit({ type: "WAKE_TRIGGERED" });
     eventBus.emit({ type: "WAKE_DETECTED", confidence: 1.0 });
     speakAndListen(s === "SLEEP" ? FALLBACK_FR.sleep_wake : getCachedResponse("wake"));
-  }, [micArmed, ensureSession, goToIdle, interrupt, speakAndListen]);
+  }, [deepgramSTT.isRunning, ensureSession, goToIdle, interrupt, micArmed, speakAndListen]);
 
   const handleParentMode = useCallback(() => {
     conversationActiveRef.current = false;
