@@ -100,6 +100,7 @@ export function useBobbyVoiceCore({
   const handledNarrationIdRef = useRef<string | null>(null);
   const sessionOpenRef = useRef(false);
   const wakeWordArmedRef = useRef(false);
+  const startListeningRef = useRef<() => Promise<void>>(async () => {});
 
   const { startSession, addMessage, endSession, sessionIdRef } = useSessionTracker(childName, childAge);
 
