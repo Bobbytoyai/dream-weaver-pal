@@ -1646,11 +1646,52 @@ export const BOBBY_MULTI_RESPONSES: MultiResponseEntry[] = [
   },
 ];
 
-// ─── Multi-Response Matcher ─────────────────────────────
+// ─── DETRESSE Priority Keywords ─────────────────────────
+
+const DETRESSE_KEYWORDS = [
+  "mourir", "disparaître", "me faire mal", "personne m'aime",
+  "je veux mourir", "je veux disparaître", "je veux me faire mal",
+  "me tuer", "plus envie de vivre", "je veux plus être là",
+  "je suis inutile", "personne ne m'aime",
+];
+
+function isDetresseInput(text: string): boolean {
+  const lower = text.toLowerCase();
+  return DETRESSE_KEYWORDS.some(kw => lower.includes(kw));
+}
+
+// ─── Multi-Response Matcher (with DETRESSE priority) ────
 
 export function findMultiResponse(userInput: string): MultiResponseEntry | null {
   const normalized = userInput.toLowerCase().trim();
   if (!normalized || normalized.length < 2) return null;
+
+  // 🚨 PRIORITÉ ABSOLUE: DÉTRESSE → route vers securite_critique
+  if (isDetresseInput(normalized)) {
+    const criticalEntries = BOBBY_MULTI_RESPONSES.filter(
+      e => e.category === "securite_critique" || e.category === "securite"
+    );
+    // Find best match among critical entries
+    let bestCritical: MultiResponseEntry | null = null;
+    let bestScore = 0;
+    for (const entry of criticalEntries) {
+      const entryNorm = entry.input.toLowerCase().trim();
+      if (normalized === entryNorm) return entry;
+      const userWords = normalized.split(/\s+/).filter(w => w.length > 1);
+      const entryWords = entryNorm.split(/\s+/).filter(w => w.length > 1);
+      let overlap = 0;
+      for (const uw of userWords) {
+        for (const ew of entryWords) {
+          if (uw === ew || uw.includes(ew) || ew.includes(uw)) { overlap++; break; }
+        }
+      }
+      const score = entryWords.length > 0 ? overlap / entryWords.length : 0;
+      if (score > bestScore) { bestScore = score; bestCritical = entry; }
+    }
+    if (bestCritical) return bestCritical;
+    // Fallback: return first securite_critique entry
+    if (criticalEntries.length > 0) return criticalEntries[0];
+  }
 
   let bestMatch: MultiResponseEntry | null = null;
   let bestScore = 0;
@@ -1685,9 +1726,15 @@ export function findMultiResponse(userInput: string): MultiResponseEntry | null 
   return bestMatch;
 }
 
-// ─── Proactive Relance ──────────────────────────────────
+// ─── Proactive Relance (with Conversational Rebond) ─────
 
-export function getProactiveRelance(): string {
+export function getProactiveRelance(childName?: string): string {
+  // Try conversational rebond first (~40% of time for natural feel)
+  if (Math.random() < 0.4) {
+    const rebond = getConversationalRebond(childName);
+    if (rebond) return rebond;
+  }
+
   const silenceEntry = BOBBY_MULTI_RESPONSES.find(e => e.input === "__silence__");
   if (!silenceEntry) return "Tu es là ? 😊";
 
