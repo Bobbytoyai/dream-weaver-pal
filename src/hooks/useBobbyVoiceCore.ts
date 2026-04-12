@@ -331,6 +331,20 @@ export function useBobbyVoiceCore({
     scheduleSleep();
   }, [go, scheduleSleep, stopPlayback]);
 
+  // ─── Wake word: listen continuously when IDLE or SLEEP ───
+  const wakeWordEnabled = machineState === "IDLE" || machineState === "SLEEP";
+
+  const handleWakeDetected = useCallback((transcript: string) => {
+    console.log("[BobbyVoiceCore] 🎤 Wake word detected:", transcript);
+    void startListening();
+  }, [startListening]);
+
+  const wakeWord = useWakeWord({
+    enabled: wakeWordEnabled,
+    onWake: handleWakeDetected,
+    sensitivity: "high",
+  });
+
   const handleTapBobby = useCallback(async () => {
     // Arm wake word on first user gesture (browser mic policy)
     if (!wakeWordArmedRef.current) {
@@ -346,21 +360,7 @@ export function useBobbyVoiceCore({
     // Stop wake word while we do active STT
     wakeWord.stopListening();
     await startListening();
-  }, [interrupt, startListening]);
-
-  // ─── Wake word: listen continuously when IDLE or SLEEP ───
-  const wakeWordEnabled = machineState === "IDLE" || machineState === "SLEEP";
-
-  const handleWakeDetected = useCallback((transcript: string) => {
-    console.log("[BobbyVoiceCore] 🎤 Wake word detected:", transcript);
-    void startListening();
-  }, [startListening]);
-
-  const wakeWord = useWakeWord({
-    enabled: wakeWordEnabled,
-    onWake: handleWakeDetected,
-    sensitivity: "high",
-  });
+  }, [interrupt, startListening, wakeWord]);
 
   useEffect(() => {
     const welcome = getBobbyWelcomeMessage(childName);
