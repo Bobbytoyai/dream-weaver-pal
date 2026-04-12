@@ -263,36 +263,37 @@ export default function AdminDetailDialog({ item, onClose, onSave, onDelete, onD
             </div>
           )}
           <div className="flex gap-2 items-center">
-            <Button
-              onClick={handleSave}
-              disabled={saving || !dirty}
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
-            >
-              {saving ? "…" : <><Save className="w-4 h-4 mr-1.5" /> Enregistrer</>}
-            </Button>
-          )}
-          {onDuplicate && (
-            <Button
-              variant="ghost"
-              onClick={() => onDuplicate(item.type, values)}
-              className="text-white/40 hover:text-white"
-              title="Dupliquer"
-            >
-              <Copy className="w-4 h-4" />
-            </Button>
-          )}
-          {onDelete && item.id && (
-            <Button
-              variant="ghost"
-              onClick={() => onDelete(item.type, item.id!)}
-              className="text-red-400/50 hover:text-red-400"
-              title="Supprimer"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          )}
+            {onSave && (
+              <Button
+                onClick={handleSave}
+                disabled={saving || !dirty}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+              >
+                {saving ? "…" : <><Save className="w-4 h-4 mr-1.5" /> Enregistrer</>}
+              </Button>
+            )}
+            {onDuplicate && (
+              <Button
+                variant="ghost"
+                onClick={() => onDuplicate(item.type, values)}
+                className="text-white/40 hover:text-white"
+                title="Dupliquer"
+              >
+                <Copy className="w-4 h-4" />
+              </Button>
+            )}
+            {onDelete && item.id && (
+              <Button
+                variant="ghost"
+                onClick={() => onDelete(item.type, item.id!)}
+                className="text-red-400/50 hover:text-red-400"
+                title="Supprimer"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
     </div>
   );
 }
