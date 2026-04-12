@@ -6,7 +6,7 @@ import {
   Play, Pause, AlertTriangle, TrendingUp, Trash2, ChevronRight, Gamepad2,
   BarChart3, Calendar, User, Zap, Moon, Sun, Hand, Lock, Search,
   Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X,
-  SkipForward, SkipBack, Activity, Bell, ChevronDown, Star, Edit3
+  SkipForward, SkipBack, Activity, Bell, ChevronDown, ChevronLeft, Star, Edit3
 } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { getInterestSnapshot, INTEREST_KEYWORDS_PUBLIC } from "@/lib/bobby/interestTracker";
@@ -224,7 +224,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [audioDuration, setAudioDuration] = useState(0);
   const [newBlockedTopic, setNewBlockedTopic] = useState("");
   const [activeMessageIdx, setActiveMessageIdx] = useState<number>(-1);
-  const [reglagesSection, setReglagesSection] = useState<"voix" | "contenu" | "limites">("voix");
+  const [reglagesSection, setReglagesSection] = useState<"voix" | "contenu" | "limites" | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string; description: string; confirmLabel?: string;
     variant?: "danger" | "warning"; onConfirm: () => void;
@@ -2326,26 +2326,31 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const renderReglages = () => (
     <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
-      {/* Section selector — compact pills */}
-      <div className="flex gap-1.5">
-        {([
-          ["voix", "🎤", "Voix"],
-          ["contenu", "📚", "Contenu"],
-          ["limites", "⏱️", "Limites"],
-        ] as const).map(([key, emoji, label]) => (
-          <button key={key} onClick={() => setReglagesSection(key)}
-            className={`flex-1 py-2.5 rounded-2xl text-center transition-all duration-200 border ${
-              reglagesSection === key
-                ? "bg-primary/10 border-primary/30 shadow-sm"
-                : "bg-card border-border/20 hover:bg-muted/50"
-            }`}>
-            <span className="text-lg block">{emoji}</span>
-            <span className={`text-[10px] font-extrabold block ${
-              reglagesSection === key ? "text-primary" : "text-muted-foreground"
-            }`}>{label}</span>
-          </button>
-        ))}
-      </div>
+      {/* Card grid — home of settings */}
+      {!reglagesSection && (
+        <div className="grid grid-cols-2 gap-3">
+          {([
+            ["voix", "🎤", "Voix & Sons", "Type, vitesse, couleur, effets", "from-blue-400/15 to-blue-300/5"],
+            ["contenu", "📚", "Contenu", "Modes, thèmes, durée", "from-emerald-400/15 to-emerald-300/5"],
+            ["limites", "⏱️", "Limites", "Temps, nuit, interactions", "from-amber-400/15 to-amber-300/5"],
+          ] as const).map(([key, emoji, label, desc, gradient]) => (
+            <button key={key} onClick={() => setReglagesSection(key)}
+              className={`bg-gradient-to-br ${gradient} rounded-2xl p-4 text-center transition-all duration-200 active:scale-95 border-2 border-transparent hover:border-primary/15`}>
+              <span className="text-3xl block mb-2">{emoji}</span>
+              <span className="text-[13px] font-extrabold text-foreground block">{label}</span>
+              <span className="text-[9px] text-muted-foreground leading-tight">{desc}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Back button when inside a section */}
+      {reglagesSection && (
+        <button onClick={() => setReglagesSection(null)}
+          className="flex items-center gap-1.5 text-[12px] font-bold text-primary hover:underline mb-1 active:scale-95 transition-all">
+          <ChevronLeft className="w-4 h-4" /> Réglages
+        </button>
+      )}
 
       {/* Voix section */}
       {reglagesSection === "voix" && (
