@@ -13,7 +13,7 @@ import { getInterestSnapshot, INTEREST_KEYWORDS_PUBLIC } from "@/lib/bobby/inter
 import { supabase } from "@/integrations/supabase/client";
 import StoryLibrary from "@/components/StoryLibrary";
 import ContentCategories from "@/components/ContentCategories";
-import { preloadVoice as preloadPiperVoice } from "@/lib/piperTTS";
+// Piper TTS removed — ElevenLabs only
 import ConfirmDialog from "@/components/ConfirmDialog";
 import {
   loadParentDashboardSnapshot,
@@ -2179,20 +2179,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     <button
                       onClick={async () => {
                         if (item.label === "Voix Bobby") {
-                          setPiperDownloading(true);
-                          setPiperDone(false);
-                          const profiles = ["female", "male", "child", "sister", "brother"] as const;
-                          for (const profile of profiles) {
-                            try {
-                              await preloadPiperVoice(profile, (p) => {
-                                setPiperProgress((prev) => ({ ...prev, [profile]: p }));
-                              });
-                              setPiperProgress((prev) => ({ ...prev, [profile]: 1 }));
-                            } catch {
-                              console.warn(`[ParentMode] Failed to download Piper voice: ${profile}`);
-                            }
-                          }
-                          setPiperDownloading(false);
+                          // ElevenLabs voices are cloud-based, no download needed
                           setPiperDone(true);
                         }
                       }}
