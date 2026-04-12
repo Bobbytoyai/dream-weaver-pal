@@ -246,20 +246,21 @@ export function useBobbyVoiceCore({
 
     // ─── Cooldown: reject transcripts arriving too soon after Bobby stopped speaking ───
     const msSinceSpeech = Date.now() - lastSpeechEndRef.current;
-    if (msSinceSpeech < 4000) {
+    if (msSinceSpeech < 1500) {
       console.warn("[BobbyVoiceCore] 🔇 Anti-echo cooldown: rejected transcript", msSinceSpeech, "ms after speech end");
       return;
     }
 
-    // ─── Anti-echo: reject transcript if it matches ANY recent Bobby message ───
+    // ─── Anti-echo: reject transcript if it's nearly identical to Bobby's last message ───
+    // Only reject at very high similarity (>0.7) to avoid blocking legitimate user input
     const incoming = trimmedText.toLowerCase();
-    const incomingWords = incoming.split(/\s+/);
+    const incomingWords = incoming.split(/\s+/).filter(w => w.length > 2); // ignore short words
     for (const recentMsg of recentBobbyMessagesRef.current) {
-      if (recentMsg.length < 10) continue;
-      const bobbyWords = new Set(recentMsg.split(/\s+/));
+      if (recentMsg.length < 15) continue;
+      const bobbyWords = new Set(recentMsg.split(/\s+/).filter(w => w.length > 2));
       const matchCount = incomingWords.filter(w => bobbyWords.has(w)).length;
       const similarity = matchCount / Math.max(incomingWords.length, 1);
-      if (similarity > 0.3) {
+      if (similarity > 0.7) {
         console.warn("[BobbyVoiceCore] 🔇 Anti-echo: rejected (similarity:", similarity.toFixed(2), "):", trimmedText.slice(0, 50));
         processingRef.current = false;
         void startListeningRef.current();
