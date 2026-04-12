@@ -16,7 +16,6 @@ import { toVoiceState, type BobbyBrainReply, type ConversationState, type Pendin
 import { useSessionTracker } from "./useSessionTracker";
 import { useSmartSTT } from "./useSmartSTT";
 import { useConversationRecorder } from "./useConversationRecorder";
-import { useSmartSTT } from "./useSmartSTT";
 
 interface UseBobbyVoiceCoreOptions {
   childName: string;
