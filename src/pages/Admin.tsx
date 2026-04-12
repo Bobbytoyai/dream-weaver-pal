@@ -941,12 +941,67 @@ const Admin = () => {
   }
 
   if (topSection === "qa") {
-    const filteredQA = search.trim()
-      ? QA_DATABASE.filter(e =>
-          e.triggers.some(t => t.toLowerCase().includes(search.toLowerCase())) ||
-          e.responses.some(r => r.toLowerCase().includes(search.toLowerCase()))
-        )
-      : null;
+    const QA_INTENT_EMOJIS: Record<string, string> = {
+      GREETING: "👋", FAREWELL: "👋", GRATITUDE: "🙏", POSITIVE: "😊", IDENTITY: "🤖",
+      PLAY_REQUEST: "🎮", RIDDLE: "🧩", JOKE: "😂", QUIZ: "🧠", QUESTION: "❓",
+      ANIMALS: "🐾", DINOSAUR: "🦖", SPACE: "🚀", NATURE: "🌿", ECOLOGY: "♻️",
+      SCIENCE: "🔬", MATH: "🔢", GEOGRAPHY: "🌍", HISTORY: "📜", HEALTH: "🩺",
+      EMOTIONS: "💛", FRIENDSHIP: "🤝", SCHOOL: "🏫", FOOD: "🍽️", SPORT: "⚽",
+      MUSIC: "🎵", ART: "🎨", TECHNOLOGY: "💻", TRANSPORT: "🚗", JOBS: "👷",
+      FAMILY: "👨‍👩‍👧", FANTASY: "✨", STORY: "📖", TIME: "⏰", PHILOSOPHY: "🤔",
+      NEUTRAL: "😐", HELP: "🆘", REPEAT: "🔁", VOLUME: "🔊", ENCOURAGEMENT: "💪",
+      CULTURE: "🏛️", TRANSITION: "➡️", OTHER: "📋",
+    };
+
+    // Detail: show all entries of a selected intent
+    if (interactionCat) {
+      const intentEntries = QA_DATABASE.filter(e => (e.intent || "OTHER") === interactionCat);
+      const searchLower = search.toLowerCase();
+      const filtered = searchLower
+        ? intentEntries.filter(e => e.triggers.some(t => t.toLowerCase().includes(searchLower)) || e.responses.some(r => r.toLowerCase().includes(searchLower)))
+        : intentEntries;
+
+      return (
+        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+          <div className="max-w-4xl mx-auto space-y-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+              <span className="text-2xl">{QA_INTENT_EMOJIS[interactionCat] || "❓"}</span>
+              <div>
+                <h1 className="text-xl font-bold text-white">{interactionCat}</h1>
+                <p className="text-white/40 text-xs">{filtered.length}/{intentEntries.length} entrées</p>
+              </div>
+            </div>
+
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
+                className="bg-white/10 border-white/20 text-white pl-9" />
+            </div>
+
+            <div className="space-y-2">
+              {filtered.map((entry, idx) => (
+                <div key={idx} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                  <p className="text-xs text-white/50 mb-1.5">🎯 {entry.triggers.join(" • ")}</p>
+                  <div className="space-y-1">
+                    {entry.responses.map((r, i) => (
+                      <p key={i} className="text-sm text-white/70">🤖 {r}</p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Intent category grid with search
+    const searchLower = search.toLowerCase();
+    const filteredIntents = searchLower
+      ? qaByIntent.filter(([, entries]) => entries.some(e => e.triggers.some(t => t.toLowerCase().includes(searchLower)) || e.responses.some(r => r.toLowerCase().includes(searchLower))))
+      : qaByIntent;
 
     return (
       <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
@@ -956,50 +1011,30 @@ const Admin = () => {
             <span className="text-2xl">❓</span>
             <div>
               <h1 className="text-xl font-bold text-white">QA Database</h1>
-              <p className="text-white/40 text-xs">{QA_DATABASE.length} entrées • {qaByIntent.length} intents</p>
+              <p className="text-white/40 text-xs">{QA_DATABASE.length} entrées • {qaByIntent.length} sujets</p>
             </div>
           </div>
 
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher dans les QA…"
+            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher dans toutes les QA…"
               className="bg-white/10 border-white/20 text-white pl-9" />
           </div>
 
-          {filteredQA ? (
-            <div className="space-y-2">
-              <p className="text-white/50 text-xs">{filteredQA.length} résultats</p>
-              {filteredQA.slice(0, 50).map((entry, idx) => (
-                <div key={idx} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">{entry.intent}</span>
-                  </div>
-                  <p className="text-xs text-white/50 mb-1">Triggers: {entry.triggers.join(", ")}</p>
-                  <p className="text-sm text-white/70">{entry.responses[0]}</p>
-                  {entry.responses.length > 1 && <p className="text-[10px] text-white/30 mt-1">+{entry.responses.length - 1} autres réponses</p>}
+          <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+            {filteredIntents.map(([intent, entries]) => (
+              <button key={intent} onClick={() => { setInteractionCat(intent); setSearch(""); }}
+                className="bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between aspect-square"
+              >
+                <span className="text-2xl">{QA_INTENT_EMOJIS[intent] || "❓"}</span>
+                <div>
+                  <p className="text-lg font-bold text-white">{entries.length}</p>
+                  <h3 className="text-[10px] font-semibold text-amber-400">{intent}</h3>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {qaByIntent.map(([intent, entries]) => (
-                <div key={intent} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold">{intent}</span>
-                      <span className="text-white/40 text-xs">{entries.length} entrées</span>
-                    </div>
-                  </div>
-                  <div className="mt-2 space-y-1">
-                    {entries.slice(0, 2).map((e, i) => (
-                      <p key={i} className="text-xs text-white/50 truncate">• {e.triggers[0]} → {e.responses[0]}</p>
-                    ))}
-                    {entries.length > 2 && <p className="text-[10px] text-white/30">+{entries.length - 2} autres…</p>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+              </button>
+            ))}
+          </div>
+          {filteredIntents.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
         </div>
       </div>
     );
