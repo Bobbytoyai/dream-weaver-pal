@@ -1439,6 +1439,10 @@ const INTENT_FACE_MAP: Partial<Record<LocalIntent, FaceState>> = {
   IDENTITE_BOBBY: "proud",
   COMPLIMENT: "proud",
   CONTENU_BLOQUE: "reassuring",
+  CRISE_SECURITE: "reassuring",
+  FATIGUE: "calm",
+  ECHEC: "reassuring",
+  OBJECTIF: "excited",
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
