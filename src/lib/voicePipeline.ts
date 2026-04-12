@@ -223,7 +223,7 @@ export function useAudioQueue() {
 
     const url = queueRef.current.shift()!;
 
-    if (url === "__browser_tts__" || url === "__silent__" || url === "__piper_silent__") {
+    if (url === "__silent__") {
       playNext();
       return;
     }
@@ -261,7 +261,7 @@ export function useAudioQueue() {
 
   const stopAll = useCallback(() => {
     queueRef.current.forEach(url => {
-      if (url !== "__browser_tts__" && url !== "__silent__" && url !== "__piper_silent__" && !audioCache.has(url)) {
+      if (url !== "__silent__" && !audioCache.has(url)) {
         URL.revokeObjectURL(url);
       }
     });

@@ -38,7 +38,7 @@ export default function VoicePickerStep({ childName, selectedVoice, onSelect, on
     onSelect(profile);
     try {
       const url = await fetchTTSAudio(PREVIEW_TEXT_FN(childName), undefined, profile);
-      if (url === "__silent__" || url === "__browser_tts__") {
+      if (url === "__silent__") {
         setPlaying(null);
         return;
       }
