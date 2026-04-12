@@ -234,7 +234,7 @@ export function useBobbyVoiceCore({
     }
 
     // ─── Anti-echo: reject transcript if it matches Bobby's last response ───
-    const lastResp = lastAiResponse.toLowerCase().trim();
+    const lastResp = lastAiResponseRef.current.toLowerCase().trim();
     const incoming = trimmedText.toLowerCase();
     // Check similarity: if >60% of words match Bobby's last response, it's echo
     if (lastResp.length > 10) {
