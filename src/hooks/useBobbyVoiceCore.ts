@@ -92,6 +92,8 @@ export function useBobbyVoiceCore({
   const [micArmed, setMicArmed] = useState(false);
   const [networkOffline, setNetworkOffline] = useState(() => getNetworkMode() === "OFFLINE");
   const [currentEmotion, setCurrentEmotion] = useState<FaceState>("idle");
+  const [currentExpressionCombo, setCurrentExpressionCombo] = useState<ExpressionCombo | undefined>();
+  const [currentExpressionIntensity, setCurrentExpressionIntensity] = useState<number>(3);
 
   const machineRef = useRef<ConversationState>("IDLE");
   const processingRef = useRef(false);
