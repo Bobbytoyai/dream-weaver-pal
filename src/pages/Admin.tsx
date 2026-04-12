@@ -1246,6 +1246,7 @@ const Admin = () => {
             {renderItems()}
           </div>
         </div>
+        </>
       );
     }
 
