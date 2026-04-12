@@ -140,11 +140,22 @@ export function useBobbyVoiceCore({
 
   const closeSession = useCallback(async () => {
     if (!sessionOpenRef.current) return;
+    const sid = sessionIdRef.current;
     // Stop recording and upload audio
-    if (sessionIdRef.current) {
-      const audioPath = await stopRecording(sessionIdRef.current);
+    if (sid) {
+      const audioPath = await stopRecording(sid);
       if (audioPath) {
         console.log("[BobbyVoiceCore] 🎙️ Audio saved:", audioPath);
+        // Create analysis entry with audio path so parents can replay
+        try {
+          const { supabase } = await import("@/integrations/supabase/client");
+          await supabase.from("conversation_analyses").insert({
+            session_id: sid,
+            audio_path: audioPath,
+          });
+        } catch (e) {
+          console.warn("[BobbyVoiceCore] Failed to save audio path:", e);
+        }
       }
     }
     await endSession();
