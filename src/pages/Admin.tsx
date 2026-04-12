@@ -267,6 +267,17 @@ const Admin = () => {
   const [editingStory, setEditingStory] = useState<Partial<Histoire & { id: string }> | null>(null);
   const [savingStory, setSavingStory] = useState(false);
 
+  // Store management
+  interface StoreContentItem {
+    id: string; slug: string; name: string; emoji: string; description: string;
+    category: string; age_min: number; age_max: number; tags: string[];
+    size_label: string; is_new: boolean; is_popular: boolean; is_featured: boolean;
+    is_active: boolean; version: number; install_count: number; created_at: string;
+  }
+  const [storeItems, setStoreItems] = useState<StoreContentItem[]>([]);
+  const [editingStoreItem, setEditingStoreItem] = useState<Partial<StoreContentItem> | null>(null);
+  const [savingStoreItem, setSavingStoreItem] = useState(false);
+
   // 10K interactions (lazy loaded)
   const [interactions, setInteractions] = useState<BobbyInteraction[] | null>(null);
   const [loadingInteractions, setLoadingInteractions] = useState(false);
