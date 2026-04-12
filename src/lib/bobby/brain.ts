@@ -2,6 +2,7 @@ import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import { getOfflineResponse, resetConversationContext } from "@/lib/offlineEngine";
 import { getLibraryReply, getNarrationText } from "./library";
 import type { BobbyBrainReply, PendingNarration } from "./types";
+import { simplifyForAge } from "@/lib/adaptiveEngine";
 
 interface BuildBobbyReplyOptions {
   childName: string;
@@ -64,7 +65,7 @@ export function resetBobbyBrainSession() {
 export function buildBobbyReply({ childName, childAge, userText = "", pendingNarration }: BuildBobbyReplyOptions): BobbyBrainReply {
   if (pendingNarration) {
     return {
-      text: getNarrationText(pendingNarration, childName),
+      text: simplifyForAge(getNarrationText(pendingNarration, childName), childAge),
       intent: "NARRATION",
       source: "narration",
       emotion: "curious",
@@ -73,17 +74,32 @@ export function buildBobbyReply({ childName, childAge, userText = "", pendingNar
     };
   }
 
+  // 1. Library (stories, jokes) — always high confidence
   const libraryReply = getLibraryReply(userText, childName, childAge);
-  if (libraryReply) return libraryReply;
+  if (libraryReply) {
+    return {
+      ...libraryReply,
+      text: simplifyForAge(libraryReply.text, childAge),
+    };
+  }
 
+  // 2. Offline brain (QA 1623 + 10K interactions with real scoring)
   const offlineReply = getOfflineResponse(userText, childName, childAge);
 
+  // The offline engine now returns _confidence from the adaptive engine
+  // Use the real confidence if available, otherwise estimate from intent
+  const realConfidence = (offlineReply as any)._confidence as number | undefined;
+  const confidence = realConfidence ?? (offlineReply.intent === "UNKNOWN" ? 0.3 : 0.75);
+
+  // Apply age-appropriate simplification to the response
+  const adaptedText = simplifyForAge(offlineReply.text, childAge);
+
   return {
-    text: offlineReply.text,
+    text: adaptedText,
     intent: offlineReply.intent,
     source: "offline_brain",
-    emotion: resolveEmotion(offlineReply.intent, offlineReply.text),
-    confidence: offlineReply.intent === "UNKNOWN" ? 0.55 : 0.88,
+    emotion: resolveEmotion(offlineReply.intent, adaptedText),
+    confidence,
     isOffline: true,
   };
 }
