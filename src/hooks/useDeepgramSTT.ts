@@ -333,31 +333,33 @@ export function useDeepgramSTT({ onPartial, onFinal, onError, onUtteranceEnd, on
     }
   }, [language, cleanupAudio]);
 
-  const start = useCallback(async () => {
+  /**
+   * Start STT. Accepts an optional pre-acquired MediaStream to preserve
+   * the browser gesture chain (critical on mobile Safari/Chrome).
+   */
+  const start = useCallback(async (externalStream?: MediaStream) => {
     if (isRunningRef.current) return;
     shouldBeRunningRef.current = true;
     isRunningRef.current = true;
     reconnectAttemptsRef.current = 0;
 
     try {
-      // Pre-fetch token while getting mic access
-      const tokenPromise = getToken();
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          // Don't force sampleRate — let device choose native rate
-          // Mobile Safari ignores this constraint anyway
-        },
-      });
+      let stream: MediaStream;
+      if (externalStream && externalStream.active) {
+        stream = externalStream;
+        console.log("[DeepgramSTT] Using pre-acquired mic stream");
+      } else {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+        });
+      }
       streamRef.current = stream;
 
-      // Wait for token to be ready
-      await tokenPromise;
-
-      // Connect WebSocket
+      // Connect WebSocket (will fetch token internally)
       await connectWebSocket(stream);
     } catch (err: any) {
       console.error("[DeepgramSTT] Start error:", err.message || err);
