@@ -962,6 +962,26 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
     },
   },
 
+  CRISE_SECURITE: {
+    default: {
+      empathy: [
+        "Je suis vraiment content que tu m'en parles 💛",
+        "Ce que tu ressens est important et je te prends au sérieux 💛",
+        "Merci de me faire confiance 💛",
+      ],
+      response: [
+        "Tu comptes énormément. Même si tu ne le sens pas en ce moment, il y a des gens qui t'aiment.",
+        "Ce que tu ressens est douloureux et tu mérites de l'aide.",
+        "Bobby est là, mais le plus important c'est d'en parler à quelqu'un qui peut vraiment t'aider.",
+      ],
+      opening: [
+        "Est-ce que tu peux en parler à un adulte de confiance — un parent, un prof, quelqu'un que tu aimes ?",
+        "Tu sais à qui tu pourrais le dire ? Un parent, un adulte de confiance ?",
+        "Tu veux me dire ce qui te fait te sentir comme ça ?",
+      ],
+    },
+  },
+
   CONTENU_BLOQUE: {
     default: {
       empathy: [],
@@ -971,6 +991,67 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
         "J'ai une meilleure idée ! Et si on parlait d'un truc super cool ?",
       ],
       opening: [],
+    },
+  },
+
+  FATIGUE: {
+    default: {
+      empathy: [
+        "Ton corps te dit qu'il a besoin de repos 😴",
+        "C'est normal d'être fatigué parfois…",
+        "Hé, tu as l'air épuisé…",
+      ],
+      response: [
+        "C'est important d'écouter ton corps 💛",
+        "Même les super-héros ont besoin de recharger leurs batteries !",
+        "Se reposer, c'est aussi être fort.",
+      ],
+      opening: [
+        "Tu peux te détendre un peu ?",
+        "Tu veux qu'on fasse quelque chose de calme ensemble ?",
+        "Tu préfères une histoire douce pour te relaxer ?",
+      ],
+    },
+  },
+
+  ECHEC: {
+    default: {
+      empathy: [
+        "Ça peut être dur de rater quelque chose 😔",
+        "C'est pas un moment facile…",
+        "Je comprends que ça te déçoive.",
+      ],
+      response: [
+        "Mais ça ne définit pas qui tu es 💛",
+        "Chaque erreur te rapproche de la réussite !",
+        "Les plus grands ont tous échoué avant de réussir.",
+        "Tu as essayé, et ça c'est déjà courageux 💪",
+      ],
+      opening: [
+        "Tu veux qu'on voie comment t'améliorer ?",
+        "Qu'est-ce qui a été le plus difficile ?",
+        "Tu veux réessayer ensemble ?",
+      ],
+    },
+  },
+
+  OBJECTIF: {
+    default: {
+      empathy: [
+        "J'adore ta motivation ! 💪",
+        "Wow, quel objectif ! 🌟",
+        "Ça c'est de la détermination !",
+      ],
+      response: [
+        "Tu fais déjà de ton mieux et ça compte beaucoup 💛",
+        "Bobby croit en toi à 100% !",
+        "Avec de l'entraînement, tu vas y arriver !",
+      ],
+      opening: [
+        "Tu veux t'entraîner sur quoi ?",
+        "C'est quoi ta stratégie pour y arriver ?",
+        "Tu veux qu'on fasse un plan ensemble ?",
+      ],
     },
   },
 
