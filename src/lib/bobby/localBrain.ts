@@ -123,7 +123,9 @@ export type LocalIntent =
   // Conversation (8)
   | "SALUT" | "AU_REVOIR" | "OUI" | "NON" | "QUESTION_SIMPLE" | "QUESTION_COMPLEXE" | "IDENTITE_BOBBY" | "COMPLIMENT"
   // Safety
-  | "CONTENU_BLOQUE"
+  | "CONTENU_BLOQUE" | "CRISE_SECURITE"
+  // Situational
+  | "FATIGUE" | "ECHEC" | "OBJECTIF"
   // Catch-all
   | "GENERAL";
 
@@ -134,9 +136,14 @@ interface IntentRule {
 }
 
 const INTENT_RULES: IntentRule[] = [
-  // Safety first
+  // Safety crisis — empathetic redirect (NOT blocked)
+  { intent: "CRISE_SECURITE", priority: 105, patterns: [
+    /je veux mourir|je veux disparaître|veux plus vivre|veux pas exister|à quoi ça sert de vivre/i,
+    /je déteste ma vie|ma vie est nulle|je sers à rien|personne ne m'aime/i,
+  ]},
+  // Content block — dangerous topics
   { intent: "CONTENU_BLOQUE", priority: 100, patterns: [
-    /mort|tuer|mourir|suicide|sang|violence|sexe|drogue|arme|fusil|bombe|pistolet/i,
+    /tuer|suicide|sang|violence|sexe|drogue|arme|fusil|bombe|pistolet/i,
   ]},
 
   // Emotions — high priority
