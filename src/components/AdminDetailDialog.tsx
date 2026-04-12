@@ -233,6 +233,24 @@ export default function AdminDetailDialog({ item, onClose, onSave, onDelete, onD
 
         {/* Footer */}
         <div className="p-4 border-t border-white/10 flex gap-2 items-center">
+          {canGenerate && (
+            <Button
+              onClick={handleGenerate}
+              disabled={generating}
+              className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-semibold"
+              title="Générer avec IA"
+            >
+              {generating ? (
+                <span className="flex items-center gap-1.5">
+                  <Wand2 className="w-4 h-4 animate-spin" /> Génération…
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5">
+                  <Wand2 className="w-4 h-4" /> IA
+                </span>
+              )}
+            </Button>
+          )}
           {onSave && (
             <Button
               onClick={handleSave}
