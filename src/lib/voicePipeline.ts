@@ -146,6 +146,8 @@ export async function fetchTTSAudio(
   const cached = audioCache.get(cacheKey);
   if (cached) return cached;
 
+  const isOnline = typeof navigator !== "undefined" && navigator.onLine;
+
   // 2. Check persistent cache (IndexedDB) — SKIP if online (prefer ElevenLabs quality)
   if (!isOnline) {
     try {
@@ -158,7 +160,6 @@ export async function fetchTTSAudio(
   }
 
   // 3. ElevenLabs (cloud — low latency streaming)
-  const isOnline = typeof navigator !== "undefined" && navigator.onLine;
   console.log(`[TTS] 🌐 Online: ${isOnline}, profile: ${profile}, text: "${spokenText.slice(0, 30)}..."`);
   if (isOnline) {
     try {
