@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
+import { toast } from "sonner";
 import {
   ArrowLeft, Clock, MessageSquare, Heart, Brain, Loader2, RefreshCw,
   Mic, BookOpen, Timer, Sparkles, Shield, Camera, Volume2, VolumeX,
