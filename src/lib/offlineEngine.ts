@@ -62,7 +62,7 @@ import type { MiniGameType } from "./offline-stories";
 import { context, updateContext, detectMoodFromText, pickRandom, personalize, handleFollowUpAnswer, handleContextualContinuation, handleConversationalContext, buildContextualPrefix, getFollowUp } from "./offline-context";
 import { BOBBY_INTERACTIONS } from "./bobby_interactions_10k";
 import { adaptiveEngine, type AdaptiveContext } from "./adaptiveEngine";
-import { findMultiResponse, selectBestResponse, recordInput, recordResponse, updateEngagement, setEmotionalState, selectNonRepetitiveResponse } from "./responseSelector";
+import { findMultiResponse, selectBestResponse, recordInput, recordResponse, updateEngagement, setEmotionalState, selectNonRepetitiveResponse, recordIntent, recordInteraction, boostResponseScore, penalizeResponseScore, getConversationalRebond, getDominantEmotion } from "./responseSelector";
 import { isScenarioActive, tryStartScenario, handleScenarioStep, resetScenario } from "./scenarioEngine";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
