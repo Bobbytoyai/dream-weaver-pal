@@ -1142,6 +1142,41 @@ const Admin = () => {
       { title: "Phrases d'au revoir", items: FAREWELL_PHRASES },
     ];
 
+    const BOBBY_EMOTIONS: { state: string; emoji: string; desc: string; triggers: string; response: string }[] = [
+      { state: "happy", emoji: "😊", desc: "Joyeux — état par défaut", triggers: "aime, content, heureux, sourire, rire, adore", response: "Bobby sourit, yeux grands ouverts, bouche en U" },
+      { state: "sad", emoji: "😢", desc: "Triste — empathie", triggers: "triste, pleure, cafard, blessé, seul, désolé", response: "Bobby est empathique, bouche inversée, yeux bas" },
+      { state: "excited", emoji: "🤩", desc: "Excité — haute énergie", triggers: "wow, incroyable, génial, super, magique, bravo, 🎉", response: "Bobby s'illumine, yeux écarquillés, grand sourire" },
+      { state: "surprised", emoji: "😲", desc: "Surpris — étonnement", triggers: "vraiment?, sérieux, c'est fou, bizarre, impossible", response: "Bobby ouvre grand les yeux, bouche en O" },
+      { state: "curious", emoji: "🤔", desc: "Curieux — questionnement", triggers: "pourquoi, comment, c'est quoi, explique, ?", response: "Bobby penche la tête, sourcil levé, réfléchit" },
+      { state: "thinking", emoji: "💭", desc: "Pensif — réflexion", triggers: "hmm, réfléchis, imagine, et si, suppose, difficile", response: "Bobby regarde en haut, yeux mi-clos, pense" },
+      { state: "calm", emoji: "😌", desc: "Calme — apaisement", triggers: "calme, tranquille, dors, nuit, bonsoir, respire", response: "Bobby parle doucement, expression sereine" },
+      { state: "playful", emoji: "😜", desc: "Joueur — taquin", triggers: "blague, taquin, coquin, farce, haha, drôle", response: "Bobby fait un clin d'œil, sourire malicieux" },
+      { state: "proud", emoji: "💪", desc: "Fier — encouragement", triggers: "bravo, fier, champion, réussi, gagné, bien joué, 🏆", response: "Bobby rayonne, expression fière et chaleureuse" },
+      { state: "reassuring", emoji: "🤗", desc: "Rassurant — soutien", triggers: "j'ai peur, monstres, noir, confiance, je suis là", response: "Bobby est doux, chaleureux, protecteur" },
+      { state: "confused", emoji: "😕", desc: "Confus — incompréhension", triggers: "Bobby ne comprend pas la demande", response: "Bobby fronce les sourcils, tête penchée" },
+      { state: "sleepy", emoji: "😴", desc: "Endormi — mode nuit", triggers: "Mode nuit, inactivité prolongée, bonsoir", response: "Bobby ferme les yeux, animation ZzZ" },
+      { state: "listening", emoji: "👂", desc: "Écoute — attentif", triggers: "L'enfant parle, micro actif", response: "Bobby est attentif, yeux fixes, légère inclinaison" },
+      { state: "speaking", emoji: "🗣️", desc: "Parle — réponse vocale", triggers: "Bobby génère une réponse TTS", response: "Bobby anime la bouche en sync avec l'audio" },
+      { state: "attentive", emoji: "👀", desc: "Attentif — concentration", triggers: "Sujet important, question complexe", response: "Bobby se concentre, regard fixe et intense" },
+      { state: "idle", emoji: "🫥", desc: "Inactif — attente", triggers: "Aucune interaction en cours", response: "Bobby attend, clignements naturels, respiration" },
+    ];
+
+    const EMOTION_TRIGGERS_QA = [
+      { emotion: "Peur", triggers: ["j'ai peur", "j'ai peur du noir", "j'ai peur des monstres"], response: "Pas de panique ! Tu es en sécurité 😊" },
+      { emotion: "Tristesse", triggers: ["je suis triste", "j'ai du chagrin", "je pleure"], response: "Je suis là pour toi 🤗" },
+      { emotion: "Colère", triggers: ["je suis énervé", "je suis en colère", "je suis fâché"], response: "Respire doucement ! 😤" },
+      { emotion: "Joie", triggers: ["je suis heureux", "je suis content", "je suis joyeux"], response: "Super ! 😊 Le bonheur ça se partage !" },
+      { emotion: "Amour", triggers: ["je t'aime bobby", "tu es mon ami", "t'es mon meilleur ami"], response: "Moi aussi je t'aime ! 💙" },
+      { emotion: "Jalousie", triggers: ["je suis jaloux", "la jalousie"], response: "Ça arrive à tout le monde ! Parle-moi 😔" },
+      { emotion: "Honte", triggers: ["j'ai honte", "la honte"], response: "Ne t'inquiète pas ! Tout le monde fait des erreurs 💚" },
+      { emotion: "Courage", triggers: ["le courage", "c'est quoi le courage"], response: "Faire quelque chose même quand on a peur ! 💪" },
+      { emotion: "Gentillesse", triggers: ["la gentillesse", "être gentil"], response: "Penser aux autres ! 😊💙" },
+      { emotion: "Respect", triggers: ["le respect", "c'est quoi le respect"], response: "Traiter les autres comme on veut être traité ! 🤝" },
+      { emotion: "Patience", triggers: ["la patience", "être patient"], response: "Attendre sans s'énerver ! 😌" },
+      { emotion: "Pardon", triggers: ["pardonner", "c'est quoi pardonner"], response: "Ne plus être en colère contre quelqu'un ! 💚" },
+      { emotion: "Partage", triggers: ["partager", "c'est quoi partager"], response: "Donner une partie de ce qu'on a ! 🤝" },
+    ];
+
     return (
       <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
@@ -1154,6 +1189,41 @@ const Admin = () => {
             </div>
           </div>
 
+          {/* Emotions grid */}
+          <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+            <h3 className="text-white/70 text-xs font-semibold mb-3 uppercase tracking-wider">🎭 États émotionnels ({BOBBY_EMOTIONS.length})</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {BOBBY_EMOTIONS.map(e => (
+                <div key={e.state} className="bg-white/5 rounded-xl p-3 border border-white/10">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-xl">{e.emoji}</span>
+                    <span className="text-xs font-bold text-white/80 uppercase">{e.state}</span>
+                  </div>
+                  <p className="text-[11px] text-white/50 mb-1">{e.desc}</p>
+                  <p className="text-[10px] text-white/30">🎯 {e.triggers}</p>
+                  <p className="text-[10px] text-white/25 mt-0.5">👁 {e.response}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Emotion triggers QA */}
+          <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+            <h3 className="text-white/70 text-xs font-semibold mb-3 uppercase tracking-wider">💬 Réponses émotionnelles ({EMOTION_TRIGGERS_QA.length})</h3>
+            <div className="space-y-2">
+              {EMOTION_TRIGGERS_QA.map((eq, i) => (
+                <div key={i} className="bg-white/5 rounded-xl p-3 border border-white/10">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-semibold">{eq.emotion}</span>
+                  </div>
+                  <p className="text-[10px] text-white/40">Déclencheurs: {eq.triggers.join(", ")}</p>
+                  <p className="text-[11px] text-white/60 mt-1">→ {eq.response}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Personality sections */}
           {sections.map((section, idx) => (
             <div key={idx} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
               <h3 className="text-white/70 text-xs font-semibold mb-3 uppercase tracking-wider">{section.title}</h3>
