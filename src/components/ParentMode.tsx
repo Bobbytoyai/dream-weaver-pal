@@ -1665,12 +1665,20 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             )}
 
             {analysis.sociability_score != null && (
-              <Card title="Comportement" icon={Activity}>
+              <Card title="Scores comportementaux" icon={Activity}>
                 <div className="flex justify-around py-2">
-                  <ScoreGauge label="Sociabilité" score={analysis.sociability_score || 0} emoji="🤝" color="hsl(var(--primary))" />
-                  <ScoreGauge label="Curiosité" score={analysis.curiosity_score || 0} emoji="🔍" color="hsl(36, 90%, 50%)" />
-                  <ScoreGauge label="Stabilité" score={analysis.emotional_stability_score || 0} emoji="⚖️" color="hsl(var(--success))" />
+                  <ScoreGauge label="Sociabilité" score={analysis.sociability_score || 0} emoji="🤝" color="hsl(var(--primary))" size="lg" />
+                  <ScoreGauge label="Curiosité" score={analysis.curiosity_score || 0} emoji="🔍" color="hsl(36, 90%, 50%)" size="lg" />
+                  <ScoreGauge label="Stabilité" score={analysis.emotional_stability_score || 0} emoji="⚖️" color="hsl(145, 65%, 42%)" size="lg" />
                 </div>
+                {analysis.attention_span && (
+                  <div className="mt-3 pt-2 border-t border-border/50 flex items-center justify-between">
+                    <span className="text-[11px] text-muted-foreground">⏱️ Attention</span>
+                    <span className={`text-[11px] font-bold ${
+                      analysis.attention_span === "long" ? "text-primary" : analysis.attention_span === "moyen" ? "text-accent-foreground" : "text-destructive"
+                    }`}>{analysis.attention_span === "long" ? "Longue 🟢" : analysis.attention_span === "moyen" ? "Moyenne 🟡" : "Courte 🔴"}</span>
+                  </div>
+                )}
               </Card>
             )}
 
