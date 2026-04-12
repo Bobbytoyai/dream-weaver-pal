@@ -1167,7 +1167,7 @@ const Admin = () => {
                   <h3 className="text-white/60 text-xs font-semibold mb-2 uppercase tracking-wider">{cat} ({questions.length})</h3>
                   <div className="space-y-2">
                     {questions.map((q, i) => (
-                      <div key={i} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                      <div key={i} onClick={() => openQuizDetail(q, "vf")} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
                         <div className="flex items-start gap-2">
                           <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${q.answer ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"}`}>
                             {q.answer ? "VRAI" : "FAUX"}
