@@ -22,6 +22,11 @@ import { BLAGUES } from "@/lib/bobby-content/blagues";
 import { HISTOIRES } from "@/lib/bobby-content/histoires";
 import { QA_DATABASE } from "@/lib/qa-database";
 import {
+  QUIZ_ANIMAUX, QUIZ_EDUCATIF, VRAI_FAUX, DEVINETTES,
+  BLAGUES as GAME_BLAGUES,
+  type QuizQuestion, type TrueFalseQuestion, type Riddle,
+} from "@/lib/gameEngine";
+import {
   BOBBY_PERSONALITY,
   BOBBY_NATURAL_REACTIONS,
   SILENCE_RELAUNCHES,
