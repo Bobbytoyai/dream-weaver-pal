@@ -94,6 +94,7 @@ export function useBobbyVoiceCore({
   const finalTranscriptRef = useRef<(text: string) => void>(() => {});
   const sttErrorRef = useRef<(error: string) => void>(() => {});
   const sleepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const listenTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const handledNarrationIdRef = useRef<string | null>(null);
   const sessionOpenRef = useRef(false);
@@ -271,6 +272,20 @@ export function useBobbyVoiceCore({
     setCurrentEmotion("attentive");
     go("LISTENING");
     eventBus.emit({ type: "WAKE_DETECTED", confidence: 1 });
+
+    // 40s silence watchdog — if no final transcript arrives, stop listening
+    if (listenTimeoutRef.current) clearTimeout(listenTimeoutRef.current);
+    listenTimeoutRef.current = setTimeout(() => {
+      if (machineRef.current === "LISTENING") {
+        console.log("[BobbyVoiceCore] 40s silence timeout — stopping listening");
+        stopSttRef.current();
+        setMicArmed(false);
+        setPartialText("");
+        setCurrentEmotion("idle");
+        go("IDLE");
+        scheduleSleep();
+      }
+    }, 40_000);
 
     try {
       // CRITICAL: Acquire mic stream DIRECTLY in the tap gesture handler
