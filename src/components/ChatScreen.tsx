@@ -63,7 +63,7 @@ const ChatScreen = ({ childName, childAge, onSwitchToVoice }: ChatScreenProps) =
     setIsLoading(true);
 
     // 100% offline brain response
-    const reply = buildBobbyReply({ childName, childAge, userText });
+    const reply = await buildBobbyReply({ childName, childAge, userText });
 
     // Small delay for natural feel
     await new Promise(r => setTimeout(r, 200 + Math.random() * 300));

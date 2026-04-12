@@ -312,7 +312,7 @@ export function useBobbyVoiceCore({
       await ensureSession();
       await addMessage("user", trimmedText);
 
-      const reply = buildBobbyReply({ childName, childAge, userText: trimmedText, parentSettings });
+      const reply = await buildBobbyReply({ childName, childAge, userText: trimmedText, parentSettings });
       await addMessage("assistant", reply.text, reply.emotion);
       await speakReply(reply);
     } finally {
@@ -463,7 +463,7 @@ export function useBobbyVoiceCore({
 
         await ensureSession();
 
-        const reply = buildBobbyReply({
+        const reply = await buildBobbyReply({
           childName,
           childAge,
           pendingNarration,
