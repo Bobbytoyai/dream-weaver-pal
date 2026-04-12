@@ -13,6 +13,7 @@ import { getInterestSnapshot, INTEREST_KEYWORDS_PUBLIC } from "@/lib/bobby/inter
 import { supabase } from "@/integrations/supabase/client";
 import StoryLibrary from "@/components/StoryLibrary";
 import ContentCategories from "@/components/ContentCategories";
+import BobbyStore from "@/components/BobbyStore";
 // Piper TTS removed — ElevenLabs only
 import ConfirmDialog from "@/components/ConfirmDialog";
 import {
@@ -240,6 +241,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [noteText, setNoteText] = useState("");
   const [parentAlerts, setParentAlerts] = useState<Array<{ id: string; session_id: string; child_name: string; alert_type: string; severity: string; message: string; context: string | null; is_read: boolean; created_at: string }>>([]);
   const [showNotifPanel, setShowNotifPanel] = useState(false);
+  const [installedContent, setInstalledContent] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("bobby-installed-content") || "[]"); } catch { return []; }
+  });
+  const toggleInstallContent = (id: string) => {
+    setInstalledContent(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      localStorage.setItem("bobby-installed-content", JSON.stringify(next));
+      toast.success(next.includes(id) ? "Contenu installé ✅" : "Contenu désinstallé");
+      return next;
+    });
+  };
 
   const unreadAlertCount = parentAlerts.filter(a => !a.is_read).length;
 
@@ -3145,11 +3157,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         case "dashboard": return renderDashboard();
         case "sessions": return renderSessionsList();
         case "activites": return (
-          <ContentCategories
-            childName={childName}
-            onSelectCategory={(sub) => toast.info(`L'activité "${sub}" sera lancée depuis le mode enfant 🎮`)}
-            onBack={() => setActiveTab("home")}
-            voiceProfile={settings.voiceType || "female"}
+          <BobbyStore
+            installedIds={installedContent}
+            onToggleInstall={toggleInstallContent}
+            childAge={settings.childAge}
           />
         );
         case "profil": return renderProfil();
@@ -3163,7 +3174,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     const categoryCards: { id: Tab; emoji: string; label: string; desc: string; color: string; badge?: number }[] = [
       { id: "dashboard", emoji: "📊", label: "Tableau de bord", desc: "Vue d'ensemble", color: "from-primary/20 to-primary/5" },
       { id: "sessions", emoji: "💬", label: "Sessions", desc: `${sessions.length} conversations`, color: "from-accent/30 to-accent/5", badge: sessions.filter(s => !analyses.some(a => a.session_id === s.id)).length || undefined },
-      { id: "activites", emoji: "🎮", label: "Activités", desc: "Histoires & jeux", color: "from-secondary/30 to-secondary/5" },
+      { id: "activites", emoji: "🛒", label: "Bobby Store", desc: `${installedContent.length} installés`, color: "from-secondary/30 to-secondary/5", badge: undefined },
       { id: "profil", emoji: "👤", label: "Profil enfant", desc: "Intérêts & mémoire", color: "from-primary/15 to-primary/3" },
       { id: "reglages", emoji: "⚙️", label: "Réglages", desc: "Voix, contenu, limites", color: "from-muted to-muted/30" },
       { id: "confidentialite", emoji: "🔒", label: "Confidentialité", desc: "Données & sécurité", color: "from-destructive/10 to-destructive/3" },
