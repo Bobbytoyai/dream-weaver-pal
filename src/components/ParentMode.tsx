@@ -2986,22 +2986,101 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const renderTabContent = () => {
     if (selectedSession) return renderSessionDetail();
-    switch (displayedTab) {
-      case "dashboard": return renderDashboard();
-      case "sessions": return renderSessionsList();
-      case "activites": return (
-        <ContentCategories
-          childName={childName}
-          onSelectCategory={() => {}}
-          onBack={() => setActiveTab("dashboard")}
-          voiceProfile={settings.voiceType || "female"}
-        />
-      );
-      case "profil": return renderProfil();
-      case "reglages": return renderReglages();
-      case "confidentialite": return renderConfidentialite();
-      default: return renderDashboard();
+    // If a category is selected, render that category
+    if (activeTab !== "home") {
+      switch (activeTab) {
+        case "dashboard": return renderDashboard();
+        case "sessions": return renderSessionsList();
+        case "activites": return (
+          <ContentCategories
+            childName={childName}
+            onSelectCategory={() => {}}
+            onBack={() => setActiveTab("home")}
+            voiceProfile={settings.voiceType || "female"}
+          />
+        );
+        case "profil": return renderProfil();
+        case "reglages": return renderReglages();
+        case "confidentialite": return renderConfidentialite();
+        default: return renderDashboard();
+      }
     }
+
+    // ─── HOME: Card Grid ───
+    const categoryCards: { id: Tab; emoji: string; label: string; desc: string; color: string; badge?: number }[] = [
+      { id: "dashboard", emoji: "📊", label: "Tableau de bord", desc: "Vue d'ensemble", color: "from-primary/20 to-primary/5" },
+      { id: "sessions", emoji: "💬", label: "Sessions", desc: `${sessions.length} conversations`, color: "from-accent/30 to-accent/5", badge: sessions.filter(s => !analyses.some(a => a.session_id === s.id)).length || undefined },
+      { id: "activites", emoji: "🎮", label: "Activités", desc: "Histoires & jeux", color: "from-secondary/30 to-secondary/5" },
+      { id: "profil", emoji: "👤", label: "Profil enfant", desc: "Intérêts & mémoire", color: "from-primary/15 to-primary/3" },
+      { id: "reglages", emoji: "⚙️", label: "Réglages", desc: "Voix, contenu, limites", color: "from-muted to-muted/30" },
+      { id: "confidentialite", emoji: "🔒", label: "Confidentialité", desc: "Données & sécurité", color: "from-destructive/10 to-destructive/3" },
+    ];
+
+    return (
+      <div className="p-4 space-y-4">
+        {/* Welcome banner */}
+        <div className="bg-card rounded-2xl p-4 border border-border/30">
+          <h2 className="text-lg font-bold text-foreground">👋 Bonjour !</h2>
+          <p className="text-[12px] text-muted-foreground mt-1">
+            {sessions.length > 0
+              ? `${childName} a eu ${sessions.length} session${sessions.length > 1 ? "s" : ""} au total.`
+              : `Aucune session enregistrée pour ${childName} pour le moment.`}
+          </p>
+          {dailySummary && (
+            <p className="text-[12px] text-foreground mt-2 bg-primary/5 rounded-xl px-3 py-2">
+              💡 {dailySummary}
+            </p>
+          )}
+        </div>
+
+        {/* Category cards grid */}
+        <div className="grid grid-cols-2 gap-3">
+          {categoryCards.map(card => (
+            <button key={card.id}
+              onClick={() => setActiveTab(card.id)}
+              className={`relative bg-gradient-to-br ${card.color} rounded-2xl p-4 text-left border border-border/20 hover:border-primary/30 hover:shadow-md transition-all duration-200 active:scale-[0.97]`}>
+              <span className="text-3xl">{card.emoji}</span>
+              <h3 className="text-[13px] font-bold text-foreground mt-2">{card.label}</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{card.desc}</p>
+              {card.badge && card.badge > 0 && (
+                <span className="absolute top-2 right-2 min-w-[20px] h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
+                  {card.badge}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Quick alerts preview */}
+        {unreadAlertCount > 0 && (
+          <button onClick={() => setShowNotifPanel(true)}
+            className="w-full bg-destructive/5 border border-destructive/20 rounded-2xl p-3 flex items-center gap-3 hover:bg-destructive/10 transition-colors">
+            <span className="text-xl">🔔</span>
+            <div className="flex-1 text-left">
+              <p className="text-[12px] font-bold text-destructive">{unreadAlertCount} alerte{unreadAlertCount > 1 ? "s" : ""} non lue{unreadAlertCount > 1 ? "s" : ""}</p>
+              <p className="text-[10px] text-muted-foreground">Touchez pour voir les détails</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-destructive" />
+          </button>
+        )}
+
+        {/* Quick scores preview if available */}
+        {avgScores && (
+          <div className="bg-card rounded-2xl p-4 border border-border/30">
+            <div className="flex items-center gap-2 mb-3">
+              <Brain className="w-4 h-4 text-muted-foreground" />
+              <h3 className="text-[13px] font-bold text-foreground">Développement</h3>
+              <button onClick={() => setActiveTab("dashboard")} className="ml-auto text-[10px] text-primary font-semibold">Voir tout →</button>
+            </div>
+            <div className="flex justify-around">
+              <ScoreGauge label="Sociabilité" score={avgScores.sociability} emoji="🤝" color="hsl(var(--primary))" />
+              <ScoreGauge label="Curiosité" score={avgScores.curiosity} emoji="🔍" color="hsl(36, 90%, 50%)" />
+              <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="hsl(145, 65%, 42%)" />
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   const [lightMode, setLightMode] = useState(() => {
