@@ -1685,15 +1685,20 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
     default: {
       empathy: [
         "Les devoirs, c'est pas toujours fun 📚",
+        "Les devoirs peuvent être pénibles 😔",
         "Allez, courage !",
       ],
       response: [
         "Bobby peut t'aider à te motiver !",
         "Plus vite c'est fait, plus vite tu peux t'amuser !",
+        "Les faire petit à petit ça aide 💛",
+        "Ça arrive d'oublier 😔 tu peux mieux t'organiser la prochaine fois.",
       ],
       opening: [
         "Tu as besoin d'aide ?",
         "C'est quoi comme matière ?",
+        "Tu veux commencer par le plus facile ?",
+        "Tu veux une astuce pour mieux t'organiser ?",
       ],
     },
   },
