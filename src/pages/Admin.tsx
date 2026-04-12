@@ -20,6 +20,7 @@ import {
 import type { BobbyInteraction } from "@/lib/bobby_interactions_10k";
 import { BLAGUES } from "@/lib/bobby-content/blagues";
 import { HISTOIRES } from "@/lib/bobby-content/histoires";
+import { CHANSONS, CHANSON_CATEGORIES, type Chanson, type ChansonCategorie } from "@/lib/bobby-content/chansons";
 import { QA_DATABASE } from "@/lib/qa-database";
 import {
   QUIZ_ANIMAUX, QUIZ_EDUCATIF, VRAI_FAUX, DEVINETTES,
@@ -111,7 +112,7 @@ interface KBEntry {
 }
 
 // ─── Top-level brain sections shown as big square cards ─────────────
-type TopSection = "interactions" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux";
+type TopSection = "interactions" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons";
 
 const TOP_SECTIONS: {
   id: TopSection;
@@ -128,6 +129,7 @@ const TOP_SECTIONS: {
   { id: "qa", label: "QA Database", icon: HelpCircle, color: "text-amber-400", bgColor: "bg-amber-500/20", count: "537", desc: "Questions-réponses offline structurées", emoji: "❓" },
   { id: "blagues", label: "Blagues", icon: Laugh, color: "text-green-400", bgColor: "bg-green-500/20", count: "26", desc: "Blagues adaptées par âge & catégorie", emoji: "😂" },
   { id: "histoires", label: "Histoires", icon: BookOpen, color: "text-purple-400", bgColor: "bg-purple-500/20", count: "6", desc: "Contes & aventures personnalisées", emoji: "📖" },
+  { id: "chansons", label: "Chansons", icon: Music, color: "text-rose-400", bgColor: "bg-rose-500/20", count: String(CHANSONS.length), desc: "Comptines, berceuses, éducatif, activités", emoji: "🎵" },
   { id: "cerveau", label: "Personnalité", icon: Sparkles, color: "text-pink-400", bgColor: "bg-pink-500/20", count: "5", desc: "Personnalité, réactions, phrases Bobby", emoji: "✨" },
   { id: "cloud", label: "Cloud KB", icon: Globe, color: "text-blue-400", bgColor: "bg-blue-500/20", count: "∞", desc: "Base cloud extensible (ajout via admin)", emoji: "☁️" },
 ];
