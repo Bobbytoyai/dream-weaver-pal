@@ -1966,14 +1966,14 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
     const categoryCards: { key: string; emoji: string; label: string; bg: string; active: boolean; onClick: () => void }[] = [
       { key: "all", emoji: "📋", label: "Tous", bg: "from-primary/20 to-primary/10", active: !tagFilter && !sessionFavFilter, onClick: () => { setTagFilter(null); setSessionFavFilter(false); } },
-      { key: "fav", emoji: "⭐", label: "Favoris", bg: "from-yellow-400/25 to-yellow-300/10", active: sessionFavFilter, onClick: () => setSessionFavFilter(!sessionFavFilter) },
+      { key: "fav", emoji: "⭐", label: "Favoris", bg: "from-yellow-400/25 to-yellow-300/10", active: sessionFavFilter && !tagFilter, onClick: () => { setTagFilter(null); setSessionFavFilter(!sessionFavFilter); } },
       ...Object.entries(tagLabels).map(([key, info]) => ({
         key,
         emoji: info.emoji,
         label: info.label,
         bg: key === "fun" ? "from-pink-400/20 to-pink-300/10" : key === "learning" ? "from-blue-400/20 to-blue-300/10" : key === "emotion" ? "from-amber-400/20 to-amber-300/10" : "from-muted to-muted/50",
-        active: tagFilter === key,
-        onClick: () => setTagFilter(tagFilter === key ? null : key),
+        active: tagFilter === key && !sessionFavFilter,
+        onClick: () => { setSessionFavFilter(false); setTagFilter(tagFilter === key ? null : key); },
       })),
     ];
 
