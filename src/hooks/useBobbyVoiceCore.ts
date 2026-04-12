@@ -326,7 +326,15 @@ export function useBobbyVoiceCore({
       setMicArmed(false);
       setPartialText("");
       setLastRecognized(trimmedText);
-      setCurrentEmotion("thinking");
+
+      // ─── Empathetic pre-reaction: detect child's emotion BEFORE processing ───
+      const { detectChildExpression } = await import("@/lib/emotionMapper");
+      const childExpr = detectChildExpression(trimmedText, parentSettings?.childAge ?? 7);
+      setCurrentEmotion(childExpr.faceState);
+      setCurrentExpressionCombo(childExpr.expression.combo);
+      setCurrentExpressionIntensity(childExpr.expression.intensity);
+      console.log("[BobbyVoiceCore] 🎭 Child emotion detected:", childExpr.expression.emotion, "→ Bobby reacts:", childExpr.faceState);
+
       go("PROCESSING");
       eventBus.emit({ type: "VOICE_INPUT", transcript: trimmedText });
 
