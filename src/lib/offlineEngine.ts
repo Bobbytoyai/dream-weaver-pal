@@ -62,6 +62,7 @@ import type { MiniGameType } from "./offline-stories";
 import { context, updateContext, detectMoodFromText, pickRandom, personalize, handleFollowUpAnswer, handleContextualContinuation, handleConversationalContext, buildContextualPrefix, getFollowUp } from "./offline-context";
 import { BOBBY_INTERACTIONS } from "./bobby_interactions_10k";
 import { adaptiveEngine, type AdaptiveContext } from "./adaptiveEngine";
+import { findMultiResponse, selectBestResponse, recordInput, recordResponse, updateEngagement, setEmotionalState, selectNonRepetitiveResponse } from "./responseSelector";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // MAIN RESPONSE ENGINE
@@ -82,9 +83,15 @@ export function getOfflineResponse(
 ): OfflineResponse {
   const normalized = normalizeInput(text);
 
+  // Record input in behavioral memory
+  recordInput(text);
+
   // Update mood from text
   const detectedMood = detectMoodFromText(text);
-  if (detectedMood) context.mood = detectedMood;
+  if (detectedMood) {
+    context.mood = detectedMood;
+    setEmotionalState(detectedMood);
+  }
 
   // 1. Safety filter — with severity-aware response + parent alert
   if (isBlockedContent(text)) {
@@ -166,22 +173,38 @@ export function getOfflineResponse(
   const contextual = handleConversationalContext(text, childName);
   if (contextual) return contextual;
 
+  // 3c. 🧠 Multi-response smart selection (anti-repetition + behavioral adaptation)
+  const multiMatch = findMultiResponse(text);
+  if (multiMatch) {
+    const selected = selectBestResponse(multiMatch.responses);
+    if (selected) {
+      const finalText = personalize(selected.text, childName);
+      const intent = detectOfflineIntent(text);
+      recordResponse(finalText, multiMatch.category, selected.type);
+      updateEngagement(selected.energy === "high" ? 5 : selected.energy === "medium" ? 2 : -1);
+      updateContext(intent, text, finalText);
+      return { text: finalText, intent, isOffline: true };
+    }
+  }
+
   // 4. QA fuzzy match
   const qaMatch = matchQA(normalized);
   if (qaMatch) {
-    const response = pickRandom(qaMatch.responses, `qa_${qaMatch.triggers[0]}`);
+    const response = selectNonRepetitiveResponse(qaMatch.responses);
     const intent = qaMatch.intent || detectOfflineIntent(text);
 
     if (intent === "STORY_REQUEST") {
       const theme = detectStoryTheme(text);
       const story = pickRandom(LOCAL_STORIES[theme], `story_${theme}`);
       const finalText = personalize(story, childName);
+      recordResponse(finalText, "story");
       updateContext(intent, text, finalText);
       return { text: finalText, intent, isOffline: true, theme };
     }
     if (intent === "PLAY_REQUEST") {
       const game = pickMiniGame(pickRandom);
       const finalText = personalize(game.text, childName);
+      recordResponse(finalText, "games");
       updateContext(intent, text, finalText);
       return { text: finalText, intent, isOffline: true, gameType: game.type };
     }
@@ -189,6 +212,7 @@ export function getOfflineResponse(
     const finalText = personalize(response, childName);
     const followUp = getFollowUp(intent);
     const fullResponse = finalText + followUp;
+    recordResponse(fullResponse, "qa");
     updateContext(intent, text, fullResponse);
     return { text: fullResponse, intent, isOffline: true };
   }
@@ -207,6 +231,8 @@ export function getOfflineResponse(
     const finalText = personalize(interactionMatch.ai_response, childName);
     const followUp = getFollowUp(interactionMatch.intent as any);
     const fullResponse = finalText + followUp;
+    recordResponse(fullResponse, interactionMatch.category, interactionMatch.intent);
+    updateEngagement(3);
     updateContext(interactionMatch.intent as any, text, fullResponse);
     return {
       text: fullResponse,
@@ -330,6 +356,7 @@ export function getOfflineResponse(
   const finalText = personalize(response, childName);
   const followUp = getFollowUp(intent);
   const fullResponse = (contextPrefix ? contextPrefix + " " : "") + finalText + followUp;
+  recordResponse(fullResponse, intent.toLowerCase());
   updateContext(intent, text, fullResponse);
   return { text: fullResponse, intent, isOffline: true };
 }
