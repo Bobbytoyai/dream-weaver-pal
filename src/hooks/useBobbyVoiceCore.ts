@@ -106,6 +106,7 @@ export function useBobbyVoiceCore({
   const startListeningRef = useRef<() => Promise<void>>(async () => {});
 
   const { startSession, addMessage, endSession, sessionIdRef } = useSessionTracker(childName, childAge);
+  const { startRecording, stopRecording } = useConversationRecorder();
 
   const go = useCallback((nextState: ConversationState) => {
     const previousState = machineRef.current;
