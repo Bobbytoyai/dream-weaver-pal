@@ -1,12 +1,12 @@
 /**
- * Voice Pipeline v5 — ElevenLabs Only
- * 
- * Pipeline: ElevenLabs (cloud) → Browser Web Speech API (last resort fallback)
- * No Piper TTS. No WASM dependency.
+ * Voice Pipeline v6 — ElevenLabs only
+ *
+ * Pipeline: ElevenLabs (live) → cached ElevenLabs audio → silent fallback.
+ * No Piper TTS. No browser robot voice.
  */
 
 import { useCallback, useRef } from "react";
-import { getCachedTTSAudio, makeCacheKey } from "./ttsCache";
+import { getCachedTTSAudio } from "./ttsCache";
 
 // ─── Safety filters ─────────────────────────────────────────
 const UNSAFE_PATTERNS = [
@@ -54,26 +54,6 @@ function cacheAudio(key: string, blobUrl: string) {
     }
   }
   audioCache.set(key, blobUrl);
-}
-
-// ─── Browser TTS (fallback) ─────────────────────────────────
-function speakWithBrowserTTS(text: string): Promise<string> {
-  const spokenText = sanitizeSpokenText(text);
-  if (!spokenText) return Promise.resolve("__browser_tts__");
-
-  return new Promise((resolve, reject) => {
-    if (!("speechSynthesis" in window)) {
-      reject(new Error("Browser TTS not supported"));
-      return;
-    }
-    const utterance = new SpeechSynthesisUtterance(spokenText);
-    utterance.lang = "fr-FR";
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
-    utterance.onend = () => resolve("__browser_tts__");
-    utterance.onerror = () => reject(new Error("Browser TTS error"));
-    speechSynthesis.speak(utterance);
-  });
 }
 
 // ─── ElevenLabs TTS (cloud, low latency) ────────────────────
@@ -124,7 +104,7 @@ async function speakWithElevenLabs(
 
 // ─── Public TTS API ─────────────────────────────────────────
 /**
- * Fetch TTS audio — ElevenLabs (cloud) → Piper (local WASM) → Browser TTS
+ * Fetch TTS audio — ElevenLabs live first, cached audio second, silence last.
  */
 export async function fetchTTSAudio(
   text: string,
@@ -147,18 +127,7 @@ export async function fetchTTSAudio(
 
   const isOnline = typeof navigator !== "undefined" && navigator.onLine;
 
-  // 2. Check persistent cache (IndexedDB) — SKIP if online (prefer ElevenLabs quality)
-  if (!isOnline) {
-    try {
-      const persistentCached = await getCachedTTSAudio(spokenText, profile);
-      if (persistentCached) {
-        console.log("[TTS] ⚡ Persistent cache hit (offline)!");
-        return persistentCached;
-      }
-    } catch { /* non-critical */ }
-  }
-
-  // 3. ElevenLabs (cloud — low latency streaming)
+  // 2. ElevenLabs (cloud — low latency streaming)
   console.log(`[TTS] 🌐 Online: ${isOnline}, SUPABASE_URL: ${!!import.meta.env.VITE_SUPABASE_URL}, profile: ${profile}, text: "${spokenText.slice(0, 30)}..."`);
   if (isOnline) {
     try {
@@ -173,13 +142,23 @@ export async function fetchTTSAudio(
       return url;
     } catch (e: any) {
       if (e.name === "AbortError" && signal?.aborted) throw e;
-      console.warn("[TTS] ⚠️ ElevenLabs failed, falling back to Piper:", e.message);
+       console.warn("[TTS] ⚠️ ElevenLabs live generation failed:", e.message);
     }
   }
 
-  // 4. Browser Web Speech API (last resort — only if ElevenLabs failed)
-  console.warn("[TTS] ⚠️ ElevenLabs unavailable, using browser TTS fallback");
-  return speakWithBrowserTTS(spokenText);
+  // 3. Cached ElevenLabs audio (works offline if previously generated)
+  try {
+    const persistentCached = await getCachedTTSAudio(spokenText, profile);
+    if (persistentCached) {
+      console.log(`[TTS] ⚡ Using cached ElevenLabs audio (${isOnline ? "after live failure" : "offline"})`);
+      return persistentCached;
+    }
+  } catch {
+    // Non-critical: fall through to silent mode.
+  }
+
+  console.warn("[TTS] 🔇 No ElevenLabs audio available, staying silent");
+  return "__silent__";
 }
 
 /**
@@ -195,24 +174,22 @@ export async function previewVoiceProfile(profile: VoiceProfile): Promise<void> 
   };
   const text = previewTexts[profile];
 
-  // Try ElevenLabs first (best quality)
-  if (navigator.onLine) {
-    try {
-      const url = await speakWithElevenLabs(text, profile);
-      const audio = new Audio(url);
-      await audio.play();
-      await new Promise<void>((resolve) => {
-        audio.onended = () => resolve();
-        audio.onerror = () => resolve();
-      });
-      return;
-    } catch (e) {
-      console.warn("[Preview] ElevenLabs failed:", e);
-    }
+  if (!navigator.onLine) {
+    console.warn("[Preview] Skipping voice preview while offline");
+    return;
   }
 
-  // Fallback to browser TTS
-  await speakWithBrowserTTS(text);
+  try {
+    const url = await speakWithElevenLabs(text, profile);
+    const audio = new Audio(url);
+    await audio.play();
+    await new Promise<void>((resolve) => {
+      audio.onended = () => resolve();
+      audio.onerror = () => resolve();
+    });
+  } catch (e) {
+    console.warn("[Preview] ElevenLabs preview failed:", e);
+  }
 }
 
 // ─── Emotion detection from text (for TTS modulation) ───────
@@ -283,7 +260,6 @@ export function useAudioQueue() {
   }, [playNext]);
 
   const stopAll = useCallback(() => {
-    if ("speechSynthesis" in window) speechSynthesis.cancel();
     queueRef.current.forEach(url => {
       if (url !== "__browser_tts__" && url !== "__silent__" && url !== "__piper_silent__" && !audioCache.has(url)) {
         URL.revokeObjectURL(url);
