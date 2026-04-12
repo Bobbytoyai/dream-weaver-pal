@@ -1235,33 +1235,282 @@ const Admin = () => {
 
 
   if (topSection === "histoires") {
+    const STORY_THEMES = [
+      { id: "espace", label: "Espace", emoji: "🚀", color: "bg-indigo-500/20" },
+      { id: "pirate", label: "Pirates", emoji: "🏴‍☠️", color: "bg-amber-500/20" },
+      { id: "magie", label: "Magie", emoji: "✨", color: "bg-purple-500/20" },
+      { id: "animaux", label: "Animaux", emoji: "🦁", color: "bg-green-500/20" },
+      { id: "dodo", label: "Dodo", emoji: "🌙", color: "bg-blue-500/20" },
+      { id: "nature", label: "Nature", emoji: "🌿", color: "bg-emerald-500/20" },
+      { id: "amitié", label: "Amitié", emoji: "🤝", color: "bg-pink-500/20" },
+      { id: "courage", label: "Courage", emoji: "💪", color: "bg-red-500/20" },
+    ];
+
+    // Merge local + cloud stories
+    const allStories = [
+      ...HISTOIRES.map(h => ({ ...h, source: "local" as const })),
+      ...cloudStories.map(s => ({
+        id: s.id,
+        titre: s.title,
+        theme: s.theme,
+        ageMin: s.age_min,
+        ageMax: s.age_max,
+        duree: s.duration as "courte" | "moyenne" | "longue",
+        texte: s.full_text || s.template_text,
+        moralité: s.summary || undefined,
+        tags: [s.category, s.theme, s.mood].filter(Boolean),
+        source: "cloud" as const,
+      })),
+    ];
+
+    // Get unique themes from actual data
+    const activeThemes = [...new Set(allStories.map(s => s.theme))];
+    const allThemeConfigs = activeThemes.map(t => STORY_THEMES.find(st => st.id === t) || { id: t, label: t.charAt(0).toUpperCase() + t.slice(1), emoji: "📖", color: "bg-white/10" });
+
+    const AGE_GROUPS_STORY = [
+      { label: "Tous", min: 0, max: 99 },
+      { label: "3-5 ans", min: 3, max: 5 },
+      { label: "6-8 ans", min: 6, max: 8 },
+      { label: "9-12 ans", min: 9, max: 12 },
+    ];
+
+    // ── Story editor form ──
+    if (editingStory) {
+      return (
+        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+          <div className="max-w-2xl mx-auto space-y-4">
+            <Button variant="ghost" onClick={() => setEditingStory(null)} className="text-white/70">
+              <ArrowLeft className="w-4 h-4 mr-2" /> Retour
+            </Button>
+            <h2 className="text-xl font-bold text-white">{editingStory.id ? "Modifier" : "Nouvelle"} histoire</h2>
+            <div className="space-y-4 bg-white/5 backdrop-blur rounded-xl p-5 border border-white/10">
+              <div>
+                <label className="text-white/60 text-xs font-medium mb-1 block">Titre</label>
+                <Input value={editingStory.titre || ""} onChange={e => setEditingStory({ ...editingStory, titre: e.target.value })}
+                  placeholder="L'aventure de..." className="bg-white/10 border-white/20 text-white" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-white/60 text-xs font-medium mb-1 block">Thème</label>
+                  <Select value={editingStory.theme || "magie"} onValueChange={v => setEditingStory({ ...editingStory, theme: v })}>
+                    <SelectTrigger className="bg-white/10 border-white/20 text-white"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {STORY_THEMES.map(t => <SelectItem key={t.id} value={t.id}>{t.emoji} {t.label}</SelectItem>)}
+                      <SelectItem value="autre">📖 Autre</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-white/60 text-xs font-medium mb-1 block">Durée</label>
+                  <Select value={editingStory.duree || "courte"} onValueChange={v => setEditingStory({ ...editingStory, duree: v as any })}>
+                    <SelectTrigger className="bg-white/10 border-white/20 text-white"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="courte">Courte (~1 min)</SelectItem>
+                      <SelectItem value="moyenne">Moyenne (~3 min)</SelectItem>
+                      <SelectItem value="longue">Longue (~5 min)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-white/60 text-xs font-medium mb-1 block">Âge min</label>
+                  <Input type="number" min={3} max={12} value={editingStory.ageMin || 5}
+                    onChange={e => setEditingStory({ ...editingStory, ageMin: Number(e.target.value) })} className="bg-white/10 border-white/20 text-white" />
+                </div>
+                <div>
+                  <label className="text-white/60 text-xs font-medium mb-1 block">Âge max</label>
+                  <Input type="number" min={3} max={12} value={editingStory.ageMax || 12}
+                    onChange={e => setEditingStory({ ...editingStory, ageMax: Number(e.target.value) })} className="bg-white/10 border-white/20 text-white" />
+                </div>
+              </div>
+              <div>
+                <label className="text-white/60 text-xs font-medium mb-1 block">Moralité / résumé (optionnel)</label>
+                <Input value={editingStory.moralité || ""} onChange={e => setEditingStory({ ...editingStory, moralité: e.target.value })}
+                  placeholder="La leçon de l'histoire…" className="bg-white/10 border-white/20 text-white" />
+              </div>
+              <div>
+                <label className="text-white/60 text-xs font-medium mb-1 block">Texte complet (utilise {"{child_name}"} pour le prénom)</label>
+                <Textarea value={editingStory.texte || ""} onChange={e => setEditingStory({ ...editingStory, texte: e.target.value })}
+                  placeholder="Il était une fois…" className="bg-white/10 border-white/20 text-white min-h-[200px]" />
+              </div>
+              <div>
+                <label className="text-white/60 text-xs font-medium mb-1 block">Tags (virgules)</label>
+                <Input value={(editingStory.tags || []).join(", ")}
+                  onChange={e => setEditingStory({ ...editingStory, tags: e.target.value.split(",").map(t => t.trim()).filter(Boolean) })}
+                  placeholder="aventure, amitié, courage" className="bg-white/10 border-white/20 text-white" />
+              </div>
+            </div>
+            <Button onClick={async () => {
+              if (!editingStory.titre?.trim() || !editingStory.texte?.trim()) { toast.error("Titre et texte requis"); return; }
+              setSavingStory(true);
+              const payload = {
+                title: editingStory.titre!.trim(),
+                theme: editingStory.theme || "magie",
+                template_text: editingStory.texte!.trim().slice(0, 100),
+                full_text: editingStory.texte!.trim(),
+                summary: editingStory.moralité || null,
+                age_min: editingStory.ageMin || 5,
+                age_max: editingStory.ageMax || 12,
+                duration: editingStory.duree || "courte",
+                category: editingStory.theme || "magie",
+                language: "fr",
+              };
+              if (editingStory.id && editingStory.id.includes("-")) {
+                const { error } = await supabase.from("story_templates").update(payload as any).eq("id", editingStory.id);
+                if (error) toast.error("Erreur: " + error.message);
+                else toast.success("Histoire modifiée !");
+              } else {
+                const { error } = await supabase.from("story_templates").insert(payload as any);
+                if (error) toast.error("Erreur: " + error.message);
+                else toast.success("Histoire ajoutée !");
+              }
+              setSavingStory(false);
+              setEditingStory(null);
+              fetchCloudStories();
+            }} disabled={savingStory} className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+              {savingStory ? "Enregistrement..." : "Enregistrer dans le Cloud"}
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Detail: stories in a theme ──
+    if (interactionCat) {
+      const themeConfig = allThemeConfigs.find(t => t.id === interactionCat);
+      const themeStories = allStories.filter(s => s.theme === interactionCat);
+      const ageFiltered = ageFilter
+        ? themeStories.filter(s => {
+            const ag = AGE_GROUPS_STORY.find(a => a.label === ageFilter);
+            return ag ? s.ageMin <= ag.max && s.ageMax >= ag.min : true;
+          })
+        : themeStories;
+      const searchLower = search.toLowerCase();
+      const filtered = searchLower
+        ? ageFiltered.filter(s => s.titre.toLowerCase().includes(searchLower) || s.texte.toLowerCase().includes(searchLower))
+        : ageFiltered;
+
+      return (
+        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+          <div className="max-w-4xl mx-auto space-y-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+              <span className="text-2xl">{themeConfig?.emoji || "📖"}</span>
+              <div>
+                <h1 className="text-xl font-bold text-white">{themeConfig?.label}</h1>
+                <p className="text-white/40 text-xs">{filtered.length} histoires</p>
+              </div>
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+              {AGE_GROUPS_STORY.map(ag => (
+                <button key={ag.label} onClick={() => setAgeFilter(ageFilter === ag.label ? null : ag.label)}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === ag.label ? "bg-purple-500/30 border-purple-400/50 text-purple-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
+                  {ag.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
+                className="bg-white/10 border-white/20 text-white pl-9" />
+            </div>
+
+            <div className="space-y-3">
+              {filtered.map(h => {
+                const isExpanded = expandedStory === h.id;
+                return (
+                  <div key={h.id} className="bg-white/5 backdrop-blur rounded-xl border border-white/10 overflow-hidden">
+                    <button onClick={() => setExpandedStory(isExpanded ? null : h.id)}
+                      className="w-full p-4 text-left">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">{h.theme}</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">{h.ageMin}-{h.ageMax} ans</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">{h.duree}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${h.source === "cloud" ? "bg-sky-500/20 text-sky-300" : "bg-white/10 text-white/40"}`}>
+                          {h.source === "cloud" ? "☁️ Cloud" : "📦 Local"}
+                        </span>
+                        <ChevronRight className={`w-4 h-4 text-white/30 ml-auto transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+                      </div>
+                      <h3 className="text-white font-semibold text-sm">{h.titre}</h3>
+                      {!isExpanded && <p className="text-white/40 text-xs mt-1 line-clamp-2">{h.texte.replace(/\{child_name\}/g, "[Enfant]")}</p>}
+                    </button>
+                    {isExpanded && (
+                      <div className="px-4 pb-4 space-y-3">
+                        <div className="bg-white/5 rounded-lg p-4 border border-white/5">
+                          <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap">{h.texte.replace(/\{child_name\}/g, "[Enfant]")}</p>
+                        </div>
+                        {h.moralité && <p className="text-white/50 text-xs italic">💡 {h.moralité}</p>}
+                        <div className="flex gap-1 flex-wrap">
+                          {h.tags.map((t, i) => <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-white/40">{t}</span>)}
+                        </div>
+                        {h.source === "cloud" && (
+                          <div className="flex gap-2 pt-2">
+                            <Button size="sm" variant="ghost" className="text-blue-400 text-xs" onClick={() => setEditingStory({
+                              id: h.id, titre: h.titre, theme: h.theme, ageMin: h.ageMin, ageMax: h.ageMax,
+                              duree: h.duree, texte: h.texte, moralité: h.moralité, tags: h.tags,
+                            })}>
+                              <Pencil className="w-3 h-3 mr-1" /> Modifier
+                            </Button>
+                            <Button size="sm" variant="ghost" className="text-red-400 text-xs" onClick={async () => {
+                              if (!confirm("Supprimer cette histoire ?")) return;
+                              await supabase.from("story_templates").delete().eq("id", h.id);
+                              toast.success("Supprimée");
+                              fetchCloudStories();
+                            }}>
+                              <Trash2 className="w-3 h-3 mr-1" /> Supprimer
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucune histoire pour ce filtre</p>}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Main grid by theme ──
     return (
       <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
-            <span className="text-2xl">📖</span>
-            <div>
-              <h1 className="text-xl font-bold text-white">Histoires</h1>
-              <p className="text-white/40 text-xs">{HISTOIRES.length} histoires embarquées</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+              <span className="text-2xl">📖</span>
+              <div>
+                <h1 className="text-xl font-bold text-white">Histoires</h1>
+                <p className="text-white/40 text-xs">{allStories.length} histoires • {activeThemes.length} thèmes ({HISTOIRES.length} local + {cloudStories.length} cloud)</p>
+              </div>
             </div>
+            <Button onClick={() => setEditingStory({ theme: "magie", duree: "courte", ageMin: 5, ageMax: 10, tags: [] })}
+              className="bg-purple-600 hover:bg-purple-700"><Plus className="w-4 h-4 mr-1" /> Ajouter</Button>
           </div>
 
-          {HISTOIRES.map(h => (
-            <div key={h.id} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">{h.theme}</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">{h.ageMin}-{h.ageMax} ans</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">{h.duree}</span>
-              </div>
-              <h3 className="text-white font-semibold text-sm">{h.titre}</h3>
-              <p className="text-white/40 text-xs mt-2 line-clamp-3">{h.texte.replace(/\{child_name\}/g, "[Enfant]")}</p>
-              {h.moralité && <p className="text-white/50 text-[10px] mt-2 italic">💡 {h.moralité}</p>}
-              <div className="flex gap-1 mt-2 flex-wrap">
-                {h.tags.map((t, i) => <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-white/40">{t}</span>)}
-              </div>
-            </div>
-          ))}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {allThemeConfigs.map(theme => {
+              const count = allStories.filter(s => s.theme === theme.id).length;
+              const localCount = HISTOIRES.filter(s => s.theme === theme.id).length;
+              const cloudCount = cloudStories.filter(s => s.theme === theme.id).length;
+              return (
+                <button key={theme.id} onClick={() => { setInteractionCat(theme.id); setSearch(""); setAgeFilter(null); }}
+                  className={`aspect-square ${theme.color} hover:opacity-90 backdrop-blur rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between`}>
+                  <span className="text-3xl">{theme.emoji}</span>
+                  <div>
+                    <p className="text-xl font-bold text-white">{count}</p>
+                    <h3 className="text-xs font-semibold text-white/70">{theme.label}</h3>
+                    <p className="text-[9px] text-white/40 mt-0.5">{localCount} local • {cloudCount} cloud</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     );
