@@ -9,7 +9,7 @@ const corsHeaders = {
 const VOICE_MAP: Record<string, string> = {
   // Natural French voices
   female: "FGY2WhTYpPnrIDTdsKH5",   // Laura - warm female
-  child:  "e79twtVS2278lVZZQiAD",    // The Elf - playful
+  child:  "XrExE9yKIg1WjnnlVkGX",    // Matilda - more natural childlike tone
   male:   "JBFqnCBsd6RMkjVDRZzb",    // George - warm male
   sister: "EXAVITQu4vr4xnSDxMaL",    // Sarah - young female
   brother:"IKne3meq5aSn9XLyUdCD",    // Charlie - young male
@@ -39,9 +39,9 @@ serve(async (req) => {
 
     const voiceId = VOICE_MAP[voiceProfile || "female"] || VOICE_MAP.female;
 
-    // Use turbo model for low latency
+    // Use higher-quality multilingual model to avoid robotic output
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_22050_32`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
       {
         method: "POST",
         headers: {
@@ -50,11 +50,11 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           text: text.slice(0, 2000), // Safety limit
-          model_id: "eleven_turbo_v2_5",
+          model_id: "eleven_multilingual_v2",
           voice_settings: {
-            stability: 0.45,
-            similarity_boost: 0.75,
-            style: 0.35,
+            stability: 0.58,
+            similarity_boost: 0.8,
+            style: 0.18,
             use_speaker_boost: true,
             speed: 1.0,
           },
