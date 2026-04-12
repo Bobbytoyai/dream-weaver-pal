@@ -45,6 +45,8 @@ export const context: ConversationContext = {
   mood: "neutral",
   interactionCount: 0,
   lastResponses: [],
+  lastBobbyResponse: "",
+  lastResponseTime: 0,
   history: [],
   mentionedTopics: new Set(),
   childPreferences: {},
