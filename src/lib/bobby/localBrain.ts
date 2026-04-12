@@ -131,6 +131,7 @@ export type LocalIntent =
   | "RETRAIT" | "PEUR_ABANDON" | "PEUR_ECHEC" | "AVERSION" | "PEOPLE_PLEASING"
   | "CURIOSITE" | "CREATION" | "IDENTITE_PEUR" | "MAUVAIS_COMPORTEMENT"
   | "STRESS" | "PARTAGE_QUOTIDIEN" | "RESISTANCE" | "ENVIE"
+  | "QUESTION_ABSURDE" | "QUESTION_EXISTENTIELLE"
   // Catch-all
   | "GENERAL";
 
@@ -343,10 +344,16 @@ const INTENT_RULES: IntentRule[] = [
     /aventure|pirate|trésor|mission|super-héros|chevalier|magie|ninja/i,
   ]},
   { intent: "IMAGINATION", priority: 72, patterns: [
-    /imagine|si on|et si|on invente|on crée|monde imaginaire|faire semblant/i,
+    /imagine|si on|et si|on invente|on crée|monde imaginaire|faire semblant|je peux voler|je peux être|devenir un dinosaure|parler aux animaux|battre le vent|invisible vraiment|créer un monde/i,
+  ]},
+  { intent: "QUESTION_ABSURDE", priority: 68, patterns: [
+    /pourquoi les poules|pourquoi l'eau mouille|nuages.*coton|si je mange beaucoup|lune.*me suit|si je saute.*voler|si je cours.*vent/i,
+  ]},
+  { intent: "QUESTION_EXISTENTIELLE", priority: 66, patterns: [
+    /pourquoi le temps passe|pourquoi j'ai des émotions|pourquoi on existe|c'est quoi la vie|pourquoi on meurt|pourquoi on respire|pourquoi on doit dormir/i,
   ]},
   { intent: "APPRENDRE", priority: 70, patterns: [
-    /apprendre|c'est quoi|pourquoi|comment ça marche|explique|sais-tu|tu connais/i,
+    /apprendre|c'est quoi|comment ça marche|explique|sais-tu|tu connais|pourquoi le ciel|pourquoi les poissons|je veux savoir tout/i,
   ]},
   { intent: "CHANSON", priority: 72, patterns: [
     /chanson|chante|chanter|fredonne|musique/i,
@@ -979,14 +986,24 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
 
   IMAGINATION: {
     default: {
-      empathy: ["Ooh, on imagine ! 🌈"],
+      empathy: [
+        "Ooh, on imagine ! 🌈",
+        "Wow ton imagination est forte 😄",
+        "Roooar 🦖😄",
+        "Ce serait magique 😄",
+      ],
       response: [
         "L'imagination, c'est le plus beau des pouvoirs !",
+        "Bobby adore imaginer avec toi 💛",
+        "C'est comme ça que naissent les meilleures aventures !",
       ],
       opening: [
         "Si tu pouvais créer un monde, il serait comment ?",
         "Tu inventes le personnage, moi j'invente l'aventure ?",
         "On crée un animal imaginaire ensemble ?",
+        "Tu ferais quoi en premier ?",
+        "Tu serais quoi exactement ?",
+        "Tu parlerais avec qui en premier ?",
       ],
     },
   },
@@ -1800,6 +1817,46 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
     },
   },
 
+  QUESTION_ABSURDE: {
+    default: {
+      empathy: [
+        "Haha 😄",
+        "Quelle question rigolote !",
+        "Oh j'adore cette question 😄",
+      ],
+      response: [
+        "Bobby adore les questions farfelues 💛",
+        "C'est le genre de question que Bobby préfère !",
+        "Les meilleures questions sont les plus drôles !",
+      ],
+      opening: [
+        "Et toi, tu en penses quoi ?",
+        "Tu as d'autres questions comme ça ?",
+        "Tu veux qu'on imagine la réponse ensemble ?",
+      ],
+    },
+  },
+
+  QUESTION_EXISTENTIELLE: {
+    default: {
+      empathy: [
+        "Wow, quelle question profonde 🤔",
+        "C'est une vraie grande question…",
+        "Tu réfléchis beaucoup, et c'est beau 💛",
+      ],
+      response: [
+        "Les plus belles questions n'ont pas toujours de réponse simple.",
+        "Bobby aime réfléchir à ça avec toi 💛",
+        "C'est ce genre de question qui rend la vie fascinante.",
+      ],
+      opening: [
+        "Et toi, qu'est-ce que tu en penses ?",
+        "Qu'est-ce qui t'a fait penser à ça ?",
+        "Tu veux qu'on explore ça ensemble ?",
+      ],
+    },
+  },
+
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1986,6 +2043,8 @@ const INTENT_FACE_MAP: Partial<Record<LocalIntent, FaceState>> = {
   RESISTANCE: "reassuring",
   PARTAGE_QUOTIDIEN: "happy",
   ENVIE: "playful",
+  QUESTION_ABSURDE: "playful",
+  QUESTION_EXISTENTIELLE: "curious",
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
