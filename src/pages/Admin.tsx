@@ -261,6 +261,10 @@ const Admin = () => {
   const [interactionAge, setInteractionAge] = useState<{ min: number; max: number }>({ min: 3, max: 12 });
   const [cloudSection, setCloudSection] = useState<string | null>(null);
   const [ageFilter, setAgeFilter] = useState<string | null>(null);
+  const [expandedStory, setExpandedStory] = useState<string | null>(null);
+  const [cloudStories, setCloudStories] = useState<any[]>([]);
+  const [editingStory, setEditingStory] = useState<Partial<Histoire & { id: string }> | null>(null);
+  const [savingStory, setSavingStory] = useState(false);
 
   // 10K interactions (lazy loaded)
   const [interactions, setInteractions] = useState<BobbyInteraction[] | null>(null);
