@@ -125,7 +125,8 @@ export type LocalIntent =
   // Safety
   | "CONTENU_BLOQUE" | "CRISE_SECURITE"
   // Situational
-  | "FATIGUE" | "ECHEC" | "OBJECTIF"
+  | "FATIGUE" | "ECHEC" | "OBJECTIF" | "SANTE" | "PERTE" | "REVE_AVENIR"
+  | "ANXIETE" | "ABANDON" | "MENSONGE" | "EXCITATION" | "AMOUREUX"
   // Catch-all
   | "GENERAL";
 
@@ -149,7 +150,8 @@ const INTENT_RULES: IntentRule[] = [
   // Emotions — high priority
   { intent: "PEUR", priority: 90, patterns: [
     /j'ai peur|fait peur|effrayé|terrifié|cauchemar|monstre|angoiss|j'ose pas|me fait peur/i,
-    /peur du noir|peur de|peur quand|peur que/i,
+    /peur du noir|peur de|peur quand|peur que|peur d'être puni|peur de mourir|peur de parler/i,
+    /stressé|stress|anxieux|anxiété|inquiet/i,
   ]},
   { intent: "TRISTESSE", priority: 90, patterns: [
     /je suis triste|je pleure|pas bien|malheureux|je me sens mal|j'ai le cafard|personne m'aime/i,
@@ -165,7 +167,7 @@ const INTENT_RULES: IntentRule[] = [
     /je m'ennuie|m'ennuie|rien à faire|c'est nul|bof|chiant|ennuie|sais pas quoi faire/i,
   ]},
   { intent: "HONTE", priority: 85, patterns: [
-    /honte|ridicule|la honte|embarrass|j'ai fait une bêtise|tout le monde a ri/i,
+    /honte|ridicule|la honte|embarrass|j'ai fait une bêtise|tout le monde a ri|j'ai menti|j'ai triché/i,
   ]},
   { intent: "JALOUSIE", priority: 85, patterns: [
     /jaloux|jalouse|pourquoi pas moi|lui il a|elle elle a|c'est injuste/i,
@@ -177,7 +179,7 @@ const INTENT_RULES: IntentRule[] = [
     /fier|fière|j'ai réussi|j'ai gagné|champion|regarde ce que|bien joué/i,
   ]},
   { intent: "AMOUR", priority: 80, patterns: [
-    /je t'aime|t'adore|câlin|bisou|tu es mon ami|meilleur ami|aime bobby/i,
+    /je t'aime|t'adore|câlin|bisou|tu es mon ami|meilleur ami|aime bobby|amoureux|amoureuse/i,
   ]},
   { intent: "TIMIDITE", priority: 80, patterns: [
     /timide|j'ose pas|gêné|rouge|devant tout le monde/i,
@@ -189,7 +191,7 @@ const INTENT_RULES: IntentRule[] = [
   // Social situations
   { intent: "CONFLIT_FAMILLE", priority: 88, patterns: [
     /parents crient|papa crie|maman crie|disputé avec|frère m'énerve|sœur m'énerve|parents séparés|divorce/i,
-    /punition|puni|grondé|engueulé/i,
+    /punition|puni|grondé|engueulé|parents se disputent|parents se battent/i,
   ]},
   { intent: "CONFLIT_AMI", priority: 88, patterns: [
     /copain m'a|copine m'a|ami m'a|plus mon ami|disputé avec mon copain|il m'a tapé|elle m'a tapé/i,
