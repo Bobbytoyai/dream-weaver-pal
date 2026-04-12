@@ -88,6 +88,10 @@ export function updateContext(intent: OfflineIntent, topic: string, response: st
   context.lastResponses.push(response);
   if (context.lastResponses.length > 5) context.lastResponses.shift();
 
+  // Track for learning loop
+  context.lastBobbyResponse = response;
+  context.lastResponseTime = Date.now();
+
   context.history.push(
     { role: "user", text: topic, intent, topic, timestamp: Date.now() },
     { role: "bobby", text: response, intent, topic, timestamp: Date.now() },
