@@ -343,9 +343,9 @@ export function useBobbyVoiceCore({
       if (machineRef.current !== "LISTENING") return;
       silenceCountRef.current++;
 
-      if (silenceCountRef.current >= 2) {
-        // Already relaunched once — end conversation
-        console.log("[BobbyVoiceCore] 2nd silence timeout — ending conversation");
+      if (silenceCountRef.current >= 1) {
+        // Already waited once — end conversation silently
+        console.log("[BobbyVoiceCore] Silence timeout — ending conversation");
         stopSttRef.current();
         setMicArmed(false);
         setPartialText("");
@@ -356,25 +356,14 @@ export function useBobbyVoiceCore({
         return;
       }
 
-      // First timeout — Bobby relaunches the child with interest-based question
-      console.log("[BobbyVoiceCore] 60s silence — Bobby relaunches child");
-      const interestRelaunch = getInterestBasedRelaunch(childName);
-      const genericRelaunches = [
-        `${childName}, tu es toujours là ? Dis-moi quelque chose !`,
-        `Hé ${childName} ! On continue à discuter ? 😊`,
-        `${childName}, Bobby t'attend ! Tu veux jouer ou parler ?`,
-        `Tu es là ${childName} ? Raconte-moi un truc !`,
-      ];
-      const text = interestRelaunch || genericRelaunches[Math.floor(Math.random() * genericRelaunches.length)];
-      const relaunchReply: BobbyBrainReply = {
-        text,
-        intent: "RELAUNCH",
-        source: "offline_brain",
-        emotion: "curious",
-        confidence: 1,
-        isOffline: true,
-      };
-      void speakReply(relaunchReply);
+      // First timeout — show text prompt only, NO SPEECH (avoids echo loop)
+      console.log("[BobbyVoiceCore] 60s silence — showing text prompt (no speech)");
+      setBobbyText(`${childName}, touche Bobby si tu veux me parler ! 😊`);
+      setCurrentEmotion("idle");
+      stopSttRef.current();
+      setMicArmed(false);
+      go("IDLE");
+      scheduleSleep();
     }, 60_000);
 
     try {
