@@ -1,6 +1,6 @@
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import type { ParentSettings } from "@/components/parentSettings";
-import { getOfflineResponse, resetConversationContext } from "@/lib/offlineEngine";
+import { resetConversationContext } from "@/lib/offlineEngine";
 import { getLibraryReply, getNarrationText } from "./library";
 import type { BobbyBrainReply, PendingNarration } from "./types";
 import { simplifyForAge } from "@/lib/adaptiveEngine";
@@ -8,6 +8,7 @@ import { resetMemory } from "@/lib/responseSelector";
 import { resetScenario } from "@/lib/scenarioEngine";
 import { trackInterests, getSmartFollowUp, resetInterestTracker } from "./interestTracker";
 import { getLLMReply, clearHistory } from "./llmBrain";
+import { getLocalBrainReply, resetLocalBrain } from "./localBrain";
 
 interface BuildBobbyReplyOptions {
   childName: string;
