@@ -1966,14 +1966,14 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
     const categoryCards: { key: string; emoji: string; label: string; bg: string; active: boolean; onClick: () => void }[] = [
       { key: "all", emoji: "📋", label: "Tous", bg: "from-primary/20 to-primary/10", active: !tagFilter && !sessionFavFilter, onClick: () => { setTagFilter(null); setSessionFavFilter(false); } },
-      { key: "fav", emoji: "⭐", label: "Favoris", bg: "from-yellow-400/25 to-yellow-300/10", active: sessionFavFilter, onClick: () => setSessionFavFilter(!sessionFavFilter) },
+      { key: "fav", emoji: "⭐", label: "Favoris", bg: "from-yellow-400/25 to-yellow-300/10", active: sessionFavFilter && !tagFilter, onClick: () => { setTagFilter(null); setSessionFavFilter(!sessionFavFilter); } },
       ...Object.entries(tagLabels).map(([key, info]) => ({
         key,
         emoji: info.emoji,
         label: info.label,
         bg: key === "fun" ? "from-pink-400/20 to-pink-300/10" : key === "learning" ? "from-blue-400/20 to-blue-300/10" : key === "emotion" ? "from-amber-400/20 to-amber-300/10" : "from-muted to-muted/50",
-        active: tagFilter === key,
-        onClick: () => setTagFilter(tagFilter === key ? null : key),
+        active: tagFilter === key && !sessionFavFilter,
+        onClick: () => { setSessionFavFilter(false); setTagFilter(tagFilter === key ? null : key); },
       })),
     ];
 
@@ -2017,22 +2017,31 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               const dayData = calendarDays.find(c => c.date.getDate() === dayNum && c.date.getMonth() === calMonth);
               const isToday = dayNum === now.getDate();
               return (
-                <button key={dayNum}
-                  onClick={() => {
+                <button key={dayNum} type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     if (dayData) {
-                      const target = dailySummaries.find(d => new Date(d.daySessions[0].started_at).getDate() === dayNum);
+                      const target = dailySummaries.find(d => {
+                        const sd = new Date(d.daySessions[0].started_at);
+                        return sd.getDate() === dayNum && sd.getMonth() === calMonth;
+                      });
                       if (target) {
                         const el = document.getElementById(`day-${target.day}`);
-                        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        if (el) {
+                          el.scrollIntoView({ behavior: "smooth", block: "center" });
+                          el.classList.add("ring-2", "ring-primary");
+                          setTimeout(() => el.classList.remove("ring-2", "ring-primary"), 2000);
+                        }
                       }
                     }
                   }}
                   className={`aspect-square rounded-lg flex flex-col items-center justify-center text-[10px] transition-all ${
                     dayData
-                      ? "bg-primary/15 text-primary font-bold hover:bg-primary/25 cursor-pointer"
+                      ? "bg-primary/15 text-primary font-bold hover:bg-primary/25 cursor-pointer active:scale-90"
                       : isToday
                         ? "bg-muted ring-1 ring-primary/30 text-foreground font-bold"
-                        : "text-muted-foreground"
+                        : "text-muted-foreground cursor-default"
                   }`}>
                   {dayNum}
                   {dayData && <span className="text-[7px] -mt-0.5">{dayData.mood}</span>}
