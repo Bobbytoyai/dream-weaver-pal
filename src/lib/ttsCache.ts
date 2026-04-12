@@ -175,7 +175,6 @@ export async function preloadOfflineTTSCache(
   onProgress?: (done: number, total: number) => void,
 ): Promise<void> {
   if (cacheProgress.running) return; // Already running
-  if (!navigator.onLine) return; // Can't cache when offline
 
   const phrases = getPriorityPhrases(childName);
   cacheProgress = { total: phrases.length, done: 0, running: true };
