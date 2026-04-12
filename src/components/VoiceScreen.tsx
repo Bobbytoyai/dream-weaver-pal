@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { eventBus } from "@/lib/eventBus";
 import { getUnreadAlertCount } from "@/lib/offlineEngine";
-import { Settings, Camera, Mic, MicOff, Gamepad2 } from "lucide-react";
+import { Settings, Camera, Gamepad2 } from "lucide-react";
 import { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
 
@@ -54,20 +54,20 @@ const FloatingParticles = () => {
   );
 };
 
-const DebugOverlay = ({ state, micArmed, micRunning, partialText, lastRecognized, lastAiResponse, sttBackend, offline }: {
-  state: ConversationState; micArmed: boolean; micRunning: boolean;
-  partialText: string; lastRecognized: string; lastAiResponse: string; sttBackend: string; offline: boolean;
+const DebugOverlay = ({ state, micRunning, partialText, lastRecognized, lastAiResponse, offline }: {
+  state: ConversationState; micRunning: boolean;
+  partialText: string; lastRecognized: string; lastAiResponse: string; offline: boolean;
 }) => (
   <div className="fixed top-0 left-0 right-0 z-50 bg-black/85 text-white p-3 text-[10px] font-mono space-y-1 pointer-events-none max-h-48 overflow-y-auto">
     <div className="flex gap-3 flex-wrap">
       <span>State: <span className={`font-bold ${state === "ERROR" ? "text-red-400" : state === "LISTENING" ? "text-green-400" : state === "SPEAKING" ? "text-blue-400" : state === "PROCESSING" ? "text-yellow-400" : state === "SLEEP" ? "text-indigo-400" : "text-gray-400"}`}>{state}</span></span>
-      <span>Mic: {micArmed ? (micRunning ? "🟢 ON" : "🟡 ARMED") : "🔴 OFF"}</span>
-      <span>STT: {sttBackend}</span>
+      <span>Mic: {micRunning ? "🟢 ON" : "🔴 OFF"}</span>
+      <span>STT: Natif</span>
       <span>Net: {offline ? "🔴 OFFLINE" : "🟢 ONLINE"}</span>
     </div>
-    {partialText && <div className="text-green-300 truncate">📝 Partial: "{partialText}"</div>}
-    {lastRecognized && <div className="text-cyan-300 truncate">✅ Recognized: "{lastRecognized}"</div>}
-    {lastAiResponse && <div className="text-purple-300 truncate">🤖 AI: "{lastAiResponse.slice(0, 100)}"</div>}
+    {partialText && <div className="text-green-300 truncate">📝 "{partialText}"</div>}
+    {lastRecognized && <div className="text-cyan-300 truncate">✅ "{lastRecognized}"</div>}
+    {lastAiResponse && <div className="text-purple-300 truncate">🤖 "{lastAiResponse.slice(0, 100)}"</div>}
   </div>
 );
 
@@ -164,12 +164,10 @@ const VoiceScreen = ({
       {showDebug && (
         <DebugOverlay
           state={sm.machineState}
-          micArmed={sm.micArmed}
-          micRunning={sm.deepgramSTT.isRunning.current}
+          micRunning={sm.sttIsRunning.current}
           partialText={sm.partialText}
           lastRecognized={sm.lastRecognized}
           lastAiResponse={sm.lastAiResponse}
-          sttBackend={sm.deepgramSTT.backend}
           offline={sm.networkOffline}
         />
       )}
