@@ -6,7 +6,7 @@ import { getUnreadAlertCount } from "@/lib/offlineEngine";
 import { Settings, Camera, Mic, MicOff, Gamepad2 } from "lucide-react";
 import { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
-import { MicStatusIndicator } from "@/components/MicStatusIndicator";
+
 import {
   useConversationStateMachine,
   type ConversationState,
