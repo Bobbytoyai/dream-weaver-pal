@@ -22,6 +22,7 @@ import { BLAGUES } from "@/lib/bobby-content/blagues";
 import { HISTOIRES } from "@/lib/bobby-content/histoires";
 import { CHANSONS, CHANSON_CATEGORIES, type Chanson, type ChansonCategorie } from "@/lib/bobby-content/chansons";
 import { QA_DATABASE } from "@/lib/qa-database";
+import { BOBBY_MULTI_RESPONSES } from "@/lib/responseSelector";
 import {
   QUIZ_ANIMAUX, QUIZ_EDUCATIF, VRAI_FAUX, DEVINETTES,
   BLAGUES as GAME_BLAGUES,
