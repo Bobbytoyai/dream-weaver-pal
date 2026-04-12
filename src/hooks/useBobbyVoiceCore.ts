@@ -328,7 +328,10 @@ export function useBobbyVoiceCore({
     } catch (err: any) {
       handleSttError("STT_START_FAILED");
     }
-  }, [clearSleepTimer, go, handleSttError, smartSTT, stopPlayback]);
+  }, [childName, clearSleepTimer, closeSession, go, handleSttError, scheduleSleep, smartSTT, speakReply, stopPlayback]);
+
+  // Keep the ref in sync so speakReply can call it without circular deps
+  useEffect(() => { startListeningRef.current = startListening; }, [startListening]);
 
   const interrupt = useCallback(() => {
     processingRef.current = false;
