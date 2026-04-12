@@ -356,6 +356,7 @@ export function getOfflineResponse(
   const finalText = personalize(response, childName);
   const followUp = getFollowUp(intent);
   const fullResponse = (contextPrefix ? contextPrefix + " " : "") + finalText + followUp;
+  recordResponse(fullResponse, intent.toLowerCase());
   updateContext(intent, text, fullResponse);
   return { text: fullResponse, intent, isOffline: true };
 }
