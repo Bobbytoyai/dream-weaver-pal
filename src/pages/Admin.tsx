@@ -332,6 +332,31 @@ const Admin = () => {
     return counts;
   }, [interactions]);
 
+  // Multi-response category counts
+  const multiResponseCategoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const entry of BOBBY_MULTI_RESPONSES) {
+      counts[entry.category] = (counts[entry.category] || 0) + 1;
+    }
+    return counts;
+  }, []);
+
+  // Dynamic section counts
+  const sectionCounts = useMemo(() => {
+    const totalGameItems = QUIZ_ANIMAUX.length + QUIZ_EDUCATIF.length + VRAI_FAUX.length + DEVINETTES.length + GAME_BLAGUES.length;
+    return {
+      interactions: interactions?.length ?? "…",
+      multiresponses: BOBBY_MULTI_RESPONSES.length,
+      jeux: totalGameItems,
+      qa: QA_DATABASE.length,
+      blagues: BLAGUES.length,
+      histoires: HISTOIRES.length,
+      chansons: CHANSONS.length,
+      cerveau: "16",
+      cloud: entries.length,
+    } as Record<string, string | number>;
+  }, [interactions, entries]);
+
   // ─── Handlers ───
   const handleSave = async () => {
     if (!editingEntry?.question?.trim() || !editingEntry?.answer?.trim()) {
