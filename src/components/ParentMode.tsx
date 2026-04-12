@@ -8,7 +8,8 @@ import {
   Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X,
   SkipForward, SkipBack, Activity, Bell, ChevronDown, Star, Edit3
 } from "lucide-react";
-import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
+import { getInterestSnapshot, INTEREST_KEYWORDS_PUBLIC } from "@/lib/bobby/interestTracker";
 import { supabase } from "@/integrations/supabase/client";
 import StoryLibrary from "@/components/StoryLibrary";
 import ContentCategories from "@/components/ContentCategories";
@@ -920,6 +921,88 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
         </div>
       )}
+
+      {/* ═══ 2d-bis. CENTRES D'INTÉRÊT (RADAR) ═══ */}
+      {(() => {
+        // Combine DB interests + live tracker
+        const liveSnapshot = getInterestSnapshot();
+        const dbCounts: Record<string, number> = {};
+        analyses.forEach(a => {
+          (a.extracted_interests || []).forEach((interest: string) => {
+            const normalized = interest.toLowerCase();
+            dbCounts[normalized] = (dbCounts[normalized] || 0) + 1;
+          });
+          (a.topics_detected || []).forEach((topic: string) => {
+            const normalized = topic.toLowerCase();
+            dbCounts[normalized] = (dbCounts[normalized] || 0) + 0.5;
+          });
+        });
+
+        // Map to interest categories
+        const categoryScores: Record<string, number> = {};
+        const kwMap = INTEREST_KEYWORDS_PUBLIC;
+        Object.entries(kwMap).forEach(([cat, info]) => {
+          let score = 0;
+          // From live tracker
+          const live = liveSnapshot.topInterests.find(t => t.topic === cat);
+          if (live) score += live.score;
+          // From DB
+          info.keywords.forEach(kw => {
+            Object.entries(dbCounts).forEach(([dbKey, count]) => {
+              if (dbKey.includes(kw) || kw.includes(dbKey)) score += count;
+            });
+          });
+          if (score > 0) categoryScores[cat] = Math.round(score * 10) / 10;
+        });
+
+        const radarData = Object.entries(categoryScores)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 8)
+          .map(([cat, score]) => ({
+            subject: `${kwMap[cat]?.emoji || "📌"} ${cat.charAt(0).toUpperCase() + cat.slice(1)}`,
+            score: Math.min(score, 100),
+            fullMark: Math.max(...Object.values(categoryScores), 10),
+          }));
+
+        if (radarData.length < 3) return null;
+
+        return (
+          <div className="bg-card rounded-2xl p-4 border border-border/30">
+            <div className="flex items-center gap-2 mb-2">
+              <Activity className="w-4 h-4 text-primary" />
+              <h3 className="text-[13px] font-bold text-foreground">Centres d'intérêt de {childName}</h3>
+            </div>
+            <p className="text-[10px] text-muted-foreground mb-3">
+              Sujets les plus abordés lors des conversations avec Bobby
+            </p>
+            <ResponsiveContainer width="100%" height={220}>
+              <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
+                <PolarGrid stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                <PolarAngleAxis
+                  dataKey="subject"
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                />
+                <PolarRadiusAxis tick={false} axisLine={false} />
+                <Radar
+                  name="Intérêt"
+                  dataKey="score"
+                  stroke="hsl(var(--primary))"
+                  fill="hsl(var(--primary))"
+                  fillOpacity={0.25}
+                  strokeWidth={2}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {radarData.slice(0, 5).map((d, i) => (
+                <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                  {d.subject}
+                </span>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ═══ 2d. ANALYSE SEMAINE ═══ */}
       {dailyInsights.length > 0 && (
