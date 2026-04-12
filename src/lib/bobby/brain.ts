@@ -6,6 +6,7 @@ import type { BobbyBrainReply, PendingNarration } from "./types";
 import { simplifyForAge } from "@/lib/adaptiveEngine";
 import { resetMemory } from "@/lib/responseSelector";
 import { resetScenario } from "@/lib/scenarioEngine";
+import { trackInterests, getSmartFollowUp, resetInterestTracker } from "./interestTracker";
 
 interface BuildBobbyReplyOptions {
   childName: string;
@@ -149,6 +150,7 @@ export function resetBobbyBrainSession() {
   resetConversationContext();
   resetMemory();
   resetScenario();
+  resetInterestTracker();
 }
 
 export function buildBobbyReply({ childName, childAge, userText = "", pendingNarration, parentSettings }: BuildBobbyReplyOptions): BobbyBrainReply {
