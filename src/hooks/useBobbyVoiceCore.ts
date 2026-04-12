@@ -99,6 +99,7 @@ export function useBobbyVoiceCore({
   const sleepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const listenTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const lastSpeechEndRef = useRef(0);
   const handledNarrationIdRef = useRef<string | null>(null);
   const sessionOpenRef = useRef(false);
   const wakeWordArmedRef = useRef(false);
@@ -195,6 +196,7 @@ export function useBobbyVoiceCore({
 
     if (!controller.signal.aborted) {
       eventBus.emit({ type: "SPEECH_STOP" });
+      lastSpeechEndRef.current = Date.now();
       silenceCountRef.current = 0;
       // ─── Wait 1.5s after Bobby finishes before restarting STT ───
       // This ensures the speaker audio fully dissipates before mic listens
