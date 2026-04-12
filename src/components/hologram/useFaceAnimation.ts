@@ -18,9 +18,7 @@ export type FaceState =
   | "sleepy"
   | "curious"
   | "playful"
-  | "proud"
-  | "angry"
-  | "love";
+  | "proud";
 
 export interface FaceAnimationState {
   eyeOpenness: number;
@@ -46,7 +44,7 @@ export interface FaceAnimationState {
 const STATE_TARGETS: Record<FaceState, Partial<FaceAnimationState>> = {
   idle: {
     eyeOpenness: 1, eyebrowHeight: 0, eyebrowTilt: 0,
-    mouthOpenness: 0, mouthWidth: 0.5, mouthCurve: 0.25, mouthRound: 0, jawDrop: 0,
+    mouthOpenness: 0, mouthWidth: 0.5, mouthCurve: 0.08, mouthRound: 0, jawDrop: 0,
     headTiltX: 0, headTiltZ: 0, glowIntensity: 0.3,
     pupilSize: 1, cheekGlow: 0.1, irisGlow: 0.4, eyeSparkle: 0.5,
   },
@@ -69,10 +67,10 @@ const STATE_TARGETS: Record<FaceState, Partial<FaceAnimationState>> = {
     pupilSize: 1.05, cheekGlow: 0.2, irisGlow: 0.55, eyeSparkle: 0.6,
   },
   happy: {
-    eyeOpenness: 0.75, eyebrowHeight: 0.18, eyebrowTilt: 0,
-    mouthOpenness: 0.25, mouthWidth: 0.85, mouthCurve: 0.6, mouthRound: 0, jawDrop: 0.12,
-    headTiltX: 0.04, headTiltZ: 0, glowIntensity: 0.9,
-    pupilSize: 1.15, cheekGlow: 0.75, irisGlow: 0.85, eyeSparkle: 0.95,
+    eyeOpenness: 0.85, eyebrowHeight: 0.16, eyebrowTilt: 0,
+    mouthOpenness: 0.2, mouthWidth: 0.78, mouthCurve: 0.55, mouthRound: 0, jawDrop: 0.1,
+    headTiltX: 0.04, headTiltZ: 0, glowIntensity: 0.85,
+    pupilSize: 1.2, cheekGlow: 0.65, irisGlow: 0.8, eyeSparkle: 0.9,
   },
   confused: {
     eyeOpenness: 1.15, eyebrowHeight: 0.1, eyebrowTilt: 0.25,
@@ -93,8 +91,8 @@ const STATE_TARGETS: Record<FaceState, Partial<FaceAnimationState>> = {
     pupilSize: 1.2, cheekGlow: 0.3, irisGlow: 0.7, eyeSparkle: 0.8,
   },
   surprised: {
-    eyeOpenness: 1.45, eyebrowHeight: 0.35, eyebrowTilt: 0,
-    mouthOpenness: 0.4, mouthWidth: 0.35, mouthCurve: 0, mouthRound: 0.5, jawDrop: 0.35,
+    eyeOpenness: 1.4, eyebrowHeight: 0.32, eyebrowTilt: 0,
+    mouthOpenness: 0.35, mouthWidth: 0.5, mouthCurve: 0, mouthRound: 0.4, jawDrop: 0.3,
     headTiltX: 0, headTiltZ: 0, glowIntensity: 0.75,
     pupilSize: 1.4, cheekGlow: 0.2, irisGlow: 0.85, eyeSparkle: 0.95,
   },
@@ -111,8 +109,8 @@ const STATE_TARGETS: Record<FaceState, Partial<FaceAnimationState>> = {
     pupilSize: 1.1, cheekGlow: 0.25, irisGlow: 0.5, eyeSparkle: 0.6,
   },
   sad: {
-    eyeOpenness: 0.75, eyebrowHeight: -0.08, eyebrowTilt: -0.3,
-    mouthOpenness: 0.02, mouthWidth: 0.4, mouthCurve: -0.3, mouthRound: 0, jawDrop: 0,
+    eyeOpenness: 0.75, eyebrowHeight: -0.05, eyebrowTilt: -0.2,
+    mouthOpenness: 0.02, mouthWidth: 0.4, mouthCurve: -0.2, mouthRound: 0, jawDrop: 0,
     headTiltX: -0.06, headTiltZ: -0.04, glowIntensity: 0.2,
     pupilSize: 0.85, cheekGlow: 0.05, irisGlow: 0.25, eyeSparkle: 0.2,
   },
@@ -139,18 +137,6 @@ const STATE_TARGETS: Record<FaceState, Partial<FaceAnimationState>> = {
     mouthOpenness: 0.08, mouthWidth: 0.62, mouthCurve: 0.32, mouthRound: 0, jawDrop: 0.03,
     headTiltX: -0.06, headTiltZ: 0, glowIntensity: 0.7,
     pupilSize: 1.1, cheekGlow: 0.35, irisGlow: 0.65, eyeSparkle: 0.75,
-  },
-  angry: {
-    eyeOpenness: 0.7, eyebrowHeight: 0.12, eyebrowTilt: -0.3,
-    mouthOpenness: 0, mouthWidth: 0.4, mouthCurve: -0.1, mouthRound: 0, jawDrop: 0,
-    headTiltX: 0.02, headTiltZ: 0, glowIntensity: 0.5,
-    pupilSize: 0.85, cheekGlow: 0.05, irisGlow: 0.4, eyeSparkle: 0.3,
-  },
-  love: {
-    eyeOpenness: 0.88, eyebrowHeight: -0.05, eyebrowTilt: 0,
-    mouthOpenness: 0.1, mouthWidth: 0.7, mouthCurve: 0.35, mouthRound: 0, jawDrop: 0.05,
-    headTiltX: 0.02, headTiltZ: 0.03, glowIntensity: 0.85,
-    pupilSize: 1.15, cheekGlow: 0.9, irisGlow: 0.8, eyeSparkle: 0.9,
   },
 };
 
@@ -209,17 +195,9 @@ export function useFaceAnimation(
   const nextMouthQuirk = useRef(1 + Math.random() * 2);
   const mouthQuirkPhase = useRef(0); // 0=none, 1=quirking, 2=returning
   const mouthQuirkTarget = useRef({ curve: 0, width: 0, open: 0 });
-  // OHH mouth animation — triggered by sustained gaze to far left/right
-  const ohhTimer = useRef(0);
-  const ohhPhase = useRef(0); // 0=waiting, 1=opening, 2=hold, 3=closing
-  const ohhAmount = useRef(0); // current openness 0-1
-  const ohhType = useRef(0);
-  // Gaze-hold tracker for OHH trigger
-  const gazeHoldTimer = useRef(0);
-  const gazeHoldTriggered = useRef(false);
   // v3.0: Anticipation/delay buffers
-  const eyebrowAnticipationBuffer = useRef(0);
-  const eyeDelayBuffer = useRef({ openness: 1, sparkle: 0.5 });
+  const eyebrowAnticipationBuffer = useRef(0); // stores upcoming eyebrow lift
+  const eyeDelayBuffer = useRef({ openness: 1, sparkle: 0.5 }); // delayed eye state
   const eyeDelayTimer = useRef(0);
   // v3.0: Performance failsafe
   const frameBudgetExceeded = useRef(0);
@@ -412,20 +390,64 @@ export function useFaceAnimation(
       proudHeadUp = -0.04 * intensity;
     }
 
-    // --- IDLE MOUTH — disabled, mouth stays closed ---
-    const mouthBreath = 0;
-    const mouthBreathCurve = 0;
-    const mouthBreathWidth = 0;
-    const mouthQuirkCurveAdd = 0;
-    const mouthQuirkWidthAdd = 0;
-    const mouthQuirkOpenAdd = 0;
+    // --- IDLE MOUTH ANIMATION (natural, like breathing through mouth) ---
+    mouthIdlePhase.current += delta * 1.2;
+    // Breathing-linked mouth movement (amplified)
+    const mouthBreath = Math.sin(mouthIdlePhase.current) * 0.035 + Math.sin(mouthIdlePhase.current * 2.3) * 0.02;
+    const mouthBreathCurve = Math.sin(mouthIdlePhase.current * 0.7) * 0.05;
+    const mouthBreathWidth = Math.sin(mouthIdlePhase.current * 1.1) * 0.025;
 
-    // --- OHH disabled ---
-    const ohhOpenAdd = 0;
-    const ohhRoundAdd = 0;
-    const ohhWidthAdd = 0;
-    const ohhEyeWiden = 0;
-    const ohhBrowLift = 0;
+    // Occasional mouth quirks (like a small smile, lip purse, or twitch)
+    let mouthQuirkCurveAdd = 0;
+    let mouthQuirkWidthAdd = 0;
+    let mouthQuirkOpenAdd = 0;
+
+    if (faceState !== "speaking") {
+      mouthQuirkTimer.current += delta;
+      if (mouthQuirkPhase.current === 0 && mouthQuirkTimer.current >= nextMouthQuirk.current) {
+        mouthQuirkPhase.current = 1;
+        mouthQuirkTimer.current = 0;
+        // Random quirk type
+        const quirkType = Math.random();
+        if (quirkType < 0.35) {
+          // Smile
+          mouthQuirkTarget.current = { curve: 0.25 + Math.random() * 0.15, width: 0.08, open: 0.02 };
+        } else if (quirkType < 0.55) {
+          // Lip purse / thinking
+          mouthQuirkTarget.current = { curve: -0.08, width: -0.1, open: 0.05 };
+        } else if (quirkType < 0.75) {
+          // Slight open (like about to speak)
+          mouthQuirkTarget.current = { curve: 0.05, width: 0.02, open: 0.08 + Math.random() * 0.05 };
+        } else if (quirkType < 0.9) {
+          // Smirk
+          mouthQuirkTarget.current = { curve: 0.15, width: 0.06, open: 0.02 };
+        } else {
+          // Big grin
+          mouthQuirkTarget.current = { curve: 0.35, width: 0.1, open: 0.04 };
+        }
+      }
+
+      if (mouthQuirkPhase.current === 1) {
+        const progress = Math.min(1, mouthQuirkTimer.current * 3);
+        mouthQuirkCurveAdd = mouthQuirkTarget.current.curve * progress;
+        mouthQuirkWidthAdd = mouthQuirkTarget.current.width * progress;
+        mouthQuirkOpenAdd = mouthQuirkTarget.current.open * progress;
+        if (mouthQuirkTimer.current > 0.6 + Math.random() * 0.5) {
+          mouthQuirkPhase.current = 2;
+          mouthQuirkTimer.current = 0;
+        }
+      } else if (mouthQuirkPhase.current === 2) {
+        const fadeOut = Math.max(0, 1 - mouthQuirkTimer.current * 2);
+        mouthQuirkCurveAdd = mouthQuirkTarget.current.curve * fadeOut;
+        mouthQuirkWidthAdd = mouthQuirkTarget.current.width * fadeOut;
+        mouthQuirkOpenAdd = mouthQuirkTarget.current.open * fadeOut;
+        if (fadeOut <= 0.01) {
+          mouthQuirkPhase.current = 0;
+          mouthQuirkTimer.current = 0;
+          nextMouthQuirk.current = 1.5 + Math.random() * 2.5;
+        }
+      }
+    }
 
     // --- LIP SYNC + EXPRESSIVE FACE (cartoon-exaggerated viseme mapping) ---
     let mouthOpenTarget: number;
@@ -481,10 +503,10 @@ export function useFaceAnimation(
       speechHeadNod = Math.sin(breathPhase.current * 6) * audioAmplitude * 0.03;
       speechCheekBoost = audioAmplitude > 0.2 ? audioAmplitude * 0.15 : 0;
     } else {
-      mouthOpenTarget = (targets.mouthOpenness ?? 0) + mouthBreath + mouthQuirkOpenAdd + ohhOpenAdd;
-      mouthWidthTarget = (targets.mouthWidth ?? 0.5) + mouthBreathWidth + mouthQuirkWidthAdd + ohhWidthAdd;
-      mouthRoundTarget = (targets.mouthRound ?? 0) + ohhRoundAdd;
-      jawDropTarget = (targets.jawDrop ?? 0) + mouthBreath * 0.3 + ohhOpenAdd * 0.5;
+      mouthOpenTarget = (targets.mouthOpenness ?? 0) + mouthBreath + mouthQuirkOpenAdd;
+      mouthWidthTarget = (targets.mouthWidth ?? 0.5) + mouthBreathWidth + mouthQuirkWidthAdd;
+      mouthRoundTarget = targets.mouthRound ?? 0;
+      jawDropTarget = (targets.jawDrop ?? 0) + mouthBreath * 0.3;
     }
 
     // --- LERP ALL VALUES ---
@@ -492,7 +514,7 @@ export function useFaceAnimation(
 
     // v3.0: EYEBROW ANTICIPATION — eyebrows lead speech by ~50ms
     // Buffer the eyebrow target and use it slightly ahead of audio
-    const eyebrowTarget = (targets.eyebrowHeight ?? 0) + microOffset.current.eyebrow + speechEyebrowLift + ohhBrowLift;
+    const eyebrowTarget = (targets.eyebrowHeight ?? 0) + microOffset.current.eyebrow + speechEyebrowLift;
     const anticipatedEyebrow = eyebrowTarget + (eyebrowTarget - eyebrowAnticipationBuffer.current) * 0.3;
     eyebrowAnticipationBuffer.current = eyebrowTarget;
     c.eyebrowHeight = lerp(c.eyebrowHeight, anticipatedEyebrow, delta * (faceState === "speaking" ? baseSpeed * 4 : baseSpeed));
@@ -500,7 +522,7 @@ export function useFaceAnimation(
 
     // v3.0: EYE DELAY — eyes follow with +100ms natural delay
     eyeDelayTimer.current += delta;
-    const eyeTargetOpenness = ((targets.eyeOpenness ?? 1) + sleepyEyeWobble + speechEyeWiden + ohhEyeWiden) * blinkMult;
+    const eyeTargetOpenness = ((targets.eyeOpenness ?? 1) + sleepyEyeWobble + speechEyeWiden) * blinkMult;
     const eyeTargetSparkle = (targets.eyeSparkle ?? 0.5) * (0.7 + sparkleWave * 0.3);
     // Smooth delay: update delayed buffer at ~10Hz for natural lag
     if (eyeDelayTimer.current > 0.1) {

@@ -281,7 +281,9 @@ export function useConversationStateMachine(options: {
     micArmed:            state !== "IDLE",
     networkOffline:      false,
 
-    // STT (for debug overlay)
+    // STT — compat fields for VoiceScreen + MicStatusIndicator
+    sttIsRunning:      stt.isRunning,
+    sttBackend:        "deepgram" as const,
     deepgramSTT: {
       isRunning: stt.isRunning,
       backend:   "deepgram" as const,

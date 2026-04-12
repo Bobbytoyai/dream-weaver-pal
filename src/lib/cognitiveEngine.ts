@@ -487,8 +487,8 @@ const VARIATION_HINTS = [
 ];
 
 function getVariationHint(): string {
-  // Only vary every 2-3 turns
-  if (state.turnCount % 3 !== 0) return "";
+  // Vary every 2 turns (raised from 3): Bobby feels more alive and spontaneous
+  if (state.turnCount % 2 !== 0) return "";
   state.variationSeed = (state.variationSeed + 1) % VARIATION_HINTS.length;
   return VARIATION_HINTS[state.variationSeed];
 }

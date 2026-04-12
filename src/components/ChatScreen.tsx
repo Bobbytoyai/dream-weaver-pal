@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import ChatMessage from "./ChatMessage";
 import ModeSelector, { type ChatMode } from "./ModeSelector";
 import { streamChat } from "@/lib/streamChat";
-import companionAvatar from "@/assets/bobby-face.png";
+import companionAvatar from "@/assets/companion-avatar.png";
 
 interface Message {
   id: string;

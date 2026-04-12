@@ -316,7 +316,7 @@ Deno.serve(async (req) => {
     const systemPrompt = buildSystemPrompt(intent, childName, childAge, parentSettings, memoryContext, cognitiveContext, difficulty) + storyContext;
 
     // Keep only recent messages for speed (voice needs fast responses)
-    const recentMessages = messages.length > 6 ? messages.slice(-6) : messages;
+    const recentMessages = messages.length > 10 ? messages.slice(-10) : messages; // raised: 6→10 for better story/game continuity
 
     // Model selection: gemini-2.0-flash for all intents (fastest next-gen)
     // Fall back to flash-lite only for ultra-simple calm/chat
@@ -338,7 +338,7 @@ Deno.serve(async (req) => {
         ],
         stream: true,
         temperature: intent === "emotion_support" ? 0.2 : intent === "story" ? 0.4 : 0.25,
-        max_tokens: intent === "story" ? 600 : intent === "game" ? 80 : 60,
+        max_tokens: intent === "story" ? 600 : intent === "game" ? 120 : intent === "emotion_support" ? 150 : 110, // raised: chat 60→110 (avoid truncation), game 80→120
       }),
     });
 

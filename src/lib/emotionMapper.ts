@@ -27,11 +27,11 @@ const KB_EMOTION_MAP: Record<string, FaceState> = {
 const TTS_EMOTION_MAP: Record<string, FaceState> = {
   happy: "happy",
   sad: "sad",
-  scared: "sad",        // no "scared" face, use sad
-  bored: "sleepy",
+  scared: "reassuring", // Bobby becomes reassuring when child is scared (not sad)
+  bored: "playful",     // Bobby becomes playful when child is bored (not sleepy)
   curious: "curious",
   excited: "excited",
-  angry: "confused",    // no "angry" face, use confused
+  angry: "calm",        // Bobby stays calm when child is angry (de-escalate)
   calm: "calm",
 };
 
