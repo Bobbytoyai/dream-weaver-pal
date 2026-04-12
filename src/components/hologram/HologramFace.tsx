@@ -1,5 +1,6 @@
 import { Suspense, useRef, useCallback, useState, useEffect, memo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 import { FaceMesh } from "./FaceMesh";
 import { HologramParticles, ScanRing } from "./HologramEffects";
 import { useGazeTracker } from "./useGazeTracker";
