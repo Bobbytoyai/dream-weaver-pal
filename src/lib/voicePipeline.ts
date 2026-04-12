@@ -195,6 +195,24 @@ export async function previewVoiceProfile(profile: VoiceProfile): Promise<void> 
     brother: "Yo ! C'est ton grand frère Bobby ! Prêt pour l'aventure ?",
   };
   const text = previewTexts[profile];
+
+  // Try ElevenLabs first (best quality)
+  if (navigator.onLine) {
+    try {
+      const url = await speakWithElevenLabs(text, profile);
+      const audio = new Audio(url);
+      await audio.play();
+      await new Promise<void>((resolve) => {
+        audio.onended = () => resolve();
+        audio.onerror = () => resolve();
+      });
+      return;
+    } catch (e) {
+      console.warn("[Preview] ElevenLabs failed, trying Piper:", e);
+    }
+  }
+
+  // Fallback to Piper
   try {
     await piperPreview(profile);
   } catch {
