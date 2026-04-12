@@ -179,6 +179,9 @@ export function useFaceAnimation(
   viseme?: VisemeState,
   emotionIntensity: number = 0.7,
   emotionDuringSpeech?: FaceState,
+  /** New modular expression override — takes priority over STATE_TARGETS */
+  expressionOverride?: ExpressionCombo,
+  expressionIntensityLevel?: number,
 ) {
   const current = useRef<FaceAnimationState>({ ...DEFAULT_STATE });
   const blinkTimer = useRef(0);
