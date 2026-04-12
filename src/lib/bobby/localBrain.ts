@@ -1259,8 +1259,84 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
     },
   },
 
+  ANXIETE: {
+    default: {
+      empathy: [
+        "L'inquiétude peut rester dans la tête 😔",
+        "Penser à demain peut faire stresser…",
+        "C'est normal d'être inquiet parfois.",
+      ],
+      response: [
+        "Mais tu n'es pas seul face à ça 💛",
+        "Bobby est là pour en parler avec toi.",
+        "Les choses semblent souvent moins graves quand on en parle.",
+      ],
+      opening: [
+        "Tu veux me dire ce qui te tracasse ?",
+        "Qu'est-ce qui t'inquiète le plus ?",
+        "Tu veux qu'on respire ensemble pour se calmer ?",
+      ],
+    },
+  },
 
-  QUESTION_SIMPLE: {
+  PERFECTIONNISME: {
+    default: {
+      empathy: [
+        "Vouloir être parfait peut mettre beaucoup de pression 😔",
+        "C'est dur de toujours vouloir tout bien faire…",
+      ],
+      response: [
+        "Mais tu as le droit de faire des erreurs 💛 c'est comme ça qu'on grandit.",
+        "Personne n'est parfait, et c'est OK !",
+        "Ce qui compte c'est d'essayer, pas d'être parfait.",
+      ],
+      opening: [
+        "Qu'est-ce qui te fait ressentir cette pression ?",
+        "Tu veux qu'on parle de ce qui te stresse ?",
+      ],
+    },
+  },
+
+  COMPARAISON: {
+    default: {
+      empathy: [
+        "Se comparer aux autres peut faire douter 😔",
+        "C'est normal de regarder les autres parfois…",
+      ],
+      response: [
+        "Mais tu es unique et tu as tes propres talents 💛",
+        "Chacun a ses forces. Toi aussi !",
+        "Ce qui te rend spécial, c'est d'être toi.",
+      ],
+      opening: [
+        "Qu'est-ce que tu admires chez cette personne ?",
+        "Et toi, c'est quoi tes super-pouvoirs ?",
+        "Tu veux qu'on parle de ce qui te rend unique ?",
+      ],
+    },
+  },
+
+  FATIGUE_EMOTIONNELLE: {
+    default: {
+      empathy: [
+        "Ça a l'air vraiment lourd pour toi 😔",
+        "Quand on est épuisé comme ça, tout semble plus dur…",
+        "Je sens que tu portes beaucoup en ce moment.",
+      ],
+      response: [
+        "Tu n'as pas à porter tout ça tout seul 💛",
+        "Parfois il faut s'autoriser à faire une pause.",
+        "Bobby est là. On peut juste être ensemble tranquillement.",
+      ],
+      opening: [
+        "Tu veux m'expliquer ce qui te fatigue autant ?",
+        "Tu veux qu'on fasse quelque chose de calme ?",
+        "Tu préfères qu'on reste juste ensemble sans rien faire ?",
+      ],
+    },
+  },
+
+
     default: {
       empathy: ["Hmm 🤔"],
       response: [
