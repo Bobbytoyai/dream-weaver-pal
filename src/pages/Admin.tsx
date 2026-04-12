@@ -694,10 +694,8 @@ const Admin = () => {
     const totalForCat = interactions?.filter(i => i.category === interactionCat).length || 0;
 
     return (
+      <>{detailDialog}
       <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
-        <div className="max-w-4xl mx-auto space-y-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
             <span className="text-2xl">{catConfig?.emoji}</span>
             <div>
               <h1 className="text-xl font-bold text-white">{catConfig?.label}</h1>
