@@ -331,12 +331,16 @@ const Admin = () => {
   const cloudEntries = useMemo(() => {
     if (!currentCloudSection) return [];
     let list = entries.filter(e => currentCloudSection.dbCategories.includes(e.category));
+    if (ageFilter) {
+      const ag = AGE_GROUPS.find(a => a.label === ageFilter);
+      if (ag) list = list.filter(e => e.age_min <= ag.max && e.age_max >= ag.min);
+    }
     if (search.trim()) {
       const s = search.toLowerCase();
       list = list.filter(e => e.question.toLowerCase().includes(s) || e.answer.toLowerCase().includes(s));
     }
     return list;
-  }, [entries, currentCloudSection, search]);
+  }, [entries, currentCloudSection, search, ageFilter]);
 
   // Filtered interactions
   const filteredInteractions = useMemo(() => {
@@ -617,27 +621,43 @@ const Admin = () => {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // MULTI-RÉPONSES — Category grid + detail
+  // MULTI-RÉPONSES — Category grid + detail with emotion/tag filters
   // ═══════════════════════════════════════════════════════════════════
   if (topSection === "multiresponses") {
-    // If a category is selected
+    const uniqueEmotions = [...new Set(BOBBY_MULTI_RESPONSES.map(e => e.emotion).filter(Boolean))];
+    const uniqueTags = [...new Set(BOBBY_MULTI_RESPONSES.flatMap(e => e.tags || []))].sort();
+
     if (interactionCat) {
       const catEntries = BOBBY_MULTI_RESPONSES.filter(e => e.category === interactionCat);
       const searchLower = search.toLowerCase();
-      const filtered = searchLower
-        ? catEntries.filter(e => e.input.toLowerCase().includes(searchLower) || e.responses.some(r => r.text.toLowerCase().includes(searchLower)))
-        : catEntries;
+      let filtered = catEntries;
+      if (ageFilter) filtered = filtered.filter(e => e.emotion === ageFilter); // reusing ageFilter for emotion
+      if (searchLower) filtered = filtered.filter(e => e.input.toLowerCase().includes(searchLower) || e.responses.some(r => r.text.toLowerCase().includes(searchLower)));
 
       return (
         <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+              <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
               <span className="text-2xl">⚡</span>
               <div>
                 <h1 className="text-xl font-bold text-white capitalize">{interactionCat.replace(/_/g, " ")}</h1>
-                <p className="text-white/40 text-xs">{filtered.length} entrées multi-réponses</p>
+                <p className="text-white/40 text-xs">{filtered.length}/{catEntries.length} entrées</p>
               </div>
+            </div>
+
+            {/* Emotion filter */}
+            <div className="flex gap-2 flex-wrap">
+              <button onClick={() => setAgeFilter(null)}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-all ${!ageFilter ? "bg-orange-500/30 border-orange-400/50 text-orange-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
+                Tous
+              </button>
+              {[...new Set(catEntries.map(e => e.emotion).filter(Boolean))].map(em => (
+                <button key={em} onClick={() => setAgeFilter(ageFilter === em ? null : em!)}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === em ? "bg-pink-500/30 border-pink-400/50 text-pink-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
+                  {em}
+                </button>
+              ))}
             </div>
 
             <div className="relative">
@@ -668,14 +688,27 @@ const Admin = () => {
                   </div>
                 </div>
               ))}
+              {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
             </div>
           </div>
         </div>
       );
     }
 
-    // Category grid
+    // Category grid with search + emotion filter
     const uniqueCats = [...new Set(BOBBY_MULTI_RESPONSES.map(e => e.category))];
+    const searchLower = search.toLowerCase();
+    const emotionFilter = ageFilter;
+    let filteredCats = uniqueCats;
+    if (emotionFilter) {
+      const catsWithEmotion = new Set(BOBBY_MULTI_RESPONSES.filter(e => e.emotion === emotionFilter).map(e => e.category));
+      filteredCats = uniqueCats.filter(c => catsWithEmotion.has(c));
+    }
+    if (searchLower) {
+      const catsWithSearch = new Set(BOBBY_MULTI_RESPONSES.filter(e => e.input.toLowerCase().includes(searchLower) || e.responses.some(r => r.text.toLowerCase().includes(searchLower))).map(e => e.category));
+      filteredCats = filteredCats.filter(c => catsWithSearch.has(c));
+    }
+
     return (
       <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
@@ -684,13 +717,33 @@ const Admin = () => {
             <span className="text-2xl">⚡</span>
             <div>
               <h1 className="text-xl font-bold text-white">Multi-Réponses</h1>
-              <p className="text-white/40 text-xs">{BOBBY_MULTI_RESPONSES.length} entrées • {uniqueCats.length} catégories</p>
+              <p className="text-white/40 text-xs">{BOBBY_MULTI_RESPONSES.length} entrées • {uniqueCats.length} catégories • {uniqueEmotions.length} émotions</p>
             </div>
           </div>
 
+          {/* Emotion filter */}
+          <div className="flex gap-2 flex-wrap">
+            <button onClick={() => setAgeFilter(null)}
+              className={`text-xs px-3 py-1.5 rounded-full border transition-all ${!ageFilter ? "bg-orange-500/30 border-orange-400/50 text-orange-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
+              Toutes émotions
+            </button>
+            {uniqueEmotions.map(em => (
+              <button key={em} onClick={() => setAgeFilter(ageFilter === em ? null : em!)}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === em ? "bg-pink-500/30 border-pink-400/50 text-pink-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
+                {em}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher dans toutes les entrées…"
+              className="bg-white/10 border-white/20 text-white pl-9" />
+          </div>
+
           <div className="grid grid-cols-3 gap-3">
-            {uniqueCats.map(cat => (
-              <button key={cat} onClick={() => { setInteractionCat(cat); setSearch(""); }}
+            {filteredCats.map(cat => (
+              <button key={cat} onClick={() => { setInteractionCat(cat); setSearch(""); setAgeFilter(null); }}
                 className="bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group aspect-square"
               >
                 <span className="text-lg capitalize text-white/70">{cat.replace(/_/g, " ")}</span>
@@ -701,6 +754,7 @@ const Admin = () => {
               </button>
             ))}
           </div>
+          {filteredCats.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucune catégorie pour ce filtre</p>}
         </div>
       </div>
     );
@@ -891,12 +945,67 @@ const Admin = () => {
   }
 
   if (topSection === "qa") {
-    const filteredQA = search.trim()
-      ? QA_DATABASE.filter(e =>
-          e.triggers.some(t => t.toLowerCase().includes(search.toLowerCase())) ||
-          e.responses.some(r => r.toLowerCase().includes(search.toLowerCase()))
-        )
-      : null;
+    const QA_INTENT_EMOJIS: Record<string, string> = {
+      GREETING: "👋", FAREWELL: "👋", GRATITUDE: "🙏", POSITIVE: "😊", IDENTITY: "🤖",
+      PLAY_REQUEST: "🎮", RIDDLE: "🧩", JOKE: "😂", QUIZ: "🧠", QUESTION: "❓",
+      ANIMALS: "🐾", DINOSAUR: "🦖", SPACE: "🚀", NATURE: "🌿", ECOLOGY: "♻️",
+      SCIENCE: "🔬", MATH: "🔢", GEOGRAPHY: "🌍", HISTORY: "📜", HEALTH: "🩺",
+      EMOTIONS: "💛", FRIENDSHIP: "🤝", SCHOOL: "🏫", FOOD: "🍽️", SPORT: "⚽",
+      MUSIC: "🎵", ART: "🎨", TECHNOLOGY: "💻", TRANSPORT: "🚗", JOBS: "👷",
+      FAMILY: "👨‍👩‍👧", FANTASY: "✨", STORY: "📖", TIME: "⏰", PHILOSOPHY: "🤔",
+      NEUTRAL: "😐", HELP: "🆘", REPEAT: "🔁", VOLUME: "🔊", ENCOURAGEMENT: "💪",
+      CULTURE: "🏛️", TRANSITION: "➡️", OTHER: "📋",
+    };
+
+    // Detail: show all entries of a selected intent
+    if (interactionCat) {
+      const intentEntries = QA_DATABASE.filter(e => (e.intent || "OTHER") === interactionCat);
+      const searchLower = search.toLowerCase();
+      const filtered = searchLower
+        ? intentEntries.filter(e => e.triggers.some(t => t.toLowerCase().includes(searchLower)) || e.responses.some(r => r.toLowerCase().includes(searchLower)))
+        : intentEntries;
+
+      return (
+        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+          <div className="max-w-4xl mx-auto space-y-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+              <span className="text-2xl">{QA_INTENT_EMOJIS[interactionCat] || "❓"}</span>
+              <div>
+                <h1 className="text-xl font-bold text-white">{interactionCat}</h1>
+                <p className="text-white/40 text-xs">{filtered.length}/{intentEntries.length} entrées</p>
+              </div>
+            </div>
+
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
+                className="bg-white/10 border-white/20 text-white pl-9" />
+            </div>
+
+            <div className="space-y-2">
+              {filtered.map((entry, idx) => (
+                <div key={idx} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                  <p className="text-xs text-white/50 mb-1.5">🎯 {entry.triggers.join(" • ")}</p>
+                  <div className="space-y-1">
+                    {entry.responses.map((r, i) => (
+                      <p key={i} className="text-sm text-white/70">🤖 {r}</p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Intent category grid with search
+    const searchLower = search.toLowerCase();
+    const filteredIntents = searchLower
+      ? qaByIntent.filter(([, entries]) => entries.some(e => e.triggers.some(t => t.toLowerCase().includes(searchLower)) || e.responses.some(r => r.toLowerCase().includes(searchLower))))
+      : qaByIntent;
 
     return (
       <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
@@ -906,50 +1015,30 @@ const Admin = () => {
             <span className="text-2xl">❓</span>
             <div>
               <h1 className="text-xl font-bold text-white">QA Database</h1>
-              <p className="text-white/40 text-xs">{QA_DATABASE.length} entrées • {qaByIntent.length} intents</p>
+              <p className="text-white/40 text-xs">{QA_DATABASE.length} entrées • {qaByIntent.length} sujets</p>
             </div>
           </div>
 
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher dans les QA…"
+            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher dans toutes les QA…"
               className="bg-white/10 border-white/20 text-white pl-9" />
           </div>
 
-          {filteredQA ? (
-            <div className="space-y-2">
-              <p className="text-white/50 text-xs">{filteredQA.length} résultats</p>
-              {filteredQA.slice(0, 50).map((entry, idx) => (
-                <div key={idx} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">{entry.intent}</span>
-                  </div>
-                  <p className="text-xs text-white/50 mb-1">Triggers: {entry.triggers.join(", ")}</p>
-                  <p className="text-sm text-white/70">{entry.responses[0]}</p>
-                  {entry.responses.length > 1 && <p className="text-[10px] text-white/30 mt-1">+{entry.responses.length - 1} autres réponses</p>}
+          <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+            {filteredIntents.map(([intent, entries]) => (
+              <button key={intent} onClick={() => { setInteractionCat(intent); setSearch(""); }}
+                className="bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between aspect-square"
+              >
+                <span className="text-2xl">{QA_INTENT_EMOJIS[intent] || "❓"}</span>
+                <div>
+                  <p className="text-lg font-bold text-white">{entries.length}</p>
+                  <h3 className="text-[10px] font-semibold text-amber-400">{intent}</h3>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {qaByIntent.map(([intent, entries]) => (
-                <div key={intent} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold">{intent}</span>
-                      <span className="text-white/40 text-xs">{entries.length} entrées</span>
-                    </div>
-                  </div>
-                  <div className="mt-2 space-y-1">
-                    {entries.slice(0, 2).map((e, i) => (
-                      <p key={i} className="text-xs text-white/50 truncate">• {e.triggers[0]} → {e.responses[0]}</p>
-                    ))}
-                    {entries.length > 2 && <p className="text-[10px] text-white/30">+{entries.length - 2} autres…</p>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+              </button>
+            ))}
+          </div>
+          {filteredIntents.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
         </div>
       </div>
     );
@@ -1657,6 +1746,16 @@ const Admin = () => {
             </div>
             <Button onClick={() => setEditingEntry({ keywords: [], category: currentCloudSection.dbCategories[0], priority: 5, is_active: true, age_min: 3, age_max: 12 })}
               className="bg-purple-600 hover:bg-purple-700"><Plus className="w-4 h-4 mr-1" /> Ajouter</Button>
+          </div>
+
+          {/* Age filter */}
+          <div className="flex gap-2 flex-wrap">
+            {AGE_GROUPS.map(g => (
+              <button key={g.label} onClick={() => setAgeFilter(ageFilter === g.label ? null : g.label)}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === g.label ? "bg-blue-500/30 border-blue-400/50 text-blue-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
+                {g.label}
+              </button>
+            ))}
           </div>
 
           <div className="relative">
