@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { getInterestSnapshot, INTEREST_KEYWORDS_PUBLIC } from "@/lib/bobby/interestTracker";
+import { ScoreGauge } from "./SharedUI";
+import { getInterestSnapshot, INTEREST_KEYWORDS_PUBLIC } from "@/lib/bobby/interestTracker";
 import {
   type Analysis, type Session, type SafetyAlertRecord,
   emotionScoreLabels, formatDuration, formatDate, humanizeSummary,
