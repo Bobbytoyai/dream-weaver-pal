@@ -471,19 +471,23 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
               <Sparkles className="w-3 h-3" /> FEATURED
             </span>
           </div>
-          <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-1 px-1">
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
             {featuredItems.map(item => (
               <button key={item.id}
                 onClick={() => setSelectedItem(item)}
-                className="shrink-0 w-[120px] bg-white border-2 border-black p-2 text-center hover:translate-y-[-2px] transition-all active:scale-95 overflow-hidden"
+                className="shrink-0 w-[160px] bg-white border-2 border-black p-2.5 text-center hover:translate-y-[-2px] transition-all active:scale-95 overflow-hidden"
                 style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
                 {item.cover_image_url ? (
-                  <img src={item.cover_image_url} alt={item.name} className="w-full h-16 object-cover border border-black mb-1" loading="eager" fetchPriority="high" />
+                  <div className="w-full aspect-square border-2 border-black mb-2 overflow-hidden bg-muted">
+                    <img src={item.cover_image_url} alt={item.name} className="w-full h-full object-cover" loading="eager" fetchPriority="high" />
+                  </div>
                 ) : (
-                  <span className="text-3xl block mb-1">{item.emoji}</span>
+                  <div className="w-full aspect-square border-2 border-black mb-2 flex items-center justify-center bg-muted/30">
+                    <span className="text-5xl">{item.emoji}</span>
+                  </div>
                 )}
-                <p className="text-[10px] font-black text-foreground leading-tight uppercase">{item.name}</p>
-                <p className="text-[8px] text-foreground/60 mt-0.5 font-bold">{item.age_min}-{item.age_max} ans</p>
+                <p className="text-[12px] font-black text-foreground leading-tight">{item.name} {item.emoji}</p>
+                <p className="text-[10px] text-foreground/60 mt-0.5 font-bold">{item.age_min}-{item.age_max} ans</p>
               </button>
             ))}
           </div>
