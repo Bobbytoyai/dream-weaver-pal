@@ -124,7 +124,7 @@ export default function BobbyParent() {
             Ce QR code parent n'existe pas, n'est plus actif, ou le Bobby associé n'a pas encore été activé.
           </p>
           <button onClick={() => navigate("/")}
-            className="w-full py-3 text-sm font-black uppercase border-4 border-foreground bg-primary text-primary-foreground hover:opacity-90 active:scale-95 transition-all"
+            className="w-full py-3 text-sm font-black uppercase border-4 border-foreground bg-primary text-primary-foreground hover:opacity-90 transition-all"
             style={{ boxShadow: "4px 4px 0 rgba(0,0,0,0.25)" }}>
             ← Retour
           </button>
@@ -155,7 +155,7 @@ export default function BobbyParent() {
             </p>
           </div>
           <button onClick={() => navigate("/")}
-            className="w-full py-3 text-sm font-black uppercase border-4 border-foreground bg-primary text-primary-foreground hover:opacity-90 active:scale-95 transition-all"
+            className="w-full py-3 text-sm font-black uppercase border-4 border-foreground bg-primary text-primary-foreground hover:opacity-90 transition-all"
             style={{ boxShadow: "4px 4px 0 rgba(0,0,0,0.25)" }}>
             ← Retour
           </button>
@@ -175,7 +175,7 @@ export default function BobbyParent() {
             Appareil lié avec succès. Accédez au tableau de bord de {bobbyCode?.child_name || "votre enfant"}.
           </p>
           <button onClick={() => setStep("active")}
-            className="w-full py-3 text-sm font-black uppercase border-4 border-foreground bg-primary text-primary-foreground hover:opacity-90 active:scale-95 transition-all"
+            className="w-full py-3 text-sm font-black uppercase border-4 border-foreground bg-primary text-primary-foreground hover:opacity-90 transition-all"
             style={{ boxShadow: "4px 4px 0 rgba(0,0,0,0.25)" }}>
             Accéder au Mode Parent →
           </button>
@@ -214,7 +214,7 @@ export default function BobbyParent() {
           )}
           <button onClick={handlePinSubmit}
             disabled={pinInput.length === 0}
-            className="w-full py-3 text-sm font-black uppercase border-4 border-foreground bg-primary text-primary-foreground hover:opacity-90 active:scale-95 transition-all disabled:opacity-40"
+            className="w-full py-3 text-sm font-black uppercase border-4 border-foreground bg-primary text-primary-foreground hover:opacity-90 transition-all disabled:opacity-40"
             style={{ boxShadow: "4px 4px 0 rgba(0,0,0,0.25)" }}>
             Valider →
           </button>

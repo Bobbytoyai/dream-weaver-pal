@@ -106,7 +106,7 @@ export default function VoicePickerStep({ childName, selectedVoice, onSelect, on
 
       <button
         onClick={onNext}
-        className="animate-fadeInUp w-full py-4 rounded-2xl bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] font-bold text-lg shadow-lg shadow-[hsla(200,100%,60%,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+        className="animate-fadeInUp w-full py-4 rounded-2xl bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] font-bold text-lg shadow-lg shadow-[hsla(200,100%,60%,0.3)] hover:scale-[1.02] transition-all duration-200"
         style={{ animationDelay: "0.5s" }}
       >
         Suivant ✨

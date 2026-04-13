@@ -108,7 +108,7 @@ const VoiceSettings = ({ settings, onUpdate, onBack, onSave, saved }: VoiceSetti
   return (
     <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
       <button onClick={onBack}
-        className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white">
+        className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 transition-all border-2 border-black px-3 py-1.5 bg-white">
         <ChevronLeft className="w-4 h-4" /> RÉGLAGES
       </button>
 
@@ -153,7 +153,7 @@ const VoiceSettings = ({ settings, onUpdate, onBack, onSave, saved }: VoiceSetti
                   <button
                     onClick={(e) => { e.stopPropagation(); previewVoice(v.type); }}
                     disabled={!!previewPlaying}
-                    className="w-10 h-10 border-4 border-black bg-white text-foreground flex items-center justify-center shrink-0 hover:opacity-90 active:scale-90 transition-all"
+                    className="w-10 h-10 border-4 border-black bg-white text-foreground flex items-center justify-center shrink-0 hover:opacity-90 transition-all"
                     style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.3)" }}>
                     {isPlaying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                   </button>
@@ -222,7 +222,7 @@ const VoiceSettings = ({ settings, onUpdate, onBack, onSave, saved }: VoiceSetti
       {/* Save */}
       <button
         onClick={onSave}
-        className={`w-full py-3.5 text-[14px] font-black transition-all active:scale-95 border-4 border-black uppercase ${
+        className={`w-full py-3.5 text-[14px] font-black transition-all border-4 border-black uppercase ${
           saved
             ? "bg-[var(--retro-green)] text-foreground"
             : "bg-foreground text-background hover:opacity-90"

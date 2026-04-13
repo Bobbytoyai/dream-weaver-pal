@@ -29,7 +29,7 @@ const NameChangeDialog: React.FC<NameChangeDialogProps> = ({
             onConfirm(pendingName);
             toast.success(`✅ Surnom changé en "${pendingName}"`);
           }}
-          className="w-full py-3.5 border-4 border-black bg-foreground text-background font-black text-[14px] hover:opacity-90 transition-all active:scale-95 uppercase"
+          className="w-full py-3.5 border-4 border-black bg-foreground text-background font-black text-[14px] hover:opacity-90 transition-all uppercase"
           style={{ boxShadow: "4px 4px 0px rgba(0,0,0,0.2)" }}>
           🏷️ C'EST UN SURNOM
         </button>
@@ -40,7 +40,7 @@ const NameChangeDialog: React.FC<NameChangeDialogProps> = ({
               description: "Cette fonctionnalité permettra de gérer plusieurs enfants.",
             });
           }}
-          className="w-full py-3.5 border-4 border-black bg-white text-foreground font-black text-[14px] hover:bg-[var(--retro-yellow)] transition-all active:scale-95 uppercase"
+          className="w-full py-3.5 border-4 border-black bg-white text-foreground font-black text-[14px] hover:bg-[var(--retro-yellow)] transition-all uppercase"
           style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.15)" }}>
           👦 CHANGER D'ENFANT <span className="text-[11px] font-bold text-foreground/50 ml-1">(bientôt)</span>
         </button>

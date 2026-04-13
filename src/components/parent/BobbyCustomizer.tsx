@@ -164,12 +164,12 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
       {/* Header */}
       <div className="flex items-center justify-between">
         <button onClick={onBack}
-          className="flex items-center gap-1 text-[13px] font-black uppercase text-foreground hover:opacity-70 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white">
+          className="flex items-center gap-1 text-[13px] font-black uppercase text-foreground hover:opacity-70 transition-all border-2 border-black px-3 py-1.5 bg-white">
           <ChevronLeft className="w-4 h-4" /> RETOUR
         </button>
         <button
           onClick={randomizeBobby}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--retro-yellow)] text-foreground text-[12px] font-black uppercase hover:opacity-90 active:scale-95 transition-all border-4 border-black"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--retro-yellow)] text-foreground text-[12px] font-black uppercase hover:opacity-90 transition-all border-4 border-black"
           style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.25)" }}
         >
           <Shuffle className="w-3.5 h-3.5" /> ALÉATOIRE
@@ -217,7 +217,7 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
                 <button
                   key={emo.face}
                   onClick={() => testEmotion(emo.face)}
-                  className={`flex flex-col items-center gap-0.5 py-1.5 px-1 transition-all duration-150 active:scale-90 border-2 border-black ${
+                  className={`flex flex-col items-center gap-0.5 py-1.5 px-1 transition-all duration-150 border-2 border-black ${
                     isActive
                       ? "bg-[var(--retro-yellow)] shadow-md scale-[1.08]"
                       : "bg-white hover:bg-[var(--retro-blue)]/30 hover:scale-105"
@@ -289,7 +289,7 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
             <div key={section.key} className={`transition-all duration-200 ${isOpen ? "col-span-2" : ""} retro-card-tilt-${(idx % 6) + 1}`}>
               <button
                 onClick={() => setOpenSection(isOpen ? null : section.key)}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 border-4 border-black transition-all duration-200 active:scale-[0.97]"
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 border-4 border-black transition-all duration-200"
                 style={{
                   backgroundColor: isOpen ? retroBg : "var(--card)",
                   boxShadow: isOpen ? "4px 4px 0px rgba(0,0,0,0.25)" : "2px 2px 0px rgba(0,0,0,0.15)",
@@ -316,7 +316,7 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
                       <button
                         key={c.id}
                         onClick={() => updateColor(section.key, c.id)}
-                        className={`w-9 h-9 transition-all duration-150 active:scale-90 border-4 flex items-center justify-center ${
+                        className={`w-9 h-9 transition-all duration-150 border-4 flex items-center justify-center ${
                           isSelected
                             ? "border-black scale-110 ring-2 ring-foreground/25"
                             : "border-black/30 hover:scale-105 hover:border-black"
@@ -341,7 +341,7 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
 
       {/* Save */}
       <button onClick={onSave}
-        className={`w-full py-3 text-[13px] font-black transition-all active:scale-95 border-4 border-black uppercase ${
+        className={`w-full py-3 text-[13px] font-black transition-all border-4 border-black uppercase ${
           saved
             ? "bg-[var(--retro-green)] text-foreground"
             : "bg-foreground text-background hover:opacity-90"

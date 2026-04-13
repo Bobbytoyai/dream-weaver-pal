@@ -102,7 +102,7 @@ const SessionsListTab = ({
           const retroBgs = ["var(--retro-blue)", "var(--retro-yellow)", "var(--retro-red)", "var(--retro-blue)", "var(--retro-yellow)", "var(--retro-green)"];
           return (
             <button key={card.key} onClick={card.onClick}
-              className={`relative px-1 py-2.5 flex flex-col items-center justify-center gap-1 transition-all duration-200 active:scale-90 border-2 border-black ${
+              className={`relative px-1 py-2.5 flex flex-col items-center justify-center gap-1 transition-all duration-200 border-2 border-black ${
                 card.active ? "ring-2 ring-foreground/20 scale-[1.03]" : "hover:translate-y-[-1px]"
               }`}
               style={{
@@ -156,7 +156,7 @@ const SessionsListTab = ({
                 }}
                 className={`w-full aspect-square flex items-center justify-center text-[11px] font-black transition-all border ${
                   dayData
-                    ? "bg-[var(--retro-blue)] text-foreground border-black hover:bg-[var(--retro-yellow)] cursor-pointer active:scale-90"
+                    ? "bg-[var(--retro-blue)] text-foreground border-black hover:bg-[var(--retro-yellow)] cursor-pointer"
                     : isToday
                       ? "bg-white border-black text-foreground ring-1 ring-foreground/30"
                       : "text-foreground/30 border-transparent cursor-default"

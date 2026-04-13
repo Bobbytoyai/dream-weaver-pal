@@ -147,7 +147,7 @@ function ProductDetail({ item, installed, installing, detailsLoading, onInstall,
   return (
     <div className="space-y-4" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>
       {/* Header with back */}
-      <button onClick={onBack} className="flex items-center gap-2 text-foreground text-[13px] font-black uppercase hover:opacity-70 active:scale-95 transition-transform border-2 border-black px-3 py-1.5 bg-white">
+      <button onClick={onBack} className="flex items-center gap-2 text-foreground text-[13px] font-black uppercase hover:opacity-70 transition-transform border-2 border-black px-3 py-1.5 bg-white">
         <ArrowLeft className="w-4 h-4" /> BOBBY STORE
       </button>
 
@@ -182,7 +182,7 @@ function ProductDetail({ item, installed, installing, detailsLoading, onInstall,
 
         {/* Install Button */}
         <button onClick={onInstall} disabled={installing}
-          className={`w-full mt-4 py-3 text-[15px] font-black transition-all active:scale-[0.97] flex items-center justify-center gap-2 border-4 border-black uppercase ${
+          className={`w-full mt-4 py-3 text-[15px] font-black transition-all flex items-center justify-center gap-2 border-4 border-black uppercase ${
             installed
               ? "bg-white text-foreground hover:bg-[var(--retro-red)]"
               : "bg-foreground text-background"
@@ -317,13 +317,13 @@ function ProductDetail({ item, installed, installing, detailsLoading, onInstall,
       <div className="pb-4">
         {installed ? (
           <button onClick={onInstall} disabled={installing}
-            className="w-full py-3 bg-[var(--retro-red)] text-foreground text-[14px] font-black flex items-center justify-center gap-2 active:scale-[0.97] transition-all border-4 border-black uppercase"
+            className="w-full py-3 bg-[var(--retro-red)] text-foreground text-[14px] font-black flex items-center justify-center gap-2 transition-all border-4 border-black uppercase"
             style={{ boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}>
             <Trash2 className="w-4 h-4" /> DÉSINSTALLER
           </button>
         ) : (
           <button onClick={onInstall} disabled={installing}
-            className="w-full py-3 bg-foreground text-background text-[14px] font-black flex items-center justify-center gap-2 active:scale-[0.97] transition-all border-4 border-black uppercase disabled:opacity-50"
+            className="w-full py-3 bg-foreground text-background text-[14px] font-black flex items-center justify-center gap-2 transition-all border-4 border-black uppercase disabled:opacity-50"
             style={{ boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}>
             {installing ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Download className="w-5 h-5" /> INSTALLER MAINTENANT</>}
           </button>
@@ -558,7 +558,7 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
         <span className="text-4xl">😕</span>
         <p className="text-[14px] text-foreground font-black uppercase">Impossible de charger le Store</p>
         <p className="text-[12px] text-foreground/60 font-bold">Vérifie ta connexion et réessaie</p>
-        <button onClick={() => fetchData()} className="mt-2 px-4 py-2 border-4 border-black bg-[var(--retro-blue)] text-foreground text-[13px] font-black active:scale-95 transition-transform uppercase"
+        <button onClick={() => fetchData()} className="mt-2 px-4 py-2 border-4 border-black bg-[var(--retro-blue)] text-foreground text-[13px] font-black transition-transform uppercase"
           style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.25)" }}>
           🔄 RÉESSAYER
         </button>
@@ -606,7 +606,7 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
             {featuredItems.map((item, index) => (
               <button key={item.id}
                 onClick={() => openItem(item)}
-                className="shrink-0 w-[160px] bg-white border-2 border-black p-2.5 text-center hover:translate-y-[-2px] transition-all active:scale-95 overflow-hidden"
+                className="shrink-0 w-[160px] bg-white border-2 border-black p-2.5 text-center hover:translate-y-[-2px] transition-all overflow-hidden"
                 style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
                 {item.cover_image_url ? (
                   <div className="w-full aspect-square border-2 border-black mb-2 overflow-hidden bg-muted">
@@ -635,7 +635,7 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
       <div className="flex gap-2 overflow-x-auto pb-1">
         {CATEGORIES.map(cat => (
           <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
-            className={`shrink-0 px-3.5 py-2 flex items-center gap-1.5 border-2 border-black transition-all duration-200 active:scale-90 font-black text-[11px] uppercase ${
+            className={`shrink-0 px-3.5 py-2 flex items-center gap-1.5 border-2 border-black transition-all duration-200 font-black text-[11px] uppercase ${
               activeCategory === cat.id
                 ? "ring-2 ring-foreground/20"
                 : "hover:translate-y-[-1px]"
@@ -677,7 +677,7 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
             return (
               <button key={item.id}
                 onClick={() => openItem(item)}
-                className={`retro-card ${tiltClass} w-full overflow-hidden text-left active:scale-[0.98]`}>
+                className={`retro-card ${tiltClass} w-full overflow-hidden text-left`}>
                 <div className="flex items-center gap-3 p-3">
                   <div className="w-14 h-14 border-2 border-black bg-white flex items-center justify-center shrink-0 text-3xl overflow-hidden">
                     {item.cover_image_url ? (
@@ -710,7 +710,7 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
                   <div className="flex items-center gap-2 shrink-0">
                     <div
                       onClick={(e) => { e.stopPropagation(); toggleInstall(item.id); }}
-                      className={`w-[72px] h-[32px] border-2 border-black text-[11px] font-black transition-all duration-200 active:scale-90 flex items-center justify-center gap-1 cursor-pointer uppercase ${
+                      className={`w-[72px] h-[32px] border-2 border-black text-[11px] font-black transition-all duration-200 flex items-center justify-center gap-1 cursor-pointer uppercase ${
                         installed
                           ? "bg-white text-foreground hover:bg-[var(--retro-red)]"
                           : "bg-foreground text-background"

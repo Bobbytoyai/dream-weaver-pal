@@ -180,7 +180,7 @@ export default function BobbyQR() {
 
           <button
             onClick={() => navigate("/")}
-            className="w-full py-3 text-[13px] font-black uppercase border-4 border-black bg-foreground text-background hover:opacity-90 active:scale-95 transition-all"
+            className="w-full py-3 text-[13px] font-black uppercase border-4 border-black bg-foreground text-background hover:opacity-90 transition-all"
             style={{ boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}>
             ← Retour à l'accueil
           </button>
@@ -212,7 +212,7 @@ export default function BobbyQR() {
           <button
             onClick={() => childName.trim() && setStep("onboarding-age")}
             disabled={!childName.trim()}
-            className="w-full py-3 text-sm font-black uppercase border-4 border-black bg-foreground text-background hover:opacity-90 active:scale-95 transition-all disabled:opacity-40"
+            className="w-full py-3 text-sm font-black uppercase border-4 border-black bg-foreground text-background hover:opacity-90 transition-all disabled:opacity-40"
             style={{ boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}
           >
             Suivant →
@@ -235,7 +235,7 @@ export default function BobbyQR() {
               <button
                 key={a}
                 onClick={() => setChildAge(a)}
-                className={`aspect-square flex items-center justify-center text-lg font-black border-4 border-black transition-all active:scale-90 ${
+                className={`aspect-square flex items-center justify-center text-lg font-black border-4 border-black transition-all ${
                   childAge === a
                     ? "bg-foreground text-background scale-110"
                     : "bg-white text-foreground hover:bg-[var(--retro-yellow)]"
@@ -249,7 +249,7 @@ export default function BobbyQR() {
           <button
             onClick={claimCode}
             disabled={!childAge}
-            className="w-full py-3 text-sm font-black uppercase border-4 border-black bg-foreground text-background hover:opacity-90 active:scale-95 transition-all disabled:opacity-40"
+            className="w-full py-3 text-sm font-black uppercase border-4 border-black bg-foreground text-background hover:opacity-90 transition-all disabled:opacity-40"
             style={{ boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}
           >
             C'est parti ! 🚀

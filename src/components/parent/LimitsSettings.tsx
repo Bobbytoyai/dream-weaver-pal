@@ -33,7 +33,7 @@ const LimitsSettings = ({ settings, onUpdate, onUpdateNested, todayDuration, onB
   return (
     <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
       <button onClick={onBack}
-        className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white">
+        className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 transition-all border-2 border-black px-3 py-1.5 bg-white">
         <ChevronLeft className="w-4 h-4" /> RÉGLAGES
       </button>
 
@@ -176,7 +176,7 @@ const LimitsSettings = ({ settings, onUpdate, onUpdateNested, todayDuration, onB
         <div className="flex flex-wrap gap-1.5 mb-3">
           {settings.blockedTopics.map(t => (
             <button key={t} onClick={() => onUpdate("blockedTopics", settings.blockedTopics.filter(x => x !== t))}
-              className="flex items-center gap-1 px-2.5 py-1.5 bg-white border-2 border-black text-foreground text-[11px] font-black hover:bg-foreground hover:text-background transition-all active:scale-95">
+              className="flex items-center gap-1 px-2.5 py-1.5 bg-white border-2 border-black text-foreground text-[11px] font-black hover:bg-foreground hover:text-background transition-all">
               {t} <X className="w-3 h-3" />
             </button>
           ))}
@@ -246,7 +246,7 @@ const LimitsSettings = ({ settings, onUpdate, onUpdateNested, todayDuration, onB
 
       {/* Save */}
       <button onClick={onSave}
-        className={`w-full py-3.5 text-[14px] font-black transition-all active:scale-95 border-4 border-black uppercase ${
+        className={`w-full py-3.5 text-[14px] font-black transition-all border-4 border-black uppercase ${
           saved
             ? "bg-[var(--retro-green)] text-foreground"
             : "bg-foreground text-background hover:opacity-90"

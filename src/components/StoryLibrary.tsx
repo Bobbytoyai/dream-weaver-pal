@@ -233,20 +233,20 @@ function InlineNarrationPlayer({
             <button
               onClick={() => currentIndex > 0 ? playSegment(currentIndex - 1) : audioRef.current && (audioRef.current.currentTime = 0)}
               disabled={currentIndex <= 0 && !audioRef.current}
-              className="w-9 h-9 rounded-full bg-background flex items-center justify-center text-foreground/60 hover:text-foreground hover:bg-accent disabled:opacity-30 transition-all active:scale-90"
+              className="w-9 h-9 rounded-full bg-background flex items-center justify-center text-foreground/60 hover:text-foreground hover:bg-accent disabled:opacity-30 transition-all"
             >
               <SkipBack className="w-4 h-4" />
             </button>
             <button
               onClick={currentIndex === -1 ? () => playSegment(0) : togglePause}
-              className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all"
+              className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:scale-105 transition-all"
             >
               {isPaused || currentIndex === -1 ? <Play className="w-5 h-5 ml-0.5" /> : <Pause className="w-5 h-5" />}
             </button>
             <button
               onClick={() => currentIndex < segments.length - 1 && playSegment(currentIndex + 1)}
               disabled={currentIndex >= segments.length - 1}
-              className="w-9 h-9 rounded-full bg-background flex items-center justify-center text-foreground/60 hover:text-foreground hover:bg-accent disabled:opacity-30 transition-all active:scale-90"
+              className="w-9 h-9 rounded-full bg-background flex items-center justify-center text-foreground/60 hover:text-foreground hover:bg-accent disabled:opacity-30 transition-all"
             >
               <SkipForward className="w-4 h-4" />
             </button>
@@ -539,7 +539,7 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
               <button
                 key={story.id}
                 onClick={() => setSelectedStory(story)}
-                className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-4 text-left border ${meta.accent} hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 relative group aspect-square flex flex-col justify-between`}
+                className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-4 text-left border ${meta.accent} hover:shadow-lg hover:scale-[1.02] transition-all duration-200 relative group aspect-square flex flex-col justify-between`}
               >
                 <div>
                   <span className="text-2xl block mb-2">{meta.emoji}</span>
@@ -613,7 +613,7 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
                     <button
                       key={story.id}
                       onClick={() => setSelectedStory(story)}
-                      className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-4 text-left border ${meta.accent} hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 relative`}
+                      className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-4 text-left border ${meta.accent} hover:shadow-lg hover:scale-[1.02] transition-all duration-200 relative`}
                     >
                       <Heart className="w-3.5 h-3.5 text-red-500 fill-current absolute top-3 right-3" />
                       <span className="text-2xl block mb-2">{meta.emoji}</span>
@@ -643,7 +643,7 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
                   <button
                     key={category}
                     onClick={() => setSelectedCategory(category)}
-                    className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-5 text-left border ${meta.accent} hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 aspect-square flex flex-col justify-between ${isEmpty ? "opacity-75" : ""}`}
+                    className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-5 text-left border ${meta.accent} hover:shadow-lg hover:scale-[1.02] transition-all duration-200 aspect-square flex flex-col justify-between ${isEmpty ? "opacity-75" : ""}`}
                   >
                     <span className="text-4xl block">{meta.emoji}</span>
                     <div>

@@ -152,7 +152,7 @@ const ContentCategories = ({ childName, onSelectCategory, onBack, voiceProfile =
               <button
                 key={sub.id}
                 onClick={() => handleSelectCategory(sub.id)}
-                className="bg-card rounded-2xl p-4 text-left hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border border-border/30 group"
+                className="bg-card rounded-2xl p-4 text-left hover:shadow-md hover:scale-[1.02] transition-all duration-200 border border-border/30 group"
                 style={{ animationDelay: animatingIn ? `${idx * 80}ms` : undefined }}
               >
                 <span className="text-3xl block mb-2">{sub.emoji}</span>
@@ -210,7 +210,7 @@ const ContentCategories = ({ childName, onSelectCategory, onBack, voiceProfile =
                 animateTransition(() => setSelectedCat(cat.id));
               }
             }}
-            className={`bg-gradient-to-br ${cat.gradient} rounded-2xl p-5 text-left hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border border-border/30 relative overflow-hidden group`}
+            className={`bg-gradient-to-br ${cat.gradient} rounded-2xl p-5 text-left hover:shadow-lg hover:scale-[1.02] transition-all duration-200 border border-border/30 relative overflow-hidden group`}
           >
             <span className="text-4xl block mb-3">{cat.emoji}</span>
             <h3 className="text-[14px] font-bold text-foreground leading-tight">{cat.label}</h3>

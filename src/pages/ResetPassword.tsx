@@ -76,7 +76,7 @@ export default function ResetPassword() {
             </div>
             <button
               onClick={handleReset} disabled={submitting}
-              className="w-full py-3 text-sm font-black uppercase bg-black text-white border-black transition-all active:scale-95 disabled:opacity-40"
+              className="w-full py-3 text-sm font-black uppercase bg-black text-white border-black transition-all disabled:opacity-40"
               style={{ borderWidth: "3px", boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}
             >
               {submitting ? "Mise à jour…" : "Réinitialiser ✓"}
