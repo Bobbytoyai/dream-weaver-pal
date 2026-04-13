@@ -48,13 +48,22 @@ const Index = () => {
     return unsub;
   }, []);
 
-  // Also restore from cloud memory if available (cloud takes priority over stale local)
+  // Restore from cloud memory ONLY if localStorage has no settings (first visit / new device)
+  // localStorage is the source of truth; cloud is backup for cross-device sync
   useEffect(() => {
     if (!memory?.preferences?.parentSettings) return;
+    const hasLocalSettings = !!localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (hasLocalSettings) {
+      // Local exists → push local to cloud (local is truth)
+      const localSettings = loadSavedSettings();
+      saveSettings({ parentSettings: localSettings });
+      return;
+    }
+    // No local settings → restore from cloud (new device)
     try {
       const saved = memory.preferences.parentSettings as Record<string, unknown>;
       setParentSettings((prev) => {
-        const merged = { ...prev, ...saved };
+        const merged = { ...DEFAULT_PARENT_SETTINGS, ...saved };
         localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));
         return merged;
       });

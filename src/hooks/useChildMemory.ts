@@ -45,8 +45,9 @@ export function useChildMemory(childName: string) {
   }, [childName]);
 
   const saveSettings = useCallback(async (settings: Record<string, unknown>) => {
-    if (!memory) return;
-    const merged = { ...memory.preferences, ...settings };
+    // Always save to cloud, even if memory hasn't loaded yet
+    const currentPrefs = memory?.preferences ?? {};
+    const merged = { ...currentPrefs, ...settings };
     setMemory((m) => m ? { ...m, preferences: merged } : m);
     await updateMemory(childName, { preferences: merged });
   }, [childName, memory]);
