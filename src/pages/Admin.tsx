@@ -2815,6 +2815,46 @@ const Admin = () => {
           );
         })()}
 
+        {/* ── Live Activity Widget ── */}
+        <div className="bg-gradient-to-r from-emerald-500/[0.06] to-cyan-500/[0.06] backdrop-blur-xl rounded-2xl p-3 border border-emerald-500/10">
+          <div className="flex items-center gap-2 mb-2.5">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <p className="text-[11px] font-bold text-emerald-400 tracking-wide">ACTIVITÉ EN DIRECT</p>
+            <p className="text-[9px] text-white/20 ml-auto">⟳ 30s</p>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-white/[0.04] rounded-xl p-2.5 text-center">
+              <p className="text-[22px] font-extrabold text-emerald-400 leading-none">{liveStats.activeSessions}</p>
+              <p className="text-[9px] text-white/30 mt-1">actives maintenant</p>
+            </div>
+            <div className="bg-white/[0.04] rounded-xl p-2.5 text-center">
+              <p className="text-[22px] font-extrabold text-cyan-400 leading-none">{liveStats.todaySessions}</p>
+              <p className="text-[9px] text-white/30 mt-1">sessions aujourd'hui</p>
+            </div>
+            <div className="bg-white/[0.04] rounded-xl p-2.5 text-center">
+              <p className="text-[22px] font-extrabold text-blue-400 leading-none">{liveStats.todayMessages}</p>
+              <p className="text-[9px] text-white/30 mt-1">messages aujourd'hui</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between mt-2.5 px-1">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] text-white/20">⏱ Durée moy:</span>
+              <span className="text-[10px] font-bold text-white/50">{liveStats.avgDuration > 0 ? `${Math.floor(liveStats.avgDuration / 60)}m${(liveStats.avgDuration % 60).toString().padStart(2, "0")}s` : "—"}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] text-white/20">😊 Top émotion:</span>
+              <span className="text-[10px] font-bold text-white/50">{liveStats.topEmotion}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] text-white/20">🕐 Dernière:</span>
+              <span className="text-[10px] font-bold text-white/50">{liveStats.lastActivity ? (() => {
+                const diff = Math.round((Date.now() - new Date(liveStats.lastActivity).getTime()) / 60000);
+                return diff < 1 ? "à l'instant" : diff < 60 ? `il y a ${diff}m` : `il y a ${Math.floor(diff / 60)}h`;
+              })() : "—"}</span>
+            </div>
+          </div>
+        </div>
+
         {/* ── Quick actions ── */}
         <div className="flex gap-2">
           <button onClick={() => { setTopSection("cloud"); setCloudSection(null); setSearch(""); }}
