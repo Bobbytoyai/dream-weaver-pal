@@ -3234,7 +3234,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       {
         name: "Pro", price: "9,99€", period: "/mois", emoji: "🚀",
         color: "from-amber-500/15 to-amber-400/5", border: "border-amber-400/30",
-        features: ["Tout Famille +", "Appareils illimités", "IA avancée (GPT-5)", "Analyses détaillées IA", "Bobby Store Premium", "API développeur", "Support dédié 24/7"],
+        features: ["Tout Famille +", "Appareils illimités", "Bobby Brain Intelligence V4", "Analyses détaillées IA", "Bobby Store Premium", "API développeur", "Support dédié 24/7"],
         cta: "Bientôt disponible", disabled: true,
       },
     ];
