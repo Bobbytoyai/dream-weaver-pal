@@ -1138,34 +1138,34 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     const hasAnalysis = recentAnalyses.length > 0;
 
     return (
-    <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>
+    <div className="p-4 space-y-4" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif" }}>
 
-      {/* ═══ 1. KPI HERO — 3 cols colorful ═══ */}
-      <div className="grid grid-cols-3 gap-2 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
+      {/* ═══ 1. KPI HERO — retro grid ═══ */}
+      <div className="grid grid-cols-3 gap-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         {[
-          { value: totalSessions, label: "Sessions", emoji: "💬", gradient: "from-blue-400/30 to-indigo-400/10", border: "border-blue-300/25" },
-          { value: totalMessages, label: "Messages", emoji: "📝", gradient: "from-emerald-400/30 to-teal-400/10", border: "border-emerald-300/25" },
-          { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", gradient: "from-purple-400/30 to-violet-400/10", border: "border-purple-300/25" },
-          { value: todaySessions.length, label: "Aujourd'hui", emoji: "📅", gradient: "from-amber-400/30 to-orange-400/10", border: "border-amber-300/25" },
-          { value: avgMessagesPerSession, label: "Msg/session", emoji: "📊", gradient: "from-pink-400/30 to-rose-400/10", border: "border-pink-300/25" },
-          { value: `${recentAnalyses.length}/${totalSessions}`, label: "Analysées", emoji: "🔬", gradient: "from-cyan-400/30 to-sky-400/10", border: "border-cyan-300/25" },
+          { value: totalSessions, label: "Sessions", emoji: "💬", bg: "var(--retro-blue)" },
+          { value: totalMessages, label: "Messages", emoji: "📝", bg: "var(--retro-green)" },
+          { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", bg: "var(--retro-purple)" },
+          { value: todaySessions.length, label: "Aujourd'hui", emoji: "📅", bg: "var(--retro-yellow)" },
+          { value: avgMessagesPerSession, label: "Msg/session", emoji: "📊", bg: "var(--retro-red)" },
+          { value: `${recentAnalyses.length}/${totalSessions}`, label: "Analysées", emoji: "🔬", bg: "#e5e5e5" },
         ].map((kpi) => (
-          <div key={kpi.label} className={`bg-gradient-to-br ${kpi.gradient} rounded-[18px] p-2.5 border-2 ${kpi.border} text-center`}>
+          <div key={kpi.label} className="retro-card p-2.5 text-center" style={{ backgroundColor: kpi.bg }}>
             <span className="text-[24px] block mb-0.5 drop-shadow-sm">{kpi.emoji}</span>
-            <p className="text-[17px] font-black text-foreground leading-none truncate">{kpi.value}</p>
-            <p className="text-[9px] text-muted-foreground font-bold mt-0.5 truncate">{kpi.label}</p>
+            <p className="text-[17px] font-black text-gray-800 leading-none truncate">{kpi.value}</p>
+            <p className="text-[9px] text-gray-600 font-bold mt-0.5 truncate">{kpi.label}</p>
           </div>
         ))}
       </div>
 
       {/* ═══ 2. RÉSUMÉ DU JOUR ═══ */}
       {dailySummary && (
-        <div className="bg-gradient-to-br from-primary/15 to-primary/5 rounded-3xl p-5 border border-primary/20 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
+        <div className="retro-card p-5 animate-fadeInUp" style={{ animationDelay: "0.1s", backgroundColor: 'var(--retro-blue)' }}>
           <div className="flex items-center gap-2.5 mb-2">
-            <span className="text-2xl">📋</span>
-            <h3 className="text-[17px] font-extrabold text-foreground">Résumé du jour</h3>
+            <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">📋</span></div>
+            <h3 className="text-[17px] font-black text-gray-800">Résumé du jour</h3>
           </div>
-          <p className="text-[15px] text-foreground/80 leading-relaxed font-bold">{dailySummary}</p>
+          <p className="text-[15px] text-gray-700 leading-relaxed font-bold">{dailySummary}</p>
         </div>
       )}
 
