@@ -90,7 +90,7 @@ function StoreCard({ item, installs, onClick }: {
   const gradient = CAT_COLORS[item.category] || "from-gray-500/30 to-gray-400/20";
   return (
     <button onClick={onClick}
-      className={`relative bg-white/[0.04] backdrop-blur-xl rounded-[20px] border transition-all duration-200 hover:scale-[1.03] hover:shadow-xl active:scale-[0.97] overflow-hidden text-left group ${
+      className={`relative bg-white/[0.04] backdrop-blur-xl rounded-[20px] border transition-all duration-200 hover:scale-[1.03] hover:shadow-xl overflow-hidden text-left group ${
         item.is_active ? "border-white/10 hover:border-white/25" : "border-red-500/20 opacity-50"
       }`}>
       <div className={`aspect-square w-full bg-gradient-to-br ${gradient} flex items-center justify-center relative overflow-hidden`}>
@@ -497,7 +497,7 @@ function StoreDetailDialog({ item, installs, onClose, onEdit, onDelete, onManage
 
           {/* Manage Content Button — prominent */}
           <button onClick={onManageContent}
-            className="w-full py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-[13px] flex items-center justify-center gap-2 active:scale-[0.97] transition-all shadow-lg shadow-blue-600/25">
+            className="w-full py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-[13px] flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/25">
             <ListOrdered className="w-5 h-5" />
             📋 Gérer le contenu ({realCount} éléments)
           </button>
