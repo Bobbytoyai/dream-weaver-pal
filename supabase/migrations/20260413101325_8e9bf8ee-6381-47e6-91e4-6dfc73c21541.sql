@@ -1,0 +1,1 @@
+UPDATE store_content SET content_count = 20 WHERE id IN ('ac3f8e4b-108c-4276-a437-3a60fd279f90','9060d755-6f2e-47fa-a189-11a34b2789e6','c9dc8f2a-e3c2-4100-8c0d-9b094accb19a','d68cc6f2-a074-4c1f-9526-3e397ff237f3');
