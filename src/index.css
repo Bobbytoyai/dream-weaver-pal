@@ -279,8 +279,25 @@
   transform: rotate(0deg) translateY(-3px) scale(1.02);
 }
 .retro-card:active {
-  transform: rotate(0deg) scale(0.97);
+  animation: retro-click 0.25s ease-out;
   box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3);
+}
+
+/* Click rotation burst */
+@keyframes retro-click {
+  0%   { transform: rotate(0deg) scale(1); }
+  25%  { transform: rotate(-3deg) scale(0.95); }
+  50%  { transform: rotate(2deg) scale(0.97); }
+  75%  { transform: rotate(-1deg) scale(0.99); }
+  100% { transform: rotate(var(--card-tilt, -0.8deg)) scale(1); }
+}
+
+/* Bounce entrance for cards */
+@keyframes retro-bounce-in {
+  0%   { opacity: 0; transform: translateY(40px) rotate(var(--card-tilt, -0.8deg)) scale(0.8); }
+  50%  { opacity: 1; transform: translateY(-8px) rotate(var(--card-tilt, -0.8deg)) scale(1.03); }
+  70%  { transform: translateY(4px) rotate(var(--card-tilt, -0.8deg)) scale(0.99); }
+  100% { transform: translateY(0) rotate(var(--card-tilt, -0.8deg)) scale(1); }
 }
 
 /* Alternating tilts for visual variety */
@@ -298,6 +315,7 @@
   transform: rotate(0deg) scale(1.02);
 }
 
+/* Stagger bounce-in entrance */
 @keyframes cardTiltSlideUp {
   from { opacity: 0; transform: translateY(30px) rotate(var(--card-tilt, -0.8deg)) scale(0.9); }
   to { opacity: 1; transform: translateY(0) rotate(var(--card-tilt, -0.8deg)) scale(1); }
@@ -306,13 +324,43 @@
   from { opacity: 0; transform: translateY(20px) rotate(-0.5deg) scale(0.95); }
   to { opacity: 1; transform: translateY(0) rotate(-0.5deg) scale(1); }
 }
-.card-stagger-1 { --card-tilt: -1.2deg; animation: cardTiltSlideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s both; }
-.card-stagger-2 { --card-tilt: 0.8deg; animation: cardTiltSlideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.12s both; }
-.card-stagger-3 { --card-tilt: -0.6deg; animation: cardTiltSlideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.19s both; }
-.card-stagger-4 { --card-tilt: 1deg; animation: cardTiltSlideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.26s both; }
-.card-stagger-5 { --card-tilt: -0.9deg; animation: cardTiltSlideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.33s both; }
-.card-stagger-6 { --card-tilt: 0.5deg; animation: cardTiltSlideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.4s both; }
+.card-stagger-1 { --card-tilt: -1.2deg; animation: retro-bounce-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s both; }
+.card-stagger-2 { --card-tilt: 0.8deg; animation: retro-bounce-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.12s both; }
+.card-stagger-3 { --card-tilt: -0.6deg; animation: retro-bounce-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.19s both; }
+.card-stagger-4 { --card-tilt: 1deg; animation: retro-bounce-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.26s both; }
+.card-stagger-5 { --card-tilt: -0.9deg; animation: retro-bounce-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.33s both; }
+.card-stagger-6 { --card-tilt: 0.5deg; animation: retro-bounce-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.4s both; }
 .hero-fade-in { animation: heroTiltSlide 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0s both; }
+
+/* ── Retro glitch page transition ── */
+@keyframes retro-glitch-in {
+  0%   { opacity: 0; transform: translateX(-3px); filter: blur(2px); }
+  15%  { opacity: 0.6; transform: translateX(4px) skewX(-2deg); filter: blur(0); }
+  30%  { opacity: 0.8; transform: translateX(-2px) skewX(1deg); }
+  50%  { opacity: 0.9; transform: translateX(1px) skewX(0deg); }
+  100% { opacity: 1; transform: translateX(0) skewX(0deg); filter: blur(0); }
+}
+.retro-glitch-enter {
+  animation: retro-glitch-in 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* ── Retro button bounce ── */
+@keyframes retro-btn-press {
+  0%   { transform: scale(1); box-shadow: 4px 4px 0px rgba(0,0,0,0.25); }
+  40%  { transform: scale(0.92) rotate(-1.5deg); box-shadow: 1px 1px 0px rgba(0,0,0,0.3); }
+  70%  { transform: scale(1.05) rotate(0.5deg); box-shadow: 5px 5px 0px rgba(0,0,0,0.2); }
+  100% { transform: scale(1) rotate(0deg); box-shadow: 4px 4px 0px rgba(0,0,0,0.25); }
+}
+.retro-btn:active {
+  animation: retro-btn-press 0.3s ease-out;
+}
+
+/* ── Retro wiggle on hover ── */
+@keyframes retro-wiggle {
+  0%, 100% { transform: rotate(var(--card-tilt, -0.8deg)); }
+  25%  { transform: rotate(calc(var(--card-tilt, -0.8deg) - 1.5deg)); }
+  75%  { transform: rotate(calc(var(--card-tilt, -0.8deg) + 1.5deg)); }
+}
 
 @keyframes glow-voice {
   0% { transform: scale(1); opacity: 0.8; }
