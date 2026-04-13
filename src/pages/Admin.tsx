@@ -979,6 +979,81 @@ const Admin = () => {
     );
   }
 
+  // ── Real user conversations detail view ──
+  if (topSection === "interactions" && interactionCat === "real_conversations") {
+    return (
+      <>
+      {detailPortal}
+      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+            <span className="text-2xl">💬</span>
+            <div>
+              <h1 className="text-xl font-bold text-white">Conversations réelles</h1>
+              <p className="text-white/40 text-xs">{realConversations.length} sessions enregistrées — données pour améliorer Bobby</p>
+            </div>
+          </div>
+
+          {realConvLoading ? (
+            <div className="text-center text-white/50 py-12 animate-pulse">Chargement des conversations…</div>
+          ) : realConversations.length === 0 ? (
+            <div className="text-center py-12">
+              <span className="text-4xl block mb-2">📭</span>
+              <p className="text-white/30 text-sm">Aucune conversation enregistrée pour le moment</p>
+              <p className="text-white/20 text-xs mt-1">Les conversations des utilisateurs apparaîtront ici</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {realConversations.map(conv => (
+                <div key={conv.session_id} className="bg-white/5 backdrop-blur rounded-2xl p-4 border border-white/10 space-y-3">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-bold">{conv.child_name}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">{conv.child_age} ans</span>
+                      {conv.detected_emotions?.map((e, i) => (
+                        <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300">{e}</span>
+                      ))}
+                    </div>
+                    <span className="text-[10px] text-white/20">{new Date(conv.started_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                  </div>
+                  {conv.topics?.length ? (
+                    <div className="flex gap-1 flex-wrap">
+                      {conv.topics.map((t, i) => (
+                        <span key={i} className="text-[8px] px-1.5 py-0.5 rounded bg-white/10 text-white/40">#{t}</span>
+                      ))}
+                    </div>
+                  ) : null}
+                  <div className="space-y-1.5 max-h-60 overflow-y-auto">
+                    {conv.messages.map((msg, i) => (
+                      <div key={i} className="flex gap-2">
+                        <span className={`text-[10px] shrink-0 mt-0.5 ${msg.role === "user" ? "text-blue-400" : "text-green-400"}`}>
+                          {msg.role === "user" ? "👦" : "🤖"}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-[11px] ${msg.role === "user" ? "text-white/80" : "text-white/50"}`}>{msg.content}</p>
+                          {msg.detected_emotion && (
+                            <span className="text-[8px] text-pink-400/50">{msg.detected_emotion}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-1.5 pt-1 border-t border-white/5">
+                    <span className="text-[9px] text-white/20">{conv.messages.length} messages</span>
+                    <span className="text-[9px] text-white/10">•</span>
+                    <span className="text-[9px] text-white/20">Session: {conv.session_id.slice(0, 8)}…</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      </>
+    );
+  }
+
   // ═══════════════════════════════════════════════════════════════════
   // INTERACTIONS — Category grid
   // ═══════════════════════════════════════════════════════════════════
