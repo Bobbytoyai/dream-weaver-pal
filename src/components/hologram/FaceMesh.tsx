@@ -159,11 +159,10 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   // ─── Materials ────────────────────────────────────────────
   const eyeOutlineMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#2A2A4C"), transparent: true, opacity: 0.5,
+    color: new THREE.Color("#3A3A5C"), transparent: true, opacity: 0,
   }), []);
-  // Shadow behind eye for 3D depth
   const eyeShadowMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#1A1A3A"), transparent: true, opacity: 0.15,
+    color: new THREE.Color("#1A1A3A"), transparent: true, opacity: 0,
   }), []);
   const eyeWhiteMat = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color("#FFFFFF") }), []);
 
