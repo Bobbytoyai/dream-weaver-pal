@@ -1,10 +1,11 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { HologramFace } from "@/components/hologram/HologramFace";
 import { EYES, EYEBROWS, MOUTHS, ANIMATIONS, type ExpressionCombo } from "@/lib/bobby/expressionLibrary";
 import { type BobbyEmotion, emotionToExpression } from "@/lib/bobby/expressionEngine";
+import { loadSettings, type ParentSettings } from "@/components/parentSettings";
 
 const EMOTIONS: BobbyEmotion[] = [
   "joy", "sadness", "fear", "anger", "love", "curiosity", "pride",
