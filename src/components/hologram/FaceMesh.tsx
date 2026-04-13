@@ -548,23 +548,23 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     hl2: [number, number],
   ) => (
     <group ref={eyeRef} position={[eyeX, eyeY, 0.01]} key={side}>
-      {/* Eye outline ring */}
-      <mesh geometry={eyeOutlineGeo} material={eyeOutlineMat} position={[0, 0, -0.005]} />
-      <mesh geometry={eyeWhiteGeo} material={eyeWhiteMat} />
+      <mesh geometry={eyeWhiteGeo} material={eyeWhiteMat} renderOrder={1} />
       <mesh ref={irisRef} geometry={irisOuterGeo} position={[0, -0.03, 0.01]} material={irisOuterMat} />
       <mesh ref={pupilRef} geometry={pupilGeo} position={[0, -0.02, 0.02]} material={pupilMat} />
       <mesh ref={hl1Ref} position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       {/* hl2 hidden — single highlight per eye */}
       <mesh ref={hl2Ref} position={[hl1[0], hl1[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} visible={false} />
-      {/* Eyelid — same shape as eye white, anchored from the top inside the eye */}
-      <mesh ref={eyelidRef} position={[0, 0.27, 0.044]} material={eyelidMat} scale={[1, 0, 1]} renderOrder={10}>
+      {/* Eyelid — inset inside the white eye frame so it never touches the outer ring */}
+      <mesh ref={eyelidRef} position={[0, 0.27, 0.044]} material={eyelidMat} scale={[1, 0, 1]} renderOrder={12}>
         <shapeGeometry args={[(() => {
           const s = new THREE.Shape();
-          // Top anchored at y=0 so scaleY grows downward while staying inside the eye bounds
-          s.absellipse(0, -0.27, 0.33, 0.27, 0, Math.PI * 2, false, 0);
+          // Top anchored at y=0, slightly inset from eye white to preserve a visible white frame
+          s.absellipse(0, -0.27, 0.318, 0.258, 0, Math.PI * 2, false, 0);
           return s;
         })(), 32]} />
       </mesh>
+      {/* Eye outline ring — forced above the eyelid so the lid stays visually inside the eye */}
+      <mesh geometry={eyeOutlineGeo} material={eyeOutlineMat} position={[0, 0, 0.05]} renderOrder={20} />
     </group>
   );
 
