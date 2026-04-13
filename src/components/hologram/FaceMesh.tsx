@@ -60,8 +60,8 @@ function svgToWorld(sx: number, sy: number): [number, number] {
 // ─── Eyebrow builder — rounded rectangle ─────────────────────
 function buildEyebrowShape(_archHeight: number = 0.06): THREE.Shape {
   const shape = new THREE.Shape();
-  const w = 0.22;   // half width
-  const h = 0.035;  // half height (thick bar)
+  const w = 0.24;   // half width
+  const h = 0.05;   // half height (thicker bar)
   const r = 0.015;  // corner radius
 
   shape.moveTo(-w + r, -h);
@@ -81,9 +81,9 @@ function buildEyebrowShape(_archHeight: number = 0.06): THREE.Shape {
 // Upper lip: a curved arc (smile/frown)
 function buildUpperLipShape(curve: number, width: number): THREE.Shape {
   const shape = new THREE.Shape();
-  const halfW = 0.12 + width * 0.10;
-  const depth = curve * 0.12;
-  const thickness = 0.028;
+  const halfW = 0.14 + width * 0.10;
+  const depth = curve * 0.14;
+  const thickness = 0.032;
 
   shape.moveTo(-halfW, 0);
   shape.quadraticCurveTo(0, -depth, halfW, 0);
@@ -95,8 +95,8 @@ function buildUpperLipShape(curve: number, width: number): THREE.Shape {
 // Lower lip: drops down when mouth opens
 function buildLowerLipShape(curve: number, width: number, openness: number, round: number): THREE.Shape {
   const shape = new THREE.Shape();
-  const halfW = (0.12 + width * 0.10) * (1 - round * 0.3);
-  const depth = curve * 0.12;
+  const halfW = (0.14 + width * 0.10) * (1 - round * 0.3);
+  const depth = curve * 0.14;
   const dropAmount = openness * 0.25 + round * 0.18;
   const thickness = 0.025;
 
@@ -263,9 +263,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const eyebrowGeo = useMemo(() => new THREE.ShapeGeometry(buildEyebrowShape(0.06), 16), []);
 
   // Initial mouth geometries
-  const upperLipGeo = useMemo(() => new THREE.ShapeGeometry(buildUpperLipShape(0.08, 0.5), 16), []);
-  const lowerLipGeo = useMemo(() => new THREE.ShapeGeometry(buildLowerLipShape(0.08, 0.5, 0, 0), 16), []);
-  const mouthInteriorGeo = useMemo(() => new THREE.ShapeGeometry(buildMouthInteriorShape(0.08, 0.5, 0, 0), 16), []);
+  const upperLipGeo = useMemo(() => new THREE.ShapeGeometry(buildUpperLipShape(0.15, 0.5), 16), []);
+  const lowerLipGeo = useMemo(() => new THREE.ShapeGeometry(buildLowerLipShape(0.15, 0.5, 0, 0), 16), []);
+  const mouthInteriorGeo = useMemo(() => new THREE.ShapeGeometry(buildMouthInteriorShape(0.15, 0.5, 0, 0), 16), []);
 
   // Cheek oval
   const cheekGeo = useMemo(() => {
