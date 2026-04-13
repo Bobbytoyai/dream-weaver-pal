@@ -1660,19 +1660,19 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
             {/* ── Emotions — colorful pills ── */}
             {analysis.emotions && Object.keys(analysis.emotions).length > 0 && (
-              <div className="bg-card rounded-3xl p-5 border border-border/20">
+              <div className="retro-card p-5">
                 <div className="flex items-center gap-2.5 mb-4">
-                  <span className="text-2xl">💛</span>
-                  <h3 className="text-[16px] font-extrabold text-foreground">Émotions</h3>
+                  <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">💛</span></div>
+                  <h3 className="text-[16px] font-black text-foreground uppercase">Émotions</h3>
                 </div>
                 <div className="flex flex-wrap gap-2.5">
                   {Object.entries(analysis.emotions).filter(([, v]) => (v as number) > 0).sort(([, a], [, b]) => (b as number) - (a as number)).map(([key, value]) => {
                     const info = emotionScoreLabels[key] || { label: key, emoji: "❓" };
                     return (
-                      <div key={key} className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-muted/60 to-muted/30 border border-border/10">
+                      <div key={key} className="flex items-center gap-2.5 px-4 py-2.5 border-2 border-black bg-white">
                         <span className="text-xl">{info.emoji}</span>
-                        <span className="text-[14px] font-extrabold text-foreground">{info.label}</span>
-                        <span className="text-[14px] text-primary font-bold">{value as number}%</span>
+                        <span className="text-[14px] font-black text-gray-800">{info.label}</span>
+                        <span className="text-[14px] text-primary font-black">{value as number}%</span>
                       </div>
                     );
                   })}
@@ -1684,21 +1684,21 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             {(analysis.extracted_interests?.length > 0 || analysis.topics_detected?.length > 0) && (
               <div className="grid grid-cols-2 gap-3">
                 {analysis.extracted_interests?.length > 0 && (
-                  <div className="bg-gradient-to-br from-accent/12 to-accent/3 rounded-3xl p-4 border border-accent/15">
-                    <h4 className="text-[15px] font-extrabold text-foreground mb-3">✨ Intérêts</h4>
+                  <div className="retro-card p-4" style={{ backgroundColor: 'var(--retro-purple)' }}>
+                    <h4 className="text-[15px] font-black text-gray-800 mb-3 uppercase">✨ Intérêts</h4>
                     <div className="flex flex-wrap gap-2">
                       {analysis.extracted_interests.map((interest, i) => (
-                        <span key={i} className="px-3 py-1.5 rounded-xl bg-accent/15 text-[13px] font-bold text-foreground">{interest}</span>
+                        <span key={i} className="px-3 py-1.5 border-2 border-black bg-white text-[13px] font-bold text-gray-800">{interest}</span>
                       ))}
                     </div>
                   </div>
                 )}
                 {analysis.topics_detected?.length > 0 && (
-                  <div className="bg-gradient-to-br from-primary/8 to-primary/2 rounded-3xl p-4 border border-primary/10">
-                    <h4 className="text-[15px] font-extrabold text-foreground mb-3">💬 Sujets</h4>
+                  <div className="retro-card p-4" style={{ backgroundColor: 'var(--retro-blue)' }}>
+                    <h4 className="text-[15px] font-black text-gray-800 mb-3 uppercase">💬 Sujets</h4>
                     <div className="flex flex-wrap gap-2">
                       {analysis.topics_detected.map((t, i) => (
-                        <span key={i} className="px-3 py-1.5 rounded-xl bg-primary/12 text-[13px] font-bold text-primary">{t}</span>
+                        <span key={i} className="px-3 py-1.5 border-2 border-black bg-white text-[13px] font-bold text-gray-800">{t}</span>
                       ))}
                     </div>
                   </div>
@@ -1708,15 +1708,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
             {/* ── Observations ── */}
             {analysis.behavior_insights?.length > 0 && (
-              <div className="bg-card rounded-3xl p-5 border border-border/20">
+              <div className="retro-card p-5">
                 <div className="flex items-center gap-2.5 mb-4">
-                  <span className="text-2xl">🔎</span>
-                  <h3 className="text-[16px] font-extrabold text-foreground">Observations</h3>
+                  <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">🔎</span></div>
+                  <h3 className="text-[16px] font-black text-foreground uppercase">Observations</h3>
                 </div>
                 <ul className="space-y-3">
                   {analysis.behavior_insights.map((insight, i) => (
-                    <li key={i} className="text-[14px] text-foreground flex items-start gap-3 leading-relaxed font-medium">
-                      <span className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />{insight}
+                    <li key={i} className="text-[14px] text-foreground flex items-start gap-3 leading-relaxed font-bold">
+                      <span className="w-2 h-2 bg-black mt-2 shrink-0" />{insight}
                     </li>
                   ))}
                 </ul>
@@ -1725,13 +1725,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
             {/* ── Alerts ── */}
             {analysis.alerts?.length > 0 && (
-              <div className="bg-gradient-to-br from-destructive/10 to-destructive/3 rounded-3xl p-5 border border-destructive/15">
+              <div className="retro-card p-5" style={{ backgroundColor: 'var(--retro-red)' }}>
                 <div className="flex items-center gap-2.5 mb-3">
-                  <AlertTriangle className="w-6 h-6 text-destructive" />
-                  <h3 className="text-[16px] font-extrabold text-destructive">Alertes</h3>
+                  <AlertTriangle className="w-6 h-6 text-gray-800" />
+                  <h3 className="text-[16px] font-black text-gray-800 uppercase">Alertes</h3>
                 </div>
                 {analysis.alerts.map((alert, i) => (
-                  <p key={i} className="text-[14px] text-foreground mb-2 font-medium">⚠️ {alert.message}</p>
+                  <p key={i} className="text-[14px] text-gray-800 mb-2 font-bold">⚠️ {alert.message}</p>
                 ))}
               </div>
             )}
