@@ -423,7 +423,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
           ? 4 * t * t * t
           : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-        const hiddenY = -0.62;
+        // Eyelid travels only within eye bounds: from just below eye (-0.27) to closed (0.03)
+        const hiddenY = -0.27;
         const closedY = 0.03;
         let targetY = hiddenY + easedCover * (closedY - hiddenY);
 
