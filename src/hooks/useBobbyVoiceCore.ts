@@ -578,19 +578,12 @@ export function useBobbyVoiceCore({
       return;
     }
 
-    // Wake up Bobby — speak welcome phrase then listen
+    // Wake up Bobby — go straight to listening (no generic welcome phrase)
     clearSleepTimer();
     voiceDetectedRef.current = false;
     convRelanceCountRef.current = 0;
 
-    const welcome = pickRandom(WELCOME_PHRASES);
-    go("SPEAKING");
-    await speakSystemMessage(welcome, "happy");
-
-    // After welcome, start listening
-    if (["SPEAKING", "IDLE"].includes(machineRef.current)) {
-      await startListening();
-    }
+    await startListening();
   }, [clearSleepTimer, go, interrupt, speakSystemMessage, startListening]);
 
   // ─── Init on child change ──────────────────────────
