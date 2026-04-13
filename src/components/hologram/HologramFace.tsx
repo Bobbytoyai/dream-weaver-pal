@@ -47,6 +47,7 @@ export function HologramFace({
   emotionOverride,
   emotionIntensity = 0.7,
   bobbyColor,
+  bobbyColors,
   expressionOverride,
   expressionIntensityLevel,
 }: HologramFaceProps) {
