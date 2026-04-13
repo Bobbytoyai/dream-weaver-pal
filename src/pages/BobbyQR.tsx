@@ -141,11 +141,49 @@ export default function BobbyQR() {
 
   if (step === "claimed") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FDF6EC] p-6">
-        <div className="retro-card p-8 text-center max-w-sm space-y-4" style={{ backgroundColor: "var(--retro-yellow)" }}>
-          <span className="text-5xl">🔒</span>
-          <h2 className="text-xl font-black text-foreground uppercase">Déjà utilisé</h2>
-          <p className="text-sm font-bold text-foreground/70">Ce Bobby a déjà été activé par quelqu'un d'autre.</p>
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 parent-light"
+        style={{ background: "repeating-linear-gradient(0deg, #FDF6EC 0px, #FDF6EC 28px, #e8ddd0 28px, #e8ddd0 30px)" }}>
+        {/* Decorative tape strip */}
+        <div className="w-16 h-6 bg-[var(--retro-yellow)] border-2 border-black rotate-[-3deg] mb-[-12px] z-10 opacity-80" />
+
+        <div className="retro-card retro-card-tilt-1 p-8 text-center max-w-sm w-full space-y-5"
+          style={{ backgroundColor: "var(--retro-red)" }}>
+          {/* Lock icon in retro box */}
+          <div className="mx-auto w-20 h-20 border-4 border-black bg-white flex items-center justify-center">
+            <span className="text-5xl">🔒</span>
+          </div>
+
+          <h2 className="text-2xl font-black text-foreground uppercase tracking-tight leading-tight">
+            Ce Bobby est<br />déjà activé !
+          </h2>
+
+          <div className="border-t-4 border-black pt-4 space-y-2">
+            <p className="text-[13px] font-bold text-foreground/70 leading-relaxed">
+              Ce code QR a déjà été utilisé pour activer un Bobby sur un autre appareil.
+            </p>
+            <p className="text-[11px] font-bold text-foreground/50">
+              Chaque Bobby est unique et ne peut être activé qu'une seule fois.
+            </p>
+          </div>
+
+          <div className="retro-card p-3 text-left space-y-1.5" style={{ backgroundColor: "var(--retro-yellow)" }}>
+            <p className="text-[11px] font-black text-foreground uppercase">💡 Tu as perdu ton Bobby ?</p>
+            <p className="text-[10px] font-bold text-foreground/60 leading-relaxed">
+              Demande à tes parents de contacter le support Bobby pour récupérer ton profil.
+            </p>
+          </div>
+
+          <button
+            onClick={() => navigate("/")}
+            className="w-full py-3 text-[13px] font-black uppercase border-4 border-black bg-foreground text-background hover:opacity-90 active:scale-95 transition-all"
+            style={{ boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}>
+            ← Retour à l'accueil
+          </button>
+        </div>
+
+        {/* Bottom decorative stamp */}
+        <div className="mt-6 text-center">
+          <span className="text-[10px] font-black text-foreground/30 uppercase tracking-widest">Bobby™ — Code à usage unique</span>
         </div>
       </div>
     );
