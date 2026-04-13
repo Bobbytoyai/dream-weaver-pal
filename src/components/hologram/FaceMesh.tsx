@@ -312,10 +312,12 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     const maxPupilX = 0.38 - 0.17; // ~0.21
     const maxPupilY = 0.32 - 0.17; // ~0.15
     
-    const rawPupilX = state.pupilX * 0.85 + wanderX;
-    const rawPupilY = state.pupilY * 0.7 + wanderY;
-    const rawIrisX = state.pupilX * 0.4 + wanderX * 0.5;
-    const rawIrisY = state.pupilY * 0.3 + wanderY * 0.5;
+    // During sleep, freeze pupils at center (no tracking)
+    const sleepDamp = faceState === "sleepy" ? 0 : 1;
+    const rawPupilX = (state.pupilX * 0.85 + wanderX) * sleepDamp;
+    const rawPupilY = (state.pupilY * 0.7 + wanderY) * sleepDamp;
+    const rawIrisX = (state.pupilX * 0.4 + wanderX * 0.5) * sleepDamp;
+    const rawIrisY = (state.pupilY * 0.3 + wanderY * 0.5) * sleepDamp;
     
     // Clamp to elliptical bounds
     const clampEllipse = (x: number, y: number, mx: number, my: number): [number, number] => {
