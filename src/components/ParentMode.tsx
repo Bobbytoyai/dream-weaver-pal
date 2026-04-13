@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 import {
   ArrowLeft, Clock, MessageSquare, Heart, Brain, Loader2, RefreshCw,
   Mic, BookOpen, Timer, Sparkles, Shield, Camera, Volume2, VolumeX,
@@ -234,6 +235,8 @@ const tabs: { id: Tab; icon: any; label: string; emoji?: string }[] = [
 
 const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: ParentModeProps) => {
   const [activeTab, setActiveTab] = useState<Tab>("home");
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [safetyAlerts, setSafetyAlerts] = useState<SafetyAlertRecord[]>([]);
   const [showSafetyAlerts, setShowSafetyAlerts] = useState(true);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -312,6 +315,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   };
 
   const handleCloudSave = async () => {
+    if (!user) {
+      navigate("/bobby-cloud?returnTo=/");
+      return;
+    }
     setCloudLoading(true);
     try {
       const result = await saveToCloud(displayName, settings);
@@ -326,6 +333,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const handleCloudRestore = async () => {
     if (!cloudRestoreCode.trim()) return;
+    if (!user) {
+      navigate("/bobby-cloud?returnTo=/");
+      return;
+    }
     setCloudLoading(true);
     try {
       const result = await restoreFromCloud(cloudRestoreCode);
