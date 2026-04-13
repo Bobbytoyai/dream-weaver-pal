@@ -192,21 +192,21 @@ function SquareCard({ label, emoji, count, desc, color, bgColor, onClick }: {
 
 function InteractionCard({ interaction }: { interaction: BobbyInteraction }) {
   return (
-    <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-      <div className="flex items-center gap-2 mb-2 flex-wrap">
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-medium">{interaction.category}</span>
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium">{interaction.age} ans</span>
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-medium">{interaction.emotion}</span>
-        <span className="text-[10px] text-white/30 ml-auto">Niv.{interaction.difficulty_level}</span>
+    <div className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] hover:bg-white/[0.06] transition-all">
+      <div className="flex items-center gap-2 mb-2.5 flex-wrap">
+        <span className="text-[10px] px-2.5 py-1 rounded-xl bg-cyan-500/15 text-cyan-300 font-semibold">{interaction.category}</span>
+        <span className="text-[10px] px-2.5 py-1 rounded-xl bg-purple-500/15 text-purple-300 font-semibold">{interaction.age} ans</span>
+        <span className="text-[10px] px-2.5 py-1 rounded-xl bg-pink-500/15 text-pink-300 font-semibold">{interaction.emotion}</span>
+        <span className="text-[10px] text-white/20 ml-auto font-mono">Niv.{interaction.difficulty_level}</span>
       </div>
-      <div className="space-y-1.5">
-        <div className="flex gap-2">
-          <span className="text-[10px] text-blue-400 shrink-0 mt-0.5">👦</span>
-          <p className="text-sm text-white/80">{interaction.child_input}</p>
+      <div className="space-y-2">
+        <div className="flex gap-2.5">
+          <span className="text-[11px] shrink-0 mt-0.5">👦</span>
+          <p className="text-[13px] text-white/80 leading-relaxed">{interaction.child_input}</p>
         </div>
-        <div className="flex gap-2">
-          <span className="text-[10px] text-green-400 shrink-0 mt-0.5">🤖</span>
-          <p className="text-sm text-white/60">{interaction.ai_response}</p>
+        <div className="flex gap-2.5">
+          <span className="text-[11px] shrink-0 mt-0.5">🤖</span>
+          <p className="text-[13px] text-white/50 leading-relaxed">{interaction.ai_response}</p>
         </div>
       </div>
     </div>
