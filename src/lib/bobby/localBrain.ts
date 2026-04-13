@@ -16,7 +16,7 @@
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import type { BobbyBrainReply } from "./types";
 import { smartClassify } from "./smartClassifier";
-import { tryStartScenario, isScenarioActive, getScenarioResponse, resetScenarios } from "./emotionalScenarios";
+import { tryStartScenario, isScenarioActive, getScenarioResponse, resetScenarios, getActiveScenarioInfo, getScenarioTriggerIntents } from "./emotionalScenarios";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 1. SHORT-TERM MEMORY
@@ -191,7 +191,10 @@ const INTENT_RULES: IntentRule[] = [
     /fier|fière|j'ai réussi|j'ai gagné|champion|regarde ce que|bien joué/i,
   ]},
   { intent: "AMOUR", priority: 80, patterns: [
-    /je t'aime|t'adore|câlin|bisou|tu es mon ami|meilleur ami|aime bobby|amoureux|amoureuse/i,
+    /je t'aime|t'adore|câlin|bisou|tu es mon ami|meilleur ami|aime bobby/i,
+  ]},
+  { intent: "AMOUREUX", priority: 82, patterns: [
+    /amoureux|amoureuse|petite copine|petit copain|petite amie|petit ami|crush|je l'aime|lui dire que je l'aime|elle me plaît|il me plaît|je kiffe/i,
   ]},
   { intent: "TIMIDITE", priority: 80, patterns: [
     /timide|j'ose pas|gêné|rouge|devant tout le monde/i,
@@ -206,7 +209,7 @@ const INTENT_RULES: IntentRule[] = [
     /punition|puni|grondé|engueulé|parents se disputent|parents se battent/i,
   ]},
   { intent: "CONFLIT_AMI", priority: 88, patterns: [
-    /copain m'a|copine m'a|ami m'a|plus mon ami|disputé avec mon copain|il m'a tapé|elle m'a tapé/i,
+    /copain m'a (?!dit)|copine m'a (?!dit)|ami m'a|plus mon ami|disputé avec mon copain|il m'a tapé|elle m'a tapé/i,
     /mon ami ne veut plus|m'a insulté|moqué de moi/i,
   ]},
   { intent: "SOLITUDE", priority: 87, patterns: [
@@ -2197,21 +2200,33 @@ export function getLocalBrainReply(
   });
 
   // 5. Check for active scenario (multi-turn emotional journey)
+  //    BUT: if the child clearly changed topic/intent, break out of the scenario
   if (isScenarioActive()) {
-    const scenarioResp = getScenarioResponse(userText, childName);
-    if (scenarioResp) {
-      addTurn({ role: "bobby", text: scenarioResp.text, intent, timestamp: Date.now() });
-      addBobbyResponse(scenarioResp.text);
-      const latency = performance.now() - startTime;
-      console.log(`[LocalBrain] 🎭 Scenario response ${latency.toFixed(1)}ms`);
-      return {
-        text: scenarioResp.text,
-        intent,
-        source: "local_brain",
-        emotion: (scenarioResp.faceState as FaceState) || "reassuring",
-        confidence: 0.95,
-        isOffline: true,
-      };
+    const scenarioInfo = getActiveScenarioInfo();
+    const scenarioTriggerIntents = scenarioInfo ? getScenarioTriggerIntents(scenarioInfo.id) : [];
+    const childChangedTopic = intent !== "OUI" && intent !== "NON" && intent !== "GENERAL" 
+      && intent !== "QUESTION_SIMPLE" && !scenarioTriggerIntents.includes(intent);
+    
+    if (childChangedTopic) {
+      // Child moved on — reset scenario
+      console.log(`[LocalBrain] 🔄 Child changed topic (${intent}), breaking scenario ${scenarioInfo?.id}`);
+      resetScenarios();
+    } else {
+      const scenarioResp = getScenarioResponse(userText, childName);
+      if (scenarioResp) {
+        addTurn({ role: "bobby", text: scenarioResp.text, intent, timestamp: Date.now() });
+        addBobbyResponse(scenarioResp.text);
+        const latency = performance.now() - startTime;
+        console.log(`[LocalBrain] 🎭 Scenario response ${latency.toFixed(1)}ms`);
+        return {
+          text: scenarioResp.text,
+          intent,
+          source: "local_brain",
+          emotion: (scenarioResp.faceState as FaceState) || "reassuring",
+          confidence: 0.95,
+          isOffline: true,
+        };
+      }
     }
   }
 

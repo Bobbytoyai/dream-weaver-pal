@@ -1039,6 +1039,12 @@ export function resetScenarios() {
   activeScenario = null;
 }
 
+/** Get trigger intents for a scenario by id */
+export function getScenarioTriggerIntents(scenarioId: string): string[] {
+  const scenario = SCENARIOS.find(s => s.id === scenarioId);
+  return scenario?.triggerIntents ?? [];
+}
+
 /** Get active scenario info */
 export function getActiveScenarioInfo() {
   if (!activeScenario) return null;
