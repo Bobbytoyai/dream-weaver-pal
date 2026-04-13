@@ -149,19 +149,19 @@ const TOP_SECTIONS_CONFIG: {
   desc: string;
   emoji: string;
 }[] = [
-  { id: "interactions", label: "Interactions", icon: MessageSquare, color: "text-cyan-600 dark:text-cyan-400", bgColor: "bg-cyan-500/20", desc: "Base d'interactions enfant par âge & catégorie", emoji: "🧠" },
-  { id: "multiresponses", label: "Multi-Réponses", icon: Zap, color: "text-orange-600 dark:text-orange-400", bgColor: "bg-orange-500/20", desc: "Réponses adaptatives multi-tags (offline)", emoji: "⚡" },
-  { id: "jeux", label: "Jeux & Quiz", icon: Gamepad2, color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-500/20", desc: "Quiz animaux, sciences, vrai/faux, devinettes", emoji: "🎮" },
-  { id: "qa", label: "QA Database", icon: HelpCircle, color: "text-amber-600 dark:text-amber-400", bgColor: "bg-amber-500/20", desc: "Questions-réponses offline structurées", emoji: "❓" },
-  { id: "blagues", label: "Blagues", icon: Laugh, color: "text-green-600 dark:text-green-400", bgColor: "bg-green-500/20", desc: "Blagues adaptées par âge & catégorie", emoji: "😂" },
-  { id: "histoires", label: "Histoires", icon: BookOpen, color: "text-purple-600 dark:text-purple-400", bgColor: "bg-purple-500/20", desc: "Contes & aventures personnalisées", emoji: "📖" },
-  { id: "chansons", label: "Chansons", icon: Music, color: "text-rose-600 dark:text-rose-400", bgColor: "bg-rose-500/20", desc: "Comptines, berceuses, éducatif, activités", emoji: "🎵" },
-  { id: "cerveau", label: "Personnalité", icon: Sparkles, color: "text-pink-600 dark:text-pink-400", bgColor: "bg-pink-500/20", desc: "Personnalité, réactions, phrases Bobby", emoji: "✨" },
-  { id: "cloud", label: "Cloud KB", icon: Globe, color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-500/20", desc: "Base cloud extensible (ajout via admin)", emoji: "☁️" },
-  { id: "store", label: "Bobby Store", icon: Star, color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-500/20", desc: "Gérer le catalogue du store (CRUD)", emoji: "🛒" },
-  { id: "expressions", label: "Expressions", icon: Eye, color: "text-fuchsia-600 dark:text-fuchsia-400", bgColor: "bg-fuchsia-500/20", desc: "Preview & test des expressions faciales", emoji: "🎭" },
-  { id: "autolearn", label: "Auto-Learning", icon: Microscope, color: "text-lime-600 dark:text-lime-400", bgColor: "bg-lime-500/20", desc: "IA auto-complétion depuis les conversations", emoji: "🧬" },
-  { id: "cloudusers", label: "Bobby Cloud", icon: Users, color: "text-sky-600 dark:text-sky-400", bgColor: "bg-sky-500/20", desc: "Utilisateurs Bobby Cloud, profils sync", emoji: "☁️👥" },
+  { id: "interactions", label: "Interactions", icon: MessageSquare, color: "text-cyan-500", bgColor: "bg-cyan-500/20", desc: "Base d'interactions enfant par âge & catégorie", emoji: "🧠" },
+  { id: "multiresponses", label: "Multi-Réponses", icon: Zap, color: "text-orange-500", bgColor: "bg-orange-500/20", desc: "Réponses adaptatives multi-tags (offline)", emoji: "⚡" },
+  { id: "jeux", label: "Jeux & Quiz", icon: Gamepad2, color: "text-blue-500", bgColor: "bg-blue-500/20", desc: "Quiz animaux, sciences, vrai/faux, devinettes", emoji: "🎮" },
+  { id: "qa", label: "QA Database", icon: HelpCircle, color: "text-amber-500", bgColor: "bg-amber-500/20", desc: "Questions-réponses offline structurées", emoji: "❓" },
+  { id: "blagues", label: "Blagues", icon: Laugh, color: "text-green-500", bgColor: "bg-green-500/20", desc: "Blagues adaptées par âge & catégorie", emoji: "😂" },
+  { id: "histoires", label: "Histoires", icon: BookOpen, color: "text-purple-500", bgColor: "bg-purple-500/20", desc: "Contes & aventures personnalisées", emoji: "📖" },
+  { id: "chansons", label: "Chansons", icon: Music, color: "text-rose-500", bgColor: "bg-rose-500/20", desc: "Comptines, berceuses, éducatif, activités", emoji: "🎵" },
+  { id: "cerveau", label: "Personnalité", icon: Sparkles, color: "text-pink-500", bgColor: "bg-pink-500/20", desc: "Personnalité, réactions, phrases Bobby", emoji: "✨" },
+  { id: "cloud", label: "Cloud KB", icon: Globe, color: "text-blue-500", bgColor: "bg-blue-500/20", desc: "Base cloud extensible (ajout via admin)", emoji: "☁️" },
+  { id: "store", label: "Bobby Store", icon: Star, color: "text-emerald-500", bgColor: "bg-emerald-500/20", desc: "Gérer le catalogue du store (CRUD)", emoji: "🛒" },
+  { id: "expressions", label: "Expressions", icon: Eye, color: "text-fuchsia-500", bgColor: "bg-fuchsia-500/20", desc: "Preview & test des expressions faciales", emoji: "🎭" },
+  { id: "autolearn", label: "Auto-Learning", icon: Microscope, color: "text-lime-500", bgColor: "bg-lime-500/20", desc: "IA auto-complétion depuis les conversations", emoji: "🧬" },
+  { id: "cloudusers", label: "Bobby Cloud", icon: Users, color: "text-sky-500", bgColor: "bg-sky-500/20", desc: "Utilisateurs Bobby Cloud, profils sync", emoji: "☁️👥" },
 ];
 
 // ═══════════════════════════════════════════════════════════════════
