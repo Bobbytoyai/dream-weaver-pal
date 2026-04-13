@@ -2511,7 +2511,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           {([
             ["voix", "🎤", "Voix & Sons", "Profils vocaux, vitesse, ton", "from-blue-400/15 to-blue-300/5"],
             ["limites", "⏱️", "Limites & Contrôle", "Temps, nuit, interactions, sujets", "from-amber-400/15 to-amber-300/5"],
-            ["personnalisation", "🎨", "Personnaliser", "Apparence, couleurs, style", "from-rose-400/15 to-pink-300/5"],
             ["profil", "👤", "Profil enfant", "Intérêts, mémoire, préférences", "from-violet-400/15 to-purple-300/5"],
           ] as const).map(([key, emoji, label, desc, gradient]) => (
             <button key={key} onClick={() => setReglagesSection(key)}
@@ -3222,10 +3221,16 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             childAge={settings.childAge}
           />
         );
-        case "profil":
-        case "personnalisation":
-          // Route through reglages
-          return renderReglages();
+        case "profil": return renderReglages();
+        case "personnalisation": return (
+          <BobbyCustomizer
+            settings={settings}
+            onUpdate={(key, value) => updateSetting(key, value)}
+            onBack={() => setActiveTab("home")}
+            onSave={() => { onSettingsChange?.(settings); setSettingsSaved(true); setTimeout(() => setSettingsSaved(false), 2000); }}
+            saved={settingsSaved}
+          />
+        );
         case "reglages": return renderReglages();
         case "cloud": return renderCloud();
         case "confidentialite": return renderConfidentialite();
@@ -3384,6 +3389,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             { id: "sessions" as Tab, emoji: "💬", label: "Sessions", color: "from-emerald-400/25 to-teal-400/10", border: "border-emerald-300/25",
               badge: sessions.filter(s => !analyses.some(a => a.session_id === s.id)).length || undefined },
             { id: "activites" as Tab, emoji: "🛒", label: "Bobby Store", color: "from-orange-400/25 to-amber-400/10", border: "border-orange-300/25" },
+            { id: "personnalisation" as Tab, emoji: "🎨", label: "Personnaliser", color: "from-rose-400/25 to-pink-400/10", border: "border-rose-300/25" },
             { id: "cloud" as Tab, emoji: "☁️", label: "Bobby Cloud", color: "from-violet-400/25 to-purple-400/10", border: "border-violet-300/25" },
             { id: "reglages" as Tab, emoji: "⚙️", label: "Réglages", color: "from-cyan-400/25 to-sky-400/10", border: "border-cyan-300/25" },
           ].map((card, i) => (
