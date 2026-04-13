@@ -873,7 +873,7 @@ const Admin = () => {
             <ArrowLeft className="w-4 h-4 mr-2" /> Retour
           </Button>
           <h2 className="text-xl font-bold text-white">{editingEntry.id ? "Modifier" : "Nouvelle"} interaction</h2>
-          <div className="space-y-4 bg-white/5 backdrop-blur rounded-xl p-5 border border-white/10">
+          <div className="space-y-4 bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-5 border border-white/10">
             <div>
               <label className="text-white/60 text-xs font-medium mb-1 block">Question / Déclencheur</label>
               <Textarea value={editingEntry.question || ""} onChange={e => setEditingEntry({ ...editingEntry, question: e.target.value })}
@@ -1164,7 +1164,7 @@ const Admin = () => {
 
             <div className="space-y-3">
               {filtered.map((entry, idx) => (
-                <div key={idx} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                <div key={idx} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/10">
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300">{entry.category}</span>
                     {entry.emotion && <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300">{entry.emotion}</span>}
@@ -1293,7 +1293,7 @@ const Admin = () => {
                   <h3 className="text-white/60 text-xs font-semibold mb-2 uppercase tracking-wider">{cat} ({questions.length})</h3>
                   <div className="space-y-2">
                     {questions.map((q, i) => (
-                      <div key={i} onClick={() => openQuizDetail(q, "quiz")} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
+                      <div key={i} onClick={() => openQuizDetail(q, "quiz")} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
                         <p className="text-sm text-white/80 font-medium mb-2">{q.question}</p>
                         <div className="grid grid-cols-2 gap-1.5 mb-2">
                           {q.choices.map((c, ci) => (
@@ -1329,7 +1329,7 @@ const Admin = () => {
                   <h3 className="text-white/60 text-xs font-semibold mb-2 uppercase tracking-wider">{cat} ({questions.length})</h3>
                   <div className="space-y-2">
                     {questions.map((q, i) => (
-                      <div key={i} onClick={() => openQuizDetail(q, "vf")} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
+                      <div key={i} onClick={() => openQuizDetail(q, "vf")} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
                         <div className="flex items-start gap-2">
                           <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${q.answer ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"}`}>
                             {q.answer ? "VRAI" : "FAUX"}
@@ -1354,7 +1354,7 @@ const Admin = () => {
           return (
             <div className="space-y-2">
               {filtered.map((q, i) => (
-                <div key={i} onClick={() => openQuizDetail(q, "riddle")} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
+                <div key={i} onClick={() => openQuizDetail(q, "riddle")} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
                   <p className="text-sm text-white/80 font-medium mb-2">{q.question}</p>
                   <div className="flex gap-1.5 mb-2 flex-wrap">
                     {q.choices.map((c, ci) => (
@@ -1376,7 +1376,7 @@ const Admin = () => {
         return (
           <div className="space-y-2">
             {filtered.map((b, i) => (
-              <div key={i} onClick={() => openQuizDetail(b, "blague")} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
+              <div key={i} onClick={() => openQuizDetail(b, "blague")} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
                 <p className="text-sm text-white/70">{b}</p>
               </div>
             ))}
@@ -1486,7 +1486,7 @@ const Admin = () => {
 
             <div className="space-y-2">
               {filtered.map((entry, idx) => (
-                <div key={idx} onClick={() => openQADetail(entry)} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
+                <div key={idx} onClick={() => openQADetail(entry)} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
                   <p className="text-xs text-white/50 mb-1.5">🎯 {entry.triggers.join(" • ")}</p>
                   <div className="space-y-1">
                     {entry.responses.map((r, i) => (
@@ -1605,7 +1605,7 @@ const Admin = () => {
 
             <div className="space-y-2">
               {filtered.map((b, i) => (
-                <div key={i} onClick={() => openBlagueDetail(b, i)} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
+                <div key={i} onClick={() => openBlagueDetail(b, i)} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">{b.ageMin}-{b.ageMax} ans</span>
                     <span className="text-[10px] text-white/30">Niv.{b.difficulte}</span>
@@ -1646,7 +1646,7 @@ const Admin = () => {
           {searchLower ? (
             <div className="space-y-2">
               {BLAGUES.filter(b => b.question.toLowerCase().includes(searchLower) || b.reponse.toLowerCase().includes(searchLower)).map((b, i) => (
-                <div key={i} onClick={() => openBlagueDetail(b, i)} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
+                <div key={i} onClick={() => openBlagueDetail(b, i)} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300 capitalize">{b.categorie}</span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">{b.ageMin}-{b.ageMax} ans</span>
@@ -1749,7 +1749,7 @@ const Admin = () => {
                 )}
                 <div className="space-y-2">
                   {chansons.map(c => (
-                    <div key={c.id} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                    <div key={c.id} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/10">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300">{c.ageMin}-{c.ageMax} ans</span>
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/40">⏱ {c.duree}</span>
@@ -1796,7 +1796,7 @@ const Admin = () => {
           {searchLower ? (
             <div className="space-y-2">
               {CHANSONS.filter(c => c.titre.toLowerCase().includes(searchLower) || c.description.toLowerCase().includes(searchLower) || c.tags.some(t => t.includes(searchLower))).map(c => (
-                <div key={c.id} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                <div key={c.id} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/10">
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 capitalize">{c.categorie}</span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">{c.ageMin}-{c.ageMax} ans</span>
@@ -1880,7 +1880,7 @@ const Admin = () => {
               <ArrowLeft className="w-4 h-4 mr-2" /> Retour
             </Button>
             <h2 className="text-xl font-bold text-white">{editingStory.id ? "Modifier" : "Nouvelle"} histoire</h2>
-            <div className="space-y-4 bg-white/5 backdrop-blur rounded-xl p-5 border border-white/10">
+            <div className="space-y-4 bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-5 border border-white/10">
               <div>
                 <label className="text-white/60 text-xs font-medium mb-1 block">Titre</label>
                 <Input value={editingStory.titre || ""} onChange={e => setEditingStory({ ...editingStory, titre: e.target.value })}
@@ -2021,7 +2021,7 @@ const Admin = () => {
               {filtered.map(h => {
                 const isExpanded = expandedStory === h.id;
                 return (
-                  <div key={h.id} className="bg-white/5 backdrop-blur rounded-xl border border-white/10 overflow-hidden">
+                  <div key={h.id} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] border border-white/10 overflow-hidden">
                     <button onClick={() => setExpandedStory(isExpanded ? null : h.id)}
                       className="w-full p-4 text-left">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -2192,7 +2192,7 @@ const Admin = () => {
           </div>
 
           {/* Emotions grid */}
-          <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+          <div className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/10">
             <h3 className="text-white/70 text-xs font-semibold mb-3 uppercase tracking-wider">🎭 États émotionnels ({BOBBY_EMOTIONS.length})</h3>
             <div className="grid grid-cols-2 gap-2">
               {BOBBY_EMOTIONS.map(e => (
@@ -2210,7 +2210,7 @@ const Admin = () => {
           </div>
 
           {/* Emotion triggers QA */}
-          <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+          <div className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/10">
             <h3 className="text-white/70 text-xs font-semibold mb-3 uppercase tracking-wider">💬 Réponses émotionnelles ({EMOTION_TRIGGERS_QA.length})</h3>
             <div className="space-y-2">
               {EMOTION_TRIGGERS_QA.map((eq, i) => (
@@ -2227,7 +2227,7 @@ const Admin = () => {
 
           {/* Personality sections */}
           {sections.map((section, idx) => (
-            <div key={idx} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+            <div key={idx} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/10">
               <h3 className="text-white/70 text-xs font-semibold mb-3 uppercase tracking-wider">{section.title}</h3>
               <div className="space-y-1.5">
                 {section.items.map((item, i) => (
