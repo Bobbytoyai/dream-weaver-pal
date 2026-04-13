@@ -3215,16 +3215,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   useEffect(() => {
     if (activeTab === prevTabRef.current) return;
-    const prevIdx = allTabIds.indexOf(prevTabRef.current);
-    const nextIdx = allTabIds.indexOf(activeTab);
-    const direction = nextIdx > prevIdx ? "right" : "left";
-    setAnimClass(direction === "right" ? "tab-exit-left" : "tab-exit-right");
+    setAnimClass("retro-glitch-exit");
     const t = setTimeout(() => {
       setDisplayedTab(activeTab);
-      setAnimClass(direction === "right" ? "tab-enter-right" : "tab-enter-left");
-      const t2 = setTimeout(() => setAnimClass(""), 300);
+      setAnimClass("retro-glitch-enter");
+      const t2 = setTimeout(() => setAnimClass(""), 350);
       return () => clearTimeout(t2);
-    }, 160);
+    }, 120);
     prevTabRef.current = activeTab;
     return () => clearTimeout(t);
   }, [activeTab]);
