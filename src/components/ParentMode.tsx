@@ -2081,16 +2081,16 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             className="w-full pl-11 pr-4 py-3 rounded-2xl bg-muted text-[15px] font-semibold text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
         </div>
 
-        {/* Category cards — 5 on same line */}
-        <div className="flex gap-2 mt-2 overflow-x-auto pb-1 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
+        {/* Category cards — horizontal scroll */}
+        <div className="flex gap-2.5 mt-2 overflow-x-auto pb-2 scrollbar-hide animate-fadeInUp" style={{ animationDelay: "0.1s", WebkitOverflowScrolling: "touch" }}>
           {categoryCards.map(card => (
             <button key={card.key} onClick={card.onClick}
-              className={`relative flex-shrink-0 w-[60px] aspect-square rounded-2xl bg-gradient-to-br ${card.bg} flex flex-col items-center justify-center gap-1 transition-all duration-200 active:scale-90 ${
+              className={`relative flex-shrink-0 min-w-[72px] px-2 py-3 rounded-2xl bg-gradient-to-br ${card.bg} flex flex-col items-center justify-center gap-1.5 transition-all duration-200 active:scale-90 ${
                 card.active ? "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg shadow-primary/20 scale-[1.03]" : "hover:ring-1 hover:ring-primary/20"
               }`}
               style={{ fontFamily: "'Nunito', sans-serif" }}>
               <span className="text-2xl">{card.emoji}</span>
-              <span className={`text-[10px] font-extrabold leading-tight truncate max-w-full px-1 ${card.active ? "text-primary" : "text-foreground/70"}`}>{card.label}</span>
+              <span className={`text-[11px] font-extrabold leading-tight whitespace-nowrap ${card.active ? "text-primary" : "text-foreground/70"}`}>{card.label}</span>
             </button>
           ))}
         </div>
