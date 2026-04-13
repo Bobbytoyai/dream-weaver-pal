@@ -260,6 +260,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [pendingNameChange, setPendingNameChange] = useState<string | null>(null);
 
   const unreadAlertCount = parentAlerts.filter(a => !a.is_read).length;
+  // Always use settings.childName as the display name — it's the source of truth
+  const displayName = settings.childName || childName;
 
   useEffect(() => { loadData(); loadAlerts(); loadCloudProfile(); }, []);
 
