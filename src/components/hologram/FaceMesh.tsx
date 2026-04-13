@@ -77,42 +77,51 @@ function buildEyebrowShape(_archHeight: number = 0.06): THREE.Shape {
   return shape;
 }
 
-// ─── Mouth shape builder v3 — single unified shape ──────────────────
-// Draws ONE mouth shape that smoothly morphs between:
-//   - closed smile (thin curved line)
-//   - open wide "ahhh" (wide ellipse)
-//   - round "ooh/hoo" (circle)
-//   - shock "O" (tall oval)
+// ─── Mouth shape builder v4 — smiley arc style ──────────────────
+// At rest: curved arc (smiley smile) with thickness
+// When open: transitions to open mouth (ellipse) for speech
 // Parameters: curve (-0.3 to 0.6), width (0-1), openness (0-1), round (0-1)
 
 function buildMouthShape(curve: number, width: number, openness: number, round: number): THREE.Shape {
   const shape = new THREE.Shape();
   
-  // Base dimensions
-  const baseHalfW = 0.16 + width * 0.10;
-  // Round narrows width, openness doesn't change width much
-  const halfW = baseHalfW * (1 - round * 0.45);
+  const halfW = (0.16 + width * 0.10) * (1 - round * 0.35);
+  const depth = curve * 0.22; // smile curve depth
+  const thickness = 0.022; // line thickness
   
-  // Height: closed = thin line, open = tall
-  const minThickness = 0.018; // thin line when closed
-  const maxHeight = 0.16;
-  const halfH = minThickness + openness * maxHeight + round * 0.08;
+  // Blend between arc (closed) and ellipse (open)
+  const openBlend = Math.min(1, openness * 3 + round * 2); // 0 = arc, 1 = ellipse
   
-  // Curve offset (positive = smile down, negative = frown up)
-  const curveOffset = curve * 0.12;
-  
-  // Draw elliptical mouth shape
-  const segments = 32;
-  for (let i = 0; i <= segments; i++) {
-    const angle = (i / segments) * Math.PI * 2;
-    const x = Math.cos(angle) * halfW;
-    const y = Math.sin(angle) * halfH - curveOffset * (1 - openness * 0.5);
-    if (i === 0) shape.moveTo(x, y);
-    else shape.lineTo(x, y);
+  if (openBlend < 0.15) {
+    // ── Smiley arc mode (closed mouth) ──
+    // Top edge of smile arc
+    shape.moveTo(-halfW, 0);
+    shape.quadraticCurveTo(-halfW * 0.3, -depth, 0, -depth);
+    shape.quadraticCurveTo(halfW * 0.3, -depth, halfW, 0);
+    // Bottom edge (thickness below)
+    shape.lineTo(halfW - 0.005, -thickness * 0.3);
+    shape.quadraticCurveTo(halfW * 0.3, -depth - thickness, 0, -depth - thickness);
+    shape.quadraticCurveTo(-halfW * 0.3, -depth - thickness, -halfW + 0.005, -thickness * 0.3);
+    shape.closePath();
+  } else {
+    // ── Open mouth mode (ellipse for speech) ──
+    const ellipseW = halfW * (0.6 + (1 - openBlend) * 0.4);
+    const ellipseH = 0.02 + openness * 0.15 + round * 0.10;
+    const yOff = -depth * (1 - openBlend * 0.5);
+    
+    const segments = 32;
+    for (let i = 0; i <= segments; i++) {
+      const angle = (i / segments) * Math.PI * 2;
+      const x = Math.cos(angle) * ellipseW;
+      const y = Math.sin(angle) * ellipseH + yOff;
+      if (i === 0) shape.moveTo(x, y);
+      else shape.lineTo(x, y);
+    }
+    shape.closePath();
   }
-  shape.closePath();
   
   return shape;
+}
 }
 
 export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIntensity = 0.7, emotionDuringSpeech, bobbyColor, bobbyColors, expressionOverride, expressionIntensityLevel }: FaceMeshProps) {
