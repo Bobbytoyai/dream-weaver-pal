@@ -1738,11 +1738,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
             {/* ── Transcription — Apple iMessage style ── */}
             {sessionMessages.length > 0 && (
-              <div className="bg-card rounded-3xl p-5 border border-border/20">
+              <div className="retro-card p-5">
                 <div className="flex items-center gap-2.5 mb-4">
-                  <span className="text-2xl">📖</span>
-                  <h3 className="text-[16px] font-extrabold text-foreground">Transcription</h3>
-                  <span className="ml-auto text-[12px] text-muted-foreground font-bold bg-muted px-2.5 py-1 rounded-full">{sessionMessages.length} msgs</span>
+                  <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">📖</span></div>
+                  <h3 className="text-[16px] font-black text-foreground uppercase">Transcription</h3>
+                  <span className="ml-auto text-[12px] text-muted-foreground font-black bg-muted px-2.5 py-1 border border-black">{sessionMessages.length} msgs</span>
                 </div>
                 <div className="max-h-[500px] overflow-y-auto space-y-3 py-1">
                   {sessionMessages.map((msg, i) => {
@@ -1787,10 +1787,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
             {/* ── Timeline émotionnelle ── */}
             {sessionMessages.filter(m => m.detected_emotion && m.role === "user").length > 0 && (
-              <div className="bg-card rounded-3xl p-5 border border-border/20">
+              <div className="retro-card p-5">
                 <div className="flex items-center gap-2.5 mb-3">
-                  <span className="text-2xl">📈</span>
-                  <h3 className="text-[16px] font-extrabold text-foreground">Timeline émotionnelle</h3>
+                  <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">📈</span></div>
+                  <h3 className="text-[16px] font-black text-foreground uppercase">Timeline émotionnelle</h3>
                 </div>
                 <div className="flex items-center gap-1 overflow-x-auto pb-2">
                   {sessionMessages.map((msg, i) => {
@@ -1815,7 +1815,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
             {/* ── Audio Player — clean, ABOVE Note parent ── */}
             {(analysis?.audio_path || sessionMessages.length > 0) && (
-              <div className="bg-gradient-to-br from-primary/8 via-primary/4 to-accent/6 rounded-3xl p-5 border border-primary/15 shadow-sm">
+              <div className="retro-card p-5" style={{ backgroundColor: 'var(--retro-blue)' }}>
                 <div className="flex items-center gap-3 mb-4">
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
                     playingAudio || fullPlaybackActive ? "bg-primary/20 animate-pulse" : "bg-primary/10"
@@ -1995,10 +1995,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             )}
 
             {/* ── Note du parent ── */}
-            <div className="bg-card rounded-3xl p-5 border border-border/20">
+            <div className="retro-card p-5">
               <div className="flex items-center gap-2.5 mb-3">
-                <span className="text-2xl">📝</span>
-                <h3 className="text-[16px] font-extrabold text-foreground">Note du parent</h3>
+                <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">📝</span></div>
+                <h3 className="text-[16px] font-black text-foreground uppercase">Note du parent</h3>
               </div>
               {editingNote === selectedSession!.id ? (
                 <div className="space-y-3">
@@ -2034,7 +2034,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </>
         ) : (
           <button onClick={() => analyzeSession(selectedSession!)}
-            className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-3xl p-5 font-extrabold text-[16px] hover:opacity-90 transition-all shadow-md shadow-primary/20">
+            className="w-full bg-primary text-primary-foreground border-4 border-black p-5 font-black text-[16px] hover:opacity-90 transition-all active:scale-95 uppercase">
             🧠 Lancer l'analyse IA
           </button>
         )}
@@ -2043,9 +2043,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         <div className="grid grid-cols-3 gap-3">
           <button
             onClick={() => exportSessionPDF(selectedSession!, selectedAnalysis)}
-            className="flex flex-col items-center gap-2 py-4 rounded-3xl bg-gradient-to-br from-blue-500/12 to-blue-400/5 border border-blue-400/15 hover:border-blue-400/30 transition-all active:scale-95">
-            <Download className="w-6 h-6 text-primary" />
-            <span className="text-[13px] font-extrabold text-foreground">Exporter</span>
+            className="flex flex-col items-center gap-2 py-4 border-4 border-black bg-white hover:bg-muted transition-all active:scale-95">
+            <Download className="w-6 h-6 text-gray-800" />
+            <span className="text-[13px] font-black text-gray-800 uppercase">Exporter</span>
           </button>
           <button
             onClick={async () => {
@@ -2057,9 +2057,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 toast.error("Erreur", { description: result.error });
               }
             }}
-            className="flex flex-col items-center gap-2 py-4 rounded-3xl bg-gradient-to-br from-purple-500/12 to-purple-400/5 border border-purple-400/15 hover:border-purple-400/30 transition-all active:scale-95">
-            <CloudUpload className="w-6 h-6 text-primary" />
-            <span className="text-[13px] font-extrabold text-foreground">Bobby Cloud</span>
+            className="flex flex-col items-center gap-2 py-4 border-4 border-black bg-white hover:bg-muted transition-all active:scale-95">
+            <CloudUpload className="w-6 h-6 text-gray-800" />
+            <span className="text-[13px] font-black text-gray-800 uppercase">Cloud</span>
           </button>
           <button
             onClick={() => setConfirmDialog({
@@ -2069,9 +2069,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               variant: "danger",
               onConfirm: () => { deleteSession(selectedSession!.id); setConfirmDialog(null); },
             })}
-            className="flex flex-col items-center gap-2 py-4 rounded-3xl bg-gradient-to-br from-red-500/10 to-red-400/5 border border-destructive/15 hover:border-destructive/30 transition-all active:scale-95">
-            <Trash2 className="w-6 h-6 text-destructive" />
-            <span className="text-[13px] font-extrabold text-destructive">Supprimer</span>
+            className="flex flex-col items-center gap-2 py-4 border-4 border-black hover:bg-muted transition-all active:scale-95" style={{ backgroundColor: 'var(--retro-red)' }}>
+            <Trash2 className="w-6 h-6 text-gray-800" />
+            <span className="text-[13px] font-black text-gray-800 uppercase">Supprimer</span>
           </button>
         </div>
 
