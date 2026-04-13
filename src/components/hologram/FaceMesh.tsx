@@ -85,7 +85,7 @@ function buildSmileLine(curve: number, width: number): THREE.Shape {
   const shape = new THREE.Shape();
   const halfW = 0.18 + width * 0.10;
   const depth = curve * 0.25; // more curved smile
-  const thickness = 0.028; // thicker line
+  const thickness = 0.045; // thick visible line
 
   // Top edge of the line (the smile curve)
   shape.moveTo(-halfW, 0);
@@ -443,13 +443,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (mouthKey !== prevMouthKey.current) {
       prevMouthKey.current = mouthKey;
 
-      // Smile line (always visible — the cute curved line)
+      // Smile line — static shape, no animation on curve changes
       if (upperLipRef.current) {
-        const newShape = buildSmileLine(mc, mw);
-        const newGeo = new THREE.ShapeGeometry(newShape, 16);
-        upperLipRef.current.geometry.dispose();
-        upperLipRef.current.geometry = newGeo;
-        // Hide smile line when mouth is wide open (oval takes over)
+        // Only hide when mouth is open, never rebuild shape
         (upperLipRef.current.material as THREE.MeshBasicMaterial).opacity = isOpen ? 0 : 1;
       }
 
