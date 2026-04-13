@@ -338,7 +338,7 @@
 .card-stagger-4 { --card-tilt: 1deg; animation: retro-bounce-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.26s both; }
 .card-stagger-5 { --card-tilt: -0.9deg; animation: retro-bounce-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.33s both; }
 .card-stagger-6 { --card-tilt: 0.5deg; animation: retro-bounce-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.4s both; }
-.hero-fade-in { animation: heroTiltSlide 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0s both; }
+
 
 /* ── Retro glitch page transition ── */
 @keyframes retro-glitch-in {
