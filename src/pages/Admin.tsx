@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import ExpressionPreview from "@/components/ExpressionPreview";
 import AutoLearnPanel from "@/components/AutoLearnPanel";
+import KBDebugPanel from "@/components/KBDebugPanel";
 import AdminDetailDialog, { type DetailItem, type DetailField } from "@/components/AdminDetailDialog";
 import AdminStoreManager from "@/components/AdminStoreManager";
 import { createPortal } from "react-dom";
@@ -137,7 +138,7 @@ interface KBEntry {
 }
 
 // ─── Top-level brain sections shown as big square cards ─────────────
-type TopSection = "interactions" | "multiresponses" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons" | "store" | "expressions" | "autolearn" | "cloudusers";
+type TopSection = "interactions" | "multiresponses" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons" | "store" | "expressions" | "autolearn" | "cloudusers" | "kbdebug";
 
 // Counts are computed dynamically below in the component
 const TOP_SECTIONS_CONFIG: {
@@ -162,6 +163,7 @@ const TOP_SECTIONS_CONFIG: {
   { id: "expressions", label: "Expressions", icon: Eye, color: "text-fuchsia-500", bgColor: "bg-fuchsia-500/20", desc: "Preview & test des expressions faciales", emoji: "🎭" },
   { id: "autolearn", label: "Auto-Learning", icon: Microscope, color: "text-lime-500", bgColor: "bg-lime-500/20", desc: "IA auto-complétion depuis les conversations", emoji: "🧬" },
   { id: "cloudusers", label: "Bobby Cloud", icon: Users, color: "text-sky-500", bgColor: "bg-sky-500/20", desc: "Utilisateurs Bobby Cloud, profils sync", emoji: "☁️👥" },
+  { id: "kbdebug", label: "KB Debug", icon: Search, color: "text-emerald-500", bgColor: "bg-emerald-500/20", desc: "Debug scoring sémantique KB en temps réel", emoji: "🔍" },
 ];
 
 // ═══════════════════════════════════════════════════════════════════
@@ -922,6 +924,7 @@ const Admin = () => {
       autolearn: autoLearnCount ?? "…",
       store: storeItems.length,
       cloudusers: cloudUsers.length,
+      kbdebug: "🔍",
     } as Record<string, string | number>;
   }, [interactions, entries, cloudStories, storeItems, cloudUsers, autoLearnCount]);
 
@@ -2814,6 +2817,14 @@ const Admin = () => {
     return <AutoLearnPanel onBack={() => { setTopSection(null); }} />;
   }
 
+  if (topSection === "kbdebug") {
+    return (
+      <div className="min-h-screen p-4" style={{ background: "var(--admin-bg)" }}>
+        <KBDebugPanel onBack={() => { setTopSection(null); }} />
+      </div>
+    );
+  }
+
   if (topSection === "store") {
     return (
       <AdminStoreManager
@@ -3091,6 +3102,7 @@ const Admin = () => {
               TOP_SECTIONS_CONFIG.find(s => s.id === "cloud")!,
               TOP_SECTIONS_CONFIG.find(s => s.id === "interactions")!,
               TOP_SECTIONS_CONFIG.find(s => s.id === "autolearn")!,
+              TOP_SECTIONS_CONFIG.find(s => s.id === "kbdebug")!,
             ].map(section => (
               <DashCard key={section.id} label={section.label} emoji={section.emoji}
                 count={sectionCounts[section.id] ?? "…"} desc={section.desc}

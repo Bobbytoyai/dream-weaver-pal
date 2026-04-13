@@ -595,6 +595,90 @@ function contextBonus(keywords: string[]): number {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DEBUG SCORING — exported for admin debug panel
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export interface KBScoreBreakdown {
+  id: string;
+  question: string;
+  answer: string;
+  keywords: string[];
+  category: string;
+  emotion: string;
+  priority: number;
+  kwScore: number;
+  qScore: number;
+  containment: number;
+  ctxBonus: number;
+  rawScore: number;
+  priorityFactor: number;
+  finalScore: number;
+  expandedTokens: string[];
+  inputTokens: string[];
+}
+
+export async function debugScoreQuery(
+  userText: string,
+  childAge: number,
+  limit: number = 20,
+): Promise<{ results: KBScoreBreakdown[]; context: string[] }> {
+  if (!userText || userText.length < 2) return { results: [], context: [...recentTopics] };
+
+  const { data, error } = await supabase
+    .from("knowledge_base")
+    .select("id, question, answer, keywords, emotion, priority, category, source_content_id")
+    .eq("is_active", true)
+    .lte("age_min", childAge)
+    .gte("age_max", childAge)
+    .order("priority", { ascending: false })
+    .limit(300);
+
+  if (error || !data?.length) return { results: [], context: [...recentTopics] };
+
+  const inputTokens = tokenize(userText);
+  if (inputTokens.length === 0) return { results: [], context: [...recentTopics] };
+
+  const expandedInput = expandWithSemantics(inputTokens);
+  const inputNorm = normalize(userText);
+
+  const scored: KBScoreBreakdown[] = [];
+
+  for (const entry of data) {
+    const kwScore = scoreKeywords(inputTokens, expandedInput, entry.keywords || []);
+    const qScore = scoreQuestion(inputTokens, entry.question);
+    const containment = scoreFullContainment(inputNorm, normalize(entry.question));
+    const ctxBonus = contextBonus(entry.keywords || []);
+    const rawScore = Math.max(kwScore, qScore, containment) + ctxBonus;
+    const priorityFactor = 0.5 + ((entry.priority || 5) / 10) * 0.5;
+    const finalScore = rawScore * priorityFactor;
+
+    if (finalScore > 0.01) {
+      scored.push({
+        id: entry.id,
+        question: entry.question,
+        answer: entry.answer,
+        keywords: entry.keywords || [],
+        category: entry.category || "",
+        emotion: entry.emotion || "happy",
+        priority: entry.priority || 5,
+        kwScore,
+        qScore,
+        containment,
+        ctxBonus,
+        rawScore,
+        priorityFactor,
+        finalScore,
+        expandedTokens: [...expandedInput],
+        inputTokens,
+      });
+    }
+  }
+
+  scored.sort((a, b) => b.finalScore - a.finalScore);
+  return { results: scored.slice(0, limit), context: [...recentTopics] };
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // MAIN QUERY
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -604,7 +688,6 @@ export async function queryKnowledgeBase(
 ): Promise<BobbyBrainReply | null> {
   if (!userText || userText.length < 2) return null;
 
-  // Push user message into conversational context
   pushConversationContext(userText);
 
   try {
@@ -634,10 +717,7 @@ export async function queryKnowledgeBase(
       const containment = scoreFullContainment(inputNorm, normalize(entry.question));
       const ctxBonus = contextBonus(entry.keywords || []);
       
-      // Composite: best of (keyword, question, containment) + context bonus
       const rawScore = Math.max(kwScore, qScore, containment) + ctxBonus;
-      
-      // Priority scaling (P5=0.65x, P8=0.85x, P10=1.0x)
       const priorityFactor = 0.5 + ((entry.priority || 5) / 10) * 0.5;
       const finalScore = rawScore * priorityFactor;
 
@@ -649,7 +729,6 @@ export async function queryKnowledgeBase(
 
     if (!bestMatch) return null;
 
-    // Increment usage (fire & forget)
     Promise.resolve(supabase.rpc("increment_kb_usage", { entry_id: bestMatch.id })).catch(() => {});
 
     console.log(`[KnowledgeQuery] ✅ Match (score ${bestScore.toFixed(3)}): "${bestMatch.question.slice(0, 60)}" → "${bestMatch.answer.slice(0, 60)}" ${bestMatch.source_content_id ? "[Store]" : "[learned]"}`);
