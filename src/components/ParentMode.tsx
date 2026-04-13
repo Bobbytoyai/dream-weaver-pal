@@ -2563,13 +2563,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const renderNouveautes = () => (
     <div className="p-4 space-y-3">
       {/* Version banner */}
-      <div className="bg-gradient-to-br from-primary/15 to-primary/5 rounded-2xl p-4 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
+      <div className="retro-card retro-card-tilt-1 p-4" style={{ backgroundColor: 'var(--retro-blue)' }}>
         <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="w-4 h-4 text-primary" />
-          <h3 className="text-[13px] font-bold text-foreground">Bobby v2.0</h3>
-          <span className="text-[9px] px-2 py-0.5 bg-primary/20 text-primary rounded-full font-semibold">Dernière mise à jour</span>
+          <Sparkles className="w-4 h-4 text-foreground" />
+          <h3 className="text-[13px] font-black text-foreground uppercase">Bobby v2.0</h3>
+          <span className="text-[9px] px-2 py-0.5 border-2 border-black bg-white font-black">Dernière mise à jour</span>
         </div>
-        <p className="text-[11px] text-muted-foreground">10 avril 2026</p>
+        <p className="text-[11px] text-foreground/60 font-bold">10 avril 2026</p>
       </div>
 
       {/* 🎤 Voix */}
