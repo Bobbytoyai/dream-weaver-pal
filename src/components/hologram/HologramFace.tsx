@@ -10,6 +10,13 @@ import type { ExpressionCombo } from "@/lib/bobby/expressionLibrary";
 import { eventBus } from "@/lib/eventBus";
 // Audio connector managed externally
 
+interface BobbyColors {
+  iris: string;
+  cheek: string;
+  eyebrow: string;
+  background: string;
+}
+
 interface HologramFaceProps {
   voiceState: "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
   enableCamera?: boolean;
@@ -17,6 +24,7 @@ interface HologramFaceProps {
   emotionOverride?: FaceState;
   emotionIntensity?: number;
   bobbyColor?: string;
+  bobbyColors?: BobbyColors;
   expressionOverride?: ExpressionCombo;
   expressionIntensityLevel?: number;
 }
