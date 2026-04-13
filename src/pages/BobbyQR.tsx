@@ -34,11 +34,11 @@ export default function BobbyQR() {
       setBobbyCode(data);
 
       if (data.claimed_at && data.child_name) {
-        // Already claimed — restore session
         setChildName(data.child_name);
         setChildAge(data.child_age || 6);
-        if (data.session_data?.parentSettings) {
-          setParentSettings({ ...DEFAULT_PARENT_SETTINGS, ...data.session_data.parentSettings });
+        const sd = data.session_data as Record<string, any> | null;
+        if (sd?.parentSettings) {
+          setParentSettings({ ...DEFAULT_PARENT_SETTINGS, ...sd.parentSettings });
         }
         setStep("sleeping");
       } else {
@@ -63,7 +63,7 @@ export default function BobbyQR() {
     if (!bobbyCode) return;
     await supabase
       .from("bobby_codes")
-      .update({ session_data: { parentSettings: settings || parentSettings } })
+      .update({ session_data: { parentSettings: settings || parentSettings } as any })
       .eq("id", bobbyCode.id);
   };
 
@@ -222,11 +222,9 @@ export default function BobbyQR() {
     return (
       <ParentMode
         childName={childName}
-        childAge={childAge || 6}
-        settings={parentSettings}
-        onUpdateSetting={updateSetting}
-        onBack={() => setStep("active")}
-        requireAccountForStore={true}
+        onClose={() => setStep("active")}
+        parentSettings={parentSettings}
+        onSettingsChange={(s) => { setParentSettings(s); saveToCode(s); }}
       />
     );
   }
