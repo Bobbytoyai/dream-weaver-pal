@@ -1898,56 +1898,54 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         ) : (
           <div className="space-y-3">
             {dailySummaries.map(day => (
-              <div key={day.day} id={`day-${day.day}`} className="bg-card rounded-2xl p-4 border border-border/20 space-y-3">
+              <div key={day.day} id={`day-${day.day}`} className="bg-card rounded-3xl p-5 border border-border/20 space-y-4 transition-all">
                 {/* Day header */}
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-primary" />
-                    <h4 className="text-[13px] font-bold text-foreground">{formatDayHeader(day.daySessions[0].started_at)}</h4>
-                    {day.hasFavorite && <span className="text-xs">⭐</span>}
+                  <div className="flex items-center gap-2.5">
+                    <Calendar className="w-5 h-5 text-primary" />
+                    <h4 className="text-[17px] font-extrabold text-foreground">{formatDayHeader(day.daySessions[0].started_at)}</h4>
+                    {day.hasFavorite && <span className="text-base">⭐</span>}
                   </div>
-                  <span className="text-2xl">{day.mood.emoji}</span>
+                  <span className="text-3xl">{day.mood.emoji}</span>
                 </div>
 
                 {/* KPIs row */}
-                <div className="flex gap-2">
-                  <div className="flex-1 bg-muted/50 rounded-xl p-2 text-center">
-                    <p className="text-[15px] font-bold text-foreground">{day.daySessions.length}</p>
-                    <p className="text-[8px] text-muted-foreground">session{day.daySessions.length > 1 ? "s" : ""}</p>
+                <div className="grid grid-cols-3 gap-2.5">
+                  <div className="bg-gradient-to-br from-blue-500/15 to-blue-400/5 rounded-2xl p-3 text-center">
+                    <p className="text-xl font-extrabold text-foreground">{day.daySessions.length}</p>
+                    <p className="text-[11px] text-muted-foreground font-bold">session{day.daySessions.length > 1 ? "s" : ""}</p>
                   </div>
-                  <div className="flex-1 bg-muted/50 rounded-xl p-2 text-center">
-                    <p className="text-[15px] font-bold text-foreground">{day.totalMessages}</p>
-                    <p className="text-[8px] text-muted-foreground">messages</p>
+                  <div className="bg-gradient-to-br from-emerald-500/15 to-emerald-400/5 rounded-2xl p-3 text-center">
+                    <p className="text-xl font-extrabold text-foreground">{day.totalMessages}</p>
+                    <p className="text-[11px] text-muted-foreground font-bold">messages</p>
                   </div>
-                  <div className="flex-1 bg-muted/50 rounded-xl p-2 text-center">
-                    <p className="text-[15px] font-bold text-foreground">{formatDuration(day.totalDuration)}</p>
-                    <p className="text-[8px] text-muted-foreground">durée</p>
+                  <div className="bg-gradient-to-br from-purple-500/15 to-purple-400/5 rounded-2xl p-3 text-center">
+                    <p className="text-xl font-extrabold text-foreground">{formatDuration(day.totalDuration)}</p>
+                    <p className="text-[11px] text-muted-foreground font-bold">durée</p>
                   </div>
                 </div>
 
                 {/* Summary */}
                 {day.daySummary && (
-                  <p className="text-[11px] text-muted-foreground leading-relaxed bg-muted/30 rounded-xl px-3 py-2">
+                  <p className="text-[14px] text-foreground/70 leading-relaxed bg-gradient-to-r from-primary/8 to-accent/5 rounded-2xl px-4 py-3">
                     💡 {day.daySummary}
                   </p>
                 )}
 
                 {/* Scores mini */}
                 {day.avgSociability !== null && (
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     {[
-                      { label: "Sociabilité", score: day.avgSociability, emoji: "🤝" },
-                      { label: "Curiosité", score: day.avgCuriosity, emoji: "🔍" },
-                      { label: "Stabilité", score: day.avgStability, emoji: "⚖️" },
+                      { label: "Sociabilité", score: day.avgSociability, emoji: "🤝", color: "from-blue-500/15 to-blue-400/5" },
+                      { label: "Curiosité", score: day.avgCuriosity, emoji: "🔍", color: "from-amber-500/15 to-amber-400/5" },
+                      { label: "Stabilité", score: day.avgStability, emoji: "⚖️", color: "from-emerald-500/15 to-emerald-400/5" },
                     ].map(s => (
-                      <div key={s.label} className="flex-1 flex items-center gap-1.5 bg-muted/30 rounded-lg px-2 py-1.5">
-                        <span className="text-[11px]">{s.emoji}</span>
-                        <div className="flex-1">
-                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                            <div className="h-full rounded-full bg-primary/60 transition-all" style={{ width: `${s.score}%` }} />
-                          </div>
+                      <div key={s.label} className={`bg-gradient-to-br ${s.color} rounded-2xl p-2.5 flex flex-col items-center gap-1`}>
+                        <span className="text-lg">{s.emoji}</span>
+                        <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
+                          <div className="h-full rounded-full bg-primary/60 transition-all" style={{ width: `${s.score}%` }} />
                         </div>
-                        <span className="text-[9px] font-bold text-muted-foreground">{s.score}</span>
+                        <span className="text-[13px] font-extrabold text-foreground">{s.score}</span>
                       </div>
                     ))}
                   </div>
@@ -1955,12 +1953,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
                 {/* Tags */}
                 {(day.topTopics.length > 0 || day.topEmotions.length > 0) && (
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-2">
                     {day.topTopics.map(t => (
-                      <span key={t} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] font-medium">#{t}</span>
+                      <span key={t} className="px-3 py-1 rounded-xl bg-primary/12 text-primary text-[12px] font-bold">#{t}</span>
                     ))}
                     {day.topEmotions.map(e => (
-                      <span key={e} className="px-2 py-0.5 rounded-full bg-accent/30 text-accent-foreground text-[9px] font-medium">{e}</span>
+                      <span key={e} className="px-3 py-1 rounded-xl bg-accent/30 text-accent-foreground text-[12px] font-bold">{e}</span>
                     ))}
                   </div>
                 )}
