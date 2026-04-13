@@ -3419,27 +3419,24 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         ))}
       </div>
 
-      {/* ── ARCHITECTURE SCALABLE ── */}
-      <div className="bg-gradient-to-br from-emerald-500/10 to-teal-400/5 rounded-3xl p-5 border border-emerald-400/15">
-        <h3 className="text-[16px] font-extrabold text-foreground mb-3">🏗️ Infrastructure Cloud</h3>
-        <div className="space-y-2.5">
+      {/* ── INFRASTRUCTURE FOOTER ── */}
+      <div className="mt-4 pt-4 border-t border-border/15">
+        <div className="flex items-center justify-center gap-3 flex-wrap">
           {[
-            { emoji: "🔒", title: "Chiffrement AES-256", desc: "Données chiffrées au repos et en transit" },
-            { emoji: "🌍", title: "Multi-région", desc: "Serveurs EU (RGPD) avec réplication automatique" },
-            { emoji: "📈", title: "Scalable", desc: "Architecture auto-scalable, pas de limite de stockage" },
-            { emoji: "🔄", title: "Sync temps réel", desc: "Synchronisation automatique toutes les 5 secondes" },
-            { emoji: "📱", title: "Multi-appareils", desc: "Tablette, téléphone, PC — un seul code" },
-            { emoji: "🛡️", title: "Conformité RGPD", desc: "Données hébergées en Europe, suppression à la demande" },
+            { emoji: "🔒", label: "AES-256" },
+            { emoji: "🇪🇺", label: "RGPD" },
+            { emoji: "📱", label: "Multi-appareils" },
+            { emoji: "🔄", label: "Sync auto" },
+            { emoji: "📈", label: "Scalable" },
           ].map(f => (
-            <div key={f.title} className="flex items-start gap-2.5">
-              <span className="text-lg mt-0.5">{f.emoji}</span>
-              <div>
-                <h4 className="text-[13px] font-extrabold text-foreground">{f.title}</h4>
-                <p className="text-[11px] text-muted-foreground leading-snug">{f.desc}</p>
-              </div>
-            </div>
+            <span key={f.label} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-muted/40 text-[9px] font-bold text-muted-foreground">
+              {f.emoji} {f.label}
+            </span>
           ))}
         </div>
+        <p className="text-center text-[9px] text-muted-foreground/60 mt-2">
+          ☁️ Infrastructure sécurisée • Chiffrement bout en bout • Serveurs EU
+        </p>
       </div>
     </div>
   );
