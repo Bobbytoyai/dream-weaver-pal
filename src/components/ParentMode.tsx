@@ -270,6 +270,65 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     } catch (e) { console.warn("Failed to load alerts:", e); }
   };
 
+  const loadCloudProfile = async () => {
+    const profile = await getCloudProfile();
+    setCloudProfile(profile);
+  };
+
+  const handleCloudSave = async () => {
+    setCloudLoading(true);
+    try {
+      const result = await saveToCloud(settings.childName || childName, settings);
+      if (result.success && result.profile) {
+        setCloudProfile(result.profile);
+        toast.success(result.isNew ? "☁️ Profil Bobby Cloud créé !" : "☁️ Synchronisé avec Bobby Cloud !");
+      } else {
+        toast.error("Erreur de synchronisation", { description: result.error });
+      }
+    } finally { setCloudLoading(false); }
+  };
+
+  const handleCloudRestore = async () => {
+    if (!cloudRestoreCode.trim()) return;
+    setCloudLoading(true);
+    try {
+      const result = await restoreFromCloud(cloudRestoreCode);
+      if (result.success && result.profile) {
+        setCloudProfile(result.profile);
+        // Restore parent settings
+        const restored = result.profile.parent_settings;
+        if (restored && typeof restored === "object") {
+          // Keep local childName/childAge priority
+          const merged = {
+            ...DEFAULT_PARENT_SETTINGS,
+            ...restored,
+            childName: settings.childName || childName,
+            childAge: settings.childAge,
+            contentModes: { ...DEFAULT_PARENT_SETTINGS.contentModes, ...(restored as any).contentModes },
+            nightMode: { ...DEFAULT_PARENT_SETTINGS.nightMode, ...(restored as any).nightMode },
+            interactions: { ...DEFAULT_PARENT_SETTINGS.interactions, ...(restored as any).interactions },
+          };
+          setSettings(merged as ParentSettings);
+          onSettingsChange?.(merged as ParentSettings);
+        }
+        setCloudRestoreCode("");
+        toast.success("☁️ Profil restauré depuis Bobby Cloud !");
+      } else {
+        toast.error("Code introuvable", { description: result.error });
+      }
+    } finally { setCloudLoading(false); }
+  };
+
+  const handleCloudDelete = async () => {
+    setCloudLoading(true);
+    const ok = await deleteCloudProfile();
+    setCloudLoading(false);
+    if (ok) {
+      setCloudProfile(null);
+      toast.success("Profil Bobby Cloud supprimé");
+    }
+  };
+
   const markAlertRead = async (alertId: string) => {
     await supabase.from("parent_alerts").update({ is_read: true }).eq("id", alertId);
     setParentAlerts(prev => prev.map(a => a.id === alertId ? { ...a, is_read: true } : a));
