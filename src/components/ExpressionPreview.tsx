@@ -28,6 +28,15 @@ const animKeys = Object.keys(ANIMATIONS);
 export default function ExpressionPreview({ onBack }: { onBack: () => void }) {
   const [mode, setMode] = useState<"emotion" | "manual">("emotion");
 
+  // Load saved parent settings for consistent Bobby appearance
+  const [savedSettings] = useState(() => {
+    try {
+      const raw = localStorage.getItem("bobby_parent_settings");
+      if (raw) return { ...DEFAULT_PARENT_SETTINGS, ...JSON.parse(raw) };
+    } catch {}
+    return DEFAULT_PARENT_SETTINGS;
+  });
+
   // Emotion mode
   const [selectedEmotion, setSelectedEmotion] = useState<BobbyEmotion>("joy");
   const [intensity, setIntensity] = useState(3);
