@@ -285,53 +285,82 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
   const [search, setSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState<StoreItem | null>(null);
 
-  const fetchData = useCallback(async () => {
+  const [loadError, setLoadError] = useState(false);
+
+  const mapRow = (r: any): StoreItem => ({
+    id: r.id,
+    slug: r.slug,
+    name: r.name,
+    emoji: r.emoji,
+    description: r.description,
+    detailed_description: r.detailed_description || "",
+    category: r.category,
+    age_min: r.age_min,
+    age_max: r.age_max,
+    tags: r.tags ?? [],
+    size_label: r.size_label,
+    is_new: r.is_new,
+    is_popular: r.is_popular,
+    is_featured: r.is_featured,
+    is_premium: r.is_premium ?? false,
+    install_count: r.install_count,
+    content_items: Array.isArray(r.content_items) ? r.content_items : [],
+    creator_name: r.creator_name || "Équipe Bobby",
+    creator_role: r.creator_role || "Éducation & Divertissement",
+    version_label: r.version_label || "1.0",
+    changelog: r.changelog || "",
+    rating: r.rating ?? 4.5,
+    rating_count: r.rating_count ?? 0,
+    content_count: r.content_count ?? 0,
+    learning_objectives: r.learning_objectives ?? [],
+    skills_developed: r.skills_developed ?? [],
+    duration_estimate: r.duration_estimate || "10-15 min",
+    difficulty_level: r.difficulty_level || "adaptatif",
+    languages: r.languages ?? ["fr"],
+    last_updated_at: r.last_updated_at || r.updated_at,
+    created_at: r.created_at,
+  });
+
+  const fetchData = useCallback(async (retryCount = 0) => {
     setLoading(true);
-    const [catalogRes, installedRes] = await Promise.all([
-      supabase.from("store_content").select("*").eq("is_active", true).order("created_at", { ascending: false }),
-      supabase.from("installed_content").select("content_id").eq("child_name", childName),
-    ]);
+    setLoadError(false);
+    try {
+      const catalogPromise = supabase.from("store_content").select("*").eq("is_active", true).order("created_at", { ascending: false });
+      const installedPromise = supabase.from("installed_content").select("content_id").eq("child_name", childName);
 
-    if (catalogRes.data) {
-      setItems(catalogRes.data.map((r: any) => ({
-        id: r.id,
-        slug: r.slug,
-        name: r.name,
-        emoji: r.emoji,
-        description: r.description,
-        detailed_description: r.detailed_description || "",
-        category: r.category,
-        age_min: r.age_min,
-        age_max: r.age_max,
-        tags: r.tags ?? [],
-        size_label: r.size_label,
-        is_new: r.is_new,
-        is_popular: r.is_popular,
-        is_featured: r.is_featured,
-        is_premium: r.is_premium ?? false,
-        install_count: r.install_count,
-        content_items: Array.isArray(r.content_items) ? r.content_items : [],
-        creator_name: r.creator_name || "Équipe Bobby",
-        creator_role: r.creator_role || "Éducation & Divertissement",
-        version_label: r.version_label || "1.0",
-        changelog: r.changelog || "",
-        rating: r.rating ?? 4.5,
-        rating_count: r.rating_count ?? 0,
-        content_count: r.content_count ?? 0,
-        learning_objectives: r.learning_objectives ?? [],
-        skills_developed: r.skills_developed ?? [],
-        duration_estimate: r.duration_estimate || "10-15 min",
-        difficulty_level: r.difficulty_level || "adaptatif",
-        languages: r.languages ?? ["fr"],
-        last_updated_at: r.last_updated_at || r.updated_at,
-        created_at: r.created_at,
-      })));
-    }
+      // Race against a timeout to handle auth lock delays
+      const timeout = (ms: number) => new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), ms));
+      
+      const [catalogRes, installedRes] = await Promise.race([
+        Promise.all([catalogPromise, installedPromise]),
+        timeout(8000).then(() => { throw new Error("timeout"); }),
+      ]) as any;
 
-    if (installedRes.data) {
-      setInstalledIds(new Set(installedRes.data.map(r => r.content_id)));
+      if (catalogRes.error) throw catalogRes.error;
+
+      if (catalogRes.data && catalogRes.data.length > 0) {
+        setItems(catalogRes.data.map(mapRow));
+      } else if (retryCount < 2) {
+        // Retry if empty result (might be auth lock delay)
+        console.warn("[BobbyStore] Empty result, retrying...", retryCount + 1);
+        setTimeout(() => fetchData(retryCount + 1), 1500);
+        return;
+      }
+
+      if (installedRes?.data) {
+        setInstalledIds(new Set(installedRes.data.map((r: any) => r.content_id)));
+      }
+      setLoading(false);
+    } catch (err: any) {
+      console.error("[BobbyStore] Fetch error:", err.message);
+      if (retryCount < 2) {
+        console.warn("[BobbyStore] Retrying after error...", retryCount + 1);
+        setTimeout(() => fetchData(retryCount + 1), 2000);
+      } else {
+        setLoadError(true);
+        setLoading(false);
+      }
     }
-    setLoading(false);
   }, [childName]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
