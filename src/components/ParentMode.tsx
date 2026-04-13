@@ -1389,28 +1389,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </div>
       )}
 
-      {/* ═══ MODES RAPIDES — colorful square cards ═══ */}
-      <div className="bg-card rounded-2xl p-3 border border-border/20">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-lg">⚡</span>
-          <h3 className="text-[14px] font-extrabold text-foreground">Modes rapides</h3>
-        </div>
-        <div className="grid grid-cols-4 gap-2">
-          {[
-            { id: "calm", emoji: "😌", label: "Calme", gradient: "from-blue-400/15 to-blue-300/5" },
-            { id: "game", emoji: "🎮", label: "Jeu", gradient: "from-pink-400/15 to-pink-300/5" },
-            { id: "night", emoji: "🌙", label: "Nuit", gradient: "from-purple-400/15 to-purple-300/5" },
-            { id: "education", emoji: "📚", label: "Éducatif", gradient: "from-emerald-400/15 to-emerald-300/5" },
-          ].map(preset => (
-            <button key={preset.id} onClick={() => applyPreset(preset.id)}
-              className={`flex flex-col items-center p-2.5 rounded-2xl bg-gradient-to-br ${preset.gradient} transition-all active:scale-95 border border-transparent hover:border-primary/15`}>
-              <span className="text-2xl">{preset.emoji}</span>
-              <span className="text-[10px] font-extrabold text-foreground mt-1">{preset.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* ═══ ÉTAT VIDE ═══ */}
       {!hasData && (
         <div className="bg-card rounded-2xl p-6 text-center border border-border/20">
@@ -3217,21 +3195,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           ))}
         </div>
 
-        {/* Quick scores preview if available */}
-        {avgScores && (
-          <div className="bg-card rounded-2xl p-4 border border-border/30">
-            <div className="flex items-center gap-2 mb-3">
-              <Brain className="w-4 h-4 text-muted-foreground" />
-              <h3 className="text-[13px] font-bold text-foreground">Développement</h3>
-              <button onClick={() => setActiveTab("dashboard")} className="ml-auto text-[10px] text-primary font-semibold">Voir tout →</button>
-            </div>
-            <div className="flex justify-around">
-              <ScoreGauge label="Sociabilité" score={avgScores.sociability} emoji="🤝" color="hsl(var(--primary))" />
-              <ScoreGauge label="Curiosité" score={avgScores.curiosity} emoji="🔍" color="hsl(36, 90%, 50%)" />
-              <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="hsl(145, 65%, 42%)" />
-            </div>
-          </div>
-        )}
       </div>
     );
   };
