@@ -1853,21 +1853,36 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     </div>
                   </div>
                 )}
-                {!analysis?.audio_path && fullPlaybackActive && (
+                {!analysis?.audio_path && sessionMessages.length > 0 && (
                   <div className="mb-4">
                     <div className="w-full h-2 bg-muted/40 rounded-full overflow-hidden cursor-pointer"
                       onClick={(e) => {
                         const rect = e.currentTarget.getBoundingClientRect();
                         const pct = ((e.clientX - rect.left) / rect.width);
                         const idx = Math.round(pct * (sessionMessages.length - 1));
-                        setFullPlaybackIdx(Math.max(0, Math.min(sessionMessages.length - 1, idx)));
+                        const clampedIdx = Math.max(0, Math.min(sessionMessages.length - 1, idx));
+                        if (fullPlaybackActive) {
+                          // Stop current audio before seeking
+                          fullPlaybackRef.current.audio?.pause();
+                          fullPlaybackRef.current.audio = null;
+                          setFullPlaybackIdx(clampedIdx);
+                        } else {
+                          // Start playback from clicked position
+                          startFullPlayback(clampedIdx);
+                        }
                       }}>
                       <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-300"
-                        style={{ width: `${((fullPlaybackIdx) / Math.max(1, sessionMessages.length)) * 100}%` }} />
+                        style={{ width: `${(fullPlaybackActive ? (fullPlaybackIdx / Math.max(1, sessionMessages.length)) * 100 : 0)}%` }} />
                     </div>
                     <div className="flex justify-between mt-1.5">
-                      <span className="text-[10px] text-muted-foreground font-mono font-bold">#{fullPlaybackIdx + 1}</span>
-                      <span className="text-[10px] text-muted-foreground font-mono font-bold">{sessionMessages.length} msgs</span>
+                      <span className="text-[10px] text-muted-foreground font-mono font-bold">
+                        {fullPlaybackActive ? `${fullPlaybackIdx + 1} / ${sessionMessages.length}` : "0:00"}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground font-mono font-bold">
+                        {selectedSession?.duration_seconds
+                          ? formatDuration(selectedSession.duration_seconds)
+                          : `${sessionMessages.length} msgs`}
+                      </span>
                     </div>
                   </div>
                 )}
