@@ -166,21 +166,20 @@ export function useAudioAmplitude() {
       mouthRound = 0.1;
       jawDrop = 0.08;
     } else if (lowRatio > 0.45 && midRatio < 0.25) {
-      // Low dominant, low mid — open vowel (A, O)
-      // Distinguish A (wider) vs O (rounder) by width of low band
-      const isRound = sm.low > 0.4 && sm.mid < 0.15;
+      // Low dominant, low mid — bias toward classic vertical stretch, not round "O"
+      const isRound = sm.low > 0.55 && sm.mid < 0.1;
       if (isRound) {
         viseme = "OO";
-        mouthOpenness = 0.35 + sm.low * 0.5;
-        mouthWidth = 0.3; // pursed
-        mouthRound = 0.7 + sm.low * 0.3;
-        jawDrop = 0.2 + sm.low * 0.3;
+        mouthOpenness = 0.28 + sm.low * 0.35;
+        mouthWidth = 0.42;
+        mouthRound = 0.35 + sm.low * 0.15;
+        jawDrop = 0.12 + sm.low * 0.2;
       } else {
         viseme = "AA";
-        mouthOpenness = 0.4 + sm.low * 0.6;
-        mouthWidth = 0.65 + sm.low * 0.2; // wide open
-        mouthRound = 0.1;
-        jawDrop = 0.3 + sm.low * 0.4;
+        mouthOpenness = 0.35 + sm.low * 0.45;
+        mouthWidth = 0.7 + sm.low * 0.15;
+        mouthRound = 0.05;
+        jawDrop = 0.22 + sm.low * 0.28;
       }
     } else if (midRatio > 0.35) {
       // Mid dominant — closed/spread vowel (E, I)
