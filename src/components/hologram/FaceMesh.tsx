@@ -441,40 +441,45 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       rightEyebrowRef.current.scale.set(furrow, 1, 1);
     }
 
-    // ─── MOUTH — upper lip + lower lip + interior ───────────
+    // ─── KAWAII MOUTH — smile line + open oval + tongue ────────
     const mc = state.mouthCurve;
     const mw = state.mouthWidth;
     const mo = state.mouthOpenness;
     const mr = state.mouthRound;
-    // Build a simple key to avoid rebuilding every single frame
     const mouthKey = `${mc.toFixed(2)}_${mw.toFixed(2)}_${mo.toFixed(2)}_${mr.toFixed(2)}`;
+    const isOpen = mo > 0.03 || mr > 0.05;
     
     if (mouthKey !== prevMouthKey.current) {
       prevMouthKey.current = mouthKey;
 
-      // Upper lip
+      // Smile line (always visible — the cute curved line)
       if (upperLipRef.current) {
-        const newShape = buildUpperLipShape(mc, mw);
+        const newShape = buildSmileLine(mc, mw);
         const newGeo = new THREE.ShapeGeometry(newShape, 16);
         upperLipRef.current.geometry.dispose();
         upperLipRef.current.geometry = newGeo;
+        // Hide smile line when mouth is wide open (oval takes over)
+        (upperLipRef.current.material as THREE.MeshBasicMaterial).opacity = isOpen ? Math.max(0, 1 - mo * 4) : 1;
       }
 
-      // Lower lip — drops down when open
+      // Open mouth oval (only when speaking/open)
       if (lowerLipRef.current) {
-        const newShape = buildLowerLipShape(mc, mw, mo, mr);
-        const newGeo = new THREE.ShapeGeometry(newShape, 16);
-        lowerLipRef.current.geometry.dispose();
-        lowerLipRef.current.geometry = newGeo;
-        // Move lower lip down proportional to openness
-        lowerLipRef.current.position.y = -0.65 - mo * 0.06;
+        if (isOpen) {
+          const newShape = buildMouthOpenShape(mc, mw, mo, mr);
+          const newGeo = new THREE.ShapeGeometry(newShape, 16);
+          lowerLipRef.current.geometry.dispose();
+          lowerLipRef.current.geometry = newGeo;
+          lowerLipRef.current.visible = true;
+          lowerLipRef.current.position.y = -0.58;
+        } else {
+          lowerLipRef.current.visible = false;
+        }
       }
 
-      // Mouth interior (dark fill visible when open)
-      const isOpen = mo > 0.03 || mr > 0.05;
+      // Mouth interior (dark fill inside open mouth)
       if (mouthInteriorRef.current) {
         if (isOpen) {
-          const newShape = buildMouthInteriorShape(mc, mw, mo, mr);
+          const newShape = buildMouthOpenShape(mc, mw, mo * 0.85, mr * 0.85);
           const newGeo = new THREE.ShapeGeometry(newShape, 16);
           mouthInteriorRef.current.geometry.dispose();
           mouthInteriorRef.current.geometry = newGeo;
@@ -485,13 +490,14 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       }
     }
 
-    // Tongue — appears inside open mouth
+    // Tongue — cute circle inside open mouth
     if (tongueRef.current) {
-      const showTongue = mo > 0.15;
-      const targetOpacity = showTongue ? Math.min(0.75, (mo - 0.15) * 3) : 0;
+      const showTongue = mo > 0.12;
+      const targetOpacity = showTongue ? Math.min(0.8, (mo - 0.12) * 3.5) : 0;
       tongueMat.opacity += (targetOpacity - tongueMat.opacity) * delta * 8;
-      tongueRef.current.position.y = -0.72 - mo * 0.08;
-      tongueRef.current.scale.set(0.5 + mo * 0.5, 0.3 + mo * 0.5, 1);
+      tongueRef.current.position.y = -0.64 - mo * 0.06;
+      const tongueScale = 0.4 + mo * 0.6;
+      tongueRef.current.scale.set(tongueScale, tongueScale * 0.6, 1);
     }
 
     // Cheeks — glow with emotion
