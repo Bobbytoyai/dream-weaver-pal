@@ -262,6 +262,12 @@ const Admin = () => {
   const navigate = useNavigate();
   const [authenticated, setAuthenticated] = useState(false);
   const [code, setCode] = useState("");
+  const [adminDark, setAdminDark] = useState(() => {
+    try { return localStorage.getItem("bobby-admin-theme") !== "light"; } catch { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("bobby-admin-theme", adminDark ? "dark" : "light"); } catch {}
+  }, [adminDark]);
 
   // Cloud KB
   const [entries, setEntries] = useState<KBEntry[]>([]);
