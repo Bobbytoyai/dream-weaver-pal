@@ -154,13 +154,13 @@ function SleepZzz() {
     if (!groupRef.current) return;
     zLetters.current.forEach((mesh, i) => {
       if (!mesh) return;
-      phases.current[i] += delta * 0.35;
-      const p = phases.current[i] % 6;
-      const t = p / 6;
+      phases.current[i] += delta * 0.25;
+      const p = phases.current[i] % 8;
+      const t = p / 8;
 
-      // Float up high — from face level to top of screen, then reset
-      mesh.position.x = 0.35 + t * 0.6 + i * 0.15;
-      mesh.position.y = 0.15 + t * 4.5; // much higher travel distance
+      // Float up to top-right corner of screen and disappear
+      mesh.position.x = 0.3 + t * 1.2 + i * 0.15;
+      mesh.position.y = 0.15 + t * 8.0; // travel very high — off screen
       mesh.position.z = 0.15;
 
       const scale = (1.5 + i * 0.6) * (0.3 + Math.sin(t * Math.PI) * 0.7);
