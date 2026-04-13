@@ -24,6 +24,11 @@ const EYEBROW_HEX: Record<string, string> = {
   brown: "#8B6914", dark: "#4A3728", blonde: "#D4A54A",
   grey: "#9E9E9E", blue: "#5B8BD4", pink: "#D47BA0",
 };
+const BG_HEX: Record<string, string> = {
+  "soft-blue": "#E8F0FE", "soft-pink": "#FDE8F0", "soft-green": "#E8FEF0",
+  "soft-purple": "#F0E8FE", "soft-yellow": "#FEF8E8", "white": "#FFFFFF",
+  "dark": "#1A1A2E", "night": "#0D1B2A",
+};
 
 interface BobbyColors {
   iris: string;
@@ -215,11 +220,14 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       }
       const browHex = EYEBROW_HEX[bobbyColors.eyebrow] || EYEBROW_HEX.brown;
       eyebrowMat.color.set(browHex);
+      // Eyelid matches background for seamless blink
+      const bgHex = BG_HEX[bobbyColors.background] || BG_HEX["soft-blue"];
+      eyelidMat.color.set(bgHex);
     } else if (bobbyColor) {
       const irisHex = IRIS_HEX[bobbyColor] || IRIS_HEX.blue;
       irisOuterMat.color.set(irisHex);
     }
-  }, [bobbyColor, bobbyColors, irisOuterMat, blushMat, eyebrowMat]);
+  }, [bobbyColor, bobbyColors, irisOuterMat, blushMat, eyebrowMat, eyelidMat]);
 
   const eyeOutlineGeo = useMemo(() => {
     const shape = new THREE.Shape();
