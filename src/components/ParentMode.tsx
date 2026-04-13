@@ -2561,18 +2561,19 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
     return (
       <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
-        <h2 className="text-[18px] font-black text-foreground animate-fadeInUp">⚙️ Réglages</h2>
+        <h2 className="text-[18px] font-black text-foreground animate-fadeInUp uppercase">⚙️ Réglages</h2>
         <div className="grid grid-cols-2 gap-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
           {([
-            ["voix", "🎤", "Voix & Sons", "Profils vocaux, vitesse, ton", "from-blue-400/15 to-blue-300/5"],
-            ["limites", "⏱️", "Limites & Contrôle", "Temps, nuit, interactions, sujets", "from-amber-400/15 to-amber-300/5"],
-            ["profil", "👤", "Profil enfant", "Intérêts, mémoire, préférences", "from-violet-400/15 to-purple-300/5"],
-          ] as const).map(([key, emoji, label, desc, gradient]) => (
+            ["voix", "🎤", "Voix & Sons", "Profils vocaux, vitesse, ton", "var(--retro-blue)"],
+            ["limites", "⏱️", "Limites & Contrôle", "Temps, nuit, interactions, sujets", "var(--retro-yellow)"],
+            ["profil", "👤", "Profil enfant", "Intérêts, mémoire, préférences", "var(--retro-purple)"],
+          ] as const).map(([key, emoji, label, desc, bg]) => (
             <button key={key} onClick={() => setReglagesSection(key)}
-              className={`bg-gradient-to-br ${gradient} rounded-2xl p-5 text-center transition-all duration-200 active:scale-95 border-2 border-transparent hover:border-primary/15`}>
+              className="retro-card retro-card-tilt p-5 text-center transition-all duration-200 active:scale-95"
+              style={{ backgroundColor: bg }}>
               <span className="text-4xl block mb-2">{emoji}</span>
-              <span className="text-[14px] font-black text-foreground block">{label}</span>
-              <span className="text-[10px] text-muted-foreground leading-tight block mt-1">{desc}</span>
+              <span className="text-[14px] font-black text-gray-800 block uppercase">{label}</span>
+              <span className="text-[10px] text-gray-600 leading-tight block mt-1 font-bold">{desc}</span>
             </button>
           ))}
         </div>
