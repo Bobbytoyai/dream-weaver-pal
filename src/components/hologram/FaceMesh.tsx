@@ -264,11 +264,11 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     return new THREE.ShapeGeometry(shape, 32);
   }, []);
 
-  // Highlight positions
-  const hl1Offset: [number, number] = [-0.10, 0.10];
-  const hl2Offset: [number, number] = [0.12, -0.088];
+  // Highlight positions — single highlight per eye, top-right
+  const hl1Offset: [number, number] = [0.10, 0.10];
+  const hl2Offset: [number, number] = [0.10, 0.10]; // same as hl1 (hidden)
   const hl1OffsetR: [number, number] = [0.10, 0.10];
-  const hl2OffsetR: [number, number] = [-0.12, -0.088];
+  const hl2OffsetR: [number, number] = [0.10, 0.10]; // same as hl1 (hidden)
 
   // ─── Frame Update ──────────────────────────────────────────
   useFrame((_, delta) => {
@@ -533,7 +533,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={irisRef} geometry={irisOuterGeo} position={[0, -0.03, 0.01]} material={irisOuterMat} />
       <mesh ref={pupilRef} geometry={pupilGeo} position={[0, -0.02, 0.02]} material={pupilMat} />
       <mesh ref={hl1Ref} position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
-      <mesh ref={hl2Ref} position={[hl2[0], hl2[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} />
+      {/* hl2 hidden — single highlight per eye */}
+      <mesh ref={hl2Ref} position={[hl1[0], hl1[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} visible={false} />
       {/* Eyelid */}
       <mesh ref={eyelidRef} position={[0, 0.55, 0.044]} material={eyelidMat}>
         <shapeGeometry args={[(() => {
