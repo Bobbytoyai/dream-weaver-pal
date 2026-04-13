@@ -49,6 +49,10 @@ interface ParentModeProps {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────
+/** Replace generic AI references with "Bobby" in summaries */
+function humanizeSummary(text: string): string {
+  return text.replace(/\bl'IA\b/gi, "Bobby").replace(/\bl'intelligence artificielle\b/gi, "Bobby").replace(/\ble chatbot\b/gi, "Bobby").replace(/\ble bot\b/gi, "Bobby").replace(/\bl'assistant\b/gi, "Bobby");
+}
 
 const emotionLabels: Record<string, { label: string; color: string; emoji: string }> = {
   happy: { label: "Joyeux", color: "bg-secondary text-secondary-foreground", emoji: "😊" },
