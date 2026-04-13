@@ -159,10 +159,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   // ─── Materials ────────────────────────────────────────────
   const eyeOutlineMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#3A3A5C"), transparent: true, opacity: 0,
-  }), []);
-  const eyeShadowMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#1A1A3A"), transparent: true, opacity: 0,
+    color: new THREE.Color("#3A3A5C"), transparent: true, opacity: 0.35,
   }), []);
   const eyeWhiteMat = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color("#FFFFFF") }), []);
 
@@ -244,19 +241,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   const eyeOutlineGeo = useMemo(() => {
     const shape = new THREE.Shape();
-    shape.absellipse(0, 0, 0.43, 0.37, 0, Math.PI * 2, false, 0);
+    shape.absellipse(0, 0, 0.41, 0.35, 0, Math.PI * 2, false, 0);
     const hole = new THREE.Path();
     hole.absellipse(0, 0, 0.38, 0.32, 0, Math.PI * 2, false, 0);
-    shape.holes.push(hole);
-    return new THREE.ShapeGeometry(shape, 32);
-  }, []);
-
-  // Larger shadow ellipse behind the eye for 3D depth
-  const eyeShadowGeo = useMemo(() => {
-    const shape = new THREE.Shape();
-    shape.absellipse(0, 0, 0.48, 0.40, 0, Math.PI * 2, false, 0);
-    const hole = new THREE.Path();
-    hole.absellipse(0, 0, 0.43, 0.37, 0, Math.PI * 2, false, 0);
     shape.holes.push(hole);
     return new THREE.ShapeGeometry(shape, 32);
   }, []);
@@ -538,8 +525,6 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     hl2: [number, number],
   ) => (
     <group ref={eyeRef} position={[eyeX, eyeY, 0.01]} key={side}>
-      {/* Shadow ring for 3D depth */}
-      <mesh geometry={eyeShadowGeo} material={eyeShadowMat} position={[0, -0.02, -0.01]} />
       {/* Eye outline ring */}
       <mesh geometry={eyeOutlineGeo} material={eyeOutlineMat} position={[0, 0, -0.005]} />
       <mesh geometry={eyeWhiteGeo} material={eyeWhiteMat} />
