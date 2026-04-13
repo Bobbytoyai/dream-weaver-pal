@@ -1883,8 +1883,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     />
                     {fullPlaybackLoading && (
                       <div className="absolute inset-x-0 top-0 h-2 rounded-full overflow-hidden pointer-events-none">
-                        <div className="h-full w-1/3 bg-primary/50 rounded-full animate-[shimmer_1.2s_ease-in-out_infinite]"
-                          style={{ marginLeft: `${progressPct - 5}%` }} />
+                        <div className="h-full w-1/3 bg-primary/40 rounded-full animate-pulse"
+                          style={{ marginLeft: `${Math.max(0, progressPct - 10)}%` }} />
                       </div>
                     )}
                     <div className="flex justify-between mt-1.5">
