@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
+import LazyImportBoundary from "@/components/LazyImportBoundary";
 import RetroLoader from "@/components/RetroLoader";
 import type { PendingNarration } from "@/hooks/useConversationStateMachine";
 
@@ -82,62 +83,70 @@ const Index = () => {
 
   if (mode === "parent") {
     return (
-      <Suspense fallback={<RetroLoader message="Mode parent…" />}>
-        <ParentMode
-          childName={childName}
-          onClose={() => setMode("voice")}
-          parentSettings={parentSettings}
-          onSettingsChange={handleSettingsChange}
-        />
-      </Suspense>
+      <LazyImportBoundary label="Parent mode">
+        <Suspense fallback={<RetroLoader message="Mode parent…" />}>
+          <ParentMode
+            childName={childName}
+            onClose={() => setMode("voice")}
+            parentSettings={parentSettings}
+            onSettingsChange={handleSettingsChange}
+          />
+        </Suspense>
+      </LazyImportBoundary>
     );
   }
 
   if (mode === "activities") {
     return (
-      <Suspense fallback={<RetroLoader message="Activités…" />}>
-        <ContentCategories
-          childName={childName}
-          voiceProfile={parentSettings.voiceType || "female"}
-          onSelectCategory={(cat) => {
-            setActiveGameCategory(cat);
-            setMode("voice");
-          }}
-          onBack={() => setMode("voice")}
-        />
-      </Suspense>
+      <LazyImportBoundary label="Activities">
+        <Suspense fallback={<RetroLoader message="Activités…" />}>
+          <ContentCategories
+            childName={childName}
+            voiceProfile={parentSettings.voiceType || "female"}
+            onSelectCategory={(cat) => {
+              setActiveGameCategory(cat);
+              setMode("voice");
+            }}
+            onBack={() => setMode("voice")}
+          />
+        </Suspense>
+      </LazyImportBoundary>
     );
   }
 
   if (mode === "story") {
     return (
-      <Suspense fallback={<RetroLoader message="Histoire…" />}>
-        <StoryMode
-          childName={childName}
-          childAge={childAge}
-          onBack={() => setMode("voice")}
-          parentSettings={parentSettings}
-          onParentMode={() => setMode("parent")}
-        />
-      </Suspense>
+      <LazyImportBoundary label="Story mode">
+        <Suspense fallback={<RetroLoader message="Histoire…" />}>
+          <StoryMode
+            childName={childName}
+            childAge={childAge}
+            onBack={() => setMode("voice")}
+            parentSettings={parentSettings}
+            onParentMode={() => setMode("parent")}
+          />
+        </Suspense>
+      </LazyImportBoundary>
     );
   }
 
   return (
-    <Suspense fallback={<RetroLoader />}>
-      <VoiceScreen
-        childName={childName}
-        childAge={childAge}
-        onSwitchToChat={() => {}}
-        onSwitchToStory={() => setMode("story")}
-        onParentMode={() => setMode("parent")}
-        parentSettings={parentSettings}
-        activeGameCategory={activeGameCategory}
-        onClearGame={() => setActiveGameCategory(null)}
-        pendingNarration={pendingNarration}
-        onNarrationConsumed={() => setPendingNarration(null)}
-      />
-    </Suspense>
+    <LazyImportBoundary label="Voice screen">
+      <Suspense fallback={<RetroLoader />}>
+        <VoiceScreen
+          childName={childName}
+          childAge={childAge}
+          onSwitchToChat={() => {}}
+          onSwitchToStory={() => setMode("story")}
+          onParentMode={() => setMode("parent")}
+          parentSettings={parentSettings}
+          activeGameCategory={activeGameCategory}
+          onClearGame={() => setActiveGameCategory(null)}
+          pendingNarration={pendingNarration}
+          onNarrationConsumed={() => setPendingNarration(null)}
+        />
+      </Suspense>
+    </LazyImportBoundary>
   );
 };
 
