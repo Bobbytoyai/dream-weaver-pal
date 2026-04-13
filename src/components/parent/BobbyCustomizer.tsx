@@ -232,6 +232,47 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
         )}
       </div>
 
+      {/* Expression enable/disable toggles */}
+      <div>
+        <button
+          onClick={() => setOpenSection(openSection === "expr-toggles" ? null : "expr-toggles")}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-xl border-2 border-border/30 bg-card hover:border-border/50 transition-all"
+        >
+          <span className="text-[12px] font-bold text-foreground">🚫 Activer / Désactiver des expressions</span>
+          <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${openSection === "expr-toggles" ? "rotate-180" : ""}`} />
+        </button>
+
+        {openSection === "expr-toggles" && (
+          <div className="mt-2 space-y-1 animate-fade-in">
+            <p className="text-[9px] text-muted-foreground px-1 mb-1.5">Désactivez les expressions que Bobby ne doit jamais utiliser en conversation.</p>
+            {TOGGLEABLE_EMOTIONS.map((emo) => {
+              const emotionKey = FACE_TO_EMOTION[emo.face];
+              if (!emotionKey) return null;
+              const isDisabled = (settings.disabledExpressions || []).includes(emotionKey);
+              return (
+                <div key={emo.face} className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-all">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[16px]">{emo.emoji}</span>
+                    <span className="text-[11px] font-bold text-foreground">{emo.label}</span>
+                  </div>
+                  <Switch
+                    checked={!isDisabled}
+                    onCheckedChange={(enabled) => {
+                      const current = settings.disabledExpressions || [];
+                      const updated = enabled
+                        ? current.filter(e => e !== emotionKey)
+                        : [...current, emotionKey];
+                      onUpdate("disabledExpressions" as keyof ParentSettings, updated as any);
+                    }}
+                    className="scale-75"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Compact cards grid */}
       <div className="grid grid-cols-2 gap-2.5">
         {SECTIONS.map((section) => {
