@@ -1171,16 +1171,16 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ 3. RECOMMANDATIONS ═══ */}
       {parentRecommendations.length > 0 && (
-        <div className="bg-card rounded-3xl p-5 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.15s" }}>
+        <div className="retro-card retro-card-tilt-2 p-5" style={{ backgroundColor: 'var(--retro-yellow)' }}>
           <div className="flex items-center gap-2.5 mb-3">
             <span className="text-2xl">✨</span>
-            <h3 className="text-[17px] font-extrabold text-foreground">Recommandations</h3>
+            <h3 className="text-[17px] font-black text-foreground uppercase">Recommandations</h3>
           </div>
           <div className="space-y-2">
             {parentRecommendations.map((rec, i) => (
-              <div key={i} className="flex items-start gap-3 p-3 rounded-2xl bg-gradient-to-r from-primary/8 to-accent/5">
+              <div key={i} className="flex items-start gap-3 p-3 border-2 border-black bg-white">
                 <span className="text-xl mt-0.5">{rec.emoji}</span>
-                <p className="text-[14px] text-foreground/80 leading-relaxed">{rec.text}</p>
+                <p className="text-[14px] text-foreground/80 leading-relaxed font-bold">{rec.text}</p>
               </div>
             ))}
           </div>
