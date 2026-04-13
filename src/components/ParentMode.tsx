@@ -2311,102 +2311,100 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </button>
       )}
       {/* Avatar + Name + Age — compact hero card */}
-      <div className="bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/10 rounded-3xl p-4 border border-primary/10 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
+      <div className="retro-card retro-card-tilt-1 p-4" style={{ backgroundColor: 'var(--retro-blue)' }}>
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-primary/15 flex items-center justify-center text-4xl shrink-0">
+          <div className="w-16 h-16 border-4 border-black bg-white flex items-center justify-center text-4xl shrink-0">
             👤
           </div>
           <div className="flex-1 min-w-0">
             <input type="text" value={settings.childName}
               onChange={(e) => updateSetting("childName", e.target.value)}
               placeholder="Prénom"
-              className="w-full bg-transparent text-xl font-extrabold text-foreground outline-none placeholder:text-muted-foreground/50 border-b border-primary/20 pb-1 focus:border-primary transition-colors" />
-            <p className="text-[11px] text-muted-foreground mt-1">Profil enfant</p>
+              className="w-full bg-transparent text-xl font-black text-foreground outline-none placeholder:text-foreground/40 border-b-2 border-black pb-1 focus:border-foreground transition-colors uppercase" />
+            <p className="text-[11px] text-foreground/60 mt-1 font-bold">Profil enfant</p>
             {settings.childName.trim() !== "" && settings.childName.trim() !== childName && (
               <button
                 onClick={() => setPendingNameChange(settings.childName.trim())}
-                className="mt-2 w-full py-2 rounded-xl bg-primary text-primary-foreground text-[13px] font-bold active:scale-95 transition-all shadow-sm shadow-primary/20">
+                className="mt-2 w-full py-2 border-2 border-black bg-foreground text-background text-[13px] font-black active:scale-95 transition-all uppercase"
+                style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
                 Enregistrer le prénom
               </button>
             )}
           </div>
         </div>
-        {/* Age selector — pills */}
         <div className="flex gap-1.5 mt-3 overflow-x-auto">
           {[4, 5, 6, 7, 8, 9, 10, 11, 12].map(age => (
             <button key={age} onClick={() => updateSetting("childAge", age)}
-              className={`shrink-0 w-10 h-10 rounded-xl text-[13px] font-extrabold transition-all duration-200 active:scale-90 ${
+              className={`shrink-0 w-10 h-10 border-2 border-black text-[13px] font-black transition-all duration-200 active:scale-90 ${
                 settings.childAge === age
-                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/30 scale-105"
-                  : "bg-card/60 text-foreground/60 hover:bg-card"
+                  ? "bg-foreground text-background"
+                  : "bg-white text-foreground/60 hover:bg-[var(--retro-yellow)]"
               }`}>{age}</button>
           ))}
-          <span className="self-center text-[10px] text-muted-foreground ml-1 shrink-0">ans</span>
+          <span className="self-center text-[10px] text-foreground/60 ml-1 shrink-0 font-black">ans</span>
         </div>
       </div>
 
       {/* Personality — square cards grid */}
-      <div className="grid grid-cols-2 gap-2.5 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
+      <div className="grid grid-cols-2 gap-2.5">
         {([
-          ["calm", "😌", "Calme", "Doux et rassurant", "from-blue-400/15 to-blue-300/5"],
-          ["energetic", "⚡", "Énergique", "Vif et enthousiaste", "from-amber-400/15 to-amber-300/5"],
-          ["educational", "📚", "Éducatif", "Curieux et savant", "from-emerald-400/15 to-emerald-300/5"],
-          ["balanced", "🎯", "Équilibré", "Un peu de tout", "from-purple-400/15 to-purple-300/5"],
-        ] as const).map(([val, emoji, label, desc, gradient]) => (
+          ["calm", "😌", "Calme", "Doux et rassurant", "var(--retro-blue)"],
+          ["energetic", "⚡", "Énergique", "Vif et enthousiaste", "var(--retro-yellow)"],
+          ["educational", "📚", "Éducatif", "Curieux et savant", "var(--retro-green)"],
+          ["balanced", "🎯", "Équilibré", "Un peu de tout", "var(--retro-purple)"],
+        ] as const).map(([val, emoji, label, desc, bg]) => (
           <button key={val} onClick={() => updateSetting("personality", val)}
-            className={`bg-gradient-to-br ${gradient} rounded-2xl p-3 text-center transition-all duration-200 active:scale-95 border-2 ${
+            className={`retro-card p-3 text-center transition-all duration-200 active:scale-95 ${
               settings.personality === val
-                ? "border-primary shadow-md shadow-primary/15 scale-[1.02]"
-                : "border-transparent hover:border-primary/15"
-            }`}>
+                ? "ring-2 ring-foreground/30"
+                : ""
+            }`}
+            style={{ backgroundColor: bg }}>
             <span className="text-2xl block mb-1">{emoji}</span>
-            <span className={`text-[12px] font-extrabold block ${settings.personality === val ? "text-primary" : "text-foreground"}`}>{label}</span>
-            <span className="text-[9px] text-muted-foreground leading-tight">{desc}</span>
+            <span className="text-[12px] font-black block text-foreground uppercase">{label}</span>
+            <span className="text-[9px] text-foreground/60 leading-tight font-bold">{desc}</span>
           </button>
         ))}
       </div>
 
       {/* Interests — compact colored pills */}
-      <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.15s" }}>
+      <div className="retro-card retro-card-tilt-2 p-3" style={{ backgroundColor: 'var(--retro-green)' }}>
         <div className="flex items-center gap-2 mb-2">
           <span className="text-base">💡</span>
-          <h4 className="text-[12px] font-extrabold text-foreground">Centres d'intérêt détectés</h4>
+          <h4 className="text-[12px] font-black text-foreground uppercase">Centres d'intérêt détectés</h4>
         </div>
         {allInterests.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
             {allInterests.map(([interest], i) => {
-              const colors = [
-                "bg-blue-400/15 text-blue-700", "bg-pink-400/15 text-pink-700",
-                "bg-emerald-400/15 text-emerald-700", "bg-amber-400/15 text-amber-700",
-                "bg-purple-400/15 text-purple-700", "bg-cyan-400/15 text-cyan-700",
-              ];
+              const retroBgs = ["var(--retro-blue)", "var(--retro-red)", "var(--retro-yellow)", "var(--retro-orange)", "var(--retro-purple)", "#e5e5e5"];
               return (
-                <span key={interest} className={`px-2.5 py-1 rounded-xl ${colors[i % colors.length]} text-[10px] font-bold`}>
+                <span key={interest} className="px-2.5 py-1 border-2 border-black text-[10px] font-black text-foreground"
+                  style={{ backgroundColor: retroBgs[i % retroBgs.length] }}>
                   {interest}
                 </span>
               );
             })}
           </div>
         ) : (
-          <p className="text-[10px] text-muted-foreground italic">Détection auto pendant les sessions 🔍</p>
+          <p className="text-[10px] text-foreground/50 italic font-bold">Détection auto pendant les sessions 🔍</p>
         )}
       </div>
 
       {/* Blocked topics — compact */}
-      <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.2s" }}>
+      <div className="retro-card retro-card-tilt-3 p-3" style={{ backgroundColor: 'var(--retro-red)' }}>
         <div className="flex items-center gap-2 mb-2">
           <span className="text-base">🚫</span>
-          <h4 className="text-[12px] font-extrabold text-foreground">Sujets bloqués</h4>
+          <h4 className="text-[12px] font-black text-foreground uppercase">Sujets bloqués</h4>
         </div>
         <div className="flex flex-wrap gap-1.5 mb-2">
           {settings.blockedTopics.map(t => (
             <button key={t} onClick={() => updateSetting("blockedTopics", settings.blockedTopics.filter(x => x !== t))}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-destructive/10 text-destructive text-[10px] font-bold hover:bg-destructive/20 transition-all active:scale-95">
+              className="flex items-center gap-1 px-2.5 py-1 border-2 border-black bg-white text-foreground text-[10px] font-black hover:bg-foreground hover:text-background transition-all active:scale-95">
               {t} <X className="w-2.5 h-2.5" />
             </button>
           ))}
           {settings.blockedTopics.length === 0 && (
-            <span className="text-[10px] text-muted-foreground italic">Aucun sujet bloqué</span>
+            <span className="text-[10px] text-foreground/50 italic font-bold">Aucun sujet bloqué</span>
           )}
         </div>
         <input type="text" value={newBlockedTopic}
@@ -2420,23 +2418,24 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             }
           }}
           placeholder="Ajouter un sujet…"
-          className="w-full px-3 py-2 rounded-xl bg-muted text-[11px] text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
+          className="w-full px-3 py-2 bg-white text-[11px] text-foreground placeholder:text-foreground/40 border-4 border-black outline-none font-bold" />
       </div>
 
       {/* Save button */}
-      <div className="pt-1 pb-2 animate-fadeInUp" style={{ animationDelay: "0.25s" }}>
+      <div className="pt-1 pb-2">
         <button
           onClick={() => {
             onSettingsChange?.(settings);
             setSettingsSaved(true);
             setTimeout(() => setSettingsSaved(false), 2000);
           }}
-          className={`w-full py-3 rounded-2xl text-[13px] font-extrabold transition-all active:scale-95 ${
+          className={`w-full py-3.5 text-[14px] font-black transition-all active:scale-95 border-4 border-black uppercase ${
             settingsSaved
-              ? "bg-emerald-500/15 text-emerald-700 border-2 border-emerald-500/30"
-              : "bg-primary text-primary-foreground hover:opacity-90 shadow-md shadow-primary/20"
-          }`}>
-          {settingsSaved ? "✅ Enregistré !" : "💾 Enregistrer"}
+              ? "bg-[var(--retro-green)] text-foreground"
+              : "bg-foreground text-background hover:opacity-90"
+          }`}
+          style={{ boxShadow: "5px 5px 0px rgba(0,0,0,0.3)" }}>
+          {settingsSaved ? "✅ ENREGISTRÉ !" : "💾 ENREGISTRER"}
         </button>
       </div>
     </div>
