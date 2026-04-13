@@ -379,15 +379,18 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(ps);
     if (rightPupilRef.current) rightPupilRef.current.scale.setScalar(ps);
 
-    // Eyelids (blink) — smooth curtain sliding down naturally
+    // Eyelids — only visible during blinks (eyeOpenness < 0.5) or sleep
     const blinkClose = 1 - state.eyeOpenness;
     const isSleepingNow = faceState === "sleepy";
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
       if (ref.current) {
-        // During sleep, force eyelids mostly closed regardless of eyeOpenness
+        // During sleep, force eyelids mostly closed
+        // During blink, show eyelids only when significantly closing (threshold 0.5)
+        // Otherwise hide them completely so they don't sit on screen
+        const isBlinking = blinkClose > 0.5;
         const coverAmount = isSleepingNow
-          ? 0.97 // almost fully shut
-          : Math.max(0, Math.min(1, blinkClose));
+          ? 0.97
+          : isBlinking ? Math.max(0, Math.min(1, blinkClose)) : 0;
         
         if (coverAmount < 0.01) {
           ref.current.visible = false;
