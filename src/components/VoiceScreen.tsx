@@ -166,15 +166,7 @@ const VoiceScreen = ({
     }
   }, []);
 
-  const stateLabel = {
-    IDLE: sm.partialText ? `"${sm.partialText}"` : 'Touche Bobby pour parler !',
-    LISTENING: sm.partialText ? `"${sm.partialText}"` : "",
-    PROCESSING: "",
-    SPEAKING: "",
-    RELANCE: "",
-    ERROR: "Dis-moi !",
-    SLEEP: "💤 Bobby dort… touche Bobby pour le réveiller !",
-  }[sm.machineState];
+  // stateLabel removed — transcription shown directly at bottom
 
   // Background color from customization
   const BG_HEX_MAP: Record<string, string> = {
