@@ -1074,6 +1074,18 @@ const Admin = () => {
             <div className="text-center text-white/50 py-12">Chargement des interactions…</div>
           ) : (
             <div className="grid grid-cols-3 gap-3">
+              {/* Real conversations card — always first */}
+              <button onClick={() => { setInteractionCat("real_conversations"); setSearch(""); }}
+                className="aspect-square bg-gradient-to-br from-emerald-500/10 to-teal-500/10 hover:from-emerald-500/20 hover:to-teal-500/20 backdrop-blur rounded-2xl p-3 border border-emerald-500/20 hover:border-emerald-500/40 transition-all text-left flex flex-col justify-between group"
+              >
+                <span className="text-2xl">💬</span>
+                <div>
+                  <p className="text-lg font-bold text-white">{realConversations.length}</p>
+                  <h3 className="text-[11px] font-semibold text-emerald-400">Conversations réelles</h3>
+                  <p className="text-[8px] text-white/30 mt-0.5">Sessions utilisateurs enregistrées</p>
+                </div>
+              </button>
+
               {INTERACTION_CATEGORIES.map(cat => {
                 const count = interactionCategoryCounts[cat.id] || 0;
                 if (count === 0) return null;
