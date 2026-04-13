@@ -209,21 +209,11 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   // Eyelid — matches background with slight tint for contrast
   const bgKey = bobbyColors?.background || "soft-blue";
   const bgHex = BG_HEX[bgKey] || BG_HEX["soft-blue"];
-  const eyelidMat = useMemo(() => {
-    const m = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(bgHex),
-      transparent: true,
-      opacity: 1.0,
-      depthWrite: false,
-      depthTest: false,
-      side: THREE.DoubleSide,
-    });
-    // Only render where stencil = 1 (inside eye white)
-    m.stencilWrite = false;
-    m.stencilRef = 1;
-    m.stencilFunc = THREE.EqualStencilFunc;
-    return m;
-  }, []);
+  const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: new THREE.Color(bgHex),
+    transparent: true,
+    opacity: 1.0,
+  }), []);
   
   // Keep eyelid color synced — always a noticeably darker shade of the background
   useEffect(() => {
