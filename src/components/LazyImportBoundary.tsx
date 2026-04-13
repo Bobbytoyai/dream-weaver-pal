@@ -41,7 +41,7 @@ export default class LazyImportBoundary extends Component<LazyImportBoundaryProp
               </p>
               <button
                 onClick={this.handleReload}
-                className="w-full border-4 border-foreground bg-primary px-4 py-3 text-sm font-black uppercase text-primary-foreground transition-transform active:scale-[0.98]"
+                className="w-full border-4 border-foreground bg-primary px-4 py-3 text-sm font-black uppercase text-primary-foreground transition-transform"
               >
                 Réessayer
               </button>

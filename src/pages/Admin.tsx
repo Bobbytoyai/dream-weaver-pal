@@ -176,7 +176,7 @@ function DashCard({ label, emoji, count, desc, color, bgColor, onClick, badge }:
 }) {
   return (
     <button onClick={onClick}
-      className="rounded-2xl p-3 transition-all duration-200 text-left flex items-center gap-3 group active:scale-[0.98] w-full"
+      className="rounded-2xl p-3 transition-all duration-200 text-left flex items-center gap-3 group w-full"
       style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}
     >
       <div className={`w-10 h-10 shrink-0 rounded-xl ${bgColor} flex items-center justify-center`}>
@@ -2876,7 +2876,7 @@ const Admin = () => {
       <div className="max-w-4xl mx-auto px-4 py-5 space-y-4">
         {/* ── Header — compact ── */}
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate("/")} className="w-9 h-9 rounded-xl flex items-center justify-center hover:opacity-80 transition-all active:scale-95" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
+          <button onClick={() => navigate("/")} className="w-9 h-9 rounded-xl flex items-center justify-center hover:opacity-80 transition-all" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
             <ArrowLeft className="w-4 h-4" style={{ color: "var(--admin-text-muted)" }} />
           </button>
           <div className="flex-1 min-w-0">
@@ -2884,11 +2884,11 @@ const Admin = () => {
             <p className="text-[11px]" style={{ color: "var(--admin-text-dim)" }}>Tableau de bord central</p>
           </div>
           <button onClick={() => setAdminDark(d => !d)}
-            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
             {adminDark ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
           </button>
           <button onClick={() => { fetchEntries(); fetchStoreItems(); fetchCloudUsers(); fetchCloudStories(); fetchRealConversations(); fetchLiveStats(); fetchChartData(); toast.success("Données rafraîchies"); }}
-            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
             <RefreshCw className="w-4 h-4" style={{ color: "var(--admin-text-muted)" }} />
           </button>
         </div>
@@ -3011,15 +3011,15 @@ const Admin = () => {
         {/* ── Quick actions ── */}
         <div className="flex gap-2">
           <button onClick={() => { setTopSection("cloud"); setCloudSection(null); setSearch(""); }}
-            className="flex-1 flex items-center justify-center gap-1.5 bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 rounded-xl py-2.5 text-[11px] font-bold transition-all active:scale-95">
+            className="flex-1 flex items-center justify-center gap-1.5 bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 rounded-xl py-2.5 text-[11px] font-bold transition-all">
             <Plus className="w-3.5 h-3.5" /> Ajouter KB
           </button>
           <button onClick={() => { setTopSection("autolearn"); setSearch(""); }}
-            className="flex-1 flex items-center justify-center gap-1.5 bg-lime-500/15 hover:bg-lime-500/25 text-lime-300 rounded-xl py-2.5 text-[11px] font-bold transition-all active:scale-95">
+            className="flex-1 flex items-center justify-center gap-1.5 bg-lime-500/15 hover:bg-lime-500/25 text-lime-300 rounded-xl py-2.5 text-[11px] font-bold transition-all">
             <Microscope className="w-3.5 h-3.5" /> Auto-Learn
           </button>
           <button onClick={() => { setTopSection("store"); setSearch(""); }}
-            className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 rounded-xl py-2.5 text-[11px] font-bold transition-all active:scale-95">
+            className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 rounded-xl py-2.5 text-[11px] font-bold transition-all">
             <Star className="w-3.5 h-3.5" /> Store
           </button>
         </div>
@@ -3139,7 +3139,7 @@ const Admin = () => {
               TOP_SECTIONS_CONFIG.find(s => s.id === "chansons")!,
             ].map(section => (
               <button key={section.id} onClick={() => { setTopSection(section.id); setSearch(""); }}
-                className="bg-white/[0.04] hover:bg-white/[0.08] rounded-xl p-2.5 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex items-center gap-2.5 active:scale-[0.98]">
+                className="bg-white/[0.04] hover:bg-white/[0.08] rounded-xl p-2.5 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex items-center gap-2.5">
                 <span className="text-lg">{section.emoji}</span>
                 <div className="flex-1 min-w-0">
                   <p className={`text-[11px] font-bold ${section.color} truncate`}>{section.label}</p>
