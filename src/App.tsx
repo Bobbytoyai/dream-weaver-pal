@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import LazyImportBoundary from "@/components/LazyImportBoundary";
 import RetroLoader from "@/components/RetroLoader";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -32,22 +33,24 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Suspense fallback={<RetroLoader />}>
-            <Routes>
-              {/* Bobby accessible sans auth — QR code only */}
-              <Route path="/" element={<Index />} />
-              <Route path="/b/:code" element={<BobbyQR />} />
-              
-              {/* Cloud auth dédié */}
-              <Route path="/bobby-cloud" element={<BobbyCloudAuth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              
-              {/* Admin (pas de gate, vérification interne) */}
-              <Route path="/admin" element={<Admin />} />
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+          <LazyImportBoundary label="route">
+            <Suspense fallback={<RetroLoader />}>
+              <Routes>
+                {/* Bobby accessible sans auth — QR code only */}
+                <Route path="/" element={<Index />} />
+                <Route path="/b/:code" element={<BobbyQR />} />
+                
+                {/* Cloud auth dédié */}
+                <Route path="/bobby-cloud" element={<BobbyCloudAuth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                
+                {/* Admin (pas de gate, vérification interne) */}
+                <Route path="/admin" element={<Admin />} />
+                
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </LazyImportBoundary>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
