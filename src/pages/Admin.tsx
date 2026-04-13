@@ -1025,7 +1025,57 @@ const Admin = () => {
             </div>
           </div>
 
-          {realConvLoading ? (
+          {/* Stats globales */}
+          {realConversations.length > 0 && (() => {
+            const totalMsgs = realConversations.reduce((s, c) => s + c.messages.length, 0);
+            const avgMsgs = Math.round(totalMsgs / realConversations.length);
+            const emotionMap: Record<string, number> = {};
+            const topicMap: Record<string, number> = {};
+            realConversations.forEach(c => {
+              c.detected_emotions?.forEach(e => { emotionMap[e] = (emotionMap[e] || 0) + 1; });
+              c.topics?.forEach(t => { topicMap[t] = (topicMap[t] || 0) + 1; });
+              c.messages.forEach(m => { if (m.detected_emotion) emotionMap[m.detected_emotion] = (emotionMap[m.detected_emotion] || 0) + 1; });
+            });
+            const topEmotions = Object.entries(emotionMap).sort((a, b) => b[1] - a[1]).slice(0, 6);
+            const topTopics = Object.entries(topicMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
+            return (
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-white/[0.04] rounded-2xl p-3 border border-white/[0.06] text-center">
+                  <p className="text-2xl font-bold text-white">{avgMsgs}</p>
+                  <p className="text-[10px] text-white/40">msgs / session</p>
+                </div>
+                <div className="bg-white/[0.04] rounded-2xl p-3 border border-white/[0.06] text-center">
+                  <p className="text-2xl font-bold text-white">{totalMsgs}</p>
+                  <p className="text-[10px] text-white/40">messages total</p>
+                </div>
+                <div className="bg-white/[0.04] rounded-2xl p-3 border border-white/[0.06] text-center">
+                  <p className="text-2xl font-bold text-white">{realConversations.length}</p>
+                  <p className="text-[10px] text-white/40">sessions</p>
+                </div>
+                {topEmotions.length > 0 && (
+                  <div className="col-span-3 bg-white/[0.04] rounded-2xl p-3 border border-white/[0.06]">
+                    <p className="text-[10px] text-white/40 uppercase tracking-wider mb-2">Émotions fréquentes</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {topEmotions.map(([em, count]) => (
+                        <span key={em} className="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/15 text-pink-300">{em} <span className="text-white/30">×{count}</span></span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {topTopics.length > 0 && (
+                  <div className="col-span-3 bg-white/[0.04] rounded-2xl p-3 border border-white/[0.06]">
+                    <p className="text-[10px] text-white/40 uppercase tracking-wider mb-2">Topics populaires</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {topTopics.map(([topic, count]) => (
+                        <span key={topic} className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300">#{topic} <span className="text-white/30">×{count}</span></span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
             <div className="text-center text-white/50 py-12 animate-pulse">Chargement des conversations…</div>
           ) : realConversations.length === 0 ? (
             <div className="text-center py-12">
