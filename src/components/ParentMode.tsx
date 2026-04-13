@@ -1757,10 +1757,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                       ? `${Math.floor((userIdx / totalUserMsgs) * (selectedSession.duration_seconds / 60))}:${String(Math.floor((userIdx / totalUserMsgs) * selectedSession.duration_seconds % 60)).padStart(2, "0")}`
                       : "";
                     return (
-                      <button key={i} onClick={() => jumpToMoment(i)}
-                        className="flex flex-col items-center px-1.5 py-1.5 rounded-xl hover:bg-primary/8 transition-all min-w-[36px]">
-                        <span className="text-base">{emo.emoji}</span>
-                        <span className="text-[9px] text-muted-foreground font-mono font-bold">{timeStr}</span>
+                        <button key={i} onClick={() => jumpToMoment(i)}
+                          className="flex flex-col items-center px-1.5 py-1.5 border border-black hover:bg-[var(--retro-yellow)] transition-all min-w-[36px]">
+                          <span className="text-base">{emo.emoji}</span>
+                          <span className="text-[9px] text-foreground/60 font-mono font-black">{timeStr}</span>
                       </button>
                     );
                   })}
@@ -1772,16 +1772,16 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             {(analysis?.audio_path || sessionMessages.length > 0) && (
               <div className="retro-card p-5" style={{ backgroundColor: 'var(--retro-blue)' }}>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-                    playingAudio || fullPlaybackActive ? "bg-primary/20 animate-pulse" : "bg-primary/10"
+                  <div className={`w-10 h-10 border-2 border-black flex items-center justify-center ${
+                    playingAudio || fullPlaybackActive ? "bg-[var(--retro-yellow)]" : "bg-white"
                   }`}>
                     <span className="text-xl">🎧</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-[15px] font-extrabold text-foreground">
+                    <h3 className="text-[15px] font-black text-foreground uppercase">
                       {playingAudio || fullPlaybackActive ? "🔴 Lecture en cours" : "Réécouter"}
                     </h3>
-                    <p className="text-[11px] text-muted-foreground font-bold truncate">
+                    <p className="text-[11px] text-foreground/60 font-bold truncate">
                       {playingAudio && activeMessageIdx >= 0
                         ? `Message ${activeMessageIdx + 1}/${sessionMessages.length}`
                         : `${sessionMessages.length} messages`
