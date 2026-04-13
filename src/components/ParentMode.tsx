@@ -3246,13 +3246,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       switch (tab) {
         case "dashboard": return renderDashboard();
         case "sessions": return renderSessionsList();
-        case "activites": {
-          // Gate Store behind authentication
-          const { data: { session: authSession } } = /* check inline */ { data: { session: null as any } };
-          return (
-            <StoreGate childName={settings.childName} childAge={settings.childAge} />
-          );
-        }
+        case "activites": return <StoreGateWrapper childName={settings.childName} childAge={settings.childAge} />;
         case "profil": return renderReglages();
         case "personnalisation": return (
           <BobbyCustomizer
