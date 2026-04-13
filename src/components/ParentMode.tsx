@@ -14,6 +14,9 @@ import { supabase } from "@/integrations/supabase/client";
 import StoryLibrary from "@/components/StoryLibrary";
 import ContentCategories from "@/components/ContentCategories";
 import BobbyStore from "@/components/BobbyStore";
+import VoiceSettings from "@/components/parent/VoiceSettings";
+import BobbyCustomizer from "@/components/parent/BobbyCustomizer";
+import LimitsSettings from "@/components/parent/LimitsSettings";
 // Piper TTS removed — ElevenLabs only
 import ConfirmDialog from "@/components/ConfirmDialog";
 import {
