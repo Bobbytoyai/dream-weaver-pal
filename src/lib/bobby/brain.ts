@@ -9,6 +9,7 @@ import { resetScenario } from "@/lib/scenarioEngine";
 import { trackInterests, getSmartFollowUp, resetInterestTracker } from "./interestTracker";
 import { getLLMReply, clearHistory } from "./llmBrain";
 import { getLocalBrainReply, resetLocalBrain } from "./localBrain";
+import { queryKnowledgeBase } from "./knowledgeQuery";
 
 interface BuildBobbyReplyOptions {
   childName: string;
