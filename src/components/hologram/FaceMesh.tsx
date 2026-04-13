@@ -402,7 +402,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(ps);
     if (rightPupilRef.current) rightPupilRef.current.scale.setScalar(ps);
 
-    // Eyelids — visible top layer, but animated only inside the white eye mask
+    // Eyelids — top layer clipped inside the eye, moving up from below
     const blinkClose = 1 - state.eyeOpenness;
     const isSleepingNow = faceState === "sleepy";
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
@@ -423,18 +423,18 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
           ? 4 * t * t * t
           : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-        const hiddenY = 0.60;
+        const hiddenY = -0.62;
         const closedY = 0.0;
-        let targetY = hiddenY - easedCover * (hiddenY - closedY);
+        let targetY = hiddenY + easedCover * (closedY - hiddenY);
 
-        // Sleep: stays closed, then slightly lifts upward to reveal a thin strip at the bottom
+        // Sleep: fully closed with light upward rebounds that reveal a thin strip at the bottom
         if (isSleepingNow) {
           const sleepT = performance.now() * 0.001;
           const breathLift = Math.max(0, Math.sin(sleepT * 0.35)) * 0.035;
-          const microPeek = Math.sin(sleepT * 0.08) > 0.9
+          const microLift = Math.sin(sleepT * 0.08) > 0.9
             ? Math.max(0, Math.sin(sleepT * 0.9)) * 0.055
             : 0;
-          targetY = closedY + Math.max(breathLift, microPeek);
+          targetY = closedY + Math.max(breathLift, microLift);
         }
 
         ref.current.position.y = targetY;
