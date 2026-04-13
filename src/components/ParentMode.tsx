@@ -145,22 +145,22 @@ const formatDayHeader = (date: string): string => {
 
 const Toggle = ({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) => (
   <button onClick={() => onChange(!value)}
-    className={`relative w-12 h-7 rounded-full transition-all duration-300 ${value ? "bg-primary" : "bg-muted"}`}>
-    <div className={`w-5 h-5 rounded-full bg-card shadow-md transition-all duration-300 ${value ? "translate-x-6" : "translate-x-1"}`} />
+    className={`relative w-12 h-7 border-4 border-black transition-all duration-300 ${value ? "bg-foreground" : "bg-white"}`}>
+    <div className={`w-4 h-4 bg-white border-2 border-black transition-all duration-300 ${value ? "translate-x-5 bg-[var(--retro-green)]" : "translate-x-0.5"}`} style={{ marginTop: "-2px" }} />
   </button>
 );
 
 const SettingRow = ({ icon: Icon, title, desc, children }: {
   icon: any; title: string; desc?: string; children: React.ReactNode;
 }) => (
-  <div className="flex items-center justify-between py-3 px-1">
+  <div className="flex items-center justify-between py-3 px-1 border-b-2 border-black/10 last:border-0">
     <div className="flex items-center gap-3 flex-1 min-w-0">
-      <div className="w-9 h-9 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">
-        <Icon className="w-4.5 h-4.5 text-primary" />
+      <div className="w-9 h-9 border-2 border-black bg-white flex items-center justify-center shrink-0">
+        <Icon className="w-4.5 h-4.5 text-foreground" />
       </div>
       <div className="min-w-0">
-        <h4 className="text-[14px] font-semibold text-foreground">{title}</h4>
-        {desc && <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">{desc}</p>}
+        <h4 className="text-[14px] font-black text-foreground uppercase">{title}</h4>
+        {desc && <p className="text-[12px] text-foreground/60 leading-tight mt-0.5 font-bold">{desc}</p>}
       </div>
     </div>
     <div className="shrink-0 ml-3">{children}</div>
