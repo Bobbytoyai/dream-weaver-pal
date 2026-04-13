@@ -184,7 +184,7 @@ const VoiceScreen = ({
   const bgHex = BG_HEX_MAP[bgId] || "#E8F0FE";
 
   return (
-    <div className="child-light flex flex-col items-center justify-between h-screen px-4 py-6 max-w-lg mx-auto select-none overflow-hidden relative"
+    <div className="child-light flex flex-col items-center justify-between h-screen w-screen px-4 py-6 select-none overflow-hidden relative"
       style={{ background: bgHex }}>
 
       {showDebug && (
@@ -239,7 +239,7 @@ const VoiceScreen = ({
 
       {/* Hologram area */}
       <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 relative z-10">
-        <div className="absolute w-96 h-96 rounded-full pointer-events-none transition-all duration-500"
+        <div className="absolute w-80 h-80 md:w-[28rem] md:h-[28rem] lg:w-[34rem] lg:h-[34rem] rounded-full pointer-events-none transition-all duration-500"
           style={{
             background: sm.partialText && sm.machineState === "LISTENING"
               ? `radial-gradient(circle, hsla(210, 100%, 65%, 0.35) 0%, hsla(210, 90%, 60%, 0.2) 30%, hsla(230, 70%, 65%, 0.08) 55%, transparent 75%)`
@@ -248,7 +248,7 @@ const VoiceScreen = ({
           }}
         />
 
-        <div className="relative w-80 h-80 md:w-96 md:h-96" onPointerDownCapture={sm.handleTapBobby}>
+        <div className="relative w-80 h-80 md:w-[28rem] md:h-[28rem] lg:w-[34rem] lg:h-[34rem]" onPointerDownCapture={sm.handleTapBobby}>
           <HologramFace
             voiceState={sm.displayState}
             enableCamera={parentSettings?.enableCamera ?? false}
