@@ -534,7 +534,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const exportSessionPDF = (session: Session, analysis: Analysis | null) => {
     const lines: string[] = [
-      `RAPPORT DE SESSION — ${childName}`,
+      `RAPPORT DE SESSION — ${displayName}`,
       `═══════════════════════════════════════`,
       `Date : ${formatDate(session.started_at)}`,
       `Durée : ${formatDuration(session.duration_seconds)}`,
@@ -577,7 +577,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `rapport-${childName}-${new Date(session.started_at).toISOString().slice(0, 10)}.txt`;
+    a.download = `rapport-${displayName}-${new Date(session.started_at).toISOString().slice(0, 10)}.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -827,7 +827,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       const [topEmo, topVal] = sortedEmotions[0];
       const info = emotionScoreLabels[topEmo];
       if (info && topVal > 40) {
-        insights.push(`${info.emoji} ${childName} est principalement ${info.label.toLowerCase()} (${topVal}%) dans ses échanges.`);
+        insights.push(`${info.emoji} ${displayName} est principalement ${info.label.toLowerCase()} (${topVal}%) dans ses échanges.`);
       }
     }
 
@@ -849,7 +849,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     }
 
     return insights;
-  }, [recentAnalyses, avgEmotions, allInterests, engagementDist, avgScores, childName]);
+  }, [recentAnalyses, avgEmotions, allInterests, engagementDist, avgScores, displayName]);
 
   // v4.0: Daily AI summary
   const dailySummary = useMemo(() => {
@@ -859,12 +859,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       return s && new Date(s.started_at).toDateString() === new Date().toDateString();
     });
     if (todayAnalyses.length === 0 && todaySessions.length > 0) {
-      return `${childName} a eu ${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} aujourd'hui (${formatDuration(todayDuration)}).`;
+      return `${displayName} a eu ${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} aujourd'hui (${formatDuration(todayDuration)}).`;
     }
     const summaries = todayAnalyses.map(a => a.summary).filter(Boolean);
     if (summaries.length === 0) return null;
     return summaries.join(" ");
-  }, [todaySessions, recentAnalyses, sessions, childName, todayDuration]);
+  }, [todaySessions, recentAnalyses, sessions, displayName, todayDuration]);
 
   // v4.0: Parent recommendations based on data
   const parentRecommendations = useMemo(() => {
@@ -888,7 +888,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         recs.push({ emoji: "🤗", text: `Les émotions varient beaucoup. Un moment calme ensemble pourrait aider à stabiliser l'humeur.` });
       }
       if (avgScores.sociability > 70) {
-        recs.push({ emoji: "👫", text: `${childName} est très sociable ! Invitez un ami à jouer avec Bobby ensemble.` });
+        recs.push({ emoji: "👫", text: `${displayName} est très sociable ! Invitez un ami à jouer avec Bobby ensemble.` });
       }
       if (avgScores.curiosity > 70) {
         recs.push({ emoji: "📚", text: `Curiosité élevée ! Activez le mode éducatif pour explorer de nouveaux sujets.` });
@@ -903,11 +903,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
     // Always suggest at least one
     if (recs.length === 0) {
-      recs.push({ emoji: "✨", text: `Continuez ainsi ! ${childName} utilise Bobby de manière équilibrée.` });
+      recs.push({ emoji: "✨", text: `Continuez ainsi ! ${displayName} utilise Bobby de manière équilibrée.` });
     }
 
     return recs.slice(0, 4);
-  }, [recentAnalyses, allInterests, engagementDist, avgScores, childName, totalDuration, totalSessions]);
+  }, [recentAnalyses, allInterests, engagementDist, avgScores, displayName, totalDuration, totalSessions]);
 
   // ─── Key moments (emotional highlights) ───────────────────────
   const keyMoments = useMemo(() => {
@@ -1198,7 +1198,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           <div className="bg-card rounded-3xl p-4 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.2s" }}>
             <div className="flex items-center gap-2.5 mb-2">
               <span className="text-2xl">🎯</span>
-              <h3 className="text-[17px] font-extrabold text-foreground">Intérêts de {childName}</h3>
+              <h3 className="text-[17px] font-extrabold text-foreground">Intérêts de {displayName}</h3>
             </div>
             <ResponsiveContainer width="100%" height={200}>
               <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="65%">
@@ -1491,7 +1491,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         <div className="bg-card rounded-2xl p-6 text-center border border-border/20">
           <span className="text-5xl block mb-2">🎙️</span>
           <h3 className="text-lg font-extrabold text-foreground mb-1">Pas encore de sessions</h3>
-          <p className="text-[12px] text-muted-foreground">Les métriques apparaîtront après la première conversation de {childName} avec Bobby.</p>
+          <p className="text-[12px] text-muted-foreground">Les métriques apparaîtront après la première conversation de {displayName} avec Bobby.</p>
         </div>
       )}
     </div>
@@ -2863,7 +2863,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     const blob = new Blob([JSON.stringify(allData, null, 2)], { type: "application/json" });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
-                    a.href = url; a.download = `bobby-rgpd-export-${childName}-${new Date().toISOString().slice(0, 10)}.json`;
+                    a.href = url; a.download = `bobby-rgpd-export-${displayName}-${new Date().toISOString().slice(0, 10)}.json`;
                     a.click(); URL.revokeObjectURL(url);
                   } else if (id === "access") { setActiveTab("sessions"); }
                   else if (id === "delete") {
@@ -3267,8 +3267,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               <h2 className="text-[22px] font-black text-foreground">Bonjour 👋</h2>
               <p className="text-[12px] text-muted-foreground font-bold mt-0.5">
                 {todaySessions.length > 0
-                  ? `${childName} a eu ${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} aujourd'hui`
-                  : `${childName} n'a pas encore parlé à Bobby`
+                  ? `${displayName} a eu ${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} aujourd'hui`
+                  : `${displayName} n'a pas encore parlé à Bobby`
                 }
               </p>
             </div>
