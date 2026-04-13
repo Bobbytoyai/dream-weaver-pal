@@ -60,11 +60,11 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
       </p>
 
       {/* Live Preview */}
-      <div className="animate-fadeInUp bg-gradient-to-br from-[hsl(230,30%,8%)] via-[hsl(250,25%,12%)] to-[hsl(220,25%,10%)] rounded-3xl p-4 border-2 border-primary/20" style={{ animationDelay: "0.1s" }}>
+      <div className="animate-fadeInUp bg-gradient-to-br from-muted/50 via-background to-muted/30 rounded-3xl p-4 border-2 border-border/30" style={{ animationDelay: "0.1s" }}>
         <div className="w-32 h-32 mx-auto relative">
-          <HologramFace voiceState="idle" enableCamera={false} />
+          <HologramFace voiceState="idle" enableCamera={false} bobbyColor={settings.bobbyColor} />
         </div>
-        <p className="text-center text-[10px] text-white/40 mt-2 font-bold">Aperçu en direct</p>
+        <p className="text-center text-[10px] text-muted-foreground mt-2 font-bold">Aperçu en direct</p>
       </div>
 
       {/* Colors */}
