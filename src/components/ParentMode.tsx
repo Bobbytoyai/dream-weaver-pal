@@ -2496,7 +2496,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       {reglagesSection === "voix" && (
         <>
           {/* Voice type — compact grid */}
-          <div className="bg-card rounded-2xl p-3 border border-border/20">
+          <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-base">🎤</span>
               <h4 className="text-[12px] font-extrabold text-foreground">Type de voix</h4>
@@ -2533,7 +2533,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
 
           {/* Voice speed — inline */}
-          <div className="bg-card rounded-2xl p-3 border border-border/20">
+          <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-base">⚡</span>
               <h4 className="text-[12px] font-extrabold text-foreground">Vitesse</h4>
@@ -2552,7 +2552,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
 
           {/* Bobby color — compact */}
-          <div className="bg-card rounded-2xl p-3 border border-border/20">
+          <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.15s" }}>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-base">🎨</span>
               <h4 className="text-[12px] font-extrabold text-foreground">Couleur de Bobby</h4>
@@ -2573,7 +2573,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
 
           {/* Face tracking + SFX — compact row */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 animate-fadeInUp" style={{ animationDelay: "0.2s" }}>
             <div className="bg-card rounded-2xl p-3 border border-border/20">
               <div className="flex items-center justify-between">
                 <div>
@@ -2612,7 +2612,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       {/* Contenu section */}
       {reglagesSection === "contenu" && (
         <>
-          <div className="bg-card rounded-2xl p-3 border border-border/20">
+          <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-base">💬</span>
               <h4 className="text-[12px] font-extrabold text-foreground">Modes de contenu</h4>
@@ -2641,7 +2641,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             </div>
           </div>
 
-          <div className="bg-card rounded-2xl p-3 border border-border/20">
+          <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-base">✨</span>
               <h4 className="text-[12px] font-extrabold text-foreground">Thèmes d'histoires</h4>
@@ -2664,7 +2664,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 animate-fadeInUp" style={{ animationDelay: "0.15s" }}>
             <div className="bg-card rounded-2xl p-3 border border-border/20">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-base">⏱️</span>
@@ -2696,7 +2696,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       {/* Limites section */}
       {reglagesSection === "limites" && (
         <>
-          <div className="bg-card rounded-2xl p-3 border border-border/20">
+          <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-base">⏳</span>
               <h4 className="text-[12px] font-extrabold text-foreground">Limite journalière</h4>
@@ -2722,7 +2722,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
             <div className="bg-card rounded-2xl p-3 border border-border/20">
               <div className="flex items-center justify-between">
                 <div>
@@ -2763,7 +2763,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             </div>
           )}
 
-          <div className="bg-card rounded-2xl p-3 border border-border/20">
+          <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.15s" }}>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-base">👆</span>
               <h4 className="text-[12px] font-extrabold text-foreground">Interactions</h4>
