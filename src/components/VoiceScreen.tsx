@@ -271,17 +271,51 @@ const VoiceScreen = ({
           </p>
         )}
 
-        {/* Listening animation — no text, just visual feedback */}
-        {sm.machineState === "LISTENING" && (
-          <div className="mt-3 flex items-center gap-3 px-6 py-3 rounded-full bg-white/40 backdrop-blur-md transition-all duration-500 animate-in fade-in slide-in-from-bottom-2">
-            <SoundWave active />
-            <div className="w-2 h-2 rounded-full bg-primary/60 animate-pulse" />
-            <SoundWave active />
-          </div>
+        {/* Bobby text (AI response) */}
+        {sm.machineState === "SPEAKING" && sm.bobbyText && (
+          <p className="mt-4 text-sm font-bold text-foreground/70 tracking-wide text-center px-4">
+            {sm.bobbyText}
+          </p>
         )}
       </div>
 
-      <div className="pb-4" />
+      {/* Bottom section — fixed at bottom */}
+      <div className="w-full flex flex-col items-center gap-3 pb-6 relative z-10">
+        {/* Live transcription — big, bold, at the bottom */}
+        {sm.machineState === "LISTENING" && sm.partialText && (
+          <div className="w-full px-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
+            <p className="text-xl font-extrabold text-foreground/80 text-center leading-tight">
+              "{sm.partialText}"
+            </p>
+          </div>
+        )}
+
+        {/* Recognized text confirmation */}
+        {sm.machineState === "PROCESSING" && sm.lastRecognized && (
+          <div className="w-full px-6 animate-in fade-in duration-200">
+            <p className="text-lg font-bold text-primary/70 text-center">
+              ✅ "{sm.lastRecognized}"
+            </p>
+          </div>
+        )}
+
+        {/* Listening animation */}
+        {sm.machineState === "LISTENING" && (
+          <MicListeningAnimation hasVoice={!!sm.partialText} />
+        )}
+
+        {/* Idle / Sleep labels */}
+        {sm.machineState === "IDLE" && (
+          <p className="text-sm font-semibold text-foreground/50 text-center">
+            Touche Bobby pour parler !
+          </p>
+        )}
+        {sm.machineState === "SLEEP" && (
+          <p className="text-sm font-semibold text-foreground/50 text-center">
+            💤 Bobby dort… touche Bobby pour le réveiller !
+          </p>
+        )}
+      </div>
     </div>
   );
 };
