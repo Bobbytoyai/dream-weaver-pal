@@ -46,7 +46,7 @@ export interface FaceAnimationState {
 const STATE_TARGETS: Record<FaceState, Partial<FaceAnimationState>> = {
   idle: {
     eyeOpenness: 1, eyebrowHeight: 0, eyebrowTilt: 0,
-    mouthOpenness: 0, mouthWidth: 0.5, mouthCurve: 0.05, mouthRound: 0, jawDrop: 0,
+    mouthOpenness: 0, mouthWidth: 0.5, mouthCurve: 0, mouthRound: 0, jawDrop: 0,
     headTiltX: 0, headTiltZ: 0, glowIntensity: 0.3,
     pupilSize: 1, cheekGlow: 0.1, irisGlow: 0.4, eyeSparkle: 0.5,
   },
@@ -144,7 +144,7 @@ const STATE_TARGETS: Record<FaceState, Partial<FaceAnimationState>> = {
 
 const DEFAULT_STATE: FaceAnimationState = {
   eyeOpenness: 1, eyebrowHeight: 0, eyebrowTilt: 0,
-  mouthOpenness: 0, mouthWidth: 0.5, mouthCurve: 0.08, mouthRound: 0, jawDrop: 0,
+  mouthOpenness: 0, mouthWidth: 0.5, mouthCurve: 0, mouthRound: 0, jawDrop: 0,
   headTiltX: 0, headTiltY: 0, headTiltZ: 0,
   pupilX: 0, pupilY: 0, pupilSize: 1,
   glowIntensity: 0.3, cheekGlow: 0.1, irisGlow: 0.4, eyeSparkle: 0.5,
