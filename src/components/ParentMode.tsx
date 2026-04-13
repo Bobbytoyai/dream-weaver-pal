@@ -3546,6 +3546,48 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         onConfirm={() => confirmDialog?.onConfirm()}
         onCancel={() => setConfirmDialog(null)}
       />
+
+      {/* Name Change Dialog — surnom vs session */}
+      {pendingNameChange !== null && (
+        <div className="fixed inset-0 z-[200] bg-black/40 flex items-center justify-center p-6" onClick={() => setPendingNameChange(null)}>
+          <div className="bg-card rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-border/20 space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="text-center">
+              <span className="text-4xl block mb-2">✏️</span>
+              <h3 className="text-[18px] font-black text-foreground">Changer le prénom ?</h3>
+              <p className="text-[13px] text-muted-foreground mt-1">
+                <span className="font-bold">{childName}</span> → <span className="font-bold text-primary">{pendingNameChange}</span>
+              </p>
+            </div>
+
+            <div className="space-y-2.5">
+              <button
+                onClick={() => {
+                  updateSetting("childName", pendingNameChange);
+                  setPendingNameChange(null);
+                  toast.success(`✅ Surnom changé en "${pendingNameChange}"`);
+                }}
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-extrabold text-[14px] hover:opacity-90 transition-all active:scale-95 shadow-md shadow-primary/20">
+                🏷️ C'est un surnom
+              </button>
+              <button
+                onClick={() => {
+                  setPendingNameChange(null);
+                  toast.info("🔜 Changement de session bientôt disponible !", {
+                    description: "Cette fonctionnalité permettra de gérer plusieurs enfants.",
+                  });
+                }}
+                className="w-full py-3.5 rounded-2xl bg-muted/60 text-foreground font-extrabold text-[14px] hover:bg-muted transition-all active:scale-95 border border-border/15">
+                👦 Changer d'enfant <span className="text-[11px] font-bold text-muted-foreground ml-1">(bientôt)</span>
+              </button>
+              <button
+                onClick={() => setPendingNameChange(null)}
+                className="w-full py-2.5 text-[13px] text-muted-foreground font-bold hover:text-foreground transition-colors">
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
