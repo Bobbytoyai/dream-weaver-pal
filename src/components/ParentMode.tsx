@@ -2865,8 +2865,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
         </div>
       </Card>
+      </div>
 
       {/* 📖 Histoires */}
+      <div className="animate-fadeInUp" style={{ animationDelay: "0.15s" }}>
       <Card title="📖 Histoires & Personnages" icon={BookOpen}>
         <div className="space-y-2">
           {[
