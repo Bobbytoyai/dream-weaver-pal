@@ -86,7 +86,7 @@ function buildMouthShape(curve: number, width: number, openness: number, round: 
   const shape = new THREE.Shape();
   
   const halfW = (0.14 + width * 0.08) * (1 - round * 0.35);
-  const thickness = 0.038;
+  const thickness = 0.0621;
   
   // When is mouth "open"? Only for actual speech/surprise
   const isOpen = openness > 0.08 || round > 0.1;
