@@ -428,11 +428,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         ref.current.position.y = 0.27;
         ref.current.scale.set(1, Math.max(0, Math.min(1, scaleY)), 1);
 
-        if (isSleepingNow) {
-          eyelidMat.opacity = 1.0;
-        } else {
-          eyelidMat.opacity = 0.58 + easedCover * 0.42;
-        }
+        eyelidMat.opacity = 1.0;
       }
     });
 
