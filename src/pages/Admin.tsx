@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import ExpressionPreview from "@/components/ExpressionPreview";
 import AutoLearnPanel from "@/components/AutoLearnPanel";
 import AdminDetailDialog, { type DetailItem, type DetailField } from "@/components/AdminDetailDialog";
+import AdminStoreManager from "@/components/AdminStoreManager";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
