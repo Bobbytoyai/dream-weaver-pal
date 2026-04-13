@@ -97,8 +97,8 @@ const EMOTION_PATTERNS: EmotionPattern[] = [
   {
     emotion: "surprise",
     patterns: [
-      /vraiment\s*[?!]|sérieux|c'est fou|impossible|dingue|incroyable|😲|😮|🤯/i,
-      /pas possible|je crois pas|wow|waouh|oh la/i,
+      /c'est fou|impossible|dingue|incroyable|😲|😮|🤯/i,
+      /pas possible|je crois pas|waouh/i,
     ],
     baseIntensity: 3,
   },
