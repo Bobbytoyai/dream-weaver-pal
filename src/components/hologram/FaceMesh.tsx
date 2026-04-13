@@ -548,11 +548,11 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={hl1Ref} position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       {/* hl2 hidden — single highlight per eye */}
       <mesh ref={hl2Ref} position={[hl1[0], hl1[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} visible={false} />
-      {/* Eyelid */}
-      <mesh ref={eyelidRef} position={[0, 0.55, 0.044]} material={eyelidMat}>
+      {/* Eyelid — oversized to fully cover the eye */}
+      <mesh ref={eyelidRef} position={[0, 0.58, 0.044]} material={eyelidMat}>
         <shapeGeometry args={[(() => {
           const s = new THREE.Shape();
-          s.absellipse(0, 0, 0.38, 0.32, 0, Math.PI * 2, false, 0);
+          s.absellipse(0, 0, 0.44, 0.38, 0, Math.PI * 2, false, 0);
           return s;
         })(), 32]} />
       </mesh>
