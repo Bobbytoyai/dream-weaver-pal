@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { Search, Download, Check, Star, Sparkles, Users, Zap, Loader2, Trash2, ArrowLeft, Clock, Award, BookOpen, ChevronRight, Globe, Shield, Heart, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { installContentPack, uninstallContentPack, getLocalCacheSize, type InstallResult } from "@/lib/bobby/contentInstaller";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 // ─── Types ──────────────────────────────────────────────────────────
@@ -340,6 +341,7 @@ interface BobbyStoreProps {
 }
 
 export default function BobbyStore({ childName = "enfant", childAge = 7 }: BobbyStoreProps) {
+  const { user } = useAuth();
   const [items, setItems] = useState<StoreItem[]>([]);
   const [installedIds, setInstalledIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -356,7 +358,6 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
     setLoadError(false);
     setSelectedItem(null);
     try {
-      const installedPromise = supabase.from("installed_content").select("content_id").eq("child_name", childName);
       const catalogRes = await supabase
         .from("store_content")
         .select(LIST_COLUMNS)
@@ -368,16 +369,19 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
       setItems((catalogRes.data || []).map(mapStoreRow));
       setLoading(false);
 
-      const installedRes = await installedPromise;
-      if (installedRes?.data) {
-        setInstalledIds(new Set(installedRes.data.map((r: any) => r.content_id)));
+      // Only fetch installed content if user is logged in
+      if (user) {
+        const installedRes = await supabase.from("installed_content").select("content_id").eq("child_name", childName);
+        if (installedRes?.data) {
+          setInstalledIds(new Set(installedRes.data.map((r: any) => r.content_id)));
+        }
       }
     } catch (err: any) {
       console.error("[BobbyStore] Fetch error:", err.message);
       setLoadError(true);
       setLoading(false);
     }
-  }, [childName]);
+  }, [childName, user]);
 
   const loadItemDetails = useCallback(async (itemId: string) => {
     const existingItem = items.find((item) => item.id === itemId);
@@ -426,6 +430,18 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
   }, [selectedItem, activeCategory]);
 
   const toggleInstall = async (contentId: string) => {
+    // Auth required for install/uninstall
+    if (!user) {
+      toast.error("Compte Bobby Cloud requis", {
+        description: "Crée un compte gratuit pour installer des packs",
+        action: {
+          label: "Créer un compte",
+          onClick: () => { window.location.href = `/bobby-cloud?returnTo=${encodeURIComponent(window.location.pathname)}`; },
+        },
+      });
+      return;
+    }
+
     setInstalling(contentId);
     const isInstalled = installedIds.has(contentId);
 
