@@ -1348,6 +1348,26 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             />
           </Suspense>
         );
+        case "personnalisation": {
+          // Route personnalisation to reglages with personnalisation section pre-selected
+          return (
+            <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
+              <LazyReglagesTab
+                settings={settings}
+                sessions={sessions}
+                childName={childName}
+                allInterests={allInterests}
+                settingsSaved={settingsSaved}
+                reglagesSection="personnalisation"
+                setReglagesSection={(s) => { if (!s) setActiveTab("home"); else setReglagesSection(s); }}
+                onUpdate={updateSetting}
+                onUpdateNested={updateNested}
+                onSave={handleSave}
+                onPendingNameChange={(name) => setPendingNameChange(name)}
+              />
+            </Suspense>
+          );
+        }
         case "cloud": return renderCloud();
         case "confidentialite": return (
           <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
