@@ -169,7 +169,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   // ─── Materials ────────────────────────────────────────────
   const eyeOutlineMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#3A3A5C"), transparent: true, opacity: 0.35,
+    color: new THREE.Color("#3A3A5C"), transparent: true, opacity: 0.22,
   }), []);
   const eyeWhiteMat = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color("#FFFFFF") }), []);
 
@@ -253,7 +253,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   const eyeOutlineGeo = useMemo(() => {
     const shape = new THREE.Shape();
-    shape.absellipse(0, 0, 0.36, 0.30, 0, Math.PI * 2, false, 0);
+    shape.absellipse(0, 0, 0.345, 0.285, 0, Math.PI * 2, false, 0);
     const hole = new THREE.Path();
     hole.absellipse(0, 0, 0.33, 0.27, 0, Math.PI * 2, false, 0);
     shape.holes.push(hole);
