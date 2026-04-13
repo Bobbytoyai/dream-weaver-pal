@@ -13,6 +13,8 @@ import {
 const LazyDashboardTab = lazy(() => import("@/components/parent/DashboardTab"));
 const LazySessionsListTab = lazy(() => import("@/components/parent/SessionsListTab"));
 const LazySessionDetailView = lazy(() => import("@/components/parent/SessionDetailView"));
+const LazyReglagesTab = lazy(() => import("@/components/parent/ReglagesTab"));
+const LazyConfidentialiteTab = lazy(() => import("@/components/parent/ConfidentialiteTab"));
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { getInterestSnapshot, INTEREST_KEYWORDS_PUBLIC } from "@/lib/bobby/interestTracker";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,9 +22,7 @@ import StoryLibrary from "@/components/StoryLibrary";
 import ContentCategories from "@/components/ContentCategories";
 import BobbyStore from "@/components/BobbyStore";
 import StoreGateWrapper from "@/components/StoreGateWrapper";
-import VoiceSettings from "@/components/parent/VoiceSettings";
-import BobbyCustomizer from "@/components/parent/BobbyCustomizer";
-import LimitsSettings from "@/components/parent/LimitsSettings";
+// VoiceSettings, BobbyCustomizer, LimitsSettings now lazy-loaded via ReglagesTab
 // Piper TTS removed — ElevenLabs only
 import ConfirmDialog from "@/components/ConfirmDialog";
 import {
@@ -787,250 +787,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   // ═══════════════════════════════════════════════════════════════
   // SESSION DETAIL + SESSIONS LIST: extracted to SessionDetailView + SessionsListTab
   // ═══════════════════════════════════════════════════════════════
-  // ═══════════════════════════════════════════════════════════════
-  // RENDER: PROFIL
-  // ═══════════════════════════════════════════════════════════════
-
-  const renderProfil = () => (
-    <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
-      {/* Back button when accessed from Réglages */}
-      {reglagesSection === "profil" && (
-        <button onClick={() => setReglagesSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white">
-          <ArrowLeft className="w-4 h-4" /> RÉGLAGES
-        </button>
-      )}
-      {/* Avatar + Name + Age — compact hero card */}
-      <div className="retro-card retro-card-tilt-1 p-4" style={{ backgroundColor: 'var(--retro-blue)' }}>
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 border-4 border-black bg-white flex items-center justify-center text-4xl shrink-0">
-            👤
-          </div>
-          <div className="flex-1 min-w-0">
-            <input type="text" value={settings.childName}
-              onChange={(e) => updateSetting("childName", e.target.value)}
-              placeholder="Prénom"
-              className="w-full bg-transparent text-xl font-black text-foreground outline-none placeholder:text-foreground/40 border-b-2 border-black pb-1 focus:border-foreground transition-colors uppercase" />
-            <p className="text-[11px] text-foreground/60 mt-1 font-bold">Profil enfant</p>
-            {settings.childName.trim() !== "" && settings.childName.trim() !== childName && (
-              <button
-                onClick={() => setPendingNameChange(settings.childName.trim())}
-                className="mt-2 w-full py-2 border-2 border-black bg-foreground text-background text-[13px] font-black active:scale-95 transition-all uppercase"
-                style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
-                Enregistrer le prénom
-              </button>
-            )}
-          </div>
-        </div>
-        <div className="flex gap-1.5 mt-3 overflow-x-auto">
-          {[4, 5, 6, 7, 8, 9, 10, 11, 12].map(age => (
-            <button key={age} onClick={() => updateSetting("childAge", age)}
-              className={`shrink-0 w-10 h-10 border-2 border-black text-[13px] font-black transition-all duration-200 active:scale-90 ${
-                settings.childAge === age
-                  ? "bg-foreground text-background"
-                  : "bg-white text-foreground/60 hover:bg-[var(--retro-yellow)]"
-              }`}>{age}</button>
-          ))}
-          <span className="self-center text-[10px] text-foreground/60 ml-1 shrink-0 font-black">ans</span>
-        </div>
-      </div>
-
-      {/* Personality — square cards grid */}
-      <div className="grid grid-cols-2 gap-2.5">
-        {([
-          ["calm", "😌", "Calme", "Doux et rassurant", "var(--retro-blue)"],
-          ["energetic", "⚡", "Énergique", "Vif et enthousiaste", "var(--retro-yellow)"],
-          ["educational", "📚", "Éducatif", "Curieux et savant", "var(--retro-green)"],
-          ["balanced", "🎯", "Équilibré", "Un peu de tout", "var(--retro-purple)"],
-        ] as const).map(([val, emoji, label, desc, bg]) => (
-          <button key={val} onClick={() => updateSetting("personality", val)}
-            className={`retro-card p-3 text-center transition-all duration-200 active:scale-95 ${
-              settings.personality === val
-                ? "ring-2 ring-foreground/30"
-                : ""
-            }`}
-            style={{ backgroundColor: bg }}>
-            <span className="text-2xl block mb-1">{emoji}</span>
-            <span className="text-[12px] font-black block text-foreground uppercase">{label}</span>
-            <span className="text-[9px] text-foreground/60 leading-tight font-bold">{desc}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Interests — compact colored pills */}
-      <div className="retro-card retro-card-tilt-2 p-3" style={{ backgroundColor: 'var(--retro-green)' }}>
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-base">💡</span>
-          <h4 className="text-[12px] font-black text-foreground uppercase">Centres d'intérêt détectés</h4>
-        </div>
-        {allInterests.length > 0 ? (
-          <div className="flex flex-wrap gap-1.5">
-            {allInterests.map(([interest], i) => {
-              const retroBgs = ["var(--retro-blue)", "var(--retro-red)", "var(--retro-yellow)", "var(--retro-orange)", "var(--retro-purple)", "#e5e5e5"];
-              return (
-                <span key={interest} className="px-2.5 py-1 border-2 border-black text-[10px] font-black text-foreground"
-                  style={{ backgroundColor: retroBgs[i % retroBgs.length] }}>
-                  {interest}
-                </span>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-[10px] text-foreground/50 italic font-bold">Détection auto pendant les sessions 🔍</p>
-        )}
-      </div>
-
-      {/* Blocked topics — compact */}
-      <div className="retro-card retro-card-tilt-3 p-3" style={{ backgroundColor: 'var(--retro-red)' }}>
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-base">🚫</span>
-          <h4 className="text-[12px] font-black text-foreground uppercase">Sujets bloqués</h4>
-        </div>
-        <div className="flex flex-wrap gap-1.5 mb-2">
-          {settings.blockedTopics.map(t => (
-            <button key={t} onClick={() => updateSetting("blockedTopics", settings.blockedTopics.filter(x => x !== t))}
-              className="flex items-center gap-1 px-2.5 py-1 border-2 border-black bg-white text-foreground text-[10px] font-black hover:bg-foreground hover:text-background transition-all active:scale-95">
-              {t} <X className="w-2.5 h-2.5" />
-            </button>
-          ))}
-          {settings.blockedTopics.length === 0 && (
-            <span className="text-[10px] text-foreground/50 italic font-bold">Aucun sujet bloqué</span>
-          )}
-        </div>
-        <input type="text" value={newBlockedTopic}
-          onChange={(e) => setNewBlockedTopic(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && newBlockedTopic.trim()) {
-              if (!settings.blockedTopics.includes(newBlockedTopic.trim())) {
-                updateSetting("blockedTopics", [...settings.blockedTopics, newBlockedTopic.trim()]);
-              }
-              setNewBlockedTopic("");
-            }
-          }}
-          placeholder="Ajouter un sujet…"
-          className="w-full px-3 py-2 bg-white text-[11px] text-foreground placeholder:text-foreground/40 border-4 border-black outline-none font-bold" />
-      </div>
-
-      {/* Save button */}
-      <div className="pt-1 pb-2">
-        <button
-          onClick={() => {
-            onSettingsChange?.(settings);
-            setSettingsSaved(true);
-            setTimeout(() => setSettingsSaved(false), 2000);
-          }}
-          className={`w-full py-3.5 text-[14px] font-black transition-all active:scale-95 border-4 border-black uppercase ${
-            settingsSaved
-              ? "bg-[var(--retro-green)] text-foreground"
-              : "bg-foreground text-background hover:opacity-90"
-          }`}
-          style={{ boxShadow: "5px 5px 0px rgba(0,0,0,0.3)" }}>
-          {settingsSaved ? "✅ ENREGISTRÉ !" : "💾 ENREGISTRER"}
-        </button>
-      </div>
-    </div>
-  );
-
-  // ═══════════════════════════════════════════════════════════════
-  // RENDER: RÉGLAGES (merged: Voix + Contenu + Limites)
-  // ═══════════════════════════════════════════════════════════════
-
-  const VOICE_MAP: Record<string, { label: string; emoji: string; desc: string; voiceName: string }> = {
-    child: { label: "Mélodie", emoji: "🧒", voiceName: "Enfant", desc: "Voix fun et dynamique" },
-    female: { label: "Mila", emoji: "👩", voiceName: "Maman", desc: "Voix douce et rassurante" },
-    male: { label: "Vincent", emoji: "👨", voiceName: "Papa", desc: "Voix calme et chaleureuse" },
-    sister: { label: "Marine", emoji: "👧", voiceName: "Grande Sœur", desc: "Cool et complice" },
-    brother: { label: "Yanis", emoji: "👦", voiceName: "Grand Frère", desc: "Aventurier et drôle" },
-    custom: { label: "Personnaliser", emoji: "🎨", voiceName: "", desc: "Bientôt disponible" },
-  };
-
-  const [previewPlaying, setPreviewPlaying] = useState<string | false>(false);
-
-  const previewVoice = async (voiceType: string) => {
-    if (previewPlaying || voiceType === "custom") return;
-    setPreviewPlaying(voiceType);
-    try {
-      const { previewVoiceProfile } = await import("@/lib/voicePipeline");
-      await previewVoiceProfile(voiceType as any);
-    } catch (e) { console.warn("Preview error:", e); }
-    finally { setPreviewPlaying(false); }
-  };
-
-  const renderReglages = () => {
-    const handleSave = () => {
-      onSettingsChange?.(settings);
-      setSettingsSaved(true);
-      setTimeout(() => setSettingsSaved(false), 2000);
-    };
-
-    const handleUpdate = <K extends keyof ParentSettings>(key: K, value: ParentSettings[K]) => {
-      updateSetting(key, value);
-    };
-
-    if (reglagesSection === "voix") {
-      return (
-        <VoiceSettings
-          settings={settings}
-          onUpdate={handleUpdate}
-          onBack={() => setReglagesSection(null)}
-          onSave={handleSave}
-          saved={settingsSaved}
-        />
-      );
-    }
-
-    if (reglagesSection === "limites") {
-      const today = new Date().toLocaleDateString("fr-FR");
-      const todaySessions = sessions.filter(s => new Date(s.started_at).toLocaleDateString("fr-FR") === today);
-      const todayDur = todaySessions.reduce((a, s) => a + (s.duration_seconds || 0), 0);
-      return (
-        <LimitsSettings
-          settings={settings}
-          onUpdate={handleUpdate}
-          onUpdateNested={updateNested}
-          todayDuration={todayDur}
-          onBack={() => setReglagesSection(null)}
-          onSave={handleSave}
-          saved={settingsSaved}
-        />
-      );
-    }
-
-    if (reglagesSection === "personnalisation") {
-      return (
-        <BobbyCustomizer
-          settings={settings}
-          onUpdate={(key, value) => updateSetting(key, value)}
-          onBack={() => setReglagesSection(null)}
-          onSave={handleSave}
-          saved={settingsSaved}
-        />
-      );
-    }
-
-    if (reglagesSection === "profil") {
-      return renderProfil();
-    }
-
-    return (
-      <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
-        <h2 className="text-[18px] font-black text-foreground animate-fadeInUp uppercase">⚙️ Réglages</h2>
-        <div className="grid grid-cols-2 gap-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-          {([
-            ["voix", "🎤", "Voix & Sons", "Profils vocaux, vitesse, ton", "var(--retro-blue)"],
-            ["limites", "⏱️", "Limites & Contrôle", "Temps, nuit, interactions, sujets", "var(--retro-yellow)"],
-            ["profil", "👤", "Profil enfant", "Intérêts, mémoire, préférences", "var(--retro-purple)"],
-          ] as const).map(([key, emoji, label, desc, bg], i) => (
-            <button key={key} onClick={() => setReglagesSection(key)}
-              className={`retro-card retro-card-tilt-${(i % 6) + 1} p-5 text-center transition-all duration-200 active:scale-95 hover:translate-y-[-2px]`}
-              style={{ backgroundColor: bg, boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}>
-              <span className="text-4xl block mb-2">{emoji}</span>
-              <span className="text-[14px] font-black text-foreground block uppercase">{label}</span>
-              <span className="text-[10px] text-foreground/60 leading-tight block mt-1 font-bold">{desc}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
+  // PROFIL: extracted to ProfilTab.tsx
+  // RÉGLAGES: extracted to ReglagesTab.tsx
+  const handleSave = () => {
+    onSettingsChange?.(settings);
+    setSettingsSaved(true);
+    setTimeout(() => setSettingsSaved(false), 2000);
   };
 
   // ═══════════════════════════════════════════════════════════════
@@ -1176,271 +938,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     </div>
   );
 
-  // ═══════════════════════════════════════════════════════════════
-  // RENDER: CONFIDENTIALITÉ (merged: Sécurité + Données)
-  // ═══════════════════════════════════════════════════════════════
-
-  const [confSection, setConfSection] = useState<"securite" | "donnees" | "rgpd" | null>(null);
-
-  const renderConfidentialite = () => {
-    const dataCategories = [
-      { id: "conversations", emoji: "💬", label: "Conversations", desc: "Messages texte", count: sessions.reduce((s, x) => s + x.message_count, 0) },
-      { id: "audio", emoji: "🎙️", label: "Enregistrements", desc: "Fichiers audio", count: analyses.filter(a => a.audio_path).length },
-      { id: "analyses", emoji: "📊", label: "Analyses IA", desc: "Résumés, scores", count: analyses.length },
-      { id: "memories", emoji: "🧠", label: "Mémoire", desc: "Préférences", count: 1 },
-    ];
-
-    // ── Sub-section: Sécurité ──
-    if (confSection === "securite") return (
-      <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-        <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
-          <ChevronLeft className="w-4 h-4" /> CONFIDENTIALITÉ
-        </button>
-        <Card title="Code PIN parental" icon={Lock}>
-          <p className="text-[10px] text-foreground/60 mb-3 leading-tight font-bold">Protège l'accès au Mode Parent avec un code à 4 chiffres</p>
-          <div className="flex gap-2 items-center">
-            <input type="password" maxLength={4} inputMode="numeric" pattern="[0-9]*"
-              value={settings.parentPin}
-              onChange={(e) => { const val = e.target.value.replace(/\D/g, "").slice(0, 4); updateSetting("parentPin", val); }}
-              placeholder="● ● ● ●"
-              className="flex-1 px-4 py-2.5 bg-white text-sm text-foreground text-center tracking-[0.5em] placeholder:text-foreground/40 border-4 border-black outline-none font-mono font-black" />
-            {settings.parentPin.length === 4 && (
-              <span className="text-[11px] text-foreground font-black flex items-center gap-1"><Shield className="w-3.5 h-3.5" /> Actif</span>
-            )}
-          </div>
-          {settings.parentPin.length === 4 && (
-            <button onClick={() => updateSetting("parentPin", "")} className="mt-2 text-[11px] text-foreground font-black hover:underline uppercase">Supprimer le code PIN</button>
-          )}
-        </Card>
-        <Card title="Niveau de filtrage" icon={Shield}>
-          <div className="space-y-2">
-            {([
-              ["standard", "🟢", "Standard", "Contenu adapté aux enfants"],
-              ["strict", "🔒", "Strict", "Filtre renforcé, exclusivement positif"],
-            ] as const).map(([val, emoji, label, desc]) => (
-              <button key={val} onClick={() => updateSetting("contentFilter", val)}
-                className={`w-full p-3 text-left transition-all border-2 border-black ${settings.contentFilter === val ? "bg-[var(--retro-green)] ring-2 ring-foreground/20" : "bg-white hover:bg-[var(--retro-yellow)]"}`}>
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">{emoji}</span>
-                  <div>
-                    <h4 className="text-[12px] font-black text-foreground uppercase">{label}</h4>
-                    <p className="text-[10px] text-foreground/60 mt-0.5 font-bold">{desc}</p>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </Card>
-        <Card title="Protections" icon={Shield}>
-          <div className="space-y-1">
-            <SettingRow icon={Shield} title="Mode ultra-safe" desc="Protection maximale activée">
-              <Toggle value={settings.ultraSafe} onChange={(v) => updateSetting("ultraSafe", v)} />
-            </SettingRow>
-            <SettingRow icon={Lock} title="Bloquer infos personnelles" desc="Empêche le partage de données personnelles">
-              <Toggle value={settings.blockPersonalInfo} onChange={(v) => updateSetting("blockPersonalInfo", v)} />
-            </SettingRow>
-            <SettingRow icon={Shield} title="Bloquer les liens externes" desc="Bobby ne mentionne aucun site web">
-              <Toggle value={settings.blockExternalLinks} onChange={(v) => updateSetting("blockExternalLinks", v)} />
-            </SettingRow>
-          </div>
-        </Card>
-        <Card title="Mot de sécurité" icon={AlertTriangle}>
-          <p className="text-[10px] text-foreground/60 mb-3 leading-tight font-bold">Si l'enfant dit ce mot, Bobby réagit immédiatement</p>
-          <input type="text" value={settings.safeWord}
-            onChange={(e) => updateSetting("safeWord", e.target.value.slice(0, 30))}
-            placeholder="Ex: 'au secours', 'aide-moi'…"
-            className="w-full px-4 py-2.5 bg-white text-sm text-foreground placeholder:text-foreground/40 border-4 border-black outline-none font-bold mb-3" />
-          {settings.safeWord.trim() && (
-            <div className="grid grid-cols-3 gap-2">
-              {([
-                ["pause", "⏸️", "Pause"],
-                ["alert", "🔔", "Alerte"],
-                ["stop", "🛑", "Stop"],
-              ] as const).map(([val, emoji, label]) => (
-                <button key={val} onClick={() => updateSetting("safeWordAction", val)}
-                  className={`p-3 text-center transition-all border-2 border-black ${settings.safeWordAction === val ? "bg-[var(--retro-green)] ring-2 ring-foreground/20" : "bg-white hover:bg-[var(--retro-yellow)]"}`}>
-                  <span className="text-lg block">{emoji}</span>
-                  <span className={`text-[10px] font-black ${settings.safeWordAction === val ? "text-foreground" : "text-foreground/70"} uppercase`}>{label}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </Card>
-      </div>
-    );
-
-    // ── Sub-section: Données ──
-    if (confSection === "donnees") return (
-      <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-        <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
-          <ChevronLeft className="w-4 h-4" /> CONFIDENTIALITÉ
-        </button>
-        <Card title="Collecte de données" icon={Eye}>
-          <div className="space-y-1">
-            <SettingRow icon={Mic} title="Enregistrer les conversations" desc="Sauvegarde audio pour réécoute">
-              <Toggle value={settings.recordConversations} onChange={(v) => updateSetting("recordConversations", v)} />
-            </SettingRow>
-            <SettingRow icon={EyeOff} title="Mode privé" desc="Analyse seule, sans audio">
-              <Toggle value={settings.privacyMode} onChange={(v) => updateSetting("privacyMode", v)} />
-            </SettingRow>
-          </div>
-        </Card>
-        <Card title="Données stockées" icon={BarChart3}>
-          <div className="grid grid-cols-2 gap-2">
-            {dataCategories.map(cat => (
-              <div key={cat.id} className="p-3 border-2 border-black bg-white">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-lg">{cat.emoji}</span>
-                  <span className="text-[11px] font-mono font-black text-foreground border-2 border-black px-2 py-0.5 bg-[var(--retro-yellow)]">{cat.count}</span>
-                </div>
-                <h4 className="text-[12px] font-black text-foreground uppercase">{cat.label}</h4>
-                <p className="text-[9px] text-foreground/60 font-bold">{cat.desc}</p>
-              </div>
-            ))}
-          </div>
-        </Card>
-        <Card title="Conservation" icon={Calendar}>
-          <div className="grid grid-cols-2 gap-2">
-            {([
-              ["7j", "🗓️", "7 jours"],
-              ["30j", "📅", "30 jours"],
-              ["90j", "📆", "90 jours"],
-              ["forever", "♾️", "Indéfini"],
-            ] as const).map(([val, emoji, label]) => (
-              <button key={val} onClick={() => updateSetting("dataRetention", val)}
-                className={`p-3 text-center transition-all border-2 border-black ${settings.dataRetention === val ? "bg-[var(--retro-green)] ring-2 ring-foreground/20" : "bg-white hover:bg-[var(--retro-yellow)]"}`}>
-                <span className="text-xl block mb-1">{emoji}</span>
-                <span className={`text-[11px] font-black ${settings.dataRetention === val ? "text-foreground" : "text-foreground/70"} uppercase`}>{label}</span>
-              </button>
-            ))}
-          </div>
-        </Card>
-        <Card title="Suppression sélective" icon={Trash2}>
-          <div className="space-y-2">
-            {[
-              { emoji: "🎙️", label: "Supprimer les audio", desc: "Garde les analyses", action: () => {
-                setConfirmDialog({ title: "Supprimer les enregistrements ?", description: "Tous les fichiers audio seront supprimés. Les analyses textuelles seront conservées.", confirmLabel: "Supprimer", variant: "danger" as const, onConfirm: () => {
-                  supabase.storage.from("conversation-audio").list().then(({ data }) => { if (data?.length) supabase.storage.from("conversation-audio").remove(data.map(f => f.name)); });
-                  setConfirmDialog(null);
-                }});
-              }},
-              { emoji: "📊", label: "Supprimer les analyses", desc: "Garde les sessions", action: () => {
-                setConfirmDialog({ title: "Supprimer les analyses ?", description: "Toutes les analyses IA seront supprimées.", confirmLabel: "Supprimer", variant: "danger" as const, onConfirm: () => {
-                  supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000").then(() => loadData());
-                  setConfirmDialog(null);
-                }});
-              }},
-              { emoji: "🧠", label: "Réinitialiser la mémoire", desc: "Bobby oublie les préférences", action: () => {
-                setConfirmDialog({ title: "Réinitialiser la mémoire ?", description: "Bobby oubliera toutes les préférences et intérêts.", confirmLabel: "Réinitialiser", variant: "warning" as const, onConfirm: () => {
-                  supabase.from("child_memories").delete().eq("child_name", displayName).then(() => loadData());
-                  setConfirmDialog(null);
-                }});
-              }},
-            ].map(item => (
-              <button key={item.label} onClick={item.action}
-                className="w-full flex items-center gap-3 p-3 border-2 border-black bg-white hover:bg-[var(--retro-red)] transition-all text-left">
-                <span className="text-lg">{item.emoji}</span>
-                <div className="flex-1">
-                  <h4 className="text-[12px] font-black text-foreground uppercase">{item.label}</h4>
-                  <p className="text-[9px] text-foreground/60 font-bold">{item.desc}</p>
-                </div>
-                <Trash2 className="w-4 h-4 text-foreground" />
-              </button>
-            ))}
-          </div>
-        </Card>
-      </div>
-    );
-
-    // ── Sub-section: RGPD ──
-    if (confSection === "rgpd") return (
-      <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-        <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
-          <ChevronLeft className="w-4 h-4" /> CONFIDENTIALITÉ
-        </button>
-        <Card title="Vos droits (RGPD)" icon={FileText}>
-          <div className="grid grid-cols-2 gap-2">
-            {([
-              ["access", "👁️", "Accès", "Voir vos données"],
-              ["export", "📥", "Portabilité", "Export JSON"],
-              ["rectify", "✏️", "Rectification", "Corriger"],
-              ["delete", "🗑️", "Effacement", "Supprimer"],
-            ] as const).map(([id, emoji, label, desc]) => (
-              <button key={id}
-                onClick={() => {
-                  if (id === "export") {
-                    const allData = {
-                      exportDate: new Date().toISOString(), childName,
-                      settings: { ...settings, parentPin: "[MASQUÉ]" },
-                      sessions: sessions.map(s => {
-                        const analysis = analyses.find(a => a.session_id === s.id);
-                        return { id: s.id, date: s.started_at, ended: s.ended_at, duration: s.duration_seconds, messages: s.message_count,
-                          emotions: s.detected_emotions, topics: s.topics, tags: s.tags, summary: analysis?.summary,
-                          transcription: analysis?.full_transcription,
-                          scores: analysis ? { sociability: analysis.sociability_score, curiosity: analysis.curiosity_score, stability: analysis.emotional_stability_score } : null,
-                          interests: analysis?.extracted_interests, insights: analysis?.behavior_insights,
-                        };
-                      }),
-                    };
-                    const blob = new Blob([JSON.stringify(allData, null, 2)], { type: "application/json" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url; a.download = `bobby-rgpd-export-${displayName}-${new Date().toISOString().slice(0, 10)}.json`;
-                    a.click(); URL.revokeObjectURL(url);
-                  } else if (id === "access") { setActiveTab("sessions"); }
-                  else if (id === "delete") {
-                    setConfirmDialog({
-                      title: "Supprimer TOUTES les données ?",
-                      description: "Cette action est IRRÉVERSIBLE. Toutes les sessions, analyses, messages et mémoires de Bobby seront effacés.",
-                      confirmLabel: "Tout supprimer",
-                      variant: "danger",
-                      onConfirm: () => {
-                        Promise.all([
-                          supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
-                          supabase.from("session_messages").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
-                          supabase.from("child_sessions").delete().eq("child_name", displayName),
-                          supabase.from("child_memories").delete().eq("child_name", displayName),
-                        ]).then(() => loadData());
-                        setConfirmDialog(null);
-                      },
-                    });
-                  } else if (id === "rectify") { setActiveTab("profil"); }
-                }}
-                className="p-3 text-left transition-all border-2 border-black bg-white hover:bg-[var(--retro-yellow)] active:scale-95">
-                <span className="text-xl block mb-1">{emoji}</span>
-                <h4 className="text-[12px] font-black text-foreground uppercase">{label}</h4>
-                <p className="text-[9px] text-foreground/60 font-bold">{desc}</p>
-              </button>
-            ))}
-          </div>
-        </Card>
-      </div>
-    );
-
-    // ── Grid of cards ──
-    const confCards = [
-      { id: "securite" as const, emoji: "🛡️", label: "Sécurité", desc: "PIN, filtrage, protections", bg: "var(--retro-red)" },
-      { id: "donnees" as const, emoji: "💾", label: "Données", desc: "Collecte, stockage, suppression", bg: "var(--retro-blue)" },
-      { id: "rgpd" as const, emoji: "📜", label: "RGPD", desc: "Accès, export, effacement", bg: "var(--retro-green)" },
-    ];
-
-    return (
-      <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
-        <h2 className="text-[16px] font-black text-foreground animate-fadeInUp uppercase" style={{ animationDelay: "0.05s" }}>🔒 Confidentialité</h2>
-        <div className="grid grid-cols-2 gap-3">
-          {confCards.map((card, i) => (
-            <button key={card.id} onClick={() => setConfSection(card.id)}
-              className="retro-card retro-card-tilt p-4 text-left hover:shadow-lg transition-all active:scale-95 animate-fadeInUp"
-              style={{ animationDelay: `${0.1 + i * 0.05}s`, backgroundColor: card.bg }}>
-              <span className="text-3xl block mb-2">{card.emoji}</span>
-              <h3 className="text-[14px] font-black text-gray-800 leading-tight uppercase">{card.label}</h3>
-              <p className="text-[10px] text-gray-600 mt-1 leading-snug font-bold">{card.desc}</p>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  };
+  // CONFIDENTIALITÉ: extracted to ConfidentialiteTab.tsx
 
   // ═══════════════════════════════════════════════════════════════
   // RENDER: BOBBY CLOUD
@@ -1832,19 +1330,60 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </Suspense>
         );
         case "activites": return <StoreGateWrapper childName={settings.childName} childAge={settings.childAge} />;
-        case "profil": return renderReglages();
-        case "personnalisation": return (
-          <BobbyCustomizer
-            settings={settings}
-            onUpdate={(key, value) => updateSetting(key, value)}
-            onBack={() => setActiveTab("home")}
-            onSave={() => { onSettingsChange?.(settings); setSettingsSaved(true); setTimeout(() => setSettingsSaved(false), 2000); }}
-            saved={settingsSaved}
-          />
+        case "profil":
+        case "reglages": return (
+          <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
+            <LazyReglagesTab
+              settings={settings}
+              sessions={sessions}
+              childName={childName}
+              allInterests={allInterests}
+              settingsSaved={settingsSaved}
+              reglagesSection={reglagesSection}
+              setReglagesSection={setReglagesSection}
+              onUpdate={updateSetting}
+              onUpdateNested={updateNested}
+              onSave={handleSave}
+              onPendingNameChange={(name) => setPendingNameChange(name)}
+            />
+          </Suspense>
         );
-        case "reglages": return renderReglages();
+        case "personnalisation": {
+          // Route personnalisation to reglages with personnalisation section pre-selected
+          return (
+            <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
+              <LazyReglagesTab
+                settings={settings}
+                sessions={sessions}
+                childName={childName}
+                allInterests={allInterests}
+                settingsSaved={settingsSaved}
+                reglagesSection="personnalisation"
+                setReglagesSection={(s) => { if (!s) setActiveTab("home"); else setReglagesSection(s); }}
+                onUpdate={updateSetting}
+                onUpdateNested={updateNested}
+                onSave={handleSave}
+                onPendingNameChange={(name) => setPendingNameChange(name)}
+              />
+            </Suspense>
+          );
+        }
         case "cloud": return renderCloud();
-        case "confidentialite": return renderConfidentialite();
+        case "confidentialite": return (
+          <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
+            <LazyConfidentialiteTab
+              settings={settings}
+              sessions={sessions}
+              analyses={analyses}
+              displayName={displayName}
+              childName={childName}
+              onUpdate={updateSetting}
+              setConfirmDialog={setConfirmDialog}
+              setActiveTab={(tab: string) => setActiveTab(tab as any)}
+              loadData={loadData}
+            />
+          </Suspense>
+        );
         default: return (
           <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
             <LazyDashboardTab
