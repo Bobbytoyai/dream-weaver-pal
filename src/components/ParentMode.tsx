@@ -2511,7 +2511,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           {([
             ["voix", "🎤", "Voix & Sons", "Profils vocaux, vitesse, ton", "from-blue-400/15 to-blue-300/5"],
             ["limites", "⏱️", "Limites & Contrôle", "Temps, nuit, interactions, sujets", "from-amber-400/15 to-amber-300/5"],
-            ["personnalisation", "🎨", "Personnaliser", "Apparence, couleurs, style", "from-rose-400/15 to-pink-300/5"],
             ["profil", "👤", "Profil enfant", "Intérêts, mémoire, préférences", "from-violet-400/15 to-purple-300/5"],
           ] as const).map(([key, emoji, label, desc, gradient]) => (
             <button key={key} onClick={() => setReglagesSection(key)}
