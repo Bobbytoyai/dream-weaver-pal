@@ -274,6 +274,8 @@ const Admin = () => {
 
   // Cloud KB
   const [entries, setEntries] = useState<KBEntry[]>([]);
+  const [kbActiveCount, setKbActiveCount] = useState(0);
+  const [kbTotalCount, setKbTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [editingEntry, setEditingEntry] = useState<Partial<KBEntry> | null>(null);
@@ -796,13 +798,17 @@ const Admin = () => {
 
   const fetchEntries = useCallback(async () => {
     setLoading(true);
-    const [kbRes, autoLearnRes] = await Promise.all([
-      supabase.from("knowledge_base").select("*").order("priority", { ascending: false }),
+    const [kbRes, autoLearnRes, activeCountRes, totalCountRes] = await Promise.all([
+      supabase.from("knowledge_base").select("*").order("priority", { ascending: false }).limit(1000),
       supabase.from("knowledge_base").select("id", { count: "exact", head: true }).not("category", "eq", "général"),
+      supabase.from("knowledge_base").select("id", { count: "exact", head: true }).eq("is_active", true),
+      supabase.from("knowledge_base").select("id", { count: "exact", head: true }),
     ]);
     if (kbRes.error) toast.error("Erreur: " + kbRes.error.message);
     else setEntries((kbRes.data as unknown as KBEntry[]) || []);
     setAutoLearnCount(autoLearnRes.count ?? 0);
+    setKbActiveCount(activeCountRes.count ?? 0);
+    setKbTotalCount(totalCountRes.count ?? 0);
     setLoading(false);
   }, []);
 
