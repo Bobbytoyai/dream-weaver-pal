@@ -1421,19 +1421,19 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ TEMPS DE SESSION ═══ */}
       {sessionDurationChartData.some(d => d.hasData) && (
-        <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.4s" }}>
+        <div className="retro-card retro-card-tilt-1 p-3">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">⏱️</span>
-            <h3 className="text-[14px] font-extrabold text-foreground">Temps (7j)</h3>
+            <h3 className="text-[14px] font-black text-foreground uppercase">Temps (7j)</h3>
           </div>
           <div className="w-full h-36">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={sessionDurationChartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} unit=" min" />
-                <Line type="monotone" dataKey="minutes" stroke="hsl(var(--primary))" strokeWidth={2.5}
-                  dot={{ r: 3, fill: "hsl(var(--primary))", stroke: "hsl(var(--background))", strokeWidth: 2 }} connectNulls={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 9, fill: "hsl(var(--foreground))", fontWeight: 900 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 8, fill: "hsl(var(--foreground))" }} axisLine={false} tickLine={false} unit=" min" />
+                <Line type="monotone" dataKey="minutes" stroke="hsl(var(--foreground))" strokeWidth={2.5}
+                  dot={{ r: 3, fill: "hsl(var(--foreground))", stroke: "hsl(var(--background))", strokeWidth: 2 }} connectNulls={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
