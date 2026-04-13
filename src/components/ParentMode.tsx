@@ -3539,7 +3539,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         )}
 
         {/* ── Hero: Daily Summary ── */}
-        <div className="bg-gradient-to-br from-blue-400/20 via-violet-400/12 to-pink-400/10 rounded-[22px] p-5 border-2 border-blue-300/20">
+        <div className="hero-fade-in bg-gradient-to-br from-blue-400/20 via-violet-400/12 to-pink-400/10 rounded-[22px] p-5 border-2 border-blue-300/20">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-[22px] font-black text-foreground">Bonjour 👋</h2>
@@ -3581,9 +3581,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             { id: "cloud" as Tab, emoji: "☁️", label: "Bobby Cloud", color: "from-violet-400/25 to-purple-400/10", border: "border-violet-300/25" },
             { id: "profil" as Tab, emoji: "👤", label: "Profil", color: "from-pink-400/25 to-rose-400/10", border: "border-pink-300/25" },
             { id: "reglages" as Tab, emoji: "⚙️", label: "Réglages", color: "from-cyan-400/25 to-sky-400/10", border: "border-cyan-300/25" },
-          ].map(card => (
+          ].map((card, i) => (
             <button key={card.id} onClick={() => setActiveTab(card.id)}
-              className={`relative bg-gradient-to-br ${card.color} rounded-[20px] p-3 flex flex-col items-center justify-center border-2 ${card.border} hover:shadow-lg hover:scale-[1.03] transition-all active:scale-[0.94] aspect-square`}>
+              className={`card-stagger-${i + 1} relative bg-gradient-to-br ${card.color} rounded-[20px] p-3 flex flex-col items-center justify-center border-2 ${card.border} hover:shadow-lg hover:scale-[1.03] transition-all active:scale-[0.94] aspect-square`}>
               <span className="text-[36px] mb-1 drop-shadow-sm">{card.emoji}</span>
               <span className="text-[13px] font-black text-foreground leading-tight text-center tracking-tight" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>{card.label}</span>
               {card.badge && card.badge > 0 && (
