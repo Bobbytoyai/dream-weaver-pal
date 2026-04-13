@@ -68,7 +68,7 @@ const Index = () => {
         return merged;
       });
     } catch { /* ignore */ }
-  }, [memory]);
+  }, [memory, saveSettings]);
 
   const handleSettingsChange = (settings: ParentSettings) => {
     setParentSettings(settings);
