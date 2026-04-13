@@ -137,7 +137,7 @@ interface KBEntry {
 }
 
 // ─── Top-level brain sections shown as big square cards ─────────────
-type TopSection = "interactions" | "multiresponses" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons" | "store" | "expressions" | "autolearn" | "cloudusers";
+type TopSection = "interactions" | "multiresponses" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons" | "store" | "expressions" | "autolearn" | "cloudusers" | "kbdebug";
 
 // Counts are computed dynamically below in the component
 const TOP_SECTIONS_CONFIG: {
@@ -162,6 +162,7 @@ const TOP_SECTIONS_CONFIG: {
   { id: "expressions", label: "Expressions", icon: Eye, color: "text-fuchsia-500", bgColor: "bg-fuchsia-500/20", desc: "Preview & test des expressions faciales", emoji: "🎭" },
   { id: "autolearn", label: "Auto-Learning", icon: Microscope, color: "text-lime-500", bgColor: "bg-lime-500/20", desc: "IA auto-complétion depuis les conversations", emoji: "🧬" },
   { id: "cloudusers", label: "Bobby Cloud", icon: Users, color: "text-sky-500", bgColor: "bg-sky-500/20", desc: "Utilisateurs Bobby Cloud, profils sync", emoji: "☁️👥" },
+  { id: "kbdebug", label: "KB Debug", icon: Search, color: "text-emerald-500", bgColor: "bg-emerald-500/20", desc: "Debug scoring sémantique KB en temps réel", emoji: "🔍" },
 ];
 
 // ═══════════════════════════════════════════════════════════════════
@@ -2812,6 +2813,14 @@ const Admin = () => {
 
   if (topSection === "autolearn") {
     return <AutoLearnPanel onBack={() => { setTopSection(null); }} />;
+  }
+
+  if (topSection === "kbdebug") {
+    return (
+      <div className="min-h-screen p-4" style={{ background: "var(--admin-bg)" }}>
+        <KBDebugPanel onBack={() => { setTopSection(null); }} />
+      </div>
+    );
   }
 
   if (topSection === "store") {
