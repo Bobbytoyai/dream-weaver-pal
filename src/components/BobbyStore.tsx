@@ -479,9 +479,59 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-3">
-        <Loader2 className="w-8 h-8 animate-spin text-foreground" />
-        <p className="text-[12px] text-foreground/60 font-black uppercase">Chargement du Bobby Store…</p>
+      <div className="p-4 space-y-4 animate-pulse" style={{ fontFamily: "'Nunito', sans-serif" }}>
+        {/* Search skeleton */}
+        <div className="w-full h-[42px] border-4 border-black/20 bg-muted/40" />
+
+        {/* Featured banner skeleton */}
+        <div className="retro-card p-4 space-y-3" style={{ backgroundColor: "var(--retro-green)", opacity: 0.6 }}>
+          <div className="flex items-center justify-between">
+            <div className="h-4 w-28 bg-foreground/15 rounded" />
+            <div className="h-5 w-16 bg-foreground/10 rounded" />
+          </div>
+          <div className="flex gap-3 overflow-hidden">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="shrink-0 w-[160px] bg-white/60 border-2 border-black/20 p-2.5">
+                <div className="w-full aspect-square bg-muted/50 border-2 border-black/10 mb-2" />
+                <div className="h-3 w-24 bg-foreground/10 rounded mx-auto mb-1" />
+                <div className="h-2.5 w-16 bg-foreground/8 rounded mx-auto" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Category tabs skeleton */}
+        <div className="flex gap-2 overflow-hidden">
+          {[1, 2, 3, 4, 5].map(i => (
+            <div key={i} className="shrink-0 h-[34px] border-2 border-black/15 bg-muted/30 rounded" style={{ width: `${50 + i * 8}px` }} />
+          ))}
+        </div>
+
+        {/* Stats skeleton */}
+        <div className="flex items-center gap-3 px-1">
+          <div className="h-3 w-20 bg-foreground/10 rounded" />
+          <div className="h-3 w-16 bg-foreground/10 rounded" />
+        </div>
+
+        {/* Item cards skeleton */}
+        <div className="space-y-2.5">
+          {[1, 2, 3, 4, 5].map(i => (
+            <div key={i} className="retro-card w-full overflow-hidden" style={{ opacity: 1 - i * 0.1 }}>
+              <div className="flex items-center gap-3 p-3">
+                <div className="w-14 h-14 border-2 border-black/20 bg-muted/40 shrink-0" />
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="h-3.5 w-3/4 bg-foreground/12 rounded" />
+                  <div className="h-2.5 w-full bg-foreground/8 rounded" />
+                  <div className="flex gap-2">
+                    <div className="h-2 w-14 bg-foreground/6 rounded" />
+                    <div className="h-2 w-10 bg-foreground/6 rounded" />
+                  </div>
+                </div>
+                <div className="w-[72px] h-[32px] border-2 border-black/15 bg-muted/30 shrink-0" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
