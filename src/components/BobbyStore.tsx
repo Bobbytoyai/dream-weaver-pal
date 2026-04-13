@@ -325,45 +325,26 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
     cover_image_url: r.cover_image_url || null,
   });
 
-  const fetchData = useCallback(async (retryCount = 0) => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
     try {
-      const catalogPromise = supabase.from("store_content").select("*").eq("is_active", true).order("created_at", { ascending: false });
-      const installedPromise = supabase.from("installed_content").select("content_id").eq("child_name", childName);
-
-      // Race against a timeout to handle auth lock delays
-      const timeout = (ms: number) => new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), ms));
-      
-      const [catalogRes, installedRes] = await Promise.race([
-        Promise.all([catalogPromise, installedPromise]),
-        timeout(8000).then(() => { throw new Error("timeout"); }),
-      ]) as any;
+      const [catalogRes, installedRes] = await Promise.all([
+        supabase.from("store_content").select("*").eq("is_active", true).order("created_at", { ascending: false }),
+        supabase.from("installed_content").select("content_id").eq("child_name", childName),
+      ]);
 
       if (catalogRes.error) throw catalogRes.error;
-
-      if (catalogRes.data && catalogRes.data.length > 0) {
-        setItems(catalogRes.data.map(mapRow));
-      } else if (retryCount < 2) {
-        // Retry if empty result (might be auth lock delay)
-        console.warn("[BobbyStore] Empty result, retrying...", retryCount + 1);
-        setTimeout(() => fetchData(retryCount + 1), 1500);
-        return;
-      }
+      setItems((catalogRes.data || []).map(mapRow));
 
       if (installedRes?.data) {
         setInstalledIds(new Set(installedRes.data.map((r: any) => r.content_id)));
       }
-      setLoading(false);
     } catch (err: any) {
       console.error("[BobbyStore] Fetch error:", err.message);
-      if (retryCount < 2) {
-        console.warn("[BobbyStore] Retrying after error...", retryCount + 1);
-        setTimeout(() => fetchData(retryCount + 1), 2000);
-      } else {
-        setLoadError(true);
-        setLoading(false);
-      }
+      setLoadError(true);
+    } finally {
+      setLoading(false);
     }
   }, [childName]);
 
