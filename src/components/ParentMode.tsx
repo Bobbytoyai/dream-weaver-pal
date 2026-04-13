@@ -10,6 +10,7 @@ import {
   Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X, CloudUpload, LogIn,
   SkipForward, SkipBack, Activity, Bell, ChevronDown, ChevronLeft, Star, Edit3
 } from "lucide-react";
+// Recharts lazy-loaded via DashboardTab
 import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { getInterestSnapshot, INTEREST_KEYWORDS_PUBLIC } from "@/lib/bobby/interestTracker";
 import { supabase } from "@/integrations/supabase/client";
