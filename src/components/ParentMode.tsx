@@ -10,8 +10,9 @@ import {
   Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X, CloudUpload, LogIn,
   SkipForward, SkipBack, Activity, Bell, ChevronDown, ChevronLeft, Star, Edit3
 } from "lucide-react";
-// Recharts lazy-loaded via DashboardTab
-import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
+// Recharts loaded via lazy DashboardTab — no direct import here for home tab charts
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+const LazyDashboardTab = lazy(() => import("@/components/parent/DashboardTab"));
 import { getInterestSnapshot, INTEREST_KEYWORDS_PUBLIC } from "@/lib/bobby/interestTracker";
 import { supabase } from "@/integrations/supabase/client";
 import StoryLibrary from "@/components/StoryLibrary";
