@@ -13,6 +13,8 @@ import {
 const LazyDashboardTab = lazy(() => import("@/components/parent/DashboardTab"));
 const LazySessionsListTab = lazy(() => import("@/components/parent/SessionsListTab"));
 const LazySessionDetailView = lazy(() => import("@/components/parent/SessionDetailView"));
+const LazyReglagesTab = lazy(() => import("@/components/parent/ReglagesTab"));
+const LazyConfidentialiteTab = lazy(() => import("@/components/parent/ConfidentialiteTab"));
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { getInterestSnapshot, INTEREST_KEYWORDS_PUBLIC } from "@/lib/bobby/interestTracker";
 import { supabase } from "@/integrations/supabase/client";
