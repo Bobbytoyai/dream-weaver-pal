@@ -37,6 +37,18 @@ export interface ParentSettings {
   consentImprovement: boolean;
   consentStats: boolean;
   bobbyColor: string;
+  bobbyCustomization: {
+    eyeSize: number;       // 0.5 - 1.5
+    eyeSpacing: number;    // 0.5 - 1.5
+    pupilSize: number;     // 0.5 - 1.5
+    eyebrowHeight: number; // 0.5 - 1.5
+    eyebrowCurve: number;  // 0 - 1
+    eyebrowThickness: number; // 0.5 - 1.5
+    mouthWidth: number;    // 0.5 - 1.5
+    mouthCurve: number;    // 0 - 1 (0=sad, 0.5=neutral, 1=happy)
+    cheekSize: number;     // 0 - 1.5
+    eyelidDroop: number;   // 0 - 1
+  };
 }
 
 export const BOBBY_COLORS = [
@@ -87,4 +99,16 @@ export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
   consentImprovement: false,
   consentStats: false,
   bobbyColor: "blue",
+  bobbyCustomization: {
+    eyeSize: 1,
+    eyeSpacing: 1,
+    pupilSize: 1,
+    eyebrowHeight: 1,
+    eyebrowCurve: 0.5,
+    eyebrowThickness: 1,
+    mouthWidth: 1,
+    mouthCurve: 0.7,
+    cheekSize: 1,
+    eyelidDroop: 0.2,
+  },
 };
