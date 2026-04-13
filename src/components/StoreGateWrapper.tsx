@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import BobbyStore from "@/components/BobbyStore";
+import { useAuth } from "@/hooks/useAuth";
 
 interface StoreGateWrapperProps {
   childName: string;
@@ -8,15 +7,9 @@ interface StoreGateWrapperProps {
 }
 
 export default function StoreGateWrapper({ childName, childAge }: StoreGateWrapperProps) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { user, loading } = useAuth();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session);
-    });
-  }, []);
-
-  if (isAuthenticated === null) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
         <div className="text-center space-y-3">
@@ -27,7 +20,7 @@ export default function StoreGateWrapper({ childName, childAge }: StoreGateWrapp
     );
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return (
       <div className="p-4 space-y-6">
         <div

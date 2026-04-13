@@ -47,6 +47,7 @@ interface StoreItem {
   last_updated_at: string;
   created_at: string;
   cover_image_url: string | null;
+  has_full_details: boolean;
 }
 
 const CATEGORIES: { id: StoreCategory; emoji: string; label: string; bg: string }[] = [
@@ -60,6 +61,54 @@ const CATEGORIES: { id: StoreCategory; emoji: string; label: string; bg: string 
 ];
 
 const LANG_LABELS: Record<string, string> = { fr: "🇫🇷 Français", en: "🇬🇧 English", es: "🇪🇸 Español", ar: "🇸🇦 العربية", de: "🇩🇪 Deutsch" };
+
+const LIST_COLUMNS = "id,slug,name,emoji,description,category,age_min,age_max,tags,size_label,is_new,is_popular,is_featured,is_premium,install_count,rating,rating_count,content_count,languages,created_at,last_updated_at,cover_image_url";
+const DETAIL_COLUMNS = "id,slug,name,emoji,description,detailed_description,category,age_min,age_max,tags,size_label,is_new,is_popular,is_featured,is_premium,install_count,content_items,creator_name,creator_role,version_label,changelog,rating,rating_count,content_count,learning_objectives,skills_developed,duration_estimate,difficulty_level,languages,last_updated_at,created_at,cover_image_url,updated_at";
+
+function mapStoreRow(r: any): StoreItem {
+  const hasFullDetails =
+    "content_items" in r ||
+    "detailed_description" in r ||
+    "learning_objectives" in r ||
+    "skills_developed" in r ||
+    "changelog" in r;
+
+  return {
+    id: r.id,
+    slug: r.slug,
+    name: r.name,
+    emoji: r.emoji,
+    description: r.description,
+    detailed_description: r.detailed_description || "",
+    category: r.category,
+    age_min: r.age_min,
+    age_max: r.age_max,
+    tags: r.tags ?? [],
+    size_label: r.size_label,
+    is_new: r.is_new,
+    is_popular: r.is_popular,
+    is_featured: r.is_featured,
+    is_premium: r.is_premium ?? false,
+    install_count: r.install_count,
+    content_items: Array.isArray(r.content_items) ? r.content_items : [],
+    creator_name: r.creator_name || "Équipe Bobby",
+    creator_role: r.creator_role || "Éducation & Divertissement",
+    version_label: r.version_label || "1.0",
+    changelog: r.changelog || "",
+    rating: r.rating ?? 4.5,
+    rating_count: r.rating_count ?? 0,
+    content_count: r.content_count ?? 0,
+    learning_objectives: r.learning_objectives ?? [],
+    skills_developed: r.skills_developed ?? [],
+    duration_estimate: r.duration_estimate || "10-15 min",
+    difficulty_level: r.difficulty_level || "adaptatif",
+    languages: r.languages ?? ["fr"],
+    last_updated_at: r.last_updated_at || r.updated_at || r.created_at,
+    created_at: r.created_at,
+    cover_image_url: (r.cover_image_url && r.cover_image_url.trim() !== "") ? r.cover_image_url : null,
+    has_full_details: hasFullDetails,
+  };
+}
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
@@ -83,10 +132,11 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
 
 // ─── Product Detail Page ────────────────────────────────────────────
 
-function ProductDetail({ item, installed, installing, onInstall, onBack }: {
+function ProductDetail({ item, installed, installing, detailsLoading, onInstall, onBack }: {
   item: StoreItem;
   installed: boolean;
   installing: boolean;
+  detailsLoading: boolean;
   onInstall: () => void;
   onBack: () => void;
 }) {
@@ -99,6 +149,13 @@ function ProductDetail({ item, installed, installing, onInstall, onBack }: {
       <button onClick={onBack} className="flex items-center gap-2 text-foreground text-[13px] font-black uppercase hover:opacity-70 active:scale-95 transition-transform border-2 border-black px-3 py-1.5 bg-white">
         <ArrowLeft className="w-4 h-4" /> BOBBY STORE
       </button>
+
+      {detailsLoading && (
+        <div className="retro-card p-3 flex items-center gap-2" style={{ backgroundColor: "var(--retro-yellow)" }}>
+          <Loader2 className="w-4 h-4 animate-spin text-foreground" />
+          <p className="text-[11px] font-black uppercase text-foreground">Chargement des détails…</p>
+        </div>
+      )}
 
       {/* Hero Card */}
       <div className="retro-card p-5" style={{ backgroundColor: "var(--retro-blue)" }}>
@@ -287,70 +344,77 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
   const [installedIds, setInstalledIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [installing, setInstalling] = useState<string | null>(null);
+  const [detailLoadingId, setDetailLoadingId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<StoreCategory>("all");
   const [search, setSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState<StoreItem | null>(null);
 
   const [loadError, setLoadError] = useState(false);
 
-  const mapRow = (r: any): StoreItem => ({
-    id: r.id,
-    slug: r.slug,
-    name: r.name,
-    emoji: r.emoji,
-    description: r.description,
-    detailed_description: r.detailed_description || "",
-    category: r.category,
-    age_min: r.age_min,
-    age_max: r.age_max,
-    tags: r.tags ?? [],
-    size_label: r.size_label,
-    is_new: r.is_new,
-    is_popular: r.is_popular,
-    is_featured: r.is_featured,
-    is_premium: r.is_premium ?? false,
-    install_count: r.install_count,
-    content_items: Array.isArray(r.content_items) ? r.content_items : [],
-    creator_name: r.creator_name || "Équipe Bobby",
-    creator_role: r.creator_role || "Éducation & Divertissement",
-    version_label: r.version_label || "1.0",
-    changelog: r.changelog || "",
-    rating: r.rating ?? 4.5,
-    rating_count: r.rating_count ?? 0,
-    content_count: r.content_count ?? 0,
-    learning_objectives: r.learning_objectives ?? [],
-    skills_developed: r.skills_developed ?? [],
-    duration_estimate: r.duration_estimate || "10-15 min",
-    difficulty_level: r.difficulty_level || "adaptatif",
-    languages: r.languages ?? ["fr"],
-    last_updated_at: r.last_updated_at || r.updated_at,
-    created_at: r.created_at,
-    cover_image_url: (r.cover_image_url && r.cover_image_url.trim() !== "") ? r.cover_image_url : null,
-  });
-
   const fetchData = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
+    setSelectedItem(null);
     try {
-      const columns = "id,slug,name,emoji,description,detailed_description,category,age_min,age_max,tags,size_label,is_new,is_popular,is_featured,is_premium,install_count,content_items,creator_name,creator_role,version_label,changelog,rating,rating_count,content_count,learning_objectives,skills_developed,duration_estimate,difficulty_level,languages,last_updated_at,created_at,cover_image_url,updated_at";
-      const [catalogRes, installedRes] = await Promise.all([
-        supabase.from("store_content").select(columns).eq("is_active", true).order("is_featured", { ascending: false }).order("created_at", { ascending: false }),
-        supabase.from("installed_content").select("content_id").eq("child_name", childName),
-      ]);
+      const installedPromise = supabase.from("installed_content").select("content_id").eq("child_name", childName);
+      const catalogRes = await supabase
+        .from("store_content")
+        .select(LIST_COLUMNS)
+        .eq("is_active", true)
+        .order("is_featured", { ascending: false })
+        .order("created_at", { ascending: false });
 
       if (catalogRes.error) throw catalogRes.error;
-      setItems((catalogRes.data || []).map(mapRow));
+      setItems((catalogRes.data || []).map(mapStoreRow));
+      setLoading(false);
 
+      const installedRes = await installedPromise;
       if (installedRes?.data) {
         setInstalledIds(new Set(installedRes.data.map((r: any) => r.content_id)));
       }
     } catch (err: any) {
       console.error("[BobbyStore] Fetch error:", err.message);
       setLoadError(true);
-    } finally {
       setLoading(false);
     }
   }, [childName]);
+
+  const loadItemDetails = useCallback(async (itemId: string) => {
+    const existingItem = items.find((item) => item.id === itemId);
+
+    if (!existingItem || existingItem.has_full_details) {
+      return;
+    }
+
+    setDetailLoadingId(itemId);
+
+    try {
+      const { data, error } = await supabase
+        .from("store_content")
+        .select(DETAIL_COLUMNS)
+        .eq("id", itemId)
+        .single();
+
+      if (error) throw error;
+
+      const hydratedItem = mapStoreRow(data);
+
+      setItems((prev) => prev.map((item) => item.id === itemId ? hydratedItem : item));
+      setSelectedItem((current) => current?.id === itemId ? hydratedItem : current);
+    } catch (error: any) {
+      console.error("[BobbyStore] Detail fetch error:", error.message);
+      toast.error("Détail indisponible", { description: "Impossible d’ouvrir ce contenu pour le moment" });
+    } finally {
+      setDetailLoadingId(null);
+    }
+  }, [items]);
+
+  const openItem = useCallback((item: StoreItem) => {
+    setSelectedItem(item);
+    if (!item.has_full_details) {
+      void loadItemDetails(item.id);
+    }
+  }, [loadItemDetails]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -444,6 +508,7 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
           item={selectedItem}
           installed={installedIds.has(selectedItem.id)}
           installing={installing === selectedItem.id}
+          detailsLoading={detailLoadingId === selectedItem.id}
           onInstall={() => toggleInstall(selectedItem.id)}
           onBack={() => setSelectedItem(null)}
         />
@@ -472,14 +537,20 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
             </span>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
-            {featuredItems.map(item => (
+            {featuredItems.map((item, index) => (
               <button key={item.id}
-                onClick={() => setSelectedItem(item)}
+                onClick={() => openItem(item)}
                 className="shrink-0 w-[160px] bg-white border-2 border-black p-2.5 text-center hover:translate-y-[-2px] transition-all active:scale-95 overflow-hidden"
                 style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
                 {item.cover_image_url ? (
                   <div className="w-full aspect-square border-2 border-black mb-2 overflow-hidden bg-muted">
-                    <img src={item.cover_image_url} alt={item.name} className="w-full h-full object-cover" loading="eager" fetchPriority="high" />
+                    <img
+                      src={item.cover_image_url}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                      loading={index === 0 ? "eager" : "lazy"}
+                      fetchPriority={index === 0 ? "high" : "auto"}
+                    />
                   </div>
                 ) : (
                   <div className="w-full aspect-square border-2 border-black mb-2 flex items-center justify-center bg-muted/30">
@@ -539,7 +610,7 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
 
             return (
               <button key={item.id}
-                onClick={() => setSelectedItem(item)}
+                onClick={() => openItem(item)}
                 className={`retro-card ${tiltClass} w-full overflow-hidden text-left active:scale-[0.98]`}>
                 <div className="flex items-center gap-3 p-3">
                   <div className="w-14 h-14 border-2 border-black bg-white flex items-center justify-center shrink-0 text-3xl overflow-hidden">
