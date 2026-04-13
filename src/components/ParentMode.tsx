@@ -66,11 +66,29 @@ const emotionLabels: Record<string, { label: string; color: string; emoji: strin
 
 const emotionScoreLabels: Record<string, { label: string; emoji: string }> = {
   joy: { label: "Joie", emoji: "😊" },
+  joie: { label: "Joie", emoji: "😊" },
   curiosity: { label: "Curiosité", emoji: "🧐" },
+  curiosité: { label: "Curiosité", emoji: "🧐" },
   frustration: { label: "Frustration", emoji: "😤" },
   fear: { label: "Peur", emoji: "😰" },
+  peur: { label: "Peur", emoji: "😰" },
   sadness: { label: "Tristesse", emoji: "😢" },
+  tristesse: { label: "Tristesse", emoji: "😢" },
   excitement: { label: "Excitation", emoji: "🤩" },
+  excitation: { label: "Excitation", emoji: "🤩" },
+  anger: { label: "Colère", emoji: "😠" },
+  colère: { label: "Colère", emoji: "😠" },
+  surprise: { label: "Surprise", emoji: "😲" },
+  calm: { label: "Calme", emoji: "😌" },
+  calme: { label: "Calme", emoji: "😌" },
+  love: { label: "Amour", emoji: "❤️" },
+  amour: { label: "Amour", emoji: "❤️" },
+  boredom: { label: "Ennui", emoji: "😴" },
+  ennui: { label: "Ennui", emoji: "😴" },
+  confidence: { label: "Confiance", emoji: "💪" },
+  confiance: { label: "Confiance", emoji: "💪" },
+  neutral: { label: "Neutre", emoji: "😐" },
+  neutre: { label: "Neutre", emoji: "😐" },
 };
 
 const moodLabels: Record<string, { label: string; color: string; emoji: string }> = {
