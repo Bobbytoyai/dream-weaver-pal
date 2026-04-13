@@ -2,11 +2,6 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import type { ParentSettings } from "@/components/parentSettings";
 
-async function getCurrentUserId(): Promise<string | null> {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id ?? null;
-}
-
 // ─── Types ──────────────────────────────────────────────────────
 export interface CloudProfile {
   id: string;
@@ -68,6 +63,7 @@ export async function saveToCloud(
   childName: string,
   parentSettings: ParentSettings,
   childMemory?: Record<string, unknown>,
+  userId?: string,
 ): Promise<SyncResult> {
   try {
     let syncCode = getLocalSyncCode();
@@ -103,7 +99,10 @@ export async function saveToCloud(
     }
 
     // Create new profile
-    const userId = await getCurrentUserId();
+    if (!userId) {
+      return { success: false, error: "Connexion requise pour créer un compte Bobby Cloud" };
+    }
+
     syncCode = generateSyncCode();
     const { data, error } = await supabase
       .from("cloud_profiles")
