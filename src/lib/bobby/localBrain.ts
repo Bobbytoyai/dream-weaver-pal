@@ -1191,6 +1191,46 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
     },
   },
 
+  NOT_UNDERSTOOD: {
+    default: {
+      empathy: [
+        "Hmm, je n'ai pas bien compris 🤔",
+        "Oups, j'ai pas bien entendu !",
+        "Attends, j'ai pas capté…",
+      ],
+      response: [
+        "Tu peux me redire ça ?",
+        "Répète-moi un peu plus fort ?",
+        "Dis-le moi encore, je veux bien comprendre !",
+      ],
+      opening: [
+        "Je t'écoute, vas-y !",
+        "Prends ton temps, je suis là 😊",
+        "Parle bien fort pour Bobby !",
+      ],
+    },
+  },
+
+  DEMANDE_LANGUE: {
+    default: {
+      empathy: [
+        "Oh, tu veux parler une autre langue ? 😊",
+        "C'est trop bien de s'intéresser aux langues !",
+        "Ah, les langues c'est super cool !",
+      ],
+      response: [
+        "Moi je parle français, mais on peut apprendre des mots ensemble !",
+        "Bobby parle français, mais je peux t'apprendre des mots en anglais si tu veux !",
+        "Je suis un Bobby français ! Mais on peut jouer avec des mots d'autres langues !",
+      ],
+      opening: [
+        "Tu veux que je t'apprenne un mot ?",
+        "Quel mot tu voudrais apprendre ?",
+        "On joue au jeu des mots dans d'autres langues ?",
+      ],
+    },
+  },
+
   GENERAL: {
     default: {
       empathy: [
