@@ -1332,19 +1332,40 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </Suspense>
         );
         case "activites": return <StoreGateWrapper childName={settings.childName} childAge={settings.childAge} />;
-        case "profil": return renderReglages();
-        case "personnalisation": return (
-          <BobbyCustomizer
-            settings={settings}
-            onUpdate={(key, value) => updateSetting(key, value)}
-            onBack={() => setActiveTab("home")}
-            onSave={() => { onSettingsChange?.(settings); setSettingsSaved(true); setTimeout(() => setSettingsSaved(false), 2000); }}
-            saved={settingsSaved}
-          />
+        case "profil":
+        case "reglages": return (
+          <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
+            <LazyReglagesTab
+              settings={settings}
+              sessions={sessions}
+              childName={childName}
+              allInterests={allInterests}
+              settingsSaved={settingsSaved}
+              reglagesSection={reglagesSection}
+              setReglagesSection={setReglagesSection}
+              onUpdate={updateSetting}
+              onUpdateNested={updateNested}
+              onSave={handleSave}
+              onPendingNameChange={(name) => setPendingNameChange(name)}
+            />
+          </Suspense>
         );
-        case "reglages": return renderReglages();
         case "cloud": return renderCloud();
-        case "confidentialite": return renderConfidentialite();
+        case "confidentialite": return (
+          <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
+            <LazyConfidentialiteTab
+              settings={settings}
+              sessions={sessions}
+              analyses={analyses}
+              displayName={displayName}
+              childName={childName}
+              onUpdate={updateSetting}
+              setConfirmDialog={setConfirmDialog}
+              setActiveTab={(tab: string) => setActiveTab(tab as any)}
+              loadData={loadData}
+            />
+          </Suspense>
+        );
         default: return (
           <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
             <LazyDashboardTab
