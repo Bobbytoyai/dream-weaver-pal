@@ -20,23 +20,37 @@ export default function BobbyQR() {
   const [pendingNarration, setPendingNarration] = useState<PendingNarration | null>(null);
   const [parentSettings, setParentSettings] = useState<ParentSettings>(DEFAULT_PARENT_SETTINGS);
 
-  // Load code from DB
+  // Load code from DB + anti-piracy check via localStorage session token
   useEffect(() => {
     if (!code) { setStep("invalid"); return; }
+    const upperCode = code.toUpperCase();
+    const tokenKey = `bobby_session_${upperCode}`;
+
     (async () => {
       const { data, error } = await supabase
         .from("bobby_codes")
         .select("*")
-        .eq("code", code.toUpperCase())
+        .eq("code", upperCode)
         .maybeSingle();
 
       if (error || !data) { setStep("invalid"); return; }
       setBobbyCode(data);
 
       if (data.claimed_at && data.child_name) {
+        // Code already claimed — check if THIS device is the owner
+        const storedToken = localStorage.getItem(tokenKey);
+        const sd = data.session_data as Record<string, any> | null;
+        const serverToken = sd?.sessionToken;
+
+        if (!storedToken || storedToken !== serverToken) {
+          // Not the original device → show "already used" screen
+          setStep("claimed");
+          return;
+        }
+
+        // Legitimate owner — restore session
         setChildName(data.child_name);
         setChildAge(data.child_age || 6);
-        const sd = data.session_data as Record<string, any> | null;
         if (sd?.parentSettings) {
           setParentSettings({ ...DEFAULT_PARENT_SETTINGS, ...sd.parentSettings });
         }
@@ -60,25 +74,36 @@ export default function BobbyQR() {
 
   // Save settings to bobby_codes
   const saveToCode = async (settings?: ParentSettings) => {
-    if (!bobbyCode) return;
+    if (!bobbyCode || !code) return;
+    // Preserve sessionToken when saving settings
+    const tokenKey = `bobby_session_${code.toUpperCase()}`;
+    const sessionToken = localStorage.getItem(tokenKey);
     await supabase
       .from("bobby_codes")
-      .update({ session_data: { parentSettings: settings || parentSettings } as any })
+      .update({ session_data: { sessionToken, parentSettings: settings || parentSettings } as any })
       .eq("id", bobbyCode.id);
   };
 
   const claimCode = async () => {
-    if (!bobbyCode || !childName.trim() || !childAge) return;
+    if (!bobbyCode || !childName.trim() || !childAge || !code) return;
+
+    // Generate a unique session token for anti-piracy
+    const sessionToken = crypto.randomUUID();
+    const tokenKey = `bobby_session_${code.toUpperCase()}`;
+
     const { error } = await supabase
       .from("bobby_codes")
       .update({
         claimed_at: new Date().toISOString(),
         child_name: childName.trim(),
         child_age: childAge,
+        session_data: { sessionToken } as any,
       })
       .eq("id", bobbyCode.id);
 
     if (!error) {
+      // Store token on this device so only this device can re-access
+      localStorage.setItem(tokenKey, sessionToken);
       setStep("sleeping");
     }
   };
