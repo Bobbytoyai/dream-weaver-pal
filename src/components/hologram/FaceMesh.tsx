@@ -192,12 +192,25 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color("#FF69B4"), transparent: true, opacity: 0.6,
   }), []);
 
-  // ─── Apply bobbyColor tint to iris + cheeks ───────────────
+  // ─── Apply per-element colors ───────────────
   useEffect(() => {
-    const tint = COLOR_TINTS[bobbyColor || "green"] || COLOR_TINTS.green;
-    irisOuterMat.color.set(tint.iris);
-    blushMat.color.set(tint.cheek);
-  }, [bobbyColor, irisOuterMat, blushMat]);
+    if (bobbyColors) {
+      const irisHex = IRIS_HEX[bobbyColors.iris] || IRIS_HEX.blue;
+      irisOuterMat.color.set(irisHex);
+      const cheekHex = CHEEK_HEX[bobbyColors.cheek];
+      if (cheekHex) {
+        blushMat.color.set(cheekHex);
+        blushMat.opacity = 0.6;
+      } else {
+        blushMat.opacity = 0;
+      }
+      const browHex = EYEBROW_HEX[bobbyColors.eyebrow] || EYEBROW_HEX.brown;
+      eyebrowMat.color.set(browHex);
+    } else if (bobbyColor) {
+      const irisHex = IRIS_HEX[bobbyColor] || IRIS_HEX.blue;
+      irisOuterMat.color.set(irisHex);
+    }
+  }, [bobbyColor, bobbyColors, irisOuterMat, blushMat, eyebrowMat]);
 
   const eyeWhiteGeo = useMemo(() => {
     const shape = new THREE.Shape();
