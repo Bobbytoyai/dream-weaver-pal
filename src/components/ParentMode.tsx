@@ -3193,11 +3193,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
     return (
       <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
-        <h2 className="text-[16px] font-extrabold text-foreground">🔒 Confidentialité</h2>
+        <h2 className="text-[16px] font-extrabold text-foreground animate-fadeInUp" style={{ animationDelay: "0.05s" }}>🔒 Confidentialité</h2>
         <div className="grid grid-cols-2 gap-3">
-          {confCards.map(card => (
+          {confCards.map((card, i) => (
             <button key={card.id} onClick={() => setConfSection(card.id)}
-              className={`bg-gradient-to-br ${card.color} rounded-2xl p-4 text-left border border-border/20 hover:border-primary/20 hover:shadow-lg transition-all active:scale-95`}>
+              className={`bg-gradient-to-br ${card.color} rounded-2xl p-4 text-left border border-border/20 hover:border-primary/20 hover:shadow-lg transition-all active:scale-95 animate-fadeInUp`}
+              style={{ animationDelay: `${0.1 + i * 0.05}s` }}>
               <span className="text-3xl block mb-2">{card.emoji}</span>
               <h3 className="text-[14px] font-extrabold text-foreground leading-tight">{card.label}</h3>
               <p className="text-[10px] text-muted-foreground mt-1 leading-snug">{card.desc}</p>
