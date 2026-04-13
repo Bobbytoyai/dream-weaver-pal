@@ -3160,6 +3160,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         );
         case "profil": return renderProfil();
         case "reglages": return renderReglages();
+        case "cloud": return renderCloud();
         case "confidentialite": return renderConfidentialite();
         default: return renderDashboard();
       }
