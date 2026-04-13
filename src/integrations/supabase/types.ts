@@ -330,6 +330,7 @@ export type Database = {
           id: string
           installed_at: string
           is_enabled: boolean
+          user_id: string | null
         }
         Insert: {
           child_name: string
@@ -337,6 +338,7 @@ export type Database = {
           id?: string
           installed_at?: string
           is_enabled?: boolean
+          user_id?: string | null
         }
         Update: {
           child_name?: string
@@ -344,6 +346,7 @@ export type Database = {
           id?: string
           installed_at?: string
           is_enabled?: boolean
+          user_id?: string | null
         }
         Relationships: [
           {
