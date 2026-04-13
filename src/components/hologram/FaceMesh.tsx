@@ -570,7 +570,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={mouthInteriorRef} position={[0, -0.52, 0.005]} geometry={mouthInteriorGeo} material={mouthInteriorMat} />
 
       {/* Tongue */}
-      <mesh ref={tongueRef} position={[0, -0.66, 0.006]} material={tongueMat}>
+      <mesh ref={tongueRef} position={[0, -0.60, 0.006]} material={tongueMat}>
         <circleGeometry args={[0.06, 24]} />
       </mesh>
     </group>
