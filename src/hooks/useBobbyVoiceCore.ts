@@ -112,7 +112,7 @@ export function useBobbyVoiceCore({
   const lastAiResponseRef = useRef(welcomeMessage);
   const [micArmed, setMicArmed] = useState(false);
   const [networkOffline, setNetworkOffline] = useState(() => getNetworkMode() === "OFFLINE");
-  const [currentEmotion, setCurrentEmotion] = useState<FaceState>("idle");
+  const [currentEmotion, setCurrentEmotion] = useState<FaceState>("happy");
   const [currentExpressionCombo, setCurrentExpressionCombo] = useState<ExpressionCombo | undefined>();
   const [currentExpressionIntensity, setCurrentExpressionIntensity] = useState<number>(3);
 
@@ -335,7 +335,7 @@ export function useBobbyVoiceCore({
     stopSttRef.current();
     setMicArmed(false);
     setPartialText("");
-    setCurrentEmotion("idle");
+    setCurrentEmotion("happy");
     voiceDetectedRef.current = false;
     convRelanceCountRef.current = 0;
     go("IDLE");

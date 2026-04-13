@@ -68,8 +68,8 @@ const PERSONALITY_PREFIXES: Record<string, string[]> = {
     "Tout en douceur, ",
   ],
   energetic: [
-    "Oh wow ! ",
     "Génial ! ",
+    "Trop cool ! ",
     "Trop bien ! ",
   ],
   educational: [

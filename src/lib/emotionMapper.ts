@@ -36,7 +36,7 @@ const BOBBY_EMOTION_TO_FACE: Record<BobbyEmotion, FaceState> = {
   jealousy: "reassuring",
   gratitude: "happy",
   determination: "attentive",
-  neutral: "idle",
+  neutral: "happy",  // Bobby defaults to a gentle smile, not blank idle
 };
 
 // ─── KB emotion → FaceState mapping ─────────────────────────
@@ -86,7 +86,12 @@ export function ttsEmotionToFace(emotion: Emotion | undefined): FaceState | unde
  */
 export function detectBobbyEmotion(text: string): FaceState {
   const result = processBobbyResponseEmotion(text);
-  return BOBBY_EMOTION_TO_FACE[result.emotion] ?? "happy";
+  // Default to happy for neutral/unknown — Bobby should smile by default
+  const face = BOBBY_EMOTION_TO_FACE[result.emotion] ?? "happy";
+  // Never show "sad" for Bobby's own speech — Bobby is always positive
+  // Only show sad face when the child's emotion is genuinely sad (handled in detectChildExpression)
+  if (face === "sad") return "reassuring";
+  return face;
 }
 
 /**
@@ -116,8 +121,14 @@ export function detectChildExpression(text: string, childAge: number = 7): {
   const pipelineResult = processEmotionPipeline(text, childAge);
   
   // Bobby reacts empathetically: mirror positive, comfort negative
+  // BUT: only show negative faces (sad, reassuring) for high-intensity negative emotions
   const bobbyReaction = mapChildEmotionToBobbyReaction(pipelineResult.emotion);
-  const faceState = BOBBY_EMOTION_TO_FACE[bobbyReaction] ?? "attentive";
+  const negativeFaces: FaceState[] = ["sad", "reassuring"];
+  const mappedFace = BOBBY_EMOTION_TO_FACE[bobbyReaction] ?? "attentive";
+  // Only allow negative face if intensity >= 3 (genuinely distressed)
+  const faceState: FaceState = negativeFaces.includes(mappedFace) && pipelineResult.intensity < 3
+    ? "attentive"
+    : mappedFace;
   
   return {
     faceState,
