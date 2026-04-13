@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import type { ParentSettings } from "@/components/parentSettings";
 
 // ─── Types ──────────────────────────────────────────────────────
@@ -81,8 +82,8 @@ export async function saveToCloud(
           .from("cloud_profiles")
           .update({
             child_name: childName,
-            parent_settings: parentSettings as unknown as Record<string, unknown>,
-            child_memory_snapshot: childMemory || {},
+            parent_settings: parentSettings as unknown as Json,
+            child_memory_snapshot: (childMemory || {}) as Json,
             device_info: deviceInfo,
             last_synced_at: now,
             updated_at: now,
@@ -100,14 +101,14 @@ export async function saveToCloud(
     syncCode = generateSyncCode();
     const { data, error } = await supabase
       .from("cloud_profiles")
-      .insert({
+      .insert([{
         sync_code: syncCode,
         child_name: childName,
-        parent_settings: parentSettings as unknown as Record<string, unknown>,
-        child_memory_snapshot: childMemory || {},
+        parent_settings: parentSettings as unknown as Json,
+        child_memory_snapshot: (childMemory || {}) as Json,
         device_info: deviceInfo,
         last_synced_at: now,
-      })
+      }])
       .select()
       .single();
 
