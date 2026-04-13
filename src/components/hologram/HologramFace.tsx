@@ -154,13 +154,13 @@ function SleepZzz() {
     if (!groupRef.current) return;
     zLetters.current.forEach((mesh, i) => {
       if (!mesh) return;
-      phases.current[i] += delta * 0.5;
-      const p = phases.current[i] % 4;
-      const t = p / 4;
+      phases.current[i] += delta * 0.35;
+      const p = phases.current[i] % 6;
+      const t = p / 6;
 
-      // Float up and slightly right — stay within face bounds
-      mesh.position.x = 0.35 + t * 0.5 + i * 0.2;
-      mesh.position.y = 0.15 + t * 1.5;
+      // Float up high — from face level to top of screen, then reset
+      mesh.position.x = 0.35 + t * 0.6 + i * 0.15;
+      mesh.position.y = 0.15 + t * 4.5; // much higher travel distance
       mesh.position.z = 0.15;
 
       const scale = (1.5 + i * 0.6) * (0.3 + Math.sin(t * Math.PI) * 0.7);
@@ -170,7 +170,10 @@ function SleepZzz() {
       mesh.rotation.z = Math.sin(phases.current[i] * 1.8) * 0.15;
 
       const mat = mesh.material as THREE.MeshBasicMaterial;
-      mat.opacity = Math.sin(t * Math.PI) * 0.85;
+      // Fade in at start, fade out as it reaches the top
+      const fadeIn = Math.min(1, t * 5);
+      const fadeOut = Math.max(0, 1 - (t - 0.7) / 0.3);
+      mat.opacity = fadeIn * fadeOut * 0.85;
     });
   });
 
