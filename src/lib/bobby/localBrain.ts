@@ -2197,21 +2197,33 @@ export function getLocalBrainReply(
   });
 
   // 5. Check for active scenario (multi-turn emotional journey)
+  //    BUT: if the child clearly changed topic/intent, break out of the scenario
   if (isScenarioActive()) {
-    const scenarioResp = getScenarioResponse(userText, childName);
-    if (scenarioResp) {
-      addTurn({ role: "bobby", text: scenarioResp.text, intent, timestamp: Date.now() });
-      addBobbyResponse(scenarioResp.text);
-      const latency = performance.now() - startTime;
-      console.log(`[LocalBrain] 🎭 Scenario response ${latency.toFixed(1)}ms`);
-      return {
-        text: scenarioResp.text,
-        intent,
-        source: "local_brain",
-        emotion: (scenarioResp.faceState as FaceState) || "reassuring",
-        confidence: 0.95,
-        isOffline: true,
-      };
+    const scenarioInfo = getActiveScenarioInfo();
+    const scenarioTriggerIntents = scenarioInfo ? getScenarioTriggerIntents(scenarioInfo.id) : [];
+    const childChangedTopic = intent !== "OUI" && intent !== "NON" && intent !== "GENERAL" 
+      && intent !== "QUESTION_SIMPLE" && !scenarioTriggerIntents.includes(intent);
+    
+    if (childChangedTopic) {
+      // Child moved on — reset scenario
+      console.log(`[LocalBrain] 🔄 Child changed topic (${intent}), breaking scenario ${scenarioInfo?.id}`);
+      resetScenarios();
+    } else {
+      const scenarioResp = getScenarioResponse(userText, childName);
+      if (scenarioResp) {
+        addTurn({ role: "bobby", text: scenarioResp.text, intent, timestamp: Date.now() });
+        addBobbyResponse(scenarioResp.text);
+        const latency = performance.now() - startTime;
+        console.log(`[LocalBrain] 🎭 Scenario response ${latency.toFixed(1)}ms`);
+        return {
+          text: scenarioResp.text,
+          intent,
+          source: "local_brain",
+          emotion: (scenarioResp.faceState as FaceState) || "reassuring",
+          confidence: 0.95,
+          isOffline: true,
+        };
+      }
     }
   }
 
