@@ -125,12 +125,12 @@ const SettingRow = ({ icon: Icon, title, desc, children }: {
 }) => (
   <div className="flex items-center justify-between py-3 px-1">
     <div className="flex items-center gap-3 flex-1 min-w-0">
-      <div className="w-8 h-8 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">
-        <Icon className="w-4 h-4 text-primary" />
+      <div className="w-9 h-9 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">
+        <Icon className="w-4.5 h-4.5 text-primary" />
       </div>
       <div className="min-w-0">
-        <h4 className="text-[13px] font-semibold text-foreground">{title}</h4>
-        {desc && <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{desc}</p>}
+        <h4 className="text-[14px] font-semibold text-foreground">{title}</h4>
+        {desc && <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">{desc}</p>}
       </div>
     </div>
     <div className="shrink-0 ml-3">{children}</div>
