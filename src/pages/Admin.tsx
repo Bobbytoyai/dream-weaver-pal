@@ -830,17 +830,23 @@ const Admin = () => {
   // ─── Login ─────────────────────────────────────────────────────────
   if (!authenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] flex items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-sm text-center space-y-4 border border-white/10">
-          <Lock className="w-12 h-12 text-purple-400 mx-auto" />
-          <h1 className="text-xl font-bold text-white">Admin Bobby</h1>
-          <p className="text-white/60 text-sm">Code d'accès administrateur</p>
-          <Input type="password" value={code} onChange={e => setCode(e.target.value)} placeholder="••••••••"
-            className="bg-white/10 border-white/20 text-white text-center text-lg tracking-widest"
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4">
+        <div className="w-full max-w-sm text-center space-y-6">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500 to-blue-600 mx-auto flex items-center justify-center shadow-2xl shadow-purple-500/20">
+            <Brain className="w-10 h-10 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-white tracking-tight">Bobby Admin</h1>
+            <p className="text-white/40 text-sm mt-1">Base opérationnelle</p>
+          </div>
+          <Input type="password" value={code} onChange={e => setCode(e.target.value)} placeholder="Code d'accès"
+            className="bg-white/[0.06] border-white/[0.08] text-white text-center text-lg tracking-[0.3em] rounded-2xl h-14 placeholder:text-white/20 focus:border-purple-500/40 focus:ring-purple-500/20"
             onKeyDown={e => { if (e.key === "Enter") { code === ACCESS_CODE ? setAuthenticated(true) : toast.error("Code incorrect"); } }}
           />
           <Button onClick={() => { code === ACCESS_CODE ? setAuthenticated(true) : toast.error("Code incorrect"); }}
-            className="w-full bg-purple-600 hover:bg-purple-700">Accéder</Button>
+            className="w-full h-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-2xl text-[15px] font-semibold shadow-lg shadow-purple-500/20">
+            Accéder
+          </Button>
         </div>
       </div>
     );
