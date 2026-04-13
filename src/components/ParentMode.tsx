@@ -3436,17 +3436,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     );
   };
 
-  const [lightMode, setLightMode] = useState(() => {
-    const stored = localStorage.getItem("parent-light");
-    return stored === null ? true : stored === "true";
-  });
-
-  const toggleLight = () => {
-    setLightMode(v => {
-      localStorage.setItem("parent-light", String(!v));
-      return !v;
-    });
-  };
+  const lightMode = true;
 
   return (
     <div className={`min-h-screen bg-background max-w-lg mx-auto flex flex-col transition-colors duration-300 ${lightMode ? "parent-light" : ""}`}>
@@ -3475,10 +3465,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   {unreadAlertCount}
                 </span>
               )}
-            </button>
-            <button onClick={toggleLight}
-              className="w-9 h-9 border-2 border-black bg-white flex items-center justify-center text-black hover:bg-muted transition-all">
-              {lightMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </button>
             <button onClick={() => { loadData(); loadAlerts(); }} className="w-9 h-9 border-2 border-black bg-white flex items-center justify-center text-black">
               <RefreshCw className="w-4 h-4" />
