@@ -3033,6 +3033,37 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </p>
       </div>
 
+      {/* ── STATUS BANNER ── */}
+      {cloudLoading && (
+        <div className="retro-card p-4 flex items-center gap-3 animate-pulse" style={{ backgroundColor: 'var(--retro-yellow)' }}>
+          <Loader2 className="w-6 h-6 animate-spin text-gray-800" />
+          <div>
+            <p className="text-[14px] font-black text-gray-800 uppercase">Synchronisation en cours…</p>
+            <p className="text-[11px] text-gray-600 font-bold">Veuillez patienter quelques secondes.</p>
+          </div>
+        </div>
+      )}
+
+      {!cloudLoading && !user && !cloudProfile && (
+        <div className="retro-card p-4 flex items-center gap-3" style={{ backgroundColor: 'var(--retro-red)', opacity: 0.9 }}>
+          <span className="text-2xl">🔒</span>
+          <div>
+            <p className="text-[14px] font-black text-gray-800 uppercase">Connexion requise</p>
+            <p className="text-[11px] text-gray-600 font-bold">Créez un compte ou connectez-vous pour activer Bobby Cloud.</p>
+          </div>
+        </div>
+      )}
+
+      {!cloudLoading && user && !cloudProfile && (
+        <div className="retro-card p-4 flex items-center gap-3" style={{ backgroundColor: 'var(--retro-yellow)', opacity: 0.9 }}>
+          <span className="text-2xl">⚡</span>
+          <div>
+            <p className="text-[14px] font-black text-gray-800 uppercase">Cloud non activé</p>
+            <p className="text-[11px] text-gray-600 font-bold">Connecté en tant que {user.email} — activez la synchronisation ci-dessous.</p>
+          </div>
+        </div>
+      )}
+
       {/* ── CONNEXION / SYNC STATUS ── */}
       {cloudProfile ? (
         <div className="retro-card p-5 space-y-4" style={{ backgroundColor: 'var(--retro-green)' }}>
