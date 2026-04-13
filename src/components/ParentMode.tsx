@@ -3203,18 +3203,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             childAge={settings.childAge}
           />
         );
-        case "profil": return renderProfil();
+        case "profil":
+        case "personnalisation":
+          // Route through reglages
+          return renderReglages();
         case "reglages": return renderReglages();
         case "cloud": return renderCloud();
-        case "personnalisation": return (
-          <BobbyCustomizer
-            settings={settings}
-            onUpdate={(key, value) => updateSetting(key, value)}
-            onBack={() => setActiveTab("home")}
-            onSave={() => { onSettingsChange?.(settings); setSettingsSaved(true); setTimeout(() => setSettingsSaved(false), 2000); }}
-            saved={settingsSaved}
-          />
-        );
         case "confidentialite": return renderConfidentialite();
         default: return renderDashboard();
       }
