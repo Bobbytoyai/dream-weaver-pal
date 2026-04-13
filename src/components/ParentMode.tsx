@@ -1601,35 +1601,41 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
             {sessionMessages.length > 0 && (
               <Card title="Transcription" icon={FileText}>
-                <div className="max-h-80 overflow-y-auto space-y-2">
+                <div className="max-h-96 overflow-y-auto space-y-3 py-1">
                   {sessionMessages.map((msg, i) => {
                     const isChild = msg.role === "user";
                     const isActive = i === activeMessageIdx && (playingAudio || ttsPlaying);
                     const isTtsSpeaking = ttsPlaying === msg.content;
+                    const time = new Date(msg.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
                     return (
-                      <div key={i} className={`flex ${isChild ? "justify-start" : "justify-end"} transition-all duration-200`}>
-                        <div className={`max-w-[85%] rounded-2xl px-3 py-2 transition-all duration-200 ${
-                          isActive ? "ring-2 ring-primary/40 shadow-sm" : ""
-                        } ${
-                          isChild ? "bg-muted/70" : "bg-primary/8"
-                        }`}>
-                          <div className="flex items-center gap-1.5 mb-0.5">
-                            <span className="text-[10px] font-medium text-muted-foreground">
-                              {isChild ? `👦 ${settings.childName || childName}` : "🤖 Bobby"}
-                            </span>
+                      <div key={i} className={`flex ${isChild ? "justify-start" : "justify-end"}`}>
+                        <div className={`max-w-[80%] relative group ${
+                          isActive ? "scale-[1.01]" : ""
+                        } transition-transform duration-200`}>
+                          {/* Apple-style bubble */}
+                          <div className={`rounded-[20px] px-4 py-2.5 ${
+                            isChild
+                              ? "bg-muted/80 rounded-bl-md"
+                              : "bg-primary/12 rounded-br-md"
+                          } ${isActive ? "ring-2 ring-primary/30" : ""}`}>
+                            <p className="text-[13px] text-foreground leading-[1.45]">{msg.content}</p>
+                          </div>
+                          {/* Meta row */}
+                          <div className={`flex items-center gap-1.5 mt-1 px-1 ${isChild ? "" : "justify-end"}`}>
+                            <span className="text-[10px] text-muted-foreground/60">{isChild ? `👦 ${settings.childName || childName}` : "🤖 Bobby"}</span>
+                            <span className="text-[10px] text-muted-foreground/40">{time}</span>
                             {msg.detected_emotion && (
                               <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${
                                 emotionLabels[msg.detected_emotion]?.color || "bg-muted text-muted-foreground"
                               }`}>
-                                {emotionLabels[msg.detected_emotion]?.emoji} {emotionLabels[msg.detected_emotion]?.label || msg.detected_emotion}
+                                {emotionLabels[msg.detected_emotion]?.emoji}
                               </span>
                             )}
                             <button onClick={() => speakMessage(msg.content)}
-                              className="ml-auto w-5 h-5 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-colors">
+                              className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-all">
                               {isTtsSpeaking ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
                             </button>
                           </div>
-                          <p className="text-[12px] text-foreground leading-relaxed">{msg.content}</p>
                         </div>
                       </div>
                     );
