@@ -152,8 +152,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const [rightEyeX, rightEyeY] = useMemo(() => svgToWorld(342, 240), []);
   const [leftBrowX, leftBrowY] = useMemo(() => svgToWorld(155, 147.5), []);
   const [rightBrowX, rightBrowY] = useMemo(() => svgToWorld(357, 147.5), []);
-  const [leftCheekX, leftCheekY] = useMemo(() => svgToWorld(155, 340), []);
-  const [rightCheekX, rightCheekY] = useMemo(() => svgToWorld(357, 340), []);
+  const [leftCheekX, leftCheekY] = useMemo(() => svgToWorld(155, 320), []);
+  const [rightCheekX, rightCheekY] = useMemo(() => svgToWorld(357, 320), []);
 
   // ─── Materials ────────────────────────────────────────────
   const eyeOutlineMat = useMemo(() => new THREE.MeshBasicMaterial({
@@ -268,7 +268,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   // Cheek oval
   const cheekGeo = useMemo(() => {
     const shape = new THREE.Shape();
-    shape.absellipse(0, 0, 0.16, 0.12, 0, Math.PI * 2, false, 0);
+    shape.absellipse(0, 0, 0.19, 0.14, 0, Math.PI * 2, false, 0);
     return new THREE.ShapeGeometry(shape, 32);
   }, []);
 
@@ -545,8 +545,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   return (
     <group ref={rootRef}>
       {/* Cheeks */}
-      <mesh ref={leftCheekRef} position={[leftCheekX, leftCheekY, 0.005]} material={blushMat} geometry={cheekGeo} />
-      <mesh ref={rightCheekRef} position={[rightCheekX, rightCheekY, 0.005]} material={blushMat} geometry={cheekGeo} />
+      <mesh ref={leftCheekRef} position={[leftCheekX, leftCheekY, 0.005]} material={blushMat} geometry={cheekGeo} rotation={[0, 0, 0.08]} />
+      <mesh ref={rightCheekRef} position={[rightCheekX, rightCheekY, 0.005]} material={blushMat} geometry={cheekGeo} rotation={[0, 0, -0.08]} />
 
       {/* Eyes */}
       {renderEye("left", leftEyeRef, leftPupilRef, leftIrisRef, leftEyelidRef, leftHl1Ref, leftHl2Ref, leftEyeX, leftEyeY, hl1Offset, hl2Offset)}
