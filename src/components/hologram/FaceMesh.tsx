@@ -136,6 +136,10 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const rightEyelidRef = useRef<THREE.Mesh>(null);
   const leftCheekRef = useRef<THREE.Mesh>(null);
   const rightCheekRef = useRef<THREE.Mesh>(null);
+  const leftHl1Ref = useRef<THREE.Mesh>(null);
+  const leftHl2Ref = useRef<THREE.Mesh>(null);
+  const rightHl1Ref = useRef<THREE.Mesh>(null);
+  const rightHl2Ref = useRef<THREE.Mesh>(null);
   const prevMouthKey = useRef("");
 
   const animation = useFaceAnimation(faceState, gazeRef, audioAmplitude, viseme, emotionIntensity, emotionDuringSpeech, expressionOverride, expressionIntensityLevel);
@@ -280,26 +284,68 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     rootRef.current.rotation.y = state.headTiltY * 0.15;
     rootRef.current.rotation.x = state.headTiltX * 0.08;
 
-    // Pupils — gaze tracking
+    // Pupils — gaze tracking with clamping inside eye bounds
     const t = performance.now() * 0.001;
     const wanderX = Math.sin(t * 0.4) * 0.008 + Math.sin(t * 1.1) * 0.004;
     const wanderY = Math.cos(t * 0.3) * 0.006 + Math.sin(t * 0.8) * 0.003;
-    const pupilGazeX = state.pupilX * 0.85 + wanderX;
-    const pupilGazeY = state.pupilY * 0.7 + wanderY;
+    
+    // Eye white is ellipse rx=0.38, ry=0.32. Iris radius=0.264, pupil=0.17
+    // Clamp so iris stays fully inside the eye white
+    const maxIrisX = 0.38 - 0.264; // ~0.116
+    const maxIrisY = 0.32 - 0.264; // ~0.056
+    const maxPupilX = 0.38 - 0.17; // ~0.21
+    const maxPupilY = 0.32 - 0.17; // ~0.15
+    
+    const rawPupilX = state.pupilX * 0.85 + wanderX;
+    const rawPupilY = state.pupilY * 0.7 + wanderY;
+    const rawIrisX = state.pupilX * 0.4 + wanderX * 0.5;
+    const rawIrisY = state.pupilY * 0.3 + wanderY * 0.5;
+    
+    // Clamp to elliptical bounds
+    const clampEllipse = (x: number, y: number, mx: number, my: number): [number, number] => {
+      if (mx <= 0 || my <= 0) return [0, 0];
+      const nx = x / mx;
+      const ny = y / my;
+      const dist = Math.sqrt(nx * nx + ny * ny);
+      if (dist <= 1) return [x, y];
+      return [x / dist, y / dist];
+    };
+    
+    const [pupilX, pupilY] = clampEllipse(rawPupilX, rawPupilY, maxPupilX, maxPupilY);
+    const [irisX, irisY] = clampEllipse(rawIrisX, rawIrisY, maxIrisX, maxIrisY);
+    
     [leftPupilRef, rightPupilRef].forEach(ref => {
       if (ref.current) {
-        ref.current.position.x = pupilGazeX;
-        ref.current.position.y = pupilGazeY;
+        ref.current.position.x = pupilX;
+        ref.current.position.y = pupilY;
       }
     });
-    const irisGazeX = state.pupilX * 0.4 + wanderX * 0.5;
-    const irisGazeY = state.pupilY * 0.3 + wanderY * 0.5;
     [leftIrisRef, rightIrisRef].forEach(ref => {
       if (ref.current) {
-        ref.current.position.x = irisGazeX;
-        ref.current.position.y = irisGazeY;
+        ref.current.position.x = irisX;
+        ref.current.position.y = irisY;
       }
     });
+    
+    // Highlights follow gaze (offset from pupil) for realistic look
+    const hlFollowX = pupilX * 0.6;
+    const hlFollowY = pupilY * 0.6;
+    if (leftHl1Ref.current) {
+      leftHl1Ref.current.position.x = -0.10 + hlFollowX;
+      leftHl1Ref.current.position.y = 0.10 + hlFollowY;
+    }
+    if (leftHl2Ref.current) {
+      leftHl2Ref.current.position.x = 0.12 + hlFollowX;
+      leftHl2Ref.current.position.y = -0.088 + hlFollowY;
+    }
+    if (rightHl1Ref.current) {
+      rightHl1Ref.current.position.x = 0.10 + hlFollowX;
+      rightHl1Ref.current.position.y = 0.10 + hlFollowY;
+    }
+    if (rightHl2Ref.current) {
+      rightHl2Ref.current.position.x = -0.12 + hlFollowX;
+      rightHl2Ref.current.position.y = -0.088 + hlFollowY;
+    }
 
     const ps = state.pupilSize;
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(ps);
