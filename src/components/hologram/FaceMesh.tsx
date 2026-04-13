@@ -546,9 +546,13 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={hl1Ref} position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       {/* hl2 hidden — single highlight per eye */}
       <mesh ref={hl2Ref} position={[hl1[0], hl1[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} visible={false} />
-      {/* Eyelid — large rect sliding down from above */}
+      {/* Eyelid — same ellipse shape as eye white, slides from above */}
       <mesh ref={eyelidRef} position={[0, 0.60, 0.044]} material={eyelidMat}>
-        <planeGeometry args={[0.72, 0.58]} />
+        <shapeGeometry args={[(() => {
+          const s = new THREE.Shape();
+          s.absellipse(0, 0, 0.33, 0.27, 0, Math.PI * 2, false, 0);
+          return s;
+        })(), 32]} />
       </mesh>
     </group>
   );
