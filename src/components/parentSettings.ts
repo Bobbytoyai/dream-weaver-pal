@@ -37,6 +37,7 @@ export interface ParentSettings {
   consentImprovement: boolean;
   consentStats: boolean;
   disabledExpressions: string[];
+  bilingualMode: "off" | "pending";
   bobbyColor: string;
   bobbyColors: {
     iris: string;
@@ -106,6 +107,7 @@ export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
   consentImprovement: false,
   consentStats: false,
   disabledExpressions: [],
+  bilingualMode: "off",
   bobbyColor: "blue",
   bobbyColors: {
     iris: "blue",

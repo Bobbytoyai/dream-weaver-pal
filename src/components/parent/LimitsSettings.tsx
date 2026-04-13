@@ -216,6 +216,33 @@ const LimitsSettings = ({ settings, onUpdate, onUpdateNested, todayDuration, onB
         </div>
       </div>
 
+      {/* Bilingual mode */}
+      <div className="bg-card rounded-2xl p-4 border-2 border-border/20 animate-fadeInUp relative overflow-hidden" style={{ animationDelay: "0.5s" }}>
+        <div className="flex items-center justify-between">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h4 className="text-[12px] font-black text-foreground">🌍 Mode bilingue</h4>
+              <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 font-extrabold shrink-0">BIENTÔT</span>
+            </div>
+            <p className="text-[9px] text-muted-foreground mt-0.5">Français / Anglais — Bobby parle les deux langues</p>
+            <p className="text-[9px] text-amber-600/80 mt-1 font-bold">⚠️ Téléchargement lourd requis (~800 Mo)</p>
+          </div>
+        </div>
+        <div className="mt-3 space-y-2">
+          <button
+            disabled
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-muted/50 text-muted-foreground/50 text-[12px] font-black cursor-not-allowed border-2 border-dashed border-border/30"
+          >
+            <span className="text-lg">📥</span>
+            Télécharger le pack bilingue
+          </button>
+          <p className="text-[8px] text-muted-foreground/60 text-center leading-relaxed">
+            Le mode bilingue nécessite un téléchargement de données linguistiques.<br />
+            Cette fonctionnalité sera disponible dans une prochaine mise à jour.
+          </p>
+        </div>
+      </div>
+
       {/* Save */}
       <button onClick={onSave}
         className={`w-full py-3.5 rounded-2xl text-[14px] font-black transition-all active:scale-95 ${
