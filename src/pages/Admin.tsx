@@ -174,7 +174,8 @@ function DashCard({ label, emoji, count, desc, color, bgColor, onClick, badge }:
 }) {
   return (
     <button onClick={onClick}
-      className="bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-2xl p-3 border border-white/[0.06] hover:border-white/[0.12] transition-all duration-200 text-left flex items-center gap-3 group active:scale-[0.98] hover:shadow-lg hover:shadow-black/20 w-full"
+      className="rounded-2xl p-3 transition-all duration-200 text-left flex items-center gap-3 group active:scale-[0.98] w-full"
+      style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}
     >
       <div className={`w-10 h-10 shrink-0 rounded-xl ${bgColor} flex items-center justify-center`}>
         <span className="text-xl">{emoji}</span>
@@ -184,12 +185,12 @@ function DashCard({ label, emoji, count, desc, color, bgColor, onClick, badge }:
           <h3 className={`text-[13px] font-bold ${color} truncate`}>{label}</h3>
           {badge && <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold shrink-0">{badge}</span>}
         </div>
-        <p className="text-[10px] text-white/25 truncate leading-tight">{desc}</p>
+        <p className="text-[10px] truncate leading-tight" style={{ color: "var(--admin-text-dim)" }}>{desc}</p>
       </div>
       <div className="text-right shrink-0">
-        <p className="text-[18px] font-bold text-white tabular-nums">{count}</p>
+        <p className="text-[18px] font-bold tabular-nums" style={{ color: "var(--admin-text)" }}>{count}</p>
       </div>
-      <ChevronRight className="w-3.5 h-3.5 text-white/15 shrink-0 group-hover:text-white/30 transition-colors" />
+      <ChevronRight className="w-3.5 h-3.5 shrink-0 transition-colors" style={{ color: "var(--admin-text-faint)" }} />
     </button>
   );
 }
@@ -2840,24 +2841,24 @@ const Admin = () => {
 
   // ═══════════════════════════════════════════════════════════════════
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${adminDark ? 'bg-[#0a0a0f]' : 'admin-light bg-gray-50'}`}>
+    <div className={`min-h-screen transition-colors duration-300 ${adminDark ? '' : 'admin-light'}`} style={{ background: "var(--admin-bg)" }}>
       <div className="max-w-4xl mx-auto px-4 py-5 space-y-4">
         {/* ── Header — compact ── */}
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate("/")} className="w-9 h-9 rounded-xl admin-card flex items-center justify-center hover:opacity-80 transition-all active:scale-95">
-            <ArrowLeft className="w-4 h-4 admin-text-muted" />
+          <button onClick={() => navigate("/")} className="w-9 h-9 rounded-xl flex items-center justify-center hover:opacity-80 transition-all active:scale-95" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
+            <ArrowLeft className="w-4 h-4" style={{ color: "var(--admin-text-muted)" }} />
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className={`text-xl font-bold tracking-tight ${adminDark ? 'text-white' : 'text-gray-900'}`}>Bobby Admin</h1>
-            <p className={`text-[11px] ${adminDark ? 'text-white/25' : 'text-gray-400'}`}>Tableau de bord central</p>
+            <h1 className="text-xl font-bold tracking-tight" style={{ color: "var(--admin-text)" }}>Bobby Admin</h1>
+            <p className="text-[11px]" style={{ color: "var(--admin-text-dim)" }}>Tableau de bord central</p>
           </div>
           <button onClick={() => setAdminDark(d => !d)}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95 ${adminDark ? 'bg-white/[0.06] hover:bg-white/[0.1]' : 'bg-gray-200 hover:bg-gray-300'}`}>
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
             {adminDark ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
           </button>
           <button onClick={() => { fetchEntries(); fetchStoreItems(); fetchCloudUsers(); fetchCloudStories(); fetchRealConversations(); fetchLiveStats(); fetchChartData(); toast.success("Données rafraîchies"); }}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95 ${adminDark ? 'bg-white/[0.06] hover:bg-white/[0.1]' : 'bg-gray-200 hover:bg-gray-300'}`}>
-            <RefreshCw className={`w-4 h-4 ${adminDark ? 'text-white/40' : 'text-gray-500'}`} />
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
+            <RefreshCw className="w-4 h-4" style={{ color: "var(--admin-text-muted)" }} />
           </button>
         </div>
 
@@ -2868,76 +2869,69 @@ const Admin = () => {
           const activeKB = entries.filter(e => e.is_active).length;
           return (
             <div className="grid grid-cols-4 gap-2">
-              <div className="col-span-2 bg-gradient-to-r from-purple-500/10 to-blue-500/8 backdrop-blur-xl rounded-2xl p-3 border border-purple-500/10">
-                <p className="text-[28px] font-extrabold text-white tracking-tight leading-none">{total.toLocaleString("fr-FR")}</p>
-                <p className="text-[10px] text-white/35 mt-0.5">contenus total</p>
+              <div className="col-span-2 bg-gradient-to-r from-purple-500/10 to-blue-500/8 rounded-2xl p-3" style={{ border: "1px solid var(--admin-border)" }}>
+                <p className="text-[28px] font-extrabold tracking-tight leading-none" style={{ color: "var(--admin-text)" }}>{total.toLocaleString("fr-FR")}</p>
+                <p className="text-[10px] mt-0.5" style={{ color: "var(--admin-text-muted)" }}>contenus total</p>
               </div>
-              <div className="bg-white/[0.04] rounded-2xl p-3 border border-white/[0.05] text-center">
-                <p className="text-lg font-bold text-emerald-400">{activeKB}</p>
-                <p className="text-[9px] text-white/25">KB actif</p>
+              <div className="rounded-2xl p-3 text-center" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
+                <p className="text-lg font-bold text-emerald-500">{activeKB}</p>
+                <p className="text-[9px]" style={{ color: "var(--admin-text-dim)" }}>KB actif</p>
               </div>
-              <div className="bg-white/[0.04] rounded-2xl p-3 border border-white/[0.05] text-center">
-                <p className="text-lg font-bold text-sky-400">{cloudUsers.length}</p>
-                <p className="text-[9px] text-white/25">users</p>
+              <div className="rounded-2xl p-3 text-center" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
+                <p className="text-lg font-bold text-sky-500">{cloudUsers.length}</p>
+                <p className="text-[9px]" style={{ color: "var(--admin-text-dim)" }}>users</p>
               </div>
             </div>
           );
         })()}
 
         {/* ── Live Activity Widget ── */}
-        <div className="bg-gradient-to-r from-emerald-500/[0.06] to-cyan-500/[0.06] backdrop-blur-xl rounded-2xl p-3 border border-emerald-500/10">
+        <div className="bg-gradient-to-r from-emerald-500/[0.08] to-cyan-500/[0.08] rounded-2xl p-3" style={{ border: "1px solid var(--admin-border)" }}>
           <div className="flex items-center gap-2 mb-2.5">
             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <p className="text-[11px] font-bold text-emerald-400 tracking-wide">ACTIVITÉ EN DIRECT</p>
-            <p className="text-[9px] text-white/20 ml-auto">⟳ 30s</p>
+            <p className="text-[11px] font-bold text-emerald-500 tracking-wide">ACTIVITÉ EN DIRECT</p>
+            <p className="text-[9px] ml-auto" style={{ color: "var(--admin-text-faint)" }}>⟳ 30s</p>
           </div>
           <div className="grid grid-cols-3 gap-2">
-            <div className="bg-white/[0.04] rounded-xl p-2.5 text-center">
-              <p className="text-[22px] font-extrabold text-emerald-400 leading-none">{liveStats.activeSessions}</p>
-              <p className="text-[9px] text-white/30 mt-1">actives maintenant</p>
-            </div>
-            <div className="bg-white/[0.04] rounded-xl p-2.5 text-center">
-              <p className="text-[22px] font-extrabold text-cyan-400 leading-none">{liveStats.todaySessions}</p>
-              <p className="text-[9px] text-white/30 mt-1">sessions aujourd'hui</p>
-            </div>
-            <div className="bg-white/[0.04] rounded-xl p-2.5 text-center">
-              <p className="text-[22px] font-extrabold text-blue-400 leading-none">{liveStats.todayMessages}</p>
-              <p className="text-[9px] text-white/30 mt-1">messages aujourd'hui</p>
-            </div>
+            {[
+              { val: liveStats.activeSessions, label: "actives maintenant", color: "text-emerald-500" },
+              { val: liveStats.todaySessions, label: "sessions aujourd'hui", color: "text-cyan-500" },
+              { val: liveStats.todayMessages, label: "messages aujourd'hui", color: "text-blue-500" },
+            ].map(s => (
+              <div key={s.label} className="rounded-xl p-2.5 text-center" style={{ background: "var(--admin-card)" }}>
+                <p className={`text-[22px] font-extrabold leading-none ${s.color}`}>{s.val}</p>
+                <p className="text-[9px] mt-1" style={{ color: "var(--admin-text-muted)" }}>{s.label}</p>
+              </div>
+            ))}
           </div>
           <div className="flex items-center justify-between mt-2.5 px-1">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[9px] text-white/20">⏱ Durée moy:</span>
-              <span className="text-[10px] font-bold text-white/50">{liveStats.avgDuration > 0 ? `${Math.floor(liveStats.avgDuration / 60)}m${(liveStats.avgDuration % 60).toString().padStart(2, "0")}s` : "—"}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[9px] text-white/20">😊 Top émotion:</span>
-              <span className="text-[10px] font-bold text-white/50">{liveStats.topEmotion}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[9px] text-white/20">🕐 Dernière:</span>
-              <span className="text-[10px] font-bold text-white/50">{liveStats.lastActivity ? (() => {
-                const diff = Math.round((Date.now() - new Date(liveStats.lastActivity).getTime()) / 60000);
-                return diff < 1 ? "à l'instant" : diff < 60 ? `il y a ${diff}m` : `il y a ${Math.floor(diff / 60)}h`;
-              })() : "—"}</span>
-            </div>
+            {[
+              { icon: "⏱", label: "Durée moy:", value: liveStats.avgDuration > 0 ? `${Math.floor(liveStats.avgDuration / 60)}m${(liveStats.avgDuration % 60).toString().padStart(2, "0")}s` : "—" },
+              { icon: "😊", label: "Top émotion:", value: liveStats.topEmotion },
+              { icon: "🕐", label: "Dernière:", value: liveStats.lastActivity ? (() => { const diff = Math.round((Date.now() - new Date(liveStats.lastActivity).getTime()) / 60000); return diff < 1 ? "à l'instant" : diff < 60 ? `il y a ${diff}m` : `il y a ${Math.floor(diff / 60)}h`; })() : "—" },
+            ].map(s => (
+              <div key={s.label} className="flex items-center gap-1.5">
+                <span className="text-[9px]" style={{ color: "var(--admin-text-faint)" }}>{s.icon} {s.label}</span>
+                <span className="text-[10px] font-bold" style={{ color: "var(--admin-text-secondary)" }}>{s.value}</span>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* ── Charts ── */}
         <div className="grid grid-cols-1 gap-3">
           {/* Sessions per day */}
-          <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl p-3 border border-white/[0.06]">
-            <p className="text-[11px] font-bold text-white/60 mb-2">📊 Sessions & Messages (7 jours)</p>
+          <div className="rounded-2xl p-3" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
+            <p className="text-[11px] font-bold mb-2" style={{ color: "var(--admin-text-secondary)" }}>📊 Sessions & Messages (7 jours)</p>
             {chartSessions.length > 0 ? (
               <div className="h-[140px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartSessions} barGap={2}>
-                    <XAxis dataKey="day" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="day" tick={{ fill: adminDark ? "rgba(255,255,255,0.3)" : "#86868b", fontSize: 10 }} axisLine={false} tickLine={false} />
                     <YAxis hide />
                     <Tooltip
-                      contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 11, color: "#fff" }}
-                      labelStyle={{ color: "rgba(255,255,255,0.5)" }}
+                      contentStyle={{ background: adminDark ? "#1a1a2e" : "#fff", border: `1px solid ${adminDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, borderRadius: 12, fontSize: 11, color: adminDark ? "#fff" : "#1d1d1f" }}
+                      labelStyle={{ color: adminDark ? "rgba(255,255,255,0.5)" : "#86868b" }}
                     />
                     <Bar dataKey="sessions" name="Sessions" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="messages" name="Messages" fill="#06b6d4" radius={[4, 4, 0, 0]} />
@@ -2945,17 +2939,17 @@ const Admin = () => {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <p className="text-[10px] text-white/20 text-center py-6">Aucune donnée cette semaine</p>
+              <p className="text-[10px] text-center py-6" style={{ color: "var(--admin-text-faint)" }}>Aucune donnée cette semaine</p>
             )}
             <div className="flex items-center justify-center gap-4 mt-1">
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-purple-500" /><span className="text-[9px] text-white/30">Sessions</span></div>
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-cyan-500" /><span className="text-[9px] text-white/30">Messages</span></div>
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-purple-500" /><span className="text-[9px]" style={{ color: "var(--admin-text-muted)" }}>Sessions</span></div>
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-cyan-500" /><span className="text-[9px]" style={{ color: "var(--admin-text-muted)" }}>Messages</span></div>
             </div>
           </div>
 
           {/* Emotions pie */}
-          <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl p-3 border border-white/[0.06]">
-            <p className="text-[11px] font-bold text-white/60 mb-2">😊 Émotions détectées (7 jours)</p>
+          <div className="rounded-2xl p-3" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
+            <p className="text-[11px] font-bold mb-2" style={{ color: "var(--admin-text-secondary)" }}>😊 Émotions détectées (7 jours)</p>
             {chartEmotions.length > 0 ? (
               <div className="flex items-center gap-3">
                 <div className="h-[120px] w-[120px] shrink-0">
@@ -2964,7 +2958,7 @@ const Admin = () => {
                       <Pie data={chartEmotions} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={50} innerRadius={25} strokeWidth={0}>
                         {chartEmotions.map((e, i) => <Cell key={i} fill={e.color} />)}
                       </Pie>
-                      <Tooltip contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 11, color: "#fff" }} />
+                      <Tooltip contentStyle={{ background: adminDark ? "#1a1a2e" : "#fff", border: `1px solid ${adminDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, borderRadius: 12, fontSize: 11, color: adminDark ? "#fff" : "#1d1d1f" }} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -2972,14 +2966,14 @@ const Admin = () => {
                   {chartEmotions.map((e, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: e.color }} />
-                      <span className="text-[11px] text-white/60 flex-1">{e.name}</span>
-                      <span className="text-[11px] font-bold text-white/40 tabular-nums">{e.value}</span>
+                      <span className="text-[11px] flex-1" style={{ color: "var(--admin-text-secondary)" }}>{e.name}</span>
+                      <span className="text-[11px] font-bold tabular-nums" style={{ color: "var(--admin-text-muted)" }}>{e.value}</span>
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-              <p className="text-[10px] text-white/20 text-center py-6">Aucune émotion détectée</p>
+              <p className="text-[10px] text-center py-6" style={{ color: "var(--admin-text-faint)" }}>Aucune émotion détectée</p>
             )}
           </div>
         </div>
@@ -3146,7 +3140,7 @@ const Admin = () => {
         </>
         )}
 
-        <p className="text-[9px] text-white/10 text-center pt-1 pb-4">Bobby Admin v2 · Cloud KB modifiable</p>
+        <p className="text-[9px] text-center pt-1 pb-4" style={{ color: "var(--admin-text-faint)" }}>Bobby Admin v2 · Cloud KB modifiable</p>
         {detailPortal}
       </div>
     </div>
