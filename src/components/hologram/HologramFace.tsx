@@ -105,7 +105,7 @@ export function HologramFace({
       />
       <Canvas
         camera={{ position: [0, 0, 3.2], fov: 45 }}
-        gl={{ antialias: true, alpha: true }}
+        gl={{ antialias: true, alpha: true, stencil: true }}
         style={{ background: "transparent" }}
       >
         <Suspense fallback={null}>
