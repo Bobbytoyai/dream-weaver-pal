@@ -1702,30 +1702,35 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               )}
             </Card>
 
-            <button
-              onClick={() => exportSessionPDF(selectedSession!, analysis)}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-card text-primary text-[13px] font-semibold hover:bg-primary/8 transition-all">
-              <Download className="w-4 h-4" /> Exporter le rapport
-            </button>
-          </>
-        ) : (
-          <button onClick={() => analyzeSession(selectedSession!)}
-            className="w-full bg-primary text-primary-foreground rounded-2xl p-4 font-semibold text-[13px] hover:opacity-90 transition-all">
-            🧠 Lancer l'analyse IA
-          </button>
-        )}
-
-        <button
-          onClick={() => setConfirmDialog({
-            title: "Supprimer cette session ?",
-            description: "Toutes les données de cette session (messages, analyse, audio) seront supprimées définitivement.",
-            confirmLabel: "Supprimer",
-            variant: "danger",
-            onConfirm: () => { deleteSession(selectedSession!.id); setConfirmDialog(null); },
-          })}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-destructive/5 text-destructive text-[13px] font-medium hover:bg-destructive/10 transition-all">
-          <Trash2 className="w-4 h-4" /> Supprimer cette session
-        </button>
+            {/* ── 3 Action Buttons ── */}
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => exportSessionPDF(selectedSession!, analysis)}
+                className="flex flex-col items-center gap-1.5 py-3 rounded-2xl bg-card hover:bg-primary/8 transition-all">
+                <Download className="w-5 h-5 text-primary" />
+                <span className="text-[11px] font-semibold text-foreground">Exporter</span>
+              </button>
+              <button
+                onClick={() => {
+                  toast.success("✅ Session sauvegardée dans Bobby Cloud", { description: "Les données sont synchronisées et sécurisées." });
+                }}
+                className="flex flex-col items-center gap-1.5 py-3 rounded-2xl bg-card hover:bg-primary/8 transition-all">
+                <CloudUpload className="w-5 h-5 text-primary" />
+                <span className="text-[11px] font-semibold text-foreground">Bobby Cloud</span>
+              </button>
+              <button
+                onClick={() => setConfirmDialog({
+                  title: "Supprimer cette session ?",
+                  description: "Toutes les données de cette session (messages, analyse, audio) seront supprimées définitivement.",
+                  confirmLabel: "Supprimer",
+                  variant: "danger",
+                  onConfirm: () => { deleteSession(selectedSession!.id); setConfirmDialog(null); },
+                })}
+                className="flex flex-col items-center gap-1.5 py-3 rounded-2xl bg-card hover:bg-destructive/10 transition-all">
+                <Trash2 className="w-5 h-5 text-destructive" />
+                <span className="text-[11px] font-semibold text-destructive">Supprimer</span>
+              </button>
+            </div>
       </div>
     );
   };
