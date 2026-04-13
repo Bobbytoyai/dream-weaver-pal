@@ -225,8 +225,9 @@ const VoiceScreen = ({
             </div>
           )}
           <button onClick={() => { sm.handleParentMode(); handleDebugToggle(); setSafetyBadge(0); }}
-            className="relative flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/50 text-muted-foreground text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300">
-            <Settings className="w-4 h-4" />
+            className="relative flex items-center gap-1.5 px-2.5 py-1.5 bg-white border-3 border-black text-foreground text-[11px] font-black uppercase hover:bg-[var(--retro-yellow)] active:scale-90 transition-all"
+            style={{ boxShadow: "2px 2px 0px rgba(0,0,0,0.25)" }}>
+            <Settings className="w-3.5 h-3.5" />
             Parent
             {safetyBadge > 0 && (
               <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold px-1 animate-pulse shadow-sm">
