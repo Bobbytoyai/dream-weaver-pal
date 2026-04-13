@@ -2921,17 +2921,17 @@ const Admin = () => {
         {/* ── Charts ── */}
         <div className="grid grid-cols-1 gap-3">
           {/* Sessions per day */}
-          <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl p-3 border border-white/[0.06]">
-            <p className="text-[11px] font-bold text-white/60 mb-2">📊 Sessions & Messages (7 jours)</p>
+          <div className="rounded-2xl p-3" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
+            <p className="text-[11px] font-bold mb-2" style={{ color: "var(--admin-text-secondary)" }}>📊 Sessions & Messages (7 jours)</p>
             {chartSessions.length > 0 ? (
               <div className="h-[140px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartSessions} barGap={2}>
-                    <XAxis dataKey="day" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="day" tick={{ fill: adminDark ? "rgba(255,255,255,0.3)" : "#86868b", fontSize: 10 }} axisLine={false} tickLine={false} />
                     <YAxis hide />
                     <Tooltip
-                      contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 11, color: "#fff" }}
-                      labelStyle={{ color: "rgba(255,255,255,0.5)" }}
+                      contentStyle={{ background: adminDark ? "#1a1a2e" : "#fff", border: `1px solid ${adminDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, borderRadius: 12, fontSize: 11, color: adminDark ? "#fff" : "#1d1d1f" }}
+                      labelStyle={{ color: adminDark ? "rgba(255,255,255,0.5)" : "#86868b" }}
                     />
                     <Bar dataKey="sessions" name="Sessions" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="messages" name="Messages" fill="#06b6d4" radius={[4, 4, 0, 0]} />
@@ -2939,17 +2939,17 @@ const Admin = () => {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <p className="text-[10px] text-white/20 text-center py-6">Aucune donnée cette semaine</p>
+              <p className="text-[10px] text-center py-6" style={{ color: "var(--admin-text-faint)" }}>Aucune donnée cette semaine</p>
             )}
             <div className="flex items-center justify-center gap-4 mt-1">
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-purple-500" /><span className="text-[9px] text-white/30">Sessions</span></div>
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-cyan-500" /><span className="text-[9px] text-white/30">Messages</span></div>
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-purple-500" /><span className="text-[9px]" style={{ color: "var(--admin-text-muted)" }}>Sessions</span></div>
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-cyan-500" /><span className="text-[9px]" style={{ color: "var(--admin-text-muted)" }}>Messages</span></div>
             </div>
           </div>
 
           {/* Emotions pie */}
-          <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl p-3 border border-white/[0.06]">
-            <p className="text-[11px] font-bold text-white/60 mb-2">😊 Émotions détectées (7 jours)</p>
+          <div className="rounded-2xl p-3" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
+            <p className="text-[11px] font-bold mb-2" style={{ color: "var(--admin-text-secondary)" }}>😊 Émotions détectées (7 jours)</p>
             {chartEmotions.length > 0 ? (
               <div className="flex items-center gap-3">
                 <div className="h-[120px] w-[120px] shrink-0">
@@ -2958,7 +2958,7 @@ const Admin = () => {
                       <Pie data={chartEmotions} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={50} innerRadius={25} strokeWidth={0}>
                         {chartEmotions.map((e, i) => <Cell key={i} fill={e.color} />)}
                       </Pie>
-                      <Tooltip contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 11, color: "#fff" }} />
+                      <Tooltip contentStyle={{ background: adminDark ? "#1a1a2e" : "#fff", border: `1px solid ${adminDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, borderRadius: 12, fontSize: 11, color: adminDark ? "#fff" : "#1d1d1f" }} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -2966,14 +2966,14 @@ const Admin = () => {
                   {chartEmotions.map((e, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: e.color }} />
-                      <span className="text-[11px] text-white/60 flex-1">{e.name}</span>
-                      <span className="text-[11px] font-bold text-white/40 tabular-nums">{e.value}</span>
+                      <span className="text-[11px] flex-1" style={{ color: "var(--admin-text-secondary)" }}>{e.name}</span>
+                      <span className="text-[11px] font-bold tabular-nums" style={{ color: "var(--admin-text-muted)" }}>{e.value}</span>
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-              <p className="text-[10px] text-white/20 text-center py-6">Aucune émotion détectée</p>
+              <p className="text-[10px] text-center py-6" style={{ color: "var(--admin-text-faint)" }}>Aucune émotion détectée</p>
             )}
           </div>
         </div>
