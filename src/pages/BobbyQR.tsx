@@ -74,10 +74,13 @@ export default function BobbyQR() {
 
   // Save settings to bobby_codes
   const saveToCode = async (settings?: ParentSettings) => {
-    if (!bobbyCode) return;
+    if (!bobbyCode || !code) return;
+    // Preserve sessionToken when saving settings
+    const tokenKey = `bobby_session_${code.toUpperCase()}`;
+    const sessionToken = localStorage.getItem(tokenKey);
     await supabase
       .from("bobby_codes")
-      .update({ session_data: { parentSettings: settings || parentSettings } as any })
+      .update({ session_data: { sessionToken, parentSettings: settings || parentSettings } as any })
       .eq("id", bobbyCode.id);
   };
 
