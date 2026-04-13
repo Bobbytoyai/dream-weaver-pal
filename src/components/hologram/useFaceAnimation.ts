@@ -117,10 +117,10 @@ const STATE_TARGETS: Record<FaceState, Partial<FaceAnimationState>> = {
     pupilSize: 0.85, cheekGlow: 0.05, irisGlow: 0.25, eyeSparkle: 0.2,
   },
   sleepy: {
-    eyeOpenness: -0.2, eyebrowHeight: -0.15, eyebrowTilt: 0,
-    mouthOpenness: 0, mouthWidth: 0.38, mouthCurve: 0.02, mouthRound: 0, jawDrop: 0,
-    headTiltX: -0.08, headTiltZ: 0.1, glowIntensity: 0.05,
-    pupilSize: 0.3, cheekGlow: 0.05, irisGlow: 0.05, eyeSparkle: 0.0,
+    eyeOpenness: 0.15, eyebrowHeight: -0.15, eyebrowTilt: 0,
+    mouthOpenness: 0, mouthWidth: 0.38, mouthCurve: 0.08, mouthRound: 0, jawDrop: 0,
+    headTiltX: -0.08, headTiltZ: 0.1, glowIntensity: 0.08,
+    pupilSize: 0.5, cheekGlow: 0.08, irisGlow: 0.1, eyeSparkle: 0.1,
   },
   curious: {
     eyeOpenness: 1.3, eyebrowHeight: 0.22, eyebrowTilt: 0.08,
@@ -373,12 +373,16 @@ export function useFaceAnimation(
       curiousTiltZ = Math.sin(breathPhase.current * 1.5) * 0.03;
     }
 
-    // --- SLEEPY: eyes fully closed, slow breathing head bob ---
+    // --- SLEEPY: eyes nearly closed with drowsy flutter, ready to wake ---
     let sleepyEyeWobble = 0;
     let sleepyHeadBob = 0;
     if (faceState === "sleepy") {
-      sleepyEyeWobble = -1.0; // Force eyes completely shut
-      sleepyHeadBob = Math.sin(breathPhase.current * 0.4) * 0.03; // slow nod
+      const sleepT = breathPhase.current * 0.4;
+      // Eyes mostly closed but slightly open (drowsy) with gentle flutter
+      const baseClose = -0.75; // not fully shut — slight gap
+      const flutter = Math.sin(sleepT) * 0.06 + Math.sin(sleepT * 2.3) * 0.03; // organic flutter
+      sleepyEyeWobble = baseClose + flutter; // oscillates between -0.84 and -0.66
+      sleepyHeadBob = Math.sin(sleepT) * 0.03; // slow nod
     }
 
     // --- CONFUSED: rapid micro head shake ---

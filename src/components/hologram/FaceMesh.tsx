@@ -198,7 +198,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   // Eyelid
   const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(225, 25%, 82%)"), transparent: true, opacity: 0.97, depthWrite: true,
+    color: new THREE.Color("hsl(225, 25%, 82%)"), transparent: false, opacity: 1.0, depthWrite: true,
   }), []);
 
   // Cheeks — #FF69B4
@@ -393,11 +393,12 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         const closedY = -0.05;  // slightly below center = fully shut
         let targetY = hiddenY - easedCover * (hiddenY - closedY);
         
-        // Sleeping: gentle breathing-like flutter
-        if (isSleepingNow && coverAmount > 0.9) {
+        // Sleeping: drowsy flutter — eyelids slightly open, breathing rhythm
+        if (isSleepingNow) {
           const flutterT = performance.now() * 0.001;
-          const flutter = Math.sin(flutterT * 0.5) * 0.025;
-          targetY += Math.max(0, flutter);
+          // Gentle oscillation: eyelids open a crack then close back
+          const flutter = Math.sin(flutterT * 0.4) * 0.04 + Math.sin(flutterT * 1.1) * 0.02;
+          targetY += flutter;
         }
         
         ref.current.position.y = targetY;
