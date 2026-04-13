@@ -427,14 +427,20 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         const closedY = 0.0;
         let targetY = hiddenY + easedCover * (closedY - hiddenY);
 
-        // Sleep: fully closed with light upward rebounds that reveal a thin strip at the bottom
+        // Sleep: fully closed with more pronounced upward rebounds
         if (isSleepingNow) {
           const sleepT = performance.now() * 0.001;
-          const breathLift = Math.max(0, Math.sin(sleepT * 0.35)) * 0.035;
-          const microLift = Math.sin(sleepT * 0.08) > 0.9
-            ? Math.max(0, Math.sin(sleepT * 0.9)) * 0.055
+          // Slow breathing — lifts lid noticeably
+          const breathLift = Math.max(0, Math.sin(sleepT * 0.4)) * 0.09;
+          // Frequent bigger peeks — shows more of the eye
+          const bigPeek = Math.sin(sleepT * 0.1) > 0.75
+            ? Math.max(0, Math.sin(sleepT * 1.2)) * 0.16
             : 0;
-          targetY = closedY + Math.max(breathLift, microLift);
+          // Rare dramatic flutter
+          const dramaticFlutter = Math.sin(sleepT * 0.04) > 0.95
+            ? Math.max(0, Math.sin(sleepT * 2.5)) * 0.22
+            : 0;
+          targetY = closedY + Math.max(breathLift, bigPeek, dramaticFlutter);
         }
 
         ref.current.position.y = targetY;
