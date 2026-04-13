@@ -1076,6 +1076,7 @@ const Admin = () => {
             );
           })()}
 
+          {realConvLoading ? (
             <div className="text-center text-white/50 py-12 animate-pulse">Chargement des conversations…</div>
           ) : realConversations.length === 0 ? (
             <div className="text-center py-12">
