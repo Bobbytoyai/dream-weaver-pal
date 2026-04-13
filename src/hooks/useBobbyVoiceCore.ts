@@ -23,11 +23,12 @@ import { useConversationRecorder } from "./useConversationRecorder";
 // ─── Timing constants ────────────────────────────────
 const WAIT_SILENCE_BEFORE_RELANCE_MS = 60_000;   // 60s no voice in LISTENING → relance
 const RELANCE_SILENCE_BEFORE_OFF_MS = 30_000;     // 30s no voice after relance → off
-const CONV_SILENCE_RELANCE_MS = 20_000;            // 20s silence during conversation → relance
+const CONV_SILENCE_RELANCE_MS = 30_000;            // 30s silence during conversation → relance
 const CONV_SILENCE_OFF_MS = 60_000;                // 60s silence after conv relance → goodbye
 const MIN_SESSION_MS = 90_000;                      // 90s minimum session guarantee
 const SLEEP_TIMER_MS = 120_000;                     // 2min idle → sleep
 const ANTI_ECHO_COOLDOWN_MS = 400;
+const UTTERANCE_BUFFER_MS = 2500;                   // 2.5s buffer — wait for child to finish speaking
 
 const RELANCE_MESSAGES: string[] = [];
 const GOODBYE_MESSAGES: string[] = [];
