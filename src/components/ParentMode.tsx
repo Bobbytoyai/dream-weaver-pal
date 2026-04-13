@@ -3219,20 +3219,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const allTabIds: Tab[] = ["home", ...tabs.map(t => t.id)];
   const prevTabRef = useRef(activeTab);
-  const [animClass, setAnimClass] = useState("");
+  
   const [displayedTab, setDisplayedTab] = useState(activeTab);
 
   useEffect(() => {
     if (activeTab === prevTabRef.current) return;
-    setAnimClass("retro-glitch-exit");
-    const t = setTimeout(() => {
-      setDisplayedTab(activeTab);
-      setAnimClass("retro-glitch-enter");
-      const t2 = setTimeout(() => setAnimClass(""), 350);
-      return () => clearTimeout(t2);
-    }, 120);
+    setDisplayedTab(activeTab);
     prevTabRef.current = activeTab;
-    return () => clearTimeout(t);
   }, [activeTab]);
 
   // ═══════════════════════════════════════════════════════════════
@@ -3548,7 +3541,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* Content */}
       <div ref={contentScrollRef} data-scroll-container className="flex-1 overflow-y-auto overflow-x-hidden">
-        <div className={`tab-content-wrapper ${animClass}`}>
+        <div className="tab-content-wrapper">
           {renderTabContent()}
         </div>
       </div>
