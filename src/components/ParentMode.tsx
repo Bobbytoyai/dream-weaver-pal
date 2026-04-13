@@ -3179,52 +3179,58 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ── TARIFS ── */}
       <div className="space-y-3">
-        <h3 className="text-[16px] font-extrabold text-foreground px-1">💾 Tarifs Bobby Cloud — par stockage</h3>
-        <p className="text-[11px] text-muted-foreground px-1 -mt-1">Utilisation actuelle : <span className="font-extrabold text-foreground">{storageLabel}</span> / 500 Mo</p>
+        <h3 className="text-[16px] font-black text-foreground px-1 uppercase">💾 TARIFS BOBBY CLOUD</h3>
+        <p className="text-[11px] text-foreground/60 px-1 -mt-1 font-bold">Utilisation actuelle : <span className="font-black text-foreground">{storageLabel}</span> / 500 Mo</p>
         {/* Usage bar */}
-        <div className="mx-1 h-2 rounded-full bg-muted overflow-hidden">
-          <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary/60 transition-all" style={{ width: `${Math.min(100, (estimatedStorageMB / 500) * 100)}%` }} />
+        <div className="mx-1 h-3 bg-white border-2 border-black overflow-hidden">
+          <div className="h-full bg-foreground transition-all" style={{ width: `${Math.min(100, (estimatedStorageMB / 500) * 100)}%` }} />
         </div>
-        {plans.map(plan => (
-          <div key={plan.name} className={`bg-gradient-to-br ${(plan as any).color} rounded-3xl p-4 border ${(plan as any).border} relative ${(plan as any).popular ? "ring-2 ring-primary/30" : ""}`}>
-            {(plan as any).popular && (
-              <span className="absolute -top-2.5 right-4 px-3 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-extrabold shadow-md">
-                ⭐ Recommandé
-              </span>
-            )}
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-3xl">{plan.emoji}</span>
-              <div className="flex-1">
-                <h4 className="text-[17px] font-extrabold text-foreground">{plan.name}</h4>
-                <span className="text-[12px] font-bold text-primary">💾 {(plan as any).storage}</span>
-              </div>
-              <div className="text-right">
-                <span className="text-[22px] font-extrabold text-foreground">{plan.price}</span>
-                {plan.period && <span className="text-[11px] text-muted-foreground">{plan.period}</span>}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-3">
-              {plan.features.map(f => (
-                <div key={f} className="flex items-center gap-1.5">
-                  <span className="text-green-500 text-[12px]">✓</span>
-                  <span className="text-[11px] text-foreground font-medium">{f}</span>
+        {plans.map((plan, pi) => {
+          const planBgs = ["white", "var(--retro-blue)", "var(--retro-yellow)"];
+          const tiltClass = `retro-card-tilt-${(pi % 6) + 1}`;
+          return (
+            <div key={plan.name} className={`retro-card ${tiltClass} p-4 relative ${(plan as any).popular ? "ring-2 ring-foreground/20" : ""}`}
+              style={{ backgroundColor: planBgs[pi] || "white" }}>
+              {(plan as any).popular && (
+                <span className="absolute -top-2.5 right-4 px-3 py-0.5 border-2 border-black bg-[var(--retro-yellow)] text-foreground text-[10px] font-black">
+                  ⭐ Recommandé
+                </span>
+              )}
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-3xl">{plan.emoji}</span>
+                <div className="flex-1">
+                  <h4 className="text-[17px] font-black text-foreground uppercase">{plan.name}</h4>
+                  <span className="text-[12px] font-black text-foreground/70">💾 {(plan as any).storage}</span>
                 </div>
-              ))}
+                <div className="text-right">
+                  <span className="text-[22px] font-black text-foreground">{plan.price}</span>
+                  {plan.period && <span className="text-[11px] text-foreground/60 font-bold">{plan.period}</span>}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-3">
+                {plan.features.map(f => (
+                  <div key={f} className="flex items-center gap-1.5">
+                    <span className="text-foreground text-[12px] font-black">✓</span>
+                    <span className="text-[11px] text-foreground font-bold">{f}</span>
+                  </div>
+                ))}
+              </div>
+              <button disabled={plan.disabled}
+                className={`w-full py-2.5 font-black text-[13px] transition-all active:scale-95 border-4 border-black uppercase ${
+                  plan.disabled
+                    ? "bg-white/50 text-foreground/40 cursor-not-allowed"
+                    : "bg-foreground text-background hover:opacity-90"
+                }`}
+                style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
+                {plan.cta}
+              </button>
             </div>
-            <button disabled={plan.disabled}
-              className={`w-full py-2.5 rounded-2xl font-extrabold text-[13px] transition-all active:scale-95 ${
-                plan.disabled
-                  ? "bg-muted/50 text-muted-foreground cursor-not-allowed"
-                  : "bg-primary text-primary-foreground hover:opacity-90 shadow-md shadow-primary/20"
-              }`}>
-              {plan.cta}
-            </button>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* ── INFRASTRUCTURE FOOTER ── */}
-      <div className="mt-4 pt-4 border-t border-border/15">
+      <div className="mt-4 pt-4 border-t-2 border-black/10">
         <div className="flex items-center justify-center gap-3 flex-wrap">
           {[
             { emoji: "🔒", label: "AES-256" },
@@ -3233,12 +3239,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             { emoji: "🔄", label: "Sync auto" },
             { emoji: "📈", label: "Scalable" },
           ].map(f => (
-            <span key={f.label} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-muted/40 text-[9px] font-bold text-muted-foreground">
+            <span key={f.label} className="inline-flex items-center gap-1 px-2.5 py-1 border border-black bg-white text-[9px] font-black text-foreground">
               {f.emoji} {f.label}
             </span>
           ))}
         </div>
-        <p className="text-center text-[9px] text-muted-foreground/60 mt-2">
+        <p className="text-center text-[9px] text-foreground/40 mt-2 font-bold">
           ☁️ Infrastructure sécurisée • Chiffrement bout en bout • Serveurs EU
         </p>
       </div>
