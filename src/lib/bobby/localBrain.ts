@@ -16,7 +16,7 @@
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import type { BobbyBrainReply } from "./types";
 import { smartClassify } from "./smartClassifier";
-import { tryStartScenario, isScenarioActive, getScenarioResponse, resetScenarios, getActiveScenarioInfo } from "./emotionalScenarios";
+import { tryStartScenario, isScenarioActive, getScenarioResponse, resetScenarios, getActiveScenarioInfo, getScenarioTriggerIntents } from "./emotionalScenarios";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 1. SHORT-TERM MEMORY
