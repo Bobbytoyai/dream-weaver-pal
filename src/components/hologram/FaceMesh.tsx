@@ -2,13 +2,24 @@
  * Bobby Face — Dynamic expression system v2
  * New mouth: upper lip arc + lower lip arc that opens smoothly
  * New eyebrows: curved arcs that tilt, raise, and furrow naturally
+ * Color system: bobbyColor prop tints iris + cheeks dynamically
  */
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { FaceState, useFaceAnimation } from "./useFaceAnimation";
 import { VisemeState } from "./useAudioAmplitude";
 import type { ExpressionCombo } from "@/lib/bobby/expressionLibrary";
+
+// Map bobbyColor IDs to iris + cheek tints
+const COLOR_TINTS: Record<string, { iris: string; cheek: string }> = {
+  blue:   { iris: "#1565C0", cheek: "#90CAF9" },
+  purple: { iris: "#7B1FA2", cheek: "#CE93D8" },
+  green:  { iris: "#1B5E20", cheek: "#A5D6A7" },
+  pink:   { iris: "#C2185B", cheek: "#F48FB1" },
+  orange: { iris: "#E65100", cheek: "#FFAB91" },
+  gold:   { iris: "#F9A825", cheek: "#FFE082" },
+};
 
 interface FaceMeshProps {
   faceState: FaceState;
