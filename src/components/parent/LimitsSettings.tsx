@@ -43,7 +43,7 @@ const LimitsSettings = ({ settings, onUpdate, onUpdateNested, todayDuration, onB
       </p>
 
       {/* Daily time limit */}
-      <div className="retro-card p-4" style={{ backgroundColor: "var(--retro-blue)" }}>
+      <div className="retro-card retro-card-tilt-1 p-4" style={{ backgroundColor: "var(--retro-blue)" }}>
         <div className="flex items-center gap-2 mb-3">
           <span className="text-xl">⏳</span>
           <h3 className="text-[14px] font-black text-foreground uppercase">LIMITE JOURNALIÈRE</h3>
@@ -74,13 +74,13 @@ const LimitsSettings = ({ settings, onUpdate, onUpdateNested, todayDuration, onB
 
       {/* Auto stop + Night mode */}
       <div className="grid grid-cols-2 gap-2">
-        <div className="retro-card p-4" style={{ backgroundColor: "var(--retro-red)" }}>
+        <div className="retro-card retro-card-tilt-2 p-4" style={{ backgroundColor: "var(--retro-red)" }}>
           <span className="text-2xl block mb-2">🛑</span>
           <h4 className="text-[12px] font-black text-foreground mb-1 uppercase">ARRÊT AUTO</h4>
           <p className="text-[9px] text-foreground/60 mb-2 font-bold">Bobby s'arrête quand la limite est atteinte</p>
           <Toggle value={settings.autoStop} onChange={(v) => onUpdate("autoStop", v)} />
         </div>
-        <div className="retro-card p-4" style={{ backgroundColor: "var(--retro-purple)" }}>
+        <div className="retro-card retro-card-tilt-3 p-4" style={{ backgroundColor: "var(--retro-purple)" }}>
           <span className="text-2xl block mb-2">🌙</span>
           <h4 className="text-[12px] font-black text-foreground mb-1 uppercase">MODE NUIT</h4>
           <p className="text-[9px] text-foreground/60 mb-2 font-bold">Bobby se met en veille automatiquement</p>
@@ -90,7 +90,7 @@ const LimitsSettings = ({ settings, onUpdate, onUpdateNested, todayDuration, onB
 
       {/* Night mode hours */}
       {settings.nightMode.active && (
-        <div className="retro-card p-4" style={{ backgroundColor: "var(--retro-purple)" }}>
+        <div className="retro-card retro-card-tilt-4 p-4" style={{ backgroundColor: "var(--retro-purple)" }}>
           <h4 className="text-[12px] font-black text-foreground mb-3 uppercase">🌙 PLAGE HORAIRE DE VEILLE</h4>
           <div className="flex items-center gap-3">
             <div className="flex-1">
@@ -111,7 +111,7 @@ const LimitsSettings = ({ settings, onUpdate, onUpdateNested, todayDuration, onB
       )}
 
       {/* Interaction controls */}
-      <div className="retro-card p-4" style={{ backgroundColor: "var(--retro-yellow)" }}>
+      <div className="retro-card retro-card-tilt-5 p-4" style={{ backgroundColor: "var(--retro-yellow)" }}>
         <h3 className="text-[14px] font-black text-foreground mb-3 uppercase">👆 MODES D'INTERACTION</h3>
         {([
           ["wakeWord", "🎤", "Mot de réveil", "Bobby se réveille à la voix"],
@@ -135,7 +135,7 @@ const LimitsSettings = ({ settings, onUpdate, onUpdateNested, todayDuration, onB
       </div>
 
       {/* Max message length */}
-      <div className="retro-card p-4" style={{ backgroundColor: "var(--retro-green)" }}>
+      <div className="retro-card retro-card-tilt-6 p-4" style={{ backgroundColor: "var(--retro-green)" }}>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-[13px] font-black text-foreground uppercase">📝 LONGUEUR MAX</h3>
           <span className="text-[12px] font-mono font-black text-foreground border-2 border-black px-2 bg-white">{settings.maxMessageLength} car.</span>
@@ -146,7 +146,7 @@ const LimitsSettings = ({ settings, onUpdate, onUpdateNested, todayDuration, onB
       </div>
 
       {/* Language level */}
-      <div className="retro-card p-4" style={{ backgroundColor: "var(--retro-orange)" }}>
+      <div className="retro-card retro-card-tilt-1 p-4" style={{ backgroundColor: "var(--retro-orange)" }}>
         <h3 className="text-[13px] font-black text-foreground mb-2 uppercase">🗣️ NIVEAU DE LANGAGE</h3>
         <div className="grid grid-cols-3 gap-2">
           {([
@@ -170,7 +170,7 @@ const LimitsSettings = ({ settings, onUpdate, onUpdateNested, todayDuration, onB
       </div>
 
       {/* Blocked topics */}
-      <div className="retro-card p-4" style={{ backgroundColor: "var(--retro-red)" }}>
+      <div className="retro-card retro-card-tilt-2 p-4" style={{ backgroundColor: "var(--retro-red)" }}>
         <h3 className="text-[13px] font-black text-foreground mb-2 uppercase">🚫 SUJETS BLOQUÉS</h3>
         <p className="text-[10px] text-foreground/60 mb-3 font-bold">Bobby évitera automatiquement ces sujets</p>
         <div className="flex flex-wrap gap-1.5 mb-3">
@@ -199,7 +199,7 @@ const LimitsSettings = ({ settings, onUpdate, onUpdateNested, todayDuration, onB
       </div>
 
       {/* Face tracking */}
-      <div className="retro-card p-4" style={{ backgroundColor: "var(--retro-blue)" }}>
+      <div className="retro-card retro-card-tilt-3 p-4" style={{ backgroundColor: "var(--retro-blue)" }}>
         <div className="flex items-center justify-between">
           <div>
             <h4 className="text-[12px] font-black text-foreground uppercase">📷 SUIVI DU VISAGE</h4>
@@ -218,7 +218,7 @@ const LimitsSettings = ({ settings, onUpdate, onUpdateNested, todayDuration, onB
       </div>
 
       {/* Bilingual mode */}
-      <div className="retro-card p-4 relative overflow-hidden" style={{ backgroundColor: "var(--retro-yellow)" }}>
+      <div className="retro-card retro-card-tilt-4 p-4 relative overflow-hidden" style={{ backgroundColor: "var(--retro-yellow)" }}>
         <div className="flex items-center justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
