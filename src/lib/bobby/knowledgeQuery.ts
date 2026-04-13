@@ -77,7 +77,7 @@ const SEMANTIC_FIELDS: Record<string, string[]> = {
   peur:    ["effraye", "monstre", "noir", "cauchemar", "nuit", "angoisse"],
   triste:  ["pleurer", "chagrin", "larme", "malheureux"],
   content: ["heureux", "joie", "sourire", "rire"],
-  colere:  ["enerve", "fache", "crier", "rage"],
+  colere:  ["enerve", "fache", "crier", "rage", "injustice", "respirer", "calmer", "emotion"],
   // Transport
   voiture: ["rouler", "route", "volant", "voyage", "transport"],
   avion:   ["voler", "ciel", "voyage", "aeroport", "pilote"],
@@ -296,7 +296,7 @@ const SEMANTIC_FIELDS: Record<string, string[]> = {
   squelette:  ["os", "corps", "structure", "calcium", "articulation", "biologie"],
   neurone:    ["cerveau", "signal", "penser", "nerf", "synapse", "biologie"],
   organe:     ["corps", "coeur", "poumon", "cerveau", "foie", "rein", "biologie"],
-  respirer:   ["oxygene", "poumon", "air", "inspire", "expire", "vivre"],
+  respirer:   ["oxygene", "poumon", "air", "inspire", "expire", "vivre", "calmer", "stress", "detendre", "technique", "zen"],
   digerer:    ["manger", "estomac", "intestin", "nutriment", "nourriture", "corps"],
   sang:       ["rouge", "globule", "coeur", "veine", "artere", "oxygene", "corps"],
   evolution:  ["darwin", "adaptation", "espece", "selection", "mutation", "biologie"],
@@ -356,7 +356,7 @@ const SEMANTIC_FIELDS: Record<string, string[]> = {
   acteur:     ["theatre", "cinema", "film", "jouer", "role", "spectacle", "scene"],
   poesie:     ["poeme", "rime", "mot", "vers", "hugo", "art", "ecrire", "beaute"],
   conte:      ["histoire", "fee", "prince", "magie", "perrault", "grimm", "imaginaire"],
-  "dessin anime":["animation", "manga", "disney", "pixar", "personnage", "film", "art"],
+  
   photographie:["photo", "appareil", "image", "capturer", "lumiere", "art", "souvenir"],
   "chef d''oeuvre":["art", "extraordinaire", "celebre", "musee", "joconde", "beethoven"],
   // 🍳 Cuisine (enrichi)
@@ -377,16 +377,14 @@ const SEMANTIC_FIELDS: Record<string, string[]> = {
   vitamine:   ["sante", "orange", "fruit", "legume", "corps", "nutriment", "defense"],
   cuisson:    ["chaleur", "four", "feu", "bouillir", "griller", "cuisine", "transformer"],
   legume:     ["plante", "vitamine", "sante", "carotte", "epinard", "manger", "jardin"],
-  fruit:      ["plante", "graine", "sucre", "vitamine", "manger", "pomme", "banane"],
+  "fruit cuisine":["plante", "graine", "sucre", "vitamine", "manger", "pomme", "banane", "jus"],
   riz:        ["cereale", "asie", "aliment", "eau", "riziere", "cuisine", "grain"],
   sushi:      ["japon", "riz", "poisson", "cuisine", "algue", "baguette"],
-  pizza:      ["italie", "fromage", "tomate", "four", "cuisine", "part", "mozzarella"],
-  crepe:      ["cuisine", "france", "chandeleur", "sucre", "poele", "farine", "dessert"],
   // 💗 Émotions (enrichi)
   emotion:    ["ressenti", "joie", "tristesse", "peur", "colere", "surprise", "corps", "cerveau"],
   joie:       ["bonheur", "sourire", "rire", "content", "heureux", "fete", "emotion"],
   tristesse:  ["pleurer", "chagrin", "larme", "malheureux", "triste", "emotion", "consoler"],
-  colere:     ["fache", "enerve", "crier", "injustice", "respirer", "calmer", "emotion"],
+  
   surprise:   ["inattendu", "yeux", "soudain", "cadeau", "emotion", "reaction", "oh"],
   jalousie:   ["envie", "emotion", "partager", "vouloir", "sentiment", "comparer"],
   honte:      ["gene", "erreur", "embarras", "rougir", "emotion", "apprendre", "pardonner"],
@@ -403,8 +401,8 @@ const SEMANTIC_FIELDS: Record<string, string[]> = {
   "confiance en soi":["croire", "capacite", "oser", "estime", "force", "reussir", "emotion"],
   amitie:     ["ami", "partager", "jouer", "confiance", "lien", "ensemble", "emotion"],
   rire:       ["joie", "amusement", "humour", "bonheur", "contagieux", "blague"],
-  pleurer:    ["larme", "tristesse", "emotion", "soulager", "exprimer", "douleur"],
-  respirer:   ["calmer", "stress", "detendre", "poumon", "oxygene", "technique", "zen"],
+  "pleurer emotion":["larme", "tristesse", "emotion", "soulager", "exprimer", "douleur", "consoler"],
+  "respiration calme":["calmer", "stress", "detendre", "technique", "zen", "meditation", "souffle"],
   consoler:   ["tristesse", "calin", "ecouter", "ami", "soutenir", "empathie", "reconforter"],
 };
 
