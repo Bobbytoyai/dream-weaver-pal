@@ -159,9 +159,18 @@ const VoiceScreen = ({
     SLEEP: "💤 Bobby dort… touche Bobby pour le réveiller !",
   }[sm.machineState];
 
+  // Background color from customization
+  const BG_HEX_MAP: Record<string, string> = {
+    "soft-blue": "#E8F0FE", "soft-pink": "#FDE8F0", "soft-green": "#E8FEF0",
+    "soft-purple": "#F0E8FE", "soft-yellow": "#FEF8E8", "white": "#FFFFFF",
+    "dark": "#1A1A2E", "night": "#0D1B2A",
+  };
+  const bgId = parentSettings?.bobbyColors?.background || "soft-blue";
+  const bgHex = BG_HEX_MAP[bgId] || "#E8F0FE";
+
   return (
     <div className="child-light flex flex-col items-center justify-between h-screen px-4 py-6 max-w-lg mx-auto select-none overflow-hidden relative"
-      style={{ background: `linear-gradient(180deg, hsl(220, 25%, 82%) 0%, hsl(230, 22%, 78%) 50%, hsl(240, 20%, 75%) 100%)` }}>
+      style={{ background: bgHex }}>
 
       {showDebug && (
         <DebugOverlay
