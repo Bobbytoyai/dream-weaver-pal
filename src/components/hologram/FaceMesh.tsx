@@ -367,7 +367,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       <mesh position={[hl2[0], hl2[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} />
       <mesh ref={eyelidRef} position={[0, 0.72, 0.05]} material={eyelidMat}>
-        <planeGeometry args={[0.86, 0.80]} />
+        <planeGeometry args={[0.82, 0.74]} />
       </mesh>
     </group>
   );
