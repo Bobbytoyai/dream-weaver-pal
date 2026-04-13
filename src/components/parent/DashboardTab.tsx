@@ -4,7 +4,7 @@ import { getInterestSnapshot, INTEREST_KEYWORDS_PUBLIC } from "@/lib/bobby/inter
 import {
   type Analysis, type Session, type SafetyAlertRecord,
   emotionScoreLabels, formatDuration, formatDate, humanizeSummary,
-  ScoreGauge, moodLabels,
+  moodLabels,
 } from "./parentTypes";
 
 interface DashboardTabProps {
