@@ -145,23 +145,22 @@ function SleepZzz() {
     zLetters.current.forEach((mesh, i) => {
       if (!mesh) return;
       phases.current[i] += delta * 0.5;
-      const p = phases.current[i] % 4; // 4s cycle
-      const t = p / 4; // 0→1
+      const p = phases.current[i] % 4;
+      const t = p / 4;
 
-      // Float up and right, growing then fading — 5x bigger
-      mesh.position.x = 0.8 + t * 1.2 + i * 0.4;
-      mesh.position.y = 0.3 + t * 2.5;
+      // Float up and slightly right — stay within face bounds
+      mesh.position.x = 0.35 + t * 0.5 + i * 0.2;
+      mesh.position.y = 0.15 + t * 1.5;
       mesh.position.z = 0.15;
 
-      const scale = (2.5 + i * 1.2) * (0.3 + Math.sin(t * Math.PI) * 0.7);
+      const scale = (1.5 + i * 0.6) * (0.3 + Math.sin(t * Math.PI) * 0.7);
       mesh.scale.setScalar(scale);
 
       // Gentle wobble
-      mesh.rotation.z = Math.sin(phases.current[i] * 1.8) * 0.2;
+      mesh.rotation.z = Math.sin(phases.current[i] * 1.8) * 0.15;
 
       const mat = mesh.material as THREE.MeshBasicMaterial;
-      // Fade in then out — stronger opacity
-      mat.opacity = Math.sin(t * Math.PI) * 0.9;
+      mat.opacity = Math.sin(t * Math.PI) * 0.85;
     });
   });
 
@@ -195,7 +194,7 @@ function SleepZzz() {
           key={i}
           ref={(el) => { if (el) zLetters.current[i] = el; }}
           material={zMat[i]}
-          position={[0.6 + i * 0.15, 0.2, 0.1]}
+          position={[0.3 + i * 0.1, 0.1, 0.1]}
         >
           {/* Z shape built from 3 thick boxes — 5x bigger */}
           <group>
