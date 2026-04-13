@@ -2315,8 +2315,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
       {/* Back button when accessed from Réglages */}
       {reglagesSection === "profil" && (
-        <button onClick={() => setReglagesSection(null)} className="flex items-center gap-1.5 text-primary text-[13px] font-bold mb-1">
-          <ArrowLeft className="w-4 h-4" /> Retour aux réglages
+        <button onClick={() => setReglagesSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white">
+          <ArrowLeft className="w-4 h-4" /> RÉGLAGES
         </button>
       )}
       {/* Avatar + Name + Age — compact hero card */}
@@ -2539,13 +2539,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             ["voix", "🎤", "Voix & Sons", "Profils vocaux, vitesse, ton", "var(--retro-blue)"],
             ["limites", "⏱️", "Limites & Contrôle", "Temps, nuit, interactions, sujets", "var(--retro-yellow)"],
             ["profil", "👤", "Profil enfant", "Intérêts, mémoire, préférences", "var(--retro-purple)"],
-          ] as const).map(([key, emoji, label, desc, bg]) => (
+          ] as const).map(([key, emoji, label, desc, bg], i) => (
             <button key={key} onClick={() => setReglagesSection(key)}
-              className="retro-card retro-card-tilt p-5 text-center transition-all duration-200 active:scale-95"
-              style={{ backgroundColor: bg }}>
+              className={`retro-card retro-card-tilt-${(i % 6) + 1} p-5 text-center transition-all duration-200 active:scale-95 hover:translate-y-[-2px]`}
+              style={{ backgroundColor: bg, boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}>
               <span className="text-4xl block mb-2">{emoji}</span>
-              <span className="text-[14px] font-black text-gray-800 block uppercase">{label}</span>
-              <span className="text-[10px] text-gray-600 leading-tight block mt-1 font-bold">{desc}</span>
+              <span className="text-[14px] font-black text-foreground block uppercase">{label}</span>
+              <span className="text-[10px] text-foreground/60 leading-tight block mt-1 font-bold">{desc}</span>
             </button>
           ))}
         </div>
