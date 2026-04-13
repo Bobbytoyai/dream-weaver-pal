@@ -340,7 +340,7 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
     const scrollParent = document.querySelector('[data-scroll-container]') as HTMLElement;
     scrollParent?.scrollTo({ top: 0, behavior: "instant" });
     window.scrollTo(0, 0);
-  }, [selectedItem, category]);
+  }, [selectedItem, activeCategory]);
 
   const toggleInstall = async (contentId: string) => {
     setInstalling(contentId);
