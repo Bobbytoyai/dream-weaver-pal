@@ -415,7 +415,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const loadData = async () => {
     setLoading(true);
     const snapshot = await loadParentDashboardSnapshot(50);
-    setSessions(snapshot.sessions);
+    setSessions(snapshot.sessions.filter(s => s.message_count > 0));
     setAnalyses(snapshot.analyses);
     setLoading(false);
   };
