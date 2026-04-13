@@ -2919,8 +2919,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           ))}
         </div>
       </Card>
+      </div>
 
       {/* 💡 Suggérer une idée */}
+      <div className="animate-fadeInUp" style={{ animationDelay: "0.25s" }}>
       <Card title="💡 Suggérer une idée" icon={Heart}>
         <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
           Vous avez une idée pour améliorer Bobby ? Partagez-la avec nous !
