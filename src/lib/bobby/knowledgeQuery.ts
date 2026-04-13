@@ -84,7 +84,7 @@ export async function queryKnowledgeBase(
     if (!bestMatch) return null;
 
     // Increment usage count
-    supabase.rpc("increment_kb_usage", { entry_id: (bestMatch as any).id }).catch(() => {});
+    supabase.rpc("increment_kb_usage", { entry_id: (bestMatch as any).id }).then(() => {}).catch(() => {});
 
     console.log(`[KnowledgeQuery] ✅ Match found (score ${bestScore.toFixed(2)}): "${bestMatch.question.slice(0, 40)}…" ${bestMatch.source_content_id ? "[from Store pack]" : "[base]"}`);
 
