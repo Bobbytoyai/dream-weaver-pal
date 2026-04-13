@@ -14,6 +14,9 @@ import { supabase } from "@/integrations/supabase/client";
 import StoryLibrary from "@/components/StoryLibrary";
 import ContentCategories from "@/components/ContentCategories";
 import BobbyStore from "@/components/BobbyStore";
+import VoiceSettings from "@/components/parent/VoiceSettings";
+import BobbyCustomizer from "@/components/parent/BobbyCustomizer";
+import LimitsSettings from "@/components/parent/LimitsSettings";
 // Piper TTS removed — ElevenLabs only
 import ConfirmDialog from "@/components/ConfirmDialog";
 import {
@@ -191,7 +194,7 @@ const StatPill = ({ emoji, value, label }: { emoji: string; value: string | numb
 
 // ─── Tab config (6 tabs) ────────────────────────────────────────
 
-type Tab = "home" | "dashboard" | "sessions" | "activites" | "profil" | "reglages" | "confidentialite" | "cloud";
+type Tab = "home" | "dashboard" | "sessions" | "activites" | "profil" | "reglages" | "confidentialite" | "cloud" | "personnalisation";
 
 const tabs: { id: Tab; icon: any; label: string; emoji?: string }[] = [
   { id: "dashboard", icon: BarChart3, label: "Tableau", emoji: "📊" },
@@ -200,6 +203,7 @@ const tabs: { id: Tab; icon: any; label: string; emoji?: string }[] = [
   { id: "cloud", icon: CloudUpload, label: "Cloud", emoji: "☁️" },
   { id: "profil", icon: User, label: "Profil", emoji: "👤" },
   { id: "reglages", icon: Settings, label: "Réglages", emoji: "⚙️" },
+  { id: "personnalisation", icon: Eye, label: "Perso", emoji: "🎨" },
   { id: "confidentialite", icon: Shield, label: "Privé", emoji: "🔒" },
 ];
 
@@ -230,7 +234,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [audioDuration, setAudioDuration] = useState(0);
   const [newBlockedTopic, setNewBlockedTopic] = useState("");
   const [activeMessageIdx, setActiveMessageIdx] = useState<number>(-1);
-  const [reglagesSection, setReglagesSection] = useState<"voix" | "contenu" | "limites" | null>(null);
+  const [reglagesSection, setReglagesSection] = useState<"voix" | "limites" | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string; description: string; confirmLabel?: string;
     variant?: "danger" | "warning"; onConfirm: () => void;
@@ -2464,350 +2468,65 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     finally { setPreviewPlaying(false); }
   };
 
-  const renderReglages = () => (
-    <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
-      {/* Card grid — home of settings */}
-      {!reglagesSection && (
+  const renderReglages = () => {
+    const handleSave = () => {
+      onSettingsChange?.(settings);
+      setSettingsSaved(true);
+      setTimeout(() => setSettingsSaved(false), 2000);
+    };
+
+    const handleUpdate = <K extends keyof ParentSettings>(key: K, value: ParentSettings[K]) => {
+      updateSetting(key, value);
+    };
+
+    if (reglagesSection === "voix") {
+      return (
+        <VoiceSettings
+          settings={settings}
+          onUpdate={handleUpdate}
+          onBack={() => setReglagesSection(null)}
+          onSave={handleSave}
+          saved={settingsSaved}
+        />
+      );
+    }
+
+    if (reglagesSection === "limites") {
+      const today = new Date().toLocaleDateString("fr-FR");
+      const todaySessions = sessions.filter(s => new Date(s.started_at).toLocaleDateString("fr-FR") === today);
+      const todayDur = todaySessions.reduce((a, s) => a + (s.duration_seconds || 0), 0);
+      return (
+        <LimitsSettings
+          settings={settings}
+          onUpdate={handleUpdate}
+          onUpdateNested={updateNested}
+          todayDuration={todayDur}
+          onBack={() => setReglagesSection(null)}
+          onSave={handleSave}
+          saved={settingsSaved}
+        />
+      );
+    }
+
+    return (
+      <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
+        <h2 className="text-[18px] font-black text-foreground animate-fadeInUp">⚙️ Réglages</h2>
         <div className="grid grid-cols-2 gap-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
           {([
-            ["voix", "🎤", "Voix & Sons", "Type, vitesse, couleur, effets", "from-blue-400/15 to-blue-300/5"],
-            ["contenu", "📚", "Contenu", "Modes, thèmes, durée", "from-emerald-400/15 to-emerald-300/5"],
-            ["limites", "⏱️", "Limites", "Temps, nuit, interactions", "from-amber-400/15 to-amber-300/5"],
+            ["voix", "🎤", "Voix & Sons", "Profils vocaux, vitesse, ton", "from-blue-400/15 to-blue-300/5"],
+            ["limites", "⏱️", "Limites & Contrôle", "Temps, nuit, interactions, sujets", "from-amber-400/15 to-amber-300/5"],
           ] as const).map(([key, emoji, label, desc, gradient]) => (
             <button key={key} onClick={() => setReglagesSection(key)}
-              className={`bg-gradient-to-br ${gradient} rounded-2xl p-4 text-center transition-all duration-200 active:scale-95 border-2 border-transparent hover:border-primary/15`}>
-              <span className="text-3xl block mb-2">{emoji}</span>
-              <span className="text-[13px] font-extrabold text-foreground block">{label}</span>
-              <span className="text-[9px] text-muted-foreground leading-tight">{desc}</span>
+              className={`bg-gradient-to-br ${gradient} rounded-2xl p-5 text-center transition-all duration-200 active:scale-95 border-2 border-transparent hover:border-primary/15`}>
+              <span className="text-4xl block mb-2">{emoji}</span>
+              <span className="text-[14px] font-black text-foreground block">{label}</span>
+              <span className="text-[10px] text-muted-foreground leading-tight block mt-1">{desc}</span>
             </button>
           ))}
         </div>
-      )}
-
-      {/* Back button when inside a section */}
-      {reglagesSection && (
-        <button onClick={() => setReglagesSection(null)}
-          className="flex items-center gap-1.5 text-[12px] font-bold text-primary hover:underline mb-1 active:scale-95 transition-all">
-          <ChevronLeft className="w-4 h-4" /> Réglages
-        </button>
-      )}
-
-      {/* Voix section */}
-      {reglagesSection === "voix" && (
-        <>
-          {/* Voice type — compact grid */}
-          <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-base">🎤</span>
-              <h4 className="text-[12px] font-extrabold text-foreground">Type de voix</h4>
-            </div>
-            <div className="grid grid-cols-3 gap-1.5">
-              {(["child", "female", "male", "sister", "brother", "custom"] as const).map((type) => {
-                const info = VOICE_MAP[type];
-                const isCustom = type === "custom";
-                const selected = settings.voiceType === type;
-                const isThisPlaying = previewPlaying === type;
-                return (
-                  <button key={type}
-                    onClick={() => !isCustom && updateSetting("voiceType", type)}
-                    disabled={isCustom}
-                    className={`relative p-2 rounded-xl text-center transition-all duration-200 ${
-                      isCustom ? "opacity-30 cursor-not-allowed bg-muted/20" :
-                      selected ? "bg-primary/10 ring-2 ring-primary/40" : "bg-muted/40 hover:bg-muted/60"
-                    }`}>
-                    <span className="text-lg block">{info.emoji}</span>
-                    <span className={`text-[9px] font-extrabold block mt-0.5 ${selected ? "text-primary" : "text-foreground/70"}`}>{info.label}</span>
-                    {!isCustom && selected && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); previewVoice(type); }}
-                        disabled={!!previewPlaying}
-                        className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                        {isThisPlaying ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
-                      </button>
-                    )}
-                    {isCustom && <Lock className="absolute top-1 right-1 w-3 h-3 text-muted-foreground" />}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Voice speed — inline */}
-          <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-base">⚡</span>
-              <h4 className="text-[12px] font-extrabold text-foreground">Vitesse</h4>
-            </div>
-            <div className="flex gap-1.5">
-              {([["slow", "🐢", "Lent"], ["normal", "🔊", "Normal"], ["fast", "⚡", "Rapide"]] as const).map(([val, emoji, label]) => (
-                <button key={val} onClick={() => updateSetting("voiceSpeed", val)}
-                  className={`flex-1 py-2 rounded-xl text-center transition-all ${
-                    settings.voiceSpeed === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/40 hover:bg-muted/60"
-                  }`}>
-                  <span className="text-base block">{emoji}</span>
-                  <span className={`text-[9px] font-extrabold block ${settings.voiceSpeed === val ? "text-primary" : "text-foreground/70"}`}>{label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Bobby color — compact */}
-          <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.15s" }}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-base">🎨</span>
-              <h4 className="text-[12px] font-extrabold text-foreground">Couleur de Bobby</h4>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              {BOBBY_COLORS.map((c) => {
-                const selected = settings.bobbyColor === c.id;
-                return (
-                  <button key={c.id} onClick={() => updateSetting("bobbyColor", c.id)}
-                    className={`w-10 h-10 rounded-xl transition-all duration-200 active:scale-90 border-2 ${
-                      selected ? "border-primary shadow-md shadow-primary/30 scale-110" : "border-transparent hover:scale-105"
-                    }`}
-                    style={{ backgroundColor: `hsl(${c.hsl})` }}
-                    title={c.label} />
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Face tracking + SFX — compact row */}
-          <div className="grid grid-cols-2 gap-2 animate-fadeInUp" style={{ animationDelay: "0.2s" }}>
-            <div className="bg-card rounded-2xl p-3 border border-border/20">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-base block">📷</span>
-                  <span className="text-[9px] font-extrabold text-foreground block mt-1">Suivi visage</span>
-                </div>
-                <Toggle value={settings.enableCamera} onChange={async (v) => {
-                  if (v) {
-                    try {
-                      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 320, height: 240 } });
-                      stream.getTracks().forEach(t => t.stop());
-                      updateSetting("enableCamera", true);
-                    } catch { alert("Impossible d'accéder à la caméra."); }
-                  } else { updateSetting("enableCamera", false); }
-                }} />
-              </div>
-            </div>
-            <div className="bg-card rounded-2xl p-3 border border-border/20">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-base block">{settings.sfxVolume === 0 ? "🔇" : "🔊"}</span>
-                  <span className="text-[9px] font-extrabold text-foreground block mt-1">Sons</span>
-                </div>
-                <Toggle value={settings.sfxVolume > 0} onChange={(v) => updateSetting("sfxVolume", v ? 0.7 : 0)} />
-              </div>
-              {settings.sfxVolume > 0 && (
-                <input type="range" min="0" max="100" value={Math.round(settings.sfxVolume * 100)}
-                  onChange={(e) => updateSetting("sfxVolume", Number(e.target.value) / 100)}
-                  className="w-full h-1 rounded-full appearance-none bg-muted accent-primary mt-2" />
-              )}
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Contenu section */}
-      {reglagesSection === "contenu" && (
-        <>
-          <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-base">💬</span>
-              <h4 className="text-[12px] font-extrabold text-foreground">Modes de contenu</h4>
-            </div>
-            <div className="grid grid-cols-2 gap-1.5">
-              {([
-                ["freeChat", "💬", "Discussion", "Bavardage libre"],
-                ["educational", "📚", "Éducatif", "Apprentissage ludique"],
-                ["games", "🎮", "Jeux", "Quiz et défis"],
-                ["stories", "📖", "Histoires", "Contes et aventures"],
-              ] as const).map(([key, emoji, label, desc]) => {
-                const active = settings.contentModes[key as keyof typeof settings.contentModes];
-                return (
-                  <button key={key}
-                    onClick={() => updateNested("contentModes", key, !active)}
-                    className={`relative p-2.5 rounded-xl text-center transition-all duration-200 ${
-                      active ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/40 hover:bg-muted/60"
-                    }`}>
-                    <span className="text-lg block">{emoji}</span>
-                    <span className={`text-[10px] font-extrabold block mt-0.5 ${active ? "text-primary" : "text-foreground/70"}`}>{label}</span>
-                    <span className="text-[8px] text-muted-foreground">{desc}</span>
-                    {active && <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[8px] font-bold">✓</div>}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-base">✨</span>
-              <h4 className="text-[12px] font-extrabold text-foreground">Thèmes d'histoires</h4>
-            </div>
-            <div className="grid grid-cols-4 gap-1.5">
-              {ALL_THEMES.map(theme => {
-                const active = settings.enabledThemes.includes(theme.id);
-                return (
-                  <button key={theme.id} onClick={() => toggleTheme(theme.id)}
-                    className={`p-2 rounded-xl text-center transition-all ${
-                      active ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/30 hover:bg-muted/50"
-                    }`}>
-                    <span className="text-base block">{theme.label.split(" ")[0]}</span>
-                    <span className={`text-[8px] font-bold ${active ? "text-primary" : "text-muted-foreground"}`}>
-                      {theme.label.split(" ").slice(1).join(" ") || theme.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 animate-fadeInUp" style={{ animationDelay: "0.15s" }}>
-            <div className="bg-card rounded-2xl p-3 border border-border/20">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-base">⏱️</span>
-                <h4 className="text-[11px] font-extrabold text-foreground">Durée</h4>
-              </div>
-              <div className="space-y-1">
-                {([["courte", "⚡", "~3 min"], ["moyenne", "📖", "~7 min"], ["longue", "📚", "~12 min"]] as const).map(([val, emoji, sub]) => (
-                  <button key={val} onClick={() => updateSetting("storyDuration", val)}
-                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-all ${
-                      settings.storyDuration === val ? "bg-primary/10" : "hover:bg-muted/40"
-                    }`}>
-                    <span className="text-sm">{emoji}</span>
-                    <span className={`text-[9px] font-bold flex-1 ${settings.storyDuration === val ? "text-primary" : "text-foreground/70"}`}>{sub}</span>
-                    {settings.storyDuration === val && <span className="text-[8px] text-primary">●</span>}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="bg-card rounded-2xl p-3 border border-border/20 flex flex-col items-center justify-center text-center">
-              <span className="text-2xl mb-1">🎭</span>
-              <span className="text-[10px] font-extrabold text-foreground mb-2">Interactif</span>
-              <Toggle value={settings.storyInteractive} onChange={(v) => updateSetting("storyInteractive", v)} />
-              <span className="text-[8px] text-muted-foreground mt-1">Choix dans l'histoire</span>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Limites section */}
-      {reglagesSection === "limites" && (
-        <>
-          <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-base">⏳</span>
-              <h4 className="text-[12px] font-extrabold text-foreground">Limite journalière</h4>
-              <span className="ml-auto text-sm font-extrabold text-primary">{settings.timeLimitMinutes || 60} min</span>
-            </div>
-            <input type="range" min="10" max="120" step="5" value={settings.timeLimitMinutes || 60}
-              onChange={(e) => updateSetting("timeLimitMinutes", Number(e.target.value))}
-              className="w-full h-2 rounded-full appearance-none bg-muted accent-primary" />
-            <div className="flex justify-between text-[8px] text-muted-foreground mt-1">
-              <span>10 min</span><span>1h</span><span>2h</span>
-            </div>
-            {todayDuration > 0 && (
-              <div className="mt-2 pt-2 border-t border-border/20">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-[9px] text-muted-foreground">Aujourd'hui</span>
-                  <span className="text-[9px] font-mono text-foreground">{formatDuration(todayDuration)}</span>
-                </div>
-                <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full transition-all ${todayDuration / 60 > (settings.timeLimitMinutes || 60) ? "bg-destructive" : "bg-primary"}`}
-                    style={{ width: `${Math.min(100, (todayDuration / 60 / (settings.timeLimitMinutes || 60)) * 100)}%` }} />
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
-            <div className="bg-card rounded-2xl p-3 border border-border/20">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-base block">🛑</span>
-                  <span className="text-[9px] font-extrabold text-foreground block mt-1">Arrêt auto</span>
-                </div>
-                <Toggle value={settings.autoStop} onChange={(v) => updateSetting("autoStop", v)} />
-              </div>
-            </div>
-            <div className="bg-card rounded-2xl p-3 border border-border/20">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-base block">🌙</span>
-                  <span className="text-[9px] font-extrabold text-foreground block mt-1">Mode nuit</span>
-                </div>
-                <Toggle value={settings.nightMode.active} onChange={(v) => updateNested("nightMode", "active", v)} />
-              </div>
-            </div>
-          </div>
-
-          {settings.nightMode.active && (
-            <div className="bg-card rounded-2xl p-3 border border-border/20">
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <p className="text-[9px] text-muted-foreground mb-1 font-bold">Début</p>
-                  <input type="time" value={settings.nightMode.startHour}
-                    onChange={(e) => updateNested("nightMode", "startHour", e.target.value)}
-                    className="w-full px-2 py-1.5 rounded-xl bg-muted text-[12px] text-foreground outline-none focus:ring-2 focus:ring-primary/30" />
-                </div>
-                <Sun className="w-4 h-4 text-muted-foreground mt-3" />
-                <div className="flex-1">
-                  <p className="text-[9px] text-muted-foreground mb-1 font-bold">Fin</p>
-                  <input type="time" value={settings.nightMode.endHour}
-                    onChange={(e) => updateNested("nightMode", "endHour", e.target.value)}
-                    className="w-full px-2 py-1.5 rounded-xl bg-muted text-[12px] text-foreground outline-none focus:ring-2 focus:ring-primary/30" />
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.15s" }}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-base">👆</span>
-              <h4 className="text-[12px] font-extrabold text-foreground">Interactions</h4>
-            </div>
-            <div className="space-y-1">
-              {([
-                ["wakeWord", "🎤", "Mot de réveil"],
-                ["tap", "👆", "Toucher l'écran"],
-                ["interruption", "⚠️", "Interruption"],
-              ] as const).map(([key, emoji, label]) => (
-                <div key={key} className="flex items-center justify-between py-1.5 px-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">{emoji}</span>
-                    <span className="text-[10px] font-bold text-foreground">{label}</span>
-                  </div>
-                  <Toggle
-                    value={settings.interactions[key as keyof typeof settings.interactions]}
-                    onChange={(v) => updateNested("interactions", key, v)}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Save button */}
-      <div className="pt-1 pb-2">
-        <button
-          onClick={() => {
-            onSettingsChange?.(settings);
-            setSettingsSaved(true);
-            setTimeout(() => setSettingsSaved(false), 2000);
-          }}
-          className={`w-full py-3 rounded-2xl text-[13px] font-extrabold transition-all active:scale-95 ${
-            settingsSaved
-              ? "bg-emerald-500/15 text-emerald-700 border-2 border-emerald-500/30"
-              : "bg-primary text-primary-foreground hover:opacity-90 shadow-md shadow-primary/20"
-          }`}>
-          {settingsSaved ? "✅ Enregistré !" : "💾 Enregistrer"}
-        </button>
       </div>
-    </div>
-  );
+    );
+  };
 
   // ═══════════════════════════════════════════════════════════════
   // RENDER: NOUVEAUTÉS (Mises à jour + Suggestions)
@@ -3508,6 +3227,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         case "profil": return renderProfil();
         case "reglages": return renderReglages();
         case "cloud": return renderCloud();
+        case "personnalisation": return (
+          <BobbyCustomizer
+            settings={settings}
+            onUpdate={(key, value) => updateSetting(key, value)}
+            onBack={() => setActiveTab("home")}
+            onSave={() => { onSettingsChange?.(settings); setSettingsSaved(true); setTimeout(() => setSettingsSaved(false), 2000); }}
+            saved={settingsSaved}
+          />
+        );
         case "confidentialite": return renderConfidentialite();
         default: return renderDashboard();
       }
@@ -3665,6 +3393,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               badge: sessions.filter(s => !analyses.some(a => a.session_id === s.id)).length || undefined },
             { id: "activites" as Tab, emoji: "🛒", label: "Bobby Store", color: "from-orange-400/25 to-amber-400/10", border: "border-orange-300/25" },
             { id: "cloud" as Tab, emoji: "☁️", label: "Bobby Cloud", color: "from-violet-400/25 to-purple-400/10", border: "border-violet-300/25" },
+            { id: "personnalisation" as Tab, emoji: "🎨", label: "Personnaliser", color: "from-rose-400/25 to-pink-400/10", border: "border-rose-300/25" },
             { id: "profil" as Tab, emoji: "👤", label: "Profil", color: "from-pink-400/25 to-rose-400/10", border: "border-pink-300/25" },
             { id: "reglages" as Tab, emoji: "⚙️", label: "Réglages", color: "from-cyan-400/25 to-sky-400/10", border: "border-cyan-300/25" },
           ].map((card, i) => (
