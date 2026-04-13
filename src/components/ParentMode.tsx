@@ -342,13 +342,14 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     setSessionMessages(await loadParentSessionMessages(session.id));
 
     const existing = analyses.find(a => a.session_id === session.id);
-    if (existing) { setSelectedAnalysis(existing); return; }
+    // Show existing analysis if it has actual AI data (summary)
+    if (existing?.summary) { setSelectedAnalysis(existing); return; }
     setAnalyzing(true);
     try {
       const analysis = await requestParentSessionAnalysis(session.id);
       if (analysis) {
         setSelectedAnalysis(analysis);
-        loadData();
+        loadData(); // Refresh to pick up merged audio_path + AI data
       }
     } catch { /* ignore */ } finally { setAnalyzing(false); }
   };
