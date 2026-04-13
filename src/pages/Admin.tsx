@@ -173,16 +173,18 @@ function SquareCard({ label, emoji, count, desc, color, bgColor, onClick }: {
 }) {
   return (
     <button onClick={onClick}
-      className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group"
+      className="bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300 text-left flex flex-col justify-between group active:scale-[0.97] hover:shadow-lg hover:shadow-black/20"
+      style={{ aspectRatio: "1" }}
     >
       <div className="flex items-start justify-between">
-        <span className="text-3xl">{emoji}</span>
-        <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors" />
+        <div className={`w-11 h-11 rounded-2xl ${bgColor} flex items-center justify-center`}>
+          <span className="text-2xl">{emoji}</span>
+        </div>
       </div>
       <div>
-        <p className="text-xl font-bold text-white">{count}</p>
-        <h3 className={`text-sm font-semibold ${color} mt-0.5`}>{label}</h3>
-        <p className="text-[10px] text-white/40 mt-1 line-clamp-2">{desc}</p>
+        <p className="text-[22px] font-bold text-white tracking-tight">{count}</p>
+        <h3 className={`text-[13px] font-semibold ${color} mt-0.5`}>{label}</h3>
+        <p className="text-[10px] text-white/30 mt-0.5 line-clamp-2 leading-tight">{desc}</p>
       </div>
     </button>
   );
@@ -190,21 +192,21 @@ function SquareCard({ label, emoji, count, desc, color, bgColor, onClick }: {
 
 function InteractionCard({ interaction }: { interaction: BobbyInteraction }) {
   return (
-    <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-      <div className="flex items-center gap-2 mb-2 flex-wrap">
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-medium">{interaction.category}</span>
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium">{interaction.age} ans</span>
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-medium">{interaction.emotion}</span>
-        <span className="text-[10px] text-white/30 ml-auto">Niv.{interaction.difficulty_level}</span>
+    <div className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] hover:bg-white/[0.06] transition-all">
+      <div className="flex items-center gap-2 mb-2.5 flex-wrap">
+        <span className="text-[10px] px-2.5 py-1 rounded-xl bg-cyan-500/15 text-cyan-300 font-semibold">{interaction.category}</span>
+        <span className="text-[10px] px-2.5 py-1 rounded-xl bg-purple-500/15 text-purple-300 font-semibold">{interaction.age} ans</span>
+        <span className="text-[10px] px-2.5 py-1 rounded-xl bg-pink-500/15 text-pink-300 font-semibold">{interaction.emotion}</span>
+        <span className="text-[10px] text-white/20 ml-auto font-mono">Niv.{interaction.difficulty_level}</span>
       </div>
-      <div className="space-y-1.5">
-        <div className="flex gap-2">
-          <span className="text-[10px] text-blue-400 shrink-0 mt-0.5">👦</span>
-          <p className="text-sm text-white/80">{interaction.child_input}</p>
+      <div className="space-y-2">
+        <div className="flex gap-2.5">
+          <span className="text-[11px] shrink-0 mt-0.5">👦</span>
+          <p className="text-[13px] text-white/80 leading-relaxed">{interaction.child_input}</p>
         </div>
-        <div className="flex gap-2">
-          <span className="text-[10px] text-green-400 shrink-0 mt-0.5">🤖</span>
-          <p className="text-sm text-white/60">{interaction.ai_response}</p>
+        <div className="flex gap-2.5">
+          <span className="text-[11px] shrink-0 mt-0.5">🤖</span>
+          <p className="text-[13px] text-white/50 leading-relaxed">{interaction.ai_response}</p>
         </div>
       </div>
     </div>
@@ -215,31 +217,31 @@ function EntryRow({ entry, onToggle, onEdit, onDelete }: {
   entry: KBEntry; onToggle: () => void; onEdit: () => void; onDelete: () => void;
 }) {
   return (
-    <div className={`bg-white/5 backdrop-blur rounded-xl p-4 border transition-all ${entry.is_active ? "border-white/10" : "border-red-500/30 opacity-50"}`}>
+    <div className={`bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border transition-all ${entry.is_active ? "border-white/[0.06]" : "border-red-500/20 opacity-40"}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-            <span className="text-xs text-white/40 font-mono">P{entry.priority}</span>
-            <span className="text-xs text-white/40">{entry.age_min}-{entry.age_max} ans</span>
-            <span className="text-xs text-white/30">🔄 {entry.usage_count || 0}</span>
+            <span className="text-[10px] px-2 py-1 rounded-lg bg-amber-500/15 text-amber-300 font-mono font-bold">P{entry.priority}</span>
+            <span className="text-[10px] text-white/30">{entry.age_min}-{entry.age_max} ans</span>
+            <span className="text-[10px] text-white/20">🔄 {entry.usage_count || 0}</span>
           </div>
-          <p className="text-white font-medium text-sm">{entry.question}</p>
-          <p className="text-white/40 text-xs mt-1 line-clamp-2">{entry.answer}</p>
+          <p className="text-white font-medium text-[13px] leading-relaxed">{entry.question}</p>
+          <p className="text-white/30 text-[12px] mt-1 line-clamp-2">{entry.answer}</p>
           {entry.keywords.length > 0 && (
             <div className="flex gap-1 mt-2 flex-wrap">
               {entry.keywords.slice(0, 6).map((k, i) => (
-                <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/50">{k}</span>
+                <span key={i} className="text-[9px] px-2 py-0.5 rounded-lg bg-white/[0.06] text-white/40">{k}</span>
               ))}
-              {entry.keywords.length > 6 && <span className="text-[10px] text-white/30">+{entry.keywords.length - 6}</span>}
+              {entry.keywords.length > 6 && <span className="text-[10px] text-white/20">+{entry.keywords.length - 6}</span>}
             </div>
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <Switch checked={entry.is_active} onCheckedChange={onToggle} className="scale-75" />
-          <Button size="icon" variant="ghost" onClick={onEdit} className="text-white/40 hover:text-blue-400 w-8 h-8">
+          <Button size="icon" variant="ghost" onClick={onEdit} className="text-white/30 hover:text-blue-400 w-8 h-8">
             <Pencil className="w-3.5 h-3.5" />
           </Button>
-          <Button size="icon" variant="ghost" onClick={onDelete} className="text-white/40 hover:text-red-400 w-8 h-8">
+          <Button size="icon" variant="ghost" onClick={onDelete} className="text-white/30 hover:text-red-400 w-8 h-8">
             <Trash2 className="w-3.5 h-3.5" />
           </Button>
         </div>
@@ -828,17 +830,23 @@ const Admin = () => {
   // ─── Login ─────────────────────────────────────────────────────────
   if (!authenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] flex items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-sm text-center space-y-4 border border-white/10">
-          <Lock className="w-12 h-12 text-purple-400 mx-auto" />
-          <h1 className="text-xl font-bold text-white">Admin Bobby</h1>
-          <p className="text-white/60 text-sm">Code d'accès administrateur</p>
-          <Input type="password" value={code} onChange={e => setCode(e.target.value)} placeholder="••••••••"
-            className="bg-white/10 border-white/20 text-white text-center text-lg tracking-widest"
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4">
+        <div className="w-full max-w-sm text-center space-y-6">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500 to-blue-600 mx-auto flex items-center justify-center shadow-2xl shadow-purple-500/20">
+            <Brain className="w-10 h-10 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-white tracking-tight">Bobby Admin</h1>
+            <p className="text-white/40 text-sm mt-1">Base opérationnelle</p>
+          </div>
+          <Input type="password" value={code} onChange={e => setCode(e.target.value)} placeholder="Code d'accès"
+            className="bg-white/[0.06] border-white/[0.08] text-white text-center text-lg tracking-[0.3em] rounded-2xl h-14 placeholder:text-white/20 focus:border-purple-500/40 focus:ring-purple-500/20"
             onKeyDown={e => { if (e.key === "Enter") { code === ACCESS_CODE ? setAuthenticated(true) : toast.error("Code incorrect"); } }}
           />
           <Button onClick={() => { code === ACCESS_CODE ? setAuthenticated(true) : toast.error("Code incorrect"); }}
-            className="w-full bg-purple-600 hover:bg-purple-700">Accéder</Button>
+            className="w-full h-12 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-2xl text-[15px] font-semibold shadow-lg shadow-purple-500/20">
+            Accéder
+          </Button>
         </div>
       </div>
     );
@@ -859,13 +867,13 @@ const Admin = () => {
   if (editingEntry) {
     const kwString = (editingEntry.keywords || []).join(", ");
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-2xl mx-auto space-y-4">
           <Button variant="ghost" onClick={() => setEditingEntry(null)} className="text-white/70">
             <ArrowLeft className="w-4 h-4 mr-2" /> Retour
           </Button>
           <h2 className="text-xl font-bold text-white">{editingEntry.id ? "Modifier" : "Nouvelle"} interaction</h2>
-          <div className="space-y-4 bg-white/5 backdrop-blur rounded-xl p-5 border border-white/10">
+          <div className="space-y-4 bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-5 border border-white/10">
             <div>
               <label className="text-white/60 text-xs font-medium mb-1 block">Question / Déclencheur</label>
               <Textarea value={editingEntry.question || ""} onChange={e => setEditingEntry({ ...editingEntry, question: e.target.value })}
@@ -931,7 +939,7 @@ const Admin = () => {
     return (
       <>
       {detailPortal}
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -984,7 +992,7 @@ const Admin = () => {
     return (
       <>
       {detailPortal}
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1059,7 +1067,7 @@ const Admin = () => {
   // ═══════════════════════════════════════════════════════════════════
   if (topSection === "interactions") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1091,7 +1099,7 @@ const Admin = () => {
                 if (count === 0) return null;
                 return (
                   <button key={cat.id} onClick={() => { setInteractionCat(cat.id); setSearch(""); }}
-                    className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group"
+                    className="aspect-square bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-3 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between group"
                   >
                     <span className="text-2xl">{cat.emoji}</span>
                     <div>
@@ -1123,7 +1131,7 @@ const Admin = () => {
       if (searchLower) filtered = filtered.filter(e => e.input.toLowerCase().includes(searchLower) || e.responses.some(r => r.text.toLowerCase().includes(searchLower)));
 
       return (
-        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="min-h-screen bg-[#0a0a0f] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
               <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1156,7 +1164,7 @@ const Admin = () => {
 
             <div className="space-y-3">
               {filtered.map((entry, idx) => (
-                <div key={idx} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                <div key={idx} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/10">
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300">{entry.category}</span>
                     {entry.emotion && <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300">{entry.emotion}</span>}
@@ -1198,7 +1206,7 @@ const Admin = () => {
     }
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1232,7 +1240,7 @@ const Admin = () => {
           <div className="grid grid-cols-3 gap-3">
             {filteredCats.map(cat => (
               <button key={cat} onClick={() => { setInteractionCat(cat); setSearch(""); setAgeFilter(null); }}
-                className="bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group aspect-square"
+                className="bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-3 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between group aspect-square"
               >
                 <span className="text-lg capitalize text-white/70">{cat.replace(/_/g, " ")}</span>
                 <div>
@@ -1285,7 +1293,7 @@ const Admin = () => {
                   <h3 className="text-white/60 text-xs font-semibold mb-2 uppercase tracking-wider">{cat} ({questions.length})</h3>
                   <div className="space-y-2">
                     {questions.map((q, i) => (
-                      <div key={i} onClick={() => openQuizDetail(q, "quiz")} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
+                      <div key={i} onClick={() => openQuizDetail(q, "quiz")} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
                         <p className="text-sm text-white/80 font-medium mb-2">{q.question}</p>
                         <div className="grid grid-cols-2 gap-1.5 mb-2">
                           {q.choices.map((c, ci) => (
@@ -1321,7 +1329,7 @@ const Admin = () => {
                   <h3 className="text-white/60 text-xs font-semibold mb-2 uppercase tracking-wider">{cat} ({questions.length})</h3>
                   <div className="space-y-2">
                     {questions.map((q, i) => (
-                      <div key={i} onClick={() => openQuizDetail(q, "vf")} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
+                      <div key={i} onClick={() => openQuizDetail(q, "vf")} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
                         <div className="flex items-start gap-2">
                           <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${q.answer ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"}`}>
                             {q.answer ? "VRAI" : "FAUX"}
@@ -1346,7 +1354,7 @@ const Admin = () => {
           return (
             <div className="space-y-2">
               {filtered.map((q, i) => (
-                <div key={i} onClick={() => openQuizDetail(q, "riddle")} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
+                <div key={i} onClick={() => openQuizDetail(q, "riddle")} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
                   <p className="text-sm text-white/80 font-medium mb-2">{q.question}</p>
                   <div className="flex gap-1.5 mb-2 flex-wrap">
                     {q.choices.map((c, ci) => (
@@ -1368,7 +1376,7 @@ const Admin = () => {
         return (
           <div className="space-y-2">
             {filtered.map((b, i) => (
-              <div key={i} onClick={() => openQuizDetail(b, "blague")} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
+              <div key={i} onClick={() => openQuizDetail(b, "blague")} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
                 <p className="text-sm text-white/70">{b}</p>
               </div>
             ))}
@@ -1380,7 +1388,7 @@ const Admin = () => {
       return (
         <>
         {detailPortal}
-        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="min-h-screen bg-[#0a0a0f] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
               <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1406,7 +1414,7 @@ const Admin = () => {
 
     // Jeux grid
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1420,7 +1428,7 @@ const Admin = () => {
           <div className="grid grid-cols-2 gap-3">
             {GAME_SECTIONS.map(section => (
               <button key={section.id} onClick={() => { setInteractionCat(section.id); setSearch(""); }}
-                className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group"
+                className="aspect-square bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between group"
               >
                 <span className="text-3xl">{section.emoji}</span>
                 <div>
@@ -1459,7 +1467,7 @@ const Admin = () => {
       return (
         <>
         {detailPortal}
-        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="min-h-screen bg-[#0a0a0f] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
               <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1478,7 +1486,7 @@ const Admin = () => {
 
             <div className="space-y-2">
               {filtered.map((entry, idx) => (
-                <div key={idx} onClick={() => openQADetail(entry)} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
+                <div key={idx} onClick={() => openQADetail(entry)} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
                   <p className="text-xs text-white/50 mb-1.5">🎯 {entry.triggers.join(" • ")}</p>
                   <div className="space-y-1">
                     {entry.responses.map((r, i) => (
@@ -1502,7 +1510,7 @@ const Admin = () => {
       : qaByIntent;
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1522,7 +1530,7 @@ const Admin = () => {
           <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
             {filteredIntents.map(([intent, entries]) => (
               <button key={intent} onClick={() => { setInteractionCat(intent); setSearch(""); }}
-                className="bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between aspect-square"
+                className="bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-3 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between aspect-square"
               >
                 <span className="text-2xl">{QA_INTENT_EMOJIS[intent] || "❓"}</span>
                 <div>
@@ -1569,7 +1577,7 @@ const Admin = () => {
       return (
         <>
         {detailPortal}
-        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="min-h-screen bg-[#0a0a0f] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
               <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1597,7 +1605,7 @@ const Admin = () => {
 
             <div className="space-y-2">
               {filtered.map((b, i) => (
-                <div key={i} onClick={() => openBlagueDetail(b, i)} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
+                <div key={i} onClick={() => openBlagueDetail(b, i)} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">{b.ageMin}-{b.ageMax} ans</span>
                     <span className="text-[10px] text-white/30">Niv.{b.difficulte}</span>
@@ -1618,7 +1626,7 @@ const Admin = () => {
     return (
       <>
       {detailPortal}
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1638,7 +1646,7 @@ const Admin = () => {
           {searchLower ? (
             <div className="space-y-2">
               {BLAGUES.filter(b => b.question.toLowerCase().includes(searchLower) || b.reponse.toLowerCase().includes(searchLower)).map((b, i) => (
-                <div key={i} onClick={() => openBlagueDetail(b, i)} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 cursor-pointer hover:bg-white/8 transition-colors">
+                <div key={i} onClick={() => openBlagueDetail(b, i)} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300 capitalize">{b.categorie}</span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">{b.ageMin}-{b.ageMax} ans</span>
@@ -1655,7 +1663,7 @@ const Admin = () => {
                 const EMOJIS: Record<string, string> = { animaux: "🐾", ecole: "📚", nourriture: "🍕", absurde: "🤪", famille: "👨‍👩‍👧", science: "🔬" };
                 return (
                   <button key={cat} onClick={() => { setInteractionCat(cat); setSearch(""); }}
-                    className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between">
+                    className="aspect-square bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between">
                     <span className="text-3xl">{EMOJIS[cat] || "😂"}</span>
                     <div>
                       <p className="text-xl font-bold text-white">{catBlagues.length}</p>
@@ -1708,7 +1716,7 @@ const Admin = () => {
       const catInfo = CHANSON_CATEGORIES.find(cc => cc.id === selectedChansonCat);
 
       return (
-        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="min-h-screen bg-[#0a0a0f] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
               <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1741,7 +1749,7 @@ const Admin = () => {
                 )}
                 <div className="space-y-2">
                   {chansons.map(c => (
-                    <div key={c.id} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                    <div key={c.id} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/10">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300">{c.ageMin}-{c.ageMax} ans</span>
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/40">⏱ {c.duree}</span>
@@ -1768,7 +1776,7 @@ const Admin = () => {
 
     // Category grid
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1788,7 +1796,7 @@ const Admin = () => {
           {searchLower ? (
             <div className="space-y-2">
               {CHANSONS.filter(c => c.titre.toLowerCase().includes(searchLower) || c.description.toLowerCase().includes(searchLower) || c.tags.some(t => t.includes(searchLower))).map(c => (
-                <div key={c.id} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+                <div key={c.id} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/10">
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 capitalize">{c.categorie}</span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">{c.ageMin}-{c.ageMax} ans</span>
@@ -1805,7 +1813,7 @@ const Admin = () => {
                 const count = CHANSONS.filter(c => c.categorie === cat.id).length;
                 return (
                   <button key={cat.id} onClick={() => { setInteractionCat(cat.id); setSearch(""); }}
-                    className={`aspect-square ${cat.color} hover:opacity-90 backdrop-blur rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between`}>
+                    className={`aspect-square ${cat.color} hover:opacity-90 backdrop-blur rounded-2xl p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between`}>
                     <span className="text-3xl">{cat.emoji}</span>
                     <div>
                       <p className="text-xl font-bold text-white">{count}</p>
@@ -1866,13 +1874,13 @@ const Admin = () => {
     // ── Story editor form ──
     if (editingStory) {
       return (
-        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="min-h-screen bg-[#0a0a0f] p-4">
           <div className="max-w-2xl mx-auto space-y-4">
             <Button variant="ghost" onClick={() => setEditingStory(null)} className="text-white/70">
               <ArrowLeft className="w-4 h-4 mr-2" /> Retour
             </Button>
             <h2 className="text-xl font-bold text-white">{editingStory.id ? "Modifier" : "Nouvelle"} histoire</h2>
-            <div className="space-y-4 bg-white/5 backdrop-blur rounded-xl p-5 border border-white/10">
+            <div className="space-y-4 bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-5 border border-white/10">
               <div>
                 <label className="text-white/60 text-xs font-medium mb-1 block">Titre</label>
                 <Input value={editingStory.titre || ""} onChange={e => setEditingStory({ ...editingStory, titre: e.target.value })}
@@ -1983,7 +1991,7 @@ const Admin = () => {
       return (
         <>
         {detailPortal}
-        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="min-h-screen bg-[#0a0a0f] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
               <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -2013,7 +2021,7 @@ const Admin = () => {
               {filtered.map(h => {
                 const isExpanded = expandedStory === h.id;
                 return (
-                  <div key={h.id} className="bg-white/5 backdrop-blur rounded-xl border border-white/10 overflow-hidden">
+                  <div key={h.id} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] border border-white/10 overflow-hidden">
                     <button onClick={() => setExpandedStory(isExpanded ? null : h.id)}
                       className="w-full p-4 text-left">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -2075,7 +2083,7 @@ const Admin = () => {
 
     // ── Main grid by theme ──
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -2097,7 +2105,7 @@ const Admin = () => {
               const cloudCount = cloudStories.filter(s => s.theme === theme.id).length;
               return (
                 <button key={theme.id} onClick={() => { setInteractionCat(theme.id); setSearch(""); setAgeFilter(null); }}
-                  className={`aspect-square ${theme.color} hover:opacity-90 backdrop-blur rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between`}>
+                  className={`aspect-square ${theme.color} hover:opacity-90 backdrop-blur rounded-2xl p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between`}>
                   <span className="text-3xl">{theme.emoji}</span>
                   <div>
                     <p className="text-xl font-bold text-white">{count}</p>
@@ -2172,7 +2180,7 @@ const Admin = () => {
     ];
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -2184,7 +2192,7 @@ const Admin = () => {
           </div>
 
           {/* Emotions grid */}
-          <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+          <div className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/10">
             <h3 className="text-white/70 text-xs font-semibold mb-3 uppercase tracking-wider">🎭 États émotionnels ({BOBBY_EMOTIONS.length})</h3>
             <div className="grid grid-cols-2 gap-2">
               {BOBBY_EMOTIONS.map(e => (
@@ -2202,7 +2210,7 @@ const Admin = () => {
           </div>
 
           {/* Emotion triggers QA */}
-          <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+          <div className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/10">
             <h3 className="text-white/70 text-xs font-semibold mb-3 uppercase tracking-wider">💬 Réponses émotionnelles ({EMOTION_TRIGGERS_QA.length})</h3>
             <div className="space-y-2">
               {EMOTION_TRIGGERS_QA.map((eq, i) => (
@@ -2219,7 +2227,7 @@ const Admin = () => {
 
           {/* Personality sections */}
           {sections.map((section, idx) => (
-            <div key={idx} className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
+            <div key={idx} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/10">
               <h3 className="text-white/70 text-xs font-semibold mb-3 uppercase tracking-wider">{section.title}</h3>
               <div className="space-y-1.5">
                 {section.items.map((item, i) => (
@@ -2239,7 +2247,7 @@ const Admin = () => {
   if (topSection === "cloud" && cloudSection && currentCloudSection) {
     const Icon = currentCloudSection.icon;
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -2302,7 +2310,7 @@ const Admin = () => {
   // ═══════════════════════════════════════════════════════════════════
   if (topSection === "cloud") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -2323,7 +2331,7 @@ const Admin = () => {
               const count = categoryCounts[section.id]?.total ?? 0;
               return (
                 <button key={section.id} onClick={() => { setCloudSection(section.id); setSearch(""); }}
-                  className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group"
+                  className="aspect-square bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between group"
                 >
                   <div className={`w-10 h-10 rounded-xl ${section.bgColor} flex items-center justify-center`}>
                     <Icon className={`w-5 h-5 ${section.color}`} />
@@ -2629,71 +2637,54 @@ const Admin = () => {
 
   // ═══════════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" onClick={() => navigate("/")} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
-          <div className="w-11 h-11 rounded-xl bg-purple-500/20 flex items-center justify-center">
-            <Brain className="w-6 h-6 text-purple-400" />
+    <div className="min-h-screen bg-[#0a0a0f]">
+      <div className="max-w-4xl mx-auto px-4 py-6 space-y-5">
+        {/* ── Header — iOS large title style ── */}
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate("/")} className="w-10 h-10 rounded-2xl bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] transition-all active:scale-95">
+            <ArrowLeft className="w-5 h-5 text-white/60" />
+          </button>
+          <div className="flex-1">
+            <h1 className="text-[28px] font-bold text-white tracking-tight">Cerveau Bobby</h1>
+            <p className="text-white/30 text-[13px]">Base opérationnelle</p>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-white">Cerveau Bobby</h1>
-            <p className="text-white/40 text-xs">Tout le contenu embarqué & cloud</p>
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
+            <Brain className="w-6 h-6 text-purple-400" />
           </div>
         </div>
 
-        {/* Total counter */}
+        {/* ── Hero counter ── */}
         {(() => {
           const intCount = typeof sectionCounts.interactions === "number" ? sectionCounts.interactions : 0;
           const total = intCount + BOBBY_MULTI_RESPONSES.length + QA_DATABASE.length + BLAGUES.length + HISTOIRES.length + CHANSONS.length + (sectionCounts.jeux as number) + entries.length;
           return (
-            <div className="bg-gradient-to-r from-purple-500/20 to-cyan-500/20 backdrop-blur rounded-xl p-4 border border-purple-500/30 text-center">
-              <p className="text-3xl font-extrabold text-white">{total.toLocaleString("fr-FR")}</p>
-              <p className="text-xs text-white/50 mt-1">contenus totaux dans le cerveau de Bobby</p>
+            <div className="bg-gradient-to-r from-purple-500/10 via-blue-500/8 to-cyan-500/10 backdrop-blur-xl rounded-[20px] p-5 border border-purple-500/10">
+              <p className="text-[36px] font-extrabold text-white tracking-tight">{total.toLocaleString("fr-FR")}</p>
+              <p className="text-[13px] text-white/40 -mt-0.5">contenus dans le cerveau</p>
             </div>
           );
         })()}
 
-        {/* Stats bar */}
-        <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-          <div className="grid grid-cols-4 md:grid-cols-8 gap-3 text-center">
-            <div>
-              <p className="text-sm font-bold text-cyan-400">{sectionCounts.interactions}</p>
-              <p className="text-[8px] text-white/40">Interactions</p>
+        {/* ── Stats pills ── */}
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+          {[
+            { label: "Interactions", count: sectionCounts.interactions, color: "text-cyan-400" },
+            { label: "Multi-Rép.", count: BOBBY_MULTI_RESPONSES.length, color: "text-orange-400" },
+            { label: "QA", count: QA_DATABASE.length, color: "text-amber-400" },
+            { label: "Blagues", count: BLAGUES.length, color: "text-green-400" },
+            { label: "Histoires", count: HISTOIRES.length, color: "text-purple-400" },
+            { label: "Chansons", count: CHANSONS.length, color: "text-rose-400" },
+            { label: "Jeux", count: sectionCounts.jeux, color: "text-blue-400" },
+            { label: "Cloud", count: entries.length, color: "text-sky-400" },
+          ].map(stat => (
+            <div key={stat.label} className="flex-shrink-0 bg-white/[0.04] rounded-2xl px-4 py-2.5 border border-white/[0.05] text-center min-w-[72px]">
+              <p className={`text-[15px] font-bold ${stat.color}`}>{stat.count}</p>
+              <p className="text-[9px] text-white/30 font-medium">{stat.label}</p>
             </div>
-            <div>
-              <p className="text-sm font-bold text-orange-400">{BOBBY_MULTI_RESPONSES.length}</p>
-              <p className="text-[8px] text-white/40">Multi-Rép.</p>
-            </div>
-            <div>
-              <p className="text-sm font-bold text-amber-400">{QA_DATABASE.length}</p>
-              <p className="text-[8px] text-white/40">QA Offline</p>
-            </div>
-            <div>
-              <p className="text-sm font-bold text-green-400">{BLAGUES.length}</p>
-              <p className="text-[8px] text-white/40">Blagues</p>
-            </div>
-            <div>
-              <p className="text-sm font-bold text-purple-400">{HISTOIRES.length}</p>
-              <p className="text-[8px] text-white/40">Histoires</p>
-            </div>
-            <div>
-              <p className="text-sm font-bold text-rose-400">{CHANSONS.length}</p>
-              <p className="text-[8px] text-white/40">Chansons</p>
-            </div>
-            <div>
-              <p className="text-sm font-bold text-blue-400">{sectionCounts.jeux}</p>
-              <p className="text-[8px] text-white/40">Jeux</p>
-            </div>
-            <div>
-              <p className="text-sm font-bold text-sky-400">{entries.length}</p>
-              <p className="text-[8px] text-white/40">Cloud KB</p>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Main grid — square cards */}
+        {/* ── Main grid — Apple-style cards ── */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {TOP_SECTIONS_CONFIG.map(section => (
             <SquareCard
@@ -2712,7 +2703,7 @@ const Admin = () => {
           ))}
         </div>
 
-        <p className="text-[10px] text-white/20 text-center">Les données embarquées (Interactions, QA, Blagues, Histoires, Personnalité) sont en lecture seule. Le Cloud KB est modifiable.</p>
+        <p className="text-[10px] text-white/15 text-center pt-2">Données embarquées en lecture seule · Cloud KB modifiable</p>
         {detailPortal}
       </div>
     </div>

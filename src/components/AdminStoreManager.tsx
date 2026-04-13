@@ -90,7 +90,7 @@ function StoreCard({ item, installs, onClick }: {
   const gradient = CAT_COLORS[item.category] || "from-gray-500/30 to-gray-400/20";
   return (
     <button onClick={onClick}
-      className={`relative bg-white/5 backdrop-blur rounded-2xl border transition-all duration-200 hover:scale-[1.03] hover:shadow-xl active:scale-[0.97] overflow-hidden text-left group ${
+      className={`relative bg-white/[0.04] backdrop-blur-xl rounded-[20px] border transition-all duration-200 hover:scale-[1.03] hover:shadow-xl active:scale-[0.97] overflow-hidden text-left group ${
         item.is_active ? "border-white/10 hover:border-white/25" : "border-red-500/20 opacity-50"
       }`}>
       <div className={`aspect-square w-full bg-gradient-to-br ${gradient} flex items-center justify-center relative overflow-hidden`}>
@@ -232,7 +232,7 @@ function ContentDataEditor({ contentId, contentName, onBack }: {
             <h1 className="text-lg font-bold text-white">{editingItem.id ? "✏️ Modifier" : "➕ Nouveau"} contenu</h1>
           </div>
 
-          <div className="bg-white/5 backdrop-blur rounded-2xl p-5 border border-white/10 space-y-4">
+          <div className="bg-white/[0.04] backdrop-blur-xl rounded-[20px] p-5 border border-white/10 space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-white/50 mb-1 block">Type de données</label>
@@ -343,7 +343,7 @@ function ContentDataEditor({ contentId, contentName, onBack }: {
         ) : (
           <div className="space-y-2">
             {items.map((item, idx) => (
-              <div key={item.id} className="bg-white/5 backdrop-blur rounded-xl p-3 border border-white/10 hover:bg-white/8 transition-all group">
+              <div key={item.id} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-3 border border-white/[0.06] hover:bg-white/[0.06] transition-all group">
                 <div className="flex items-start gap-3">
                   {/* Order controls */}
                   <div className="flex flex-col gap-0.5 shrink-0 pt-1">
@@ -585,7 +585,7 @@ function StoreEditForm({ item, onSave, onCancel }: {
           <h1 className="text-lg font-bold text-white">{form.id ? "✏️ Modifier" : "➕ Nouveau"} contenu</h1>
         </div>
 
-        <div className="bg-white/5 backdrop-blur rounded-2xl p-5 border border-white/10 space-y-4">
+        <div className="bg-white/[0.04] backdrop-blur-xl rounded-[20px] p-5 border border-white/10 space-y-4">
           {/* Cover upload */}
           <div>
             <label className="text-xs text-white/50 mb-2 block font-bold">📷 Image de couverture (1064×1064)</label>
