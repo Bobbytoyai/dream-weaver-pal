@@ -1,0 +1,316 @@
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Loader2, CloudUpload, LogIn, Trash2 } from "lucide-react";
+import type { ParentSession as Session, ParentAnalysis as Analysis } from "@/lib/bobby/parentDashboard";
+import { formatSyncTime, type CloudProfile } from "@/lib/bobby/cloudSync";
+
+interface CloudTabProps {
+  sessions: Session[];
+  analyses: Analysis[];
+  user: { email?: string } | null;
+  cloudProfile: CloudProfile | null;
+  cloudLoading: boolean;
+  cloudCopied: boolean;
+  setCloudCopied: (v: boolean) => void;
+  handleCloudSave: () => void;
+  handleCloudDelete: () => void;
+  setConfirmDialog: (d: {
+    title: string; description: string; confirmLabel?: string;
+    variant?: "danger" | "warning"; onConfirm: () => void;
+  } | null) => void;
+}
+
+const CloudTab = ({
+  sessions, analyses, user, cloudProfile, cloudLoading, cloudCopied, setCloudCopied,
+  handleCloudSave, handleCloudDelete, setConfirmDialog,
+}: CloudTabProps) => {
+  const navigate = useNavigate();
+
+  const totalSessions = sessions.length;
+  const totalMessages = sessions.reduce((s, sess) => s + (sess.message_count || 0), 0);
+  const totalAnalyses = analyses.length;
+
+  const estimatedStorageKB = (totalSessions * 2) + (totalMessages * 0.5) + (totalAnalyses * 5);
+  const estimatedStorageMB = Math.max(0.01, estimatedStorageKB / 1024);
+  const storageLabel = estimatedStorageMB < 1 ? `${Math.round(estimatedStorageKB)} Ko` : `${estimatedStorageMB.toFixed(1)} Mo`;
+
+  const plans = [
+    {
+      name: "Découverte", price: "0€", period: "", emoji: "🆓",
+      storage: "500 Mo",
+      features: ["500 Mo de stockage cloud", "Bobby Brain V4 de base", "1 profil enfant", "Sync 1 appareil", "Bobby Store — packs gratuits"],
+      cta: "Actuel", disabled: true,
+    },
+    {
+      name: "Famille", price: "4,99€", period: "/mois", emoji: "👨‍👩‍👧‍👦",
+      storage: "5 Go",
+      features: ["5 Go de stockage cloud", "Bobby Brain Intelligence V4", "3 profils enfants", "Sync 3 appareils", "Bobby Store complet", "Export MP3 sessions", "Analyses IA détaillées"],
+      cta: "Bientôt disponible", disabled: true, popular: true,
+    },
+    {
+      name: "Pro", price: "9,99€", period: "/mois", emoji: "🚀",
+      storage: "50 Go",
+      features: ["50 Go de stockage cloud", "Bobby Brain Intelligence V4 max", "Profils illimités", "Appareils illimités", "Bobby Store Premium", "API développeur", "Support dédié 24/7"],
+      cta: "Bientôt disponible", disabled: true,
+    },
+  ];
+
+  return (
+    <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
+      {/* Hero */}
+      <div className="retro-card p-6 text-center" style={{ backgroundColor: 'var(--retro-blue)' }}>
+        <span className="text-5xl block mb-2">☁️</span>
+        <h2 className="text-[22px] font-black text-gray-800 uppercase">Bobby Cloud</h2>
+        <p className="text-[13px] text-gray-600 leading-relaxed font-bold">
+          Sauvegardez, synchronisez et téléchargez tout le contenu de Bobby entre vos appareils.
+        </p>
+      </div>
+
+      {/* STATUS BANNER */}
+      {cloudLoading && (
+        <div className="retro-card p-4 flex items-center gap-3 animate-pulse" style={{ backgroundColor: 'var(--retro-yellow)' }}>
+          <Loader2 className="w-6 h-6 animate-spin text-gray-800" />
+          <div>
+            <p className="text-[14px] font-black text-gray-800 uppercase">Synchronisation en cours…</p>
+            <p className="text-[11px] text-gray-600 font-bold">Veuillez patienter quelques secondes.</p>
+          </div>
+        </div>
+      )}
+
+      {!cloudLoading && !user && !cloudProfile && (
+        <div className="retro-card p-4 flex items-center gap-3" style={{ backgroundColor: 'var(--retro-red)', opacity: 0.9 }}>
+          <span className="text-2xl">🔒</span>
+          <div>
+            <p className="text-[14px] font-black text-gray-800 uppercase">Connexion requise</p>
+            <p className="text-[11px] text-gray-600 font-bold">Créez un compte ou connectez-vous pour activer Bobby Cloud.</p>
+          </div>
+        </div>
+      )}
+
+      {!cloudLoading && user && !cloudProfile && (
+        <div className="retro-card p-4 flex items-center gap-3" style={{ backgroundColor: 'var(--retro-yellow)', opacity: 0.9 }}>
+          <span className="text-2xl">⚡</span>
+          <div>
+            <p className="text-[14px] font-black text-gray-800 uppercase">Cloud non activé</p>
+            <p className="text-[11px] text-gray-600 font-bold">Connecté en tant que {user.email} — activez la synchronisation ci-dessous.</p>
+          </div>
+        </div>
+      )}
+
+      {/* CONNEXION / SYNC STATUS */}
+      {cloudProfile ? (
+        <div className="retro-card p-5 space-y-4" style={{ backgroundColor: 'var(--retro-green)' }}>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 border-2 border-black bg-white flex items-center justify-center">
+              <span className="text-xl">✅</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-[15px] font-black text-gray-800 uppercase">Connecté au Cloud</h3>
+              <p className="text-[12px] text-gray-600 font-bold">{formatSyncTime(cloudProfile.last_synced_at)}</p>
+            </div>
+            <span className="px-2 py-1 border-2 border-black bg-white text-gray-800 text-[10px] font-black">ACTIF</span>
+          </div>
+
+          {/* Sync code */}
+          <div className="border-2 border-black bg-white p-3">
+            <p className="text-[11px] text-gray-600 font-black mb-1.5">📋 Code de synchronisation</p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 text-[16px] font-mono font-black text-primary tracking-widest text-center py-2 border-2 border-black bg-white">
+                {cloudProfile.sync_code}
+              </code>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(cloudProfile.sync_code);
+                  setCloudCopied(true);
+                  setTimeout(() => setCloudCopied(false), 2000);
+                  toast.success("Code copié !");
+                }}
+                className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-gray-800 hover:bg-muted transition-all active:scale-90">
+                {cloudCopied ? <span>✓</span> : <span>📋</span>}
+              </button>
+            </div>
+          </div>
+
+          {/* Cloud data summary */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { emoji: "💬", value: totalSessions, label: "Sessions" },
+              { emoji: "📝", value: totalMessages, label: "Messages" },
+              { emoji: "🧠", value: totalAnalyses, label: "Analyses" },
+            ].map(s => (
+              <div key={s.label} className="border-2 border-black bg-white p-2.5 text-center">
+                <span className="text-lg">{s.emoji}</span>
+                <p className="text-[16px] font-black text-gray-800">{s.value}</p>
+                <p className="text-[9px] text-gray-600 font-bold">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Action buttons */}
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={handleCloudSave} disabled={cloudLoading}
+              className="flex flex-col items-center gap-1.5 p-3 border-4 border-black bg-white hover:bg-muted transition-all active:scale-95 disabled:opacity-50">
+              {cloudLoading ? <Loader2 className="w-5 h-5 animate-spin text-gray-800" /> : <CloudUpload className="w-5 h-5 text-gray-800" />}
+              <span className="text-[12px] font-black text-gray-800 uppercase">Sauvegarder</span>
+            </button>
+            <button onClick={() => {
+              setConfirmDialog({
+                title: "Supprimer le profil Cloud ?",
+                description: "Le code de synchronisation ne fonctionnera plus.",
+                confirmLabel: "Supprimer",
+                variant: "danger",
+                onConfirm: () => { handleCloudDelete(); setConfirmDialog(null); },
+              });
+            }} disabled={cloudLoading}
+              className="flex flex-col items-center gap-1.5 p-3 border-4 border-black hover:bg-muted transition-all active:scale-95 disabled:opacity-50" style={{ backgroundColor: 'var(--retro-red)' }}>
+              <Trash2 className="w-5 h-5 text-gray-800" />
+              <span className="text-[12px] font-black text-gray-800 uppercase">Dissocier</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <button onClick={handleCloudSave} disabled={cloudLoading}
+            className="w-full retro-card p-5 hover:translate-y-[-2px] transition-all active:scale-[0.98] disabled:opacity-50" style={{ backgroundColor: 'var(--retro-blue)' }}>
+            <div className="flex items-center gap-4">
+              {cloudLoading ? <Loader2 className="w-9 h-9 animate-spin text-gray-800" /> : <CloudUpload className="w-9 h-9 text-gray-800" />}
+              <div className="text-left flex-1">
+                <h3 className="text-[16px] font-black text-gray-800 uppercase">Créer un compte Cloud</h3>
+                <p className="text-[12px] text-gray-600 font-bold mt-0.5">Inscription avec email et mot de passe</p>
+              </div>
+            </div>
+          </button>
+
+          <button onClick={() => navigate("/bobby-cloud?returnTo=/")} disabled={cloudLoading}
+            className="w-full retro-card p-5 hover:translate-y-[-2px] transition-all active:scale-[0.98] disabled:opacity-50" style={{ backgroundColor: 'var(--retro-green)' }}>
+            <div className="flex items-center gap-4">
+              <LogIn className="w-9 h-9 text-gray-800" />
+              <div className="text-left flex-1">
+                <h3 className="text-[16px] font-black text-gray-800 uppercase">J'ai déjà un compte</h3>
+                <p className="text-[12px] text-gray-600 font-bold mt-0.5">Se connecter avec email et mot de passe</p>
+              </div>
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* CONTENU SYNCHRONISÉ */}
+      <div className="retro-card p-5">
+        <h3 className="text-[16px] font-black text-foreground mb-3 uppercase">📦 Contenu inclus dans Bobby Cloud</h3>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { emoji: "🧠", title: "Cerveau complet", desc: "Knowledge base, QA, mémoire enfant", bg: "var(--retro-purple)" },
+            { emoji: "💬", title: "Conversations", desc: "Toutes les sessions Bobby ↔ enfant", bg: "var(--retro-blue)" },
+            { emoji: "📚", title: "Bibliothèque", desc: "Histoires, contes et récits", bg: "var(--retro-yellow)" },
+            { emoji: "🎓", title: "Contenu éducatif", desc: "Jeux, quiz, activités", bg: "var(--retro-green)" },
+            { emoji: "🎙️", title: "Voix & TTS", desc: "Cache audio, préférences voix", bg: "var(--retro-red)" },
+            { emoji: "📊", title: "Analyses IA", desc: "Rapports émotionnels, scores", bg: "#e5e5e5" },
+          ].map(c => (
+            <div key={c.title} className="border-2 border-black p-3" style={{ backgroundColor: c.bg }}>
+              <span className="text-2xl block mb-1">{c.emoji}</span>
+              <h4 className="text-[13px] font-black text-gray-800">{c.title}</h4>
+              <p className="text-[10px] text-gray-600 leading-snug mt-0.5 font-bold">{c.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* TARIFS */}
+      <div className="space-y-3">
+        <h3 className="text-[16px] font-black text-foreground px-1 uppercase">💾 TARIFS BOBBY CLOUD</h3>
+        <p className="text-[11px] text-foreground/60 px-1 -mt-1 font-bold">Utilisation actuelle : <span className="font-black text-foreground">{storageLabel}</span> / 500 Mo</p>
+        <div className="mx-1 h-3 bg-white border-2 border-black overflow-hidden">
+          <div className="h-full bg-foreground transition-all" style={{ width: `${Math.min(100, (estimatedStorageMB / 500) * 100)}%` }} />
+        </div>
+        {plans.map((plan, pi) => {
+          const planBgs = ["white", "var(--retro-blue)", "var(--retro-yellow)"];
+          const tiltClass = `retro-card-tilt-${(pi % 6) + 1}`;
+          return (
+            <div key={plan.name} className={`retro-card ${tiltClass} p-4 relative ${plan.popular ? "ring-2 ring-foreground/20" : ""}`}
+              style={{ backgroundColor: planBgs[pi] || "white" }}>
+              {plan.popular && (
+                <span className="absolute -top-2.5 right-4 px-3 py-0.5 border-2 border-black bg-[var(--retro-yellow)] text-foreground text-[10px] font-black">
+                  ⭐ Recommandé
+                </span>
+              )}
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-3xl">{plan.emoji}</span>
+                <div className="flex-1">
+                  <h4 className="text-[17px] font-black text-foreground uppercase">{plan.name}</h4>
+                  <span className="text-[12px] font-black text-foreground/70">💾 {plan.storage}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[22px] font-black text-foreground">{plan.price}</span>
+                  {plan.period && <span className="text-[11px] text-foreground/60 font-bold">{plan.period}</span>}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-3">
+                {plan.features.map(f => (
+                  <div key={f} className="flex items-center gap-1.5">
+                    <span className="text-foreground text-[12px] font-black">✓</span>
+                    <span className="text-[11px] text-foreground font-bold">{f}</span>
+                  </div>
+                ))}
+              </div>
+              <button disabled={plan.disabled}
+                className={`w-full py-2.5 font-black text-[13px] transition-all active:scale-95 border-4 border-black uppercase ${
+                  plan.disabled
+                    ? "bg-white/50 text-foreground/40 cursor-not-allowed"
+                    : "bg-foreground text-background hover:opacity-90"
+                }`}
+                style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
+                {plan.cta}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* COÛT PAR UTILISATEUR */}
+      <div className="retro-card p-4" style={{ backgroundColor: "var(--retro-yellow)" }}>
+        <h3 className="text-[14px] font-black text-gray-800 mb-3 uppercase">💰 Coût infrastructure par user/mois</h3>
+        <div className="space-y-2">
+          {[
+            { label: "🟢 Scénario bas (user léger)", desc: "~10 sessions/mois, 50 messages, 0 analyse IA", cost: "~0,0003 €", detail: "DB: 0,0001€ • Auth: 0,0001€ • Storage: 0,0001€" },
+            { label: "🔴 Scénario haut (user actif)", desc: "~60 sessions/mois, 500 messages, 10 analyses IA, 5 packs Store", cost: "~0,025 €", detail: "DB: 0,005€ • Auth: 0,0001€ • Storage: 0,005€ • Edge Fn: 0,01€ • AI: 0,005€" },
+          ].map(s => (
+            <div key={s.label} className="border-2 border-black bg-white p-3">
+              <p className="text-[12px] font-black text-gray-800">{s.label}</p>
+              <p className="text-[10px] text-gray-600 font-bold mt-0.5">{s.desc}</p>
+              <p className="text-[16px] font-black text-gray-900 mt-1">{s.cost}</p>
+              <p className="text-[9px] text-gray-500 font-bold mt-0.5">{s.detail}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 border-t-2 border-black/10 pt-2">
+          <p className="text-[10px] text-gray-600 font-bold leading-relaxed">
+            📊 À 100k users : <strong>25€ → 2 500€/mois</strong> d'infra selon activité.
+            Marge nette estimée : <strong>95-99%</strong> sur les abonnements Cloud (4,99-9,99€/user).
+          </p>
+        </div>
+      </div>
+
+      {/* INFRASTRUCTURE FOOTER */}
+      <div className="mt-4 pt-4 border-t-2 border-black/10">
+        <div className="flex items-center justify-center gap-3 flex-wrap">
+          {[
+            { emoji: "🔒", label: "AES-256" },
+            { emoji: "🇪🇺", label: "RGPD" },
+            { emoji: "📱", label: "Multi-appareils" },
+            { emoji: "🔄", label: "Sync auto" },
+            { emoji: "📈", label: "Scalable" },
+          ].map(f => (
+            <span key={f.label} className="inline-flex items-center gap-1 px-2.5 py-1 border border-black bg-white text-[9px] font-black text-foreground">
+              {f.emoji} {f.label}
+            </span>
+          ))}
+        </div>
+        <p className="text-center text-[9px] text-foreground/40 mt-2 font-bold">
+          ☁️ Infrastructure sécurisée • Chiffrement bout en bout • Serveurs EU
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default CloudTab;
