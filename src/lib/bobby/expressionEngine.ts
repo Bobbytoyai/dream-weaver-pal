@@ -112,11 +112,11 @@ const EMOTION_EXPRESSIONS: Record<BobbyEmotion, IntensityVariant[]> = {
     { eyes: "squint_smile", eyebrows: "raised",    mouth: "laugh_soft",  animation: "bounce_soft" },
   ],
   curiosity: [
-    { eyes: "open",     eyebrows: "slight_up",  mouth: "hmm",        animation: "look_shift" },
-    { eyes: "curious",  eyebrows: "curious",     mouth: "hmm",        animation: "look_shift" },
-    { eyes: "curious",  eyebrows: "curious",     mouth: "oh",         animation: "look_shift" },
-    { eyes: "curious",  eyebrows: "raised",      mouth: "open",       animation: "look_shift" },
-    { eyes: "curious",  eyebrows: "raised",      mouth: "wow",        animation: "look_shift" },
+    { eyes: "open",     eyebrows: "slight_up",  mouth: "smile_small", animation: "idle_breath" },
+    { eyes: "curious",  eyebrows: "curious",     mouth: "hmm",         animation: "look_shift" },
+    { eyes: "curious",  eyebrows: "curious",     mouth: "smile_small", animation: "look_shift" },
+    { eyes: "curious",  eyebrows: "slight_up",   mouth: "small_open",  animation: "look_shift" },
+    { eyes: "curious",  eyebrows: "raised",      mouth: "open",        animation: "micro_nod" },
   ],
   pride: [
     { eyes: "neutral",    eyebrows: "confident", mouth: "smile_small",  animation: "micro_smile" },
@@ -126,11 +126,11 @@ const EMOTION_EXPRESSIONS: Record<BobbyEmotion, IntensityVariant[]> = {
     { eyes: "excited",    eyebrows: "raised",    mouth: "yay",          animation: "bounce_soft" },
   ],
   surprise: [
-    { eyes: "open",      eyebrows: "slight_up", mouth: "oh",        animation: "idle_breath" },
-    { eyes: "open",      eyebrows: "raised",    mouth: "oh",        animation: "idle_breath" },
-    { eyes: "surprised", eyebrows: "raised",    mouth: "surprised", animation: "idle_breath" },
-    { eyes: "surprised", eyebrows: "raised",    mouth: "wow",       animation: "micro_shake" },
-    { eyes: "surprised", eyebrows: "raised",    mouth: "wow",       animation: "bounce_soft" },
+    { eyes: "open",      eyebrows: "slight_up", mouth: "small_open", animation: "idle_breath" },
+    { eyes: "open",      eyebrows: "raised",    mouth: "small_open", animation: "idle_breath" },
+    { eyes: "surprised", eyebrows: "raised",    mouth: "open",       animation: "idle_breath" },
+    { eyes: "surprised", eyebrows: "raised",    mouth: "surprised",  animation: "look_shift" },
+    { eyes: "surprised", eyebrows: "raised",    mouth: "surprised",  animation: "micro_nod" },
   ],
   calm: [
     { eyes: "neutral",   eyebrows: "soft",     mouth: "neutral",     animation: "calm_wave" },

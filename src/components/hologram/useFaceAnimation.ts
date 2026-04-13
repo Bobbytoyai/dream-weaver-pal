@@ -350,11 +350,11 @@ export function useFaceAnimation(
     if (microTimer.current > 2 + Math.random() * 2) {
       microTimer.current = 0;
       microOffset.current = {
-        eyebrow: (Math.random() - 0.5) * 0.05,
-        headX: (Math.random() - 0.5) * 0.025,
-        headZ: (Math.random() - 0.5) * 0.035,
-        pupilDrift: (Math.random() - 0.5) * 0.018,
-        mouthQuirk: (Math.random() - 0.5) * 0.025,
+        eyebrow: (Math.random() - 0.5) * 0.02,
+        headX: (Math.random() - 0.5) * 0.012,
+        headZ: (Math.random() - 0.5) * 0.018,
+        pupilDrift: (Math.random() - 0.5) * 0.01,
+        mouthQuirk: (Math.random() - 0.5) * 0.01,
       };
     }
 
@@ -442,21 +442,18 @@ export function useFaceAnimation(
         mouthQuirkTimer.current = 0;
         // Random quirk type
         const quirkType = Math.random();
-        if (quirkType < 0.35) {
-          // Smile
-          mouthQuirkTarget.current = { curve: 0.25 + Math.random() * 0.15, width: 0.08, open: 0.02 };
-        } else if (quirkType < 0.55) {
-          // Lip purse / thinking — neutral, not sad
-          mouthQuirkTarget.current = { curve: 0.02, width: -0.1, open: 0.05 };
+        if (quirkType < 0.45) {
+          // Soft smile stretch
+          mouthQuirkTarget.current = { curve: 0.12 + Math.random() * 0.05, width: 0.04, open: 0.01 };
         } else if (quirkType < 0.75) {
-          // Slight open (like about to speak)
-          mouthQuirkTarget.current = { curve: 0.05, width: 0.02, open: 0.08 + Math.random() * 0.05 };
-        } else if (quirkType < 0.9) {
-          // Smirk
-          mouthQuirkTarget.current = { curve: 0.15, width: 0.06, open: 0.02 };
+          // Tiny classic stretch
+          mouthQuirkTarget.current = { curve: 0.04, width: 0.03, open: 0.01 };
+        } else if (quirkType < 0.92) {
+          // Gentle smirk
+          mouthQuirkTarget.current = { curve: 0.08, width: 0.02, open: 0.01 };
         } else {
-          // Big grin
-          mouthQuirkTarget.current = { curve: 0.35, width: 0.1, open: 0.04 };
+          // Neutral living mouth — never round "oh"
+          mouthQuirkTarget.current = { curve: 0.03, width: 0.015, open: 0.005 };
         }
       }
 
@@ -494,59 +491,52 @@ export function useFaceAnimation(
     let speechCheekBoost = 0;
 
     if (faceState === "speaking" && viseme && viseme.amplitude > 0.01) {
-      // Cartoon exaggeration: amplify all viseme values for very pronounced lip sync
-      const exaggeration = 3.5;
-      mouthOpenTarget = Math.min(1.0, viseme.mouthOpenness * exaggeration + 0.15);
-      mouthWidthTarget = viseme.mouthWidth * 1.5;
-      mouthRoundTarget = viseme.mouthRound * 2.2;
-      jawDropTarget = Math.min(0.9, viseme.jawDrop * exaggeration);
+      // Classic stretch lip sync: pronounced openness/width, controlled roundness
+      const exaggeration = 3.1;
+      mouthOpenTarget = Math.min(0.95, viseme.mouthOpenness * exaggeration + 0.08);
+      mouthWidthTarget = Math.min(0.92, viseme.mouthWidth * 1.55);
+      mouthRoundTarget = Math.min(0.28, viseme.mouthRound * 1.1);
+      jawDropTarget = Math.min(0.75, viseme.jawDrop * 2.9);
 
-      // Rhythmic micro-variation for liveliness
-      const microVar = Math.sin(breathPhase.current * 12) * 0.06 + Math.sin(breathPhase.current * 7.3) * 0.03;
+      const microVar = Math.sin(breathPhase.current * 10) * 0.04 + Math.sin(breathPhase.current * 6.8) * 0.02;
       mouthOpenTarget += microVar;
 
-      // Squash & stretch: wider mouth = less tall, taller mouth = less wide
-      if (mouthOpenTarget > 0.3) {
-        mouthWidthTarget *= 0.82;
+      if (mouthOpenTarget > 0.24) {
+        mouthWidthTarget *= 0.92;
       }
-      if (mouthWidthTarget > 0.65) {
-        mouthOpenTarget *= 0.88;
+      if (mouthWidthTarget > 0.72) {
+        mouthOpenTarget *= 0.92;
       }
 
-      // Sync eyes/eyebrows/head with speech intensity
       const amp = viseme.amplitude;
-      speechEyebrowLift = amp > 0.1 ? (amp - 0.1) * 0.5 : 0;
-      speechEyeWiden = amp > 0.08 ? (amp - 0.08) * 0.2 : 0;
-      speechHeadNod = Math.sin(breathPhase.current * 5) * amp * 0.06;
-      speechCheekBoost = mouthWidthTarget > 0.5 ? (mouthWidthTarget - 0.5) * 0.5 : 0;
+      speechEyebrowLift = amp > 0.1 ? (amp - 0.1) * 0.35 : 0;
+      speechEyeWiden = amp > 0.08 ? (amp - 0.08) * 0.14 : 0;
+      speechHeadNod = Math.sin(breathPhase.current * 4.2) * amp * 0.04;
+      speechCheekBoost = mouthWidthTarget > 0.52 ? (mouthWidthTarget - 0.52) * 0.35 : 0;
 
     } else if (faceState === "speaking") {
-      // Fallback amplitude-based (no viseme data or low amplitude)
-      // Use viseme amplitude if available, otherwise fall back to audioAmplitude prop
       const rawAmp = (viseme?.amplitude ?? 0) > 0.005 ? viseme!.amplitude : audioAmplitude;
-      const ampFactor = Math.min(1.0, rawAmp * 6.5 + 0.15);
+      const ampFactor = Math.min(0.9, rawAmp * 5.8 + 0.1);
       mouthOpenTarget = ampFactor;
-      mouthWidthTarget = (targets.mouthWidth ?? 0.55) + rawAmp * 0.3;
-      mouthRoundTarget = rawAmp > 0.2 ? 0.35 : rawAmp * 0.5;
-      jawDropTarget = rawAmp * 3.2;
+      mouthWidthTarget = Math.min(0.88, (targets.mouthWidth ?? 0.55) + rawAmp * 0.24);
+      mouthRoundTarget = rawAmp > 0.2 ? 0.16 : rawAmp * 0.22;
+      jawDropTarget = Math.min(0.7, rawAmp * 2.6);
 
-      // Add syllable-like oscillation even with raw amplitude
-      const syllableOsc = Math.sin(breathPhase.current * 14) * 0.08 * rawAmp;
+      const syllableOsc = Math.sin(breathPhase.current * 12) * 0.05 * rawAmp;
       mouthOpenTarget += syllableOsc;
 
-      // Even with zero amplitude in speaking state, keep a small mouth movement
-      // so Bobby doesn't look frozen while talking
       if (rawAmp < 0.01) {
-        const idleSpeak = Math.sin(breathPhase.current * 8) * 0.12 + 0.15;
+        const idleSpeak = Math.sin(breathPhase.current * 7) * 0.08 + 0.11;
         mouthOpenTarget = idleSpeak;
-        mouthWidthTarget = 0.5 + Math.sin(breathPhase.current * 6) * 0.05;
-        jawDropTarget = idleSpeak * 0.4;
+        mouthWidthTarget = 0.52 + Math.sin(breathPhase.current * 5.2) * 0.03;
+        mouthRoundTarget = 0.04;
+        jawDropTarget = idleSpeak * 0.32;
       }
 
-      speechEyebrowLift = rawAmp > 0.1 ? (rawAmp - 0.1) * 0.45 : 0;
-      speechEyeWiden = rawAmp > 0.08 ? (rawAmp - 0.08) * 0.18 : 0;
-      speechHeadNod = Math.sin(breathPhase.current * 5) * Math.max(rawAmp, 0.05) * 0.05;
-      speechCheekBoost = rawAmp > 0.15 ? rawAmp * 0.2 : 0;
+      speechEyebrowLift = rawAmp > 0.1 ? (rawAmp - 0.1) * 0.3 : 0;
+      speechEyeWiden = rawAmp > 0.08 ? (rawAmp - 0.08) * 0.12 : 0;
+      speechHeadNod = Math.sin(breathPhase.current * 4.5) * Math.max(rawAmp, 0.05) * 0.035;
+      speechCheekBoost = rawAmp > 0.15 ? rawAmp * 0.16 : 0;
     } else {
       mouthOpenTarget = (targets.mouthOpenness ?? 0) + mouthBreath + mouthQuirkOpenAdd;
       mouthWidthTarget = (targets.mouthWidth ?? 0.5) + mouthBreathWidth + mouthQuirkWidthAdd;
@@ -555,35 +545,32 @@ export function useFaceAnimation(
     }
 
     // --- LERP ALL VALUES ---
-    const mouthSpeed = faceState === "speaking" ? baseSpeed * 14 : baseSpeed * 3;
+    const mouthSpeed = faceState === "speaking" ? baseSpeed * 12 : baseSpeed * 1.8;
 
     // v3.0: EYEBROW ANTICIPATION — eyebrows lead speech by ~50ms
-    // Buffer the eyebrow target and use it slightly ahead of audio
     const eyebrowTarget = (targets.eyebrowHeight ?? 0) + microOffset.current.eyebrow + speechEyebrowLift + listeningEyebrowPulse;
-    const anticipatedEyebrow = eyebrowTarget + (eyebrowTarget - eyebrowAnticipationBuffer.current) * 0.3;
+    const anticipatedEyebrow = eyebrowTarget + (eyebrowTarget - eyebrowAnticipationBuffer.current) * 0.2;
     eyebrowAnticipationBuffer.current = eyebrowTarget;
-    c.eyebrowHeight = lerp(c.eyebrowHeight, anticipatedEyebrow, delta * (faceState === "speaking" ? baseSpeed * 4 : baseSpeed));
-    c.eyebrowTilt = lerp(c.eyebrowTilt, targets.eyebrowTilt ?? 0, delta * baseSpeed);
+    c.eyebrowHeight = lerp(c.eyebrowHeight, anticipatedEyebrow, delta * (faceState === "speaking" ? baseSpeed * 3 : baseSpeed * 0.9));
+    c.eyebrowTilt = lerp(c.eyebrowTilt, targets.eyebrowTilt ?? 0, delta * baseSpeed * 0.9);
 
     // v3.0: EYE DELAY — eyes follow with +100ms natural delay
     eyeDelayTimer.current += delta;
     const eyeTargetOpenness = ((targets.eyeOpenness ?? 1) + sleepyEyeWobble + speechEyeWiden) * blinkMult;
     const eyeTargetSparkle = (targets.eyeSparkle ?? 0.5) * (0.7 + sparkleWave * 0.3);
-    // Smooth delay: update delayed buffer at ~10Hz for natural lag
     if (eyeDelayTimer.current > 0.1) {
       eyeDelayBuffer.current.openness = eyeTargetOpenness;
       eyeDelayBuffer.current.sparkle = eyeTargetSparkle;
       eyeDelayTimer.current = 0;
     }
-    // Use delayed values for eyes (creates natural 100ms lag)
-    c.eyeOpenness = lerp(c.eyeOpenness, eyeDelayBuffer.current.openness, delta * baseSpeed * 2.5);
+    c.eyeOpenness = lerp(c.eyeOpenness, eyeDelayBuffer.current.openness, delta * (faceState === "speaking" ? baseSpeed * 2.2 : baseSpeed * 1.6));
 
-    // Mouth — 100% sync with audio (no delay)
+    // Mouth — fluid classic stretch sync
     c.mouthOpenness = lerp(c.mouthOpenness, mouthOpenTarget, delta * mouthSpeed);
-    c.mouthWidth = lerp(c.mouthWidth, mouthWidthTarget + microOffset.current.mouthQuirk, delta * mouthSpeed * 0.8);
-    c.mouthRound = lerp(c.mouthRound, mouthRoundTarget, delta * mouthSpeed * 0.7);
-    c.jawDrop = lerp(c.jawDrop, jawDropTarget, delta * mouthSpeed);
-    c.mouthCurve = lerp(c.mouthCurve, (targets.mouthCurve ?? 0) + mouthBreathCurve + mouthQuirkCurveAdd, delta * baseSpeed * 1.5);
+    c.mouthWidth = lerp(c.mouthWidth, mouthWidthTarget + microOffset.current.mouthQuirk, delta * mouthSpeed * 0.72);
+    c.mouthRound = lerp(c.mouthRound, mouthRoundTarget, delta * mouthSpeed * 0.45);
+    c.jawDrop = lerp(c.jawDrop, jawDropTarget, delta * mouthSpeed * 0.9);
+    c.mouthCurve = lerp(c.mouthCurve, (targets.mouthCurve ?? 0) + mouthBreathCurve + mouthQuirkCurveAdd, delta * baseSpeed);
 
     c.pupilSize = lerp(c.pupilSize, (targets.pupilSize ?? 1) + breathScale, delta * baseSpeed);
 
