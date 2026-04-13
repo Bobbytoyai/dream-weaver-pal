@@ -1858,15 +1858,16 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   {analysis?.audio_path ? (
                     <>
                       <button onClick={() => skipAudio(-10)}
-                        className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:bg-muted/70 transition-all active:scale-90">
+                        className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all active:scale-90">
                         <SkipBack className="w-4 h-4" />
                       </button>
                       <button onClick={() => playAudio(analysis.audio_path!)}
-                        className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-primary/25 active:scale-95">
+                        className="w-14 h-14 border-4 border-black bg-foreground text-background flex items-center justify-center hover:opacity-90 transition-all active:scale-95"
+                        style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
                         {playingAudio === analysis.audio_path ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-0.5" />}
                       </button>
                       <button onClick={() => skipAudio(10)}
-                        className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:bg-muted/70 transition-all active:scale-90">
+                        className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all active:scale-90">
                         <SkipForward className="w-4 h-4" />
                       </button>
                     </>
@@ -1874,25 +1875,27 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     <div className="flex items-center gap-2">
                       {!fullPlaybackActive ? (
                         <button onClick={() => startFullPlayback(0)}
-                          className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-primary/25 active:scale-95">
+                          className="w-14 h-14 border-4 border-black bg-foreground text-background flex items-center justify-center hover:opacity-90 transition-all active:scale-95"
+                          style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
                           <Play className="w-6 h-6 ml-0.5" />
                         </button>
                       ) : (
                         <>
                           <button onClick={() => { if (fullPlaybackIdx > 0) setFullPlaybackIdx(i => Math.max(0, i - 1)); }}
-                            className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:bg-muted/70 transition-all active:scale-90">
+                            className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all active:scale-90">
                             <SkipBack className="w-4 h-4" />
                           </button>
                           <button onClick={toggleFullPlaybackPause}
-                            className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-primary/25 active:scale-95">
+                            className="w-14 h-14 border-4 border-black bg-foreground text-background flex items-center justify-center hover:opacity-90 transition-all active:scale-95"
+                            style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
                             {fullPlaybackLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : fullPlaybackPaused ? <Play className="w-6 h-6 ml-0.5" /> : <Pause className="w-6 h-6" />}
                           </button>
                           <button onClick={() => { if (fullPlaybackIdx < sessionMessages.length - 1) setFullPlaybackIdx(i => i + 1); }}
-                            className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:bg-muted/70 transition-all active:scale-90">
+                            className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all active:scale-90">
                             <SkipForward className="w-4 h-4" />
                           </button>
                           <button onClick={stopFullPlayback}
-                            className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center text-destructive hover:bg-destructive/20 transition-all border border-destructive/15">
+                            className="w-10 h-10 border-2 border-black bg-[var(--retro-red)] flex items-center justify-center text-foreground hover:opacity-80 transition-all">
                             <X className="w-4 h-4" />
                           </button>
                         </>
@@ -1903,10 +1906,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 <div className="flex items-center justify-center gap-2 mt-3">
                   {[0.75, 1, 1.25, 1.5, 2].map(speed => (
                     <button key={speed} onClick={() => { if (analysis?.audio_path) setAudioSpeed(speed); else setFullPlaybackSpeed(speed); }}
-                      className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-all ${
+                      className={`px-3 py-1.5 text-[11px] font-black transition-all border-2 border-black ${
                         (analysis?.audio_path ? audioSpeed : fullPlaybackSpeed) === speed
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "bg-muted/50 text-muted-foreground hover:bg-muted/70"
+                          ? "bg-foreground text-background"
+                          : "bg-white text-foreground/60 hover:bg-[var(--retro-yellow)]"
                       }`}>
                       {speed}×
                     </button>
@@ -1914,7 +1917,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 </div>
                 {/* Karaoke-style transcription — scrolling messages with active highlight */}
                 {(playingAudio || fullPlaybackActive) && sessionMessages.length > 0 && (
-                  <div className="mt-3 max-h-36 overflow-y-auto rounded-2xl bg-muted/20 border border-border/10 scroll-smooth">
+                  <div className="mt-3 max-h-36 overflow-y-auto border-2 border-black bg-white scroll-smooth">
                     {sessionMessages.map((msg, i) => {
                       const isActive = i === activeMessageIdx || (fullPlaybackActive && i === fullPlaybackIdx);
                       const isPast = i < (fullPlaybackActive ? fullPlaybackIdx : activeMessageIdx);
@@ -1932,14 +1935,14 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                           }}
                           className={`px-3 py-2 cursor-pointer transition-all duration-300 ${
                             isActive
-                              ? "bg-primary/12 border-l-3 border-l-primary"
+                              ? "bg-[var(--retro-yellow)] border-l-4 border-l-black"
                               : isPast ? "opacity-40" : "opacity-70"
                           }`}>
-                          <span className="text-[9px] font-black text-muted-foreground">
+                          <span className="text-[9px] font-black text-foreground/60">
                             {msg.role === "user" ? `👦 ${displayName}` : "🤖 Bobby"}
                           </span>
-                          <p className={`text-[11px] leading-snug mt-0.5 font-medium ${
-                            isActive ? "text-foreground font-bold" : "text-foreground/70"
+                          <p className={`text-[11px] leading-snug mt-0.5 font-bold ${
+                            isActive ? "text-foreground font-black" : "text-foreground/70"
                           }`}>{msg.content?.slice(0, 120)}{(msg.content?.length || 0) > 120 ? "…" : ""}</p>
                         </div>
                       );
