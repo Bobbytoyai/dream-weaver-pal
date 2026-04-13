@@ -3403,7 +3403,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         })()}
 
         {/* ── Navigation cards — retro grid ── */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {[
             { id: "dashboard" as Tab, emoji: "📊", label: "Tableau de\nbord", bg: "var(--retro-blue)" },
             { id: "sessions" as Tab, emoji: "💬", label: "Sessions", bg: "var(--retro-green)",
