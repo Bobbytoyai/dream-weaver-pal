@@ -5,16 +5,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Voice IDs — cartoon-friendly animated French voices (child-safe)
+// Voice IDs — native French (France) voices, child-safe
 const VOICE_MAP: Record<string, string> = {
-  female: "XrExE9yKIg1WjnnlVkGX",   // Matilda - warm childlike (default cartoon feel)
-  child:  "XrExE9yKIg1WjnnlVkGX",   // Matilda - animated & expressive
-  male:   "IKne3meq5aSn9XLyUdCD",   // Charlie - young playful male
-  sister: "EXAVITQu4vr4xnSDxMaL",   // Sarah - young female
-  brother:"IKne3meq5aSn9XLyUdCD",   // Charlie - young male
+  // "French Darling" — native FR female, designed for kids stories & audiobooks
+  female: "vTGV06pygfwa2WhLDZFp",
+  child:  "vTGV06pygfwa2WhLDZFp",
+  // Young male French voices
+  male:   "IKne3meq5aSn9XLyUdCD",   // Charlie - young male
+  sister: "vTGV06pygfwa2WhLDZFp",   // French Darling (warm sister feel)
+  brother:"IKne3meq5aSn9XLyUdCD",   // Charlie
 };
 
-// Speed multiplier per profile for snappy natural pacing
+// Speed multiplier per profile
 const SPEED_MAP: Record<string, number> = {
   female: 1.05,
   child:  1.05,
@@ -48,7 +50,7 @@ serve(async (req) => {
     const voiceId = VOICE_MAP[voiceProfile || "child"] || VOICE_MAP.child;
     const speed = SPEED_MAP[voiceProfile || "child"] || 1.05;
 
-    // Turbo model for lowest latency + cartoon-style voice settings
+    // Turbo model for lowest latency + expressive cartoon-like settings
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_22050_32`,
       {
@@ -61,9 +63,9 @@ serve(async (req) => {
           text: text.slice(0, 2000),
           model_id: "eleven_turbo_v2_5",
           voice_settings: {
-            stability: 0.35,         // Lower = more expressive/animated
-            similarity_boost: 0.65,
-            style: 0.55,             // Higher = cartoon-like character
+            stability: 0.4,
+            similarity_boost: 0.7,
+            style: 0.45,
             use_speaker_boost: true,
             speed,
           },
@@ -80,7 +82,7 @@ serve(async (req) => {
       });
     }
 
-    // Stream the audio back for lowest time-to-first-byte
+    // Stream audio back for lowest time-to-first-byte
     return new Response(response.body, {
       headers: {
         ...corsHeaders,
