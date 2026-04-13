@@ -172,13 +172,13 @@ const VoiceSettings = ({ settings, onUpdate, onBack, onSave, saved }: VoiceSetti
             <button key={s.value} onClick={() => onUpdate("voiceSpeed", s.value)}
               className={`p-3 text-center transition-all border-4 border-black ${
                 settings.voiceSpeed === s.value
-                  ? "bg-white ring-2 ring-foreground/20"
-                  : "bg-white/60 hover:bg-white"
+                  ? "bg-foreground text-background"
+                  : "bg-white hover:bg-[var(--retro-yellow)]"
               }`}
               style={{ boxShadow: settings.voiceSpeed === s.value ? "4px 4px 0px rgba(0,0,0,0.25)" : "2px 2px 0px rgba(0,0,0,0.15)" }}>
               <span className="text-2xl block">{s.emoji}</span>
-              <span className="text-[11px] font-black block mt-1 text-foreground uppercase">{s.label}</span>
-              <span className="text-[9px] text-foreground/60 leading-tight block mt-0.5 font-bold">{s.desc}</span>
+              <span className={`text-[11px] font-black block mt-1 uppercase ${settings.voiceSpeed === s.value ? "text-background" : "text-foreground"}`}>{s.label}</span>
+              <span className={`text-[9px] leading-tight block mt-0.5 font-bold ${settings.voiceSpeed === s.value ? "text-background/70" : "text-foreground/60"}`}>{s.desc}</span>
             </button>
           ))}
         </div>
@@ -193,13 +193,13 @@ const VoiceSettings = ({ settings, onUpdate, onBack, onSave, saved }: VoiceSetti
             <button key={p.value} onClick={() => onUpdate("personality", p.value)}
               className={`p-3 text-left transition-all border-4 border-black ${
                 settings.personality === p.value
-                  ? "bg-white ring-2 ring-foreground/20"
-                  : "bg-white/60 hover:bg-white"
+                  ? "bg-foreground text-background"
+                  : "bg-white hover:bg-[var(--retro-yellow)]"
               }`}
               style={{ boxShadow: settings.personality === p.value ? "4px 4px 0px rgba(0,0,0,0.25)" : "2px 2px 0px rgba(0,0,0,0.15)" }}>
               <span className="text-2xl">{p.emoji}</span>
-              <h4 className="text-[12px] font-black mt-1 text-foreground uppercase">{p.label}</h4>
-              <p className="text-[9px] text-foreground/60 mt-0.5 font-bold">{p.desc}</p>
+              <h4 className={`text-[12px] font-black mt-1 uppercase ${settings.personality === p.value ? "text-background" : "text-foreground"}`}>{p.label}</h4>
+              <p className={`text-[9px] mt-0.5 font-bold ${settings.personality === p.value ? "text-background/70" : "text-foreground/60"}`}>{p.desc}</p>
             </button>
           ))}
         </div>
