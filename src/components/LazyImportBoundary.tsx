@@ -31,19 +31,19 @@ export default class LazyImportBoundary extends Component<LazyImportBoundaryProp
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-background p-4">
-          <div className="w-full max-w-md border-4 border-foreground bg-card px-6 py-5 text-card-foreground shadow-[6px_6px_0_hsl(var(--foreground)/0.2)]">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+          <div className="w-full max-w-md border-4 border-foreground bg-white px-6 py-5 text-foreground shadow-[6px_6px_0_hsl(var(--foreground)/0.2)]">
             <div className="space-y-3 text-center">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Loading interrupted</p>
-              <h2 className="text-lg font-black uppercase">Preview module failed to load</h2>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Chargement interrompu</p>
+              <h2 className="text-lg font-black uppercase">Erreur de chargement</h2>
               <p className="text-sm font-bold text-muted-foreground">
-                {this.props.label ? `${this.props.label} failed to load in preview.` : "A screen failed to load in preview."} Reload to continue.
+                {this.props.label ? `${this.props.label} n'a pas pu se charger.` : "Un écran n'a pas pu se charger."} Appuyez pour réessayer.
               </p>
               <button
                 onClick={this.handleReload}
                 className="w-full border-4 border-foreground bg-primary px-4 py-3 text-sm font-black uppercase text-primary-foreground transition-transform active:scale-[0.98]"
               >
-                Reload preview
+                Réessayer
               </button>
             </div>
           </div>
