@@ -1294,49 +1294,49 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ SCORES COMPORTEMENTAUX — 3 cols compact ═══ */}
       {avgScores && (
-        <div className="bg-card rounded-[18px] p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.25s" }}>
+        <div className="retro-card retro-card-tilt-4 p-3" style={{ backgroundColor: 'var(--retro-green)' }}>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🧠</span>
-            <h3 className="text-[15px] font-black text-foreground">Développement</h3>
+            <h3 className="text-[15px] font-black text-foreground uppercase">Développement</h3>
           </div>
           <div className="grid grid-cols-3 gap-2 mb-2">
-            <ScoreGauge label="Sociabilité" score={avgScores.sociability} emoji="🤝" color="hsl(var(--primary))" size="lg" />
-            <ScoreGauge label="Curiosité" score={avgScores.curiosity} emoji="🔍" color="hsl(36, 90%, 50%)" size="lg" />
-            <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="hsl(145, 65%, 42%)" size="lg" />
+            <ScoreGauge label="Sociabilité" score={avgScores.sociability} emoji="🤝" color="hsl(var(--foreground))" size="lg" />
+            <ScoreGauge label="Curiosité" score={avgScores.curiosity} emoji="🔍" color="hsl(var(--foreground))" size="lg" />
+            <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="hsl(var(--foreground))" size="lg" />
           </div>
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/20">
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t-2 border-black/15">
             <div>
-              <p className="text-[11px] text-muted-foreground font-bold mb-1">Engagement</p>
-              <div className="flex gap-0.5 h-3 rounded-full overflow-hidden">
+              <p className="text-[11px] text-foreground/60 font-black mb-1 uppercase">Engagement</p>
+              <div className="flex gap-0.5 h-3 overflow-hidden border border-black">
                 {recentAnalyses.length > 0 ? (
                   <>
-                    <div className="bg-primary rounded-l-full" style={{ width: `${(engagementDist.high / recentAnalyses.length) * 100}%` }} />
-                    <div className="bg-primary/40" style={{ width: `${(engagementDist.medium / recentAnalyses.length) * 100}%` }} />
-                    <div className="bg-muted rounded-r-full" style={{ width: `${(engagementDist.low / recentAnalyses.length) * 100}%` }} />
+                    <div className="bg-foreground" style={{ width: `${(engagementDist.high / recentAnalyses.length) * 100}%` }} />
+                    <div className="bg-foreground/40" style={{ width: `${(engagementDist.medium / recentAnalyses.length) * 100}%` }} />
+                    <div className="bg-white" style={{ width: `${(engagementDist.low / recentAnalyses.length) * 100}%` }} />
                   </>
-                ) : <div className="bg-muted w-full rounded-full" />}
+                ) : <div className="bg-white w-full" />}
               </div>
               <div className="flex justify-between mt-0.5">
-                <span className="text-[9px] text-muted-foreground font-bold">🔥{engagementDist.high}</span>
-                <span className="text-[9px] text-muted-foreground font-bold">👍{engagementDist.medium}</span>
-                <span className="text-[9px] text-muted-foreground font-bold">💤{engagementDist.low}</span>
+                <span className="text-[9px] text-foreground/60 font-black">🔥{engagementDist.high}</span>
+                <span className="text-[9px] text-foreground/60 font-black">👍{engagementDist.medium}</span>
+                <span className="text-[9px] text-foreground/60 font-black">💤{engagementDist.low}</span>
               </div>
             </div>
             <div>
-              <p className="text-[11px] text-muted-foreground font-bold mb-1">Humeur</p>
-              <div className="flex gap-0.5 h-3 rounded-full overflow-hidden">
+              <p className="text-[11px] text-foreground/60 font-black mb-1 uppercase">Humeur</p>
+              <div className="flex gap-0.5 h-3 overflow-hidden border border-black">
                 {recentAnalyses.length > 0 ? (
                   <>
-                    <div className="bg-primary/80 rounded-l-full" style={{ width: `${(moodDist.positive / recentAnalyses.length) * 100}%` }} />
-                    <div className="bg-accent" style={{ width: `${(moodDist.neutral / recentAnalyses.length) * 100}%` }} />
-                    <div className="bg-destructive/60 rounded-r-full" style={{ width: `${(moodDist.low / recentAnalyses.length) * 100}%` }} />
+                    <div className="bg-foreground/80" style={{ width: `${(moodDist.positive / recentAnalyses.length) * 100}%` }} />
+                    <div className="bg-foreground/30" style={{ width: `${(moodDist.neutral / recentAnalyses.length) * 100}%` }} />
+                    <div className="bg-[var(--retro-red)]" style={{ width: `${(moodDist.low / recentAnalyses.length) * 100}%` }} />
                   </>
-                ) : <div className="bg-muted w-full rounded-full" />}
+                ) : <div className="bg-white w-full" />}
               </div>
               <div className="flex justify-between mt-0.5">
-                <span className="text-[9px] text-muted-foreground font-bold">🟢{moodDist.positive}</span>
-                <span className="text-[9px] text-muted-foreground font-bold">🟡{moodDist.neutral}</span>
-                <span className="text-[9px] text-muted-foreground font-bold">🔴{moodDist.low}</span>
+                <span className="text-[9px] text-foreground/60 font-black">🟢{moodDist.positive}</span>
+                <span className="text-[9px] text-foreground/60 font-black">🟡{moodDist.neutral}</span>
+                <span className="text-[9px] text-foreground/60 font-black">🔴{moodDist.low}</span>
               </div>
             </div>
           </div>
