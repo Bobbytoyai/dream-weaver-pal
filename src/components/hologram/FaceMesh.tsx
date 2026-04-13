@@ -149,6 +149,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const [rightCheekX, rightCheekY] = useMemo(() => svgToWorld(357, 340), []);
 
   // ─── Materials ────────────────────────────────────────────
+  const eyeOutlineMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: new THREE.Color("#3A3A5C"), transparent: true, opacity: 0.35,
+  }), []);
   const eyeWhiteMat = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color("#FFFFFF") }), []);
 
   const irisOuterMat = useMemo(() => new THREE.MeshBasicMaterial({
@@ -213,6 +216,15 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       irisOuterMat.color.set(irisHex);
     }
   }, [bobbyColor, bobbyColors, irisOuterMat, blushMat, eyebrowMat]);
+
+  const eyeOutlineGeo = useMemo(() => {
+    const shape = new THREE.Shape();
+    shape.absellipse(0, 0, 0.41, 0.35, 0, Math.PI * 2, false, 0);
+    const hole = new THREE.Path();
+    hole.absellipse(0, 0, 0.38, 0.32, 0, Math.PI * 2, false, 0);
+    shape.holes.push(hole);
+    return new THREE.ShapeGeometry(shape, 32);
+  }, []);
 
   const eyeWhiteGeo = useMemo(() => {
     const shape = new THREE.Shape();
@@ -293,7 +305,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(ps);
     if (rightPupilRef.current) rightPupilRef.current.scale.setScalar(ps);
 
-    // Eyelids (blink) — scale Y from top to cover eye
+    // Eyelids (blink) — slide down from above to cover the eye
     const blinkClose = 1 - state.eyeOpenness;
     const isSleepingNow = faceState === "sleepy";
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
@@ -308,16 +320,18 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         ref.current.visible = true;
         const easedCover = coverAmount * coverAmount * (3 - 2 * coverAmount);
         
-        // Scale the eyelid vertically: 0 = invisible, 1 = fully covers eye
-        let scaleY = easedCover;
+        // Slide from above (hidden) to covering the eye
+        const hiddenY = 0.7;    // fully above the eye
+        const closedY = 0.0;    // centered on eye = fully closed
+        let targetY = hiddenY - easedCover * (hiddenY - closedY);
         
         if (isSleepingNow && coverAmount > 0.9) {
           const flutterT = performance.now() * 0.001;
           const flutter = Math.sin(flutterT * 0.3) * 0.02 + Math.sin(flutterT * 0.7) * 0.01;
-          scaleY = Math.max(0.85, scaleY - Math.max(0, flutter));
+          targetY += Math.max(0, flutter) * 0.05;
         }
         
-        ref.current.scale.set(1, scaleY, 1);
+        ref.current.position.y = targetY;
       }
     });
 
@@ -436,19 +450,23 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     hl2: [number, number],
   ) => (
     <group ref={eyeRef} position={[eyeX, eyeY, 0.01]} key={side}>
+      {/* Eye outline ring */}
+      <mesh geometry={eyeOutlineGeo} material={eyeOutlineMat} position={[0, 0, -0.005]} />
       <mesh geometry={eyeWhiteGeo} material={eyeWhiteMat} />
       <mesh ref={irisRef} geometry={irisOuterGeo} position={[0, -0.03, 0.01]} material={irisOuterMat} />
       <mesh ref={pupilRef} geometry={pupilGeo} position={[0, -0.02, 0.02]} material={pupilMat} />
       <mesh position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       <mesh position={[hl2[0], hl2[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} />
-      {/* Eyelid: ellipse anchored at top of eye, scales down to cover */}
-      <mesh ref={eyelidRef} position={[0, 0.32, 0.045]} material={eyelidMat}>
+      {/* Eyelid: half-ellipse that slides down over the eye */}
+      <mesh ref={eyelidRef} position={[0, 0.7, 0.045]} material={eyelidMat}>
         <shapeGeometry args={[(() => {
           const s = new THREE.Shape();
           const rx = 0.42;
-          const ry = 0.65;
-          // Full ellipse centered at top; when scaleY=1 it covers the whole eye downward
-          s.absellipse(0, 0, rx, ry, 0, Math.PI * 2, false, 0);
+          const ry = 0.36;
+          // Half-ellipse: flat top at y=0, curved bottom
+          s.moveTo(-rx, 0);
+          s.absellipse(0, 0, rx, ry, Math.PI, Math.PI * 2, false, 0);
+          s.lineTo(-rx, 0);
           return s;
         })(), 32]} />
       </mesh>
