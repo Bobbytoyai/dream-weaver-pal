@@ -3414,40 +3414,133 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       { id: "confidentialite", emoji: "🔒", label: "Confidentialité", desc: "Données & sécurité", color: "from-destructive/10 to-destructive/3" },
     ];
 
+    // ─── Daily summary data ───
+    const today = new Date().toLocaleDateString("fr-FR");
+    const todaySessions = sessions.filter(s => new Date(s.started_at).toLocaleDateString("fr-FR") === today);
+    const todayMessages = todaySessions.reduce((a, s) => a + s.message_count, 0);
+    const todayDuration = todaySessions.reduce((a, s) => a + (s.duration_seconds || 0), 0);
+    const todayEmotions = todaySessions.flatMap(s => s.detected_emotions || []);
+    const topEmotion = todayEmotions.length > 0
+      ? Object.entries(todayEmotions.reduce((acc, e) => { acc[e] = (acc[e] || 0) + 1; return acc; }, {} as Record<string, number>))
+          .sort(([, a], [, b]) => b - a)[0]
+      : null;
+    const todayAnalyses = todaySessions.map(s => analyses.find(a => a.session_id === s.id)).filter(Boolean);
+    const avgEngagement = todayAnalyses.length > 0
+      ? todayAnalyses.filter(a => a!.engagement_level === "high").length / todayAnalyses.length
+      : 0;
+
     return (
-      <div className="p-4 space-y-4">
-        {/* Quick alerts preview */}
+      <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
+        {/* Quick alerts */}
         {unreadAlertCount > 0 && (
           <button onClick={() => setShowNotifPanel(true)}
             className="w-full bg-destructive/5 border border-destructive/20 rounded-2xl p-3 flex items-center gap-3 hover:bg-destructive/10 transition-colors">
             <span className="text-xl">🔔</span>
             <div className="flex-1 text-left">
-              <p className="text-[12px] font-bold text-destructive">{unreadAlertCount} alerte{unreadAlertCount > 1 ? "s" : ""} non lue{unreadAlertCount > 1 ? "s" : ""}</p>
-              <p className="text-[10px] text-muted-foreground">Touchez pour voir les détails</p>
+              <p className="text-[13px] font-bold text-destructive">{unreadAlertCount} alerte{unreadAlertCount > 1 ? "s" : ""}</p>
+              <p className="text-[11px] text-muted-foreground">Touchez pour voir les détails</p>
             </div>
             <ChevronRight className="w-4 h-4 text-destructive" />
           </button>
         )}
 
-        {/* Category cards grid — toy style */}
-        <div className="grid grid-cols-2 gap-4">
-          {categoryCards.map(card => (
-            <button key={card.id}
-              onClick={() => setActiveTab(card.id)}
-              className={`relative bg-gradient-to-br ${card.color} rounded-3xl aspect-square flex flex-col items-center justify-center border-2 border-border/20 hover:border-primary/40 hover:shadow-lg transition-all duration-200 active:scale-[0.95] group`}
-              style={{ fontFamily: "'Nunito', 'Comic Sans MS', 'Baloo 2', sans-serif" }}>
-              <span className="text-5xl mb-2 group-hover:scale-110 transition-transform duration-200">{card.emoji}</span>
-              <h3 className="text-[15px] font-extrabold text-foreground leading-tight tracking-tight">{card.label}</h3>
-              <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">{card.desc}</p>
-              {card.badge && card.badge > 0 && (
-                <span className="absolute top-2.5 right-2.5 min-w-[22px] h-[22px] px-1.5 rounded-full bg-destructive text-destructive-foreground text-[11px] font-bold flex items-center justify-center shadow-md">
-                  {card.badge}
-                </span>
-              )}
+        {/* ── Hero: Daily Summary ── */}
+        <div className="bg-gradient-to-br from-primary/15 via-accent/8 to-secondary/8 rounded-3xl p-5 border border-primary/15">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-[20px] font-extrabold text-foreground">Bonjour 👋</h2>
+              <p className="text-[13px] text-muted-foreground font-medium mt-0.5">
+                {todaySessions.length > 0
+                  ? `${childName} a eu ${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} aujourd'hui`
+                  : `${childName} n'a pas encore parlé à Bobby aujourd'hui`
+                }
+              </p>
+            </div>
+            <div className="text-4xl">{todaySessions.length > 0 ? (topEmotion ? (emotionLabels[topEmotion[0]]?.emoji || "😊") : "😊") : "💤"}</div>
+          </div>
+
+          {todaySessions.length > 0 && (
+            <div className="grid grid-cols-4 gap-2">
+              <div className="bg-card/80 rounded-2xl p-2.5 text-center border border-border/10">
+                <span className="text-lg block">💬</span>
+                <p className="text-[15px] font-extrabold text-foreground">{todayMessages}</p>
+                <p className="text-[9px] text-muted-foreground font-bold">Messages</p>
+              </div>
+              <div className="bg-card/80 rounded-2xl p-2.5 text-center border border-border/10">
+                <span className="text-lg block">⏱️</span>
+                <p className="text-[15px] font-extrabold text-foreground">{todayDuration >= 60 ? `${Math.round(todayDuration / 60)}m` : `${todayDuration}s`}</p>
+                <p className="text-[9px] text-muted-foreground font-bold">Durée</p>
+              </div>
+              <div className="bg-card/80 rounded-2xl p-2.5 text-center border border-border/10">
+                <span className="text-lg block">{avgEngagement > 0.5 ? "🔥" : avgEngagement > 0 ? "👍" : "💤"}</span>
+                <p className="text-[15px] font-extrabold text-foreground">{avgEngagement > 0.5 ? "Fort" : avgEngagement > 0 ? "Bon" : "—"}</p>
+                <p className="text-[9px] text-muted-foreground font-bold">Engagement</p>
+              </div>
+              <div className="bg-card/80 rounded-2xl p-2.5 text-center border border-border/10">
+                <span className="text-lg block">{topEmotion ? (emotionLabels[topEmotion[0]]?.emoji || "😊") : "—"}</span>
+                <p className="text-[15px] font-extrabold text-foreground">{topEmotion ? (emotionLabels[topEmotion[0]]?.label || topEmotion[0]).slice(0, 6) : "—"}</p>
+                <p className="text-[9px] text-muted-foreground font-bold">Émotion</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Quick actions: 2 large + 2 medium ── */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* Dashboard */}
+          <button onClick={() => setActiveTab("dashboard")}
+            className="bg-gradient-to-br from-primary/18 to-primary/5 rounded-3xl p-4 flex flex-col items-center justify-center border-2 border-border/15 hover:border-primary/40 hover:shadow-lg transition-all active:scale-[0.96] aspect-[4/3]">
+            <span className="text-4xl mb-2">📊</span>
+            <h3 className="text-[15px] font-extrabold text-foreground">Tableau de bord</h3>
+            <p className="text-[10px] text-muted-foreground font-medium mt-0.5">Vue d'ensemble</p>
+          </button>
+          {/* Sessions */}
+          <button onClick={() => setActiveTab("sessions")}
+            className="relative bg-gradient-to-br from-accent/25 to-accent/5 rounded-3xl p-4 flex flex-col items-center justify-center border-2 border-border/15 hover:border-primary/40 hover:shadow-lg transition-all active:scale-[0.96] aspect-[4/3]">
+            <span className="text-4xl mb-2">💬</span>
+            <h3 className="text-[15px] font-extrabold text-foreground">Sessions</h3>
+            <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{sessions.length} conversations</p>
+            {(sessions.filter(s => !analyses.some(a => a.session_id === s.id)).length || 0) > 0 && (
+              <span className="absolute top-2.5 right-2.5 min-w-[22px] h-[22px] px-1.5 rounded-full bg-destructive text-destructive-foreground text-[11px] font-bold flex items-center justify-center shadow-md">
+                {sessions.filter(s => !analyses.some(a => a.session_id === s.id)).length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* ── Secondary grid: smaller cards ── */}
+        <div className="grid grid-cols-3 gap-2.5">
+          {[
+            { id: "activites" as Tab, emoji: "🛒", label: "Bobby Store", color: "from-secondary/25 to-secondary/5" },
+            { id: "cloud" as Tab, emoji: "☁️", label: "Cloud", color: "from-blue-500/18 to-purple-400/8" },
+            { id: "profil" as Tab, emoji: "👤", label: "Profil", color: "from-primary/12 to-primary/3" },
+            { id: "reglages" as Tab, emoji: "⚙️", label: "Réglages", color: "from-muted/80 to-muted/30" },
+            { id: "confidentialite" as Tab, emoji: "🔒", label: "Sécurité", color: "from-destructive/10 to-destructive/3" },
+          ].map(card => (
+            <button key={card.id} onClick={() => setActiveTab(card.id)}
+              className={`bg-gradient-to-br ${card.color} rounded-2xl p-3 flex flex-col items-center justify-center border border-border/15 hover:border-primary/30 hover:shadow-md transition-all active:scale-[0.95] aspect-square`}>
+              <span className="text-3xl mb-1">{card.emoji}</span>
+              <span className="text-[12px] font-extrabold text-foreground leading-tight text-center">{card.label}</span>
             </button>
           ))}
         </div>
 
+        {/* ── Last session quick preview ── */}
+        {sessions.length > 0 && (
+          <button onClick={() => { analyzeSession(sessions[0]); }}
+            className="w-full bg-card rounded-3xl p-4 border border-border/15 hover:border-primary/20 transition-all text-left flex items-center gap-4 active:scale-[0.98]">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+              <span className="text-2xl">🕐</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-extrabold text-foreground">Dernière session</p>
+              <p className="text-[12px] text-muted-foreground font-medium truncate">
+                {formatDate(sessions[0].started_at)} • {sessions[0].message_count} messages • {formatDuration(sessions[0].duration_seconds)}
+              </p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+          </button>
+        )}
       </div>
     );
   };
