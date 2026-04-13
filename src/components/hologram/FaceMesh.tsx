@@ -104,7 +104,7 @@ function buildMouthInteriorShape(curve: number, width: number, openness: number,
   return shape;
 }
 
-export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIntensity = 0.7, emotionDuringSpeech, expressionOverride, expressionIntensityLevel }: FaceMeshProps) {
+export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIntensity = 0.7, emotionDuringSpeech, bobbyColor, expressionOverride, expressionIntensityLevel }: FaceMeshProps) {
   const rootRef = useRef<THREE.Group>(null);
   const leftEyeRef = useRef<THREE.Group>(null);
   const rightEyeRef = useRef<THREE.Group>(null);
