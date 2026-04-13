@@ -26,46 +26,48 @@ export default function ConfirmDialog({
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-6"
       onClick={onCancel}>
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm animate-fadeInUp" style={{ animationDuration: "0.15s" }} />
+      <div className="absolute inset-0 bg-foreground/40" />
 
       {/* Dialog */}
-      <div className="relative bg-card rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-fadeInUp"
-        style={{ animationDuration: "0.25s" }}
+      <div className="relative w-full max-w-sm overflow-hidden border-4 border-black bg-white"
+        style={{ boxShadow: "6px 6px 0px rgba(0,0,0,0.25)" }}
         onClick={(e) => e.stopPropagation()}>
-        
+
         {/* Close button */}
         <button onClick={onCancel}
-          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+          className="absolute top-3 right-3 w-8 h-8 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-muted transition-colors">
           <X className="w-4 h-4" />
         </button>
 
         <div className="p-6 pt-8 text-center">
           {/* Icon */}
-          <div className={`w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center ${
-            isDanger ? "bg-destructive/10" : "bg-primary/10"
+          <div className={`w-16 h-16 border-4 border-black mx-auto mb-4 flex items-center justify-center ${
+            isDanger ? "bg-[var(--retro-red)]" : "bg-[var(--retro-yellow)]"
           }`}>
             {isDanger
-              ? <Trash2 className="w-7 h-7 text-destructive" />
-              : <AlertTriangle className="w-7 h-7 text-primary" />
+              ? <Trash2 className="w-7 h-7 text-foreground" />
+              : <AlertTriangle className="w-7 h-7 text-foreground" />
             }
           </div>
 
           {/* Text */}
-          <h3 className="text-lg font-bold text-foreground mb-2">{title}</h3>
-          <p className="text-[13px] text-muted-foreground leading-relaxed mb-6">{description}</p>
+          <h3 className="text-lg font-black text-foreground uppercase mb-2">{title}</h3>
+          <p className="text-[13px] text-foreground/70 font-bold leading-relaxed mb-6">{description}</p>
 
           {/* Buttons */}
           <div className="flex gap-3">
             <button onClick={onCancel}
-              className="flex-1 py-3 rounded-2xl bg-muted text-foreground text-[13px] font-semibold hover:bg-muted/80 transition-all">
+              className="flex-1 py-3 border-4 border-black bg-white text-foreground text-[13px] font-black uppercase hover:bg-muted transition-all"
+              style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.15)" }}>
               {cancelLabel}
             </button>
             <button onClick={onConfirm}
-              className={`flex-1 py-3 rounded-2xl text-[13px] font-semibold transition-all ${
+              className={`flex-1 py-3 border-4 border-black text-[13px] font-black uppercase transition-all hover:opacity-90 ${
                 isDanger
-                  ? "bg-destructive text-destructive-foreground hover:opacity-90"
-                  : "bg-primary text-primary-foreground hover:opacity-90"
-              }`}>
+                  ? "bg-[var(--retro-red)] text-foreground"
+                  : "bg-[var(--retro-yellow)] text-foreground"
+              }`}
+              style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.15)" }}>
               {confirmLabel}
             </button>
           </div>
