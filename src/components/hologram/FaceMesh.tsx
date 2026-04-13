@@ -171,9 +171,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color("#8B6F47"), transparent: true, opacity: 0.9,
   }), []);
 
-  // Lip material — #E91E63 (magenta)
+  // Lip material — cute pink-red
   const lipMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#E91E63"), side: THREE.DoubleSide,
+    color: new THREE.Color("#E91E63"), side: THREE.DoubleSide, transparent: true, opacity: 1,
   }), []);
 
   // Mouth interior — dark red
@@ -559,13 +559,13 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={leftEyebrowRef} position={[leftBrowX, leftBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
       <mesh ref={rightEyebrowRef} position={[rightBrowX, rightBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
 
-      {/* Upper lip */}
+      {/* Kawaii smile line */}
       <mesh ref={upperLipRef} position={[0, -0.58, 0.008]} geometry={upperLipGeo} material={lipMat} />
 
-      {/* Lower lip — moves down when mouth opens */}
-      <mesh ref={lowerLipRef} position={[0, -0.58, 0.007]} geometry={lowerLipGeo} material={lipMat} />
+      {/* Open mouth oval (hidden when closed) */}
+      <mesh ref={lowerLipRef} position={[0, -0.58, 0.007]} geometry={lowerLipGeo} material={lipMat} visible={false} />
 
-      {/* Mouth interior — dark, visible when open */}
+      {/* Mouth interior — dark fill */}
       <mesh ref={mouthInteriorRef} position={[0, -0.58, 0.005]} geometry={mouthInteriorGeo} material={mouthInteriorMat} />
 
       {/* Tongue */}
