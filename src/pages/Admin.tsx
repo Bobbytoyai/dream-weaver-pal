@@ -159,6 +159,7 @@ const TOP_SECTIONS_CONFIG: {
   { id: "store", label: "Bobby Store", icon: Star, color: "text-emerald-400", bgColor: "bg-emerald-500/20", desc: "Gérer le catalogue du store (CRUD)", emoji: "🛒" },
   { id: "expressions", label: "Expressions", icon: Eye, color: "text-fuchsia-400", bgColor: "bg-fuchsia-500/20", desc: "Preview & test des expressions faciales", emoji: "🎭" },
   { id: "autolearn", label: "Auto-Learning", icon: Microscope, color: "text-lime-400", bgColor: "bg-lime-500/20", desc: "IA auto-complétion depuis les conversations", emoji: "🧬" },
+  { id: "cloudusers", label: "Bobby Cloud", icon: Users, color: "text-sky-400", bgColor: "bg-sky-500/20", desc: "Utilisateurs Bobby Cloud, profils sync", emoji: "☁️👥" },
 ];
 
 // ═══════════════════════════════════════════════════════════════════
