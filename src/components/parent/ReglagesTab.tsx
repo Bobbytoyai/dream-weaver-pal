@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from "react";
+import LazyImportBoundary from "@/components/LazyImportBoundary";
 import { Loader2, ChevronLeft, Shield, Lock, Eye, EyeOff, Mic, Calendar, FileText, Database, Scale, UserCheck } from "lucide-react";
 import type { ParentSettings } from "@/components/parentSettings";
 import type { ParentSession as Session } from "@/lib/bobby/parentDashboard";
@@ -233,15 +234,17 @@ const ReglagesTab = ({
 
   if (reglagesSection === "voix") {
     return (
-      <Suspense fallback={<SuspenseFallback />}>
-        <LazyVoiceSettings
-          settings={settings}
-          onUpdate={onUpdate}
-          onBack={() => setReglagesSection(null)}
-          onSave={onSave}
-          saved={settingsSaved}
-        />
-      </Suspense>
+      <LazyImportBoundary label="voix">
+        <Suspense fallback={<SuspenseFallback />}>
+          <LazyVoiceSettings
+            settings={settings}
+            onUpdate={onUpdate}
+            onBack={() => setReglagesSection(null)}
+            onSave={onSave}
+            saved={settingsSaved}
+          />
+        </Suspense>
+      </LazyImportBoundary>
     );
   }
 
@@ -250,49 +253,55 @@ const ReglagesTab = ({
     const todaySessions = sessions.filter(s => new Date(s.started_at).toLocaleDateString("fr-FR") === today);
     const todayDur = todaySessions.reduce((a, s) => a + (s.duration_seconds || 0), 0);
     return (
-      <Suspense fallback={<SuspenseFallback />}>
-        <LazyLimitsSettings
-          settings={settings}
-          onUpdate={onUpdate}
-          onUpdateNested={onUpdateNested}
-          todayDuration={todayDur}
-          onBack={() => setReglagesSection(null)}
-          onSave={onSave}
-          saved={settingsSaved}
-        />
-      </Suspense>
+      <LazyImportBoundary label="limites">
+        <Suspense fallback={<SuspenseFallback />}>
+          <LazyLimitsSettings
+            settings={settings}
+            onUpdate={onUpdate}
+            onUpdateNested={onUpdateNested}
+            todayDuration={todayDur}
+            onBack={() => setReglagesSection(null)}
+            onSave={onSave}
+            saved={settingsSaved}
+          />
+        </Suspense>
+      </LazyImportBoundary>
     );
   }
 
   if (reglagesSection === "personnalisation") {
     return (
-      <Suspense fallback={<SuspenseFallback />}>
-        <LazyBobbyCustomizer
-          settings={settings}
-          onUpdate={(key, value) => onUpdate(key, value)}
-          onBack={() => setReglagesSection(null)}
-          onSave={onSave}
-          saved={settingsSaved}
-        />
-      </Suspense>
+      <LazyImportBoundary label="personnalisation">
+        <Suspense fallback={<SuspenseFallback />}>
+          <LazyBobbyCustomizer
+            settings={settings}
+            onUpdate={(key, value) => onUpdate(key, value)}
+            onBack={() => setReglagesSection(null)}
+            onSave={onSave}
+            saved={settingsSaved}
+          />
+        </Suspense>
+      </LazyImportBoundary>
     );
   }
 
   if (reglagesSection === "profil") {
     return (
-      <Suspense fallback={<SuspenseFallback />}>
-        <LazyProfilTab
-          settings={settings}
-          childName={childName}
-          allInterests={allInterests}
-          onUpdate={onUpdate}
-          onSave={onSave}
-          saved={settingsSaved}
-          onBack={() => setReglagesSection(null)}
-          showBackButton
-          onPendingNameChange={onPendingNameChange}
-        />
-      </Suspense>
+      <LazyImportBoundary label="profil">
+        <Suspense fallback={<SuspenseFallback />}>
+          <LazyProfilTab
+            settings={settings}
+            childName={childName}
+            allInterests={allInterests}
+            onUpdate={onUpdate}
+            onSave={onSave}
+            saved={settingsSaved}
+            onBack={() => setReglagesSection(null)}
+            showBackButton
+            onPendingNameChange={onPendingNameChange}
+          />
+        </Suspense>
+      </LazyImportBoundary>
     );
   }
 
