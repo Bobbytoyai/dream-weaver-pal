@@ -3225,10 +3225,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         case "personnalisation": return (
           <BobbyCustomizer
             settings={settings}
-            onUpdate={updateSetting}
+            onUpdate={(key, value) => updateSetting(key, value)}
             onBack={() => setActiveTab("home")}
-            onSave={() => { setSaved(true); setTimeout(() => setSaved(false), 2000); }}
-            saved={saved}
+            onSave={handleSave}
+            saved={settingsSaved}
           />
         );
         case "reglages": return renderReglages();
