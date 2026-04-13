@@ -2581,19 +2581,19 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             { emoji: "👩", name: "Maman (Matilda)", desc: "Ultra apaisante, maternelle, lente — stability 85%, speed -12%" },
             { emoji: "👨", name: "Papa (George)", desc: "Calme, protecteur, posé — stability 90%, style minimal" },
           ].map((v) => (
-            <div key={v.name} className="flex items-start gap-3 p-2.5 rounded-xl bg-muted/40">
+            <div key={v.name} className="flex items-start gap-3 p-2.5 border-2 border-black bg-white">
               <span className="text-xl">{v.emoji}</span>
               <div>
-                <h4 className="text-[12px] font-semibold text-foreground">{v.name}</h4>
-                <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{v.desc}</p>
+                <h4 className="text-[12px] font-black text-foreground uppercase">{v.name}</h4>
+                <p className="text-[10px] text-foreground/60 leading-tight mt-0.5 font-bold">{v.desc}</p>
               </div>
             </div>
           ))}
-          <div className="flex items-start gap-3 p-2.5 rounded-xl bg-primary/5 border border-primary/10">
+          <div className="flex items-start gap-3 p-2.5 border-2 border-black bg-[var(--retro-yellow)]">
             <span className="text-xl">🎭</span>
             <div>
-              <h4 className="text-[12px] font-semibold text-primary">8 émotions dynamiques</h4>
-              <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+              <h4 className="text-[12px] font-black text-foreground uppercase">8 émotions dynamiques</h4>
+              <p className="text-[10px] text-foreground/60 leading-tight mt-0.5 font-bold">
                 Joyeux, triste, effrayé, excité, calme, curieux, en colère, ennuyé — la voix s'adapte automatiquement
               </p>
             </div>
@@ -2616,17 +2616,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           ].map((t) => (
             <div key={t.label} className="flex items-center gap-3 py-1.5">
               <span className="text-lg">{t.emoji}</span>
-              <span className="text-[12px] font-medium text-foreground flex-1">{t.label}</span>
-              <span className="text-[9px] px-2 py-0.5 bg-muted rounded-full text-muted-foreground font-medium">{t.tag}</span>
+              <span className="text-[12px] font-black text-foreground flex-1">{t.label}</span>
+              <span className="text-[9px] px-2 py-0.5 border border-black bg-white text-foreground font-black">{t.tag}</span>
             </div>
           ))}
         </div>
-        <div className="mt-3 p-2.5 rounded-xl bg-muted/40">
-          <p className="text-[10px] text-muted-foreground">
-            🧒 <strong className="text-foreground">Bobby</strong> — personnage principal, ami imaginaire vivant dans un jouet
+        <div className="mt-3 p-2.5 border-2 border-black bg-white">
+          <p className="text-[10px] text-foreground/60 font-bold">
+            🧒 <strong className="text-foreground font-black">Bobby</strong> — personnage principal, ami imaginaire vivant dans un jouet
           </p>
-          <p className="text-[10px] text-muted-foreground mt-1">
-            🎵 <strong className="text-foreground">Zik</strong> — ami imaginaire de Bobby, un peu coquin
+          <p className="text-[10px] text-foreground/60 mt-1 font-bold">
+            🎵 <strong className="text-foreground font-black">Zik</strong> — ami imaginaire de Bobby, un peu coquin
           </p>
         </div>
       </Card>
@@ -2647,8 +2647,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             <div key={f.title} className="flex items-start gap-3">
               <span className="text-lg mt-0.5">{f.emoji}</span>
               <div>
-                <h4 className="text-[12px] font-semibold text-foreground">{f.title}</h4>
-                <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{f.desc}</p>
+                <h4 className="text-[12px] font-black text-foreground uppercase">{f.title}</h4>
+                <p className="text-[10px] text-foreground/60 leading-tight mt-0.5 font-bold">{f.desc}</p>
               </div>
             </div>
           ))}
@@ -2659,7 +2659,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       {/* 💡 Suggérer une idée */}
       <div className="animate-fadeInUp" style={{ animationDelay: "0.25s" }}>
       <Card title="💡 Suggérer une idée" icon={Heart}>
-        <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
+        <p className="text-[10px] text-foreground/60 mb-3 leading-tight font-bold">
           Vous avez une idée pour améliorer Bobby ? Partagez-la avec nous !
         </p>
         <textarea
@@ -2667,19 +2667,21 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           onChange={(e) => setSuggestionText(e.target.value)}
           placeholder="Ex: Ajouter une voix en anglais, un mode comptine..."
           rows={3}
-          className="w-full px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all resize-none"
+          className="w-full px-4 py-2.5 bg-white text-sm text-foreground placeholder:text-foreground/40 border-4 border-black outline-none font-bold resize-none"
         />
         <button
           onClick={handleSuggestionSubmit}
           disabled={!suggestionText.trim() || suggestionSent}
-          className={`mt-2 w-full py-2.5 rounded-xl text-[12px] font-semibold transition-all ${
+          className={`mt-2 w-full py-2.5 text-[12px] font-black transition-all border-4 border-black uppercase ${
             suggestionSent
-              ? "bg-green-500/20 text-green-600"
+              ? "bg-[var(--retro-green)] text-foreground"
               : suggestionText.trim()
-                ? "bg-primary text-primary-foreground hover:opacity-90"
-                : "bg-muted text-muted-foreground cursor-not-allowed"
-          }`}>
-          {suggestionSent ? "✅ Merci pour votre idée !" : "Envoyer ma suggestion"}
+                ? "bg-foreground text-background hover:opacity-90"
+                : "bg-white/50 text-foreground/40 cursor-not-allowed border-dashed"
+          }`}
+          style={{ boxShadow: suggestionText.trim() && !suggestionSent ? "3px 3px 0px rgba(0,0,0,0.2)" : "none" }}>
+          {suggestionSent ? "✅ MERCI POUR VOTRE IDÉE !" : "ENVOYER MA SUGGESTION"}
+        </button>
         </button>
       </Card>
       </div>
