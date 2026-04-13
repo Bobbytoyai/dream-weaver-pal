@@ -1540,173 +1540,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
         </div>
 
-        {/* ── Unified Audio Player — Real recorded audio + message sync ── */}
-        {(analysis?.audio_path || sessionMessages.length > 0) && (
-          <div className={`rounded-3xl p-5 border shadow-sm ${
-            playingAudio
-              ? "bg-gradient-to-br from-primary/12 via-accent/8 to-secondary/5 border-primary/25"
-              : "bg-gradient-to-br from-card to-muted/30 border-border/20"
-          }`}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${
-                playingAudio ? "bg-primary/20 animate-pulse" : "bg-primary/10"
-              }`}>
-                <span className="text-2xl">🎧</span>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-[16px] font-extrabold text-foreground">
-                  {playingAudio ? "🔴 Lecture en cours" : "🎧 Réécouter la session"}
-                </h3>
-                <p className="text-[12px] text-muted-foreground font-medium">
-                  {playingAudio && activeMessageIdx >= 0
-                    ? `Message ${activeMessageIdx + 1}/${sessionMessages.length}`
-                    : analysis?.audio_path
-                      ? `${sessionMessages.length} messages • Enregistrement audio`
-                      : `${sessionMessages.length} messages • Lecture vocale`
-                  }
-                </p>
-              </div>
-            </div>
-
-            {/* Progress bar */}
-            {analysis?.audio_path && (
-              <div className="mb-4">
-                <div className="w-full h-3 bg-muted/60 rounded-full cursor-pointer overflow-hidden shadow-inner"
-                  onClick={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const pct = ((e.clientX - rect.left) / rect.width) * 100;
-                    seekAudio(pct);
-                  }}>
-                  <div className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full transition-all duration-200"
-                    style={{ width: `${audioProgress}%` }} />
-                </div>
-                <div className="flex justify-between mt-1.5">
-                  <span className="text-[11px] text-muted-foreground font-mono font-bold">
-                    {audioDuration > 0 && isFinite(audioDuration) ? `${Math.floor((audioProgress / 100) * audioDuration / 60)}:${String(Math.floor((audioProgress / 100) * audioDuration % 60)).padStart(2, "0")}` : "0:00"}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground font-mono font-bold">
-                    {audioDuration > 0 && isFinite(audioDuration) ? `${Math.floor(audioDuration / 60)}:${String(Math.floor(audioDuration % 60)).padStart(2, "0")}` : "—"}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* TTS progress (no real audio) */}
-            {!analysis?.audio_path && fullPlaybackActive && (
-              <div className="mb-4">
-                <div className="w-full h-3 bg-muted/60 rounded-full overflow-hidden shadow-inner">
-                  <div className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full transition-all duration-300"
-                    style={{ width: `${((fullPlaybackIdx) / Math.max(1, sessionMessages.length)) * 100}%` }} />
-                </div>
-                <div className="flex justify-between mt-1.5">
-                  <span className="text-[11px] text-muted-foreground font-mono font-bold">#{fullPlaybackIdx + 1}</span>
-                  <span className="text-[11px] text-muted-foreground font-mono font-bold">{sessionMessages.length} msgs</span>
-                </div>
-              </div>
-            )}
-
-            {/* Controls */}
-            <div className="flex items-center justify-center gap-3 mb-4">
-              {analysis?.audio_path ? (
-                <>
-                  <button onClick={() => skipAudio(-10)}
-                    className="w-10 h-10 rounded-2xl bg-card/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors text-[11px] font-extrabold border border-border/10">
-                    -10
-                  </button>
-                  <button onClick={() => skipMessage(-1)}
-                    className="w-11 h-11 rounded-2xl bg-card/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all border border-border/10">
-                    <SkipBack className="w-5 h-5" />
-                  </button>
-                  <button onClick={() => playAudio(analysis.audio_path!)}
-                    className="w-16 h-16 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-primary/30 active:scale-95">
-                    {playingAudio === analysis.audio_path
-                      ? <Pause className="w-7 h-7" />
-                      : <Play className="w-7 h-7 ml-0.5" />}
-                  </button>
-                  <button onClick={() => skipMessage(1)}
-                    className="w-11 h-11 rounded-2xl bg-card/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all border border-border/10">
-                    <SkipForward className="w-5 h-5" />
-                  </button>
-                  <button onClick={() => skipAudio(10)}
-                    className="w-10 h-10 rounded-2xl bg-card/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors text-[11px] font-extrabold border border-border/10">
-                    +10
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button onClick={() => fullPlaybackActive && setFullPlaybackIdx(i => Math.max(0, i - 1))}
-                    disabled={!fullPlaybackActive}
-                    className="w-11 h-11 rounded-2xl bg-card/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all disabled:opacity-30 border border-border/10">
-                    <SkipBack className="w-5 h-5" />
-                  </button>
-                  {!fullPlaybackActive ? (
-                    <button onClick={() => startFullPlayback(0)}
-                      className="w-16 h-16 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-primary/30 active:scale-95">
-                      <Play className="w-7 h-7 ml-0.5" />
-                    </button>
-                  ) : (
-                    <button onClick={toggleFullPlaybackPause}
-                      className="w-16 h-16 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-primary/30 active:scale-95">
-                      {fullPlaybackLoading ? <Loader2 className="w-7 h-7 animate-spin" /> : fullPlaybackPaused ? <Play className="w-7 h-7 ml-0.5" /> : <Pause className="w-7 h-7" />}
-                    </button>
-                  )}
-                  <button onClick={() => fullPlaybackActive && setFullPlaybackIdx(i => Math.min(sessionMessages.length - 1, i + 1))}
-                    disabled={!fullPlaybackActive}
-                    className="w-11 h-11 rounded-2xl bg-card/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all disabled:opacity-30 border border-border/10">
-                    <SkipForward className="w-5 h-5" />
-                  </button>
-                  {fullPlaybackActive && (
-                    <button onClick={stopFullPlayback}
-                      className="w-11 h-11 rounded-2xl bg-destructive/10 flex items-center justify-center text-destructive hover:bg-destructive/20 transition-all border border-destructive/15">
-                      <X className="w-5 h-5" />
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Speed selector */}
-            <div className="flex items-center justify-center gap-2">
-              {[0.75, 1, 1.25, 1.5, 2].map(speed => (
-                <button key={speed} onClick={() => {
-                    if (analysis?.audio_path) setAudioSpeed(speed);
-                    else setFullPlaybackSpeed(speed);
-                  }}
-                  className={`px-3.5 py-2 rounded-xl text-[13px] font-extrabold transition-all ${
-                    (analysis?.audio_path ? audioSpeed : fullPlaybackSpeed) === speed
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "bg-card/80 text-muted-foreground hover:bg-muted/80 border border-border/10"
-                  }`}>
-                  {speed}×
-                </button>
-              ))}
-            </div>
-
-            {/* Current message highlight */}
-            {activeMessageIdx >= 0 && sessionMessages[activeMessageIdx] && (playingAudio || fullPlaybackActive) && (
-              <div className={`mt-4 rounded-2xl p-4 transition-all ${
-                sessionMessages[activeMessageIdx].role === "user"
-                  ? "bg-muted/50 border-l-4 border-l-accent"
-                  : "bg-primary/8 border-l-4 border-l-primary"
-              }`}>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-base">{sessionMessages[activeMessageIdx].role === "user" ? "👦" : "🤖"}</span>
-                  <span className="text-[13px] font-extrabold text-foreground">
-                    {sessionMessages[activeMessageIdx].role === "user" ? (settings.childName || childName) : "Bobby"}
-                  </span>
-                  {sessionMessages[activeMessageIdx].detected_emotion && (
-                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-muted font-bold">
-                      {emotionLabels[sessionMessages[activeMessageIdx].detected_emotion!]?.emoji || "💬"}
-                    </span>
-                  )}
-                </div>
-                <p className="text-[14px] text-foreground leading-relaxed font-medium line-clamp-3">
-                  {sessionMessages[activeMessageIdx].content}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Audio player moved to bottom of page */}
 
         {keyMoments.length > 0 && (
           <div className="bg-card rounded-3xl p-5 border border-border/20">
@@ -2026,6 +1860,162 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             <span className="text-[13px] font-extrabold text-destructive">Supprimer</span>
           </button>
         </div>
+
+        {/* ── Audio Player — compact & colorful at bottom ── */}
+        {(analysis?.audio_path || sessionMessages.length > 0) && (
+          <div className={`rounded-2xl p-4 border ${
+            playingAudio
+              ? "bg-gradient-to-r from-violet-500/12 via-blue-500/8 to-pink-500/6 border-violet-400/25"
+              : "bg-gradient-to-r from-blue-500/8 via-violet-500/6 to-pink-500/5 border-blue-300/15"
+          }`}>
+            {/* Header */}
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                playingAudio ? "bg-violet-500/20 animate-pulse" : "bg-blue-500/12"
+              }`}>
+                <span className="text-lg">🎧</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-[13px] font-extrabold text-foreground">
+                  {playingAudio ? "🔴 Lecture" : "Réécouter"}
+                </h3>
+                <p className="text-[10px] text-muted-foreground font-bold truncate">
+                  {playingAudio && activeMessageIdx >= 0
+                    ? `Message ${activeMessageIdx + 1}/${sessionMessages.length}`
+                    : `${sessionMessages.length} messages`
+                  }
+                </p>
+              </div>
+            </div>
+
+            {/* Progress bar — thinner */}
+            {analysis?.audio_path && (
+              <div className="mb-3">
+                <div className="w-full h-1.5 bg-muted/40 rounded-full cursor-pointer overflow-hidden"
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    seekAudio(((e.clientX - rect.left) / rect.width) * 100);
+                  }}>
+                  <div className="h-full bg-gradient-to-r from-violet-500 to-blue-500 rounded-full transition-all duration-200"
+                    style={{ width: `${audioProgress}%` }} />
+                </div>
+                <div className="flex justify-between mt-1">
+                  <span className="text-[9px] text-muted-foreground font-mono font-bold">
+                    {audioDuration > 0 && isFinite(audioDuration) ? `${Math.floor((audioProgress / 100) * audioDuration / 60)}:${String(Math.floor((audioProgress / 100) * audioDuration % 60)).padStart(2, "0")}` : "0:00"}
+                  </span>
+                  <span className="text-[9px] text-muted-foreground font-mono font-bold">
+                    {audioDuration > 0 && isFinite(audioDuration) ? `${Math.floor(audioDuration / 60)}:${String(Math.floor(audioDuration % 60)).padStart(2, "0")}` : "—"}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* TTS progress */}
+            {!analysis?.audio_path && fullPlaybackActive && (
+              <div className="mb-3">
+                <div className="w-full h-1.5 bg-muted/40 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-pink-500 to-violet-500 rounded-full transition-all duration-300"
+                    style={{ width: `${((fullPlaybackIdx) / Math.max(1, sessionMessages.length)) * 100}%` }} />
+                </div>
+                <div className="flex justify-between mt-1">
+                  <span className="text-[9px] text-muted-foreground font-mono font-bold">#{fullPlaybackIdx + 1}</span>
+                  <span className="text-[9px] text-muted-foreground font-mono font-bold">{sessionMessages.length} msgs</span>
+                </div>
+              </div>
+            )}
+
+            {/* Controls — compact row */}
+            <div className="flex items-center justify-center gap-2 mb-3">
+              {analysis?.audio_path ? (
+                <>
+                  <button onClick={() => skipAudio(-10)}
+                    className="w-8 h-8 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-600 hover:bg-orange-500/20 transition-all text-[10px] font-black border border-orange-400/15">
+                    -10
+                  </button>
+                  <button onClick={() => skipMessage(-1)}
+                    className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 hover:bg-blue-500/20 transition-all border border-blue-400/15">
+                    <SkipBack className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => playAudio(analysis.audio_path!)}
+                    className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 text-white flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-violet-500/25 active:scale-95">
+                    {playingAudio === analysis.audio_path
+                      ? <Pause className="w-5 h-5" />
+                      : <Play className="w-5 h-5 ml-0.5" />}
+                  </button>
+                  <button onClick={() => skipMessage(1)}
+                    className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 hover:bg-emerald-500/20 transition-all border border-emerald-400/15">
+                    <SkipForward className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => skipAudio(10)}
+                    className="w-8 h-8 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-600 hover:bg-pink-500/20 transition-all text-[10px] font-black border border-pink-400/15">
+                    +10
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => fullPlaybackActive && setFullPlaybackIdx(i => Math.max(0, i - 1))}
+                    disabled={!fullPlaybackActive}
+                    className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 hover:bg-blue-500/20 transition-all disabled:opacity-30 border border-blue-400/15">
+                    <SkipBack className="w-4 h-4" />
+                  </button>
+                  {!fullPlaybackActive ? (
+                    <button onClick={() => startFullPlayback(0)}
+                      className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 text-white flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-violet-500/25 active:scale-95">
+                      <Play className="w-5 h-5 ml-0.5" />
+                    </button>
+                  ) : (
+                    <button onClick={toggleFullPlaybackPause}
+                      className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 text-white flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-violet-500/25 active:scale-95">
+                      {fullPlaybackLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : fullPlaybackPaused ? <Play className="w-5 h-5 ml-0.5" /> : <Pause className="w-5 h-5" />}
+                    </button>
+                  )}
+                  <button onClick={() => fullPlaybackActive && setFullPlaybackIdx(i => Math.min(sessionMessages.length - 1, i + 1))}
+                    disabled={!fullPlaybackActive}
+                    className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 hover:bg-emerald-500/20 transition-all disabled:opacity-30 border border-emerald-400/15">
+                    <SkipForward className="w-4 h-4" />
+                  </button>
+                  {fullPlaybackActive && (
+                    <button onClick={stopFullPlayback}
+                      className="w-9 h-9 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500 hover:bg-red-500/20 transition-all border border-red-400/15">
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Speed pills — compact */}
+            <div className="flex items-center justify-center gap-1.5">
+              {[0.75, 1, 1.25, 1.5, 2].map(speed => (
+                <button key={speed} onClick={() => {
+                    if (analysis?.audio_path) setAudioSpeed(speed);
+                    else setFullPlaybackSpeed(speed);
+                  }}
+                  className={`px-2.5 py-1.5 rounded-lg text-[11px] font-black transition-all ${
+                    (analysis?.audio_path ? audioSpeed : fullPlaybackSpeed) === speed
+                      ? "bg-gradient-to-r from-violet-500 to-blue-500 text-white shadow-sm"
+                      : "bg-muted/40 text-muted-foreground hover:bg-muted/60"
+                  }`}>
+                  {speed}×
+                </button>
+              ))}
+            </div>
+
+            {/* Current message — compact */}
+            {activeMessageIdx >= 0 && sessionMessages[activeMessageIdx] && (playingAudio || fullPlaybackActive) && (
+              <div className={`mt-3 rounded-xl p-3 text-[12px] leading-relaxed font-medium ${
+                sessionMessages[activeMessageIdx].role === "user"
+                  ? "bg-muted/40 border-l-3 border-l-amber-400"
+                  : "bg-primary/6 border-l-3 border-l-violet-400"
+              }`}>
+                <span className="text-[10px] font-black text-muted-foreground">
+                  {sessionMessages[activeMessageIdx].role === "user" ? `👦 ${settings.childName || childName}` : "🤖 Bobby"}
+                </span>
+                <p className="text-foreground mt-0.5 line-clamp-2">{sessionMessages[activeMessageIdx].content}</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   };
