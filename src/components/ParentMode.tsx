@@ -249,9 +249,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [showNotifPanel, setShowNotifPanel] = useState(false);
   // Bobby Store now manages its own state via Supabase (see BobbyStore.tsx)
 
+  // Bobby Cloud sync state
+  const [cloudProfile, setCloudProfile] = useState<CloudProfile | null>(null);
+  const [cloudLoading, setCloudLoading] = useState(false);
+  const [cloudRestoreCode, setCloudRestoreCode] = useState("");
+  const [cloudCopied, setCloudCopied] = useState(false);
+
   const unreadAlertCount = parentAlerts.filter(a => !a.is_read).length;
 
-  useEffect(() => { loadData(); loadAlerts(); }, []);
+  useEffect(() => { loadData(); loadAlerts(); loadCloudProfile(); }, []);
 
   const loadAlerts = async () => {
     try {
