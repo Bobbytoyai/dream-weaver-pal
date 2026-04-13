@@ -133,6 +133,7 @@ export function HologramFace({
             emotionIntensity={emotionIntensity}
             emotionDuringSpeech={emotionDuringSpeech}
             bobbyColor={bobbyColor}
+            bobbyColors={bobbyColors}
             expressionOverride={expressionOverride}
             expressionIntensityLevel={expressionIntensityLevel}
           />
