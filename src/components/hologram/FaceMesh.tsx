@@ -197,6 +197,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   }), []);
 
   // ─── Apply per-element colors ───────────────
+  const bobbyColorsKey = bobbyColors ? JSON.stringify(bobbyColors) : "";
   useEffect(() => {
     if (bobbyColors) {
       const irisHex = IRIS_HEX[bobbyColors.iris] || IRIS_HEX.blue;
@@ -217,7 +218,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       const irisHex = IRIS_HEX[bobbyColor] || IRIS_HEX.blue;
       irisOuterMat.color.set(irisHex);
     }
-  }, [bobbyColor, bobbyColors, irisOuterMat, blushMat, eyebrowMat, eyelidMat]);
+  }, [bobbyColor, bobbyColorsKey, irisOuterMat, blushMat, eyebrowMat, eyelidMat]);
 
   const eyeOutlineGeo = useMemo(() => {
     const shape = new THREE.Shape();
