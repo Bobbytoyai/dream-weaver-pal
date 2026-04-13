@@ -1250,40 +1250,40 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       )}
 
       {/* ═══ STATS DÉTAILLÉES — compact grid ═══ */}
-      <div className="bg-card rounded-2xl p-3 border border-border/20">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-lg">📊</span>
-          <h3 className="text-[14px] font-extrabold text-foreground">Statistiques</h3>
+      <div className="bg-card rounded-3xl p-5 border border-border/20">
+        <div className="flex items-center gap-2.5 mb-3">
+          <span className="text-2xl">📊</span>
+          <h3 className="text-[17px] font-extrabold text-foreground">Statistiques</h3>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-3">
           {[
             { label: "Moy. / session", value: formatDuration(avgSessionDuration), emoji: "⏱️" },
             { label: "Msg / session", value: avgMessagesPerSession, emoji: "💬" },
             { label: "Analysées", value: `${recentAnalyses.length}/${totalSessions}`, emoji: "🔬" },
             { label: "Aujourd'hui", value: formatDuration(todayDuration), emoji: "📅" },
           ].map((stat) => (
-            <div key={stat.label} className="flex items-center gap-2 p-2 rounded-xl bg-muted/30">
-              <span className="text-base">{stat.emoji}</span>
+            <div key={stat.label} className="flex items-center gap-3 p-3 rounded-2xl bg-muted/30">
+              <span className="text-xl">{stat.emoji}</span>
               <div className="min-w-0">
-                <p className="text-[13px] font-extrabold text-foreground">{stat.value}</p>
-                <p className="text-[8px] text-muted-foreground font-bold">{stat.label}</p>
+                <p className="text-[16px] font-extrabold text-foreground">{stat.value}</p>
+                <p className="text-[11px] text-muted-foreground font-bold">{stat.label}</p>
               </div>
             </div>
           ))}
         </div>
         {/* Activity per day mini bar */}
         {hasData && (
-          <div className="mt-2 pt-2 border-t border-border/20">
-            <div className="flex items-end gap-1 h-10">
+          <div className="mt-3 pt-3 border-t border-border/20">
+            <div className="flex items-end gap-1.5 h-12">
               {weeklyActivity.map((day) => {
                 const maxCount = Math.max(...weeklyActivity.map(d => d.count), 1);
                 const height = (day.count / maxCount) * 100;
                 return (
-                  <div key={day.label} className="flex-1 flex flex-col items-center gap-0.5">
-                    <div className="w-full rounded-t-md bg-primary/20 relative" style={{ height: `${Math.max(height, 4)}%` }}>
-                      {day.count > 0 && <div className="absolute inset-0 rounded-t-md bg-primary" style={{ height: `${height}%` }} />}
+                  <div key={day.label} className="flex-1 flex flex-col items-center gap-1">
+                    <div className="w-full rounded-t-lg bg-primary/20 relative" style={{ height: `${Math.max(height, 4)}%` }}>
+                      {day.count > 0 && <div className="absolute inset-0 rounded-t-lg bg-primary" style={{ height: `${height}%` }} />}
                     </div>
-                    <span className="text-[7px] text-muted-foreground font-bold">{day.label}</span>
+                    <span className="text-[10px] text-muted-foreground font-bold">{day.label}</span>
                   </div>
                 );
               })}
