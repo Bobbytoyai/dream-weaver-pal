@@ -160,9 +160,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color("#FF80AB"), transparent: true, opacity: 0,
   }), []);
 
-  // Eyelid — match background
+  // Eyelid — match the VoiceScreen light background gradient
   const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(240, 40%, 18%)"), transparent: false, opacity: 1.0,
+    color: new THREE.Color("hsl(230, 22%, 78%)"), transparent: false, opacity: 1.0,
     depthWrite: true,
   }), []);
 
