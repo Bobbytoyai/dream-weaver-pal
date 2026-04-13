@@ -11,6 +11,7 @@ import {
   SkipForward, SkipBack, Activity, Bell, ChevronDown, ChevronLeft, Star, Edit3
 } from "lucide-react";
 const LazyDashboardTab = lazy(() => import("@/components/parent/DashboardTab"));
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { getInterestSnapshot, INTEREST_KEYWORDS_PUBLIC } from "@/lib/bobby/interestTracker";
 import { supabase } from "@/integrations/supabase/client";
 import StoryLibrary from "@/components/StoryLibrary";
@@ -2739,7 +2740,19 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     // If a category is selected, render that category
     if (tab !== "home") {
       switch (tab) {
-        case "dashboard": return renderDashboard();
+        case "dashboard": return (
+          <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
+            <LazyDashboardTab
+              sessions={sessions}
+              analyses={analyses}
+              displayName={displayName}
+              safetyAlerts={safetyAlerts}
+              showSafetyAlerts={showSafetyAlerts}
+              setShowSafetyAlerts={setShowSafetyAlerts}
+              clearSafetyAlerts={() => { clearSafetyAlertRecords(); setSafetyAlerts([]); }}
+            />
+          </Suspense>
+        );
         case "sessions": return renderSessionsList();
         case "activites": return <StoreGateWrapper childName={settings.childName} childAge={settings.childAge} />;
         case "profil": return renderReglages();
@@ -2755,7 +2768,19 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         case "reglages": return renderReglages();
         case "cloud": return renderCloud();
         case "confidentialite": return renderConfidentialite();
-        default: return renderDashboard();
+        default: return (
+          <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
+            <LazyDashboardTab
+              sessions={sessions}
+              analyses={analyses}
+              displayName={displayName}
+              safetyAlerts={safetyAlerts}
+              showSafetyAlerts={showSafetyAlerts}
+              setShowSafetyAlerts={setShowSafetyAlerts}
+              clearSafetyAlerts={() => { clearSafetyAlertRecords(); setSafetyAlerts([]); }}
+            />
+          </Suspense>
+        );
       }
     }
 
