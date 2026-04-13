@@ -82,8 +82,15 @@ export async function getLLMReply(
 
     // Safety: replace any leaked placeholder with actual child name
     replyText = replyText.replace(/\{?\bchild[_\s]?name\b\}?/gi, childName);
+    replyText = replyText.replace(/\bchildName\b/g, childName);
     replyText = replyText.replace(/\[prénom\]/gi, childName);
     replyText = replyText.replace(/\[enfant\]/gi, childName);
+    replyText = replyText.replace(/\[nom\]/gi, childName);
+    replyText = replyText.replace(/\{prénom\}/gi, childName);
+    replyText = replyText.replace(/\{name\}/gi, childName);
+    replyText = replyText.replace(/\{enfant\}/gi, childName);
+    // Catch "child name" as two words
+    replyText = replyText.replace(/\bchild name\b/gi, childName);
 
     if (!replyText) return null;
 

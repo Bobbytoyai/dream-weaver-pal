@@ -494,12 +494,12 @@ export function useFaceAnimation(
     let speechCheekBoost = 0;
 
     if (faceState === "speaking" && viseme && viseme.amplitude > 0.01) {
-      // Cartoon exaggeration: amplify all viseme values for expressiveness
-      const exaggeration = 2.8;
-      mouthOpenTarget = Math.min(1.0, viseme.mouthOpenness * exaggeration + 0.1);
-      mouthWidthTarget = viseme.mouthWidth * 1.3;
-      mouthRoundTarget = viseme.mouthRound * 1.8;
-      jawDropTarget = viseme.jawDrop * exaggeration;
+      // Cartoon exaggeration: amplify all viseme values for very pronounced lip sync
+      const exaggeration = 3.5;
+      mouthOpenTarget = Math.min(1.0, viseme.mouthOpenness * exaggeration + 0.15);
+      mouthWidthTarget = viseme.mouthWidth * 1.5;
+      mouthRoundTarget = viseme.mouthRound * 2.2;
+      jawDropTarget = Math.min(0.9, viseme.jawDrop * exaggeration);
 
       // Rhythmic micro-variation for liveliness
       const microVar = Math.sin(breathPhase.current * 12) * 0.06 + Math.sin(breathPhase.current * 7.3) * 0.03;
@@ -555,7 +555,7 @@ export function useFaceAnimation(
     }
 
     // --- LERP ALL VALUES ---
-    const mouthSpeed = faceState === "speaking" ? baseSpeed * 10 : baseSpeed * 3;
+    const mouthSpeed = faceState === "speaking" ? baseSpeed * 14 : baseSpeed * 3;
 
     // v3.0: EYEBROW ANTICIPATION — eyebrows lead speech by ~50ms
     // Buffer the eyebrow target and use it slightly ahead of audio
