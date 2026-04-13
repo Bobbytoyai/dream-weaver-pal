@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from "react";
-import { Loader2, ChevronLeft, Shield, Lock, Eye, EyeOff, Mic, BarChart3, Calendar, Trash2, FileText, AlertTriangle, Download, Database, Scale, UserCheck, Info } from "lucide-react";
+import { Loader2, ChevronLeft, Shield, Lock, Eye, EyeOff, Mic, Calendar, FileText, Database, Scale, UserCheck } from "lucide-react";
 import type { ParentSettings } from "@/components/parentSettings";
 import type { ParentSession as Session } from "@/lib/bobby/parentDashboard";
 import { Toggle, SettingRow, Card } from "@/components/parent/SharedUI";
