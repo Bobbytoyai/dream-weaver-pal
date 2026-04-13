@@ -751,8 +751,15 @@ const Admin = () => {
   }, []);
 
   useEffect(() => {
-    if (authenticated) { fetchEntries(); fetchCloudStories(); fetchStoreItems(); fetchCloudUsers(); loadInteractions(); fetchRealConversations(); }
-  }, [authenticated, fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers]);
+    if (authenticated) { fetchEntries(); fetchCloudStories(); fetchStoreItems(); fetchCloudUsers(); loadInteractions(); fetchRealConversations(); fetchLiveStats(); }
+  }, [authenticated, fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers, fetchLiveStats]);
+
+  // Auto-refresh live stats every 30s
+  useEffect(() => {
+    if (!authenticated) return;
+    const interval = setInterval(fetchLiveStats, 30_000);
+    return () => clearInterval(interval);
+  }, [authenticated, fetchLiveStats]);
 
   // ─── Derived ───
   const categoryCounts = useMemo(() => {
