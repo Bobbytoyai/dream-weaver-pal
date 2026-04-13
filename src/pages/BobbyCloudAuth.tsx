@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import RetroLoader from "@/components/RetroLoader";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -35,6 +36,11 @@ export default function BobbyCloudAuth() {
       navigate(returnTo, { replace: true });
     }
   }, [loading, navigate, returnTo, user]);
+
+  // Single loading gate — no successive loading flashes
+  if (loading) {
+    return <RetroLoader message="Connexion en cours…" />;
+  }
 
   const handleSignup = async () => {
     if (password !== confirmPassword) {
