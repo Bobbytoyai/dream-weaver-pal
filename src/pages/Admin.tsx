@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import ExpressionPreview from "@/components/ExpressionPreview";
 import AutoLearnPanel from "@/components/AutoLearnPanel";
 import AdminDetailDialog, { type DetailItem, type DetailField } from "@/components/AdminDetailDialog";
@@ -345,6 +346,64 @@ const Admin = () => {
       avgDuration,
       topEmotion,
     });
+  }, []);
+
+  // Chart data
+  interface DayData { day: string; sessions: number; messages: number; }
+  interface EmotionData { name: string; value: number; color: string; }
+  const [chartSessions, setChartSessions] = useState<DayData[]>([]);
+  const [chartEmotions, setChartEmotions] = useState<EmotionData[]>([]);
+
+  const EMOTION_COLORS: Record<string, string> = {
+    happy: "#34d399", sad: "#60a5fa", angry: "#f87171", scared: "#fbbf24",
+    surprised: "#a78bfa", neutral: "#94a3b8", excited: "#f472b6", curious: "#2dd4bf",
+    love: "#fb7185", proud: "#818cf8", shy: "#c084fc", frustrated: "#fb923c",
+  };
+
+  const fetchChartData = useCallback(async () => {
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    const [sessionsRes, msgsRes] = await Promise.all([
+      supabase.from("child_sessions").select("started_at, detected_emotions").gte("started_at", weekAgo),
+      supabase.from("session_messages").select("created_at").gte("created_at", weekAgo),
+    ]);
+
+    // Sessions & messages per day
+    const dayMap: Record<string, { sessions: number; messages: number }> = {};
+    const dayNames = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      const key = d.toISOString().slice(0, 10);
+      dayMap[key] = { sessions: 0, messages: 0 };
+    }
+
+    (sessionsRes.data || []).forEach((s: any) => {
+      const key = s.started_at?.slice(0, 10);
+      if (key && dayMap[key]) dayMap[key].sessions++;
+    });
+    (msgsRes.data || []).forEach((m: any) => {
+      const key = m.created_at?.slice(0, 10);
+      if (key && dayMap[key]) dayMap[key].messages++;
+    });
+
+    setChartSessions(Object.entries(dayMap).map(([date, v]) => {
+      const d = new Date(date);
+      return { day: dayNames[d.getDay()], sessions: v.sessions, messages: v.messages };
+    }));
+
+    // Emotions aggregation
+    const emotionCounts: Record<string, number> = {};
+    (sessionsRes.data || []).forEach((s: any) => {
+      (s.detected_emotions || []).forEach((e: string) => {
+        emotionCounts[e] = (emotionCounts[e] || 0) + 1;
+      });
+    });
+
+    const sorted = Object.entries(emotionCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    setChartEmotions(sorted.map(([name, value]) => ({
+      name, value, color: EMOTION_COLORS[name] || "#94a3b8",
+    })));
   }, []);
 
   const fetchCloudUsers = useCallback(async () => {
@@ -751,8 +810,8 @@ const Admin = () => {
   }, []);
 
   useEffect(() => {
-    if (authenticated) { fetchEntries(); fetchCloudStories(); fetchStoreItems(); fetchCloudUsers(); loadInteractions(); fetchRealConversations(); fetchLiveStats(); }
-  }, [authenticated, fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers, fetchLiveStats]);
+    if (authenticated) { fetchEntries(); fetchCloudStories(); fetchStoreItems(); fetchCloudUsers(); loadInteractions(); fetchRealConversations(); fetchLiveStats(); fetchChartData(); }
+  }, [authenticated, fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers, fetchLiveStats, fetchChartData]);
 
   // Auto-refresh live stats every 30s
   useEffect(() => {
@@ -2786,7 +2845,7 @@ const Admin = () => {
             <h1 className="text-xl font-bold text-white tracking-tight">Bobby Admin</h1>
             <p className="text-white/25 text-[11px]">Tableau de bord central</p>
           </div>
-          <button onClick={() => { fetchEntries(); fetchStoreItems(); fetchCloudUsers(); fetchCloudStories(); fetchRealConversations(); fetchLiveStats(); toast.success("Données rafraîchies"); }}
+          <button onClick={() => { fetchEntries(); fetchStoreItems(); fetchCloudUsers(); fetchCloudStories(); fetchRealConversations(); fetchLiveStats(); fetchChartData(); toast.success("Données rafraîchies"); }}
             className="w-9 h-9 rounded-xl bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] transition-all active:scale-95">
             <RefreshCw className="w-4 h-4 text-white/40" />
           </button>
@@ -2852,6 +2911,66 @@ const Admin = () => {
                 return diff < 1 ? "à l'instant" : diff < 60 ? `il y a ${diff}m` : `il y a ${Math.floor(diff / 60)}h`;
               })() : "—"}</span>
             </div>
+          </div>
+        </div>
+
+        {/* ── Charts ── */}
+        <div className="grid grid-cols-1 gap-3">
+          {/* Sessions per day */}
+          <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl p-3 border border-white/[0.06]">
+            <p className="text-[11px] font-bold text-white/60 mb-2">📊 Sessions & Messages (7 jours)</p>
+            {chartSessions.length > 0 ? (
+              <div className="h-[140px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartSessions} barGap={2}>
+                    <XAxis dataKey="day" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis hide />
+                    <Tooltip
+                      contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 11, color: "#fff" }}
+                      labelStyle={{ color: "rgba(255,255,255,0.5)" }}
+                    />
+                    <Bar dataKey="sessions" name="Sessions" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="messages" name="Messages" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="text-[10px] text-white/20 text-center py-6">Aucune donnée cette semaine</p>
+            )}
+            <div className="flex items-center justify-center gap-4 mt-1">
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-purple-500" /><span className="text-[9px] text-white/30">Sessions</span></div>
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-cyan-500" /><span className="text-[9px] text-white/30">Messages</span></div>
+            </div>
+          </div>
+
+          {/* Emotions pie */}
+          <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl p-3 border border-white/[0.06]">
+            <p className="text-[11px] font-bold text-white/60 mb-2">😊 Émotions détectées (7 jours)</p>
+            {chartEmotions.length > 0 ? (
+              <div className="flex items-center gap-3">
+                <div className="h-[120px] w-[120px] shrink-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={chartEmotions} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={50} innerRadius={25} strokeWidth={0}>
+                        {chartEmotions.map((e, i) => <Cell key={i} fill={e.color} />)}
+                      </Pie>
+                      <Tooltip contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 11, color: "#fff" }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex-1 space-y-1.5">
+                  {chartEmotions.map((e, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: e.color }} />
+                      <span className="text-[11px] text-white/60 flex-1">{e.name}</span>
+                      <span className="text-[11px] font-bold text-white/40 tabular-nums">{e.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-[10px] text-white/20 text-center py-6">Aucune émotion détectée</p>
+            )}
           </div>
         </div>
 
