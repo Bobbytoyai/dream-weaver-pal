@@ -46,6 +46,7 @@ interface StoreItem {
   languages: string[];
   last_updated_at: string;
   created_at: string;
+  cover_image_url: string | null;
 }
 
 const CATEGORIES: { id: StoreCategory; emoji: string; label: string; color: string }[] = [
@@ -102,8 +103,10 @@ function ProductDetail({ item, installed, installing, onInstall, onBack }: {
       {/* Hero Card */}
       <div className="bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/15 rounded-[22px] p-5 border-2 border-primary/15">
         <div className="flex items-start gap-4">
-          <div className="w-20 h-20 rounded-[18px] bg-card/80 backdrop-blur flex items-center justify-center text-[44px] shadow-lg border border-border/20 shrink-0">
-            {item.emoji}
+          <div className="w-20 h-20 rounded-[18px] bg-card/80 backdrop-blur flex items-center justify-center text-[44px] shadow-lg border border-border/20 shrink-0 overflow-hidden">
+            {item.cover_image_url ? (
+              <img src={item.cover_image_url} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
+            ) : item.emoji}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
@@ -319,6 +322,7 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
     languages: r.languages ?? ["fr"],
     last_updated_at: r.last_updated_at || r.updated_at,
     created_at: r.created_at,
+    cover_image_url: r.cover_image_url || null,
   });
 
   const fetchData = useCallback(async (retryCount = 0) => {
@@ -485,8 +489,12 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
             {featuredItems.map(item => (
               <button key={item.id}
                 onClick={() => setSelectedItem(item)}
-                className="shrink-0 w-[110px] bg-card/80 backdrop-blur rounded-2xl p-3 text-center border border-border/30 hover:shadow-md transition-all active:scale-95">
-                <span className="text-3xl block mb-1">{item.emoji}</span>
+                className="shrink-0 w-[110px] bg-card/80 backdrop-blur rounded-2xl p-2 text-center border border-border/30 hover:shadow-md transition-all active:scale-95 overflow-hidden">
+                {item.cover_image_url ? (
+                  <img src={item.cover_image_url} alt={item.name} className="w-full h-16 object-cover rounded-xl mb-1" loading="lazy" />
+                ) : (
+                  <span className="text-3xl block mb-1">{item.emoji}</span>
+                )}
                 <p className="text-[10px] font-bold text-foreground leading-tight">{item.name}</p>
                 <p className="text-[8px] text-muted-foreground mt-0.5">{item.age_min}-{item.age_max} ans</p>
               </button>
@@ -540,8 +548,10 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
                 onClick={() => setSelectedItem(item)}
                 className={`w-full bg-card rounded-2xl border border-border/20 hover:border-primary/20 transition-all duration-200 overflow-hidden text-left active:scale-[0.98]`}>
                 <div className="flex items-center gap-3 p-3">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center shrink-0 text-3xl">
-                    {item.emoji}
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center shrink-0 text-3xl overflow-hidden">
+                    {item.cover_image_url ? (
+                      <img src={item.cover_image_url} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
+                    ) : item.emoji}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
