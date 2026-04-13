@@ -178,8 +178,8 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
 
       {/* Preview */}
       <div
-        className="overflow-hidden border-4 border-black relative"
-        style={{ backgroundColor: selectedBg.hex, aspectRatio: "16/9", boxShadow: "6px 6px 0px rgba(0,0,0,0.25)" }}
+        className="retro-card retro-card-tilt-1 overflow-hidden relative"
+        style={{ backgroundColor: selectedBg.hex, aspectRatio: "16/9" }}
       >
         <div className="w-full h-full">
           <HologramFace
@@ -286,7 +286,7 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
           const retroBg = RETRO_COLORS[idx % RETRO_COLORS.length];
 
           return (
-            <div key={section.key} className={`transition-all duration-200 ${isOpen ? "col-span-2" : ""}`}>
+            <div key={section.key} className={`transition-all duration-200 ${isOpen ? "col-span-2" : ""} retro-card-tilt-${(idx % 6) + 1}`}>
               <button
                 onClick={() => setOpenSection(isOpen ? null : section.key)}
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 border-4 border-black transition-all duration-200 active:scale-[0.97]"
