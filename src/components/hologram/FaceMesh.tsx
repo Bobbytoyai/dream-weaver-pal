@@ -547,9 +547,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   return (
     <group ref={rootRef}>
-      {/* Cheeks */}
-      <mesh ref={leftCheekRef} position={[leftCheekX, leftCheekY, 0.005]} material={blushMat} geometry={cheekGeo} rotation={[0, 0, 0.08]} />
-      <mesh ref={rightCheekRef} position={[rightCheekX, rightCheekY, 0.005]} material={blushMat} geometry={cheekGeo} rotation={[0, 0, -0.08]} />
+      {/* Cheeks — behind eyes (z=-0.005) */}
+      <mesh ref={leftCheekRef} position={[leftCheekX, leftCheekY, -0.005]} material={blushMat} geometry={cheekGeo} rotation={[0, 0, 0.08]} />
+      <mesh ref={rightCheekRef} position={[rightCheekX, rightCheekY, -0.005]} material={blushMat} geometry={cheekGeo} rotation={[0, 0, -0.08]} />
 
       {/* Eyes */}
       {renderEye("left", leftEyeRef, leftPupilRef, leftIrisRef, leftEyelidRef, leftHl1Ref, leftHl2Ref, leftEyeX, leftEyeY, hl1Offset, hl2Offset)}
