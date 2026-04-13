@@ -424,7 +424,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
           : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
         const hiddenY = -0.62;
-        const closedY = 0.0;
+        const closedY = 0.03;
         let targetY = hiddenY + easedCover * (closedY - hiddenY);
 
         // Sleep: fully closed with more pronounced upward rebounds
