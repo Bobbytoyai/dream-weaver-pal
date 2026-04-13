@@ -2279,6 +2279,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const renderProfil = () => (
     <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
+      {/* Back button when accessed from Réglages */}
+      {reglagesSection === "profil" && (
+        <button onClick={() => setReglagesSection(null)} className="flex items-center gap-1.5 text-primary text-[13px] font-bold mb-1">
+          <ArrowLeft className="w-4 h-4" /> Retour aux réglages
+        </button>
+      )}
       {/* Avatar + Name + Age — compact hero card */}
       <div className="bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/10 rounded-3xl p-4 border border-primary/10 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         <div className="flex items-center gap-4">
