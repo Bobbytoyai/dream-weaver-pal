@@ -3140,7 +3140,7 @@ const Admin = () => {
         </>
         )}
 
-        <p className="text-[9px] text-white/10 text-center pt-1 pb-4">Bobby Admin v2 · Cloud KB modifiable</p>
+        <p className="text-[9px] text-center pt-1 pb-4" style={{ color: "var(--admin-text-faint)" }}>Bobby Admin v2 · Cloud KB modifiable</p>
         {detailPortal}
       </div>
     </div>
