@@ -9,7 +9,7 @@ import { resetScenario } from "@/lib/scenarioEngine";
 import { trackInterests, getSmartFollowUp, resetInterestTracker } from "./interestTracker";
 import { getLLMReply, clearHistory } from "./llmBrain";
 import { getLocalBrainReply, resetLocalBrain } from "./localBrain";
-import { queryKnowledgeBase } from "./knowledgeQuery";
+import { queryKnowledgeBase, clearConversationContext } from "./knowledgeQuery";
 
 interface BuildBobbyReplyOptions {
   childName: string;
@@ -156,6 +156,7 @@ export function resetBobbyBrainSession() {
   resetInterestTracker();
   clearHistory();
   resetLocalBrain();
+  clearConversationContext();
 }
 
 export async function buildBobbyReply({ childName, childAge, userText = "", pendingNarration, parentSettings }: BuildBobbyReplyOptions): Promise<BobbyBrainReply> {
