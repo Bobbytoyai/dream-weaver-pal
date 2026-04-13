@@ -210,18 +210,15 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const bgKey = bobbyColors?.background || "soft-blue";
   const bgHex = BG_HEX[bgKey] || BG_HEX["soft-blue"];
   const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color(bgHex), transparent: false, opacity: 1.0, depthWrite: true,
+    color: new THREE.Color(bgHex), transparent: true, opacity: 1.0, depthWrite: true,
   }), []);
   
   // Keep eyelid color synced — always a noticeably darker shade of the background
   useEffect(() => {
     const col = new THREE.Color(bgHex);
-    // Darken significantly so eyelids are visible on ALL backgrounds (light & dark)
     const hsl = { h: 0, s: 0, l: 0 };
     col.getHSL(hsl);
-    // Target lightness: 30-45% darker than the background, clamped
     const darkenedL = Math.max(0.15, hsl.l - 0.32);
-    // Boost saturation slightly for richer lid color
     const boostedS = Math.min(1, hsl.s * 1.25 + 0.05);
     col.setHSL(hsl.h, boostedS, darkenedL);
     eyelidMat.color.set(col);
@@ -385,34 +382,34 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(ps);
     if (rightPupilRef.current) rightPupilRef.current.scale.setScalar(ps);
 
-    // Eyelids — smooth curtain that slides down naturally during blinks
+    // Eyelids — fast curtain blink, semi-transparent except sleep
     const blinkClose = 1 - state.eyeOpenness;
     const isSleepingNow = faceState === "sleepy";
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
       if (ref.current) {
-        // Show eyelids as soon as ANY closing begins (threshold near 0)
-        // This creates a smooth, natural curtain effect instead of a flash
         const coverAmount = isSleepingNow
           ? 0.97
           : Math.max(0, Math.min(1, blinkClose));
         
-        if (coverAmount < 0.02) {
+        if (coverAmount < 0.01) {
           ref.current.visible = false;
           return;
         }
         
         ref.current.visible = true;
         
-        // Smooth cubic ease for natural, organic slide
+        // Fast snap blink — steeper ease curve
         const t = coverAmount;
-        const easedCover = t * t * (3 - 2 * t); // smoothstep — gentler than quintic
+        const easedCover = t < 0.5
+          ? 4 * t * t * t
+          : 1 - Math.pow(-2 * t + 2, 3) / 2; // cubic in-out, snappier
         
-        // Slide from fully hidden above to covering the eye
-        const hiddenY = 0.55;
-        const closedY = 0.10;
+        // Slide from fully hidden above to fully covering the eye
+        const hiddenY = 0.58;
+        const closedY = -0.05; // lower = covers entire eye including bottom
         let targetY = hiddenY - easedCover * (hiddenY - closedY);
         
-        // Sleeping: eyelids slowly breathe with gentle flutter
+        // Sleeping: slow breathing + occasional flutter
         if (isSleepingNow) {
           const flutterT = performance.now() * 0.001;
           const breathDrop = Math.sin(flutterT * 0.35) * 0.06;
@@ -422,8 +419,16 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         
         ref.current.position.y = targetY;
         
-        // Slightly squash as it closes for organic feel
-        const squashX = 1 + easedCover * 0.04;
+        // Transparency: semi-transparent during blinks, opaque when sleeping
+        if (isSleepingNow) {
+          eyelidMat.opacity = 1.0;
+        } else {
+          // Slight transparency during fast blinks for a softer look
+          eyelidMat.opacity = 0.55 + easedCover * 0.45;
+        }
+        
+        // Slight squash for organic feel
+        const squashX = 1 + easedCover * 0.06;
         ref.current.scale.set(squashX, 1, 1);
       }
     });
