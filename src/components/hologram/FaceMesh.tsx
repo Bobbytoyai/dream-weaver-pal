@@ -61,7 +61,7 @@ function svgToWorld(sx: number, sy: number): [number, number] {
 function buildEyebrowShape(_archHeight: number = 0.06): THREE.Shape {
   const shape = new THREE.Shape();
   const w = 0.24;   // half width
-  const h = 0.05;   // half height (thicker bar)
+  const h = 0.065;  // half height (thicker)
   const r = 0.015;  // corner radius
 
   shape.moveTo(-w + r, -h);
