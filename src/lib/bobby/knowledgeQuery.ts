@@ -1072,9 +1072,11 @@ function fuzzyMatch(a: string, b: string): number {
   if (a === b) return 1.0;
   const sa = stem(a), sb = stem(b);
   if (sa === sb) return 0.9;
-  // Substring containment (for compound words)
-  if (a.length >= 4 && b.includes(a)) return 0.8;
-  if (b.length >= 4 && a.includes(b)) return 0.8;
+  // Substring containment (for compound words) — require high overlap to avoid false positives
+  // e.g. "continent" should NOT match "content" (only 7/9 = 78% overlap is too low)
+  const longer = Math.max(a.length, b.length);
+  if (a.length >= 4 && b.includes(a) && a.length / longer >= 0.85) return 0.8;
+  if (b.length >= 4 && a.includes(b) && b.length / longer >= 0.85) return 0.8;
   // Prefix match (at least 4 chars shared)
   const minLen = Math.min(a.length, b.length);
   if (minLen >= 4) {
