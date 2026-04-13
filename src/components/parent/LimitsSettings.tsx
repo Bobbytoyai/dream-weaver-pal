@@ -157,13 +157,13 @@ const LimitsSettings = ({ settings, onUpdate, onUpdateNested, todayDuration, onB
             <button key={val} onClick={() => onUpdate("languageLevel", val)}
               className={`p-2.5 text-center transition-all border-4 border-black ${
                 settings.languageLevel === val
-                  ? "bg-white ring-2 ring-foreground/20"
-                  : "bg-white/60 hover:bg-white"
+                  ? "bg-foreground text-background"
+                  : "bg-white text-foreground hover:bg-[var(--retro-yellow)]"
               }`}
               style={{ boxShadow: settings.languageLevel === val ? "4px 4px 0px rgba(0,0,0,0.25)" : "2px 2px 0px rgba(0,0,0,0.15)" }}>
               <span className="text-lg block">{emoji}</span>
-              <span className="text-[10px] font-black block mt-0.5 text-foreground uppercase">{label}</span>
-              <span className="text-[8px] text-foreground/60 font-bold">{desc}</span>
+              <span className={`text-[10px] font-black block mt-0.5 uppercase ${settings.languageLevel === val ? "text-background" : "text-foreground"}`}>{label}</span>
+              <span className={`text-[8px] font-bold ${settings.languageLevel === val ? "text-background/70" : "text-foreground/60"}`}>{desc}</span>
             </button>
           ))}
         </div>
