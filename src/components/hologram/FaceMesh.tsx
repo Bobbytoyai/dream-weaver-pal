@@ -466,16 +466,12 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={pupilRef} geometry={pupilGeo} position={[0, -0.02, 0.02]} material={pupilMat} />
       <mesh position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       <mesh position={[hl2[0], hl2[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} />
-      {/* Eyelid: smooth elliptical curtain */}
+      {/* Eyelid: exact same ellipse as eye white, slides down to cover */}
       <mesh ref={eyelidRef} position={[0, 0.55, 0.044]} material={eyelidMat}>
         <shapeGeometry args={[(() => {
           const s = new THREE.Shape();
-          const rx = 0.42;
-          // Upper half-ellipse (above y=0) + lower half-ellipse (below y=0)
-          // Top dome
-          s.absellipse(0, 0, rx, 0.22, 0, Math.PI, false, 0);
-          // Bottom dome (covers eye when slid down)
-          s.absellipse(0, 0, rx, 0.40, Math.PI, Math.PI * 2, false, 0);
+          // Same shape as eyeWhiteGeo: rx=0.38, ry=0.32
+          s.absellipse(0, 0, 0.38, 0.32, 0, Math.PI * 2, false, 0);
           return s;
         })(), 32]} />
       </mesh>
