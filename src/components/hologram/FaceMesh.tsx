@@ -404,12 +404,11 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
           const s = new THREE.Shape();
           const rx = 0.50;
           const ry = 0.48;
-          // Draw upper half-dome: flat bottom at y=0, dome goes UP
-          // When this descends, the flat edge acts as the eyelid line
-          s.moveTo(-rx, 0);
-          // Arc from left to right going upward (0 to PI)
-          s.absellipse(0, 0, rx, ry, Math.PI, Math.PI * 2, false, 0);
-          s.lineTo(-rx, 0);
+          // Draw dome: flat bottom at y=0, curved part goes UP (positive y)
+          // startAngle=0 (right), endAngle=PI (left), going counterclockwise = upper half
+          s.moveTo(rx, 0);
+          s.absellipse(0, 0, rx, ry, 0, Math.PI, false, 0);
+          s.lineTo(rx, 0);
           return s;
         })(), 32]} />
       </mesh>
