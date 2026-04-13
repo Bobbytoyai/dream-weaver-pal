@@ -424,7 +424,7 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
         <span className="text-4xl">😕</span>
         <p className="text-[14px] text-foreground font-bold">Impossible de charger le Store</p>
         <p className="text-[12px] text-muted-foreground">Vérifie ta connexion et réessaie</p>
-        <button onClick={() => fetchData(0)} className="mt-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-[13px] font-bold active:scale-95 transition-transform">
+        <button onClick={() => fetchData()} className="mt-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-[13px] font-bold active:scale-95 transition-transform">
           🔄 Réessayer
         </button>
       </div>
