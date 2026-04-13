@@ -1819,10 +1819,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       <div className="p-4 space-y-4">
         {/* Search bar */}
         <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input type="text" value={sessionSearch} onChange={e => setSessionSearch(e.target.value)}
             placeholder="Rechercher…"
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-muted text-[13px] text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
+            className="w-full pl-11 pr-4 py-3 rounded-2xl bg-muted text-[15px] font-semibold text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
         </div>
 
         {/* Category cards — 5 on same line */}
