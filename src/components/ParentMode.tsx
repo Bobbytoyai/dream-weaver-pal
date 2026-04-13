@@ -7,7 +7,7 @@ import {
   Mic, BookOpen, Timer, Sparkles, Shield, Camera, Volume2, VolumeX,
   Play, Pause, AlertTriangle, TrendingUp, Trash2, ChevronRight, Gamepad2,
   BarChart3, Calendar, User, Zap, Moon, Sun, Hand, Lock, Search,
-  Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X, CloudUpload,
+  Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X, CloudUpload, LogIn,
   SkipForward, SkipBack, Activity, Bell, ChevronDown, ChevronLeft, Star, Edit3
 } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
