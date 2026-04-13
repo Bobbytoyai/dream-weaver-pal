@@ -1698,7 +1698,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 <div className="flex items-center gap-2.5 mb-4">
                   <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">📖</span></div>
                   <h3 className="text-[16px] font-black text-foreground uppercase">Transcription</h3>
-                  <span className="ml-auto text-[12px] text-muted-foreground font-black bg-muted px-2.5 py-1 border border-black">{sessionMessages.length} msgs</span>
+                  <span className="ml-auto text-[12px] text-foreground/60 font-black bg-white px-2.5 py-1 border-2 border-black">{sessionMessages.length} msgs</span>
                 </div>
                 <div className="max-h-[500px] overflow-y-auto space-y-3 py-1">
                   {sessionMessages.map((msg, i) => {
@@ -1711,25 +1711,24 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                         <div className={`max-w-[82%] relative group ${
                           isActive ? "scale-[1.02]" : ""
                         } transition-transform duration-200`}>
-                          <div className={`rounded-[22px] px-4 py-3 ${
+                          <div className={`px-4 py-3 border-2 border-black ${
                             isChild
-                              ? "bg-gradient-to-br from-muted/80 to-muted/50 rounded-bl-lg"
-                              : "bg-gradient-to-br from-primary/15 to-primary/8 rounded-br-lg"
-                          } ${isActive ? "ring-2 ring-primary/30 shadow-md" : "shadow-sm"}`}>
-                            <p className="text-[14px] text-foreground leading-[1.5] font-medium">{msg.content}</p>
+                              ? "bg-white"
+                              : "bg-[var(--retro-blue)]"
+                          } ${isActive ? "ring-2 ring-foreground/30" : ""}`}
+                            style={{ boxShadow: "2px 2px 0px rgba(0,0,0,0.15)" }}>
+                            <p className="text-[14px] text-foreground leading-[1.5] font-bold">{msg.content}</p>
                           </div>
                           <div className={`flex items-center gap-2 mt-1.5 px-1.5 ${isChild ? "" : "justify-end"}`}>
-                            <span className="text-[11px] text-muted-foreground/70 font-bold">{isChild ? `👦 ${displayName}` : "🤖 Bobby"}</span>
-                            <span className="text-[10px] text-muted-foreground/50 font-medium">{time}</span>
+                            <span className="text-[11px] text-foreground/50 font-black">{isChild ? `👦 ${displayName}` : "🤖 Bobby"}</span>
+                            <span className="text-[10px] text-foreground/40 font-bold">{time}</span>
                             {msg.detected_emotion && (
-                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                                emotionLabels[msg.detected_emotion]?.color || "bg-muted text-muted-foreground"
-                              }`}>
+                              <span className="text-[10px] px-2 py-0.5 border border-black bg-white font-black">
                                 {emotionLabels[msg.detected_emotion]?.emoji}
                               </span>
                             )}
                             <button onClick={() => speakMessage(msg.content)}
-                              className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all">
+                              className="opacity-0 group-hover:opacity-100 w-7 h-7 border border-black flex items-center justify-center text-foreground/60 hover:bg-[var(--retro-yellow)] transition-all">
                               {isTtsSpeaking ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                             </button>
                           </div>
