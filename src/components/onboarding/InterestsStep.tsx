@@ -55,7 +55,7 @@ export default function InterestsStep({ selectedInterests, onSelect, onNext, chi
               }`}
               style={{ animationDelay: `${0.12 + idx * 0.04}s` }}
             >
-              <span className={`text-2xl transition-transform duration-300 ${isSelected ? "scale-125 animate-bounce-slow" : ""}`}>{item.emoji}</span>
+              <span className={`text-2xl transition-transform duration-300 ${isSelected ? "scale-125" : ""}`}>{item.emoji}</span>
               <span className={`font-bold text-sm transition-colors ${isSelected ? "text-foreground" : "text-muted-foreground"}`}>
                 {item.label}
               </span>
