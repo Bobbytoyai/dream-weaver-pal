@@ -756,18 +756,9 @@ const SEMANTIC_FIELDS: Record<string, string[]> = {
   // 🐾 Animaux supplémentaires (non déjà définis)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   animal_general: ["vivant", "sauvage", "domestique", "foret", "ferme", "zoo", "nature", "espece", "biologie"],
-  vache:          ["ferme", "lait", "fromage", "meuh", "herbivore", "pre", "animal", "veau"],
-  cochon:         ["ferme", "boue", "groin", "rose", "animal", "porcelet", "truie"],
-  poule:          ["ferme", "oeuf", "coq", "poussin", "plume", "animal", "caqueter", "poulailler"],
-  mouton:         ["ferme", "laine", "belier", "agneau", "tondre", "animal", "troupeau"],
   ane:            ["ferme", "bruit", "oreille", "tetu", "animal", "porter", "shrek"],
   chevre:         ["ferme", "montagne", "fromage", "corne", "animal", "chevreau", "lait"],
   gorille:        ["afrique", "singe", "fort", "intelligent", "foret", "animal", "famille"],
-  kangourou:      ["australie", "saut", "poche", "bebe", "marsupial", "animal", "boxe"],
-  koala:          ["australie", "eucalyptus", "dormir", "mignon", "arbre", "animal", "marsupial"],
-  cerf:           ["foret", "bois", "bambi", "automne", "majestueux", "animal", "biche"],
-  ecureuil:       ["foret", "noisette", "arbre", "queue", "automne", "animal", "reserve"],
-  herisson:       ["piquant", "jardin", "nocturne", "boule", "insecte", "animal", "proteger"],
   flamant:        ["rose", "patte", "lac", "afrique", "animal", "equilibre", "oiseau"],
   pieuvre:        ["tentacule", "intelligent", "ocean", "encre", "camouflage", "animal", "mer"],
   hippocampe:     ["mer", "cheval", "petit", "male", "bebe", "corail", "animal", "unique"],
