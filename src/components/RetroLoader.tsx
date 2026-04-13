@@ -8,11 +8,6 @@ export default function RetroLoader({ message = "Chargement…" }: { message?: s
       className="min-h-screen flex flex-col items-center justify-center gap-5"
       style={{ backgroundColor: "#FDF6EC" }}
     >
-      {/* Bouncing Bobby */}
-      <span className="text-6xl animate-bounce select-none" aria-hidden>
-        🤖
-      </span>
-
       {/* Pixel progress bar */}
       <div
         className="w-48 h-4 border-[3px] border-black overflow-hidden"
