@@ -9,6 +9,7 @@ import { resetScenario } from "@/lib/scenarioEngine";
 import { trackInterests, getSmartFollowUp, resetInterestTracker } from "./interestTracker";
 import { getLLMReply, clearHistory } from "./llmBrain";
 import { getLocalBrainReply, resetLocalBrain } from "./localBrain";
+import { queryKnowledgeBase } from "./knowledgeQuery";
 
 interface BuildBobbyReplyOptions {
   childName: string;
@@ -192,7 +193,22 @@ export async function buildBobbyReply({ childName, childAge, userText = "", pend
     return { ...libraryReply, text };
   }
 
-  // ─── 2. LLM Brain (Gemini via Lovable AI Gateway) ───
+  // ─── 2. Knowledge Base (installed Store content + learned Q&A) ───
+  if (userText) {
+    try {
+      const kbReply = await queryKnowledgeBase(userText, childAge);
+      if (kbReply && kbReply.confidence >= 0.6) {
+        let text = simplifyForAge(kbReply.text, childAge);
+        text = personalizeWithName(text, childName);
+        text = applyPersonality(text, personality);
+        return { ...kbReply, text };
+      }
+    } catch (e) {
+      console.warn("[BobbyBrain] KB query failed:", e);
+    }
+  }
+
+  // ─── 3. LLM Brain (Gemini via Lovable AI Gateway) ───
   if (userText) {
     try {
       const llmReply = await getLLMReply(childName, childAge, userText, personality);
@@ -205,7 +221,7 @@ export async function buildBobbyReply({ childName, childAge, userText = "", pend
     }
   }
 
-  // ─── 3. Local Brain (intelligent template-based engine) ───
+  // ─── 4. Local Brain (intelligent template-based engine) ───
   if (userText) {
     const localReply = getLocalBrainReply(userText, childName, childAge);
     

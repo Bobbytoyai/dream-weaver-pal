@@ -178,6 +178,68 @@ export type Database = {
         }
         Relationships: []
       }
+      content_data: {
+        Row: {
+          age_max: number
+          age_min: number
+          answer: string
+          body: string
+          content_id: string
+          created_at: string
+          data_type: string
+          emotion: string
+          id: string
+          keywords: string[]
+          metadata: Json
+          priority: number
+          question: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          age_max?: number
+          age_min?: number
+          answer?: string
+          body?: string
+          content_id: string
+          created_at?: string
+          data_type?: string
+          emotion?: string
+          id?: string
+          keywords?: string[]
+          metadata?: Json
+          priority?: number
+          question?: string
+          sort_order?: number
+          title?: string
+        }
+        Update: {
+          age_max?: number
+          age_min?: number
+          answer?: string
+          body?: string
+          content_id?: string
+          created_at?: string
+          data_type?: string
+          emotion?: string
+          id?: string
+          keywords?: string[]
+          metadata?: Json
+          priority?: number
+          question?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_data_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "store_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_analyses: {
         Row: {
           alerts: Json
@@ -294,6 +356,7 @@ export type Database = {
           keywords: string[]
           priority: number
           question: string
+          source_content_id: string | null
           updated_at: string
           usage_count: number
         }
@@ -309,6 +372,7 @@ export type Database = {
           keywords?: string[]
           priority?: number
           question: string
+          source_content_id?: string | null
           updated_at?: string
           usage_count?: number
         }
@@ -324,10 +388,19 @@ export type Database = {
           keywords?: string[]
           priority?: number
           question?: string
+          source_content_id?: string | null
           updated_at?: string
           usage_count?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_base_source_content_id_fkey"
+            columns: ["source_content_id"]
+            isOneToOne: false
+            referencedRelation: "store_content"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       parent_alerts: {
         Row: {
