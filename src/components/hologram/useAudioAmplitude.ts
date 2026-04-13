@@ -57,8 +57,8 @@ export function useAudioAmplitude() {
     if (!contextRef.current) {
       contextRef.current = new AudioContext();
       analyserRef.current = contextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 512; // more frequency resolution
-      analyserRef.current.smoothingTimeConstant = 0.35;
+      analyserRef.current.fftSize = 512;
+      analyserRef.current.smoothingTimeConstant = 0.2; // less smoothing = more responsive lip sync
       const binCount = analyserRef.current.frequencyBinCount;
       freqDataRef.current = new Uint8Array(binCount);
       timeDataRef.current = new Uint8Array(binCount);
