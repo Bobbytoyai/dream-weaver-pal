@@ -77,39 +77,41 @@ function buildEyebrowShape(_archHeight: number = 0.06): THREE.Shape {
   return shape;
 }
 
-// ─── Kawaii Mouth shape builders ──────────────────────────────
-// Single cute smile line (closed) or oval (open) — no double lip issue
+// ─── Mouth shape builder v3 — single unified shape ──────────────────
+// Draws ONE mouth shape that smoothly morphs between:
+//   - closed smile (thin curved line)
+//   - open wide "ahhh" (wide ellipse)
+//   - round "ooh/hoo" (circle)
+//   - shock "O" (tall oval)
+// Parameters: curve (-0.3 to 0.6), width (0-1), openness (0-1), round (0-1)
 
-// Kawaii smile: a single curved line with thickness
-function buildSmileLine(curve: number, width: number): THREE.Shape {
+function buildMouthShape(curve: number, width: number, openness: number, round: number): THREE.Shape {
   const shape = new THREE.Shape();
-  const halfW = 0.18 + width * 0.10;
-  const depth = curve * 0.25; // more curved smile
-  const thickness = 0.045; // thick visible line
-
-  // Top edge of the line (the smile curve)
-  shape.moveTo(-halfW, 0);
-  shape.quadraticCurveTo(0, -depth, halfW, 0);
-  // Bottom edge (slightly below = thickness)
-  shape.quadraticCurveTo(0, -depth - thickness, -halfW, 0);
-
-  return shape;
-}
-
-// Open mouth: cute oval/ellipse that grows with openness
-function buildMouthOpenShape(curve: number, width: number, openness: number, round: number): THREE.Shape {
-  const shape = new THREE.Shape();
-  const halfW = (0.14 + width * 0.08) * (1 - round * 0.2);
-  const halfH = openness * 0.18 + round * 0.12;
-  const smileDrop = curve * 0.08; // offset down for smile context
-
-  // Elliptical open mouth
-  shape.moveTo(-halfW, -smileDrop);
-  shape.quadraticCurveTo(-halfW, -smileDrop - halfH, 0, -smileDrop - halfH);
-  shape.quadraticCurveTo(halfW, -smileDrop - halfH, halfW, -smileDrop);
-  shape.quadraticCurveTo(halfW, -smileDrop + halfH * 0.3, 0, -smileDrop + halfH * 0.2);
-  shape.quadraticCurveTo(-halfW, -smileDrop + halfH * 0.3, -halfW, -smileDrop);
-
+  
+  // Base dimensions
+  const baseHalfW = 0.16 + width * 0.10;
+  // Round narrows width, openness doesn't change width much
+  const halfW = baseHalfW * (1 - round * 0.45);
+  
+  // Height: closed = thin line, open = tall
+  const minThickness = 0.018; // thin line when closed
+  const maxHeight = 0.16;
+  const halfH = minThickness + openness * maxHeight + round * 0.08;
+  
+  // Curve offset (positive = smile down, negative = frown up)
+  const curveOffset = curve * 0.12;
+  
+  // Draw elliptical mouth shape
+  const segments = 32;
+  for (let i = 0; i <= segments; i++) {
+    const angle = (i / segments) * Math.PI * 2;
+    const x = Math.cos(angle) * halfW;
+    const y = Math.sin(angle) * halfH - curveOffset * (1 - openness * 0.5);
+    if (i === 0) shape.moveTo(x, y);
+    else shape.lineTo(x, y);
+  }
+  shape.closePath();
+  
   return shape;
 }
 
