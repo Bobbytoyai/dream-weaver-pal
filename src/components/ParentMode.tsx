@@ -2895,8 +2895,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </p>
         </div>
       </Card>
+      </div>
 
       {/* ⚡ Nouvelles fonctionnalités */}
+      <div className="animate-fadeInUp" style={{ animationDelay: "0.2s" }}>
       <Card title="⚡ Nouvelles fonctionnalités" icon={Zap}>
         <div className="space-y-2.5">
           {[
