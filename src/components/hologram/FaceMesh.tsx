@@ -245,21 +245,21 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   const eyeOutlineGeo = useMemo(() => {
     const shape = new THREE.Shape();
-    shape.absellipse(0, 0, 0.41, 0.35, 0, Math.PI * 2, false, 0);
+    shape.absellipse(0, 0, 0.36, 0.30, 0, Math.PI * 2, false, 0);
     const hole = new THREE.Path();
-    hole.absellipse(0, 0, 0.38, 0.32, 0, Math.PI * 2, false, 0);
+    hole.absellipse(0, 0, 0.33, 0.27, 0, Math.PI * 2, false, 0);
     shape.holes.push(hole);
     return new THREE.ShapeGeometry(shape, 32);
   }, []);
 
   const eyeWhiteGeo = useMemo(() => {
     const shape = new THREE.Shape();
-    shape.absellipse(0, 0, 0.38, 0.32, 0, Math.PI * 2, false, 0);
+    shape.absellipse(0, 0, 0.33, 0.27, 0, Math.PI * 2, false, 0);
     return new THREE.ShapeGeometry(shape, 32);
   }, []);
 
-  const irisOuterGeo = useMemo(() => new THREE.CircleGeometry(0.264, 32), []);
-  const pupilGeo = useMemo(() => new THREE.CircleGeometry(0.17, 32), []);
+  const irisOuterGeo = useMemo(() => new THREE.CircleGeometry(0.22, 32), []);
+  const pupilGeo = useMemo(() => new THREE.CircleGeometry(0.14, 32), []);
   const highlightLargeGeo = useMemo(() => new THREE.CircleGeometry(0.07, 16), []);
   const highlightSmallGeo = useMemo(() => new THREE.CircleGeometry(0.047, 12), []);
 
