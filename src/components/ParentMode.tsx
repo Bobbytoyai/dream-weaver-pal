@@ -3219,7 +3219,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const allTabIds: Tab[] = ["home", ...tabs.map(t => t.id)];
   const prevTabRef = useRef(activeTab);
-  const [animClass, setAnimClass] = useState("");
+  
   const [displayedTab, setDisplayedTab] = useState(activeTab);
 
   useEffect(() => {
