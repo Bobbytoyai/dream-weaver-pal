@@ -2869,17 +2869,17 @@ const Admin = () => {
           const activeKB = entries.filter(e => e.is_active).length;
           return (
             <div className="grid grid-cols-4 gap-2">
-              <div className="col-span-2 bg-gradient-to-r from-purple-500/10 to-blue-500/8 backdrop-blur-xl rounded-2xl p-3 border border-purple-500/10">
-                <p className="text-[28px] font-extrabold text-white tracking-tight leading-none">{total.toLocaleString("fr-FR")}</p>
-                <p className="text-[10px] text-white/35 mt-0.5">contenus total</p>
+              <div className="col-span-2 bg-gradient-to-r from-purple-500/10 to-blue-500/8 rounded-2xl p-3" style={{ border: "1px solid var(--admin-border)" }}>
+                <p className="text-[28px] font-extrabold tracking-tight leading-none" style={{ color: "var(--admin-text)" }}>{total.toLocaleString("fr-FR")}</p>
+                <p className="text-[10px] mt-0.5" style={{ color: "var(--admin-text-muted)" }}>contenus total</p>
               </div>
-              <div className="bg-white/[0.04] rounded-2xl p-3 border border-white/[0.05] text-center">
-                <p className="text-lg font-bold text-emerald-400">{activeKB}</p>
-                <p className="text-[9px] text-white/25">KB actif</p>
+              <div className="rounded-2xl p-3 text-center" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
+                <p className="text-lg font-bold text-emerald-500">{activeKB}</p>
+                <p className="text-[9px]" style={{ color: "var(--admin-text-dim)" }}>KB actif</p>
               </div>
-              <div className="bg-white/[0.04] rounded-2xl p-3 border border-white/[0.05] text-center">
-                <p className="text-lg font-bold text-sky-400">{cloudUsers.length}</p>
-                <p className="text-[9px] text-white/25">users</p>
+              <div className="rounded-2xl p-3 text-center" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
+                <p className="text-lg font-bold text-sky-500">{cloudUsers.length}</p>
+                <p className="text-[9px]" style={{ color: "var(--admin-text-dim)" }}>users</p>
               </div>
             </div>
           );
