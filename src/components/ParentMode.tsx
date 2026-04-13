@@ -240,6 +240,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [settingsSaved, setSettingsSaved] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressInterval = useRef<number | null>(null);
+  const contentScrollRef = useRef<HTMLDivElement>(null);
   const [piperDownloading, setPiperDownloading] = useState(false);
   const [piperProgress, setPiperProgress] = useState<Record<string, number>>({});
   const [piperDone, setPiperDone] = useState(false);
@@ -260,6 +261,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const unreadAlertCount = parentAlerts.filter(a => !a.is_read).length;
 
   useEffect(() => { loadData(); loadAlerts(); loadCloudProfile(); }, []);
+
+  // Scroll to top on tab/section change
+  useEffect(() => {
+    contentScrollRef.current?.scrollTo({ top: 0, behavior: "instant" });
+  }, [activeTab, reglagesSection, selectedSession]);
 
   const loadAlerts = async () => {
     try {
@@ -3517,7 +3523,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       {/* No tab bar — using card grid on home */}
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+      <div ref={contentScrollRef} className="flex-1 overflow-y-auto overflow-x-hidden">
         <div className={`tab-content-wrapper ${animClass}`}>
           {renderTabContent()}
         </div>
