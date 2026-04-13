@@ -217,31 +217,31 @@ function EntryRow({ entry, onToggle, onEdit, onDelete }: {
   entry: KBEntry; onToggle: () => void; onEdit: () => void; onDelete: () => void;
 }) {
   return (
-    <div className={`bg-white/5 backdrop-blur rounded-xl p-4 border transition-all ${entry.is_active ? "border-white/10" : "border-red-500/30 opacity-50"}`}>
+    <div className={`bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border transition-all ${entry.is_active ? "border-white/[0.06]" : "border-red-500/20 opacity-40"}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-            <span className="text-xs text-white/40 font-mono">P{entry.priority}</span>
-            <span className="text-xs text-white/40">{entry.age_min}-{entry.age_max} ans</span>
-            <span className="text-xs text-white/30">🔄 {entry.usage_count || 0}</span>
+            <span className="text-[10px] px-2 py-1 rounded-lg bg-amber-500/15 text-amber-300 font-mono font-bold">P{entry.priority}</span>
+            <span className="text-[10px] text-white/30">{entry.age_min}-{entry.age_max} ans</span>
+            <span className="text-[10px] text-white/20">🔄 {entry.usage_count || 0}</span>
           </div>
-          <p className="text-white font-medium text-sm">{entry.question}</p>
-          <p className="text-white/40 text-xs mt-1 line-clamp-2">{entry.answer}</p>
+          <p className="text-white font-medium text-[13px] leading-relaxed">{entry.question}</p>
+          <p className="text-white/30 text-[12px] mt-1 line-clamp-2">{entry.answer}</p>
           {entry.keywords.length > 0 && (
             <div className="flex gap-1 mt-2 flex-wrap">
               {entry.keywords.slice(0, 6).map((k, i) => (
-                <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/50">{k}</span>
+                <span key={i} className="text-[9px] px-2 py-0.5 rounded-lg bg-white/[0.06] text-white/40">{k}</span>
               ))}
-              {entry.keywords.length > 6 && <span className="text-[10px] text-white/30">+{entry.keywords.length - 6}</span>}
+              {entry.keywords.length > 6 && <span className="text-[10px] text-white/20">+{entry.keywords.length - 6}</span>}
             </div>
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <Switch checked={entry.is_active} onCheckedChange={onToggle} className="scale-75" />
-          <Button size="icon" variant="ghost" onClick={onEdit} className="text-white/40 hover:text-blue-400 w-8 h-8">
+          <Button size="icon" variant="ghost" onClick={onEdit} className="text-white/30 hover:text-blue-400 w-8 h-8">
             <Pencil className="w-3.5 h-3.5" />
           </Button>
-          <Button size="icon" variant="ghost" onClick={onDelete} className="text-white/40 hover:text-red-400 w-8 h-8">
+          <Button size="icon" variant="ghost" onClick={onDelete} className="text-white/30 hover:text-red-400 w-8 h-8">
             <Trash2 className="w-3.5 h-3.5" />
           </Button>
         </div>
