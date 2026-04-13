@@ -2974,8 +2974,150 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   };
 
   // ═══════════════════════════════════════════════════════════════
-  // TAB TRANSITION ANIMATION
+  // RENDER: BOBBY CLOUD
   // ═══════════════════════════════════════════════════════════════
+
+  const renderCloud = () => (
+    <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
+      {/* Hero */}
+      <div className="bg-gradient-to-br from-blue-500/20 via-purple-400/15 to-pink-400/10 rounded-3xl p-6 text-center border border-blue-400/20">
+        <span className="text-5xl block mb-3">☁️</span>
+        <h2 className="text-[20px] font-extrabold text-foreground mb-1">Bobby Cloud</h2>
+        <p className="text-[14px] text-muted-foreground leading-relaxed">
+          Sauvegardez et restaurez les réglages et sessions de Bobby entre appareils.
+        </p>
+      </div>
+
+      {/* Status card */}
+      {cloudProfile ? (
+        <div className="bg-card rounded-3xl p-5 border border-primary/20 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-primary/15 flex items-center justify-center">
+              <span className="text-2xl">✅</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-[16px] font-extrabold text-foreground">Connecté au Cloud</h3>
+              <p className="text-[13px] text-muted-foreground">{formatSyncTime(cloudProfile.last_synced_at)}</p>
+            </div>
+          </div>
+
+          {/* Sync code display */}
+          <div className="bg-muted/40 rounded-2xl p-4">
+            <p className="text-[12px] text-muted-foreground font-bold mb-2">📋 Code de synchronisation</p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 text-[18px] font-mono font-extrabold text-primary tracking-widest text-center py-2 bg-card rounded-xl border border-primary/20">
+                {cloudProfile.sync_code}
+              </code>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(cloudProfile.sync_code);
+                  setCloudCopied(true);
+                  setTimeout(() => setCloudCopied(false), 2000);
+                  toast.success("Code copié !");
+                }}
+                className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-all active:scale-90">
+                {cloudCopied ? <span className="text-lg">✓</span> : <span className="text-lg">📋</span>}
+              </button>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-2 text-center">
+              Utilisez ce code sur un autre appareil pour restaurer votre profil.
+            </p>
+          </div>
+
+          {/* Action buttons */}
+          <div className="grid grid-cols-2 gap-3">
+            <button onClick={handleCloudSave} disabled={cloudLoading}
+              className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-gradient-to-br from-blue-500/15 to-blue-400/5 border border-blue-400/20 hover:border-blue-400/40 transition-all active:scale-95 disabled:opacity-50">
+              {cloudLoading ? <Loader2 className="w-6 h-6 animate-spin text-primary" /> : <CloudUpload className="w-6 h-6 text-primary" />}
+              <span className="text-[13px] font-extrabold text-foreground">Sauvegarder</span>
+              <span className="text-[10px] text-muted-foreground">Envoyer vers le cloud</span>
+            </button>
+            <button onClick={() => {
+              setConfirmDialog({
+                title: "Supprimer le profil Cloud ?",
+                description: "Le code de synchronisation ne fonctionnera plus et les données cloud seront supprimées.",
+                confirmLabel: "Supprimer",
+                variant: "danger",
+                onConfirm: () => { handleCloudDelete(); setConfirmDialog(null); },
+              });
+            }} disabled={cloudLoading}
+              className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-gradient-to-br from-red-500/10 to-red-400/5 border border-destructive/15 hover:border-destructive/30 transition-all active:scale-95 disabled:opacity-50">
+              <Trash2 className="w-6 h-6 text-destructive" />
+              <span className="text-[13px] font-extrabold text-destructive">Dissocier</span>
+              <span className="text-[10px] text-muted-foreground">Supprimer du cloud</span>
+            </button>
+          </div>
+
+          {/* Info */}
+          <div className="bg-muted/30 rounded-2xl p-3">
+            <p className="text-[12px] text-muted-foreground leading-relaxed">
+              ℹ️ La sauvegarde inclut : réglages parents, profil voix, thèmes activés, sujets bloqués et préférences.
+              Les sessions restent dans la base de données et sont accessibles depuis tous les appareils.
+            </p>
+          </div>
+        </div>
+      ) : (
+        /* Not connected — show create + restore */
+        <div className="space-y-4">
+          {/* Create new */}
+          <button onClick={handleCloudSave} disabled={cloudLoading}
+            className="w-full bg-gradient-to-br from-primary/15 to-primary/5 rounded-3xl p-6 border-2 border-primary/20 hover:border-primary/40 transition-all active:scale-[0.98] disabled:opacity-50">
+            <div className="flex items-center gap-4">
+              {cloudLoading ? <Loader2 className="w-10 h-10 animate-spin text-primary" /> : <CloudUpload className="w-10 h-10 text-primary" />}
+              <div className="text-left flex-1">
+                <h3 className="text-[17px] font-extrabold text-foreground">Créer une sauvegarde</h3>
+                <p className="text-[13px] text-muted-foreground mt-1">Générer un code de synchronisation unique</p>
+              </div>
+            </div>
+          </button>
+
+          {/* Restore from code */}
+          <div className="bg-card rounded-3xl p-5 border border-border/20 space-y-4">
+            <div className="flex items-center gap-3">
+              <Download className="w-6 h-6 text-primary" />
+              <h3 className="text-[16px] font-extrabold text-foreground">Restaurer depuis un code</h3>
+            </div>
+            <p className="text-[13px] text-muted-foreground">
+              Entrez le code Bobby Cloud d'un autre appareil pour restaurer vos réglages.
+            </p>
+            <input
+              type="text"
+              value={cloudRestoreCode}
+              onChange={e => setCloudRestoreCode(e.target.value.toUpperCase())}
+              placeholder="BOBBY-XXXX-XXXX"
+              className="w-full text-center text-[18px] font-mono font-extrabold tracking-widest px-4 py-4 rounded-2xl bg-muted text-foreground placeholder:text-muted-foreground/40 outline-none focus:ring-2 focus:ring-primary/30 transition-all border border-border/20"
+            />
+            <button onClick={handleCloudRestore} disabled={cloudLoading || !cloudRestoreCode.trim()}
+              className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-extrabold text-[15px] hover:opacity-90 transition-all active:scale-95 disabled:opacity-40 shadow-md shadow-primary/20">
+              {cloudLoading ? "Restauration…" : "☁️ Restaurer"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Features list */}
+      <div className="bg-card rounded-3xl p-5 border border-border/20">
+        <h3 className="text-[16px] font-extrabold text-foreground mb-3">🌟 Fonctionnalités Bobby Cloud</h3>
+        <div className="space-y-3">
+          {[
+            { emoji: "🔄", title: "Sync multi-appareils", desc: "Partagez le même profil sur tablette, téléphone, ordinateur" },
+            { emoji: "💾", title: "Sauvegarde sécurisée", desc: "Vos réglages sont chiffrés et stockés en toute sécurité" },
+            { emoji: "📊", title: "Sessions centralisées", desc: "Toutes les conversations sont accessibles partout" },
+            { emoji: "⚡", title: "Restauration instantanée", desc: "Un code suffit pour retrouver votre profil Bobby" },
+          ].map(f => (
+            <div key={f.title} className="flex items-start gap-3">
+              <span className="text-xl mt-0.5">{f.emoji}</span>
+              <div>
+                <h4 className="text-[14px] font-bold text-foreground">{f.title}</h4>
+                <p className="text-[12px] text-muted-foreground leading-relaxed">{f.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
 
   const allTabIds: Tab[] = ["home", ...tabs.map(t => t.id)];
   const prevTabRef = useRef(activeTab);
