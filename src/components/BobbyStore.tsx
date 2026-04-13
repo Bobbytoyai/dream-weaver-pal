@@ -322,15 +322,16 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
     languages: r.languages ?? ["fr"],
     last_updated_at: r.last_updated_at || r.updated_at,
     created_at: r.created_at,
-    cover_image_url: r.cover_image_url || null,
+    cover_image_url: (r.cover_image_url && r.cover_image_url.trim() !== "") ? r.cover_image_url : null,
   });
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
     try {
+      const columns = "id,slug,name,emoji,description,detailed_description,category,age_min,age_max,tags,size_label,is_new,is_popular,is_featured,is_premium,install_count,content_items,creator_name,creator_role,version_label,changelog,rating,rating_count,content_count,learning_objectives,skills_developed,duration_estimate,difficulty_level,languages,last_updated_at,created_at,cover_image_url,updated_at";
       const [catalogRes, installedRes] = await Promise.all([
-        supabase.from("store_content").select("*").eq("is_active", true).order("created_at", { ascending: false }),
+        supabase.from("store_content").select(columns).eq("is_active", true).order("is_featured", { ascending: false }).order("created_at", { ascending: false }),
         supabase.from("installed_content").select("content_id").eq("child_name", childName),
       ]);
 
@@ -472,7 +473,7 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
                 onClick={() => setSelectedItem(item)}
                 className="shrink-0 w-[110px] bg-card/80 backdrop-blur rounded-2xl p-2 text-center border border-border/30 hover:shadow-md transition-all active:scale-95 overflow-hidden">
                 {item.cover_image_url ? (
-                  <img src={item.cover_image_url} alt={item.name} className="w-full h-16 object-cover rounded-xl mb-1" loading="lazy" />
+                  <img src={item.cover_image_url} alt={item.name} className="w-full h-16 object-cover rounded-xl mb-1" loading="eager" fetchPriority="high" />
                 ) : (
                   <span className="text-3xl block mb-1">{item.emoji}</span>
                 )}
