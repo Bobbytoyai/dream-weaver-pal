@@ -11,14 +11,18 @@ import { FaceState, useFaceAnimation } from "./useFaceAnimation";
 import { VisemeState } from "./useAudioAmplitude";
 import type { ExpressionCombo } from "@/lib/bobby/expressionLibrary";
 
-// Map bobbyColor IDs to iris + cheek tints
-const COLOR_TINTS: Record<string, { iris: string; cheek: string }> = {
-  blue:   { iris: "#1565C0", cheek: "#90CAF9" },
-  purple: { iris: "#7B1FA2", cheek: "#CE93D8" },
-  green:  { iris: "#1B5E20", cheek: "#A5D6A7" },
-  pink:   { iris: "#C2185B", cheek: "#F48FB1" },
-  orange: { iris: "#E65100", cheek: "#FFAB91" },
-  gold:   { iris: "#F9A825", cheek: "#FFE082" },
+// Map color IDs to hex values for per-element coloring
+const IRIS_HEX: Record<string, string> = {
+  blue: "#4A90D9", green: "#5CB85C", purple: "#9B59B6",
+  amber: "#E6A532", pink: "#E06B8F", teal: "#3DBDB5",
+};
+const CHEEK_HEX: Record<string, string> = {
+  pink: "#F8B4C8", peach: "#FCDAB7", lavender: "#D4B8E8",
+  coral: "#F5A08C", mint: "#B8E6D0", none: "",
+};
+const EYEBROW_HEX: Record<string, string> = {
+  brown: "#8B6914", dark: "#4A3728", blonde: "#D4A54A",
+  grey: "#9E9E9E", blue: "#5B8BD4", pink: "#D47BA0",
 };
 
 interface BobbyColors {
