@@ -15,6 +15,7 @@ const LazySessionsListTab = lazy(() => import("@/components/parent/SessionsListT
 const LazySessionDetailView = lazy(() => import("@/components/parent/SessionDetailView"));
 const LazyReglagesTab = lazy(() => import("@/components/parent/ReglagesTab"));
 const LazyConfidentialiteTab = lazy(() => import("@/components/parent/ConfidentialiteTab"));
+const LazyCloudTab = lazy(() => import("@/components/parent/CloudTab"));
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { getInterestSnapshot, INTEREST_KEYWORDS_PUBLIC } from "@/lib/bobby/interestTracker";
 import { supabase } from "@/integrations/supabase/client";
@@ -916,7 +917,22 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             </Suspense>
           );
         }
-        case "cloud": return renderCloud();
+        case "cloud": return (
+          <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
+            <LazyCloudTab
+              sessions={sessions}
+              analyses={analyses}
+              user={user}
+              cloudProfile={cloudProfile}
+              cloudLoading={cloudLoading}
+              cloudCopied={cloudCopied}
+              setCloudCopied={setCloudCopied}
+              handleCloudSave={handleCloudSave}
+              handleCloudDelete={handleCloudDelete}
+              setConfirmDialog={setConfirmDialog}
+            />
+          </Suspense>
+        );
         case "confidentialite": return (
           <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
             <LazyConfidentialiteTab
