@@ -76,7 +76,7 @@ const STATE_TARGETS: Record<FaceState, Partial<FaceAnimationState>> = {
   },
   confused: {
     eyeOpenness: 1.15, eyebrowHeight: 0.1, eyebrowTilt: 0.25,
-    mouthOpenness: 0, mouthWidth: 0.32, mouthCurve: -0.08, mouthRound: 0, jawDrop: 0,
+    mouthOpenness: 0, mouthWidth: 0.32, mouthCurve: 0.02, mouthRound: 0, jawDrop: 0,
     headTiltX: 0, headTiltZ: 0.18, glowIntensity: 0.35,
     pupilSize: 1.1, cheekGlow: 0.05, irisGlow: 0.45, eyeSparkle: 0.4,
   },
@@ -446,8 +446,8 @@ export function useFaceAnimation(
           // Smile
           mouthQuirkTarget.current = { curve: 0.25 + Math.random() * 0.15, width: 0.08, open: 0.02 };
         } else if (quirkType < 0.55) {
-          // Lip purse / thinking
-          mouthQuirkTarget.current = { curve: -0.08, width: -0.1, open: 0.05 };
+          // Lip purse / thinking — neutral, not sad
+          mouthQuirkTarget.current = { curve: 0.02, width: -0.1, open: 0.05 };
         } else if (quirkType < 0.75) {
           // Slight open (like about to speak)
           mouthQuirkTarget.current = { curve: 0.05, width: 0.02, open: 0.08 + Math.random() * 0.05 };
