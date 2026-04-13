@@ -2838,6 +2838,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       </div>
 
       {/* 🎤 Voix */}
+      <div className="animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
       <Card title="🎤 Voix émotionnelles V2" icon={Mic}>
         <div className="space-y-2">
           {[
