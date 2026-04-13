@@ -1,13 +1,22 @@
-import { useState, useEffect } from "react";
-import VoiceScreen from "@/components/VoiceScreen";
-import StoryMode from "@/components/StoryMode";
-import ContentCategories from "@/components/ContentCategories";
-import ParentMode from "@/components/ParentMode";
+import { useState, useEffect, lazy, Suspense } from "react";
 import type { PendingNarration } from "@/hooks/useConversationStateMachine";
 
 import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/parentSettings";
 import { useChildMemory } from "@/hooks/useChildMemory";
 import { eventBus } from "@/lib/eventBus";
+
+const VoiceScreen = lazy(() => import("@/components/VoiceScreen"));
+const StoryMode = lazy(() => import("@/components/StoryMode"));
+const ContentCategories = lazy(() => import("@/components/ContentCategories"));
+const ParentMode = lazy(() => import("@/components/ParentMode"));
+
+function ModeFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-foreground text-sm animate-pulse font-black uppercase">Chargement…</div>
+    </div>
+  );
+}
 
 const SETTINGS_STORAGE_KEY = "bobby_parent_settings";
 
@@ -80,54 +89,62 @@ const Index = () => {
 
   if (mode === "parent") {
     return (
-      <ParentMode
-        childName={childName}
-        onClose={() => setMode("voice")}
-        parentSettings={parentSettings}
-        onSettingsChange={handleSettingsChange}
-      />
+      <Suspense fallback={<ModeFallback />}>
+        <ParentMode
+          childName={childName}
+          onClose={() => setMode("voice")}
+          parentSettings={parentSettings}
+          onSettingsChange={handleSettingsChange}
+        />
+      </Suspense>
     );
   }
 
   if (mode === "activities") {
     return (
-      <ContentCategories
-        childName={childName}
-        voiceProfile={parentSettings.voiceType || "female"}
-        onSelectCategory={(cat) => {
-          setActiveGameCategory(cat);
-          setMode("voice");
-        }}
-        onBack={() => setMode("voice")}
-      />
+      <Suspense fallback={<ModeFallback />}>
+        <ContentCategories
+          childName={childName}
+          voiceProfile={parentSettings.voiceType || "female"}
+          onSelectCategory={(cat) => {
+            setActiveGameCategory(cat);
+            setMode("voice");
+          }}
+          onBack={() => setMode("voice")}
+        />
+      </Suspense>
     );
   }
 
   if (mode === "story") {
     return (
-      <StoryMode
-        childName={childName}
-        childAge={childAge}
-        onBack={() => setMode("voice")}
-        parentSettings={parentSettings}
-        onParentMode={() => setMode("parent")}
-      />
+      <Suspense fallback={<ModeFallback />}>
+        <StoryMode
+          childName={childName}
+          childAge={childAge}
+          onBack={() => setMode("voice")}
+          parentSettings={parentSettings}
+          onParentMode={() => setMode("parent")}
+        />
+      </Suspense>
     );
   }
 
   return (
-    <VoiceScreen
-      childName={childName}
-      childAge={childAge}
-      onSwitchToChat={() => {}}
-      onSwitchToStory={() => setMode("story")}
-      onParentMode={() => setMode("parent")}
-      parentSettings={parentSettings}
-      activeGameCategory={activeGameCategory}
-      onClearGame={() => setActiveGameCategory(null)}
-      pendingNarration={pendingNarration}
-      onNarrationConsumed={() => setPendingNarration(null)}
-    />
+    <Suspense fallback={<ModeFallback />}>
+      <VoiceScreen
+        childName={childName}
+        childAge={childAge}
+        onSwitchToChat={() => {}}
+        onSwitchToStory={() => setMode("story")}
+        onParentMode={() => setMode("parent")}
+        parentSettings={parentSettings}
+        activeGameCategory={activeGameCategory}
+        onClearGame={() => setActiveGameCategory(null)}
+        pendingNarration={pendingNarration}
+        onNarrationConsumed={() => setPendingNarration(null)}
+      />
+    </Suspense>
   );
 };
 
