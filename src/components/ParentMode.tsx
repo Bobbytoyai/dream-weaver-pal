@@ -2079,8 +2079,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         <div className="flex gap-2 mt-2 overflow-x-auto pb-1 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
           {categoryCards.map(card => (
             <button key={card.key} onClick={card.onClick}
-              className={`flex-shrink-0 w-[60px] aspect-square rounded-2xl bg-gradient-to-br ${card.bg} flex flex-col items-center justify-center gap-1 border-2 transition-all duration-200 active:scale-90 ${
-                card.active ? "border-primary shadow-lg shadow-primary/25 scale-[1.03]" : "border-transparent hover:border-primary/20"
+              className={`relative flex-shrink-0 w-[60px] aspect-square rounded-2xl bg-gradient-to-br ${card.bg} flex flex-col items-center justify-center gap-1 transition-all duration-200 active:scale-90 ${
+                card.active ? "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg shadow-primary/20 scale-[1.03]" : "hover:ring-1 hover:ring-primary/20"
               }`}
               style={{ fontFamily: "'Nunito', sans-serif" }}>
               <span className="text-2xl">{card.emoji}</span>
