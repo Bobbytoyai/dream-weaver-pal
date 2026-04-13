@@ -335,6 +335,13 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // Scroll parent container to top on view change
+  useEffect(() => {
+    const scrollParent = document.querySelector('[data-scroll-container]') as HTMLElement;
+    scrollParent?.scrollTo({ top: 0, behavior: "instant" });
+    window.scrollTo(0, 0);
+  }, [selectedItem, category]);
+
   const toggleInstall = async (contentId: string) => {
     setInstalling(contentId);
     const isInstalled = installedIds.has(contentId);
