@@ -3031,33 +3031,33 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     return (
     <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
       {/* Hero */}
-      <div className="bg-gradient-to-br from-blue-500/20 via-purple-400/15 to-pink-400/10 rounded-3xl p-6 text-center border border-blue-400/20">
+      <div className="retro-card p-6 text-center" style={{ backgroundColor: 'var(--retro-blue)' }}>
         <span className="text-5xl block mb-2">☁️</span>
-        <h2 className="text-[22px] font-extrabold text-foreground mb-1">Bobby Cloud</h2>
-        <p className="text-[13px] text-muted-foreground leading-relaxed">
+        <h2 className="text-[22px] font-black text-gray-800 uppercase">Bobby Cloud</h2>
+        <p className="text-[13px] text-gray-600 leading-relaxed font-bold">
           Sauvegardez, synchronisez et téléchargez tout le contenu de Bobby entre vos appareils.
         </p>
       </div>
 
       {/* ── CONNEXION / SYNC STATUS ── */}
       {cloudProfile ? (
-        <div className="bg-card rounded-3xl p-5 border border-primary/20 space-y-4">
+        <div className="retro-card p-5 space-y-4" style={{ backgroundColor: 'var(--retro-green)' }}>
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-green-500/15 flex items-center justify-center">
+            <div className="w-11 h-11 border-2 border-black bg-white flex items-center justify-center">
               <span className="text-xl">✅</span>
             </div>
             <div className="flex-1">
-              <h3 className="text-[15px] font-extrabold text-foreground">Connecté au Cloud</h3>
-              <p className="text-[12px] text-muted-foreground">{formatSyncTime(cloudProfile.last_synced_at)}</p>
+              <h3 className="text-[15px] font-black text-gray-800 uppercase">Connecté au Cloud</h3>
+              <p className="text-[12px] text-gray-600 font-bold">{formatSyncTime(cloudProfile.last_synced_at)}</p>
             </div>
-            <span className="px-2 py-1 rounded-full bg-green-500/15 text-green-600 text-[10px] font-bold">ACTIF</span>
+            <span className="px-2 py-1 border-2 border-black bg-white text-gray-800 text-[10px] font-black">ACTIF</span>
           </div>
 
           {/* Sync code */}
-          <div className="bg-muted/40 rounded-2xl p-3">
-            <p className="text-[11px] text-muted-foreground font-bold mb-1.5">📋 Code de synchronisation</p>
+          <div className="border-2 border-black bg-white p-3">
+            <p className="text-[11px] text-gray-600 font-black mb-1.5">📋 Code de synchronisation</p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 text-[16px] font-mono font-extrabold text-primary tracking-widest text-center py-2 bg-card rounded-xl border border-primary/20">
+              <code className="flex-1 text-[16px] font-mono font-black text-primary tracking-widest text-center py-2 border-2 border-black bg-white">
                 {cloudProfile.sync_code}
               </code>
               <button
@@ -3067,7 +3067,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   setTimeout(() => setCloudCopied(false), 2000);
                   toast.success("Code copié !");
                 }}
-                className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-all active:scale-90">
+                className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-gray-800 hover:bg-muted transition-all active:scale-90">
                 {cloudCopied ? <span>✓</span> : <span>📋</span>}
               </button>
             </div>
@@ -3080,10 +3080,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               { emoji: "📝", value: totalMessages, label: "Messages" },
               { emoji: "🧠", value: totalAnalyses, label: "Analyses" },
             ].map(s => (
-              <div key={s.label} className="bg-muted/30 rounded-xl p-2.5 text-center">
+              <div key={s.label} className="border-2 border-black bg-white p-2.5 text-center">
                 <span className="text-lg">{s.emoji}</span>
-                <p className="text-[16px] font-extrabold text-foreground">{s.value}</p>
-                <p className="text-[9px] text-muted-foreground font-bold">{s.label}</p>
+                <p className="text-[16px] font-black text-gray-800">{s.value}</p>
+                <p className="text-[9px] text-gray-600 font-bold">{s.label}</p>
               </div>
             ))}
           </div>
@@ -3091,9 +3091,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           {/* Action buttons */}
           <div className="grid grid-cols-2 gap-2">
             <button onClick={handleCloudSave} disabled={cloudLoading}
-              className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-gradient-to-br from-blue-500/15 to-blue-400/5 border border-blue-400/20 hover:border-blue-400/40 transition-all active:scale-95 disabled:opacity-50">
-              {cloudLoading ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : <CloudUpload className="w-5 h-5 text-primary" />}
-              <span className="text-[12px] font-extrabold text-foreground">Sauvegarder</span>
+              className="flex flex-col items-center gap-1.5 p-3 border-4 border-black bg-white hover:bg-muted transition-all active:scale-95 disabled:opacity-50">
+              {cloudLoading ? <Loader2 className="w-5 h-5 animate-spin text-gray-800" /> : <CloudUpload className="w-5 h-5 text-gray-800" />}
+              <span className="text-[12px] font-black text-gray-800 uppercase">Sauvegarder</span>
             </button>
             <button onClick={() => {
               setConfirmDialog({
@@ -3104,9 +3104,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 onConfirm: () => { handleCloudDelete(); setConfirmDialog(null); },
               });
             }} disabled={cloudLoading}
-              className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-gradient-to-br from-red-500/10 to-red-400/5 border border-destructive/15 hover:border-destructive/30 transition-all active:scale-95 disabled:opacity-50">
-              <Trash2 className="w-5 h-5 text-destructive" />
-              <span className="text-[12px] font-extrabold text-destructive">Dissocier</span>
+              className="flex flex-col items-center gap-1.5 p-3 border-4 border-black hover:bg-muted transition-all active:scale-95 disabled:opacity-50" style={{ backgroundColor: 'var(--retro-red)' }}>
+              <Trash2 className="w-5 h-5 text-gray-800" />
+              <span className="text-[12px] font-black text-gray-800 uppercase">Dissocier</span>
             </button>
           </div>
         </div>
