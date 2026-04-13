@@ -2783,8 +2783,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     // ── Sub-section: Données ──
     if (confSection === "donnees") return (
       <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-        <button onClick={() => setConfSection(null)} className="flex items-center gap-2 text-primary text-[13px] font-extrabold mb-1" style={{ fontFamily: "'Nunito', sans-serif" }}>
-          <ChevronLeft className="w-4 h-4" /> Confidentialité
+        <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
+          <ChevronLeft className="w-4 h-4" /> CONFIDENTIALITÉ
         </button>
         <Card title="Collecte de données" icon={Eye}>
           <div className="space-y-1">
@@ -2799,13 +2799,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         <Card title="Données stockées" icon={BarChart3}>
           <div className="grid grid-cols-2 gap-2">
             {dataCategories.map(cat => (
-              <div key={cat.id} className="p-3 rounded-xl bg-muted/50">
+              <div key={cat.id} className="p-3 border-2 border-black bg-white">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-lg">{cat.emoji}</span>
-                  <span className="text-[11px] font-mono font-bold text-primary bg-primary/8 px-2 py-0.5 rounded-full">{cat.count}</span>
+                  <span className="text-[11px] font-mono font-black text-foreground border-2 border-black px-2 py-0.5 bg-[var(--retro-yellow)]">{cat.count}</span>
                 </div>
-                <h4 className="text-[12px] font-semibold text-foreground">{cat.label}</h4>
-                <p className="text-[9px] text-muted-foreground">{cat.desc}</p>
+                <h4 className="text-[12px] font-black text-foreground uppercase">{cat.label}</h4>
+                <p className="text-[9px] text-foreground/60 font-bold">{cat.desc}</p>
               </div>
             ))}
           </div>
@@ -2819,9 +2819,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               ["forever", "♾️", "Indéfini"],
             ] as const).map(([val, emoji, label]) => (
               <button key={val} onClick={() => updateSetting("dataRetention", val)}
-                className={`p-3 rounded-xl text-center transition-all ${settings.dataRetention === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"}`}>
+                className={`p-3 text-center transition-all border-2 border-black ${settings.dataRetention === val ? "bg-[var(--retro-green)] ring-2 ring-foreground/20" : "bg-white hover:bg-[var(--retro-yellow)]"}`}>
                 <span className="text-xl block mb-1">{emoji}</span>
-                <span className={`text-[11px] font-semibold ${settings.dataRetention === val ? "text-primary" : "text-foreground"}`}>{label}</span>
+                <span className={`text-[11px] font-black ${settings.dataRetention === val ? "text-foreground" : "text-foreground/70"} uppercase`}>{label}</span>
               </button>
             ))}
           </div>
@@ -2849,13 +2849,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               }},
             ].map(item => (
               <button key={item.label} onClick={item.action}
-                className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-destructive/5 transition-all text-left">
+                className="w-full flex items-center gap-3 p-3 border-2 border-black bg-white hover:bg-[var(--retro-red)] transition-all text-left">
                 <span className="text-lg">{item.emoji}</span>
                 <div className="flex-1">
-                  <h4 className="text-[12px] font-semibold text-foreground">{item.label}</h4>
-                  <p className="text-[9px] text-muted-foreground">{item.desc}</p>
+                  <h4 className="text-[12px] font-black text-foreground uppercase">{item.label}</h4>
+                  <p className="text-[9px] text-foreground/60 font-bold">{item.desc}</p>
                 </div>
-                <Trash2 className="w-4 h-4 text-destructive" />
+                <Trash2 className="w-4 h-4 text-foreground" />
               </button>
             ))}
           </div>
