@@ -942,47 +942,47 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     const hasAnalysis = recentAnalyses.length > 0;
 
     return (
-    <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
+    <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
 
       {/* ═══ 1. KPI HERO — 2x2 colorful square cards ═══ */}
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-2 gap-3">
         {[
-          { value: totalSessions, label: "Sessions", emoji: "💬", gradient: "from-blue-400/20 to-blue-300/5" },
-          { value: totalMessages, label: "Messages", emoji: "📝", gradient: "from-emerald-400/20 to-emerald-300/5" },
-          { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", gradient: "from-purple-400/20 to-purple-300/5" },
-          { value: todaySessions.length, label: "Aujourd'hui", emoji: "📅", gradient: "from-amber-400/20 to-amber-300/5" },
+          { value: totalSessions, label: "Sessions", emoji: "💬", gradient: "from-blue-500/25 to-blue-400/10", border: "border-blue-400/20" },
+          { value: totalMessages, label: "Messages", emoji: "📝", gradient: "from-emerald-500/25 to-emerald-400/10", border: "border-emerald-400/20" },
+          { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", gradient: "from-purple-500/25 to-purple-400/10", border: "border-purple-400/20" },
+          { value: todaySessions.length, label: "Aujourd'hui", emoji: "📅", gradient: "from-amber-500/25 to-amber-400/10", border: "border-amber-400/20" },
         ].map((kpi) => (
-          <div key={kpi.label} className={`bg-gradient-to-br ${kpi.gradient} rounded-2xl p-3 border border-border/20 text-center`}>
-            <span className="text-2xl block mb-1">{kpi.emoji}</span>
-            <p className="text-xl font-extrabold text-foreground">{kpi.value}</p>
-            <p className="text-[10px] text-muted-foreground font-bold mt-0.5">{kpi.label}</p>
+          <div key={kpi.label} className={`bg-gradient-to-br ${kpi.gradient} rounded-3xl p-4 border ${kpi.border} text-center`}>
+            <span className="text-3xl block mb-1">{kpi.emoji}</span>
+            <p className="text-2xl font-extrabold text-foreground">{kpi.value}</p>
+            <p className="text-[13px] text-muted-foreground font-bold mt-1">{kpi.label}</p>
           </div>
         ))}
       </div>
 
       {/* ═══ 2. RÉSUMÉ DU JOUR ═══ */}
       {dailySummary && (
-        <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl p-3 border border-primary/15">
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-lg">📋</span>
-            <h3 className="text-[14px] font-extrabold text-foreground">Résumé du jour</h3>
+        <div className="bg-gradient-to-br from-primary/15 to-primary/5 rounded-3xl p-5 border border-primary/20">
+          <div className="flex items-center gap-2.5 mb-2">
+            <span className="text-2xl">📋</span>
+            <h3 className="text-[17px] font-extrabold text-foreground">Résumé du jour</h3>
           </div>
-          <p className="text-[12px] text-foreground/80 leading-relaxed">{dailySummary}</p>
+          <p className="text-[15px] text-foreground/80 leading-relaxed">{dailySummary}</p>
         </div>
       )}
 
       {/* ═══ 3. RECOMMANDATIONS ═══ */}
       {parentRecommendations.length > 0 && (
-        <div className="bg-card rounded-2xl p-3 border border-border/20">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-lg">✨</span>
-            <h3 className="text-[14px] font-extrabold text-foreground">Recommandations</h3>
+        <div className="bg-card rounded-3xl p-5 border border-border/20">
+          <div className="flex items-center gap-2.5 mb-3">
+            <span className="text-2xl">✨</span>
+            <h3 className="text-[17px] font-extrabold text-foreground">Recommandations</h3>
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {parentRecommendations.map((rec, i) => (
-              <div key={i} className="flex items-start gap-2 p-2 rounded-xl bg-primary/5">
-                <span className="text-base mt-0.5">{rec.emoji}</span>
-                <p className="text-[12px] text-foreground/80 leading-relaxed">{rec.text}</p>
+              <div key={i} className="flex items-start gap-3 p-3 rounded-2xl bg-gradient-to-r from-primary/8 to-accent/5">
+                <span className="text-xl mt-0.5">{rec.emoji}</span>
+                <p className="text-[14px] text-foreground/80 leading-relaxed">{rec.text}</p>
               </div>
             ))}
           </div>
