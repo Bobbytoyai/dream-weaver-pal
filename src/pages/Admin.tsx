@@ -174,7 +174,8 @@ function DashCard({ label, emoji, count, desc, color, bgColor, onClick, badge }:
 }) {
   return (
     <button onClick={onClick}
-      className="bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-2xl p-3 border border-white/[0.06] hover:border-white/[0.12] transition-all duration-200 text-left flex items-center gap-3 group active:scale-[0.98] hover:shadow-lg hover:shadow-black/20 w-full"
+      className="rounded-2xl p-3 transition-all duration-200 text-left flex items-center gap-3 group active:scale-[0.98] w-full"
+      style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}
     >
       <div className={`w-10 h-10 shrink-0 rounded-xl ${bgColor} flex items-center justify-center`}>
         <span className="text-xl">{emoji}</span>
@@ -184,12 +185,12 @@ function DashCard({ label, emoji, count, desc, color, bgColor, onClick, badge }:
           <h3 className={`text-[13px] font-bold ${color} truncate`}>{label}</h3>
           {badge && <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold shrink-0">{badge}</span>}
         </div>
-        <p className="text-[10px] text-white/25 truncate leading-tight">{desc}</p>
+        <p className="text-[10px] truncate leading-tight" style={{ color: "var(--admin-text-dim)" }}>{desc}</p>
       </div>
       <div className="text-right shrink-0">
-        <p className="text-[18px] font-bold text-white tabular-nums">{count}</p>
+        <p className="text-[18px] font-bold tabular-nums" style={{ color: "var(--admin-text)" }}>{count}</p>
       </div>
-      <ChevronRight className="w-3.5 h-3.5 text-white/15 shrink-0 group-hover:text-white/30 transition-colors" />
+      <ChevronRight className="w-3.5 h-3.5 shrink-0 transition-colors" style={{ color: "var(--admin-text-faint)" }} />
     </button>
   );
 }
