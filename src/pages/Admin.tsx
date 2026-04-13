@@ -167,25 +167,28 @@ const TOP_SECTIONS_CONFIG: {
 // SUB-COMPONENTS
 // ═══════════════════════════════════════════════════════════════════
 
-function SquareCard({ label, emoji, count, desc, color, bgColor, onClick }: {
+function DashCard({ label, emoji, count, desc, color, bgColor, onClick, badge }: {
   label: string; emoji: string; count: string | number; desc: string;
-  color: string; bgColor: string; onClick: () => void;
+  color: string; bgColor: string; onClick: () => void; badge?: string;
 }) {
   return (
     <button onClick={onClick}
-      className="bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300 text-left flex flex-col justify-between group active:scale-[0.97] hover:shadow-lg hover:shadow-black/20"
-      style={{ aspectRatio: "1" }}
+      className="bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-2xl p-3 border border-white/[0.06] hover:border-white/[0.12] transition-all duration-200 text-left flex items-center gap-3 group active:scale-[0.98] hover:shadow-lg hover:shadow-black/20 w-full"
     >
-      <div className="flex items-start justify-between">
-        <div className={`w-11 h-11 rounded-2xl ${bgColor} flex items-center justify-center`}>
-          <span className="text-2xl">{emoji}</span>
+      <div className={`w-10 h-10 shrink-0 rounded-xl ${bgColor} flex items-center justify-center`}>
+        <span className="text-xl">{emoji}</span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <h3 className={`text-[13px] font-bold ${color} truncate`}>{label}</h3>
+          {badge && <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold shrink-0">{badge}</span>}
         </div>
+        <p className="text-[10px] text-white/25 truncate leading-tight">{desc}</p>
       </div>
-      <div>
-        <p className="text-[22px] font-bold text-white tracking-tight">{count}</p>
-        <h3 className={`text-[13px] font-semibold ${color} mt-0.5`}>{label}</h3>
-        <p className="text-[10px] text-white/30 mt-0.5 line-clamp-2 leading-tight">{desc}</p>
+      <div className="text-right shrink-0">
+        <p className="text-[18px] font-bold text-white tabular-nums">{count}</p>
       </div>
+      <ChevronRight className="w-3.5 h-3.5 text-white/15 shrink-0 group-hover:text-white/30 transition-colors" />
     </button>
   );
 }
@@ -2723,57 +2726,66 @@ const Admin = () => {
   // ═══════════════════════════════════════════════════════════════════
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-5">
-        {/* ── Header — iOS large title style ── */}
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate("/")} className="w-10 h-10 rounded-2xl bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] transition-all active:scale-95">
-            <ArrowLeft className="w-5 h-5 text-white/60" />
+      <div className="max-w-4xl mx-auto px-4 py-5 space-y-4">
+        {/* ── Header — compact ── */}
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate("/")} className="w-9 h-9 rounded-xl bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] transition-all active:scale-95">
+            <ArrowLeft className="w-4 h-4 text-white/60" />
           </button>
-          <div className="flex-1">
-            <h1 className="text-[28px] font-bold text-white tracking-tight">Cerveau Bobby</h1>
-            <p className="text-white/30 text-[13px]">Base opérationnelle</p>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-bold text-white tracking-tight">Bobby Admin</h1>
+            <p className="text-white/25 text-[11px]">Tableau de bord central</p>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-            <Brain className="w-6 h-6 text-purple-400" />
-          </div>
+          <button onClick={() => { fetchEntries(); fetchStoreItems(); fetchCloudUsers(); fetchCloudStories(); fetchRealConversations(); toast.success("Données rafraîchies"); }}
+            className="w-9 h-9 rounded-xl bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] transition-all active:scale-95">
+            <RefreshCw className="w-4 h-4 text-white/40" />
+          </button>
         </div>
 
-        {/* ── Hero counter ── */}
+        {/* ── Hero stats row ── */}
         {(() => {
           const intCount = typeof sectionCounts.interactions === "number" ? sectionCounts.interactions : 0;
           const total = intCount + BOBBY_MULTI_RESPONSES.length + QA_DATABASE.length + BLAGUES.length + HISTOIRES.length + CHANSONS.length + (sectionCounts.jeux as number) + entries.length;
+          const activeKB = entries.filter(e => e.is_active).length;
           return (
-            <div className="bg-gradient-to-r from-purple-500/10 via-blue-500/8 to-cyan-500/10 backdrop-blur-xl rounded-[20px] p-5 border border-purple-500/10">
-              <p className="text-[36px] font-extrabold text-white tracking-tight">{total.toLocaleString("fr-FR")}</p>
-              <p className="text-[13px] text-white/40 -mt-0.5">contenus dans le cerveau</p>
+            <div className="grid grid-cols-4 gap-2">
+              <div className="col-span-2 bg-gradient-to-r from-purple-500/10 to-blue-500/8 backdrop-blur-xl rounded-2xl p-3 border border-purple-500/10">
+                <p className="text-[28px] font-extrabold text-white tracking-tight leading-none">{total.toLocaleString("fr-FR")}</p>
+                <p className="text-[10px] text-white/35 mt-0.5">contenus total</p>
+              </div>
+              <div className="bg-white/[0.04] rounded-2xl p-3 border border-white/[0.05] text-center">
+                <p className="text-lg font-bold text-emerald-400">{activeKB}</p>
+                <p className="text-[9px] text-white/25">KB actif</p>
+              </div>
+              <div className="bg-white/[0.04] rounded-2xl p-3 border border-white/[0.05] text-center">
+                <p className="text-lg font-bold text-sky-400">{cloudUsers.length}</p>
+                <p className="text-[9px] text-white/25">users</p>
+              </div>
             </div>
           );
         })()}
 
-        {/* ── Stats pills ── */}
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
-          {[
-            { label: "Interactions", count: sectionCounts.interactions, color: "text-cyan-400" },
-            { label: "Multi-Rép.", count: BOBBY_MULTI_RESPONSES.length, color: "text-orange-400" },
-            { label: "QA", count: QA_DATABASE.length, color: "text-amber-400" },
-            { label: "Blagues", count: BLAGUES.length, color: "text-green-400" },
-            { label: "Histoires", count: HISTOIRES.length, color: "text-purple-400" },
-            { label: "Chansons", count: CHANSONS.length, color: "text-rose-400" },
-            { label: "Jeux", count: sectionCounts.jeux, color: "text-blue-400" },
-            { label: "Cloud", count: entries.length, color: "text-sky-400" },
-          ].map(stat => (
-            <div key={stat.label} className="flex-shrink-0 bg-white/[0.04] rounded-2xl px-4 py-2.5 border border-white/[0.05] text-center min-w-[72px]">
-              <p className={`text-[15px] font-bold ${stat.color}`}>{stat.count}</p>
-              <p className="text-[9px] text-white/30 font-medium">{stat.label}</p>
-            </div>
-          ))}
+        {/* ── Quick actions ── */}
+        <div className="flex gap-2">
+          <button onClick={() => { setTopSection("cloud"); setCloudSection(null); setSearch(""); }}
+            className="flex-1 flex items-center justify-center gap-1.5 bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 rounded-xl py-2.5 text-[11px] font-bold transition-all active:scale-95">
+            <Plus className="w-3.5 h-3.5" /> Ajouter KB
+          </button>
+          <button onClick={() => { setTopSection("autolearn"); setSearch(""); }}
+            className="flex-1 flex items-center justify-center gap-1.5 bg-lime-500/15 hover:bg-lime-500/25 text-lime-300 rounded-xl py-2.5 text-[11px] font-bold transition-all active:scale-95">
+            <Microscope className="w-3.5 h-3.5" /> Auto-Learn
+          </button>
+          <button onClick={() => { setTopSection("store"); setSearch(""); }}
+            className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 rounded-xl py-2.5 text-[11px] font-bold transition-all active:scale-95">
+            <Star className="w-3.5 h-3.5" /> Store
+          </button>
         </div>
 
-        {/* ── Global Search ── */}
+        {/* ── Search ── */}
         <div className="relative">
-          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-white/25" />
           <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher dans tout le cerveau…"
-            className="bg-white/[0.04] border-white/[0.06] text-white pl-11 h-12 rounded-2xl placeholder:text-white/25 focus:border-purple-500/30 focus:ring-purple-500/10" />
+            className="bg-white/[0.04] border-white/[0.06] text-white pl-10 h-10 rounded-xl placeholder:text-white/20 focus:border-purple-500/30 focus:ring-purple-500/10 text-[13px]" />
           {search.trim() && (
             <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 text-xs">✕</button>
           )}
@@ -2785,115 +2797,64 @@ const Admin = () => {
           const kbResults = entries.filter(e => e.question.toLowerCase().includes(q) || e.answer.toLowerCase().includes(q) || e.keywords.some(k => k.toLowerCase().includes(q))).slice(0, 8);
           const qaResults = QA_DATABASE.filter(e => e.triggers.some(t => t.toLowerCase().includes(q)) || e.responses.some(r => r.toLowerCase().includes(q))).slice(0, 8);
           const blagueResults = BLAGUES.filter(b => b.question.toLowerCase().includes(q) || b.reponse.toLowerCase().includes(q)).slice(0, 8);
-          const storyResults = [...HISTOIRES.map(h => ({ ...h, source: "local" as const })), ...cloudStories.map(s => ({ id: s.id, titre: s.title, theme: s.theme, texte: s.full_text || s.template_text, source: "cloud" as const }))].filter(s => s.titre.toLowerCase().includes(q) || s.texte?.toLowerCase().includes(q)).slice(0, 8);
-          const chansonResults = CHANSONS.filter(c => c.titre.toLowerCase().includes(q) || c.description.toLowerCase().includes(q)).slice(0, 8);
           const interactionResults = (interactions || []).filter(i => i.child_input.toLowerCase().includes(q) || i.ai_response.toLowerCase().includes(q)).slice(0, 8);
-          const multiResults = BOBBY_MULTI_RESPONSES.filter(e => e.input.toLowerCase().includes(q) || e.responses.some(r => r.text.toLowerCase().includes(q))).slice(0, 8);
-          const total = kbResults.length + qaResults.length + blagueResults.length + storyResults.length + chansonResults.length + interactionResults.length + multiResults.length;
+          const total = kbResults.length + qaResults.length + blagueResults.length + interactionResults.length;
 
           if (total === 0) return (
-            <div className="text-center py-10">
-              <span className="text-3xl block mb-2">🔍</span>
-              <p className="text-white/30 text-sm">Aucun résultat pour « {search} »</p>
+            <div className="text-center py-8">
+              <span className="text-2xl block mb-1">🔍</span>
+              <p className="text-white/25 text-xs">Aucun résultat pour « {search} »</p>
             </div>
           );
 
           return (
-            <div className="space-y-4">
-              <p className="text-[11px] text-white/30">{total}+ résultats pour « {search} »</p>
-
+            <div className="space-y-3">
+              <p className="text-[10px] text-white/25">{total}+ résultats</p>
               {kbResults.length > 0 && (
                 <div>
-                  <h3 className="text-[11px] font-semibold text-sky-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">☁️ Cloud KB ({kbResults.length})</h3>
-                  <div className="space-y-1.5">
+                  <h3 className="text-[10px] font-bold text-sky-400 mb-1.5 uppercase tracking-wider">☁️ Cloud KB ({kbResults.length})</h3>
+                  <div className="space-y-1">
                     {kbResults.map(e => (
-                      <div key={e.id} onClick={() => openKBDetail(e)} className="bg-white/[0.04] rounded-[14px] p-3 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all">
-                        <p className="text-[12px] text-white/80 font-medium">{e.question}</p>
-                        <p className="text-[11px] text-white/30 mt-0.5 line-clamp-1">{e.answer}</p>
+                      <div key={e.id} onClick={() => openKBDetail(e)} className="bg-white/[0.04] rounded-xl p-2.5 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all">
+                        <p className="text-[11px] text-white/80 font-medium truncate">{e.question}</p>
+                        <p className="text-[10px] text-white/25 mt-0.5 truncate">{e.answer}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-
               {interactionResults.length > 0 && (
                 <div>
-                  <h3 className="text-[11px] font-semibold text-cyan-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">🧠 Interactions ({interactionResults.length})</h3>
-                  <div className="space-y-1.5">
+                  <h3 className="text-[10px] font-bold text-cyan-400 mb-1.5 uppercase tracking-wider">🧠 Interactions ({interactionResults.length})</h3>
+                  <div className="space-y-1">
                     {interactionResults.map((i, idx) => (
-                      <div key={idx} onClick={() => openInteractionDetail(i)} className="bg-white/[0.04] rounded-[14px] p-3 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all">
-                        <p className="text-[12px] text-white/80">👦 {i.child_input}</p>
-                        <p className="text-[11px] text-white/30 mt-0.5 line-clamp-1">🤖 {i.ai_response}</p>
+                      <div key={idx} onClick={() => openInteractionDetail(i)} className="bg-white/[0.04] rounded-xl p-2.5 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all">
+                        <p className="text-[11px] text-white/80 truncate">👦 {i.child_input}</p>
+                        <p className="text-[10px] text-white/25 mt-0.5 truncate">🤖 {i.ai_response}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-
               {qaResults.length > 0 && (
                 <div>
-                  <h3 className="text-[11px] font-semibold text-amber-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">❓ QA ({qaResults.length})</h3>
-                  <div className="space-y-1.5">
+                  <h3 className="text-[10px] font-bold text-amber-400 mb-1.5 uppercase tracking-wider">❓ QA ({qaResults.length})</h3>
+                  <div className="space-y-1">
                     {qaResults.map((e, idx) => (
-                      <div key={idx} onClick={() => openQADetail(e)} className="bg-white/[0.04] rounded-[14px] p-3 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all">
-                        <p className="text-[12px] text-white/80">🎯 {e.triggers.slice(0, 3).join(" • ")}</p>
-                        <p className="text-[11px] text-white/30 mt-0.5 line-clamp-1">🤖 {e.responses[0]}</p>
+                      <div key={idx} onClick={() => openQADetail(e)} className="bg-white/[0.04] rounded-xl p-2.5 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all">
+                        <p className="text-[11px] text-white/80 truncate">🎯 {e.triggers.slice(0, 2).join(" • ")}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-
               {blagueResults.length > 0 && (
                 <div>
-                  <h3 className="text-[11px] font-semibold text-green-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">😂 Blagues ({blagueResults.length})</h3>
-                  <div className="space-y-1.5">
+                  <h3 className="text-[10px] font-bold text-green-400 mb-1.5 uppercase tracking-wider">😂 Blagues ({blagueResults.length})</h3>
+                  <div className="space-y-1">
                     {blagueResults.map((b, idx) => (
-                      <div key={idx} onClick={() => openBlagueDetail(b, idx)} className="bg-white/[0.04] rounded-[14px] p-3 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all">
-                        <p className="text-[12px] text-white/80">{b.question}</p>
-                        <p className="text-[11px] text-white/30 mt-0.5">→ {b.reponse}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {storyResults.length > 0 && (
-                <div>
-                  <h3 className="text-[11px] font-semibold text-purple-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">📖 Histoires ({storyResults.length})</h3>
-                  <div className="space-y-1.5">
-                    {storyResults.map((s, idx) => (
-                      <div key={idx} className="bg-white/[0.04] rounded-[14px] p-3 border border-white/[0.06]">
-                        <p className="text-[12px] text-white/80 font-medium">{s.titre}</p>
-                        <p className="text-[11px] text-white/30 mt-0.5">🎭 {s.theme} • {s.source === "cloud" ? "☁️" : "📦"}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {chansonResults.length > 0 && (
-                <div>
-                  <h3 className="text-[11px] font-semibold text-rose-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">🎵 Chansons ({chansonResults.length})</h3>
-                  <div className="space-y-1.5">
-                    {chansonResults.map(c => (
-                      <div key={c.id} className="bg-white/[0.04] rounded-[14px] p-3 border border-white/[0.06]">
-                        <p className="text-[12px] text-white/80 font-medium">{c.titre}</p>
-                        <p className="text-[11px] text-white/30 mt-0.5">{c.description.slice(0, 60)}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {multiResults.length > 0 && (
-                <div>
-                  <h3 className="text-[11px] font-semibold text-orange-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">⚡ Multi-Réponses ({multiResults.length})</h3>
-                  <div className="space-y-1.5">
-                    {multiResults.map((e, idx) => (
-                      <div key={idx} className="bg-white/[0.04] rounded-[14px] p-3 border border-white/[0.06]">
-                        <p className="text-[12px] text-white/80">👦 {e.input}</p>
-                        <p className="text-[11px] text-white/30 mt-0.5 line-clamp-1">🤖 {e.responses[0]?.text}</p>
+                      <div key={idx} onClick={() => openBlagueDetail(b, idx)} className="bg-white/[0.04] rounded-xl p-2.5 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all">
+                        <p className="text-[11px] text-white/80 truncate">{b.question}</p>
                       </div>
                     ))}
                   </div>
@@ -2903,28 +2864,70 @@ const Admin = () => {
           );
         })() : (
         <>
-        {/* ── Main grid — Apple-style cards ── */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {TOP_SECTIONS_CONFIG.map(section => (
-            <SquareCard
-              key={section.id}
-              label={section.label}
-              emoji={section.emoji}
-              count={sectionCounts[section.id] ?? "…"}
-              desc={section.desc}
-              color={section.color}
-              bgColor={section.bgColor}
-              onClick={() => {
-                setTopSection(section.id);
-                setSearch("");
-              }}
-            />
-          ))}
+        {/* ── Section: Intelligence ── */}
+        <div className="space-y-1.5">
+          <p className="text-[10px] text-white/20 uppercase tracking-widest font-bold px-1">Intelligence</p>
+          <div className="space-y-1.5">
+            {[
+              TOP_SECTIONS_CONFIG.find(s => s.id === "cloud")!,
+              TOP_SECTIONS_CONFIG.find(s => s.id === "interactions")!,
+              TOP_SECTIONS_CONFIG.find(s => s.id === "autolearn")!,
+            ].map(section => (
+              <DashCard key={section.id} label={section.label} emoji={section.emoji}
+                count={sectionCounts[section.id] ?? "…"} desc={section.desc}
+                color={section.color} bgColor={section.bgColor}
+                badge={section.id === "cloud" ? `${entries.filter(e => e.is_active).length} actifs` : undefined}
+                onClick={() => { setTopSection(section.id); setSearch(""); }} />
+            ))}
+          </div>
+        </div>
+
+        {/* ── Section: Contenu ── */}
+        <div className="space-y-1.5">
+          <p className="text-[10px] text-white/20 uppercase tracking-widest font-bold px-1">Contenu</p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {[
+              TOP_SECTIONS_CONFIG.find(s => s.id === "multiresponses")!,
+              TOP_SECTIONS_CONFIG.find(s => s.id === "qa")!,
+              TOP_SECTIONS_CONFIG.find(s => s.id === "jeux")!,
+              TOP_SECTIONS_CONFIG.find(s => s.id === "blagues")!,
+              TOP_SECTIONS_CONFIG.find(s => s.id === "histoires")!,
+              TOP_SECTIONS_CONFIG.find(s => s.id === "chansons")!,
+            ].map(section => (
+              <button key={section.id} onClick={() => { setTopSection(section.id); setSearch(""); }}
+                className="bg-white/[0.04] hover:bg-white/[0.08] rounded-xl p-2.5 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex items-center gap-2.5 active:scale-[0.98]">
+                <span className="text-lg">{section.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-[11px] font-bold ${section.color} truncate`}>{section.label}</p>
+                  <p className="text-[9px] text-white/20">{sectionCounts[section.id] ?? "…"} items</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Section: Gestion ── */}
+        <div className="space-y-1.5">
+          <p className="text-[10px] text-white/20 uppercase tracking-widest font-bold px-1">Gestion</p>
+          <div className="space-y-1.5">
+            {[
+              TOP_SECTIONS_CONFIG.find(s => s.id === "store")!,
+              TOP_SECTIONS_CONFIG.find(s => s.id === "cerveau")!,
+              TOP_SECTIONS_CONFIG.find(s => s.id === "expressions")!,
+              TOP_SECTIONS_CONFIG.find(s => s.id === "cloudusers")!,
+            ].map(section => (
+              <DashCard key={section.id} label={section.label} emoji={section.emoji}
+                count={sectionCounts[section.id] ?? "…"} desc={section.desc}
+                color={section.color} bgColor={section.bgColor}
+                badge={section.id === "store" ? `${storeItems.filter(s => s.is_active).length} actifs` : section.id === "cloudusers" ? "live" : undefined}
+                onClick={() => { setTopSection(section.id); setSearch(""); }} />
+            ))}
+          </div>
         </div>
         </>
         )}
 
-        <p className="text-[10px] text-white/15 text-center pt-2">Données embarquées en lecture seule · Cloud KB modifiable</p>
+        <p className="text-[9px] text-white/10 text-center pt-1 pb-4">Bobby Admin v2 · Cloud KB modifiable</p>
         {detailPortal}
       </div>
     </div>
