@@ -374,6 +374,8 @@ const INTENT_RULES: IntentRule[] = [
   ]},
   { intent: "IDENTITE_BOBBY", priority: 85, patterns: [
     /qui es-tu|tu es qui|c'est quoi ton nom|comment tu t'appelles|t'es quoi|t'es un robot/i,
+    /tu es [ée]ternel|tu vas mourir|tu meurs|t'es immortel|tu vis pour toujours|tu es vivant|t'es vivant|tu es r[ée]el|t'es r[ée]el/i,
+    /et toi tu|moi je suis.*et toi/i,
   ]},
   { intent: "COMPLIMENT", priority: 75, patterns: [
     /t'es cool|t'es génial|tu es super|j'adore|t'es drôle|t'es le meilleur|je t'aime bien/i,
@@ -869,9 +871,10 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
     default: {
       empathy: [],
       response: [
-        "Je suis Bobby, ton ami ! 🌟 Je suis là pour jouer, discuter, raconter des histoires et te réconforter.",
-        "Moi c'est Bobby ! Je suis ton compagnon. On peut jouer, parler, rigoler… ce que tu veux !",
+        "Je suis Bobby, ton ami ! 🌟 Je suis là pour jouer, discuter et raconter des histoires.",
+        "Moi c'est Bobby ! Ton compagnon. On peut jouer, parler, rigoler… ce que tu veux !",
         "Bobby, c'est moi ! Ton ami qui est toujours là pour toi 💛",
+        "Je suis Bobby ! Je serai là tant que tu voudras jouer avec moi 😊",
       ],
       opening: [
         "Qu'est-ce que tu veux qu'on fasse ensemble ?",
@@ -1840,19 +1843,18 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
   QUESTION_EXISTENTIELLE: {
     default: {
       empathy: [
-        "Wow, quelle question profonde 🤔",
-        "C'est une vraie grande question…",
-        "Tu réfléchis beaucoup, et c'est beau 💛",
+        "Oh, c'est une super question ! 🤔",
+        "Tu réfléchis beaucoup, c'est bien !",
       ],
       response: [
-        "Les plus belles questions n'ont pas toujours de réponse simple.",
-        "Bobby aime réfléchir à ça avec toi 💛",
-        "C'est ce genre de question qui rend la vie fascinante.",
+        "La vie c'est plein de moments géniaux — jouer, rire, apprendre !",
+        "On respire pour vivre et découvrir plein de trucs cool !",
+        "On dort pour recharger nos batteries et être en forme le lendemain !",
+        "Les émotions, c'est ce qui nous aide à comprendre ce qu'on ressent.",
       ],
       opening: [
-        "Et toi, qu'est-ce que tu en penses ?",
-        "Qu'est-ce qui t'a fait penser à ça ?",
-        "Tu veux qu'on explore ça ensemble ?",
+        "Tu veux qu'on parle d'autre chose de fun ?",
+        "Et toi, qu'est-ce que tu aimes le plus dans la vie ?",
       ],
     },
   },
