@@ -105,7 +105,7 @@ const RETRO_COLORS = ["var(--retro-blue)", "var(--retro-yellow)", "var(--retro-g
 const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCustomizerProps) => {
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [activeEmotion, setActiveEmotion] = useState<FaceState | undefined>(undefined);
-  const [showEmotions, setShowEmotions] = useState(true);
+  const [showEmotions, setShowEmotions] = useState(false);
   const emotionTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const colors = settings.bobbyColors || {
