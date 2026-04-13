@@ -924,6 +924,7 @@ const Admin = () => {
       autolearn: autoLearnCount ?? "…",
       store: storeItems.length,
       cloudusers: cloudUsers.length,
+      kbdebug: "🔍",
     } as Record<string, string | number>;
   }, [interactions, entries, cloudStories, storeItems, cloudUsers, autoLearnCount]);
 
