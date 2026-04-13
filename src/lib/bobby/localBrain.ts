@@ -124,6 +124,8 @@ export type LocalIntent =
   | "SALUT" | "AU_REVOIR" | "OUI" | "NON" | "QUESTION_SIMPLE" | "QUESTION_COMPLEXE" | "IDENTITE_BOBBY" | "COMPLIMENT"
   // Safety
   | "CONTENU_BLOQUE" | "CRISE_SECURITE"
+  // Comprehension
+  | "NOT_UNDERSTOOD" | "DEMANDE_LANGUE"
   // Situational
   | "FATIGUE" | "ECHEC" | "OBJECTIF" | "SANTE" | "PERTE" | "REVE_AVENIR"
   | "ANXIETE" | "ABANDON" | "MENSONGE" | "EXCITATION" | "AMOUREUX"
@@ -142,6 +144,11 @@ interface IntentRule {
 }
 
 const INTENT_RULES: IntentRule[] = [
+  // Language request — child asks Bobby to speak another language
+  { intent: "DEMANDE_LANGUE", priority: 110, patterns: [
+    /speak english|parle anglais|parle en anglais|talk english|in english|en anglais|speak french|parle espagnol|speak spanish|habla español/i,
+    /tu parles anglais|tu sais parler anglais|dis.+en anglais|mot.+anglais|apprends.+anglais/i,
+  ]},
   // Safety crisis — empathetic redirect (NOT blocked)
   { intent: "CRISE_SECURITE", priority: 105, patterns: [
     /je veux mourir|je veux disparaître|veux plus vivre|veux pas exister|à quoi ça sert de vivre/i,
