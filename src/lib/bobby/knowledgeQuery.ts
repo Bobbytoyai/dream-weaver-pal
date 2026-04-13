@@ -11,6 +11,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { getCachedPack } from "./contentInstaller";
+import { ensureKBCache, getEntriesForAge, type KBEntry } from "./kbCache";
 import type { BobbyBrainReply } from "./types";
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
 
@@ -1266,16 +1267,12 @@ export async function debugScoreQuery(
 ): Promise<{ results: KBScoreBreakdown[]; context: string[] }> {
   if (!userText || userText.length < 2) return { results: [], context: [...recentTopics] };
 
-  const { data, error } = await supabase
-    .from("knowledge_base")
-    .select("id, question, answer, keywords, emotion, priority, category, source_content_id")
-    .eq("is_active", true)
-    .lte("age_min", childAge)
-    .gte("age_max", childAge)
-    .order("priority", { ascending: false })
-    .limit(300);
+  await ensureKBCache();
+  const data = getEntriesForAge(childAge)
+    .sort((a, b) => (b.priority || 5) - (a.priority || 5))
+    .slice(0, 500);
 
-  if (error || !data?.length) return { results: [], context: [...recentTopics] };
+  if (!data.length) return { results: [], context: [...recentTopics] };
 
   const inputTokens = tokenize(userText);
   if (inputTokens.length === 0) return { results: [], context: [...recentTopics] };
@@ -1333,16 +1330,11 @@ export async function queryKnowledgeBase(
   pushConversationContext(userText);
 
   try {
-    const { data, error } = await supabase
-      .from("knowledge_base")
-      .select("id, question, answer, keywords, emotion, priority, source_content_id")
-      .eq("is_active", true)
-      .lte("age_min", childAge)
-      .gte("age_max", childAge)
-      .order("priority", { ascending: false })
-      .limit(300);
+    // Use local cache instead of Supabase — works 100% offline
+    await ensureKBCache();
+    const data = getEntriesForAge(childAge);
 
-    if (error || !data?.length) return null;
+    if (!data.length) return null;
 
     const inputTokens = tokenize(userText);
     if (inputTokens.length === 0) return null;
@@ -1350,7 +1342,7 @@ export async function queryKnowledgeBase(
     const expandedInput = expandWithSemantics(inputTokens);
     const inputNorm = normalize(userText);
 
-    let bestMatch: typeof data[0] | null = null;
+    let bestMatch: KBEntry | null = null;
     let bestScore = 0;
 
     for (const entry of data) {
@@ -1371,9 +1363,12 @@ export async function queryKnowledgeBase(
 
     if (!bestMatch) return null;
 
-    Promise.resolve(supabase.rpc("increment_kb_usage", { entry_id: bestMatch.id })).catch(() => {});
+    // Non-blocking usage tracking (only when online)
+    if (navigator.onLine) {
+      Promise.resolve(supabase.rpc("increment_kb_usage", { entry_id: bestMatch.id })).catch(() => {});
+    }
 
-    console.log(`[KnowledgeQuery] ✅ Match (score ${bestScore.toFixed(3)}): "${bestMatch.question.slice(0, 60)}" → "${bestMatch.answer.slice(0, 60)}" ${bestMatch.source_content_id ? "[Store]" : "[learned]"}`);
+    console.log(`[KnowledgeQuery] ✅ Match (score ${bestScore.toFixed(3)}): "${bestMatch.question.slice(0, 60)}" → "${bestMatch.answer.slice(0, 60)}" ${bestMatch.source_content_id ? "[Store]" : "[learned]"} [LOCAL]`);
 
     return {
       text: bestMatch.answer,
@@ -1381,7 +1376,7 @@ export async function queryKnowledgeBase(
       source: bestMatch.source_content_id ? "library" : "local_brain",
       emotion: (bestMatch.emotion || "happy") as FaceState,
       confidence: Math.min(0.97, 0.55 + bestScore * 0.45),
-      isOffline: false,
+      isOffline: !navigator.onLine,
     };
 
   } catch (e) {
