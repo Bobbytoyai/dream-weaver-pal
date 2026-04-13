@@ -1171,16 +1171,16 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ 3. RECOMMANDATIONS ═══ */}
       {parentRecommendations.length > 0 && (
-        <div className="bg-card rounded-3xl p-5 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.15s" }}>
+        <div className="retro-card retro-card-tilt-2 p-5" style={{ backgroundColor: 'var(--retro-yellow)' }}>
           <div className="flex items-center gap-2.5 mb-3">
             <span className="text-2xl">✨</span>
-            <h3 className="text-[17px] font-extrabold text-foreground">Recommandations</h3>
+            <h3 className="text-[17px] font-black text-foreground uppercase">Recommandations</h3>
           </div>
           <div className="space-y-2">
             {parentRecommendations.map((rec, i) => (
-              <div key={i} className="flex items-start gap-3 p-3 rounded-2xl bg-gradient-to-r from-primary/8 to-accent/5">
+              <div key={i} className="flex items-start gap-3 p-3 border-2 border-black bg-white">
                 <span className="text-xl mt-0.5">{rec.emoji}</span>
-                <p className="text-[14px] text-foreground/80 leading-relaxed">{rec.text}</p>
+                <p className="text-[14px] text-foreground/80 leading-relaxed font-bold">{rec.text}</p>
               </div>
             ))}
           </div>
@@ -1221,17 +1221,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           }));
         if (radarData.length < 3) return null;
         return (
-          <div className="bg-card rounded-3xl p-4 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.2s" }}>
+          <div className="retro-card retro-card-tilt-3 p-4" style={{ backgroundColor: 'var(--retro-blue)' }}>
             <div className="flex items-center gap-2.5 mb-2">
               <span className="text-2xl">🎯</span>
-              <h3 className="text-[17px] font-extrabold text-foreground">Intérêts de {displayName}</h3>
+              <h3 className="text-[17px] font-black text-foreground uppercase">Intérêts de {displayName}</h3>
             </div>
             <ResponsiveContainer width="100%" height={200}>
               <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="65%">
-                <PolarGrid stroke="hsl(var(--border))" strokeOpacity={0.4} />
-                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 700 }} />
+                <PolarGrid stroke="rgba(0,0,0,0.15)" />
+                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "hsl(var(--foreground))", fontWeight: 900 }} />
                 <PolarRadiusAxis tick={false} axisLine={false} />
-                <Radar name="Intérêt" dataKey="score" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.25} strokeWidth={2.5} />
+                <Radar name="Intérêt" dataKey="score" stroke="hsl(var(--foreground))" fill="hsl(var(--foreground))" fillOpacity={0.15} strokeWidth={2.5} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
@@ -1240,55 +1240,52 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ ALERTES BOBBY SÉCURITÉ ═══ */}
       {safetyAlerts.length > 0 && showSafetyAlerts && (
-        <div className="bg-card rounded-2xl p-3 border-2 border-destructive/30">
+        <div className="retro-card p-3 border-4 border-black" style={{ backgroundColor: 'var(--retro-red)' }}>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🛡️</span>
-            <h3 className="text-[14px] font-extrabold text-destructive">Alertes Sécurité</h3>
-            <span className="ml-auto text-[9px] px-2 py-0.5 rounded-full bg-destructive text-destructive-foreground font-bold">{safetyAlerts.length}</span>
+            <h3 className="text-[14px] font-black text-foreground uppercase">Alertes Sécurité</h3>
+            <span className="ml-auto text-[9px] px-2 py-0.5 border-2 border-black bg-white text-foreground font-black">{safetyAlerts.length}</span>
           </div>
           <div className="space-y-1.5 max-h-40 overflow-y-auto">
             {safetyAlerts.slice(0, 10).map((alert, i) => (
-              <div key={i} className={`flex items-start gap-2 p-2 rounded-xl ${
-                alert.severity === "CRITICAL" ? "bg-destructive/10" : "bg-amber-400/10"
-              }`}>
+              <div key={i} className="flex items-start gap-2 p-2 border-2 border-black bg-white">
                 <span className="text-sm mt-0.5">{alert.severity === "CRITICAL" ? "🔴" : "🟡"}</span>
                 <div className="flex-1 min-w-0">
-                  <span className="text-[10px] font-bold text-foreground">{alert.category.replace(/_/g, " ")}</span>
-                  <p className="text-[10px] text-foreground/70">«{alert.keyword}»</p>
+                  <span className="text-[10px] font-black text-foreground">{alert.category.replace(/_/g, " ")}</span>
+                  <p className="text-[10px] text-foreground/70 font-bold">«{alert.keyword}»</p>
                 </div>
               </div>
             ))}
           </div>
           <div className="flex gap-2 mt-2">
             <button onClick={() => { clearSafetyAlertRecords(); setSafetyAlerts([]); }}
-              className="flex-1 text-[10px] font-bold py-1.5 rounded-xl bg-muted text-muted-foreground">Effacer</button>
+              className="flex-1 text-[10px] font-black py-1.5 border-2 border-black bg-white text-foreground uppercase">Effacer</button>
             <button onClick={() => setShowSafetyAlerts(false)}
-              className="flex-1 text-[10px] font-bold py-1.5 rounded-xl bg-destructive/10 text-destructive">Fermer</button>
+              className="flex-1 text-[10px] font-black py-1.5 border-2 border-black bg-foreground text-background uppercase">Fermer</button>
           </div>
         </div>
       )}
       {safetyAlerts.length > 0 && !showSafetyAlerts && (
         <button onClick={() => setShowSafetyAlerts(true)}
-          className="w-full flex items-center justify-center gap-2 py-2 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-[12px] font-extrabold">
+          className="w-full flex items-center justify-center gap-2 py-2 border-4 border-black bg-[var(--retro-red)] text-foreground text-[12px] font-black uppercase"
+          style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
           🛡️ {safetyAlerts.length} alerte{safetyAlerts.length > 1 ? "s" : ""}
         </button>
       )}
 
       {/* ═══ ALERTES SMART ═══ */}
       {smartAlerts.length > 0 && (
-        <div className="bg-card rounded-2xl p-3 border border-destructive/15">
+        <div className="retro-card p-3" style={{ backgroundColor: 'var(--retro-orange)' }}>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🔔</span>
-            <h3 className="text-[14px] font-extrabold text-foreground">Alertes</h3>
-            <span className="ml-auto text-[9px] px-2 py-0.5 rounded-full bg-destructive/10 text-destructive font-bold">{smartAlerts.length}</span>
+            <h3 className="text-[14px] font-black text-foreground uppercase">Alertes</h3>
+            <span className="ml-auto text-[9px] px-2 py-0.5 border-2 border-black bg-white text-foreground font-black">{smartAlerts.length}</span>
           </div>
           <div className="space-y-1.5">
             {smartAlerts.map((alert, i) => (
-              <div key={i} className={`flex items-start gap-2 p-2 rounded-xl ${
-                alert.severity === "critical" ? "bg-destructive/10" : "bg-muted/40"
-              }`}>
+              <div key={i} className="flex items-start gap-2 p-2 border-2 border-black bg-white">
                 <span className="text-sm">{alert.severity === "critical" ? "🔴" : "🟡"}</span>
-                <p className="text-[12px] text-foreground leading-relaxed">{alert.message}</p>
+                <p className="text-[12px] text-foreground leading-relaxed font-bold">{alert.message}</p>
               </div>
             ))}
           </div>
@@ -1297,49 +1294,49 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ SCORES COMPORTEMENTAUX — 3 cols compact ═══ */}
       {avgScores && (
-        <div className="bg-card rounded-[18px] p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.25s" }}>
+        <div className="retro-card retro-card-tilt-4 p-3" style={{ backgroundColor: 'var(--retro-green)' }}>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🧠</span>
-            <h3 className="text-[15px] font-black text-foreground">Développement</h3>
+            <h3 className="text-[15px] font-black text-foreground uppercase">Développement</h3>
           </div>
           <div className="grid grid-cols-3 gap-2 mb-2">
-            <ScoreGauge label="Sociabilité" score={avgScores.sociability} emoji="🤝" color="hsl(var(--primary))" size="lg" />
-            <ScoreGauge label="Curiosité" score={avgScores.curiosity} emoji="🔍" color="hsl(36, 90%, 50%)" size="lg" />
-            <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="hsl(145, 65%, 42%)" size="lg" />
+            <ScoreGauge label="Sociabilité" score={avgScores.sociability} emoji="🤝" color="hsl(var(--foreground))" size="lg" />
+            <ScoreGauge label="Curiosité" score={avgScores.curiosity} emoji="🔍" color="hsl(var(--foreground))" size="lg" />
+            <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="hsl(var(--foreground))" size="lg" />
           </div>
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/20">
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t-2 border-black/15">
             <div>
-              <p className="text-[11px] text-muted-foreground font-bold mb-1">Engagement</p>
-              <div className="flex gap-0.5 h-3 rounded-full overflow-hidden">
+              <p className="text-[11px] text-foreground/60 font-black mb-1 uppercase">Engagement</p>
+              <div className="flex gap-0.5 h-3 overflow-hidden border border-black">
                 {recentAnalyses.length > 0 ? (
                   <>
-                    <div className="bg-primary rounded-l-full" style={{ width: `${(engagementDist.high / recentAnalyses.length) * 100}%` }} />
-                    <div className="bg-primary/40" style={{ width: `${(engagementDist.medium / recentAnalyses.length) * 100}%` }} />
-                    <div className="bg-muted rounded-r-full" style={{ width: `${(engagementDist.low / recentAnalyses.length) * 100}%` }} />
+                    <div className="bg-foreground" style={{ width: `${(engagementDist.high / recentAnalyses.length) * 100}%` }} />
+                    <div className="bg-foreground/40" style={{ width: `${(engagementDist.medium / recentAnalyses.length) * 100}%` }} />
+                    <div className="bg-white" style={{ width: `${(engagementDist.low / recentAnalyses.length) * 100}%` }} />
                   </>
-                ) : <div className="bg-muted w-full rounded-full" />}
+                ) : <div className="bg-white w-full" />}
               </div>
               <div className="flex justify-between mt-0.5">
-                <span className="text-[9px] text-muted-foreground font-bold">🔥{engagementDist.high}</span>
-                <span className="text-[9px] text-muted-foreground font-bold">👍{engagementDist.medium}</span>
-                <span className="text-[9px] text-muted-foreground font-bold">💤{engagementDist.low}</span>
+                <span className="text-[9px] text-foreground/60 font-black">🔥{engagementDist.high}</span>
+                <span className="text-[9px] text-foreground/60 font-black">👍{engagementDist.medium}</span>
+                <span className="text-[9px] text-foreground/60 font-black">💤{engagementDist.low}</span>
               </div>
             </div>
             <div>
-              <p className="text-[11px] text-muted-foreground font-bold mb-1">Humeur</p>
-              <div className="flex gap-0.5 h-3 rounded-full overflow-hidden">
+              <p className="text-[11px] text-foreground/60 font-black mb-1 uppercase">Humeur</p>
+              <div className="flex gap-0.5 h-3 overflow-hidden border border-black">
                 {recentAnalyses.length > 0 ? (
                   <>
-                    <div className="bg-primary/80 rounded-l-full" style={{ width: `${(moodDist.positive / recentAnalyses.length) * 100}%` }} />
-                    <div className="bg-accent" style={{ width: `${(moodDist.neutral / recentAnalyses.length) * 100}%` }} />
-                    <div className="bg-destructive/60 rounded-r-full" style={{ width: `${(moodDist.low / recentAnalyses.length) * 100}%` }} />
+                    <div className="bg-foreground/80" style={{ width: `${(moodDist.positive / recentAnalyses.length) * 100}%` }} />
+                    <div className="bg-foreground/30" style={{ width: `${(moodDist.neutral / recentAnalyses.length) * 100}%` }} />
+                    <div className="bg-[var(--retro-red)]" style={{ width: `${(moodDist.low / recentAnalyses.length) * 100}%` }} />
                   </>
-                ) : <div className="bg-muted w-full rounded-full" />}
+                ) : <div className="bg-white w-full" />}
               </div>
               <div className="flex justify-between mt-0.5">
-                <span className="text-[9px] text-muted-foreground font-bold">🟢{moodDist.positive}</span>
-                <span className="text-[9px] text-muted-foreground font-bold">🟡{moodDist.neutral}</span>
-                <span className="text-[9px] text-muted-foreground font-bold">🔴{moodDist.low}</span>
+                <span className="text-[9px] text-foreground/60 font-black">🟢{moodDist.positive}</span>
+                <span className="text-[9px] text-foreground/60 font-black">🟡{moodDist.neutral}</span>
+                <span className="text-[9px] text-foreground/60 font-black">🔴{moodDist.low}</span>
               </div>
             </div>
           </div>
@@ -1348,20 +1345,20 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ ÉMOTIONS — 3 cols compact ═══ */}
       {Object.keys(avgEmotions).length > 0 && (
-        <div className="bg-card rounded-[18px] p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.3s" }}>
+        <div className="retro-card retro-card-tilt-5 p-3">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">💖</span>
-            <h3 className="text-[15px] font-black text-foreground">Émotions</h3>
+            <h3 className="text-[15px] font-black text-foreground uppercase">Émotions</h3>
           </div>
           <div className="grid grid-cols-3 gap-2">
-            {Object.entries(avgEmotions).filter(([, v]) => v > 0).sort(([, a], [, b]) => b - a).slice(0, 6).map(([key, value]) => {
+            {Object.entries(avgEmotions).filter(([, v]) => v > 0).sort(([, a], [, b]) => b - a).slice(0, 6).map(([key, value], ei) => {
               const info = emotionScoreLabels[key] || { label: key, emoji: "❓" };
-              const barColor = key === "joy" ? "from-emerald-400/30 to-emerald-300/10" : key === "curiosity" ? "from-blue-400/30 to-blue-300/10" : key === "excitement" ? "from-amber-400/30 to-amber-300/10" : key === "frustration" ? "from-red-400/30 to-red-300/10" : key === "fear" ? "from-purple-400/30 to-purple-300/10" : "from-muted/30 to-muted/10";
+              const retroBgs = ["var(--retro-green)", "var(--retro-blue)", "var(--retro-yellow)", "var(--retro-red)", "var(--retro-purple)", "var(--retro-orange)"];
               return (
-                <div key={key} className={`bg-gradient-to-br ${barColor} rounded-[14px] p-2 text-center border border-white/10`}>
+                <div key={key} className="border-2 border-black p-2 text-center" style={{ backgroundColor: retroBgs[ei % retroBgs.length] }}>
                   <span className="text-[20px] block">{info.emoji}</span>
                   <p className="text-[16px] font-black text-foreground leading-tight">{value}%</p>
-                  <p className="text-[9px] text-muted-foreground font-bold">{info.label}</p>
+                  <p className="text-[9px] text-foreground/60 font-black uppercase">{info.label}</p>
                 </div>
               );
             })}
@@ -1371,33 +1368,33 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ ÉVOLUTION 7 JOURS — compact chart ═══ */}
       {emotionChartData.some(d => d.hasData) && (
-        <div className="bg-card rounded-3xl p-5 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.35s" }}>
+        <div className="retro-card retro-card-tilt-6 p-5">
           <div className="flex items-center gap-2.5 mb-3">
             <span className="text-2xl">📈</span>
-            <h3 className="text-[17px] font-extrabold text-foreground">Évolution (7j)</h3>
+            <h3 className="text-[17px] font-black text-foreground uppercase">Évolution (7j)</h3>
           </div>
           <div className="w-full h-44">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={emotionChartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }} barCategoryGap="20%">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 9, fill: "hsl(var(--foreground))", fontWeight: 900 }} axisLine={false} tickLine={false} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 8, fill: "hsl(var(--foreground))" }} axisLine={false} tickLine={false} />
                 <Tooltip
-                  cursor={{ fill: "hsl(var(--muted))", opacity: 0.3, radius: 6 }}
+                  cursor={{ fill: "rgba(0,0,0,0.05)" }}
                   content={({ active, payload, label }) => {
                     if (!active || !payload?.length) return null;
                     const dataPoint = emotionChartData.find(d => d.name === label);
                     if (!dataPoint?.hasData) return null;
                     return (
-                      <div className="bg-card border border-border rounded-xl p-2 shadow-lg">
-                        <p className="text-[10px] font-extrabold text-foreground mb-1">{label}</p>
+                      <div className="border-2 border-black bg-white p-2" style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
+                        <p className="text-[10px] font-black text-foreground mb-1">{label}</p>
                         {payload.filter(p => p.dataKey !== "hasData" && (p.value as number) > 0).sort((a, b) => (b.value as number) - (a.value as number)).map(p => {
                           const cfg = emotionConfig[p.name as string] || { emoji: "❓", color: "#888" };
                           return (
                             <div key={p.name} className="flex items-center gap-1 py-0.5">
                               <span className="text-[9px]">{cfg.emoji}</span>
-                              <span className="text-[9px] text-foreground flex-1">{p.name}</span>
-                              <span className="text-[10px] font-bold" style={{ color: cfg.color }}>{p.value}%</span>
+                              <span className="text-[9px] text-foreground flex-1 font-bold">{p.name}</span>
+                              <span className="text-[10px] font-black" style={{ color: cfg.color }}>{p.value}%</span>
                             </div>
                           );
                         })}
@@ -1405,17 +1402,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     );
                   }}
                 />
-                <Bar dataKey="Joie" fill="hsl(145, 65%, 42%)" radius={[4, 4, 0, 0]} maxBarSize={10} />
-                <Bar dataKey="Curiosité" fill="hsl(210, 80%, 55%)" radius={[4, 4, 0, 0]} maxBarSize={10} />
-                <Bar dataKey="Excitation" fill="hsl(36, 90%, 50%)" radius={[4, 4, 0, 0]} maxBarSize={10} />
-                <Bar dataKey="Frustration" fill="hsl(0, 75%, 55%)" radius={[4, 4, 0, 0]} maxBarSize={10} />
+                <Bar dataKey="Joie" fill="hsl(145, 65%, 42%)" radius={[0, 0, 0, 0]} maxBarSize={10} />
+                <Bar dataKey="Curiosité" fill="hsl(210, 80%, 55%)" radius={[0, 0, 0, 0]} maxBarSize={10} />
+                <Bar dataKey="Excitation" fill="hsl(36, 90%, 50%)" radius={[0, 0, 0, 0]} maxBarSize={10} />
+                <Bar dataKey="Frustration" fill="hsl(0, 75%, 55%)" radius={[0, 0, 0, 0]} maxBarSize={10} />
               </BarChart>
             </ResponsiveContainer>
           </div>
           <div className="flex flex-wrap gap-2 mt-1">
             {Object.entries(emotionConfig).slice(0, 4).map(([label, cfg]) => (
-              <span key={label} className="flex items-center gap-1 text-[9px] text-muted-foreground font-bold">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cfg.color }} /> {cfg.emoji} {label}
+              <span key={label} className="flex items-center gap-1 text-[9px] text-foreground/60 font-black">
+                <span className="w-2 h-2" style={{ backgroundColor: cfg.color }} /> {cfg.emoji} {label}
               </span>
             ))}
           </div>
@@ -1424,75 +1421,32 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ TEMPS DE SESSION ═══ */}
       {sessionDurationChartData.some(d => d.hasData) && (
-        <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.4s" }}>
+        <div className="retro-card retro-card-tilt-1 p-3">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">⏱️</span>
-            <h3 className="text-[14px] font-extrabold text-foreground">Temps (7j)</h3>
+            <h3 className="text-[14px] font-black text-foreground uppercase">Temps (7j)</h3>
           </div>
           <div className="w-full h-36">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={sessionDurationChartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} unit=" min" />
-                <Line type="monotone" dataKey="minutes" stroke="hsl(var(--primary))" strokeWidth={2.5}
-                  dot={{ r: 3, fill: "hsl(var(--primary))", stroke: "hsl(var(--background))", strokeWidth: 2 }} connectNulls={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 9, fill: "hsl(var(--foreground))", fontWeight: 900 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 8, fill: "hsl(var(--foreground))" }} axisLine={false} tickLine={false} unit=" min" />
+                <Line type="monotone" dataKey="minutes" stroke="hsl(var(--foreground))" strokeWidth={2.5}
+                  dot={{ r: 3, fill: "hsl(var(--foreground))", stroke: "hsl(var(--background))", strokeWidth: 2 }} connectNulls={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
       )}
 
-      {/* ═══ STATS — 3 cols compact ═══ */}
-      <div className="bg-card rounded-[18px] p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.45s" }}>
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-lg">📊</span>
-          <h3 className="text-[15px] font-black text-foreground">Statistiques</h3>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { label: "Moy/session", value: formatDuration(avgSessionDuration), emoji: "⏱️", gradient: "from-purple-400/25 to-violet-300/10", border: "border-purple-300/20" },
-            { label: "Msg/session", value: avgMessagesPerSession, emoji: "💬", gradient: "from-blue-400/25 to-indigo-300/10", border: "border-blue-300/20" },
-            { label: "Analysées", value: `${recentAnalyses.length}/${totalSessions}`, emoji: "🔬", gradient: "from-emerald-400/25 to-teal-300/10", border: "border-emerald-300/20" },
-            { label: "Aujourd'hui", value: formatDuration(todayDuration), emoji: "📅", gradient: "from-amber-400/25 to-orange-300/10", border: "border-amber-300/20" },
-            { label: "Total msgs", value: totalMessages, emoji: "📝", gradient: "from-pink-400/25 to-rose-300/10", border: "border-pink-300/20" },
-            { label: "Sessions", value: totalSessions, emoji: "🎯", gradient: "from-cyan-400/25 to-sky-300/10", border: "border-cyan-300/20" },
-          ].map((stat) => (
-            <div key={stat.label} className={`bg-gradient-to-br ${stat.gradient} rounded-[14px] p-2 text-center border ${stat.border}`}>
-              <span className="text-[18px] block">{stat.emoji}</span>
-              <p className="text-[15px] font-black text-foreground leading-tight">{stat.value}</p>
-              <p className="text-[8px] text-muted-foreground font-bold">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-        {/* Activity per day mini bar */}
-        {hasData && (
-          <div className="mt-3 pt-3 border-t border-border/20">
-            <div className="flex items-end gap-1.5 h-12">
-              {weeklyActivity.map((day) => {
-                const maxCount = Math.max(...weeklyActivity.map(d => d.count), 1);
-                const height = (day.count / maxCount) * 100;
-                return (
-                  <div key={day.label} className="flex-1 flex flex-col items-center gap-1">
-                    <div className="w-full rounded-t-lg bg-primary/20 relative" style={{ height: `${Math.max(height, 4)}%` }}>
-                      {day.count > 0 && <div className="absolute inset-0 rounded-t-lg bg-primary" style={{ height: `${height}%` }} />}
-                    </div>
-                    <span className="text-[10px] text-muted-foreground font-bold">{day.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* ═══ DERNIÈRE SESSION — compact ═══ */}
       {lastSession && (
-        <div className="bg-card rounded-2xl p-3 border border-border/20">
+        <div className="retro-card retro-card-tilt-2 p-3">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🕐</span>
-            <h3 className="text-[14px] font-extrabold text-foreground">Dernière session</h3>
-            <span className="ml-auto text-[9px] text-muted-foreground font-bold">{formatDate(lastSession.started_at)}</span>
+            <h3 className="text-[14px] font-black text-foreground uppercase">Dernière session</h3>
+            <span className="ml-auto text-[9px] text-foreground/60 font-black">{formatDate(lastSession.started_at)}</span>
           </div>
           <div className="grid grid-cols-3 gap-2 mb-2">
             {[
@@ -1500,26 +1454,28 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               { v: formatDuration(lastSession.duration_seconds), l: "durée" },
               { v: lastAnalysis ? (lastAnalysis.engagement_level === "high" ? "🔥" : "👍") : "—", l: "engagement" },
             ].map(s => (
-              <div key={s.l} className="text-center p-2 rounded-xl bg-muted/30">
-                <p className="text-[14px] font-extrabold text-foreground">{s.v}</p>
-                <p className="text-[8px] text-muted-foreground font-bold">{s.l}</p>
+              <div key={s.l} className="text-center p-2 border-2 border-black bg-white">
+                <p className="text-[14px] font-black text-foreground">{s.v}</p>
+                <p className="text-[8px] text-foreground/60 font-black uppercase">{s.l}</p>
               </div>
             ))}
           </div>
           {lastAnalysis?.summary && (
-            <p className="text-[11px] text-foreground/70 leading-relaxed bg-muted/20 rounded-xl p-2 font-bold">
-              {(() => { const s = humanizeSummary(lastAnalysis.summary).match(/[^.!?]+[.!?]+/g); return s ? s.slice(0, 2).join(" ").trim() : humanizeSummary(lastAnalysis.summary); })()}
-            </p>
+            <div className="border-2 border-black bg-[var(--retro-yellow)] p-2">
+              <p className="text-[11px] text-foreground/70 leading-relaxed font-bold">
+                {(() => { const s = humanizeSummary(lastAnalysis.summary).match(/[^.!?]+[.!?]+/g); return s ? s.slice(0, 2).join(" ").trim() : humanizeSummary(lastAnalysis.summary); })()}
+              </p>
+            </div>
           )}
         </div>
       )}
 
       {/* ═══ ÉTAT VIDE ═══ */}
       {!hasData && (
-        <div className="bg-card rounded-2xl p-6 text-center border border-border/20">
+        <div className="retro-card p-6 text-center">
           <span className="text-5xl block mb-2">🎙️</span>
-          <h3 className="text-lg font-extrabold text-foreground mb-1">Pas encore de sessions</h3>
-          <p className="text-[12px] text-muted-foreground">Les métriques apparaîtront après la première conversation de {displayName} avec Bobby.</p>
+          <h3 className="text-lg font-black text-foreground mb-1 uppercase">Pas encore de sessions</h3>
+          <p className="text-[12px] text-foreground/60 font-bold">Les métriques apparaîtront après la première conversation de {displayName} avec Bobby.</p>
         </div>
       )}
     </div>
@@ -1742,7 +1698,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 <div className="flex items-center gap-2.5 mb-4">
                   <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">📖</span></div>
                   <h3 className="text-[16px] font-black text-foreground uppercase">Transcription</h3>
-                  <span className="ml-auto text-[12px] text-muted-foreground font-black bg-muted px-2.5 py-1 border border-black">{sessionMessages.length} msgs</span>
+                  <span className="ml-auto text-[12px] text-foreground/60 font-black bg-white px-2.5 py-1 border-2 border-black">{sessionMessages.length} msgs</span>
                 </div>
                 <div className="max-h-[500px] overflow-y-auto space-y-3 py-1">
                   {sessionMessages.map((msg, i) => {
@@ -1755,25 +1711,24 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                         <div className={`max-w-[82%] relative group ${
                           isActive ? "scale-[1.02]" : ""
                         } transition-transform duration-200`}>
-                          <div className={`rounded-[22px] px-4 py-3 ${
+                          <div className={`px-4 py-3 border-2 border-black ${
                             isChild
-                              ? "bg-gradient-to-br from-muted/80 to-muted/50 rounded-bl-lg"
-                              : "bg-gradient-to-br from-primary/15 to-primary/8 rounded-br-lg"
-                          } ${isActive ? "ring-2 ring-primary/30 shadow-md" : "shadow-sm"}`}>
-                            <p className="text-[14px] text-foreground leading-[1.5] font-medium">{msg.content}</p>
+                              ? "bg-white"
+                              : "bg-[var(--retro-blue)]"
+                          } ${isActive ? "ring-2 ring-foreground/30" : ""}`}
+                            style={{ boxShadow: "2px 2px 0px rgba(0,0,0,0.15)" }}>
+                            <p className="text-[14px] text-foreground leading-[1.5] font-bold">{msg.content}</p>
                           </div>
                           <div className={`flex items-center gap-2 mt-1.5 px-1.5 ${isChild ? "" : "justify-end"}`}>
-                            <span className="text-[11px] text-muted-foreground/70 font-bold">{isChild ? `👦 ${displayName}` : "🤖 Bobby"}</span>
-                            <span className="text-[10px] text-muted-foreground/50 font-medium">{time}</span>
+                            <span className="text-[11px] text-foreground/50 font-black">{isChild ? `👦 ${displayName}` : "🤖 Bobby"}</span>
+                            <span className="text-[10px] text-foreground/40 font-bold">{time}</span>
                             {msg.detected_emotion && (
-                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                                emotionLabels[msg.detected_emotion]?.color || "bg-muted text-muted-foreground"
-                              }`}>
+                              <span className="text-[10px] px-2 py-0.5 border border-black bg-white font-black">
                                 {emotionLabels[msg.detected_emotion]?.emoji}
                               </span>
                             )}
                             <button onClick={() => speakMessage(msg.content)}
-                              className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all">
+                              className="opacity-0 group-hover:opacity-100 w-7 h-7 border border-black flex items-center justify-center text-foreground/60 hover:bg-[var(--retro-yellow)] transition-all">
                               {isTtsSpeaking ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                             </button>
                           </div>
@@ -1802,10 +1757,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                       ? `${Math.floor((userIdx / totalUserMsgs) * (selectedSession.duration_seconds / 60))}:${String(Math.floor((userIdx / totalUserMsgs) * selectedSession.duration_seconds % 60)).padStart(2, "0")}`
                       : "";
                     return (
-                      <button key={i} onClick={() => jumpToMoment(i)}
-                        className="flex flex-col items-center px-1.5 py-1.5 rounded-xl hover:bg-primary/8 transition-all min-w-[36px]">
-                        <span className="text-base">{emo.emoji}</span>
-                        <span className="text-[9px] text-muted-foreground font-mono font-bold">{timeStr}</span>
+                        <button key={i} onClick={() => jumpToMoment(i)}
+                          className="flex flex-col items-center px-1.5 py-1.5 border border-black hover:bg-[var(--retro-yellow)] transition-all min-w-[36px]">
+                          <span className="text-base">{emo.emoji}</span>
+                          <span className="text-[9px] text-foreground/60 font-mono font-black">{timeStr}</span>
                       </button>
                     );
                   })}
@@ -1817,16 +1772,16 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             {(analysis?.audio_path || sessionMessages.length > 0) && (
               <div className="retro-card p-5" style={{ backgroundColor: 'var(--retro-blue)' }}>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-                    playingAudio || fullPlaybackActive ? "bg-primary/20 animate-pulse" : "bg-primary/10"
+                  <div className={`w-10 h-10 border-2 border-black flex items-center justify-center ${
+                    playingAudio || fullPlaybackActive ? "bg-[var(--retro-yellow)]" : "bg-white"
                   }`}>
                     <span className="text-xl">🎧</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-[15px] font-extrabold text-foreground">
+                    <h3 className="text-[15px] font-black text-foreground uppercase">
                       {playingAudio || fullPlaybackActive ? "🔴 Lecture en cours" : "Réécouter"}
                     </h3>
-                    <p className="text-[11px] text-muted-foreground font-bold truncate">
+                    <p className="text-[11px] text-foreground/60 font-bold truncate">
                       {playingAudio && activeMessageIdx >= 0
                         ? `Message ${activeMessageIdx + 1}/${sessionMessages.length}`
                         : `${sessionMessages.length} messages`
