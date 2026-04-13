@@ -413,8 +413,16 @@ export type Database = {
           age_max: number
           age_min: number
           category: string
+          changelog: string
+          content_count: number
+          content_items: Json
           created_at: string
+          creator_name: string
+          creator_role: string
           description: string
+          detailed_description: string
+          difficulty_level: string
+          duration_estimate: string
           emoji: string
           id: string
           install_count: number
@@ -422,19 +430,36 @@ export type Database = {
           is_featured: boolean
           is_new: boolean
           is_popular: boolean
+          is_premium: boolean
+          languages: string[]
+          last_updated_at: string
+          learning_objectives: string[]
           name: string
+          rating: number
+          rating_count: number
+          screenshots: string[]
           size_label: string
+          skills_developed: string[]
           slug: string
           tags: string[]
           updated_at: string
           version: number
+          version_label: string
         }
         Insert: {
           age_max?: number
           age_min?: number
           category?: string
+          changelog?: string
+          content_count?: number
+          content_items?: Json
           created_at?: string
+          creator_name?: string
+          creator_role?: string
           description?: string
+          detailed_description?: string
+          difficulty_level?: string
+          duration_estimate?: string
           emoji?: string
           id?: string
           install_count?: number
@@ -442,19 +467,36 @@ export type Database = {
           is_featured?: boolean
           is_new?: boolean
           is_popular?: boolean
+          is_premium?: boolean
+          languages?: string[]
+          last_updated_at?: string
+          learning_objectives?: string[]
           name: string
+          rating?: number
+          rating_count?: number
+          screenshots?: string[]
           size_label?: string
+          skills_developed?: string[]
           slug: string
           tags?: string[]
           updated_at?: string
           version?: number
+          version_label?: string
         }
         Update: {
           age_max?: number
           age_min?: number
           category?: string
+          changelog?: string
+          content_count?: number
+          content_items?: Json
           created_at?: string
+          creator_name?: string
+          creator_role?: string
           description?: string
+          detailed_description?: string
+          difficulty_level?: string
+          duration_estimate?: string
           emoji?: string
           id?: string
           install_count?: number
@@ -462,12 +504,21 @@ export type Database = {
           is_featured?: boolean
           is_new?: boolean
           is_popular?: boolean
+          is_premium?: boolean
+          languages?: string[]
+          last_updated_at?: string
+          learning_objectives?: string[]
           name?: string
+          rating?: number
+          rating_count?: number
+          screenshots?: string[]
           size_label?: string
+          skills_developed?: string[]
           slug?: string
           tags?: string[]
           updated_at?: string
           version?: number
+          version_label?: string
         }
         Relationships: []
       }
