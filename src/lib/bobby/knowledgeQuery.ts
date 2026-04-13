@@ -722,7 +722,7 @@ const SEMANTIC_FIELDS: Record<string, string[]> = {
   grain_beaute:["peau", "marron", "petit", "corps", "unique", "soleil"],
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 🌿 Nature, Écologie & Environnement
+  // 🌿 Écologie & Environnement
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   ecologie:       ["nature", "planete", "recycler", "pollution", "proteger", "environnement", "climat", "vert", "durable"],
   environnement:  ["ecologie", "nature", "planete", "proteger", "pollution", "foret", "ocean", "biodiversite"],
@@ -748,20 +748,16 @@ const SEMANTIC_FIELDS: Record<string, string[]> = {
   fonte_glaces:   ["banquise", "arctique", "ours", "rechauffement", "niveau mer", "ecologie", "climat"],
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  // 🐾 Animaux (enrichi — familles, habitats, comportements)
+  // 🐾 Animaux (enrichi — ferme, sauvages, marins, insectes)
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   animal:         ["vivant", "sauvage", "domestique", "foret", "ferme", "zoo", "nature", "espece", "biologie"],
-  // Animaux de la ferme
   vache:          ["ferme", "lait", "fromage", "meuh", "herbivore", "pre", "animal", "veau"],
   cochon:         ["ferme", "boue", "groin", "rose", "animal", "porcelet", "truie"],
   poule:          ["ferme", "oeuf", "coq", "poussin", "plume", "animal", "caqueter", "poulailler"],
   mouton:         ["ferme", "laine", "belier", "agneau", "tondre", "animal", "troupeau"],
   cheval:         ["ferme", "galop", "equitation", "criniere", "poney", "fer", "animal", "cavalier"],
   ane:            ["ferme", "bruit", "oreille", "tetu", "animal", "porter", "shrek"],
-  canard:         ["ferme", "mare", "coin", "plume", "bain", "animal", "colvert"],
-  lapin:          ["ferme", "carotte", "oreille", "saut", "doux", "animal", "terrier"],
   chevre:         ["ferme", "montagne", "fromage", "corne", "animal", "chevreau", "lait"],
-  // Animaux sauvages
   elephant:       ["afrique", "trompe", "ivoire", "gros", "savane", "memoire", "animal", "inde"],
   girafe:         ["afrique", "cou", "tache", "grand", "savane", "feuille", "animal"],
   zebre:          ["afrique", "rayure", "noir", "blanc", "savane", "cheval", "animal"],
@@ -782,7 +778,6 @@ const SEMANTIC_FIELDS: Record<string, string[]> = {
   flamant:        ["rose", "patte", "lac", "afrique", "animal", "equilibre", "oiseau"],
   perroquet:      ["parler", "couleur", "tropical", "plume", "pirate", "animal", "imiter"],
   pingouin:       ["froid", "antarctique", "glace", "nager", "poisson", "animal", "manchot"],
-  // Animaux marins
   requin:         ["ocean", "dent", "nager", "predateur", "dangereux", "poisson", "animal", "mer"],
   baleine:        ["ocean", "enorme", "mammifere", "chant", "bleu", "animal", "mer", "souffle"],
   dauphin:        ["ocean", "intelligent", "jouer", "nager", "saut", "animal", "mer", "echolocation"],
@@ -798,7 +793,6 @@ const SEMANTIC_FIELDS: Record<string, string[]> = {
   morse:          ["arctique", "defense", "moustache", "gros", "glace", "animal", "mer"],
   phoque:         ["mer", "glace", "nager", "mignon", "arctique", "animal", "fourrure"],
   narval:         ["licorne mer", "corne", "arctique", "ocean", "animal", "unique", "dent"],
-  // Insectes & petites bêtes
   abeille:        ["miel", "fleur", "ruche", "piquer", "pollen", "nature", "insecte", "reine"],
   fourmi:         ["colonie", "travailleuse", "petit", "fort", "terre", "insecte", "organisation"],
   coccinelle:     ["rouge", "point", "jardin", "chance", "puceron", "insecte", "voler"],
@@ -811,7 +805,6 @@ const SEMANTIC_FIELDS: Record<string, string[]> = {
   scarabee:       ["insecte", "egypte", "carapace", "rouler", "bouse", "coleoptere"],
   moustique:      ["piquer", "bruit", "ete", "sang", "nuit", "insecte", "maladie"],
   luciole:        ["lumiere", "nuit", "insecte", "briller", "magie", "ete", "jardin"],
-  // Comportements & vie animale
   migration:      ["oiseau", "voyage", "saison", "animal", "sud", "nord", "instinct", "nature"],
   hibernation:    ["dormir", "hiver", "ours", "marmotte", "froid", "reserve", "animal", "nature"],
   metamorphose:   ["chenille", "papillon", "tetard", "grenouille", "changer", "animal", "nature"],
