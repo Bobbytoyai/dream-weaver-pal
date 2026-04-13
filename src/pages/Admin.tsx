@@ -18,7 +18,7 @@ import {
   Star, Sparkles, Globe, Microscope, TreePine, Dog,
   GraduationCap, HelpCircle, LayoutGrid, ChevronRight,
   Dumbbell, Lightbulb, Home, Utensils, Palette, Cpu,
-  CloudLightning, Eye, Users, Zap,
+  CloudLightning, Eye, Users, Zap, RefreshCw,
 } from "lucide-react";
 
 // Lazy import — the 10K file is huge, only load when needed
@@ -627,6 +627,28 @@ const Admin = () => {
   }
   const [realConversations, setRealConversations] = useState<RealConversation[]>([]);
   const [realConvLoading, setRealConvLoading] = useState(false);
+  const [learningSessionId, setLearningSessionId] = useState<string | null>(null);
+
+  const learnFromSession = useCallback(async (conv: RealConversation) => {
+    setLearningSessionId(conv.session_id);
+    try {
+      const { data, error } = await supabase.functions.invoke("learn-from-conversations", {
+        body: { mode: "session", sessionId: conv.session_id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const qa = data?.total_qa_learned ?? 0;
+      const gaps = data?.total_gaps_filled ?? 0;
+      toast.success(`🧠 +${qa} Q&A, +${gaps} lacunes comblées depuis cette conversation !`);
+      // Refresh KB entries
+      supabase.from("knowledge_base").select("*").order("priority", { ascending: false })
+        .then(r => { if (r.data) setEntries(r.data as unknown as KBEntry[]); });
+    } catch (e: any) {
+      toast.error("Erreur : " + (e.message || "inconnue"));
+    } finally {
+      setLearningSessionId(null);
+    }
+  }, []);
 
   const fetchRealConversations = useCallback(async () => {
     setRealConvLoading(true);
@@ -1047,10 +1069,21 @@ const Admin = () => {
                       </div>
                     ))}
                   </div>
-                  <div className="flex gap-1.5 pt-1 border-t border-white/5">
+                  <div className="flex items-center gap-1.5 pt-1 border-t border-white/5">
                     <span className="text-[9px] text-white/20">{conv.messages.length} messages</span>
                     <span className="text-[9px] text-white/10">•</span>
                     <span className="text-[9px] text-white/20">Session: {conv.session_id.slice(0, 8)}…</span>
+                    <button
+                      onClick={() => learnFromSession(conv)}
+                      disabled={learningSessionId === conv.session_id}
+                      className="ml-auto flex items-center gap-1 text-[10px] px-2.5 py-1 rounded-lg bg-lime-500/15 text-lime-300 hover:bg-lime-500/25 disabled:opacity-50 transition-all font-semibold"
+                    >
+                      {learningSessionId === conv.session_id ? (
+                        <><RefreshCw className="w-3 h-3 animate-spin" /> Analyse…</>
+                      ) : (
+                        <><Brain className="w-3 h-3" /> Apprendre</>
+                      )}
+                    </button>
                   </div>
                 </div>
               ))}
