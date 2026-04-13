@@ -2966,22 +2966,22 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
     // ── Grid of cards ──
     const confCards = [
-      { id: "securite" as const, emoji: "🛡️", label: "Sécurité", desc: "PIN, filtrage, protections", color: "from-red-400/20 to-orange-400/10" },
-      { id: "donnees" as const, emoji: "💾", label: "Données", desc: "Collecte, stockage, suppression", color: "from-blue-400/20 to-cyan-400/10" },
-      { id: "rgpd" as const, emoji: "📜", label: "RGPD", desc: "Accès, export, effacement", color: "from-emerald-400/20 to-green-400/10" },
+      { id: "securite" as const, emoji: "🛡️", label: "Sécurité", desc: "PIN, filtrage, protections", bg: "var(--retro-red)" },
+      { id: "donnees" as const, emoji: "💾", label: "Données", desc: "Collecte, stockage, suppression", bg: "var(--retro-blue)" },
+      { id: "rgpd" as const, emoji: "📜", label: "RGPD", desc: "Accès, export, effacement", bg: "var(--retro-green)" },
     ];
 
     return (
       <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
-        <h2 className="text-[16px] font-extrabold text-foreground animate-fadeInUp" style={{ animationDelay: "0.05s" }}>🔒 Confidentialité</h2>
+        <h2 className="text-[16px] font-black text-foreground animate-fadeInUp uppercase" style={{ animationDelay: "0.05s" }}>🔒 Confidentialité</h2>
         <div className="grid grid-cols-2 gap-3">
           {confCards.map((card, i) => (
             <button key={card.id} onClick={() => setConfSection(card.id)}
-              className={`bg-gradient-to-br ${card.color} rounded-2xl p-4 text-left border border-border/20 hover:border-primary/20 hover:shadow-lg transition-all active:scale-95 animate-fadeInUp`}
-              style={{ animationDelay: `${0.1 + i * 0.05}s` }}>
+              className="retro-card retro-card-tilt p-4 text-left hover:shadow-lg transition-all active:scale-95 animate-fadeInUp"
+              style={{ animationDelay: `${0.1 + i * 0.05}s`, backgroundColor: card.bg }}>
               <span className="text-3xl block mb-2">{card.emoji}</span>
-              <h3 className="text-[14px] font-extrabold text-foreground leading-tight">{card.label}</h3>
-              <p className="text-[10px] text-muted-foreground mt-1 leading-snug">{card.desc}</p>
+              <h3 className="text-[14px] font-black text-gray-800 leading-tight uppercase">{card.label}</h3>
+              <p className="text-[10px] text-gray-600 mt-1 leading-snug font-bold">{card.desc}</p>
             </button>
           ))}
         </div>
