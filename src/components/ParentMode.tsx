@@ -1440,56 +1440,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </div>
       )}
 
-      {/* ═══ STATS — 3 cols compact ═══ */}
-      <div className="bg-card rounded-[18px] p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.45s" }}>
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-lg">📊</span>
-          <h3 className="text-[15px] font-black text-foreground">Statistiques</h3>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { label: "Moy/session", value: formatDuration(avgSessionDuration), emoji: "⏱️", gradient: "from-purple-400/25 to-violet-300/10", border: "border-purple-300/20" },
-            { label: "Msg/session", value: avgMessagesPerSession, emoji: "💬", gradient: "from-blue-400/25 to-indigo-300/10", border: "border-blue-300/20" },
-            { label: "Analysées", value: `${recentAnalyses.length}/${totalSessions}`, emoji: "🔬", gradient: "from-emerald-400/25 to-teal-300/10", border: "border-emerald-300/20" },
-            { label: "Aujourd'hui", value: formatDuration(todayDuration), emoji: "📅", gradient: "from-amber-400/25 to-orange-300/10", border: "border-amber-300/20" },
-            { label: "Total msgs", value: totalMessages, emoji: "📝", gradient: "from-pink-400/25 to-rose-300/10", border: "border-pink-300/20" },
-            { label: "Sessions", value: totalSessions, emoji: "🎯", gradient: "from-cyan-400/25 to-sky-300/10", border: "border-cyan-300/20" },
-          ].map((stat) => (
-            <div key={stat.label} className={`bg-gradient-to-br ${stat.gradient} rounded-[14px] p-2 text-center border ${stat.border}`}>
-              <span className="text-[18px] block">{stat.emoji}</span>
-              <p className="text-[15px] font-black text-foreground leading-tight">{stat.value}</p>
-              <p className="text-[8px] text-muted-foreground font-bold">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-        {/* Activity per day mini bar */}
-        {hasData && (
-          <div className="mt-3 pt-3 border-t border-border/20">
-            <div className="flex items-end gap-1.5 h-12">
-              {weeklyActivity.map((day) => {
-                const maxCount = Math.max(...weeklyActivity.map(d => d.count), 1);
-                const height = (day.count / maxCount) * 100;
-                return (
-                  <div key={day.label} className="flex-1 flex flex-col items-center gap-1">
-                    <div className="w-full rounded-t-lg bg-primary/20 relative" style={{ height: `${Math.max(height, 4)}%` }}>
-                      {day.count > 0 && <div className="absolute inset-0 rounded-t-lg bg-primary" style={{ height: `${height}%` }} />}
-                    </div>
-                    <span className="text-[10px] text-muted-foreground font-bold">{day.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* ═══ DERNIÈRE SESSION — compact ═══ */}
       {lastSession && (
-        <div className="bg-card rounded-2xl p-3 border border-border/20">
+        <div className="retro-card retro-card-tilt-2 p-3">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🕐</span>
-            <h3 className="text-[14px] font-extrabold text-foreground">Dernière session</h3>
-            <span className="ml-auto text-[9px] text-muted-foreground font-bold">{formatDate(lastSession.started_at)}</span>
+            <h3 className="text-[14px] font-black text-foreground uppercase">Dernière session</h3>
+            <span className="ml-auto text-[9px] text-foreground/60 font-black">{formatDate(lastSession.started_at)}</span>
           </div>
           <div className="grid grid-cols-3 gap-2 mb-2">
             {[
@@ -1497,26 +1454,28 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               { v: formatDuration(lastSession.duration_seconds), l: "durée" },
               { v: lastAnalysis ? (lastAnalysis.engagement_level === "high" ? "🔥" : "👍") : "—", l: "engagement" },
             ].map(s => (
-              <div key={s.l} className="text-center p-2 rounded-xl bg-muted/30">
-                <p className="text-[14px] font-extrabold text-foreground">{s.v}</p>
-                <p className="text-[8px] text-muted-foreground font-bold">{s.l}</p>
+              <div key={s.l} className="text-center p-2 border-2 border-black bg-white">
+                <p className="text-[14px] font-black text-foreground">{s.v}</p>
+                <p className="text-[8px] text-foreground/60 font-black uppercase">{s.l}</p>
               </div>
             ))}
           </div>
           {lastAnalysis?.summary && (
-            <p className="text-[11px] text-foreground/70 leading-relaxed bg-muted/20 rounded-xl p-2 font-bold">
-              {(() => { const s = humanizeSummary(lastAnalysis.summary).match(/[^.!?]+[.!?]+/g); return s ? s.slice(0, 2).join(" ").trim() : humanizeSummary(lastAnalysis.summary); })()}
-            </p>
+            <div className="border-2 border-black bg-[var(--retro-yellow)] p-2">
+              <p className="text-[11px] text-foreground/70 leading-relaxed font-bold">
+                {(() => { const s = humanizeSummary(lastAnalysis.summary).match(/[^.!?]+[.!?]+/g); return s ? s.slice(0, 2).join(" ").trim() : humanizeSummary(lastAnalysis.summary); })()}
+              </p>
+            </div>
           )}
         </div>
       )}
 
       {/* ═══ ÉTAT VIDE ═══ */}
       {!hasData && (
-        <div className="bg-card rounded-2xl p-6 text-center border border-border/20">
+        <div className="retro-card p-6 text-center">
           <span className="text-5xl block mb-2">🎙️</span>
-          <h3 className="text-lg font-extrabold text-foreground mb-1">Pas encore de sessions</h3>
-          <p className="text-[12px] text-muted-foreground">Les métriques apparaîtront après la première conversation de {displayName} avec Bobby.</p>
+          <h3 className="text-lg font-black text-foreground mb-1 uppercase">Pas encore de sessions</h3>
+          <p className="text-[12px] text-foreground/60 font-bold">Les métriques apparaîtront après la première conversation de {displayName} avec Bobby.</p>
         </div>
       )}
     </div>
