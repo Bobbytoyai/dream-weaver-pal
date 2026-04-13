@@ -3478,38 +3478,37 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   return (
     <div className={`min-h-screen bg-background max-w-lg mx-auto flex flex-col transition-colors duration-300 ${lightMode ? "parent-light" : ""}`}>
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-card border-b border-border">
+      {/* Header — retro style */}
+      <div className="flex items-center gap-3 px-4 py-3 bg-card border-b-4 border-black">
         <button
           onClick={selectedSession ? () => { setSelectedSession(null); setSelectedAnalysis(null); setSessionMessages([]); setPlayingAudio(null); setAudioProgress(0); setActiveMessageIdx(-1); if (audioRef.current) audioRef.current.pause(); if (progressInterval.current) clearInterval(progressInterval.current); } : activeTab !== "home" ? () => setActiveTab("home") : onClose}
-          className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+          className="w-9 h-9 border-2 border-black bg-white flex items-center justify-center text-black hover:bg-muted transition-colors">
           <ArrowLeft className="w-4.5 h-4.5" />
         </button>
         <div className="flex-1">
-          <h2 className="text-base font-bold text-foreground">
-            {activeTab === "home" ? "Mode Parent" : tabs.find(t => t.id === activeTab)?.label || "Mode Parent"}
+          <h2 className="text-lg font-black text-foreground uppercase tracking-tight">
+            {activeTab === "home" ? "BOBBY" : (tabs.find(t => t.id === activeTab)?.label || "BOBBY").toUpperCase()}
           </h2>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[11px] text-muted-foreground font-bold">
             {selectedSession ? formatDate(selectedSession.started_at) : `${childName}`}
           </p>
         </div>
         {!selectedSession && (
           <div className="flex items-center gap-1.5">
-            {/* Notification bell */}
             <button onClick={() => { setShowNotifPanel(!showNotifPanel); }}
-              className="relative w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
+              className="relative w-9 h-9 border-2 border-black bg-white flex items-center justify-center text-black hover:bg-muted transition-all">
               <Bell className="w-4 h-4" />
               {unreadAlertCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-destructive text-white text-[10px] font-bold flex items-center justify-center px-1 animate-pulse">
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-destructive text-white text-[10px] font-bold flex items-center justify-center px-1 animate-pulse">
                   {unreadAlertCount}
                 </span>
               )}
             </button>
             <button onClick={toggleLight}
-              className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
+              className="w-9 h-9 border-2 border-black bg-white flex items-center justify-center text-black hover:bg-muted transition-all">
               {lightMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </button>
-            <button onClick={() => { loadData(); loadAlerts(); }} className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+            <button onClick={() => { loadData(); loadAlerts(); }} className="w-9 h-9 border-2 border-black bg-white flex items-center justify-center text-black">
               <RefreshCw className="w-4 h-4" />
             </button>
           </div>
