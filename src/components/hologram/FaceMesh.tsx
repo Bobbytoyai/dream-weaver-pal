@@ -219,7 +219,12 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const bgHex = BG_HEX[bgKey] || BG_HEX["soft-blue"];
   const eyelidMat = useMemo(() => {
     const m = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(bgHex), transparent: true, opacity: 1.0, depthWrite: true,
+      color: new THREE.Color(bgHex),
+      transparent: true,
+      opacity: 1.0,
+      depthWrite: false,
+      depthTest: false,
+      side: THREE.DoubleSide,
     });
     // Only render where stencil = 1 (inside eye white)
     m.stencilWrite = false;
@@ -397,7 +402,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(ps);
     if (rightPupilRef.current) rightPupilRef.current.scale.setScalar(ps);
 
-    // Eyelids — anchored inside the eye shape, never leaving the white area
+    // Eyelids — visible top layer, but animated only inside the white eye mask
     const blinkClose = 1 - state.eyeOpenness;
     const isSleepingNow = faceState === "sleepy";
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
@@ -418,25 +423,27 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
           ? 4 * t * t * t
           : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-        let scaleY = easedCover;
+        const hiddenY = 0.60;
+        const closedY = 0.0;
+        let targetY = hiddenY - easedCover * (hiddenY - closedY);
 
-        // Sleep: fully closed with tiny upward rebounds that reveal only a sliver at the bottom
+        // Sleep: stays closed, then slightly lifts upward to reveal a thin strip at the bottom
         if (isSleepingNow) {
           const sleepT = performance.now() * 0.001;
-          const breathPeek = Math.max(0, Math.sin(sleepT * 0.35)) * 0.04;
+          const breathLift = Math.max(0, Math.sin(sleepT * 0.35)) * 0.035;
           const microPeek = Math.sin(sleepT * 0.08) > 0.9
-            ? Math.max(0, Math.sin(sleepT * 0.9)) * 0.06
+            ? Math.max(0, Math.sin(sleepT * 0.9)) * 0.055
             : 0;
-          scaleY = 1 - Math.max(breathPeek, microPeek);
+          targetY = closedY + Math.max(breathLift, microPeek);
         }
 
-        ref.current.position.y = 0.27;
-        ref.current.scale.set(1, Math.min(1, Math.max(0, scaleY)), 1);
+        ref.current.position.y = targetY;
+        ref.current.scale.set(1, 1, 1);
 
         if (isSleepingNow) {
           eyelidMat.opacity = 1.0;
         } else {
-          eyelidMat.opacity = 0.55 + easedCover * 0.45;
+          eyelidMat.opacity = 0.58 + easedCover * 0.42;
         }
       }
     });
@@ -549,22 +556,20 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   ) => (
     <group ref={eyeRef} position={[eyeX, eyeY, 0.01]} key={side}>
       <mesh geometry={eyeWhiteGeo} material={eyeWhiteMat} renderOrder={1} />
+      <mesh geometry={eyeOutlineGeo} material={eyeOutlineMat} position={[0, 0, 0.02]} renderOrder={2} />
       <mesh ref={irisRef} geometry={irisOuterGeo} position={[0, -0.03, 0.01]} material={irisOuterMat} />
       <mesh ref={pupilRef} geometry={pupilGeo} position={[0, -0.02, 0.02]} material={pupilMat} />
       <mesh ref={hl1Ref} position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       {/* hl2 hidden — single highlight per eye */}
       <mesh ref={hl2Ref} position={[hl1[0], hl1[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} visible={false} />
-      {/* Eyelid — inset inside the white eye frame so it never touches the outer ring */}
-      <mesh ref={eyelidRef} position={[0, 0.27, 0.044]} material={eyelidMat} scale={[1, 0, 1]} renderOrder={12}>
+      {/* Eyelid — same eye shape, drawn last, clipped inside the white eye area */}
+      <mesh ref={eyelidRef} position={[0, 0.60, 0.044]} material={eyelidMat} renderOrder={30}>
         <shapeGeometry args={[(() => {
           const s = new THREE.Shape();
-          // Top anchored at y=0, slightly inset from eye white to preserve a visible white frame
-          s.absellipse(0, -0.27, 0.318, 0.258, 0, Math.PI * 2, false, 0);
+          s.absellipse(0, 0, 0.33, 0.27, 0, Math.PI * 2, false, 0);
           return s;
         })(), 32]} />
       </mesh>
-      {/* Eye outline ring — forced above the eyelid so the lid stays visually inside the eye */}
-      <mesh geometry={eyeOutlineGeo} material={eyeOutlineMat} position={[0, 0, 0.05]} renderOrder={20} />
     </group>
   );
 
