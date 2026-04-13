@@ -274,6 +274,8 @@ const Admin = () => {
 
   // Cloud KB
   const [entries, setEntries] = useState<KBEntry[]>([]);
+  const [kbActiveCount, setKbActiveCount] = useState(0);
+  const [kbTotalCount, setKbTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [editingEntry, setEditingEntry] = useState<Partial<KBEntry> | null>(null);
@@ -796,13 +798,17 @@ const Admin = () => {
 
   const fetchEntries = useCallback(async () => {
     setLoading(true);
-    const [kbRes, autoLearnRes] = await Promise.all([
-      supabase.from("knowledge_base").select("*").order("priority", { ascending: false }),
+    const [kbRes, autoLearnRes, activeCountRes, totalCountRes] = await Promise.all([
+      supabase.from("knowledge_base").select("*").order("priority", { ascending: false }).limit(1000),
       supabase.from("knowledge_base").select("id", { count: "exact", head: true }).not("category", "eq", "général"),
+      supabase.from("knowledge_base").select("id", { count: "exact", head: true }).eq("is_active", true),
+      supabase.from("knowledge_base").select("id", { count: "exact", head: true }),
     ]);
     if (kbRes.error) toast.error("Erreur: " + kbRes.error.message);
     else setEntries((kbRes.data as unknown as KBEntry[]) || []);
     setAutoLearnCount(autoLearnRes.count ?? 0);
+    setKbActiveCount(activeCountRes.count ?? 0);
+    setKbTotalCount(totalCountRes.count ?? 0);
     setLoading(false);
   }, []);
 
@@ -2882,8 +2888,7 @@ const Admin = () => {
         {/* ── Hero stats row ── */}
         {(() => {
           const intCount = typeof sectionCounts.interactions === "number" ? sectionCounts.interactions : 0;
-          const total = intCount + BOBBY_MULTI_RESPONSES.length + QA_DATABASE.length + BLAGUES.length + HISTOIRES.length + CHANSONS.length + (sectionCounts.jeux as number) + entries.length;
-          const activeKB = entries.filter(e => e.is_active).length;
+          const total = intCount + BOBBY_MULTI_RESPONSES.length + QA_DATABASE.length + BLAGUES.length + HISTOIRES.length + CHANSONS.length + (sectionCounts.jeux as number) + kbTotalCount;
           return (
             <div className="grid grid-cols-4 gap-2">
               <div className="col-span-2 bg-gradient-to-r from-purple-500/10 to-blue-500/8 rounded-2xl p-3" style={{ border: "1px solid var(--admin-border)" }}>
@@ -2891,7 +2896,7 @@ const Admin = () => {
                 <p className="text-[10px] mt-0.5" style={{ color: "var(--admin-text-muted)" }}>contenus total</p>
               </div>
               <div className="rounded-2xl p-3 text-center" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
-                <p className="text-lg font-bold text-emerald-500">{activeKB}</p>
+                <p className="text-lg font-bold text-emerald-500">{kbActiveCount.toLocaleString("fr-FR")}</p>
                 <p className="text-[9px]" style={{ color: "var(--admin-text-dim)" }}>KB actif</p>
               </div>
               <div className="rounded-2xl p-3 text-center" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
