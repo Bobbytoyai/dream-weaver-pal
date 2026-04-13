@@ -52,20 +52,22 @@ function svgToWorld(sx: number, sy: number): [number, number] {
   return [(sx - cx) * S, (cy - sy) * S];
 }
 
-// ─── Eyebrow arc builder ─────────────────────────────────────
-// Creates a thick curved arc shape for natural-looking eyebrows
-function buildEyebrowShape(archHeight: number = 0.06): THREE.Shape {
+// ─── Eyebrow builder — rounded rectangle ─────────────────────
+function buildEyebrowShape(_archHeight: number = 0.06): THREE.Shape {
   const shape = new THREE.Shape();
-  const halfW = 0.22;
-  const thickness = 0.045;
+  const w = 0.22;   // half width
+  const h = 0.035;  // half height (thick bar)
+  const r = 0.015;  // corner radius
 
-  // Top arc
-  shape.moveTo(-halfW, 0);
-  shape.quadraticCurveTo(-halfW * 0.3, archHeight, 0, archHeight * 1.1);
-  shape.quadraticCurveTo(halfW * 0.3, archHeight, halfW, 0);
-  // Bottom arc (thinner, follows top)
-  shape.quadraticCurveTo(halfW * 0.3, archHeight - thickness, 0, archHeight * 1.1 - thickness);
-  shape.quadraticCurveTo(-halfW * 0.3, archHeight - thickness, -halfW, 0);
+  shape.moveTo(-w + r, -h);
+  shape.lineTo(w - r, -h);
+  shape.quadraticCurveTo(w, -h, w, -h + r);
+  shape.lineTo(w, h - r);
+  shape.quadraticCurveTo(w, h, w - r, h);
+  shape.lineTo(-w + r, h);
+  shape.quadraticCurveTo(-w, h, -w, h - r);
+  shape.lineTo(-w, -h + r);
+  shape.quadraticCurveTo(-w, -h, -w + r, -h);
 
   return shape;
 }
@@ -184,7 +186,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   // Eyelid
   const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(230, 22%, 78%)"), transparent: false, opacity: 1.0, depthWrite: true,
+    color: new THREE.Color("hsl(230, 22%, 78%)"), transparent: true, opacity: 1.0, depthWrite: true,
   }), []);
 
   // Cheeks — #FF69B4
@@ -291,14 +293,13 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(ps);
     if (rightPupilRef.current) rightPupilRef.current.scale.setScalar(ps);
 
-    // Eyelids (blink) — half-dome curtain descending from above
+    // Eyelids (blink) — scale Y from top to cover eye
     const blinkClose = 1 - state.eyeOpenness;
     const isSleepingNow = faceState === "sleepy";
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
       if (ref.current) {
         const coverAmount = Math.max(0, Math.min(1, blinkClose));
         
-        // Only show eyelids when actually blinking/closing
         if (coverAmount < 0.02) {
           ref.current.visible = false;
           return;
@@ -307,17 +308,16 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         ref.current.visible = true;
         const easedCover = coverAmount * coverAmount * (3 - 2 * coverAmount);
         
-        const fullyOpenY = 1.05;
-        const fullyClosed = -0.02;
-        let targetY = fullyOpenY - easedCover * (fullyOpenY - fullyClosed);
+        // Scale the eyelid vertically: 0 = invisible, 1 = fully covers eye
+        let scaleY = easedCover;
         
         if (isSleepingNow && coverAmount > 0.9) {
           const flutterT = performance.now() * 0.001;
-          const flutter = Math.sin(flutterT * 0.3) * 0.015 + Math.sin(flutterT * 0.7) * 0.008;
-          targetY += Math.max(0, flutter);
+          const flutter = Math.sin(flutterT * 0.3) * 0.02 + Math.sin(flutterT * 0.7) * 0.01;
+          scaleY = Math.max(0.85, scaleY - Math.max(0, flutter));
         }
         
-        ref.current.position.y = targetY;
+        ref.current.scale.set(1, scaleY, 1);
       }
     });
 
@@ -441,17 +441,14 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={pupilRef} geometry={pupilGeo} position={[0, -0.02, 0.02]} material={pupilMat} />
       <mesh position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       <mesh position={[hl2[0], hl2[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} />
-      {/* Eyelid: half-dome descending from above like a real eyelid */}
-      <mesh ref={eyelidRef} position={[0, 0.95, 0.05]} material={eyelidMat}>
+      {/* Eyelid: ellipse anchored at top of eye, scales down to cover */}
+      <mesh ref={eyelidRef} position={[0, 0.32, 0.045]} material={eyelidMat}>
         <shapeGeometry args={[(() => {
           const s = new THREE.Shape();
-          const rx = 0.50;
-          const ry = 0.48;
-          // Draw dome: flat bottom at y=0, curved part goes UP (positive y)
-          // startAngle=0 (right), endAngle=PI (left), going counterclockwise = upper half
-          s.moveTo(rx, 0);
-          s.absellipse(0, 0, rx, ry, 0, Math.PI, false, 0);
-          s.lineTo(rx, 0);
+          const rx = 0.42;
+          const ry = 0.65;
+          // Full ellipse centered at top; when scaleY=1 it covers the whole eye downward
+          s.absellipse(0, 0, rx, ry, 0, Math.PI * 2, false, 0);
           return s;
         })(), 32]} />
       </mesh>
