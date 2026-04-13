@@ -90,6 +90,17 @@ const EMOTION_BUTTONS: { emoji: string; label: string; face: FaceState }[] = [
   { emoji: "😜", label: "Joueur", face: "playful" },
 ];
 
+// Map face states to BobbyEmotion for disable toggle
+const FACE_TO_EMOTION: Record<string, BobbyEmotion> = {
+  happy: "joy", sad: "sadness", surprised: "surprise", curious: "curiosity",
+  excited: "excitement", calm: "calm", proud: "pride", confused: "confusion",
+  reassuring: "love", playful: "boredom", attentive: "determination",
+};
+
+// Only these expressions can be disabled (not system states like listening/speaking)
+const TOGGLEABLE_EMOTIONS = EMOTION_BUTTONS.filter(
+  e => !["idle", "listening", "thinking", "speaking", "sleepy"].includes(e.face)
+);
 const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCustomizerProps) => {
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [activeEmotion, setActiveEmotion] = useState<FaceState | undefined>(undefined);
