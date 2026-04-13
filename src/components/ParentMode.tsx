@@ -2828,7 +2828,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const renderNouveautes = () => (
     <div className="p-4 space-y-3">
       {/* Version banner */}
-      <div className="bg-gradient-to-br from-primary/15 to-primary/5 rounded-2xl p-4">
+      <div className="bg-gradient-to-br from-primary/15 to-primary/5 rounded-2xl p-4 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         <div className="flex items-center gap-2 mb-1">
           <Sparkles className="w-4 h-4 text-primary" />
           <h3 className="text-[13px] font-bold text-foreground">Bobby v2.0</h3>
@@ -2838,6 +2838,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       </div>
 
       {/* 🎤 Voix */}
+      <div className="animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
       <Card title="🎤 Voix émotionnelles V2" icon={Mic}>
         <div className="space-y-2">
           {[
@@ -2864,8 +2865,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
         </div>
       </Card>
+      </div>
 
       {/* 📖 Histoires */}
+      <div className="animate-fadeInUp" style={{ animationDelay: "0.15s" }}>
       <Card title="📖 Histoires & Personnages" icon={BookOpen}>
         <div className="space-y-2">
           {[
@@ -2892,8 +2895,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </p>
         </div>
       </Card>
+      </div>
 
       {/* ⚡ Nouvelles fonctionnalités */}
+      <div className="animate-fadeInUp" style={{ animationDelay: "0.2s" }}>
       <Card title="⚡ Nouvelles fonctionnalités" icon={Zap}>
         <div className="space-y-2.5">
           {[
@@ -2914,8 +2919,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           ))}
         </div>
       </Card>
+      </div>
 
       {/* 💡 Suggérer une idée */}
+      <div className="animate-fadeInUp" style={{ animationDelay: "0.25s" }}>
       <Card title="💡 Suggérer une idée" icon={Heart}>
         <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
           Vous avez une idée pour améliorer Bobby ? Partagez-la avec nous !
@@ -2940,6 +2947,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           {suggestionSent ? "✅ Merci pour votre idée !" : "Envoyer ma suggestion"}
         </button>
       </Card>
+      </div>
     </div>
   );
 
@@ -2959,7 +2967,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
     // ── Sub-section: Sécurité ──
     if (confSection === "securite") return (
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         <button onClick={() => setConfSection(null)} className="flex items-center gap-2 text-primary text-[13px] font-extrabold mb-1" style={{ fontFamily: "'Nunito', sans-serif" }}>
           <ChevronLeft className="w-4 h-4" /> Confidentialité
         </button>
@@ -3038,7 +3046,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
     // ── Sub-section: Données ──
     if (confSection === "donnees") return (
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         <button onClick={() => setConfSection(null)} className="flex items-center gap-2 text-primary text-[13px] font-extrabold mb-1" style={{ fontFamily: "'Nunito', sans-serif" }}>
           <ChevronLeft className="w-4 h-4" /> Confidentialité
         </button>
@@ -3121,7 +3129,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
     // ── Sub-section: RGPD ──
     if (confSection === "rgpd") return (
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         <button onClick={() => setConfSection(null)} className="flex items-center gap-2 text-primary text-[13px] font-extrabold mb-1" style={{ fontFamily: "'Nunito', sans-serif" }}>
           <ChevronLeft className="w-4 h-4" /> Confidentialité
         </button>
@@ -3193,11 +3201,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
     return (
       <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
-        <h2 className="text-[16px] font-extrabold text-foreground">🔒 Confidentialité</h2>
+        <h2 className="text-[16px] font-extrabold text-foreground animate-fadeInUp" style={{ animationDelay: "0.05s" }}>🔒 Confidentialité</h2>
         <div className="grid grid-cols-2 gap-3">
-          {confCards.map(card => (
+          {confCards.map((card, i) => (
             <button key={card.id} onClick={() => setConfSection(card.id)}
-              className={`bg-gradient-to-br ${card.color} rounded-2xl p-4 text-left border border-border/20 hover:border-primary/20 hover:shadow-lg transition-all active:scale-95`}>
+              className={`bg-gradient-to-br ${card.color} rounded-2xl p-4 text-left border border-border/20 hover:border-primary/20 hover:shadow-lg transition-all active:scale-95 animate-fadeInUp`}
+              style={{ animationDelay: `${0.1 + i * 0.05}s` }}>
               <span className="text-3xl block mb-2">{card.emoji}</span>
               <h3 className="text-[14px] font-extrabold text-foreground leading-tight">{card.label}</h3>
               <p className="text-[10px] text-muted-foreground mt-1 leading-snug">{card.desc}</p>
