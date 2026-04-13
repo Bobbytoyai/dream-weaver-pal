@@ -206,11 +206,20 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color("#FF80AB"), transparent: true, opacity: 0,
   }), []);
 
-  // Eyelid
-  const defaultBgHex = (bobbyColors?.background && BG_HEX[bobbyColors.background]) || BG_HEX["soft-blue"];
+  // Eyelid — matches background with slight tint for contrast
+  const bgKey = bobbyColors?.background || "soft-blue";
+  const bgHex = BG_HEX[bgKey] || BG_HEX["soft-blue"];
   const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color(defaultBgHex), transparent: false, opacity: 1.0, depthWrite: true,
+    color: new THREE.Color(bgHex), transparent: false, opacity: 1.0, depthWrite: true,
   }), []);
+  
+  // Keep eyelid color synced every render
+  useEffect(() => {
+    const col = new THREE.Color(bgHex);
+    // Slight darkening for subtle contrast
+    col.lerp(new THREE.Color("#000000"), 0.03);
+    eyelidMat.color.set(col);
+  }, [bgHex, eyelidMat]);
 
   // Cheeks — #FF69B4
   const blushMat = useMemo(() => new THREE.MeshBasicMaterial({
@@ -220,10 +229,6 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   // ─── Apply per-element colors ───────────────
   const bobbyColorsKey = bobbyColors ? JSON.stringify(bobbyColors) : "";
   useEffect(() => {
-    // Always sync eyelid to background — even without bobbyColors
-    const bgKey = bobbyColors?.background || "soft-blue";
-    const bgHex = BG_HEX[bgKey] || BG_HEX["soft-blue"];
-    eyelidMat.color.set(bgHex);
 
     if (bobbyColors) {
       const irisHex = IRIS_HEX[bobbyColors.iris] || IRIS_HEX.blue;
