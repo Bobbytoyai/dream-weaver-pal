@@ -132,7 +132,7 @@ export async function fetchTTSAudio(
   if (isOnline) {
     try {
       // Add a 10s timeout to avoid hanging forever
-      const timeoutSignal = AbortSignal.timeout(10_000);
+      const timeoutSignal = AbortSignal.timeout(7_000);
       const combinedSignal = signal 
         ? AbortSignal.any([signal, timeoutSignal])
         : timeoutSignal;

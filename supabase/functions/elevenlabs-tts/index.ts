@@ -5,14 +5,22 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Voice IDs for French voices (ElevenLabs)
+// Voice IDs — cartoon-friendly animated French voices (child-safe)
 const VOICE_MAP: Record<string, string> = {
-  // Natural French voices
-  female: "FGY2WhTYpPnrIDTdsKH5",   // Laura - warm female
-  child:  "XrExE9yKIg1WjnnlVkGX",    // Matilda - more natural childlike tone
-  male:   "JBFqnCBsd6RMkjVDRZzb",    // George - warm male
-  sister: "EXAVITQu4vr4xnSDxMaL",    // Sarah - young female
-  brother:"IKne3meq5aSn9XLyUdCD",    // Charlie - young male
+  female: "XrExE9yKIg1WjnnlVkGX",   // Matilda - warm childlike (default cartoon feel)
+  child:  "XrExE9yKIg1WjnnlVkGX",   // Matilda - animated & expressive
+  male:   "IKne3meq5aSn9XLyUdCD",   // Charlie - young playful male
+  sister: "EXAVITQu4vr4xnSDxMaL",   // Sarah - young female
+  brother:"IKne3meq5aSn9XLyUdCD",   // Charlie - young male
+};
+
+// Speed multiplier per profile for snappy natural pacing
+const SPEED_MAP: Record<string, number> = {
+  female: 1.05,
+  child:  1.05,
+  male:   1.0,
+  sister: 1.05,
+  brother: 1.0,
 };
 
 serve(async (req) => {
@@ -37,11 +45,12 @@ serve(async (req) => {
       });
     }
 
-    const voiceId = VOICE_MAP[voiceProfile || "female"] || VOICE_MAP.female;
+    const voiceId = VOICE_MAP[voiceProfile || "child"] || VOICE_MAP.child;
+    const speed = SPEED_MAP[voiceProfile || "child"] || 1.05;
 
-    // Use higher-quality multilingual model to avoid robotic output
+    // Turbo model for lowest latency + cartoon-style voice settings
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_22050_32`,
       {
         method: "POST",
         headers: {
@@ -49,14 +58,14 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          text: text.slice(0, 2000), // Safety limit
-          model_id: "eleven_multilingual_v2",
+          text: text.slice(0, 2000),
+          model_id: "eleven_turbo_v2_5",
           voice_settings: {
-            stability: 0.58,
-            similarity_boost: 0.8,
-            style: 0.18,
+            stability: 0.35,         // Lower = more expressive/animated
+            similarity_boost: 0.65,
+            style: 0.55,             // Higher = cartoon-like character
             use_speaker_boost: true,
-            speed: 1.0,
+            speed,
           },
         }),
       }
@@ -71,7 +80,7 @@ serve(async (req) => {
       });
     }
 
-    // Stream the audio back
+    // Stream the audio back for lowest time-to-first-byte
     return new Response(response.body, {
       headers: {
         ...corsHeaders,

@@ -250,10 +250,10 @@ export function useBobbyVoiceCore({
       eventBus.emit({ type: "SPEECH_STOP" });
       lastSpeechEndRef.current = Date.now();
       silenceCountRef.current = 0;
-      // ─── Wait 1.5s after Bobby finishes before restarting STT ───
-      // This ensures the speaker audio fully dissipates before mic listens
-      console.log("[BobbyVoiceCore] 🔄 Waiting 1500ms before restarting listening");
-      await new Promise(r => setTimeout(r, 1500));
+      // ─── Wait 800ms after Bobby finishes before restarting STT ───
+      // Reduced for snappier conversation flow
+      console.log("[BobbyVoiceCore] 🔄 Waiting 800ms before restarting listening");
+      await new Promise(r => setTimeout(r, 800));
       // Verify we're still in SPEAKING state (user hasn't interrupted)
       if (!abortRef.current?.signal.aborted && machineRef.current === "SPEAKING") {
         void startListeningRef.current();
@@ -295,7 +295,7 @@ export function useBobbyVoiceCore({
 
     // ─── Cooldown: reject transcripts arriving too soon after Bobby stopped speaking ───
     const msSinceSpeech = Date.now() - lastSpeechEndRef.current;
-    if (msSinceSpeech < 1500) {
+    if (msSinceSpeech < 800) {
       console.warn("[BobbyVoiceCore] 🔇 Anti-echo cooldown: rejected transcript", msSinceSpeech, "ms after speech end");
       return;
     }
