@@ -871,7 +871,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     // Take only first 2 sentences from the combined text
     const full = summaries.join(" ");
     const sentences = full.match(/[^.!?]+[.!?]+/g) || [full];
-    return sentences.slice(0, 2).join(" ").trim();
+    return humanizeSummary(sentences.slice(0, 2).join(" ").trim());
   }, [todaySessions, recentAnalyses, sessions, displayName, todayDuration]);
 
   // v4.0: Parent recommendations based on data
