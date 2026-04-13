@@ -171,15 +171,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const eyeOutlineMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("#3A3A5C"), transparent: true, opacity: 0.22,
   }), []);
-  const eyeWhiteMat = useMemo(() => {
-    const m = new THREE.MeshBasicMaterial({ color: new THREE.Color("#FFFFFF") });
-    // Write stencil to mask eyelid
-    m.stencilWrite = true;
-    m.stencilRef = 1;
-    m.stencilFunc = THREE.AlwaysStencilFunc;
-    m.stencilZPass = THREE.ReplaceStencilOp;
-    return m;
-  }, []);
+  const eyeWhiteMat = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color("#FFFFFF") }), []);
 
   const irisOuterMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("#1B5E20"), transparent: true, opacity: 0.95,
