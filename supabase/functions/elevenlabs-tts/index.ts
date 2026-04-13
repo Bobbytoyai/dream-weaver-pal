@@ -7,11 +7,11 @@ const corsHeaders = {
 
 // Voice IDs — native French (France) voices, child-safe
 const VOICE_MAP: Record<string, string> = {
-  female: "WQKwBV2Uzw1gSGr69N8I",
-  child:  "WQKwBV2Uzw1gSGr69N8I",
-  male:   "WQKwBV2Uzw1gSGr69N8I",
-  sister: "WQKwBV2Uzw1gSGr69N8I",
-  brother:"WQKwBV2Uzw1gSGr69N8I",
+  female: "YxrwjAKoUKULGd0g8K9Y",   // Maman
+  child:  "WQKwBV2Uzw1gSGr69N8I",    // Enfant (Mélodie)
+  male:   "BVBq6HVJVdnwOMJOqvy9",    // Papa
+  sister: "WQKwBV2Uzw1gSGr69N8I",    // Sœur (same as enfant)
+  brother:"AqX3O1nij56oCicN2U6w",    // Frère
 };
 
 // Speed multiplier per profile
