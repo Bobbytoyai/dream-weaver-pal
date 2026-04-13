@@ -49,6 +49,10 @@ interface ParentModeProps {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────
+/** Replace generic AI references with "Bobby" in summaries */
+function humanizeSummary(text: string): string {
+  return text.replace(/\bl'IA\b/gi, "Bobby").replace(/\bl'intelligence artificielle\b/gi, "Bobby").replace(/\ble chatbot\b/gi, "Bobby").replace(/\ble bot\b/gi, "Bobby").replace(/\bl'assistant\b/gi, "Bobby");
+}
 
 const emotionLabels: Record<string, { label: string; color: string; emoji: string }> = {
   happy: { label: "Joyeux", color: "bg-secondary text-secondary-foreground", emoji: "😊" },
@@ -867,7 +871,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     // Take only first 2 sentences from the combined text
     const full = summaries.join(" ");
     const sentences = full.match(/[^.!?]+[.!?]+/g) || [full];
-    return sentences.slice(0, 2).join(" ").trim();
+    return humanizeSummary(sentences.slice(0, 2).join(" ").trim());
   }, [todaySessions, recentAnalyses, sessions, displayName, todayDuration]);
 
   // v4.0: Parent recommendations based on data
@@ -1486,7 +1490,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
           {lastAnalysis?.summary && (
             <p className="text-[11px] text-foreground/70 leading-relaxed bg-muted/20 rounded-xl p-2 font-bold">
-              {(() => { const s = lastAnalysis.summary.match(/[^.!?]+[.!?]+/g); return s ? s.slice(0, 2).join(" ").trim() : lastAnalysis.summary; })()}
+              {(() => { const s = humanizeSummary(lastAnalysis.summary).match(/[^.!?]+[.!?]+/g); return s ? s.slice(0, 2).join(" ").trim() : humanizeSummary(lastAnalysis.summary); })()}
             </p>
           )}
         </div>
@@ -1592,7 +1596,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   <h3 className="text-[16px] font-extrabold text-foreground">Résumé</h3>
                 </div>
                 <p className="text-[15px] text-foreground leading-relaxed font-bold">
-                  {(() => { const s = analysis.summary!.match(/[^.!?]+[.!?]+/g); return s ? s.slice(0, 2).join(" ").trim() : analysis.summary; })()}
+                  {(() => { const s = humanizeSummary(analysis.summary!).match(/[^.!?]+[.!?]+/g); return s ? s.slice(0, 2).join(" ").trim() : humanizeSummary(analysis.summary!); })()}
                 </p>
               </div>
             )}
@@ -2263,7 +2267,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                                 </span>
                                 <span className="text-[12px] text-muted-foreground font-semibold">{formatDuration(session.duration_seconds)} • {session.message_count} msg</span>
                               </div>
-                              {analysis?.summary && <p className="text-[12px] text-muted-foreground mt-1 truncate">{analysis.summary}</p>}
+                              {analysis?.summary && <p className="text-[12px] text-muted-foreground mt-1 truncate">{humanizeSummary(analysis.summary)}</p>}
                             </div>
                             <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                           </button>
