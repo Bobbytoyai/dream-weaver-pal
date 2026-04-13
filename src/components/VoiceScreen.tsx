@@ -184,7 +184,7 @@ const VoiceScreen = ({
   const bgHex = BG_HEX_MAP[bgId] || "#E8F0FE";
 
   return (
-    <div className="child-light flex flex-col items-center justify-between h-screen px-4 py-6 max-w-lg mx-auto select-none overflow-hidden relative"
+    <div className="child-light flex flex-col items-center justify-between h-screen w-screen px-4 py-6 select-none overflow-hidden relative"
       style={{ background: bgHex }}>
 
       {showDebug && (
@@ -248,7 +248,7 @@ const VoiceScreen = ({
           }}
         />
 
-        <div className="relative w-80 h-80 md:w-96 md:h-96" onPointerDownCapture={sm.handleTapBobby}>
+        <div className="relative w-80 h-80 md:w-[28rem] md:h-[28rem] lg:w-[34rem] lg:h-[34rem]" onPointerDownCapture={sm.handleTapBobby}>
           <HologramFace
             voiceState={sm.displayState}
             enableCamera={parentSettings?.enableCamera ?? false}
