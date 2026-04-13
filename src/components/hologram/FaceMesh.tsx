@@ -532,8 +532,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={rightCheekRef} position={[rightCheekX, rightCheekY, 0.005]} material={blushMat} geometry={cheekGeo} />
 
       {/* Eyes */}
-      {renderEye("left", leftEyeRef, leftPupilRef, leftIrisRef, leftEyelidRef, leftEyeX, leftEyeY, hl1Offset, hl2Offset)}
-      {renderEye("right", rightEyeRef, rightPupilRef, rightIrisRef, rightEyelidRef, rightEyeX, rightEyeY, hl1OffsetR, hl2OffsetR)}
+      {renderEye("left", leftEyeRef, leftPupilRef, leftIrisRef, leftEyelidRef, leftHl1Ref, leftHl2Ref, leftEyeX, leftEyeY, hl1Offset, hl2Offset)}
+      {renderEye("right", rightEyeRef, rightPupilRef, rightIrisRef, rightEyelidRef, rightHl1Ref, rightHl2Ref, rightEyeX, rightEyeY, hl1OffsetR, hl2OffsetR)}
 
       {/* Eyebrows — curved arcs */}
       <mesh ref={leftEyebrowRef} position={[leftBrowX, leftBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
