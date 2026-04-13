@@ -2292,24 +2292,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
           <div className="flex-1 min-w-0">
             <input type="text" value={settings.childName}
-              onChange={(e) => {
-                const newName = e.target.value;
-                // If significantly different from original, ask surnom vs session change
-                if (newName.length > 1 && childName && newName.toLowerCase() !== childName.toLowerCase() && newName.trim() !== "") {
-                  setPendingNameChange(newName);
-                } else {
-                  updateSetting("childName", newName);
-                }
-              }}
-              onBlur={() => {
-                // If name changed on blur without dialog, trigger it
-                if (settings.childName !== childName && settings.childName.length > 1 && !pendingNameChange) {
-                  setPendingNameChange(settings.childName);
-                }
-              }}
+              onChange={(e) => updateSetting("childName", e.target.value)}
               placeholder="Prénom"
               className="w-full bg-transparent text-xl font-extrabold text-foreground outline-none placeholder:text-muted-foreground/50 border-b border-primary/20 pb-1 focus:border-primary transition-colors" />
             <p className="text-[11px] text-muted-foreground mt-1">Profil enfant</p>
+            {settings.childName.trim() !== "" && settings.childName.trim() !== childName && (
+              <button
+                onClick={() => setPendingNameChange(settings.childName.trim())}
+                className="mt-2 w-full py-2 rounded-xl bg-primary text-primary-foreground text-[13px] font-bold active:scale-95 transition-all shadow-sm shadow-primary/20">
+                Enregistrer le prénom
+              </button>
+            )}
           </div>
         </div>
         {/* Age selector — pills */}
