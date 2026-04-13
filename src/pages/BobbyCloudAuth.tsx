@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 type AuthStep = "choice" | "signup-info" | "signup-password" | "confirm-email" | "login" | "forgot-password" | "forgot-sent";
 
@@ -9,6 +10,7 @@ export default function BobbyCloudAuth() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnTo = searchParams.get("returnTo") || "/";
+  const { user, loading } = useAuth();
 
   const [step, setStep] = useState<AuthStep>("choice");
   const [submitting, setSubmitting] = useState(false);
@@ -29,10 +31,10 @@ export default function BobbyCloudAuth() {
 
   // Check if already authenticated
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate(returnTo, { replace: true });
-    });
-  }, []);
+    if (!loading && user) {
+      navigate(returnTo, { replace: true });
+    }
+  }, [loading, navigate, returnTo, user]);
 
   const handleSignup = async () => {
     if (password !== confirmPassword) {
@@ -73,7 +75,7 @@ export default function BobbyCloudAuth() {
   const handleLogin = async () => {
     if (!loginEmail.trim() || !loginPassword.trim()) return;
     setSubmitting(true);
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: loginEmail,
       password: loginPassword,
     });
@@ -81,16 +83,15 @@ export default function BobbyCloudAuth() {
       toast.error(error.message);
     } else {
       // Update profile with parent info if not set
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
+      if (data.user) {
         await supabase
           .from("profiles")
           .update({
-            parent_last_name: user.user_metadata?.parent_last_name || "",
-            parent_first_name: user.user_metadata?.parent_first_name || "",
-            emergency_phone: user.user_metadata?.emergency_phone || "",
+            parent_last_name: data.user.user_metadata?.parent_last_name || "",
+            parent_first_name: data.user.user_metadata?.parent_first_name || "",
+            emergency_phone: data.user.user_metadata?.emergency_phone || "",
           })
-          .eq("user_id", user.id);
+          .eq("user_id", data.user.id);
       }
       toast.success("Connecté !");
       navigate(returnTo, { replace: true });
