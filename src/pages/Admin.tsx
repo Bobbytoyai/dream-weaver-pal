@@ -3095,7 +3095,7 @@ const Admin = () => {
               <DashCard key={section.id} label={section.label} emoji={section.emoji}
                 count={sectionCounts[section.id] ?? "…"} desc={section.desc}
                 color={section.color} bgColor={section.bgColor}
-                badge={section.id === "cloud" ? `${entries.filter(e => e.is_active).length} actifs` : undefined}
+                badge={section.id === "cloud" ? `${entries.filter(e => e.is_active).length} actifs` : section.id === "autolearn" && autoLearnCount !== null ? "live" : undefined}
                 onClick={() => { setTopSection(section.id); setSearch(""); }} />
             ))}
           </div>
