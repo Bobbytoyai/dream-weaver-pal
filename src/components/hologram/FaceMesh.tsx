@@ -21,6 +21,13 @@ const COLOR_TINTS: Record<string, { iris: string; cheek: string }> = {
   gold:   { iris: "#F9A825", cheek: "#FFE082" },
 };
 
+interface BobbyColors {
+  iris: string;
+  cheek: string;
+  eyebrow: string;
+  background: string;
+}
+
 interface FaceMeshProps {
   faceState: FaceState;
   gazeRef: React.MutableRefObject<{ x: number; y: number }>;
@@ -29,6 +36,7 @@ interface FaceMeshProps {
   emotionIntensity?: number;
   emotionDuringSpeech?: FaceState;
   bobbyColor?: string;
+  bobbyColors?: BobbyColors;
   expressionOverride?: ExpressionCombo;
   expressionIntensityLevel?: number;
 }
