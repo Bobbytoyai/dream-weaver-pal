@@ -494,6 +494,45 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          bobby_code: string | null
+          cloud_storage_mb: number
+          created_at: string
+          email: string
+          emergency_phone: string
+          id: string
+          parent_first_name: string
+          parent_last_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bobby_code?: string | null
+          cloud_storage_mb?: number
+          created_at?: string
+          email?: string
+          emergency_phone?: string
+          id?: string
+          parent_first_name?: string
+          parent_last_name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bobby_code?: string | null
+          cloud_storage_mb?: number
+          created_at?: string
+          email?: string
+          emergency_phone?: string
+          id?: string
+          parent_first_name?: string
+          parent_last_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       session_messages: {
         Row: {
           content: string

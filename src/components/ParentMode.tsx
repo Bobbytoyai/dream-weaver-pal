@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   ArrowLeft, Clock, MessageSquare, Heart, Brain, Loader2, RefreshCw,
@@ -14,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import StoryLibrary from "@/components/StoryLibrary";
 import ContentCategories from "@/components/ContentCategories";
 import BobbyStore from "@/components/BobbyStore";
+import StoreGateWrapper from "@/components/StoreGateWrapper";
 import VoiceSettings from "@/components/parent/VoiceSettings";
 import BobbyCustomizer from "@/components/parent/BobbyCustomizer";
 import LimitsSettings from "@/components/parent/LimitsSettings";
@@ -3245,12 +3247,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       switch (tab) {
         case "dashboard": return renderDashboard();
         case "sessions": return renderSessionsList();
-        case "activites": return (
-          <BobbyStore
-            childName={settings.childName}
-            childAge={settings.childAge}
-          />
-        );
+        case "activites": return <StoreGateWrapper childName={settings.childName} childAge={settings.childAge} />;
         case "profil": return renderReglages();
         case "personnalisation": return (
           <BobbyCustomizer
