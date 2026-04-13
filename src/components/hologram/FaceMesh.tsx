@@ -385,39 +385,36 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(ps);
     if (rightPupilRef.current) rightPupilRef.current.scale.setScalar(ps);
 
-    // Eyelids — only visible during blinks (eyeOpenness < 0.5) or sleep
+    // Eyelids — smooth curtain that slides down naturally during blinks
     const blinkClose = 1 - state.eyeOpenness;
     const isSleepingNow = faceState === "sleepy";
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
       if (ref.current) {
-        // During sleep, force eyelids mostly closed
-        // During blink, show eyelids only when significantly closing (threshold 0.5)
-        // Otherwise hide them completely so they don't sit on screen
-        const isBlinking = blinkClose > 0.5;
+        // Show eyelids as soon as ANY closing begins (threshold near 0)
+        // This creates a smooth, natural curtain effect instead of a flash
         const coverAmount = isSleepingNow
           ? 0.97
-          : isBlinking ? Math.max(0, Math.min(1, blinkClose)) : 0;
+          : Math.max(0, Math.min(1, blinkClose));
         
-        if (coverAmount < 0.01) {
+        if (coverAmount < 0.02) {
           ref.current.visible = false;
           return;
         }
         
         ref.current.visible = true;
         
-        // Smooth quintic ease for very natural, organic slide
+        // Smooth cubic ease for natural, organic slide
         const t = coverAmount;
-        const easedCover = t * t * t * (t * (t * 6 - 15) + 10);
+        const easedCover = t * t * (3 - 2 * t); // smoothstep — gentler than quintic
         
-        // Slide from fully hidden above to well below center
+        // Slide from fully hidden above to covering the eye
         const hiddenY = 0.55;
-        const closedY = 0.10; // much higher = only covers top portion of eye
+        const closedY = 0.10;
         let targetY = hiddenY - easedCover * (hiddenY - closedY);
         
-        // Sleeping: eyelids slowly drop down a few mm then return up (drowsy breathing)
+        // Sleeping: eyelids slowly breathe with gentle flutter
         if (isSleepingNow) {
           const flutterT = performance.now() * 0.001;
-          // Negative = eyelid moves DOWN = covers more eye, then returns
           const breathDrop = Math.sin(flutterT * 0.35) * 0.06;
           const peekDrop = Math.sin(flutterT * 0.12) > 0.85 ? Math.sin(flutterT * 1.5) * 0.035 : 0;
           targetY -= Math.max(0, breathDrop) + Math.max(0, peekDrop);
@@ -425,7 +422,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         
         ref.current.position.y = targetY;
         
-        // Slightly squash the eyelid shape as it closes for organic feel
+        // Slightly squash as it closes for organic feel
         const squashX = 1 + easedCover * 0.04;
         ref.current.scale.set(squashX, 1, 1);
       }
