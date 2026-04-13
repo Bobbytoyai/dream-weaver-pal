@@ -172,10 +172,10 @@ const CloudTab = ({
         </div>
       ) : (
         <div className="space-y-3">
-          <button onClick={handleCloudSave} disabled={cloudLoading}
+          <button onClick={() => navigate(`/bobby-cloud?returnTo=${encodeURIComponent(currentPath)}`)} disabled={cloudLoading}
             className="w-full retro-card p-5 hover:translate-y-[-2px] transition-all active:scale-[0.98] disabled:opacity-50" style={{ backgroundColor: 'var(--retro-blue)' }}>
             <div className="flex items-center gap-4">
-              {cloudLoading ? <Loader2 className="w-9 h-9 animate-spin text-gray-800" /> : <CloudUpload className="w-9 h-9 text-gray-800" />}
+              <CloudUpload className="w-9 h-9 text-gray-800" />
               <div className="text-left flex-1">
                 <h3 className="text-[16px] font-black text-gray-800 uppercase">Créer un compte Cloud</h3>
                 <p className="text-[12px] text-gray-600 font-bold mt-0.5">Inscription avec email et mot de passe</p>
@@ -183,7 +183,7 @@ const CloudTab = ({
             </div>
           </button>
 
-          <button onClick={() => navigate("/bobby-cloud?returnTo=/")} disabled={cloudLoading}
+          <button onClick={() => navigate(`/bobby-cloud?returnTo=${encodeURIComponent(currentPath)}`)} disabled={cloudLoading}
             className="w-full retro-card p-5 hover:translate-y-[-2px] transition-all active:scale-[0.98] disabled:opacity-50" style={{ backgroundColor: 'var(--retro-green)' }}>
             <div className="flex items-center gap-4">
               <LogIn className="w-9 h-9 text-gray-800" />
