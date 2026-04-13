@@ -59,6 +59,7 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown, pas de \`\`\`) avec ce
 {
   "summary": "Résumé de la conversation en 2-3 phrases pour le parent",
   "topics_detected": ["sujet1", "sujet2"],
+  "tags": ["apprentissage", "devoirs"],
   "emotions": {"joie": 0.8, "curiosité": 0.6},
   "engagement_level": "high|medium|low",
   "mood_score": "positif|neutre|négatif",
@@ -70,6 +71,18 @@ Réponds UNIQUEMENT avec un JSON valide (pas de markdown, pas de \`\`\`) avec ce
   "extracted_interests": ["intérêt1", "intérêt2"],
   "alerts": []
 }
+
+RÈGLES IMPORTANTES pour "tags" — choisis parmi ces catégories EXACTES :
+- "apprentissage" : devoirs, école, math, sciences, lecture, écriture, leçons
+- "émotions" : peur, tristesse, colère, anxiété, joie, confiance en soi
+- "fun" : blagues, jeux, devinettes, histoires drôles
+- "histoires" : contes, narration, aventures
+- "créativité" : dessin, musique, imagination, invention
+- "social" : amis, famille, relations, école sociale
+- "curiosité" : questions sur le monde, sciences, nature, espace
+- "routine" : matin, coucher, repas, habitudes
+
+Pour "topics_detected", sois TRÈS SPÉCIFIQUE : si l'enfant parle de devoirs de maths, mets "devoirs de mathématiques", pas juste "école".
 
 Pour les alertes, ajoute un objet {"type": "warning|info", "message": "..."} si tu détectes :
 - Tristesse profonde ou détresse
