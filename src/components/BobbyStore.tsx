@@ -428,6 +428,18 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
   }, [selectedItem, activeCategory]);
 
   const toggleInstall = async (contentId: string) => {
+    // Auth required for install/uninstall
+    if (!user) {
+      toast.error("Compte Bobby Cloud requis", {
+        description: "Crée un compte gratuit pour installer des packs",
+        action: {
+          label: "Créer un compte",
+          onClick: () => { window.location.href = `/bobby-cloud?returnTo=${encodeURIComponent(window.location.pathname)}`; },
+        },
+      });
+      return;
+    }
+
     setInstalling(contentId);
     const isInstalled = installedIds.has(contentId);
 
