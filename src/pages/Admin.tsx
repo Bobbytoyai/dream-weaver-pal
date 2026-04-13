@@ -794,9 +794,13 @@ const Admin = () => {
 
   const fetchEntries = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("knowledge_base").select("*").order("priority", { ascending: false });
-    if (error) toast.error("Erreur: " + error.message);
-    else setEntries((data as unknown as KBEntry[]) || []);
+    const [kbRes, autoLearnRes] = await Promise.all([
+      supabase.from("knowledge_base").select("*").order("priority", { ascending: false }),
+      supabase.from("knowledge_base").select("id", { count: "exact", head: true }).not("category", "eq", "général"),
+    ]);
+    if (kbRes.error) toast.error("Erreur: " + kbRes.error.message);
+    else setEntries((kbRes.data as unknown as KBEntry[]) || []);
+    setAutoLearnCount(autoLearnRes.count ?? 0);
     setLoading(false);
   }, []);
 
@@ -915,10 +919,11 @@ const Admin = () => {
       chansons: CHANSONS.length,
       cerveau: "16",
       cloud: entries.length,
+      autolearn: autoLearnCount ?? "…",
       store: storeItems.length,
       cloudusers: cloudUsers.length,
     } as Record<string, string | number>;
-  }, [interactions, entries, cloudStories, storeItems, cloudUsers]);
+  }, [interactions, entries, cloudStories, storeItems, cloudUsers, autoLearnCount]);
 
   // ─── Handlers ───
   const handleSave = async () => {
