@@ -78,7 +78,12 @@ export async function getLLMReply(
     }
 
     const data = await response.json();
-    const replyText = data.reply?.trim();
+    let replyText = (data.reply?.trim() || "");
+
+    // Safety: replace any leaked placeholder with actual child name
+    replyText = replyText.replace(/\{?\bchild[_\s]?name\b\}?/gi, childName);
+    replyText = replyText.replace(/\[prénom\]/gi, childName);
+    replyText = replyText.replace(/\[enfant\]/gi, childName);
 
     if (!replyText) return null;
 
