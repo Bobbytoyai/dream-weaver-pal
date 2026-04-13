@@ -1101,20 +1101,22 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     const hasAnalysis = recentAnalyses.length > 0;
 
     return (
-    <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
+    <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>
 
-      {/* ═══ 1. KPI HERO — 2x2 colorful square cards ═══ */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* ═══ 1. KPI HERO — 3 cols colorful ═══ */}
+      <div className="grid grid-cols-3 gap-2">
         {[
-          { value: totalSessions, label: "Sessions", emoji: "💬", gradient: "from-blue-500/25 to-blue-400/10", border: "border-blue-400/20" },
-          { value: totalMessages, label: "Messages", emoji: "📝", gradient: "from-emerald-500/25 to-emerald-400/10", border: "border-emerald-400/20" },
-          { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", gradient: "from-purple-500/25 to-purple-400/10", border: "border-purple-400/20" },
-          { value: todaySessions.length, label: "Aujourd'hui", emoji: "📅", gradient: "from-amber-500/25 to-amber-400/10", border: "border-amber-400/20" },
+          { value: totalSessions, label: "Sessions", emoji: "💬", gradient: "from-blue-400/30 to-indigo-400/10", border: "border-blue-300/25" },
+          { value: totalMessages, label: "Messages", emoji: "📝", gradient: "from-emerald-400/30 to-teal-400/10", border: "border-emerald-300/25" },
+          { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", gradient: "from-purple-400/30 to-violet-400/10", border: "border-purple-300/25" },
+          { value: todaySessions.length, label: "Aujourd'hui", emoji: "📅", gradient: "from-amber-400/30 to-orange-400/10", border: "border-amber-300/25" },
+          { value: avgMessagesPerSession, label: "Msg/session", emoji: "📊", gradient: "from-pink-400/30 to-rose-400/10", border: "border-pink-300/25" },
+          { value: `${recentAnalyses.length}`, label: "Analyses", emoji: "🔬", gradient: "from-cyan-400/30 to-sky-400/10", border: "border-cyan-300/25" },
         ].map((kpi) => (
-          <div key={kpi.label} className={`bg-gradient-to-br ${kpi.gradient} rounded-3xl p-4 border ${kpi.border} text-center`}>
-            <span className="text-3xl block mb-1">{kpi.emoji}</span>
-            <p className="text-2xl font-extrabold text-foreground">{kpi.value}</p>
-            <p className="text-[13px] text-muted-foreground font-bold mt-1">{kpi.label}</p>
+          <div key={kpi.label} className={`bg-gradient-to-br ${kpi.gradient} rounded-[18px] p-3 border-2 ${kpi.border} text-center`}>
+            <span className="text-[28px] block mb-0.5 drop-shadow-sm">{kpi.emoji}</span>
+            <p className="text-[20px] font-black text-foreground leading-none">{kpi.value}</p>
+            <p className="text-[10px] text-muted-foreground font-bold mt-1">{kpi.label}</p>
           </div>
         ))}
       </div>
