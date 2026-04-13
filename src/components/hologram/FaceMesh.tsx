@@ -249,33 +249,32 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(ps);
     if (rightPupilRef.current) rightPupilRef.current.scale.setScalar(ps);
 
-    // Eyelids (blink) — natural slide from top, like a real eyelid
+    // Eyelids (blink) — half-dome curtain descending from above
     const blinkClose = 1 - state.eyeOpenness;
     const isSleepingNow = faceState === "sleepy";
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
       if (ref.current) {
         const coverAmount = Math.max(0, Math.min(1, blinkClose));
-        // Eyelid always full scale — it slides down from above the eye
-        ref.current.scale.y = 1;
-        ref.current.scale.x = 1;
-        // When open (coverAmount=0): eyelid sits fully above eye (hidden)
-        // When closed (coverAmount=1): eyelid slides down to cover eye center
-        const openY = 0.88;  // fully retracted above eye
-        const closedY = 0.0; // centered on eye = fully closed
-        // Ease the movement for natural feel
-        const easedCover = coverAmount * coverAmount * (3 - 2 * coverAmount); // smoothstep
-        let targetY = openY - easedCover * (openY - closedY);
+        // Smoothstep easing for natural motion
+        const easedCover = coverAmount * coverAmount * (3 - 2 * coverAmount);
         
-        // Sleep mode: subtle eyelid flutter (like almost waking up)
+        // The eyelid is a half-dome sitting above. We slide it down.
+        // Open: dome is fully above the eye, invisible behind forehead area
+        // Closed: dome descends to cover the eye
+        const fullyOpenY = 1.05;   // dome fully retracted above eye
+        const fullyClosed = -0.02; // dome bottom at eye center
+        let targetY = fullyOpenY - easedCover * (fullyOpenY - fullyClosed);
+        
+        // Sleep: subtle flutter
         if (isSleepingNow && coverAmount > 0.9) {
           const flutterT = performance.now() * 0.001;
-          // Very subtle periodic lift — like REM sleep or almost waking
-          const flutter = Math.sin(flutterT * 0.3) * 0.02 + Math.sin(flutterT * 0.7) * 0.01;
+          const flutter = Math.sin(flutterT * 0.3) * 0.015 + Math.sin(flutterT * 0.7) * 0.008;
           targetY += Math.max(0, flutter);
         }
         
         ref.current.position.y = targetY;
-        ref.current.visible = coverAmount > 0.01;
+        // Always visible — the half-dome naturally hides above the eye when open
+        ref.current.visible = true;
       }
     });
 
@@ -399,11 +398,17 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={pupilRef} geometry={pupilGeo} position={[0, -0.02, 0.02]} material={pupilMat} />
       <mesh position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       <mesh position={[hl2[0], hl2[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} />
-      <mesh ref={eyelidRef} position={[0, 0.88, 0.05]} material={eyelidMat}>
+      {/* Eyelid: half-dome descending from above like a real eyelid */}
+      <mesh ref={eyelidRef} position={[0, 0.95, 0.05]} material={eyelidMat}>
         <shapeGeometry args={[(() => {
           const s = new THREE.Shape();
-          // Larger eyelid to fully cover the eye — no bleed-through
-          s.absellipse(0, 0, 0.48, 0.44, 0, Math.PI * 2, false, 0);
+          const rx = 0.50;
+          const ry = 0.48;
+          // Draw dome: flat bottom at y=0, curved part goes UP (positive y)
+          // startAngle=0 (right), endAngle=PI (left), going counterclockwise = upper half
+          s.moveTo(rx, 0);
+          s.absellipse(0, 0, rx, ry, 0, Math.PI, false, 0);
+          s.lineTo(rx, 0);
           return s;
         })(), 32]} />
       </mesh>
