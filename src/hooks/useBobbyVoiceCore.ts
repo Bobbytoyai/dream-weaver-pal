@@ -295,7 +295,7 @@ export function useBobbyVoiceCore({
 
     // ─── Cooldown: reject transcripts arriving too soon after Bobby stopped speaking ───
     const msSinceSpeech = Date.now() - lastSpeechEndRef.current;
-    if (msSinceSpeech < 1500) {
+    if (msSinceSpeech < 800) {
       console.warn("[BobbyVoiceCore] 🔇 Anti-echo cooldown: rejected transcript", msSinceSpeech, "ms after speech end");
       return;
     }
