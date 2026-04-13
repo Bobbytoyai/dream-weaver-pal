@@ -11,6 +11,8 @@ import {
   SkipForward, SkipBack, Activity, Bell, ChevronDown, ChevronLeft, Star, Edit3
 } from "lucide-react";
 const LazyDashboardTab = lazy(() => import("@/components/parent/DashboardTab"));
+const LazySessionsListTab = lazy(() => import("@/components/parent/SessionsListTab"));
+const LazySessionDetailView = lazy(() => import("@/components/parent/SessionDetailView"));
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { getInterestSnapshot, INTEREST_KEYWORDS_PUBLIC } from "@/lib/bobby/interestTracker";
 import { supabase } from "@/integrations/supabase/client";
@@ -2735,7 +2737,34 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   // ═══════════════════════════════════════════════════════════════
 
   const renderTabContent = () => {
-    if (selectedSession) return renderSessionDetail();
+    if (selectedSession) return (
+      <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
+        <LazySessionDetailView
+          session={selectedSession}
+          analysis={selectedAnalysis || analyses.find(a => a.session_id === selectedSession.id) || null}
+          analyses={analyses}
+          sessionMessages={sessionMessages}
+          analyzing={analyzing}
+          displayName={displayName}
+          analyzeSession={analyzeSession}
+          toggleFavorite={toggleFavorite}
+          exportSessionPDF={exportSessionPDF}
+          deleteSession={deleteSession}
+          saveParentNote={saveParentNote}
+          onCloudSave={handleCloudSave}
+          setConfirmDialog={setConfirmDialog}
+          playingAudio={playingAudio}
+          audioProgress={audioProgress}
+          audioDuration={audioDuration}
+          audioSpeed={audioSpeed}
+          activeMessageIdx={activeMessageIdx}
+          playAudio={playAudio}
+          seekAudio={seekAudio}
+          skipAudio={skipAudio}
+          setAudioSpeed={setAudioSpeed}
+        />
+      </Suspense>
+    );
     const tab = displayedTab;
     // If a category is selected, render that category
     if (tab !== "home") {
@@ -2753,7 +2782,24 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             />
           </Suspense>
         );
-        case "sessions": return renderSessionsList();
+        case "sessions": return (
+          <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
+            <LazySessionsListTab
+              sessions={sessions}
+              analyses={analyses}
+              loading={loading}
+              displayName={displayName}
+              tagFilter={tagFilter}
+              setTagFilter={setTagFilter}
+              sessionFavFilter={sessionFavFilter}
+              setSessionFavFilter={setSessionFavFilter}
+              sessionSearch={sessionSearch}
+              setSessionSearch={setSessionSearch}
+              analyzeSession={analyzeSession}
+              groupedSessions={groupedSessions}
+            />
+          </Suspense>
+        );
         case "activites": return <StoreGateWrapper childName={settings.childName} childAge={settings.childAge} />;
         case "profil": return renderReglages();
         case "personnalisation": return (
