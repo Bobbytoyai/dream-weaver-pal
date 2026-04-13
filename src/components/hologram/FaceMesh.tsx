@@ -253,14 +253,10 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     const blinkClose = 1 - state.eyeOpenness;
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
       if (ref.current) {
-        // When fully closed (blinkClose=1), eyelid must cover entire eye
-        // Eye ellipse goes from -0.32 to +0.32 (height 0.64)
-        // Eyelid plane is 0.86 wide x 0.80 tall
         const coverAmount = Math.max(0, Math.min(1, blinkClose));
         ref.current.scale.y = Math.max(0.01, coverAmount * 1.0);
-        // Position: start above eye (hidden), slide down to center of eye when fully closed
-        // At coverAmount=0: y=0.72 (above, hidden). At coverAmount=1: y=-0.08 (centered over eye)
-        ref.current.position.y = 0.72 - coverAmount * 0.80;
+        // Slide from above eye (hidden) to centered over eye when fully closed
+        ref.current.position.y = 0.68 - coverAmount * 0.76;
         ref.current.visible = coverAmount > 0.02;
       }
     });
