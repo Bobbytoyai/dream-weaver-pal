@@ -145,22 +145,22 @@ const formatDayHeader = (date: string): string => {
 
 const Toggle = ({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) => (
   <button onClick={() => onChange(!value)}
-    className={`relative w-12 h-7 rounded-full transition-all duration-300 ${value ? "bg-primary" : "bg-muted"}`}>
-    <div className={`w-5 h-5 rounded-full bg-card shadow-md transition-all duration-300 ${value ? "translate-x-6" : "translate-x-1"}`} />
+    className={`relative w-12 h-7 border-4 border-black transition-all duration-300 ${value ? "bg-foreground" : "bg-white"}`}>
+    <div className={`w-4 h-4 bg-white border-2 border-black transition-all duration-300 ${value ? "translate-x-5 bg-[var(--retro-green)]" : "translate-x-0.5"}`} style={{ marginTop: "-2px" }} />
   </button>
 );
 
 const SettingRow = ({ icon: Icon, title, desc, children }: {
   icon: any; title: string; desc?: string; children: React.ReactNode;
 }) => (
-  <div className="flex items-center justify-between py-3 px-1">
+  <div className="flex items-center justify-between py-3 px-1 border-b-2 border-black/10 last:border-0">
     <div className="flex items-center gap-3 flex-1 min-w-0">
-      <div className="w-9 h-9 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">
-        <Icon className="w-4.5 h-4.5 text-primary" />
+      <div className="w-9 h-9 border-2 border-black bg-white flex items-center justify-center shrink-0">
+        <Icon className="w-4.5 h-4.5 text-foreground" />
       </div>
       <div className="min-w-0">
-        <h4 className="text-[14px] font-semibold text-foreground">{title}</h4>
-        {desc && <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">{desc}</p>}
+        <h4 className="text-[14px] font-black text-foreground uppercase">{title}</h4>
+        {desc && <p className="text-[12px] text-foreground/60 leading-tight mt-0.5 font-bold">{desc}</p>}
       </div>
     </div>
     <div className="shrink-0 ml-3">{children}</div>
@@ -1858,15 +1858,16 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   {analysis?.audio_path ? (
                     <>
                       <button onClick={() => skipAudio(-10)}
-                        className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:bg-muted/70 transition-all active:scale-90">
+                        className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all active:scale-90">
                         <SkipBack className="w-4 h-4" />
                       </button>
                       <button onClick={() => playAudio(analysis.audio_path!)}
-                        className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-primary/25 active:scale-95">
+                        className="w-14 h-14 border-4 border-black bg-foreground text-background flex items-center justify-center hover:opacity-90 transition-all active:scale-95"
+                        style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
                         {playingAudio === analysis.audio_path ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-0.5" />}
                       </button>
                       <button onClick={() => skipAudio(10)}
-                        className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:bg-muted/70 transition-all active:scale-90">
+                        className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all active:scale-90">
                         <SkipForward className="w-4 h-4" />
                       </button>
                     </>
@@ -1874,25 +1875,27 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     <div className="flex items-center gap-2">
                       {!fullPlaybackActive ? (
                         <button onClick={() => startFullPlayback(0)}
-                          className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-primary/25 active:scale-95">
+                          className="w-14 h-14 border-4 border-black bg-foreground text-background flex items-center justify-center hover:opacity-90 transition-all active:scale-95"
+                          style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
                           <Play className="w-6 h-6 ml-0.5" />
                         </button>
                       ) : (
                         <>
                           <button onClick={() => { if (fullPlaybackIdx > 0) setFullPlaybackIdx(i => Math.max(0, i - 1)); }}
-                            className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:bg-muted/70 transition-all active:scale-90">
+                            className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all active:scale-90">
                             <SkipBack className="w-4 h-4" />
                           </button>
                           <button onClick={toggleFullPlaybackPause}
-                            className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-primary/25 active:scale-95">
+                            className="w-14 h-14 border-4 border-black bg-foreground text-background flex items-center justify-center hover:opacity-90 transition-all active:scale-95"
+                            style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
                             {fullPlaybackLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : fullPlaybackPaused ? <Play className="w-6 h-6 ml-0.5" /> : <Pause className="w-6 h-6" />}
                           </button>
                           <button onClick={() => { if (fullPlaybackIdx < sessionMessages.length - 1) setFullPlaybackIdx(i => i + 1); }}
-                            className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:bg-muted/70 transition-all active:scale-90">
+                            className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all active:scale-90">
                             <SkipForward className="w-4 h-4" />
                           </button>
                           <button onClick={stopFullPlayback}
-                            className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center text-destructive hover:bg-destructive/20 transition-all border border-destructive/15">
+                            className="w-10 h-10 border-2 border-black bg-[var(--retro-red)] flex items-center justify-center text-foreground hover:opacity-80 transition-all">
                             <X className="w-4 h-4" />
                           </button>
                         </>
@@ -1903,10 +1906,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 <div className="flex items-center justify-center gap-2 mt-3">
                   {[0.75, 1, 1.25, 1.5, 2].map(speed => (
                     <button key={speed} onClick={() => { if (analysis?.audio_path) setAudioSpeed(speed); else setFullPlaybackSpeed(speed); }}
-                      className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-all ${
+                      className={`px-3 py-1.5 text-[11px] font-black transition-all border-2 border-black ${
                         (analysis?.audio_path ? audioSpeed : fullPlaybackSpeed) === speed
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "bg-muted/50 text-muted-foreground hover:bg-muted/70"
+                          ? "bg-foreground text-background"
+                          : "bg-white text-foreground/60 hover:bg-[var(--retro-yellow)]"
                       }`}>
                       {speed}×
                     </button>
@@ -1914,7 +1917,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 </div>
                 {/* Karaoke-style transcription — scrolling messages with active highlight */}
                 {(playingAudio || fullPlaybackActive) && sessionMessages.length > 0 && (
-                  <div className="mt-3 max-h-36 overflow-y-auto rounded-2xl bg-muted/20 border border-border/10 scroll-smooth">
+                  <div className="mt-3 max-h-36 overflow-y-auto border-2 border-black bg-white scroll-smooth">
                     {sessionMessages.map((msg, i) => {
                       const isActive = i === activeMessageIdx || (fullPlaybackActive && i === fullPlaybackIdx);
                       const isPast = i < (fullPlaybackActive ? fullPlaybackIdx : activeMessageIdx);
@@ -1932,14 +1935,14 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                           }}
                           className={`px-3 py-2 cursor-pointer transition-all duration-300 ${
                             isActive
-                              ? "bg-primary/12 border-l-3 border-l-primary"
+                              ? "bg-[var(--retro-yellow)] border-l-4 border-l-black"
                               : isPast ? "opacity-40" : "opacity-70"
                           }`}>
-                          <span className="text-[9px] font-black text-muted-foreground">
+                          <span className="text-[9px] font-black text-foreground/60">
                             {msg.role === "user" ? `👦 ${displayName}` : "🤖 Bobby"}
                           </span>
-                          <p className={`text-[11px] leading-snug mt-0.5 font-medium ${
-                            isActive ? "text-foreground font-bold" : "text-foreground/70"
+                          <p className={`text-[11px] leading-snug mt-0.5 font-bold ${
+                            isActive ? "text-foreground font-black" : "text-foreground/70"
                           }`}>{msg.content?.slice(0, 120)}{(msg.content?.length || 0) > 120 ? "…" : ""}</p>
                         </div>
                       );
@@ -1961,27 +1964,28 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     value={noteText}
                     onChange={e => setNoteText(e.target.value)}
                     placeholder="Ajoutez une note sur cette session…"
-                    className="w-full bg-muted rounded-2xl px-4 py-3 text-[14px] text-foreground outline-none focus:ring-2 focus:ring-primary/30 resize-none h-24 font-medium"
+                    className="w-full bg-white px-4 py-3 text-[14px] text-foreground outline-none border-4 border-black resize-none h-24 font-bold"
                   />
                   <div className="flex gap-3">
                     <button onClick={() => saveParentNote(selectedSession!.id, noteText)}
-                      className="flex-1 py-3 rounded-2xl bg-primary text-primary-foreground text-[14px] font-extrabold shadow-sm">
-                      💾 Enregistrer
+                      className="flex-1 py-3 border-4 border-black bg-foreground text-background text-[14px] font-black uppercase"
+                      style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
+                      💾 ENREGISTRER
                     </button>
                     <button onClick={() => setEditingNote(null)}
-                      className="px-5 py-3 rounded-2xl bg-muted text-muted-foreground text-[14px] font-bold">
-                      Annuler
+                      className="px-5 py-3 border-4 border-black bg-white text-foreground text-[14px] font-black uppercase">
+                      ANNULER
                     </button>
                   </div>
                 </div>
               ) : (
                 <button
                   onClick={() => { setEditingNote(selectedSession!.id); setNoteText(selectedSession!.parent_note || ""); }}
-                  className="w-full text-left p-3 rounded-2xl hover:bg-muted/50 transition-all">
+                  className="w-full text-left p-3 border-2 border-dashed border-black/30 hover:bg-[var(--retro-yellow)] transition-all">
                   {selectedSession!.parent_note ? (
-                    <p className="text-[14px] text-foreground leading-relaxed font-medium">{selectedSession!.parent_note}</p>
+                    <p className="text-[14px] text-foreground leading-relaxed font-bold">{selectedSession!.parent_note}</p>
                   ) : (
-                    <p className="text-[14px] text-muted-foreground italic font-medium">Appuyez pour ajouter une note…</p>
+                    <p className="text-[14px] text-foreground/50 italic font-bold">Appuyez pour ajouter une note…</p>
                   )}
                 </button>
               )}
@@ -2311,102 +2315,100 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </button>
       )}
       {/* Avatar + Name + Age — compact hero card */}
-      <div className="bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/10 rounded-3xl p-4 border border-primary/10 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
+      <div className="retro-card retro-card-tilt-1 p-4" style={{ backgroundColor: 'var(--retro-blue)' }}>
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-primary/15 flex items-center justify-center text-4xl shrink-0">
+          <div className="w-16 h-16 border-4 border-black bg-white flex items-center justify-center text-4xl shrink-0">
             👤
           </div>
           <div className="flex-1 min-w-0">
             <input type="text" value={settings.childName}
               onChange={(e) => updateSetting("childName", e.target.value)}
               placeholder="Prénom"
-              className="w-full bg-transparent text-xl font-extrabold text-foreground outline-none placeholder:text-muted-foreground/50 border-b border-primary/20 pb-1 focus:border-primary transition-colors" />
-            <p className="text-[11px] text-muted-foreground mt-1">Profil enfant</p>
+              className="w-full bg-transparent text-xl font-black text-foreground outline-none placeholder:text-foreground/40 border-b-2 border-black pb-1 focus:border-foreground transition-colors uppercase" />
+            <p className="text-[11px] text-foreground/60 mt-1 font-bold">Profil enfant</p>
             {settings.childName.trim() !== "" && settings.childName.trim() !== childName && (
               <button
                 onClick={() => setPendingNameChange(settings.childName.trim())}
-                className="mt-2 w-full py-2 rounded-xl bg-primary text-primary-foreground text-[13px] font-bold active:scale-95 transition-all shadow-sm shadow-primary/20">
+                className="mt-2 w-full py-2 border-2 border-black bg-foreground text-background text-[13px] font-black active:scale-95 transition-all uppercase"
+                style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
                 Enregistrer le prénom
               </button>
             )}
           </div>
         </div>
-        {/* Age selector — pills */}
         <div className="flex gap-1.5 mt-3 overflow-x-auto">
           {[4, 5, 6, 7, 8, 9, 10, 11, 12].map(age => (
             <button key={age} onClick={() => updateSetting("childAge", age)}
-              className={`shrink-0 w-10 h-10 rounded-xl text-[13px] font-extrabold transition-all duration-200 active:scale-90 ${
+              className={`shrink-0 w-10 h-10 border-2 border-black text-[13px] font-black transition-all duration-200 active:scale-90 ${
                 settings.childAge === age
-                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/30 scale-105"
-                  : "bg-card/60 text-foreground/60 hover:bg-card"
+                  ? "bg-foreground text-background"
+                  : "bg-white text-foreground/60 hover:bg-[var(--retro-yellow)]"
               }`}>{age}</button>
           ))}
-          <span className="self-center text-[10px] text-muted-foreground ml-1 shrink-0">ans</span>
+          <span className="self-center text-[10px] text-foreground/60 ml-1 shrink-0 font-black">ans</span>
         </div>
       </div>
 
       {/* Personality — square cards grid */}
-      <div className="grid grid-cols-2 gap-2.5 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
+      <div className="grid grid-cols-2 gap-2.5">
         {([
-          ["calm", "😌", "Calme", "Doux et rassurant", "from-blue-400/15 to-blue-300/5"],
-          ["energetic", "⚡", "Énergique", "Vif et enthousiaste", "from-amber-400/15 to-amber-300/5"],
-          ["educational", "📚", "Éducatif", "Curieux et savant", "from-emerald-400/15 to-emerald-300/5"],
-          ["balanced", "🎯", "Équilibré", "Un peu de tout", "from-purple-400/15 to-purple-300/5"],
-        ] as const).map(([val, emoji, label, desc, gradient]) => (
+          ["calm", "😌", "Calme", "Doux et rassurant", "var(--retro-blue)"],
+          ["energetic", "⚡", "Énergique", "Vif et enthousiaste", "var(--retro-yellow)"],
+          ["educational", "📚", "Éducatif", "Curieux et savant", "var(--retro-green)"],
+          ["balanced", "🎯", "Équilibré", "Un peu de tout", "var(--retro-purple)"],
+        ] as const).map(([val, emoji, label, desc, bg]) => (
           <button key={val} onClick={() => updateSetting("personality", val)}
-            className={`bg-gradient-to-br ${gradient} rounded-2xl p-3 text-center transition-all duration-200 active:scale-95 border-2 ${
+            className={`retro-card p-3 text-center transition-all duration-200 active:scale-95 ${
               settings.personality === val
-                ? "border-primary shadow-md shadow-primary/15 scale-[1.02]"
-                : "border-transparent hover:border-primary/15"
-            }`}>
+                ? "ring-2 ring-foreground/30"
+                : ""
+            }`}
+            style={{ backgroundColor: bg }}>
             <span className="text-2xl block mb-1">{emoji}</span>
-            <span className={`text-[12px] font-extrabold block ${settings.personality === val ? "text-primary" : "text-foreground"}`}>{label}</span>
-            <span className="text-[9px] text-muted-foreground leading-tight">{desc}</span>
+            <span className="text-[12px] font-black block text-foreground uppercase">{label}</span>
+            <span className="text-[9px] text-foreground/60 leading-tight font-bold">{desc}</span>
           </button>
         ))}
       </div>
 
       {/* Interests — compact colored pills */}
-      <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.15s" }}>
+      <div className="retro-card retro-card-tilt-2 p-3" style={{ backgroundColor: 'var(--retro-green)' }}>
         <div className="flex items-center gap-2 mb-2">
           <span className="text-base">💡</span>
-          <h4 className="text-[12px] font-extrabold text-foreground">Centres d'intérêt détectés</h4>
+          <h4 className="text-[12px] font-black text-foreground uppercase">Centres d'intérêt détectés</h4>
         </div>
         {allInterests.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
             {allInterests.map(([interest], i) => {
-              const colors = [
-                "bg-blue-400/15 text-blue-700", "bg-pink-400/15 text-pink-700",
-                "bg-emerald-400/15 text-emerald-700", "bg-amber-400/15 text-amber-700",
-                "bg-purple-400/15 text-purple-700", "bg-cyan-400/15 text-cyan-700",
-              ];
+              const retroBgs = ["var(--retro-blue)", "var(--retro-red)", "var(--retro-yellow)", "var(--retro-orange)", "var(--retro-purple)", "#e5e5e5"];
               return (
-                <span key={interest} className={`px-2.5 py-1 rounded-xl ${colors[i % colors.length]} text-[10px] font-bold`}>
+                <span key={interest} className="px-2.5 py-1 border-2 border-black text-[10px] font-black text-foreground"
+                  style={{ backgroundColor: retroBgs[i % retroBgs.length] }}>
                   {interest}
                 </span>
               );
             })}
           </div>
         ) : (
-          <p className="text-[10px] text-muted-foreground italic">Détection auto pendant les sessions 🔍</p>
+          <p className="text-[10px] text-foreground/50 italic font-bold">Détection auto pendant les sessions 🔍</p>
         )}
       </div>
 
       {/* Blocked topics — compact */}
-      <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.2s" }}>
+      <div className="retro-card retro-card-tilt-3 p-3" style={{ backgroundColor: 'var(--retro-red)' }}>
         <div className="flex items-center gap-2 mb-2">
           <span className="text-base">🚫</span>
-          <h4 className="text-[12px] font-extrabold text-foreground">Sujets bloqués</h4>
+          <h4 className="text-[12px] font-black text-foreground uppercase">Sujets bloqués</h4>
         </div>
         <div className="flex flex-wrap gap-1.5 mb-2">
           {settings.blockedTopics.map(t => (
             <button key={t} onClick={() => updateSetting("blockedTopics", settings.blockedTopics.filter(x => x !== t))}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-destructive/10 text-destructive text-[10px] font-bold hover:bg-destructive/20 transition-all active:scale-95">
+              className="flex items-center gap-1 px-2.5 py-1 border-2 border-black bg-white text-foreground text-[10px] font-black hover:bg-foreground hover:text-background transition-all active:scale-95">
               {t} <X className="w-2.5 h-2.5" />
             </button>
           ))}
           {settings.blockedTopics.length === 0 && (
-            <span className="text-[10px] text-muted-foreground italic">Aucun sujet bloqué</span>
+            <span className="text-[10px] text-foreground/50 italic font-bold">Aucun sujet bloqué</span>
           )}
         </div>
         <input type="text" value={newBlockedTopic}
@@ -2420,23 +2422,24 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             }
           }}
           placeholder="Ajouter un sujet…"
-          className="w-full px-3 py-2 rounded-xl bg-muted text-[11px] text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
+          className="w-full px-3 py-2 bg-white text-[11px] text-foreground placeholder:text-foreground/40 border-4 border-black outline-none font-bold" />
       </div>
 
       {/* Save button */}
-      <div className="pt-1 pb-2 animate-fadeInUp" style={{ animationDelay: "0.25s" }}>
+      <div className="pt-1 pb-2">
         <button
           onClick={() => {
             onSettingsChange?.(settings);
             setSettingsSaved(true);
             setTimeout(() => setSettingsSaved(false), 2000);
           }}
-          className={`w-full py-3 rounded-2xl text-[13px] font-extrabold transition-all active:scale-95 ${
+          className={`w-full py-3.5 text-[14px] font-black transition-all active:scale-95 border-4 border-black uppercase ${
             settingsSaved
-              ? "bg-emerald-500/15 text-emerald-700 border-2 border-emerald-500/30"
-              : "bg-primary text-primary-foreground hover:opacity-90 shadow-md shadow-primary/20"
-          }`}>
-          {settingsSaved ? "✅ Enregistré !" : "💾 Enregistrer"}
+              ? "bg-[var(--retro-green)] text-foreground"
+              : "bg-foreground text-background hover:opacity-90"
+          }`}
+          style={{ boxShadow: "5px 5px 0px rgba(0,0,0,0.3)" }}>
+          {settingsSaved ? "✅ ENREGISTRÉ !" : "💾 ENREGISTRER"}
         </button>
       </div>
     </div>
@@ -2564,13 +2567,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const renderNouveautes = () => (
     <div className="p-4 space-y-3">
       {/* Version banner */}
-      <div className="bg-gradient-to-br from-primary/15 to-primary/5 rounded-2xl p-4 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
+      <div className="retro-card retro-card-tilt-1 p-4" style={{ backgroundColor: 'var(--retro-blue)' }}>
         <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="w-4 h-4 text-primary" />
-          <h3 className="text-[13px] font-bold text-foreground">Bobby v2.0</h3>
-          <span className="text-[9px] px-2 py-0.5 bg-primary/20 text-primary rounded-full font-semibold">Dernière mise à jour</span>
+          <Sparkles className="w-4 h-4 text-foreground" />
+          <h3 className="text-[13px] font-black text-foreground uppercase">Bobby v2.0</h3>
+          <span className="text-[9px] px-2 py-0.5 border-2 border-black bg-white font-black">Dernière mise à jour</span>
         </div>
-        <p className="text-[11px] text-muted-foreground">10 avril 2026</p>
+        <p className="text-[11px] text-foreground/60 font-bold">10 avril 2026</p>
       </div>
 
       {/* 🎤 Voix */}
@@ -2582,19 +2585,19 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             { emoji: "👩", name: "Maman (Matilda)", desc: "Ultra apaisante, maternelle, lente — stability 85%, speed -12%" },
             { emoji: "👨", name: "Papa (George)", desc: "Calme, protecteur, posé — stability 90%, style minimal" },
           ].map((v) => (
-            <div key={v.name} className="flex items-start gap-3 p-2.5 rounded-xl bg-muted/40">
+            <div key={v.name} className="flex items-start gap-3 p-2.5 border-2 border-black bg-white">
               <span className="text-xl">{v.emoji}</span>
               <div>
-                <h4 className="text-[12px] font-semibold text-foreground">{v.name}</h4>
-                <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{v.desc}</p>
+                <h4 className="text-[12px] font-black text-foreground uppercase">{v.name}</h4>
+                <p className="text-[10px] text-foreground/60 leading-tight mt-0.5 font-bold">{v.desc}</p>
               </div>
             </div>
           ))}
-          <div className="flex items-start gap-3 p-2.5 rounded-xl bg-primary/5 border border-primary/10">
+          <div className="flex items-start gap-3 p-2.5 border-2 border-black bg-[var(--retro-yellow)]">
             <span className="text-xl">🎭</span>
             <div>
-              <h4 className="text-[12px] font-semibold text-primary">8 émotions dynamiques</h4>
-              <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+              <h4 className="text-[12px] font-black text-foreground uppercase">8 émotions dynamiques</h4>
+              <p className="text-[10px] text-foreground/60 leading-tight mt-0.5 font-bold">
                 Joyeux, triste, effrayé, excité, calme, curieux, en colère, ennuyé — la voix s'adapte automatiquement
               </p>
             </div>
@@ -2617,17 +2620,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           ].map((t) => (
             <div key={t.label} className="flex items-center gap-3 py-1.5">
               <span className="text-lg">{t.emoji}</span>
-              <span className="text-[12px] font-medium text-foreground flex-1">{t.label}</span>
-              <span className="text-[9px] px-2 py-0.5 bg-muted rounded-full text-muted-foreground font-medium">{t.tag}</span>
+              <span className="text-[12px] font-black text-foreground flex-1">{t.label}</span>
+              <span className="text-[9px] px-2 py-0.5 border border-black bg-white text-foreground font-black">{t.tag}</span>
             </div>
           ))}
         </div>
-        <div className="mt-3 p-2.5 rounded-xl bg-muted/40">
-          <p className="text-[10px] text-muted-foreground">
-            🧒 <strong className="text-foreground">Bobby</strong> — personnage principal, ami imaginaire vivant dans un jouet
+        <div className="mt-3 p-2.5 border-2 border-black bg-white">
+          <p className="text-[10px] text-foreground/60 font-bold">
+            🧒 <strong className="text-foreground font-black">Bobby</strong> — personnage principal, ami imaginaire vivant dans un jouet
           </p>
-          <p className="text-[10px] text-muted-foreground mt-1">
-            🎵 <strong className="text-foreground">Zik</strong> — ami imaginaire de Bobby, un peu coquin
+          <p className="text-[10px] text-foreground/60 mt-1 font-bold">
+            🎵 <strong className="text-foreground font-black">Zik</strong> — ami imaginaire de Bobby, un peu coquin
           </p>
         </div>
       </Card>
@@ -2648,8 +2651,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             <div key={f.title} className="flex items-start gap-3">
               <span className="text-lg mt-0.5">{f.emoji}</span>
               <div>
-                <h4 className="text-[12px] font-semibold text-foreground">{f.title}</h4>
-                <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{f.desc}</p>
+                <h4 className="text-[12px] font-black text-foreground uppercase">{f.title}</h4>
+                <p className="text-[10px] text-foreground/60 leading-tight mt-0.5 font-bold">{f.desc}</p>
               </div>
             </div>
           ))}
@@ -2660,7 +2663,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       {/* 💡 Suggérer une idée */}
       <div className="animate-fadeInUp" style={{ animationDelay: "0.25s" }}>
       <Card title="💡 Suggérer une idée" icon={Heart}>
-        <p className="text-[10px] text-muted-foreground mb-3 leading-tight">
+        <p className="text-[10px] text-foreground/60 mb-3 leading-tight font-bold">
           Vous avez une idée pour améliorer Bobby ? Partagez-la avec nous !
         </p>
         <textarea
@@ -2668,19 +2671,20 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           onChange={(e) => setSuggestionText(e.target.value)}
           placeholder="Ex: Ajouter une voix en anglais, un mode comptine..."
           rows={3}
-          className="w-full px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all resize-none"
+          className="w-full px-4 py-2.5 bg-white text-sm text-foreground placeholder:text-foreground/40 border-4 border-black outline-none font-bold resize-none"
         />
         <button
           onClick={handleSuggestionSubmit}
           disabled={!suggestionText.trim() || suggestionSent}
-          className={`mt-2 w-full py-2.5 rounded-xl text-[12px] font-semibold transition-all ${
+          className={`mt-2 w-full py-2.5 text-[12px] font-black transition-all border-4 border-black uppercase ${
             suggestionSent
-              ? "bg-green-500/20 text-green-600"
+              ? "bg-[var(--retro-green)] text-foreground"
               : suggestionText.trim()
-                ? "bg-primary text-primary-foreground hover:opacity-90"
-                : "bg-muted text-muted-foreground cursor-not-allowed"
-          }`}>
-          {suggestionSent ? "✅ Merci pour votre idée !" : "Envoyer ma suggestion"}
+                ? "bg-foreground text-background hover:opacity-90"
+                : "bg-white/50 text-foreground/40 cursor-not-allowed border-dashed"
+          }`}
+          style={{ boxShadow: suggestionText.trim() && !suggestionSent ? "3px 3px 0px rgba(0,0,0,0.2)" : "none" }}>
+          {suggestionSent ? "✅ MERCI POUR VOTRE IDÉE !" : "ENVOYER MA SUGGESTION"}
         </button>
       </Card>
       </div>
@@ -2704,23 +2708,23 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     // ── Sub-section: Sécurité ──
     if (confSection === "securite") return (
       <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-        <button onClick={() => setConfSection(null)} className="flex items-center gap-2 text-primary text-[13px] font-extrabold mb-1" style={{ fontFamily: "'Nunito', sans-serif" }}>
-          <ChevronLeft className="w-4 h-4" /> Confidentialité
+        <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
+          <ChevronLeft className="w-4 h-4" /> CONFIDENTIALITÉ
         </button>
         <Card title="Code PIN parental" icon={Lock}>
-          <p className="text-[10px] text-muted-foreground mb-3 leading-tight">Protège l'accès au Mode Parent avec un code à 4 chiffres</p>
+          <p className="text-[10px] text-foreground/60 mb-3 leading-tight font-bold">Protège l'accès au Mode Parent avec un code à 4 chiffres</p>
           <div className="flex gap-2 items-center">
             <input type="password" maxLength={4} inputMode="numeric" pattern="[0-9]*"
               value={settings.parentPin}
               onChange={(e) => { const val = e.target.value.replace(/\D/g, "").slice(0, 4); updateSetting("parentPin", val); }}
               placeholder="● ● ● ●"
-              className="flex-1 px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground text-center tracking-[0.5em] placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all font-mono" />
+              className="flex-1 px-4 py-2.5 bg-white text-sm text-foreground text-center tracking-[0.5em] placeholder:text-foreground/40 border-4 border-black outline-none font-mono font-black" />
             {settings.parentPin.length === 4 && (
-              <span className="text-[11px] text-primary font-medium flex items-center gap-1"><Shield className="w-3.5 h-3.5" /> Actif</span>
+              <span className="text-[11px] text-foreground font-black flex items-center gap-1"><Shield className="w-3.5 h-3.5" /> Actif</span>
             )}
           </div>
           {settings.parentPin.length === 4 && (
-            <button onClick={() => updateSetting("parentPin", "")} className="mt-2 text-[11px] text-destructive hover:underline">Supprimer le code PIN</button>
+            <button onClick={() => updateSetting("parentPin", "")} className="mt-2 text-[11px] text-foreground font-black hover:underline uppercase">Supprimer le code PIN</button>
           )}
         </Card>
         <Card title="Niveau de filtrage" icon={Shield}>
@@ -2730,12 +2734,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               ["strict", "🔒", "Strict", "Filtre renforcé, exclusivement positif"],
             ] as const).map(([val, emoji, label, desc]) => (
               <button key={val} onClick={() => updateSetting("contentFilter", val)}
-                className={`w-full p-3 rounded-xl text-left transition-all ${settings.contentFilter === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"}`}>
+                className={`w-full p-3 text-left transition-all border-2 border-black ${settings.contentFilter === val ? "bg-[var(--retro-green)] ring-2 ring-foreground/20" : "bg-white hover:bg-[var(--retro-yellow)]"}`}>
                 <div className="flex items-center gap-3">
                   <span className="text-xl">{emoji}</span>
                   <div>
-                    <h4 className="text-[12px] font-semibold text-foreground">{label}</h4>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{desc}</p>
+                    <h4 className="text-[12px] font-black text-foreground uppercase">{label}</h4>
+                    <p className="text-[10px] text-foreground/60 mt-0.5 font-bold">{desc}</p>
                   </div>
                 </div>
               </button>
@@ -2756,11 +2760,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
         </Card>
         <Card title="Mot de sécurité" icon={AlertTriangle}>
-          <p className="text-[10px] text-muted-foreground mb-3 leading-tight">Si l'enfant dit ce mot, Bobby réagit immédiatement</p>
+          <p className="text-[10px] text-foreground/60 mb-3 leading-tight font-bold">Si l'enfant dit ce mot, Bobby réagit immédiatement</p>
           <input type="text" value={settings.safeWord}
             onChange={(e) => updateSetting("safeWord", e.target.value.slice(0, 30))}
             placeholder="Ex: 'au secours', 'aide-moi'…"
-            className="w-full px-4 py-2.5 rounded-xl bg-muted text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all mb-3" />
+            className="w-full px-4 py-2.5 bg-white text-sm text-foreground placeholder:text-foreground/40 border-4 border-black outline-none font-bold mb-3" />
           {settings.safeWord.trim() && (
             <div className="grid grid-cols-3 gap-2">
               {([
@@ -2769,9 +2773,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 ["stop", "🛑", "Stop"],
               ] as const).map(([val, emoji, label]) => (
                 <button key={val} onClick={() => updateSetting("safeWordAction", val)}
-                  className={`p-3 rounded-xl text-center transition-all ${settings.safeWordAction === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"}`}>
+                  className={`p-3 text-center transition-all border-2 border-black ${settings.safeWordAction === val ? "bg-[var(--retro-green)] ring-2 ring-foreground/20" : "bg-white hover:bg-[var(--retro-yellow)]"}`}>
                   <span className="text-lg block">{emoji}</span>
-                  <span className={`text-[10px] font-semibold ${settings.safeWordAction === val ? "text-primary" : "text-foreground"}`}>{label}</span>
+                  <span className={`text-[10px] font-black ${settings.safeWordAction === val ? "text-foreground" : "text-foreground/70"} uppercase`}>{label}</span>
                 </button>
               ))}
             </div>
@@ -2783,8 +2787,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     // ── Sub-section: Données ──
     if (confSection === "donnees") return (
       <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-        <button onClick={() => setConfSection(null)} className="flex items-center gap-2 text-primary text-[13px] font-extrabold mb-1" style={{ fontFamily: "'Nunito', sans-serif" }}>
-          <ChevronLeft className="w-4 h-4" /> Confidentialité
+        <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
+          <ChevronLeft className="w-4 h-4" /> CONFIDENTIALITÉ
         </button>
         <Card title="Collecte de données" icon={Eye}>
           <div className="space-y-1">
@@ -2799,13 +2803,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         <Card title="Données stockées" icon={BarChart3}>
           <div className="grid grid-cols-2 gap-2">
             {dataCategories.map(cat => (
-              <div key={cat.id} className="p-3 rounded-xl bg-muted/50">
+              <div key={cat.id} className="p-3 border-2 border-black bg-white">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-lg">{cat.emoji}</span>
-                  <span className="text-[11px] font-mono font-bold text-primary bg-primary/8 px-2 py-0.5 rounded-full">{cat.count}</span>
+                  <span className="text-[11px] font-mono font-black text-foreground border-2 border-black px-2 py-0.5 bg-[var(--retro-yellow)]">{cat.count}</span>
                 </div>
-                <h4 className="text-[12px] font-semibold text-foreground">{cat.label}</h4>
-                <p className="text-[9px] text-muted-foreground">{cat.desc}</p>
+                <h4 className="text-[12px] font-black text-foreground uppercase">{cat.label}</h4>
+                <p className="text-[9px] text-foreground/60 font-bold">{cat.desc}</p>
               </div>
             ))}
           </div>
@@ -2819,9 +2823,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               ["forever", "♾️", "Indéfini"],
             ] as const).map(([val, emoji, label]) => (
               <button key={val} onClick={() => updateSetting("dataRetention", val)}
-                className={`p-3 rounded-xl text-center transition-all ${settings.dataRetention === val ? "bg-primary/10 ring-1 ring-primary/30" : "bg-muted/50 hover:bg-muted"}`}>
+                className={`p-3 text-center transition-all border-2 border-black ${settings.dataRetention === val ? "bg-[var(--retro-green)] ring-2 ring-foreground/20" : "bg-white hover:bg-[var(--retro-yellow)]"}`}>
                 <span className="text-xl block mb-1">{emoji}</span>
-                <span className={`text-[11px] font-semibold ${settings.dataRetention === val ? "text-primary" : "text-foreground"}`}>{label}</span>
+                <span className={`text-[11px] font-black ${settings.dataRetention === val ? "text-foreground" : "text-foreground/70"} uppercase`}>{label}</span>
               </button>
             ))}
           </div>
@@ -2849,13 +2853,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               }},
             ].map(item => (
               <button key={item.label} onClick={item.action}
-                className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-destructive/5 transition-all text-left">
+                className="w-full flex items-center gap-3 p-3 border-2 border-black bg-white hover:bg-[var(--retro-red)] transition-all text-left">
                 <span className="text-lg">{item.emoji}</span>
                 <div className="flex-1">
-                  <h4 className="text-[12px] font-semibold text-foreground">{item.label}</h4>
-                  <p className="text-[9px] text-muted-foreground">{item.desc}</p>
+                  <h4 className="text-[12px] font-black text-foreground uppercase">{item.label}</h4>
+                  <p className="text-[9px] text-foreground/60 font-bold">{item.desc}</p>
                 </div>
-                <Trash2 className="w-4 h-4 text-destructive" />
+                <Trash2 className="w-4 h-4 text-foreground" />
               </button>
             ))}
           </div>
@@ -2866,8 +2870,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     // ── Sub-section: RGPD ──
     if (confSection === "rgpd") return (
       <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-        <button onClick={() => setConfSection(null)} className="flex items-center gap-2 text-primary text-[13px] font-extrabold mb-1" style={{ fontFamily: "'Nunito', sans-serif" }}>
-          <ChevronLeft className="w-4 h-4" /> Confidentialité
+        <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
+          <ChevronLeft className="w-4 h-4" /> CONFIDENTIALITÉ
         </button>
         <Card title="Vos droits (RGPD)" icon={FileText}>
           <div className="grid grid-cols-2 gap-2">
@@ -2917,10 +2921,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     });
                   } else if (id === "rectify") { setActiveTab("profil"); }
                 }}
-                className="p-3 rounded-xl text-left transition-all bg-muted/50 hover:bg-muted active:scale-95">
+                className="p-3 text-left transition-all border-2 border-black bg-white hover:bg-[var(--retro-yellow)] active:scale-95">
                 <span className="text-xl block mb-1">{emoji}</span>
-                <h4 className="text-[12px] font-semibold text-foreground">{label}</h4>
-                <p className="text-[9px] text-muted-foreground">{desc}</p>
+                <h4 className="text-[12px] font-black text-foreground uppercase">{label}</h4>
+                <p className="text-[9px] text-foreground/60 font-bold">{desc}</p>
               </button>
             ))}
           </div>
@@ -3472,22 +3476,22 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* Notification Panel */}
       {showNotifPanel && (
-        <div className="absolute top-14 right-2 z-50 w-80 max-h-96 bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <div className="absolute top-14 right-2 z-50 w-80 max-h-96 bg-white border-4 border-black overflow-hidden" style={{ boxShadow: "6px 6px 0px rgba(0,0,0,0.25)" }}>
+          <div className="flex items-center justify-between px-4 py-3 border-b-2 border-black">
             <div className="flex items-center gap-2">
-              <Bell className="w-4 h-4 text-destructive" />
-              <h3 className="text-[13px] font-bold text-foreground">Notifications</h3>
+              <Bell className="w-4 h-4 text-foreground" />
+              <h3 className="text-[13px] font-black text-foreground uppercase">Notifications</h3>
               {unreadAlertCount > 0 && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/10 text-destructive font-bold">{unreadAlertCount}</span>
+                <span className="text-[10px] px-2 py-0.5 border-2 border-black bg-[var(--retro-red)] text-foreground font-black">{unreadAlertCount}</span>
               )}
             </div>
             <div className="flex items-center gap-1">
               {unreadAlertCount > 0 && (
-                <button onClick={markAllRead} className="text-[10px] text-primary font-semibold hover:underline">
-                  Tout marquer lu
+                <button onClick={markAllRead} className="text-[10px] text-foreground font-black hover:underline uppercase">
+                  Tout lu
                 </button>
               )}
-              <button onClick={() => setShowNotifPanel(false)} className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground">
+              <button onClick={() => setShowNotifPanel(false)} className="w-7 h-7 border border-black flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)]">
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -3496,15 +3500,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             {parentAlerts.length === 0 ? (
               <div className="p-6 text-center">
                 <span className="text-2xl">✅</span>
-                <p className="text-[12px] text-muted-foreground mt-2">Aucune alerte</p>
+                <p className="text-[12px] text-foreground/60 mt-2 font-bold">Aucune alerte</p>
               </div>
             ) : (
               parentAlerts.slice(0, 20).map(alert => {
-                const severityConfig: Record<string, { icon: string; borderColor: string }> = {
-                  critical: { icon: "🚨", borderColor: "border-l-destructive" },
-                  high: { icon: "⚠️", borderColor: "border-l-destructive/60" },
-                  medium: { icon: "🔔", borderColor: "border-l-accent" },
-                  low: { icon: "ℹ️", borderColor: "border-l-muted-foreground" },
+                const severityConfig: Record<string, { icon: string; bg: string }> = {
+                  critical: { icon: "🚨", bg: "bg-[var(--retro-red)]" },
+                  high: { icon: "⚠️", bg: "bg-[var(--retro-orange)]" },
+                  medium: { icon: "🔔", bg: "bg-[var(--retro-yellow)]" },
+                  low: { icon: "ℹ️", bg: "bg-white" },
                 };
                 const cfg = severityConfig[alert.severity] || severityConfig.medium;
                 const timeAgo = (() => {
@@ -3521,18 +3525,16 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                       const session = sessions.find(s => s.id === alert.session_id);
                       if (session) { analyzeSession(session); setShowNotifPanel(false); }
                     }}
-                    className={`w-full text-left px-4 py-3 border-l-4 ${cfg.borderColor} ${!alert.is_read ? "bg-primary/5" : ""} hover:bg-muted/50 transition-colors border-b border-border/30`}>
+                    className={`w-full text-left px-4 py-3 border-b-2 border-black/15 ${!alert.is_read ? cfg.bg : ""} hover:bg-[var(--retro-yellow)] transition-colors`}>
                     <div className="flex items-start gap-2">
                       <span className="text-sm mt-0.5">{cfg.icon}</span>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className={`text-[12px] ${!alert.is_read ? "font-bold text-foreground" : "font-medium text-muted-foreground"} line-clamp-2`}>
-                            {alert.message}
-                          </p>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">{alert.child_name} • {timeAgo}</p>
+                        <p className={`text-[12px] ${!alert.is_read ? "font-black text-foreground" : "font-bold text-foreground/60"} line-clamp-2`}>
+                          {alert.message}
+                        </p>
+                        <p className="text-[10px] text-foreground/50 mt-0.5 font-bold">{alert.child_name} • {timeAgo}</p>
                       </div>
-                      {!alert.is_read && <span className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />}
+                      {!alert.is_read && <span className="w-2 h-2 bg-foreground mt-1.5 shrink-0" />}
                     </div>
                   </button>
                 );
@@ -3565,12 +3567,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       {/* Name Change Dialog — surnom vs session */}
       {pendingNameChange !== null && (
         <div className="fixed inset-0 z-[200] bg-black/40 flex items-center justify-center p-6" onClick={() => setPendingNameChange(null)}>
-          <div className="bg-card rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-border/20 space-y-4" onClick={e => e.stopPropagation()}>
+          <div className="bg-white border-4 border-black p-6 w-full max-w-sm space-y-4" style={{ boxShadow: "8px 8px 0px rgba(0,0,0,0.3)" }} onClick={e => e.stopPropagation()}>
             <div className="text-center">
               <span className="text-4xl block mb-2">✏️</span>
-              <h3 className="text-[18px] font-black text-foreground">Changer le prénom ?</h3>
-              <p className="text-[13px] text-muted-foreground mt-1">
-                <span className="font-bold">{childName}</span> → <span className="font-bold text-primary">{pendingNameChange}</span>
+              <h3 className="text-[18px] font-black text-foreground uppercase">Changer le prénom ?</h3>
+              <p className="text-[13px] text-foreground/60 mt-1 font-bold">
+                <span className="font-black">{childName}</span> → <span className="font-black">{pendingNameChange}</span>
               </p>
             </div>
 
@@ -3581,8 +3583,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   setPendingNameChange(null);
                   toast.success(`✅ Surnom changé en "${pendingNameChange}"`);
                 }}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-extrabold text-[14px] hover:opacity-90 transition-all active:scale-95 shadow-md shadow-primary/20">
-                🏷️ C'est un surnom
+                className="w-full py-3.5 border-4 border-black bg-foreground text-background font-black text-[14px] hover:opacity-90 transition-all active:scale-95 uppercase"
+                style={{ boxShadow: "4px 4px 0px rgba(0,0,0,0.2)" }}>
+                🏷️ C'EST UN SURNOM
               </button>
               <button
                 onClick={() => {
@@ -3591,13 +3594,14 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     description: "Cette fonctionnalité permettra de gérer plusieurs enfants.",
                   });
                 }}
-                className="w-full py-3.5 rounded-2xl bg-muted/60 text-foreground font-extrabold text-[14px] hover:bg-muted transition-all active:scale-95 border border-border/15">
-                👦 Changer d'enfant <span className="text-[11px] font-bold text-muted-foreground ml-1">(bientôt)</span>
+                className="w-full py-3.5 border-4 border-black bg-white text-foreground font-black text-[14px] hover:bg-[var(--retro-yellow)] transition-all active:scale-95 uppercase"
+                style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.15)" }}>
+                👦 CHANGER D'ENFANT <span className="text-[11px] font-bold text-foreground/50 ml-1">(bientôt)</span>
               </button>
               <button
                 onClick={() => setPendingNameChange(null)}
-                className="w-full py-2.5 text-[13px] text-muted-foreground font-bold hover:text-foreground transition-colors">
-                Annuler
+                className="w-full py-2.5 text-[13px] text-foreground/60 font-black hover:text-foreground transition-colors uppercase">
+                ANNULER
               </button>
             </div>
           </div>
