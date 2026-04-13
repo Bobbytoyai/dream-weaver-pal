@@ -431,14 +431,12 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         if (isSleepingNow) {
           const sleepT = performance.now() * 0.001;
           // Slow breathing — lifts lid noticeably
-          const breathLift = Math.max(0, Math.sin(sleepT * 0.4)) * 0.06;
-          // Frequent peeks — moderate
+          const breathLift = Math.max(0, Math.sin(sleepT * 0.4)) * 0.03;
           const bigPeek = Math.sin(sleepT * 0.1) > 0.75
-            ? Math.max(0, Math.sin(sleepT * 1.2)) * 0.10
+            ? Math.max(0, Math.sin(sleepT * 1.2)) * 0.06
             : 0;
-          // Rare dramatic flutter — reduced
           const dramaticFlutter = Math.sin(sleepT * 0.04) > 0.95
-            ? Math.max(0, Math.sin(sleepT * 2.5)) * 0.14
+            ? Math.max(0, Math.sin(sleepT * 2.5)) * 0.09
             : 0;
           targetY = closedY + Math.max(breathLift, bigPeek, dramaticFlutter);
         }
