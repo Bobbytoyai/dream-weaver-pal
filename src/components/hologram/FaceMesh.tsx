@@ -372,7 +372,10 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     const isSleepingNow = faceState === "sleepy";
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
       if (ref.current) {
-        const coverAmount = Math.max(0, Math.min(1, blinkClose));
+        // During sleep, force eyelids mostly closed regardless of eyeOpenness
+        const coverAmount = isSleepingNow
+          ? 0.92 // base cover — almost fully shut
+          : Math.max(0, Math.min(1, blinkClose));
         
         if (coverAmount < 0.01) {
           ref.current.visible = false;
@@ -386,17 +389,18 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         const easedCover = t * t * t * (t * (t * 6 - 15) + 10);
         
         // Slide from fully hidden above to covering center of eye
-        // Position: top of eye (hidden) → center of eye (fully closed)
-        const hiddenY = 0.55;   // just above the visible eye area
-        const closedY = -0.05;  // slightly below center = fully shut
+        const hiddenY = 0.55;
+        const closedY = -0.10; // lower = covers more of the eye
         let targetY = hiddenY - easedCover * (hiddenY - closedY);
         
-        // Sleeping: drowsy flutter — eyelids slightly open, breathing rhythm
+        // Sleeping: slow drowsy flutter — eyelid lifts slightly to peek
         if (isSleepingNow) {
           const flutterT = performance.now() * 0.001;
-          // Gentle oscillation: eyelids open a crack then close back
-          const flutter = Math.sin(flutterT * 0.4) * 0.04 + Math.sin(flutterT * 1.1) * 0.02;
-          targetY += flutter;
+          // Slow breathing rhythm: eyelid lifts up a tiny bit (reveals bottom of eye)
+          const breathLift = Math.sin(flutterT * 0.35) * 0.06;
+          // Occasional bigger peek (every ~8s)
+          const peekCycle = Math.sin(flutterT * 0.12) > 0.85 ? Math.sin(flutterT * 1.5) * 0.04 : 0;
+          targetY += Math.max(0, breathLift) + Math.max(0, peekCycle);
         }
         
         ref.current.position.y = targetY;
