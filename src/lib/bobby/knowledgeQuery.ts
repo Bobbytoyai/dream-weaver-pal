@@ -803,6 +803,124 @@ const SEMANTIC_FIELDS: Record<string, string[]> = {
   chamois:        ["montagne", "agile", "corne", "alpes", "sauter", "animal", "sauvage"],
   lynx:           ["foret", "felin", "oreille", "discret", "chasse", "animal", "sauvage"],
   blaireau:       ["foret", "terrier", "nocturne", "rayure", "animal", "sauvage"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 👗 Mode & Vêtements (enrichi)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  mode:           ["vetement", "tendance", "styliste", "defile", "tissu", "couleur", "accessoire", "fashion"],
+  styliste:       ["mode", "creer", "vetement", "defile", "dessin", "collection", "tissu"],
+  defile:         ["mode", "mannequin", "podium", "vetement", "styliste", "spectacle"],
+  tissu:          ["mode", "vetement", "coton", "soie", "laine", "polyester", "coudre", "fil"],
+  coton:          ["tissu", "plante", "doux", "vetement", "naturel", "blanc", "mode"],
+  soie:           ["tissu", "doux", "brillant", "ver", "chine", "luxe", "mode"],
+  laine:          ["tissu", "mouton", "chaud", "tricoter", "pull", "echarpe", "mode"],
+  jean:           ["pantalon", "mode", "bleu", "denim", "levi", "decontracte", "vetement"],
+  basket_chaussure:["chaussure", "sport", "mode", "lacet", "confortable", "marcher", "courir"],
+  uniforme:       ["vetement", "ecole", "travail", "identique", "equipe", "regle", "mode"],
+  coudre:         ["fil", "aiguille", "tissu", "machine", "reparer", "creer", "mode"],
+  accessoire:     ["mode", "bijou", "sac", "ceinture", "montre", "lunettes", "vetement"],
+  tendance:       ["mode", "nouveau", "populaire", "style", "saison", "couleur"],
+  recyclage_textile:["mode", "vetement", "recycler", "ecologie", "donner", "seconde main", "planete"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 📺 Médias & Information
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  media:          ["information", "journal", "television", "radio", "internet", "actualite", "image"],
+  journal:        ["media", "actualite", "lire", "article", "journaliste", "papier", "information"],
+  journaliste:    ["media", "journal", "ecrire", "enqueter", "reportage", "verite", "information"],
+  television:     ["media", "ecran", "emission", "regarder", "chaine", "telecommande", "programme"],
+  radio:          ["media", "ecouter", "musique", "emission", "voix", "ondes", "antenne"],
+  actualite:      ["media", "monde", "evenement", "jour", "information", "journal", "nouveau"],
+  "fake news":    ["faux", "mentir", "internet", "verifier", "media", "attention", "esprit critique"],
+  "esprit critique":["reflechir", "verifier", "fake news", "media", "question", "analyser", "intelligent"],
+  publicite:      ["media", "vendre", "produit", "image", "television", "internet", "affiche"],
+  reportage:      ["journaliste", "media", "enquete", "filmer", "terrain", "information", "documentaire"],
+  documentaire:   ["film", "apprendre", "nature", "animal", "science", "media", "vrai", "reportage"],
+  "reseaux sociaux":["internet", "media", "partager", "photo", "ami", "attention", "ecran", "securite"],
+  "droit image":  ["photo", "vie privee", "respect", "permission", "media", "securite", "loi"],
+  interview:      ["journaliste", "question", "reponse", "media", "personne", "micro", "parler"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🔭 Astronomie avancée
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  "big bang":     ["univers", "debut", "explosion", "espace", "galaxie", "temps", "creation"],
+  "matiere noire":["univers", "invisible", "mystere", "espace", "gravite", "galaxie", "masse"],
+  exoplanete:     ["planete", "etoile", "espace", "vie", "habitable", "decouverte", "kepler"],
+  "trou de ver":  ["espace", "temps", "voyage", "raccourci", "univers", "relativite", "fiction"],
+  supernova:      ["etoile", "explosion", "lumiere", "espace", "fin", "nebuleuse", "puissant"],
+  "naine blanche":["etoile", "petit", "chaud", "vieux", "espace", "soleil", "fin"],
+  pulsar:         ["etoile", "tourner", "signal", "neutron", "espace", "rapide", "magnétique"],
+  quasar:         ["galaxie", "lumiere", "loin", "puissant", "espace", "trou noir", "energie"],
+  "voie lactee":  ["galaxie", "terre", "etoile", "espace", "spirale", "soleil", "nuit"],
+  "station spatiale":["espace", "astronaute", "orbite", "terre", "experience", "iss", "flotter"],
+  "james webb":   ["telescope", "espace", "infrarouge", "decouverte", "etoile", "univers", "galaxie"],
+  eclipse:        ["soleil", "lune", "ombre", "terre", "nuit", "rare", "spectacle", "espace"],
+  aurore_boreale: ["lumiere", "pole", "nord", "ciel", "nuit", "couleur", "magnetique", "espace"],
+  asteroide:      ["roche", "espace", "ceinture", "collision", "terre", "dinosaure", "danger"],
+  sonde_spatiale: ["espace", "explorer", "planete", "robot", "voyager", "mars", "loin", "envoyer"],
+  gravite_espace: ["force", "attraction", "masse", "newton", "einstein", "orbite", "espace", "tomber"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🏛️ Mythologie & Légendes
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  mythologie:     ["dieu", "legende", "heros", "grece", "rome", "egypte", "nordique", "histoire", "creature"],
+  zeus:           ["mythologie", "grece", "dieu", "tonnerre", "olympe", "eclair", "puissant", "ciel"],
+  poseidon:       ["mythologie", "grece", "dieu", "mer", "trident", "ocean", "tempete"],
+  athena:         ["mythologie", "grece", "deesse", "sagesse", "guerre", "chouette", "intelligence"],
+  hercule:        ["mythologie", "grece", "heros", "force", "travaux", "demi-dieu", "courage"],
+  ulysse:         ["mythologie", "grece", "voyage", "odyssee", "ruse", "troie", "heros"],
+  thor:           ["mythologie", "nordique", "marteau", "tonnerre", "dieu", "asgard", "viking"],
+  odin:           ["mythologie", "nordique", "dieu", "sagesse", "corbeaux", "asgard", "viking"],
+  minotaure:      ["mythologie", "grece", "labyrinthe", "monstre", "taureau", "crete", "thesee"],
+  meduse_myth:    ["mythologie", "grece", "serpent", "cheveux", "pierre", "regard", "monstre"],
+  phoenix:        ["mythologie", "oiseau", "feu", "renaitre", "cendre", "immortel", "legende"],
+  kraken:         ["mythologie", "mer", "monstre", "pieuvre", "geant", "legende", "marin"],
+  pegase:         ["mythologie", "cheval", "aile", "voler", "grece", "heros", "blanc"],
+  sphinx:         ["mythologie", "egypte", "enigme", "lion", "humain", "statue", "mystere"],
+  anubis:         ["mythologie", "egypte", "dieu", "mort", "chacal", "momie", "jugement"],
+  isis:           ["mythologie", "egypte", "deesse", "magie", "mere", "protection", "amour"],
+  ra:             ["mythologie", "egypte", "dieu", "soleil", "pharaon", "lumiere", "puissant"],
+  legende:        ["mythologie", "histoire", "ancien", "heros", "creature", "magie", "oral"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🦕 Dinosaures (enrichi)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  "t-rex":        ["dinosaure", "carnivore", "grand", "dent", "predateur", "jurassique", "fossile"],
+  triceratops:    ["dinosaure", "corne", "herbivore", "bouclier", "cretace", "fossile"],
+  velociraptor:   ["dinosaure", "rapide", "griffe", "intelligent", "meute", "carnivore", "fossile"],
+  diplodocus:     ["dinosaure", "long", "cou", "herbivore", "geant", "queue", "fossile"],
+  stegosaure:     ["dinosaure", "plaque", "dos", "herbivore", "queue", "pointe", "fossile"],
+  pterodactyle:   ["dinosaure", "voler", "aile", "reptile", "ciel", "bec", "prehistoire"],
+  brontosaure:    ["dinosaure", "geant", "herbivore", "long", "cou", "sauropode", "fossile"],
+  ankylosaure:    ["dinosaure", "armure", "massue", "queue", "herbivore", "defense", "fossile"],
+  spinosaure:     ["dinosaure", "voile", "dos", "carnivore", "poisson", "grand", "fossile"],
+  megalodone:     ["requin", "geant", "prehistoire", "dent", "ocean", "predateur", "disparu"],
+  paleontologue:  ["dinosaure", "fossile", "fouille", "os", "science", "decouverte", "chercheur"],
+  extinction_dino:["dinosaure", "meteorite", "disparu", "asteroide", "cretace", "fin", "catastrophe"],
+  jurassique:     ["dinosaure", "ere", "epoque", "prehistoire", "reptile", "mesozoique"],
+  cretace:        ["dinosaure", "ere", "epoque", "fin", "extinction", "prehistoire", "mesozoique"],
+  fossile_dino:   ["dinosaure", "os", "roche", "ancien", "empreinte", "paleontologue", "musee"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🏛️ Monuments & Merveilles du monde
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  monument:       ["construction", "ancien", "celebre", "visite", "histoire", "architecture", "patrimoine"],
+  "tour eiffel":  ["paris", "france", "fer", "monument", "haut", "gustave eiffel", "celebre"],
+  colisee:        ["rome", "gladiateur", "romain", "monument", "arene", "antique", "combat"],
+  "grande muraille":["chine", "mur", "long", "monument", "protection", "empereur", "histoire"],
+  "machu picchu": ["perou", "inca", "montagne", "monument", "ancien", "mystere", "ruine"],
+  "taj mahal":    ["inde", "marbre", "blanc", "monument", "amour", "mogol", "mausolee"],
+  parthenon:      ["grece", "athenes", "temple", "monument", "colonne", "antique", "athena"],
+  "statue liberte":["new york", "amerique", "france", "cadeau", "monument", "liberte", "torche"],
+  "christ redempteur":["bresil", "rio", "statue", "monument", "montagne", "bras", "celebre"],
+  stonehenge:     ["angleterre", "pierre", "cercle", "ancien", "mystere", "monument", "solstice"],
+  "mont rushmore":["amerique", "president", "sculpture", "montagne", "monument", "visage"],
+  alhambra:       ["espagne", "palais", "arabe", "monument", "jardin", "architecture", "grenade"],
+  versailles:     ["france", "chateau", "roi", "jardin", "monument", "soleil", "louis"],
+  "notre dame":   ["paris", "cathedrale", "monument", "gothique", "quasimodo", "histoire", "france"],
+  acropole:       ["grece", "athenes", "temple", "monument", "antique", "colline", "parthenon"],
+  petra:          ["jordanie", "roche", "rose", "monument", "ancien", "tresor", "desert"],
+  "angkor wat":   ["cambodge", "temple", "monument", "jungle", "hindou", "bouddhiste", "ancien"],
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
