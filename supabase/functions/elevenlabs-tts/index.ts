@@ -5,8 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Voice IDs for French voices (ElevenLabs)
-// Voice IDs — cartoon-friendly animated French voices
+// Voice IDs — cartoon-friendly animated French voices (child-safe)
 const VOICE_MAP: Record<string, string> = {
   female: "XrExE9yKIg1WjnnlVkGX",   // Matilda - warm childlike (default cartoon feel)
   child:  "XrExE9yKIg1WjnnlVkGX",   // Matilda - animated & expressive
@@ -15,7 +14,7 @@ const VOICE_MAP: Record<string, string> = {
   brother:"IKne3meq5aSn9XLyUdCD",   // Charlie - young male
 };
 
-// Speed multiplier per profile for natural pacing
+// Speed multiplier per profile for snappy natural pacing
 const SPEED_MAP: Record<string, number> = {
   female: 1.05,
   child:  1.05,
@@ -24,10 +23,32 @@ const SPEED_MAP: Record<string, number> = {
   brother: 1.0,
 };
 
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+    if (!ELEVENLABS_API_KEY) {
+      return new Response(JSON.stringify({ error: "Missing API key" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { text, voiceProfile } = await req.json();
+    if (!text || text.trim().length < 1) {
+      return new Response(JSON.stringify({ error: "No text provided" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const voiceId = VOICE_MAP[voiceProfile || "child"] || VOICE_MAP.child;
     const speed = SPEED_MAP[voiceProfile || "child"] || 1.05;
 
-    // Use turbo model for lowest latency + cartoon-style voice settings
+    // Turbo model for lowest latency + cartoon-style voice settings
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_22050_32`,
       {
@@ -42,7 +63,7 @@ const SPEED_MAP: Record<string, number> = {
           voice_settings: {
             stability: 0.35,         // Lower = more expressive/animated
             similarity_boost: 0.65,
-            style: 0.55,             // Higher = more cartoon-like character
+            style: 0.55,             // Higher = cartoon-like character
             use_speaker_boost: true,
             speed,
           },
@@ -59,7 +80,7 @@ const SPEED_MAP: Record<string, number> = {
       });
     }
 
-    // Stream the audio back
+    // Stream the audio back for lowest time-to-first-byte
     return new Response(response.body, {
       headers: {
         ...corsHeaders,
