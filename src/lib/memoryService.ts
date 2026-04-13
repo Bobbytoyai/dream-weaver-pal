@@ -21,6 +21,11 @@ import {
   type MemoryEntry,
 } from "./localMemoryStore";
 
+async function getCurrentUserId(): Promise<string | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id ?? null;
+}
+
 export interface ChildMemory {
   childName: string;
   preferences: Record<string, unknown>;
@@ -99,12 +104,16 @@ export async function loadMemory(childName: string): Promise<ChildMemory> {
       // No cloud data — create from local or fresh
       memory = buildFromLocal(childName, localProfile);
       // Create in cloud (async)
-      supabase.from("child_memories").insert({
-        child_name: childName,
-        preferences: {},
-        favorite_themes: [],
-        total_stories_heard: 0,
-      }).then(() => {});
+      getCurrentUserId().then(userId => {
+        if (!userId) return;
+        supabase.from("child_memories").insert({
+          child_name: childName,
+          preferences: {},
+          favorite_themes: [],
+          total_stories_heard: 0,
+          user_id: userId,
+        }).then(() => {});
+      });
     }
   } catch {
     // Cloud unavailable — use local only

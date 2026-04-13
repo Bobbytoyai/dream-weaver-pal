@@ -2,6 +2,11 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import type { ParentSettings } from "@/components/parentSettings";
 
+async function getCurrentUserId(): Promise<string | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id ?? null;
+}
+
 // ─── Types ──────────────────────────────────────────────────────
 export interface CloudProfile {
   id: string;
@@ -98,6 +103,7 @@ export async function saveToCloud(
     }
 
     // Create new profile
+    const userId = await getCurrentUserId();
     syncCode = generateSyncCode();
     const { data, error } = await supabase
       .from("cloud_profiles")
@@ -108,6 +114,7 @@ export async function saveToCloud(
         child_memory_snapshot: (childMemory || {}) as Json,
         device_info: deviceInfo,
         last_synced_at: now,
+        user_id: userId,
       }])
       .select()
       .single();

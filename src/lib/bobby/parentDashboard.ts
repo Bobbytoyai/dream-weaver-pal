@@ -49,6 +49,7 @@ function normalizeRuntimeAnalysis(analysis: Partial<RawParentAnalysis> & { alert
   return {
     id: analysis.id ?? analysis.session_id ?? "analysis-runtime",
     session_id: analysis.session_id ?? "",
+    user_id: analysis.user_id ?? null,
     audio_path: analysis.audio_path ?? null,
     full_transcription: analysis.full_transcription ?? null,
     summary: analysis.summary ?? null,

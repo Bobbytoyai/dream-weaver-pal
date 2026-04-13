@@ -6,13 +6,21 @@ export function useSessionTracker(childName: string, childAge: number) {
   const startTimeRef = useRef<Date | null>(null);
   const messageCountRef = useRef(0);
 
+  const getUserId = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.id ?? null;
+  };
+
   const startSession = useCallback(async () => {
     startTimeRef.current = new Date();
     messageCountRef.current = 0;
     try {
+      const userId = await getUserId();
+      if (!userId) { console.warn("[Session] No authenticated user"); return undefined; }
+
       const { data, error } = await supabase
         .from("child_sessions")
-        .insert({ child_name: childName, child_age: childAge })
+        .insert({ child_name: childName, child_age: childAge, user_id: userId })
         .select("id")
         .single();
 
@@ -32,6 +40,7 @@ export function useSessionTracker(childName: string, childAge: number) {
     if (!sessionIdRef.current) return;
     messageCountRef.current++;
     try {
+      const userId = await getUserId();
       await supabase
         .from("session_messages")
         .insert({
@@ -39,6 +48,7 @@ export function useSessionTracker(childName: string, childAge: number) {
           role,
           content,
           detected_emotion: detectedEmotion || null,
+          user_id: userId,
         });
     } catch (e) {
       console.warn("[Session] Failed to save message:", e);
@@ -49,11 +59,9 @@ export function useSessionTracker(childName: string, childAge: number) {
     if (!sessionIdRef.current || !startTimeRef.current) return;
     const durationSeconds = Math.round((Date.now() - startTimeRef.current.getTime()) / 1000);
     const id = sessionIdRef.current;
-    sessionIdRef.current = null; // Clear immediately to prevent double-end
+    sessionIdRef.current = null;
 
-    const MIN_SESSION_DURATION = 90; // 1m30 minimum
-
-    // ─── Don't save empty or too-short sessions ───
+    const MIN_SESSION_DURATION = 90;
     const shouldDelete = messageCountRef.current === 0 || durationSeconds < MIN_SESSION_DURATION;
     if (shouldDelete) {
       try {
@@ -74,14 +82,11 @@ export function useSessionTracker(childName: string, childAge: number) {
         })
         .eq("id", id);
 
-      // ─── Post-session auto-learning: trigger analysis + knowledge extraction ───
       if (messageCountRef.current >= 4) {
-        // Fire-and-forget: session analysis
         supabase.functions.invoke("session-analysis", { body: { sessionId: id } })
           .then(r => { if (r.error) console.warn("[Session] Analysis error:", r.error); })
           .catch(e => console.warn("[Session] Analysis failed:", e));
 
-        // Fire-and-forget: learn from this conversation
         supabase.functions.invoke("learn-from-conversations", { body: { mode: "session", sessionId: id } })
           .then(r => {
             if (r.data?.total_qa_learned > 0) {

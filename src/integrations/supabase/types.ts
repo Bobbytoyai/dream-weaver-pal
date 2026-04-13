@@ -36,6 +36,7 @@ export type Database = {
           session_patterns: Json
           total_stories_heard: number
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           behavior_patterns?: Json
@@ -58,6 +59,7 @@ export type Database = {
           session_patterns?: Json
           total_stories_heard?: number
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           behavior_patterns?: Json
@@ -80,6 +82,7 @@ export type Database = {
           session_patterns?: Json
           total_stories_heard?: number
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -107,6 +110,7 @@ export type Database = {
           started_at: string
           tags: string[] | null
           topics: string[] | null
+          user_id: string | null
         }
         Insert: {
           ai_summary?: string | null
@@ -123,6 +127,7 @@ export type Database = {
           started_at?: string
           tags?: string[] | null
           topics?: string[] | null
+          user_id?: string | null
         }
         Update: {
           ai_summary?: string | null
@@ -139,6 +144,7 @@ export type Database = {
           started_at?: string
           tags?: string[] | null
           topics?: string[] | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -153,6 +159,7 @@ export type Database = {
           parent_settings: Json
           sync_code: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           child_memory_snapshot?: Json
@@ -164,6 +171,7 @@ export type Database = {
           parent_settings?: Json
           sync_code: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           child_memory_snapshot?: Json
@@ -175,6 +183,7 @@ export type Database = {
           parent_settings?: Json
           sync_code?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -260,6 +269,7 @@ export type Database = {
           sociability_score: number | null
           summary: string | null
           topics_detected: string[]
+          user_id: string | null
         }
         Insert: {
           alerts?: Json
@@ -280,6 +290,7 @@ export type Database = {
           sociability_score?: number | null
           summary?: string | null
           topics_detected?: string[]
+          user_id?: string | null
         }
         Update: {
           alerts?: Json
@@ -300,6 +311,7 @@ export type Database = {
           sociability_score?: number | null
           summary?: string | null
           topics_detected?: string[]
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -413,6 +425,7 @@ export type Database = {
           message: string
           session_id: string
           severity: string
+          user_id: string | null
         }
         Insert: {
           alert_type?: string
@@ -424,6 +437,7 @@ export type Database = {
           message: string
           session_id: string
           severity?: string
+          user_id?: string | null
         }
         Update: {
           alert_type?: string
@@ -435,6 +449,7 @@ export type Database = {
           message?: string
           session_id?: string
           severity?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -454,6 +469,7 @@ export type Database = {
           id: string
           role: string
           session_id: string
+          user_id: string | null
         }
         Insert: {
           content: string
@@ -462,6 +478,7 @@ export type Database = {
           id?: string
           role: string
           session_id: string
+          user_id?: string | null
         }
         Update: {
           content?: string
@@ -470,6 +487,7 @@ export type Database = {
           id?: string
           role?: string
           session_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
