@@ -304,6 +304,49 @@ const Admin = () => {
   const [cloudUserSearch, setCloudUserSearch] = useState("");
   const [selectedCloudUser, setSelectedCloudUser] = useState<CloudUser | null>(null);
 
+  // Real-time stats
+  interface LiveStats {
+    activeSessions: number;
+    todaySessions: number;
+    todayMessages: number;
+    lastActivity: string | null;
+    avgDuration: number;
+    topEmotion: string;
+  }
+  const [liveStats, setLiveStats] = useState<LiveStats>({ activeSessions: 0, todaySessions: 0, todayMessages: 0, lastActivity: null, avgDuration: 0, topEmotion: "—" });
+
+  const fetchLiveStats = useCallback(async () => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const activeThreshold = new Date(now.getTime() - 10 * 60 * 1000).toISOString(); // 10 min
+
+    const [activeRes, todayRes, msgsRes, lastRes] = await Promise.all([
+      supabase.from("child_sessions").select("id", { count: "exact", head: true }).is("ended_at", null).gte("started_at", activeThreshold),
+      supabase.from("child_sessions").select("id, duration_seconds, detected_emotions", { count: "exact" }).gte("started_at", todayStart),
+      supabase.from("session_messages").select("id", { count: "exact", head: true }).gte("created_at", todayStart),
+      supabase.from("session_messages").select("created_at").order("created_at", { ascending: false }).limit(1),
+    ]);
+
+    const todaySessions = todayRes.data || [];
+    const durations = todaySessions.map((s: any) => s.duration_seconds).filter(Boolean) as number[];
+    const avgDuration = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : 0;
+
+    // Top emotion from today's sessions
+    const allEmotions = todaySessions.flatMap((s: any) => s.detected_emotions || []);
+    const emotionCounts: Record<string, number> = {};
+    allEmotions.forEach((e: string) => { emotionCounts[e] = (emotionCounts[e] || 0) + 1; });
+    const topEmotion = Object.entries(emotionCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "—";
+
+    setLiveStats({
+      activeSessions: activeRes.count || 0,
+      todaySessions: todayRes.count || 0,
+      todayMessages: msgsRes.count || 0,
+      lastActivity: lastRes.data?.[0]?.created_at || null,
+      avgDuration,
+      topEmotion,
+    });
+  }, []);
+
   const fetchCloudUsers = useCallback(async () => {
     setCloudUsersLoading(true);
     const { data } = await supabase.from("cloud_profiles").select("*").order("created_at", { ascending: false });
@@ -708,8 +751,15 @@ const Admin = () => {
   }, []);
 
   useEffect(() => {
-    if (authenticated) { fetchEntries(); fetchCloudStories(); fetchStoreItems(); fetchCloudUsers(); loadInteractions(); fetchRealConversations(); }
-  }, [authenticated, fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers]);
+    if (authenticated) { fetchEntries(); fetchCloudStories(); fetchStoreItems(); fetchCloudUsers(); loadInteractions(); fetchRealConversations(); fetchLiveStats(); }
+  }, [authenticated, fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers, fetchLiveStats]);
+
+  // Auto-refresh live stats every 30s
+  useEffect(() => {
+    if (!authenticated) return;
+    const interval = setInterval(fetchLiveStats, 30_000);
+    return () => clearInterval(interval);
+  }, [authenticated, fetchLiveStats]);
 
   // ─── Derived ───
   const categoryCounts = useMemo(() => {
@@ -2736,7 +2786,7 @@ const Admin = () => {
             <h1 className="text-xl font-bold text-white tracking-tight">Bobby Admin</h1>
             <p className="text-white/25 text-[11px]">Tableau de bord central</p>
           </div>
-          <button onClick={() => { fetchEntries(); fetchStoreItems(); fetchCloudUsers(); fetchCloudStories(); fetchRealConversations(); toast.success("Données rafraîchies"); }}
+          <button onClick={() => { fetchEntries(); fetchStoreItems(); fetchCloudUsers(); fetchCloudStories(); fetchRealConversations(); fetchLiveStats(); toast.success("Données rafraîchies"); }}
             className="w-9 h-9 rounded-xl bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] transition-all active:scale-95">
             <RefreshCw className="w-4 h-4 text-white/40" />
           </button>
@@ -2764,6 +2814,46 @@ const Admin = () => {
             </div>
           );
         })()}
+
+        {/* ── Live Activity Widget ── */}
+        <div className="bg-gradient-to-r from-emerald-500/[0.06] to-cyan-500/[0.06] backdrop-blur-xl rounded-2xl p-3 border border-emerald-500/10">
+          <div className="flex items-center gap-2 mb-2.5">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <p className="text-[11px] font-bold text-emerald-400 tracking-wide">ACTIVITÉ EN DIRECT</p>
+            <p className="text-[9px] text-white/20 ml-auto">⟳ 30s</p>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-white/[0.04] rounded-xl p-2.5 text-center">
+              <p className="text-[22px] font-extrabold text-emerald-400 leading-none">{liveStats.activeSessions}</p>
+              <p className="text-[9px] text-white/30 mt-1">actives maintenant</p>
+            </div>
+            <div className="bg-white/[0.04] rounded-xl p-2.5 text-center">
+              <p className="text-[22px] font-extrabold text-cyan-400 leading-none">{liveStats.todaySessions}</p>
+              <p className="text-[9px] text-white/30 mt-1">sessions aujourd'hui</p>
+            </div>
+            <div className="bg-white/[0.04] rounded-xl p-2.5 text-center">
+              <p className="text-[22px] font-extrabold text-blue-400 leading-none">{liveStats.todayMessages}</p>
+              <p className="text-[9px] text-white/30 mt-1">messages aujourd'hui</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between mt-2.5 px-1">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] text-white/20">⏱ Durée moy:</span>
+              <span className="text-[10px] font-bold text-white/50">{liveStats.avgDuration > 0 ? `${Math.floor(liveStats.avgDuration / 60)}m${(liveStats.avgDuration % 60).toString().padStart(2, "0")}s` : "—"}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] text-white/20">😊 Top émotion:</span>
+              <span className="text-[10px] font-bold text-white/50">{liveStats.topEmotion}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] text-white/20">🕐 Dernière:</span>
+              <span className="text-[10px] font-bold text-white/50">{liveStats.lastActivity ? (() => {
+                const diff = Math.round((Date.now() - new Date(liveStats.lastActivity).getTime()) / 60000);
+                return diff < 1 ? "à l'instant" : diff < 60 ? `il y a ${diff}m` : `il y a ${Math.floor(diff / 60)}h`;
+              })() : "—"}</span>
+            </div>
+          </div>
+        </div>
 
         {/* ── Quick actions ── */}
         <div className="flex gap-2">
