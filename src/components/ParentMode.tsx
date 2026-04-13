@@ -3509,7 +3509,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       {/* No tab bar — using card grid on home */}
 
       {/* Content */}
-      <div ref={contentScrollRef} className="flex-1 overflow-y-auto overflow-x-hidden">
+      <div ref={contentScrollRef} data-scroll-container className="flex-1 overflow-y-auto overflow-x-hidden">
         <div className={`tab-content-wrapper ${animClass}`}>
           {renderTabContent()}
         </div>
