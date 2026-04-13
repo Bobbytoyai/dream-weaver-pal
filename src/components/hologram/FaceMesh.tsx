@@ -505,7 +505,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     [leftCheekRef, rightCheekRef].forEach(ref => {
       if (ref.current) {
         const mat = ref.current.material as THREE.MeshBasicMaterial;
-        mat.opacity = 0.4 + state.cheekGlow * 0.3 + smile * 0.2;
+        mat.opacity = 0.25 + state.cheekGlow * 0.2 + smile * 0.15;
       }
     });
 
