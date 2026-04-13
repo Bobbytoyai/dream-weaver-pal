@@ -2947,6 +2947,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           {suggestionSent ? "✅ Merci pour votre idée !" : "Envoyer ma suggestion"}
         </button>
       </Card>
+      </div>
     </div>
   );
 
