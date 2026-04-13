@@ -20,23 +20,37 @@ export default function BobbyQR() {
   const [pendingNarration, setPendingNarration] = useState<PendingNarration | null>(null);
   const [parentSettings, setParentSettings] = useState<ParentSettings>(DEFAULT_PARENT_SETTINGS);
 
-  // Load code from DB
+  // Load code from DB + anti-piracy check via localStorage session token
   useEffect(() => {
     if (!code) { setStep("invalid"); return; }
+    const upperCode = code.toUpperCase();
+    const tokenKey = `bobby_session_${upperCode}`;
+
     (async () => {
       const { data, error } = await supabase
         .from("bobby_codes")
         .select("*")
-        .eq("code", code.toUpperCase())
+        .eq("code", upperCode)
         .maybeSingle();
 
       if (error || !data) { setStep("invalid"); return; }
       setBobbyCode(data);
 
       if (data.claimed_at && data.child_name) {
+        // Code already claimed — check if THIS device is the owner
+        const storedToken = localStorage.getItem(tokenKey);
+        const sd = data.session_data as Record<string, any> | null;
+        const serverToken = sd?.sessionToken;
+
+        if (!storedToken || storedToken !== serverToken) {
+          // Not the original device → show "already used" screen
+          setStep("claimed");
+          return;
+        }
+
+        // Legitimate owner — restore session
         setChildName(data.child_name);
         setChildAge(data.child_age || 6);
-        const sd = data.session_data as Record<string, any> | null;
         if (sd?.parentSettings) {
           setParentSettings({ ...DEFAULT_PARENT_SETTINGS, ...sd.parentSettings });
         }
