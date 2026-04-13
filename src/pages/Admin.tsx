@@ -2914,6 +2914,66 @@ const Admin = () => {
           </div>
         </div>
 
+        {/* ── Charts ── */}
+        <div className="grid grid-cols-1 gap-3">
+          {/* Sessions per day */}
+          <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl p-3 border border-white/[0.06]">
+            <p className="text-[11px] font-bold text-white/60 mb-2">📊 Sessions & Messages (7 jours)</p>
+            {chartSessions.length > 0 ? (
+              <div className="h-[140px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartSessions} barGap={2}>
+                    <XAxis dataKey="day" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis hide />
+                    <Tooltip
+                      contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 11, color: "#fff" }}
+                      labelStyle={{ color: "rgba(255,255,255,0.5)" }}
+                    />
+                    <Bar dataKey="sessions" name="Sessions" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="messages" name="Messages" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="text-[10px] text-white/20 text-center py-6">Aucune donnée cette semaine</p>
+            )}
+            <div className="flex items-center justify-center gap-4 mt-1">
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-purple-500" /><span className="text-[9px] text-white/30">Sessions</span></div>
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-cyan-500" /><span className="text-[9px] text-white/30">Messages</span></div>
+            </div>
+          </div>
+
+          {/* Emotions pie */}
+          <div className="bg-white/[0.04] backdrop-blur-xl rounded-2xl p-3 border border-white/[0.06]">
+            <p className="text-[11px] font-bold text-white/60 mb-2">😊 Émotions détectées (7 jours)</p>
+            {chartEmotions.length > 0 ? (
+              <div className="flex items-center gap-3">
+                <div className="h-[120px] w-[120px] shrink-0">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={chartEmotions} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={50} innerRadius={25} strokeWidth={0}>
+                        {chartEmotions.map((e, i) => <Cell key={i} fill={e.color} />)}
+                      </Pie>
+                      <Tooltip contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 11, color: "#fff" }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex-1 space-y-1.5">
+                  {chartEmotions.map((e, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: e.color }} />
+                      <span className="text-[11px] text-white/60 flex-1">{e.name}</span>
+                      <span className="text-[11px] font-bold text-white/40 tabular-nums">{e.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-[10px] text-white/20 text-center py-6">Aucune émotion détectée</p>
+            )}
+          </div>
+        </div>
+
         {/* ── Quick actions ── */}
         <div className="flex gap-2">
           <button onClick={() => { setTopSection("cloud"); setCloudSection(null); setSearch(""); }}
