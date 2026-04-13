@@ -6,6 +6,7 @@ import { getUnreadAlertCount } from "@/lib/offlineEngine";
 import { Settings, Camera, Gamepad2 } from "lucide-react";
 import { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
+import { setDisabledExpressions } from "@/lib/bobby/expressionEngine";
 
 import {
   useConversationStateMachine,
@@ -114,6 +115,11 @@ const VoiceScreen = ({
     childName, childAge, parentSettings,
     pendingNarration, onNarrationConsumed, onParentMode,
   });
+
+  // Sync disabled expressions from parent settings
+  useEffect(() => {
+    setDisabledExpressions(parentSettings?.disabledExpressions || []);
+  }, [parentSettings?.disabledExpressions]);
 
   // (Snoring sound removed)
 
