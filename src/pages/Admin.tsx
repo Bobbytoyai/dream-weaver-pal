@@ -19,7 +19,7 @@ import {
   Star, Sparkles, Globe, Microscope, TreePine, Dog,
   GraduationCap, HelpCircle, LayoutGrid, ChevronRight,
   Dumbbell, Lightbulb, Home, Utensils, Palette, Cpu,
-  CloudLightning, Eye, Users, Zap, RefreshCw,
+  CloudLightning, Eye, Users, Zap, RefreshCw, Sun, Moon,
 } from "lucide-react";
 
 // Lazy import — the 10K file is huge, only load when needed
