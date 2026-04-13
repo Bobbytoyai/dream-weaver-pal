@@ -341,7 +341,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     const hlFollowX = pupilX * 0.6;
     const hlFollowY = pupilY * 0.6;
     if (leftHl1Ref.current) {
-      leftHl1Ref.current.position.x = -0.10 + hlFollowX;
+      leftHl1Ref.current.position.x = 0.10 + hlFollowX;
       leftHl1Ref.current.position.y = 0.10 + hlFollowY;
     }
     if (leftHl2Ref.current) {
