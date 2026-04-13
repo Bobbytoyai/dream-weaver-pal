@@ -287,6 +287,24 @@ const Admin = () => {
   const [liveInstallCounts, setLiveInstallCounts] = useState<Record<string, number>>({});
   const [detailItem, setDetailItem] = useState<DetailItem | null>(null);
 
+  // Bobby Cloud Users
+  interface CloudUser {
+    id: string; sync_code: string; child_name: string; parent_settings: any;
+    child_memory_snapshot: any; device_info: string | null;
+    last_synced_at: string; created_at: string; updated_at: string;
+  }
+  const [cloudUsers, setCloudUsers] = useState<CloudUser[]>([]);
+  const [cloudUsersLoading, setCloudUsersLoading] = useState(false);
+  const [cloudUserSearch, setCloudUserSearch] = useState("");
+  const [selectedCloudUser, setSelectedCloudUser] = useState<CloudUser | null>(null);
+
+  const fetchCloudUsers = useCallback(async () => {
+    setCloudUsersLoading(true);
+    const { data } = await supabase.from("cloud_profiles").select("*").order("created_at", { ascending: false });
+    setCloudUsers((data as unknown as CloudUser[]) || []);
+    setCloudUsersLoading(false);
+  }, []);
+
   // ─── Detail dialog helpers ─────────────────────────────────────
   const openInteractionDetail = (interaction: BobbyInteraction) => {
     setDetailItem({
