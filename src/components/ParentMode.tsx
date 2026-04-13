@@ -28,6 +28,11 @@ import {
 import { ParentSettings, DEFAULT_PARENT_SETTINGS, BOBBY_COLORS } from "./parentSettings";
 import { getSafetyAlertRecords, clearSafetyAlertRecords, type SafetyAlertRecord } from "@/lib/offlineEngine";
 import { eventBus } from "@/lib/eventBus";
+import {
+  saveToCloud, restoreFromCloud, getCloudProfile, deleteCloudProfile,
+  getLocalSyncCode, formatSyncTime,
+  type CloudProfile,
+} from "@/lib/bobby/cloudSync";
 export type { ParentSettings };
 export { DEFAULT_PARENT_SETTINGS };
 
@@ -186,12 +191,13 @@ const StatPill = ({ emoji, value, label }: { emoji: string; value: string | numb
 
 // ─── Tab config (6 tabs) ────────────────────────────────────────
 
-type Tab = "home" | "dashboard" | "sessions" | "activites" | "profil" | "reglages" | "confidentialite";
+type Tab = "home" | "dashboard" | "sessions" | "activites" | "profil" | "reglages" | "confidentialite" | "cloud";
 
 const tabs: { id: Tab; icon: any; label: string; emoji?: string }[] = [
   { id: "dashboard", icon: BarChart3, label: "Tableau", emoji: "📊" },
   { id: "sessions", icon: MessageSquare, label: "Sessions", emoji: "💬" },
   { id: "activites", icon: Gamepad2, label: "Activités", emoji: "🎮" },
+  { id: "cloud", icon: CloudUpload, label: "Cloud", emoji: "☁️" },
   { id: "profil", icon: User, label: "Profil", emoji: "👤" },
   { id: "reglages", icon: Settings, label: "Réglages", emoji: "⚙️" },
   { id: "confidentialite", icon: Shield, label: "Privé", emoji: "🔒" },
@@ -243,9 +249,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [showNotifPanel, setShowNotifPanel] = useState(false);
   // Bobby Store now manages its own state via Supabase (see BobbyStore.tsx)
 
+  // Bobby Cloud sync state
+  const [cloudProfile, setCloudProfile] = useState<CloudProfile | null>(null);
+  const [cloudLoading, setCloudLoading] = useState(false);
+  const [cloudRestoreCode, setCloudRestoreCode] = useState("");
+  const [cloudCopied, setCloudCopied] = useState(false);
+
   const unreadAlertCount = parentAlerts.filter(a => !a.is_read).length;
 
-  useEffect(() => { loadData(); loadAlerts(); }, []);
+  useEffect(() => { loadData(); loadAlerts(); loadCloudProfile(); }, []);
 
   const loadAlerts = async () => {
     try {
@@ -256,6 +268,65 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         .limit(50);
       if (data) setParentAlerts(data as any);
     } catch (e) { console.warn("Failed to load alerts:", e); }
+  };
+
+  const loadCloudProfile = async () => {
+    const profile = await getCloudProfile();
+    setCloudProfile(profile);
+  };
+
+  const handleCloudSave = async () => {
+    setCloudLoading(true);
+    try {
+      const result = await saveToCloud(settings.childName || childName, settings);
+      if (result.success && result.profile) {
+        setCloudProfile(result.profile);
+        toast.success(result.isNew ? "☁️ Profil Bobby Cloud créé !" : "☁️ Synchronisé avec Bobby Cloud !");
+      } else {
+        toast.error("Erreur de synchronisation", { description: result.error });
+      }
+    } finally { setCloudLoading(false); }
+  };
+
+  const handleCloudRestore = async () => {
+    if (!cloudRestoreCode.trim()) return;
+    setCloudLoading(true);
+    try {
+      const result = await restoreFromCloud(cloudRestoreCode);
+      if (result.success && result.profile) {
+        setCloudProfile(result.profile);
+        // Restore parent settings
+        const restored = result.profile.parent_settings;
+        if (restored && typeof restored === "object") {
+          // Keep local childName/childAge priority
+          const merged = {
+            ...DEFAULT_PARENT_SETTINGS,
+            ...restored,
+            childName: settings.childName || childName,
+            childAge: settings.childAge,
+            contentModes: { ...DEFAULT_PARENT_SETTINGS.contentModes, ...(restored as any).contentModes },
+            nightMode: { ...DEFAULT_PARENT_SETTINGS.nightMode, ...(restored as any).nightMode },
+            interactions: { ...DEFAULT_PARENT_SETTINGS.interactions, ...(restored as any).interactions },
+          };
+          setSettings(merged as ParentSettings);
+          onSettingsChange?.(merged as ParentSettings);
+        }
+        setCloudRestoreCode("");
+        toast.success("☁️ Profil restauré depuis Bobby Cloud !");
+      } else {
+        toast.error("Code introuvable", { description: result.error });
+      }
+    } finally { setCloudLoading(false); }
+  };
+
+  const handleCloudDelete = async () => {
+    setCloudLoading(true);
+    const ok = await deleteCloudProfile();
+    setCloudLoading(false);
+    if (ok) {
+      setCloudProfile(null);
+      toast.success("Profil Bobby Cloud supprimé");
+    }
   };
 
   const markAlertRead = async (alertId: string) => {
@@ -1729,8 +1800,14 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             <span className="text-[11px] font-semibold text-foreground">Exporter</span>
           </button>
           <button
-            onClick={() => {
-              toast.success("✅ Session sauvegardée dans Bobby Cloud", { description: "Les données sont synchronisées et sécurisées." });
+            onClick={async () => {
+              const result = await saveToCloud(settings.childName || childName, settings);
+              if (result.success) {
+                setCloudProfile(result.profile!);
+                toast.success("☁️ Session sauvegardée dans Bobby Cloud", { description: `Code : ${result.profile!.sync_code}` });
+              } else {
+                toast.error("Erreur", { description: result.error });
+              }
             }}
             className="flex flex-col items-center gap-1.5 py-3 rounded-2xl bg-card hover:bg-primary/8 transition-all">
             <CloudUpload className="w-5 h-5 text-primary" />
@@ -2903,8 +2980,150 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   };
 
   // ═══════════════════════════════════════════════════════════════
-  // TAB TRANSITION ANIMATION
+  // RENDER: BOBBY CLOUD
   // ═══════════════════════════════════════════════════════════════
+
+  const renderCloud = () => (
+    <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
+      {/* Hero */}
+      <div className="bg-gradient-to-br from-blue-500/20 via-purple-400/15 to-pink-400/10 rounded-3xl p-6 text-center border border-blue-400/20">
+        <span className="text-5xl block mb-3">☁️</span>
+        <h2 className="text-[20px] font-extrabold text-foreground mb-1">Bobby Cloud</h2>
+        <p className="text-[14px] text-muted-foreground leading-relaxed">
+          Sauvegardez et restaurez les réglages et sessions de Bobby entre appareils.
+        </p>
+      </div>
+
+      {/* Status card */}
+      {cloudProfile ? (
+        <div className="bg-card rounded-3xl p-5 border border-primary/20 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-primary/15 flex items-center justify-center">
+              <span className="text-2xl">✅</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-[16px] font-extrabold text-foreground">Connecté au Cloud</h3>
+              <p className="text-[13px] text-muted-foreground">{formatSyncTime(cloudProfile.last_synced_at)}</p>
+            </div>
+          </div>
+
+          {/* Sync code display */}
+          <div className="bg-muted/40 rounded-2xl p-4">
+            <p className="text-[12px] text-muted-foreground font-bold mb-2">📋 Code de synchronisation</p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 text-[18px] font-mono font-extrabold text-primary tracking-widest text-center py-2 bg-card rounded-xl border border-primary/20">
+                {cloudProfile.sync_code}
+              </code>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(cloudProfile.sync_code);
+                  setCloudCopied(true);
+                  setTimeout(() => setCloudCopied(false), 2000);
+                  toast.success("Code copié !");
+                }}
+                className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-all active:scale-90">
+                {cloudCopied ? <span className="text-lg">✓</span> : <span className="text-lg">📋</span>}
+              </button>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-2 text-center">
+              Utilisez ce code sur un autre appareil pour restaurer votre profil.
+            </p>
+          </div>
+
+          {/* Action buttons */}
+          <div className="grid grid-cols-2 gap-3">
+            <button onClick={handleCloudSave} disabled={cloudLoading}
+              className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-gradient-to-br from-blue-500/15 to-blue-400/5 border border-blue-400/20 hover:border-blue-400/40 transition-all active:scale-95 disabled:opacity-50">
+              {cloudLoading ? <Loader2 className="w-6 h-6 animate-spin text-primary" /> : <CloudUpload className="w-6 h-6 text-primary" />}
+              <span className="text-[13px] font-extrabold text-foreground">Sauvegarder</span>
+              <span className="text-[10px] text-muted-foreground">Envoyer vers le cloud</span>
+            </button>
+            <button onClick={() => {
+              setConfirmDialog({
+                title: "Supprimer le profil Cloud ?",
+                description: "Le code de synchronisation ne fonctionnera plus et les données cloud seront supprimées.",
+                confirmLabel: "Supprimer",
+                variant: "danger",
+                onConfirm: () => { handleCloudDelete(); setConfirmDialog(null); },
+              });
+            }} disabled={cloudLoading}
+              className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-gradient-to-br from-red-500/10 to-red-400/5 border border-destructive/15 hover:border-destructive/30 transition-all active:scale-95 disabled:opacity-50">
+              <Trash2 className="w-6 h-6 text-destructive" />
+              <span className="text-[13px] font-extrabold text-destructive">Dissocier</span>
+              <span className="text-[10px] text-muted-foreground">Supprimer du cloud</span>
+            </button>
+          </div>
+
+          {/* Info */}
+          <div className="bg-muted/30 rounded-2xl p-3">
+            <p className="text-[12px] text-muted-foreground leading-relaxed">
+              ℹ️ La sauvegarde inclut : réglages parents, profil voix, thèmes activés, sujets bloqués et préférences.
+              Les sessions restent dans la base de données et sont accessibles depuis tous les appareils.
+            </p>
+          </div>
+        </div>
+      ) : (
+        /* Not connected — show create + restore */
+        <div className="space-y-4">
+          {/* Create new */}
+          <button onClick={handleCloudSave} disabled={cloudLoading}
+            className="w-full bg-gradient-to-br from-primary/15 to-primary/5 rounded-3xl p-6 border-2 border-primary/20 hover:border-primary/40 transition-all active:scale-[0.98] disabled:opacity-50">
+            <div className="flex items-center gap-4">
+              {cloudLoading ? <Loader2 className="w-10 h-10 animate-spin text-primary" /> : <CloudUpload className="w-10 h-10 text-primary" />}
+              <div className="text-left flex-1">
+                <h3 className="text-[17px] font-extrabold text-foreground">Créer une sauvegarde</h3>
+                <p className="text-[13px] text-muted-foreground mt-1">Générer un code de synchronisation unique</p>
+              </div>
+            </div>
+          </button>
+
+          {/* Restore from code */}
+          <div className="bg-card rounded-3xl p-5 border border-border/20 space-y-4">
+            <div className="flex items-center gap-3">
+              <Download className="w-6 h-6 text-primary" />
+              <h3 className="text-[16px] font-extrabold text-foreground">Restaurer depuis un code</h3>
+            </div>
+            <p className="text-[13px] text-muted-foreground">
+              Entrez le code Bobby Cloud d'un autre appareil pour restaurer vos réglages.
+            </p>
+            <input
+              type="text"
+              value={cloudRestoreCode}
+              onChange={e => setCloudRestoreCode(e.target.value.toUpperCase())}
+              placeholder="BOBBY-XXXX-XXXX"
+              className="w-full text-center text-[18px] font-mono font-extrabold tracking-widest px-4 py-4 rounded-2xl bg-muted text-foreground placeholder:text-muted-foreground/40 outline-none focus:ring-2 focus:ring-primary/30 transition-all border border-border/20"
+            />
+            <button onClick={handleCloudRestore} disabled={cloudLoading || !cloudRestoreCode.trim()}
+              className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-extrabold text-[15px] hover:opacity-90 transition-all active:scale-95 disabled:opacity-40 shadow-md shadow-primary/20">
+              {cloudLoading ? "Restauration…" : "☁️ Restaurer"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Features list */}
+      <div className="bg-card rounded-3xl p-5 border border-border/20">
+        <h3 className="text-[16px] font-extrabold text-foreground mb-3">🌟 Fonctionnalités Bobby Cloud</h3>
+        <div className="space-y-3">
+          {[
+            { emoji: "🔄", title: "Sync multi-appareils", desc: "Partagez le même profil sur tablette, téléphone, ordinateur" },
+            { emoji: "💾", title: "Sauvegarde sécurisée", desc: "Vos réglages sont chiffrés et stockés en toute sécurité" },
+            { emoji: "📊", title: "Sessions centralisées", desc: "Toutes les conversations sont accessibles partout" },
+            { emoji: "⚡", title: "Restauration instantanée", desc: "Un code suffit pour retrouver votre profil Bobby" },
+          ].map(f => (
+            <div key={f.title} className="flex items-start gap-3">
+              <span className="text-xl mt-0.5">{f.emoji}</span>
+              <div>
+                <h4 className="text-[14px] font-bold text-foreground">{f.title}</h4>
+                <p className="text-[12px] text-muted-foreground leading-relaxed">{f.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
 
   const allTabIds: Tab[] = ["home", ...tabs.map(t => t.id)];
   const prevTabRef = useRef(activeTab);
@@ -2947,6 +3166,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         );
         case "profil": return renderProfil();
         case "reglages": return renderReglages();
+        case "cloud": return renderCloud();
         case "confidentialite": return renderConfidentialite();
         default: return renderDashboard();
       }
@@ -2957,6 +3177,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       { id: "dashboard", emoji: "📊", label: "Tableau de bord", desc: "Vue d'ensemble", color: "from-primary/20 to-primary/5" },
       { id: "sessions", emoji: "💬", label: "Sessions", desc: `${sessions.length} conversations`, color: "from-accent/30 to-accent/5", badge: sessions.filter(s => !analyses.some(a => a.session_id === s.id)).length || undefined },
       { id: "activites", emoji: "🛒", label: "Bobby Store", desc: "Contenus & activités", color: "from-secondary/30 to-secondary/5", badge: undefined },
+      { id: "cloud", emoji: "☁️", label: "Bobby Cloud", desc: cloudProfile ? "Synchronisé ✅" : "Sauvegarder", color: "from-blue-500/20 to-purple-400/10" },
       { id: "profil", emoji: "👤", label: "Profil enfant", desc: "Intérêts & mémoire", color: "from-primary/15 to-primary/3" },
       { id: "reglages", emoji: "⚙️", label: "Réglages", desc: "Voix, contenu, limites", color: "from-muted to-muted/30" },
       { id: "confidentialite", emoji: "🔒", label: "Confidentialité", desc: "Données & sécurité", color: "from-destructive/10 to-destructive/3" },
