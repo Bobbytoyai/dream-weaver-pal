@@ -1151,23 +1151,23 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ ÉMOTIONS — compact bars ═══ */}
       {Object.keys(avgEmotions).length > 0 && (
-        <div className="bg-card rounded-2xl p-3 border border-border/20">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-lg">💖</span>
-            <h3 className="text-[14px] font-extrabold text-foreground">Émotions</h3>
+        <div className="bg-card rounded-3xl p-5 border border-border/20">
+          <div className="flex items-center gap-2.5 mb-3">
+            <span className="text-2xl">💖</span>
+            <h3 className="text-[17px] font-extrabold text-foreground">Émotions</h3>
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-2.5">
             {Object.entries(avgEmotions).filter(([, v]) => v > 0).sort(([, a], [, b]) => b - a).map(([key, value]) => {
               const info = emotionScoreLabels[key] || { label: key, emoji: "❓" };
               const barColor = key === "joy" ? "bg-emerald-500" : key === "curiosity" ? "bg-blue-500" : key === "excitement" ? "bg-amber-400" : key === "frustration" ? "bg-red-400" : key === "fear" ? "bg-purple-400" : "bg-muted-foreground";
               return (
-                <div key={key} className="flex items-center gap-2">
-                  <span className="text-base w-5 text-center">{info.emoji}</span>
-                  <span className="text-[11px] text-foreground w-16 font-extrabold">{info.label}</span>
-                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                <div key={key} className="flex items-center gap-3">
+                  <span className="text-xl w-7 text-center">{info.emoji}</span>
+                  <span className="text-[14px] text-foreground w-20 font-extrabold">{info.label}</span>
+                  <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
                     <div className={`h-full ${barColor} rounded-full transition-all duration-700`} style={{ width: `${value}%` }} />
                   </div>
-                  <span className="text-[11px] text-foreground w-8 text-right font-extrabold">{value}%</span>
+                  <span className="text-[14px] text-foreground w-10 text-right font-extrabold">{value}%</span>
                 </div>
               );
             })}
@@ -1177,10 +1177,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ ÉVOLUTION 7 JOURS — compact chart ═══ */}
       {emotionChartData.some(d => d.hasData) && (
-        <div className="bg-card rounded-2xl p-3 border border-border/20">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-lg">📈</span>
-            <h3 className="text-[14px] font-extrabold text-foreground">Évolution (7j)</h3>
+        <div className="bg-card rounded-3xl p-5 border border-border/20">
+          <div className="flex items-center gap-2.5 mb-3">
+            <span className="text-2xl">📈</span>
+            <h3 className="text-[17px] font-extrabold text-foreground">Évolution (7j)</h3>
           </div>
           <div className="w-full h-44">
             <ResponsiveContainer width="100%" height="100%">
