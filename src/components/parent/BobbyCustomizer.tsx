@@ -3,6 +3,8 @@ import { ChevronLeft, Shuffle, ChevronDown } from "lucide-react";
 import type { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
+import { Switch } from "@/components/ui/switch";
+import type { BobbyEmotion } from "@/lib/bobby/expressionEngine";
 
 interface BobbyCustomizerProps {
   settings: ParentSettings;
