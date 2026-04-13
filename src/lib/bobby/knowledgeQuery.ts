@@ -1077,14 +1077,14 @@ function fuzzyMatch(a: string, b: string): number {
   const longer = Math.max(a.length, b.length);
   if (a.length >= 4 && b.includes(a) && a.length / longer >= 0.85) return 0.8;
   if (b.length >= 4 && a.includes(b) && b.length / longer >= 0.85) return 0.8;
-  // Prefix match (at least 4 chars shared)
+  // Prefix match (require 80%+ of shorter word to match)
   const minLen = Math.min(a.length, b.length);
   if (minLen >= 4) {
     let shared = 0;
     for (let i = 0; i < minLen; i++) {
       if (a[i] === b[i]) shared++; else break;
     }
-    if (shared >= 4) return 0.6 + (shared / minLen) * 0.2;
+    if (shared >= 4 && shared / minLen >= 0.8) return 0.6 + (shared / minLen) * 0.2;
   }
   return 0;
 }
