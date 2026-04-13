@@ -321,7 +321,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     }
     setCloudLoading(true);
     try {
-      const result = await saveToCloud(displayName, settings);
+      const result = await saveToCloud(displayName, settings, undefined, user.id);
       if (result.success && result.profile) {
         setCloudProfile(result.profile);
         toast.success(result.isNew ? "☁️ Profil Bobby Cloud créé !" : "☁️ Synchronisé avec Bobby Cloud !");
@@ -2024,12 +2024,22 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </button>
           <button
             onClick={async () => {
-              const result = await saveToCloud(displayName, settings);
-              if (result.success) {
-                setCloudProfile(result.profile!);
-                toast.success("☁️ Session sauvegardée dans Bobby Cloud", { description: `Code : ${result.profile!.sync_code}` });
-              } else {
-                toast.error("Erreur", { description: result.error });
+              if (!user) {
+                navigate("/bobby-cloud?returnTo=/");
+                return;
+              }
+
+              setCloudLoading(true);
+              try {
+                const result = await saveToCloud(displayName, settings, undefined, user.id);
+                if (result.success && result.profile) {
+                  setCloudProfile(result.profile);
+                  toast.success("☁️ Session sauvegardée dans Bobby Cloud", { description: `Code : ${result.profile.sync_code}` });
+                } else {
+                  toast.error("Erreur", { description: result.error });
+                }
+              } finally {
+                setCloudLoading(false);
               }
             }}
             className="flex flex-col items-center gap-2 py-4 border-4 border-black bg-white hover:bg-muted transition-all active:scale-95">
