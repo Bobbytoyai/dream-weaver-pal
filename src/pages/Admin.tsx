@@ -640,13 +640,15 @@ const Admin = () => {
       const qa = data?.total_qa_learned ?? 0;
       const gaps = data?.total_gaps_filled ?? 0;
       toast.success(`🧠 +${qa} Q&A, +${gaps} lacunes comblées depuis cette conversation !`);
-      fetchEntries();
+      // Refresh KB entries
+      supabase.from("knowledge_base").select("*").order("priority", { ascending: false })
+        .then(r => { if (r.data) setEntries(r.data as unknown as KBEntry[]); });
     } catch (e: any) {
       toast.error("Erreur : " + (e.message || "inconnue"));
     } finally {
       setLearningSessionId(null);
     }
-  }, [fetchEntries]);
+  }, []);
 
   const fetchRealConversations = useCallback(async () => {
     setRealConvLoading(true);
