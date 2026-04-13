@@ -60,8 +60,8 @@ function svgToWorld(sx: number, sy: number): [number, number] {
 // ─── Eyebrow builder — rounded rectangle ─────────────────────
 function buildEyebrowShape(_archHeight: number = 0.06): THREE.Shape {
   const shape = new THREE.Shape();
-  const w = 0.24;   // half width
-  const h = 0.065;  // half height (thicker)
+  const w = 0.30;   // half width (longer)
+  const h = 0.075;  // half height (thicker)
   const r = 0.015;  // corner radius
 
   shape.moveTo(-w + r, -h);
@@ -193,7 +193,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   // Cheeks — #FF69B4
   const blushMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#FF69B4"), transparent: true, opacity: 0.6,
+    color: new THREE.Color("#FF85B0"), transparent: true, opacity: 0.35,
   }), []);
 
   // ─── Apply per-element colors ───────────────
@@ -204,7 +204,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       const cheekHex = CHEEK_HEX[bobbyColors.cheek];
       if (cheekHex) {
         blushMat.color.set(cheekHex);
-        blushMat.opacity = 0.6;
+        blushMat.opacity = 0.35;
       } else {
         blushMat.opacity = 0;
       }
@@ -260,7 +260,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   // Cheek oval
   const cheekGeo = useMemo(() => {
     const shape = new THREE.Shape();
-    shape.absellipse(0, 0, 0.19, 0.14, 0, Math.PI * 2, false, 0);
+    shape.absellipse(0, 0, 0.24, 0.13, 0, Math.PI * 2, false, 0);
     return new THREE.ShapeGeometry(shape, 32);
   }, []);
 
