@@ -341,6 +341,7 @@ interface BobbyStoreProps {
 }
 
 export default function BobbyStore({ childName = "enfant", childAge = 7 }: BobbyStoreProps) {
+  const { user } = useAuth();
   const [items, setItems] = useState<StoreItem[]>([]);
   const [installedIds, setInstalledIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
