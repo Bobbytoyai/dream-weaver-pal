@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
+import RetroLoader from "@/components/RetroLoader";
 import type { PendingNarration } from "@/hooks/useConversationStateMachine";
 
 import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/parentSettings";
@@ -9,14 +10,6 @@ const VoiceScreen = lazy(() => import("@/components/VoiceScreen"));
 const StoryMode = lazy(() => import("@/components/StoryMode"));
 const ContentCategories = lazy(() => import("@/components/ContentCategories"));
 const ParentMode = lazy(() => import("@/components/ParentMode"));
-
-function ModeFallback() {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-foreground text-sm animate-pulse font-black uppercase">Chargement…</div>
-    </div>
-  );
-}
 
 const SETTINGS_STORAGE_KEY = "bobby_parent_settings";
 
@@ -89,7 +82,7 @@ const Index = () => {
 
   if (mode === "parent") {
     return (
-      <Suspense fallback={<ModeFallback />}>
+      <Suspense fallback={<RetroLoader message="Mode parent…" />}>
         <ParentMode
           childName={childName}
           onClose={() => setMode("voice")}
@@ -102,7 +95,7 @@ const Index = () => {
 
   if (mode === "activities") {
     return (
-      <Suspense fallback={<ModeFallback />}>
+      <Suspense fallback={<RetroLoader message="Activités…" />}>
         <ContentCategories
           childName={childName}
           voiceProfile={parentSettings.voiceType || "female"}
@@ -118,7 +111,7 @@ const Index = () => {
 
   if (mode === "story") {
     return (
-      <Suspense fallback={<ModeFallback />}>
+      <Suspense fallback={<RetroLoader message="Histoire…" />}>
         <StoryMode
           childName={childName}
           childAge={childAge}
@@ -131,7 +124,7 @@ const Index = () => {
   }
 
   return (
-    <Suspense fallback={<ModeFallback />}>
+    <Suspense fallback={<RetroLoader />}>
       <VoiceScreen
         childName={childName}
         childAge={childAge}
