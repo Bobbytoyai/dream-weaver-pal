@@ -1574,25 +1574,25 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         {/* Audio player moved to bottom of page */}
 
         {keyMoments.length > 0 && (
-          <div className="bg-card rounded-3xl p-5 border border-border/20">
+          <div className="retro-card p-5" style={{ backgroundColor: 'var(--retro-yellow)' }}>
             <div className="flex items-center gap-2.5 mb-4">
               <span className="text-2xl">⭐</span>
-              <h3 className="text-[16px] font-extrabold text-foreground">Moments clés</h3>
+              <h3 className="text-[16px] font-black text-gray-800 uppercase">Moments clés</h3>
             </div>
             <div className="space-y-2.5">
               {keyMoments.map((moment, i) => {
                 const emo = emotionLabels[moment.detected_emotion!] || { emoji: "💬", label: moment.detected_emotion, color: "bg-muted text-muted-foreground" };
                 return (
                   <button key={i} onClick={() => jumpToMoment(moment.idx)}
-                    className="w-full flex items-start gap-3 p-3.5 rounded-2xl bg-muted/40 hover:bg-primary/8 transition-all text-left border border-border/10">
+                    className="w-full flex items-start gap-3 p-3.5 border-2 border-black bg-white hover:bg-muted transition-all text-left">
                     <span className="text-xl mt-0.5">{emo.emoji}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[14px] text-foreground line-clamp-2 leading-relaxed font-medium">{moment.content}</p>
-                      <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold mt-1.5 inline-block ${emo.color}`}>
+                      <p className="text-[14px] text-gray-800 line-clamp-2 leading-relaxed font-bold">{moment.content}</p>
+                      <span className={`text-[11px] px-2 py-0.5 font-bold mt-1.5 inline-block border border-black ${emo.color}`}>
                         {emo.label}
                       </span>
                     </div>
-                    <Play className="w-4 h-4 text-primary mt-1.5 shrink-0" />
+                    <Play className="w-4 h-4 text-gray-800 mt-1.5 shrink-0" />
                   </button>
                 );
               })}
@@ -1601,59 +1601,59 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         )}
 
         {analyzing ? (
-          <div className="bg-card rounded-3xl p-8 flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            <span className="text-[15px] text-muted-foreground font-bold">Analyse en cours…</span>
+          <div className="retro-card p-8 flex flex-col items-center justify-center gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-gray-800" />
+            <span className="text-[15px] text-gray-600 font-black">Analyse en cours…</span>
           </div>
         ) : analysis ? (
           <>
             {analysis.summary && (
-              <div className="bg-gradient-to-br from-primary/10 to-primary/3 rounded-3xl p-5 border border-primary/15">
+              <div className="retro-card p-5" style={{ backgroundColor: 'var(--retro-green)' }}>
                 <div className="flex items-center gap-2.5 mb-3">
-                  <span className="text-2xl">📝</span>
-                  <h3 className="text-[16px] font-extrabold text-foreground">Résumé</h3>
+                  <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">📝</span></div>
+                  <h3 className="text-[16px] font-black text-gray-800 uppercase">Résumé</h3>
                 </div>
-                <p className="text-[15px] text-foreground leading-relaxed font-bold">
+                <p className="text-[15px] text-gray-700 leading-relaxed font-bold">
                   {(() => { const s = humanizeSummary(analysis.summary!).match(/[^.!?]+[.!?]+/g); return s ? s.slice(0, 2).join(" ").trim() : humanizeSummary(analysis.summary!); })()}
                 </p>
               </div>
             )}
 
-            {/* ── Scores grid — colorful squares ── */}
+            {/* ── Scores grid — retro squares ── */}
             <div className="grid grid-cols-3 gap-2">
               {analysis.sociability_score != null && (
                 <>
-                  <div className="bg-gradient-to-br from-blue-500/15 to-blue-400/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-blue-400/15 justify-center">
+                  <div className="retro-card p-3 flex flex-col items-center gap-1 justify-center" style={{ backgroundColor: 'var(--retro-blue)' }}>
                     <span className="text-2xl">🤝</span>
-                    <span className="text-2xl font-extrabold text-foreground">{analysis.sociability_score}</span>
-                    <span className="text-[11px] font-bold text-muted-foreground">Sociabilité</span>
+                    <span className="text-2xl font-black text-gray-800">{analysis.sociability_score}</span>
+                    <span className="text-[11px] font-bold text-gray-600">Sociabilité</span>
                   </div>
-                  <div className="bg-gradient-to-br from-amber-500/15 to-amber-400/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-amber-400/15 justify-center">
+                  <div className="retro-card p-3 flex flex-col items-center gap-1 justify-center" style={{ backgroundColor: 'var(--retro-yellow)' }}>
                     <span className="text-2xl">🔍</span>
-                    <span className="text-2xl font-extrabold text-foreground">{analysis.curiosity_score || 0}</span>
-                    <span className="text-[11px] font-bold text-muted-foreground">Curiosité</span>
+                    <span className="text-2xl font-black text-gray-800">{analysis.curiosity_score || 0}</span>
+                    <span className="text-[11px] font-bold text-gray-600">Curiosité</span>
                   </div>
-                  <div className="bg-gradient-to-br from-emerald-500/15 to-emerald-400/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-emerald-400/15 justify-center">
+                  <div className="retro-card p-3 flex flex-col items-center gap-1 justify-center" style={{ backgroundColor: 'var(--retro-green)' }}>
                     <span className="text-2xl">⚖️</span>
-                    <span className="text-2xl font-extrabold text-foreground">{analysis.emotional_stability_score || 0}</span>
-                    <span className="text-[11px] font-bold text-muted-foreground">Stabilité</span>
+                    <span className="text-2xl font-black text-gray-800">{analysis.emotional_stability_score || 0}</span>
+                    <span className="text-[11px] font-bold text-gray-600">Stabilité</span>
                   </div>
                 </>
               )}
-              <div className="bg-gradient-to-br from-purple-500/15 to-purple-400/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-purple-400/15 justify-center">
+              <div className="retro-card p-3 flex flex-col items-center gap-1 justify-center" style={{ backgroundColor: 'var(--retro-purple)' }}>
                 <span className="text-2xl">{analysis.engagement_level === "high" ? "🔥" : analysis.engagement_level === "medium" ? "👍" : "💤"}</span>
-                <span className="text-xl font-extrabold text-foreground capitalize">{
+                <span className="text-xl font-black text-gray-800 capitalize">{
                   analysis.engagement_level === "high" ? "Élevé" : analysis.engagement_level === "medium" ? "Moyen" : "Faible"
                 }</span>
-                <span className="text-[11px] font-bold text-muted-foreground">Engagement</span>
+                <span className="text-[11px] font-bold text-gray-600">Engagement</span>
               </div>
               {analysis.attention_span && (
-                <div className="bg-gradient-to-br from-pink-500/15 to-pink-400/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-pink-400/15 justify-center">
+                <div className="retro-card p-3 flex flex-col items-center gap-1 justify-center" style={{ backgroundColor: 'var(--retro-red)' }}>
                   <span className="text-2xl">{analysis.attention_span === "long" ? "🟢" : analysis.attention_span === "moyen" ? "🟡" : "🔴"}</span>
-                  <span className="text-xl font-extrabold text-foreground capitalize">{
+                  <span className="text-xl font-black text-gray-800 capitalize">{
                     analysis.attention_span === "long" ? "Longue" : analysis.attention_span === "moyen" ? "Moyenne" : "Courte"
                   }</span>
-                  <span className="text-[11px] font-bold text-muted-foreground">Attention</span>
+                  <span className="text-[11px] font-bold text-gray-600">Attention</span>
                 </div>
               )}
             </div>
