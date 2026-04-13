@@ -1023,17 +1023,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           }));
         if (radarData.length < 3) return null;
         return (
-          <div className="bg-card rounded-2xl p-3 border border-border/20">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">🎯</span>
-              <h3 className="text-[14px] font-extrabold text-foreground">Intérêts de {childName}</h3>
+          <div className="bg-card rounded-3xl p-4 border border-border/20">
+            <div className="flex items-center gap-2.5 mb-2">
+              <span className="text-2xl">🎯</span>
+              <h3 className="text-[17px] font-extrabold text-foreground">Intérêts de {childName}</h3>
             </div>
-            <ResponsiveContainer width="100%" height={180}>
+            <ResponsiveContainer width="100%" height={200}>
               <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="65%">
                 <PolarGrid stroke="hsl(var(--border))" strokeOpacity={0.4} />
-                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 700 }} />
                 <PolarRadiusAxis tick={false} axisLine={false} />
-                <Radar name="Intérêt" dataKey="score" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} strokeWidth={2} />
+                <Radar name="Intérêt" dataKey="score" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.25} strokeWidth={2.5} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
@@ -1099,21 +1099,21 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ SCORES COMPORTEMENTAUX — compact ═══ */}
       {avgScores && (
-        <div className="bg-card rounded-2xl p-3 border border-border/20">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🧠</span>
-            <h3 className="text-[14px] font-extrabold text-foreground">Développement</h3>
+        <div className="bg-card rounded-3xl p-5 border border-border/20">
+          <div className="flex items-center gap-2.5 mb-4">
+            <span className="text-2xl">🧠</span>
+            <h3 className="text-[17px] font-extrabold text-foreground">Développement</h3>
           </div>
-          <div className="flex justify-around mb-3">
+          <div className="flex justify-around mb-4">
             <ScoreGauge label="Sociabilité" score={avgScores.sociability} emoji="🤝" color="hsl(var(--primary))" size="lg" />
             <ScoreGauge label="Curiosité" score={avgScores.curiosity} emoji="🔍" color="hsl(36, 90%, 50%)" size="lg" />
             <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="hsl(145, 65%, 42%)" size="lg" />
           </div>
           {/* Engagement + Mood mini */}
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/20">
+          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border/20">
             <div>
-              <p className="text-[10px] text-muted-foreground font-bold mb-1">Engagement</p>
-              <div className="flex gap-0.5 h-2.5 rounded-full overflow-hidden">
+              <p className="text-[13px] text-muted-foreground font-bold mb-1.5">Engagement</p>
+              <div className="flex gap-0.5 h-3.5 rounded-full overflow-hidden">
                 {recentAnalyses.length > 0 ? (
                   <>
                     <div className="bg-primary rounded-l-full" style={{ width: `${(engagementDist.high / recentAnalyses.length) * 100}%` }} />
@@ -1122,15 +1122,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   </>
                 ) : <div className="bg-muted w-full rounded-full" />}
               </div>
-              <div className="flex justify-between mt-0.5">
-                <span className="text-[8px] text-muted-foreground">🔥{engagementDist.high}</span>
-                <span className="text-[8px] text-muted-foreground">👍{engagementDist.medium}</span>
-                <span className="text-[8px] text-muted-foreground">💤{engagementDist.low}</span>
+              <div className="flex justify-between mt-1">
+                <span className="text-[11px] text-muted-foreground font-bold">🔥{engagementDist.high}</span>
+                <span className="text-[11px] text-muted-foreground font-bold">👍{engagementDist.medium}</span>
+                <span className="text-[11px] text-muted-foreground font-bold">💤{engagementDist.low}</span>
               </div>
             </div>
             <div>
-              <p className="text-[10px] text-muted-foreground font-bold mb-1">Humeur</p>
-              <div className="flex gap-0.5 h-2.5 rounded-full overflow-hidden">
+              <p className="text-[13px] text-muted-foreground font-bold mb-1.5">Humeur</p>
+              <div className="flex gap-0.5 h-3.5 rounded-full overflow-hidden">
                 {recentAnalyses.length > 0 ? (
                   <>
                     <div className="bg-primary/80 rounded-l-full" style={{ width: `${(moodDist.positive / recentAnalyses.length) * 100}%` }} />
@@ -1139,10 +1139,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   </>
                 ) : <div className="bg-muted w-full rounded-full" />}
               </div>
-              <div className="flex justify-between mt-0.5">
-                <span className="text-[8px] text-muted-foreground">🟢{moodDist.positive}</span>
-                <span className="text-[8px] text-muted-foreground">🟡{moodDist.neutral}</span>
-                <span className="text-[8px] text-muted-foreground">🔴{moodDist.low}</span>
+              <div className="flex justify-between mt-1">
+                <span className="text-[11px] text-muted-foreground font-bold">🟢{moodDist.positive}</span>
+                <span className="text-[11px] text-muted-foreground font-bold">🟡{moodDist.neutral}</span>
+                <span className="text-[11px] text-muted-foreground font-bold">🔴{moodDist.low}</span>
               </div>
             </div>
           </div>
