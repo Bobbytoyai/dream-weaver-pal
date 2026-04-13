@@ -125,12 +125,12 @@ const SettingRow = ({ icon: Icon, title, desc, children }: {
 }) => (
   <div className="flex items-center justify-between py-3 px-1">
     <div className="flex items-center gap-3 flex-1 min-w-0">
-      <div className="w-8 h-8 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">
-        <Icon className="w-4 h-4 text-primary" />
+      <div className="w-9 h-9 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">
+        <Icon className="w-4.5 h-4.5 text-primary" />
       </div>
       <div className="min-w-0">
-        <h4 className="text-[13px] font-semibold text-foreground">{title}</h4>
-        {desc && <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{desc}</p>}
+        <h4 className="text-[14px] font-semibold text-foreground">{title}</h4>
+        {desc && <p className="text-[12px] text-muted-foreground leading-tight mt-0.5">{desc}</p>}
       </div>
     </div>
     <div className="shrink-0 ml-3">{children}</div>
@@ -141,8 +141,8 @@ const Card = ({ title, icon: Icon, children, noPad, className: cx }: { title?: s
   <div className={`bg-card rounded-2xl overflow-hidden ${cx || ""}`}>
     {title && (
       <div className="flex items-center gap-2.5 px-5 pt-4 pb-2">
-        {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
-        <h3 className="text-[13px] font-semibold text-foreground tracking-tight">{title}</h3>
+        {Icon && <Icon className="w-5 h-5 text-muted-foreground" />}
+        <h3 className="text-[15px] font-bold text-foreground tracking-tight">{title}</h3>
       </div>
     )}
     <div className={noPad ? "" : "px-5 pb-4"}>{children}</div>
@@ -1495,42 +1495,61 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         ) : analysis ? (
           <>
             {analysis.summary && (
-              <Card title="Résumé" icon={Brain}>
-                <p className="text-[13px] text-foreground leading-relaxed">{analysis.summary}</p>
+              <Card title="📝 Résumé" icon={Brain}>
+                <p className="text-[14px] text-foreground leading-relaxed">{analysis.summary}</p>
               </Card>
             )}
 
-            {analysis.sociability_score != null && (
-              <Card title="Scores comportementaux" icon={Activity}>
-                <div className="flex justify-around py-2">
-                  <ScoreGauge label="Sociabilité" score={analysis.sociability_score || 0} emoji="🤝" color="hsl(var(--primary))" size="lg" />
-                  <ScoreGauge label="Curiosité" score={analysis.curiosity_score || 0} emoji="🔍" color="hsl(36, 90%, 50%)" size="lg" />
-                  <ScoreGauge label="Stabilité" score={analysis.emotional_stability_score || 0} emoji="⚖️" color="hsl(145, 65%, 42%)" size="lg" />
-                </div>
-                {analysis.attention_span && (
-                  <div className="mt-3 pt-2 border-t border-border/50 flex items-center justify-between">
-                    <span className="text-[11px] text-muted-foreground">⏱️ Attention</span>
-                    <span className={`text-[11px] font-bold ${
-                      analysis.attention_span === "long" ? "text-primary" : analysis.attention_span === "moyen" ? "text-accent-foreground" : "text-destructive"
-                    }`}>{analysis.attention_span === "long" ? "Longue 🟢" : analysis.attention_span === "moyen" ? "Moyenne 🟡" : "Courte 🔴"}</span>
+            {/* ── Compact colored grid: Scores + Engagement + Attention ── */}
+            <div className="grid grid-cols-2 gap-3">
+              {analysis.sociability_score != null && (
+                <>
+                  <div className="bg-primary/10 rounded-2xl p-4 flex flex-col items-center gap-1">
+                    <span className="text-2xl">🤝</span>
+                    <span className="text-2xl font-extrabold text-foreground">{analysis.sociability_score}</span>
+                    <span className="text-[12px] font-semibold text-muted-foreground">Sociabilité</span>
                   </div>
-                )}
-              </Card>
-            )}
+                  <div className="bg-accent/10 rounded-2xl p-4 flex flex-col items-center gap-1">
+                    <span className="text-2xl">🔍</span>
+                    <span className="text-2xl font-extrabold text-foreground">{analysis.curiosity_score || 0}</span>
+                    <span className="text-[12px] font-semibold text-muted-foreground">Curiosité</span>
+                  </div>
+                  <div className="bg-success/10 rounded-2xl p-4 flex flex-col items-center gap-1">
+                    <span className="text-2xl">⚖️</span>
+                    <span className="text-2xl font-extrabold text-foreground">{analysis.emotional_stability_score || 0}</span>
+                    <span className="text-[12px] font-semibold text-muted-foreground">Stabilité</span>
+                  </div>
+                </>
+              )}
+              <div className="bg-secondary/10 rounded-2xl p-4 flex flex-col items-center gap-1">
+                <span className="text-2xl">{analysis.engagement_level === "high" ? "🔥" : analysis.engagement_level === "medium" ? "👍" : "💤"}</span>
+                <span className="text-lg font-extrabold text-foreground capitalize">{
+                  analysis.engagement_level === "high" ? "Élevé" : analysis.engagement_level === "medium" ? "Moyen" : "Faible"
+                }</span>
+                <span className="text-[12px] font-semibold text-muted-foreground">Engagement</span>
+              </div>
+              {analysis.attention_span && (
+                <div className="bg-primary/5 rounded-2xl p-4 flex flex-col items-center gap-1">
+                  <span className="text-2xl">{analysis.attention_span === "long" ? "🟢" : analysis.attention_span === "moyen" ? "🟡" : "🔴"}</span>
+                  <span className="text-lg font-extrabold text-foreground capitalize">{
+                    analysis.attention_span === "long" ? "Longue" : analysis.attention_span === "moyen" ? "Moyenne" : "Courte"
+                  }</span>
+                  <span className="text-[12px] font-semibold text-muted-foreground">Attention</span>
+                </div>
+              )}
+            </div>
 
+            {/* ── Emotions as colored pills ── */}
             {analysis.emotions && Object.keys(analysis.emotions).length > 0 && (
-              <Card title="Émotions" icon={Heart}>
-                <div className="space-y-2">
+              <Card title="💛 Émotions">
+                <div className="flex flex-wrap gap-2">
                   {Object.entries(analysis.emotions).filter(([, v]) => (v as number) > 0).sort(([, a], [, b]) => (b as number) - (a as number)).map(([key, value]) => {
                     const info = emotionScoreLabels[key] || { label: key, emoji: "❓" };
                     return (
-                      <div key={key} className="flex items-center gap-2">
-                        <span className="w-5 text-center text-sm">{info.emoji}</span>
-                        <span className="text-[12px] text-foreground w-20 font-medium">{info.label}</span>
-                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-primary rounded-full" style={{ width: `${value}%` }} />
-                        </div>
-                        <span className="text-[11px] text-muted-foreground w-8 text-right">{value as number}%</span>
+                      <div key={key} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/60">
+                        <span className="text-lg">{info.emoji}</span>
+                        <span className="text-[13px] font-bold text-foreground">{info.label}</span>
+                        <span className="text-[13px] text-muted-foreground font-semibold">{value as number}%</span>
                       </div>
                     );
                   })}
@@ -1538,63 +1557,54 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               </Card>
             )}
 
-            {analysis.extracted_interests && analysis.extracted_interests.length > 0 && (
-              <Card title="Intérêts détectés" icon={Sparkles}>
-                <div className="flex flex-wrap gap-2">
-                  {analysis.extracted_interests.map((interest, i) => (
-                    <span key={i} className="px-3 py-1 rounded-full bg-accent/15 text-accent-foreground text-[11px] font-medium">
-                      ✨ {interest}
-                    </span>
-                  ))}
-                </div>
-              </Card>
+            {/* ── Interests + Topics in compact row ── */}
+            {(analysis.extracted_interests?.length > 0 || analysis.topics_detected?.length > 0) && (
+              <div className="grid grid-cols-2 gap-3">
+                {analysis.extracted_interests?.length > 0 && (
+                  <div className="bg-accent/8 rounded-2xl p-4">
+                    <h4 className="text-[13px] font-bold text-foreground mb-2">✨ Intérêts</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {analysis.extracted_interests.map((interest, i) => (
+                        <span key={i} className="px-2.5 py-1 rounded-lg bg-accent/15 text-[12px] font-semibold text-foreground">{interest}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {analysis.topics_detected?.length > 0 && (
+                  <div className="bg-primary/5 rounded-2xl p-4">
+                    <h4 className="text-[13px] font-bold text-foreground mb-2">💬 Sujets</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {analysis.topics_detected.map((t, i) => (
+                        <span key={i} className="px-2.5 py-1 rounded-lg bg-primary/12 text-[12px] font-semibold text-primary">{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
 
-            {analysis.topics_detected?.length > 0 && (
-              <Card title="Sujets abordés">
-                <div className="flex flex-wrap gap-2">
-                  {analysis.topics_detected.map((t, i) => (
-                    <span key={i} className="px-3 py-1 rounded-full bg-primary/8 text-primary text-[11px] font-medium">{t}</span>
-                  ))}
-                </div>
-              </Card>
-            )}
-
+            {/* ── Observations ── */}
             {analysis.behavior_insights?.length > 0 && (
-              <Card title="Observations">
-                <ul className="space-y-2">
+              <Card title="🔎 Observations">
+                <ul className="space-y-2.5">
                   {analysis.behavior_insights.map((insight, i) => (
-                    <li key={i} className="text-[12px] text-foreground flex items-start gap-2 leading-relaxed">
-                      <span className="text-primary mt-0.5 text-xs">•</span>{insight}
+                    <li key={i} className="text-[13px] text-foreground flex items-start gap-2.5 leading-relaxed">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />{insight}
                     </li>
                   ))}
                 </ul>
               </Card>
             )}
 
-            <Card title="Engagement">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <p className="text-[10px] text-muted-foreground">Niveau</p>
-                  <p className="text-[13px] font-bold text-foreground capitalize">{analysis.engagement_level}</p>
-                </div>
-                {analysis.attention_span && (
-                  <div>
-                    <p className="text-[10px] text-muted-foreground">Attention</p>
-                    <p className="text-[13px] font-bold text-foreground">{analysis.attention_span}</p>
-                  </div>
-                )}
-              </div>
-            </Card>
-
+            {/* ── Alerts ── */}
             {analysis.alerts?.length > 0 && (
-              <div className="bg-destructive/5 rounded-2xl p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle className="w-4 h-4 text-destructive" />
-                  <h3 className="text-[13px] font-semibold text-destructive">Alertes</h3>
+              <div className="bg-destructive/8 rounded-2xl p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertTriangle className="w-5 h-5 text-destructive" />
+                  <h3 className="text-[15px] font-bold text-destructive">Alertes</h3>
                 </div>
                 {analysis.alerts.map((alert, i) => (
-                  <p key={i} className="text-[12px] text-foreground mb-1">⚠️ {alert.message}</p>
+                  <p key={i} className="text-[13px] text-foreground mb-1.5">⚠️ {alert.message}</p>
                 ))}
               </div>
             )}
