@@ -11,15 +11,26 @@ import { FaceState, useFaceAnimation } from "./useFaceAnimation";
 import { VisemeState } from "./useAudioAmplitude";
 import type { ExpressionCombo } from "@/lib/bobby/expressionLibrary";
 
-// Map bobbyColor IDs to iris + cheek tints
-const COLOR_TINTS: Record<string, { iris: string; cheek: string }> = {
-  blue:   { iris: "#1565C0", cheek: "#90CAF9" },
-  purple: { iris: "#7B1FA2", cheek: "#CE93D8" },
-  green:  { iris: "#1B5E20", cheek: "#A5D6A7" },
-  pink:   { iris: "#C2185B", cheek: "#F48FB1" },
-  orange: { iris: "#E65100", cheek: "#FFAB91" },
-  gold:   { iris: "#F9A825", cheek: "#FFE082" },
+// Map color IDs to hex values for per-element coloring
+const IRIS_HEX: Record<string, string> = {
+  blue: "#4A90D9", green: "#5CB85C", purple: "#9B59B6",
+  amber: "#E6A532", pink: "#E06B8F", teal: "#3DBDB5",
 };
+const CHEEK_HEX: Record<string, string> = {
+  pink: "#F8B4C8", peach: "#FCDAB7", lavender: "#D4B8E8",
+  coral: "#F5A08C", mint: "#B8E6D0", none: "",
+};
+const EYEBROW_HEX: Record<string, string> = {
+  brown: "#8B6914", dark: "#4A3728", blonde: "#D4A54A",
+  grey: "#9E9E9E", blue: "#5B8BD4", pink: "#D47BA0",
+};
+
+interface BobbyColors {
+  iris: string;
+  cheek: string;
+  eyebrow: string;
+  background: string;
+}
 
 interface FaceMeshProps {
   faceState: FaceState;
@@ -29,6 +40,7 @@ interface FaceMeshProps {
   emotionIntensity?: number;
   emotionDuringSpeech?: FaceState;
   bobbyColor?: string;
+  bobbyColors?: BobbyColors;
   expressionOverride?: ExpressionCombo;
   expressionIntensityLevel?: number;
 }
@@ -104,7 +116,7 @@ function buildMouthInteriorShape(curve: number, width: number, openness: number,
   return shape;
 }
 
-export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIntensity = 0.7, emotionDuringSpeech, bobbyColor, expressionOverride, expressionIntensityLevel }: FaceMeshProps) {
+export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIntensity = 0.7, emotionDuringSpeech, bobbyColor, bobbyColors, expressionOverride, expressionIntensityLevel }: FaceMeshProps) {
   const rootRef = useRef<THREE.Group>(null);
   const leftEyeRef = useRef<THREE.Group>(null);
   const rightEyeRef = useRef<THREE.Group>(null);
@@ -180,12 +192,25 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color("#FF69B4"), transparent: true, opacity: 0.6,
   }), []);
 
-  // ─── Apply bobbyColor tint to iris + cheeks ───────────────
+  // ─── Apply per-element colors ───────────────
   useEffect(() => {
-    const tint = COLOR_TINTS[bobbyColor || "green"] || COLOR_TINTS.green;
-    irisOuterMat.color.set(tint.iris);
-    blushMat.color.set(tint.cheek);
-  }, [bobbyColor, irisOuterMat, blushMat]);
+    if (bobbyColors) {
+      const irisHex = IRIS_HEX[bobbyColors.iris] || IRIS_HEX.blue;
+      irisOuterMat.color.set(irisHex);
+      const cheekHex = CHEEK_HEX[bobbyColors.cheek];
+      if (cheekHex) {
+        blushMat.color.set(cheekHex);
+        blushMat.opacity = 0.6;
+      } else {
+        blushMat.opacity = 0;
+      }
+      const browHex = EYEBROW_HEX[bobbyColors.eyebrow] || EYEBROW_HEX.brown;
+      eyebrowMat.color.set(browHex);
+    } else if (bobbyColor) {
+      const irisHex = IRIS_HEX[bobbyColor] || IRIS_HEX.blue;
+      irisOuterMat.color.set(irisHex);
+    }
+  }, [bobbyColor, bobbyColors, irisOuterMat, blushMat, eyebrowMat]);
 
   const eyeWhiteGeo = useMemo(() => {
     const shape = new THREE.Shape();

@@ -1,6 +1,5 @@
 import { ChevronLeft } from "lucide-react";
 import type { ParentSettings } from "@/components/parentSettings";
-import { BOBBY_COLORS } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
 
 interface BobbyCustomizerProps {
@@ -11,124 +10,181 @@ interface BobbyCustomizerProps {
   saved: boolean;
 }
 
-const SLIDERS: {
-  key: keyof ParentSettings["bobbyCustomization"];
-  label: string;
-  emoji: string;
-  min: number;
-  max: number;
-  step: number;
-  desc: string;
-}[] = [
-  { key: "eyeSize", label: "Taille des yeux", emoji: "👁️", min: 0.5, max: 1.5, step: 0.05, desc: "Gros yeux mignons ou petits yeux malins" },
-  { key: "eyeSpacing", label: "Écartement des yeux", emoji: "↔️", min: 0.5, max: 1.5, step: 0.05, desc: "Rapprochés ou éloignés" },
-  { key: "pupilSize", label: "Taille des pupilles", emoji: "⚫", min: 0.5, max: 1.5, step: 0.05, desc: "Petites pupilles ou grands yeux kawaii" },
-  { key: "eyelidDroop", label: "Paupières", emoji: "😌", min: 0, max: 1, step: 0.05, desc: "Ouvertes ou mi-closes (style cool)" },
-  { key: "eyebrowHeight", label: "Hauteur des sourcils", emoji: "🤨", min: 0.5, max: 1.5, step: 0.05, desc: "Sourcils hauts (surpris) ou bas (sérieux)" },
-  { key: "eyebrowCurve", label: "Courbe des sourcils", emoji: "〰️", min: 0, max: 1, step: 0.05, desc: "Droits ou très courbés" },
-  { key: "eyebrowThickness", label: "Épaisseur des sourcils", emoji: "━", min: 0.5, max: 1.5, step: 0.05, desc: "Fins et discrets ou épais et expressifs" },
-  { key: "mouthWidth", label: "Largeur de la bouche", emoji: "👄", min: 0.5, max: 1.5, step: 0.05, desc: "Petite bouche ou grand sourire" },
-  { key: "mouthCurve", label: "Sourire", emoji: "😊", min: 0, max: 1, step: 0.05, desc: "Neutre, souriant ou très joyeux" },
-  { key: "cheekSize", label: "Joues", emoji: "🔴", min: 0, max: 1.5, step: 0.05, desc: "Sans joues ou grosses joues rondes" },
+// ─── Per-element color palettes (kid-friendly pastels matching toy/case aesthetics) ───
+
+const IRIS_COLORS = [
+  { id: "blue", label: "Bleu", hex: "#4A90D9" },
+  { id: "green", label: "Vert", hex: "#5CB85C" },
+  { id: "purple", label: "Violet", hex: "#9B59B6" },
+  { id: "amber", label: "Ambre", hex: "#E6A532" },
+  { id: "pink", label: "Rose", hex: "#E06B8F" },
+  { id: "teal", label: "Turquoise", hex: "#3DBDB5" },
+];
+
+const CHEEK_COLORS = [
+  { id: "pink", label: "Rose", hex: "#F8B4C8" },
+  { id: "peach", label: "Pêche", hex: "#FCDAB7" },
+  { id: "lavender", label: "Lavande", hex: "#D4B8E8" },
+  { id: "coral", label: "Corail", hex: "#F5A08C" },
+  { id: "mint", label: "Menthe", hex: "#B8E6D0" },
+  { id: "none", label: "Aucune", hex: "transparent" },
+];
+
+const EYEBROW_COLORS = [
+  { id: "brown", label: "Brun", hex: "#8B6914" },
+  { id: "dark", label: "Foncé", hex: "#4A3728" },
+  { id: "blonde", label: "Blond", hex: "#D4A54A" },
+  { id: "grey", label: "Gris", hex: "#9E9E9E" },
+  { id: "blue", label: "Bleu", hex: "#5B8BD4" },
+  { id: "pink", label: "Rose", hex: "#D47BA0" },
+];
+
+const BG_COLORS = [
+  { id: "soft-blue", label: "Bleu doux", hex: "#E8F0FE", hsl: "220, 80%, 95%" },
+  { id: "soft-pink", label: "Rose doux", hex: "#FDE8F0", hsl: "340, 80%, 95%" },
+  { id: "soft-green", label: "Vert doux", hex: "#E8FEF0", hsl: "150, 80%, 95%" },
+  { id: "soft-purple", label: "Violet doux", hex: "#F0E8FE", hsl: "270, 80%, 95%" },
+  { id: "soft-yellow", label: "Jaune doux", hex: "#FEF8E8", hsl: "45, 80%, 95%" },
+  { id: "white", label: "Blanc", hex: "#FFFFFF", hsl: "0, 0%, 100%" },
+  { id: "dark", label: "Sombre", hex: "#1A1A2E", hsl: "240, 28%, 14%" },
+  { id: "night", label: "Nuit", hex: "#0D1B2A", hsl: "210, 55%, 11%" },
 ];
 
 const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCustomizerProps) => {
-  const custom = settings.bobbyCustomization;
-
-  const updateCustom = (key: keyof ParentSettings["bobbyCustomization"], value: number) => {
-    onUpdate("bobbyCustomization", { ...custom, [key]: value });
+  const colors = settings.bobbyColors || {
+    iris: "blue",
+    cheek: "pink",
+    eyebrow: "brown",
+    background: "soft-blue",
   };
 
-  const resetAll = () => {
-    onUpdate("bobbyCustomization", {
-      eyeSize: 1, eyeSpacing: 1, pupilSize: 1,
-      eyebrowHeight: 1, eyebrowCurve: 0.5, eyebrowThickness: 1,
-      mouthWidth: 1, mouthCurve: 0.7, cheekSize: 1, eyelidDroop: 0.2,
-    });
+  const updateColor = (element: string, colorId: string) => {
+    onUpdate("bobbyColors" as keyof ParentSettings, {
+      ...colors,
+      [element]: colorId,
+    } as any);
   };
+
+  const selectedBg = BG_COLORS.find(c => c.id === colors.background) || BG_COLORS[0];
 
   return (
-    <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
+    <div className="p-4 space-y-5" style={{ fontFamily: "'Nunito', sans-serif" }}>
       <button onClick={onBack}
         className="flex items-center gap-1.5 text-[13px] font-extrabold text-primary hover:underline mb-1 active:scale-95 transition-all">
         <ChevronLeft className="w-4 h-4" /> Retour
       </button>
 
       <h2 className="text-[18px] font-black text-foreground animate-fadeInUp">🎨 Personnaliser Bobby</h2>
-      <p className="text-[12px] text-muted-foreground -mt-2 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-        Modifie l'apparence de Bobby pour qu'il soit unique !
-      </p>
 
-      {/* Live Preview */}
-      <div className="animate-fadeInUp bg-gradient-to-br from-muted/50 via-background to-muted/30 rounded-3xl p-4 border-2 border-border/30" style={{ animationDelay: "0.1s" }}>
-        <div className="w-32 h-32 mx-auto relative">
-          <HologramFace voiceState="idle" enableCamera={false} bobbyColor={settings.bobbyColor} />
+      {/* Full-width landscape preview */}
+      <div
+        className="animate-fadeInUp rounded-3xl overflow-hidden border-2 border-border/30 relative"
+        style={{
+          animationDelay: "0.05s",
+          backgroundColor: selectedBg.hex,
+          aspectRatio: "16/9",
+        }}
+      >
+        <div className="w-full h-full">
+          <HologramFace
+            voiceState="idle"
+            enableCamera={false}
+            bobbyColor={colors.iris}
+            bobbyColors={colors}
+          />
         </div>
-        <p className="text-center text-[10px] text-muted-foreground mt-2 font-bold">Aperçu en direct</p>
+        <p className="absolute bottom-2 left-0 right-0 text-center text-[10px] font-bold"
+          style={{ color: selectedBg.id === "dark" || selectedBg.id === "night" ? "#ffffff88" : "#00000055" }}>
+          Aperçu en direct
+        </p>
       </div>
 
-      {/* Colors */}
-      <div className="animate-fadeInUp" style={{ animationDelay: "0.15s" }}>
-        <h3 className="text-[14px] font-black text-foreground mb-2">🎨 Couleur principale</h3>
-        <div className="flex gap-3 flex-wrap">
-          {BOBBY_COLORS.map((c) => {
-            const selected = settings.bobbyColor === c.id;
-            return (
-              <button key={c.id} onClick={() => onUpdate("bobbyColor", c.id)}
-                className={`w-12 h-12 rounded-2xl transition-all duration-200 active:scale-90 border-3 ${
-                  selected ? "border-foreground shadow-lg scale-110" : "border-transparent hover:scale-105"
-                }`}
-                style={{ backgroundColor: `hsl(${c.hsl})` }}
-                title={c.label}
-              />
-            );
-          })}
-        </div>
-      </div>
+      {/* ── Color sections ── */}
+      <ColorSection
+        label="👁️ Couleur des yeux"
+        colors={IRIS_COLORS}
+        selected={colors.iris}
+        onSelect={(id) => updateColor("iris", id)}
+        delay="0.1s"
+      />
 
-      {/* Face sliders */}
-      <div className="space-y-3">
-        {SLIDERS.map((s, i) => (
-          <div key={s.key} className="bg-card rounded-2xl p-3 border-2 border-border/20 animate-fadeInUp"
-            style={{ animationDelay: `${0.2 + i * 0.03}s` }}>
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2">
-                <span className="text-base">{s.emoji}</span>
-                <h4 className="text-[12px] font-black text-foreground">{s.label}</h4>
-              </div>
-              <span className="text-[11px] font-mono font-bold text-primary">{custom[s.key].toFixed(2)}</span>
-            </div>
-            <p className="text-[9px] text-muted-foreground mb-2">{s.desc}</p>
-            <input
-              type="range"
-              min={s.min}
-              max={s.max}
-              step={s.step}
-              value={custom[s.key]}
-              onChange={(e) => updateCustom(s.key, Number(e.target.value))}
-              className="w-full h-2 rounded-full appearance-none bg-muted accent-primary"
-            />
-          </div>
-        ))}
-      </div>
+      <ColorSection
+        label="🔴 Couleur des joues"
+        colors={CHEEK_COLORS}
+        selected={colors.cheek}
+        onSelect={(id) => updateColor("cheek", id)}
+        delay="0.15s"
+      />
 
-      {/* Reset + Save */}
-      <div className="flex gap-2">
-        <button onClick={resetAll}
-          className="flex-1 py-3 rounded-2xl text-[12px] font-black bg-muted text-muted-foreground hover:bg-muted/80 transition-all active:scale-95">
-          🔄 Réinitialiser
-        </button>
-        <button onClick={onSave}
-          className={`flex-[2] py-3 rounded-2xl text-[14px] font-black transition-all active:scale-95 ${
-            saved
-              ? "bg-emerald-500/15 text-emerald-700 border-2 border-emerald-500/30"
-              : "bg-primary text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25"
-          }`}>
-          {saved ? "✅ Enregistré !" : "💾 Enregistrer"}
-        </button>
-      </div>
+      <ColorSection
+        label="〰️ Couleur des sourcils"
+        colors={EYEBROW_COLORS}
+        selected={colors.eyebrow}
+        onSelect={(id) => updateColor("eyebrow", id)}
+        delay="0.2s"
+      />
+
+      <ColorSection
+        label="🖼️ Fond d'écran"
+        colors={BG_COLORS}
+        selected={colors.background}
+        onSelect={(id) => updateColor("background", id)}
+        delay="0.25s"
+        large
+      />
+
+      {/* Save */}
+      <button onClick={onSave}
+        className={`w-full py-3.5 rounded-2xl text-[14px] font-black transition-all active:scale-95 animate-fadeInUp ${
+          saved
+            ? "bg-success/15 text-success border-2 border-success/30"
+            : "bg-primary text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25"
+        }`}
+        style={{ animationDelay: "0.3s" }}>
+        {saved ? "✅ Enregistré !" : "💾 Enregistrer"}
+      </button>
     </div>
   );
 };
+
+// ─── Reusable color picker row ───
+function ColorSection({ label, colors, selected, onSelect, delay, large }: {
+  label: string;
+  colors: { id: string; label: string; hex: string }[];
+  selected: string;
+  onSelect: (id: string) => void;
+  delay: string;
+  large?: boolean;
+}) {
+  return (
+    <div className="animate-fadeInUp" style={{ animationDelay: delay }}>
+      <h3 className="text-[13px] font-black text-foreground mb-2.5">{label}</h3>
+      <div className="flex gap-2.5 flex-wrap">
+        {colors.map((c) => {
+          const isSelected = selected === c.id;
+          const isTransparent = c.hex === "transparent";
+          return (
+            <button
+              key={c.id}
+              onClick={() => onSelect(c.id)}
+              className={`${large ? "w-10 h-10" : "w-11 h-11"} rounded-2xl transition-all duration-200 active:scale-90 border-[3px] flex items-center justify-center ${
+                isSelected
+                  ? "border-primary shadow-lg scale-110 ring-2 ring-primary/30"
+                  : "border-transparent hover:scale-105 hover:border-border/40"
+              }`}
+              style={{
+                backgroundColor: isTransparent ? undefined : c.hex,
+                ...(isTransparent ? { background: "repeating-conic-gradient(#ddd 0% 25%, transparent 0% 50%) 50% / 12px 12px" } : {}),
+              }}
+              title={c.label}
+            >
+              {isTransparent && <span className="text-[10px] text-muted-foreground font-bold">∅</span>}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default BobbyCustomizer;
