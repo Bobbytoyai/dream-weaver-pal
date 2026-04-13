@@ -2940,7 +2940,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             { id: "reglages" as Tab, emoji: "⚙️", label: "Réglages", bg: "#e5e5e5" },
           ].map((card, i) => (
             <button key={card.id} onClick={() => setActiveTab(card.id)}
-              className={`card-stagger-${i + 1} retro-card retro-card-tilt relative p-3 flex flex-col items-center justify-center aspect-square hover:shadow-lg active:scale-95 transition-all`}
+              className={`card-stagger-${i + 1} retro-card relative p-3 flex flex-col items-center justify-center aspect-square active:scale-95 transition-all`}
               style={{ backgroundColor: card.bg }}>
               <span className="text-[32px] mb-1 drop-shadow-sm">{card.emoji}</span>
               <span className="text-[11px] font-black text-gray-800 leading-tight text-center whitespace-pre-line">{card.label}</span>
