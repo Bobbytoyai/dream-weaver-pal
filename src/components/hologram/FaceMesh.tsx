@@ -499,6 +499,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     pupilRef: React.RefObject<THREE.Mesh>,
     irisRef: React.RefObject<THREE.Mesh>,
     eyelidRef: React.RefObject<THREE.Mesh>,
+    hl1Ref: React.RefObject<THREE.Mesh>,
+    hl2Ref: React.RefObject<THREE.Mesh>,
     eyeX: number,
     eyeY: number,
     hl1: [number, number],
@@ -510,13 +512,12 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh geometry={eyeWhiteGeo} material={eyeWhiteMat} />
       <mesh ref={irisRef} geometry={irisOuterGeo} position={[0, -0.03, 0.01]} material={irisOuterMat} />
       <mesh ref={pupilRef} geometry={pupilGeo} position={[0, -0.02, 0.02]} material={pupilMat} />
-      <mesh position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
-      <mesh position={[hl2[0], hl2[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} />
-      {/* Eyelid: exact same ellipse as eye white, slides down to cover */}
+      <mesh ref={hl1Ref} position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
+      <mesh ref={hl2Ref} position={[hl2[0], hl2[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} />
+      {/* Eyelid */}
       <mesh ref={eyelidRef} position={[0, 0.55, 0.044]} material={eyelidMat}>
         <shapeGeometry args={[(() => {
           const s = new THREE.Shape();
-          // Same shape as eyeWhiteGeo: rx=0.38, ry=0.32
           s.absellipse(0, 0, 0.38, 0.32, 0, Math.PI * 2, false, 0);
           return s;
         })(), 32]} />
