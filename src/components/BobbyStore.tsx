@@ -368,20 +368,26 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
       if (catalogRes.error) throw catalogRes.error;
       setItems((catalogRes.data || []).map(mapStoreRow));
       setLoading(false);
-
-      // Only fetch installed content if user is logged in
-      if (user) {
-        const installedRes = await supabase.from("installed_content").select("content_id").eq("child_name", childName);
-        if (installedRes?.data) {
-          setInstalledIds(new Set(installedRes.data.map((r: any) => r.content_id)));
-        }
-      }
     } catch (err: any) {
-      console.error("[BobbyStore] Fetch error:", err.message);
+      console.error("[BobbyStore] Catalog fetch error:", err.message);
       setLoadError(true);
       setLoading(false);
     }
-  }, [childName, user]);
+  }, []);
+
+  // Fetch installed content separately — non-blocking
+  useEffect(() => {
+    if (!user) return;
+    const fetchInstalled = async () => {
+      try {
+        const { data } = await supabase.from("installed_content").select("content_id").eq("child_name", childName);
+        if (data) setInstalledIds(new Set(data.map((r: any) => r.content_id)));
+      } catch (e) {
+        console.warn("[BobbyStore] Installed content fetch failed (non-critical):", e);
+      }
+    };
+    fetchInstalled();
+  }, [user, childName]);
 
   const loadItemDetails = useCallback(async (itemId: string) => {
     const existingItem = items.find((item) => item.id === itemId);
