@@ -56,14 +56,17 @@ export function HologramFace({
   const tapCountRef = useRef(0);
   const tapTimerRef = useRef<number>(0);
   const [wakeFlash, setWakeFlash] = useState(false);
-  // Audio connector is now managed by VoiceScreen
+  // Connect audio elements for lip sync analysis
   useEffect(() => {
-    const unsub = eventBus.on("WAKE_DETECTED", () => {
+    const unsub1 = eventBus.on("AUDIO_ELEMENT_CREATED", (e) => {
+      connectAudio(e.element);
+    });
+    const unsub2 = eventBus.on("WAKE_DETECTED", () => {
       setWakeFlash(true);
       setTimeout(() => setWakeFlash(false), 700);
     });
-    return unsub;
-  }, []);
+    return () => { unsub1(); unsub2(); };
+  }, [connectAudio]);
   const handleTap = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     const now = Date.now();
     if (now - tapTimerRef.current > 600) {
