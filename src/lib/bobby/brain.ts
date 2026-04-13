@@ -197,7 +197,7 @@ export async function buildBobbyReply({ childName, childAge, userText = "", pend
   if (userText) {
     try {
       const kbReply = await queryKnowledgeBase(userText, childAge);
-      if (kbReply && kbReply.confidence >= 0.6) {
+      if (kbReply && kbReply.confidence >= 0.45) {
         let text = simplifyForAge(kbReply.text, childAge);
         text = personalizeWithName(text, childName);
         text = applyPersonality(text, personality);
