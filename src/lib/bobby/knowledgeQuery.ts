@@ -214,14 +214,14 @@ const SEMANTIC_FIELDS: Record<string, string[]> = {
   musee:      ["art", "tableau", "sculpture", "visite", "culture", "exposition", "histoire"],
   // 🎬 Cinéma & Média
   film:       ["cinema", "regarder", "acteur", "histoire", "ecran", "dessin anime"],
-  "dessin anime":["regarder", "personnage", "aventure", "television", "manga", "animation"],
+  "dessin anime":["regarder", "personnage", "aventure", "television", "manga", "animation", "disney", "pixar", "film", "art"],
   cinema:     ["film", "ecran", "popcorn", "salle", "regarder", "acteur"],
   // 🍳 Cuisine (enrichi)
   cuisine:    ["manger", "recette", "preparer", "ingredient", "plat", "chef", "gourmand"],
   gateau:     ["cuisine", "sucre", "four", "anniversaire", "chocolat", "dessert", "patisserie"],
   soupe:      ["cuisine", "legume", "chaud", "manger", "cuillere", "bol"],
-  pizza:      ["cuisine", "italie", "fromage", "tomate", "four", "manger"],
-  crepe:      ["cuisine", "france", "sucre", "chandeleur", "poele", "dessert"],
+  pizza:      ["cuisine", "italie", "fromage", "tomate", "four", "manger", "part", "mozzarella"],
+  crepe:      ["cuisine", "france", "sucre", "chandeleur", "poele", "dessert", "farine"],
   // 🌱 Nature (enrichi)
   nature:     ["arbre", "fleur", "animal", "foret", "riviere", "montagne", "vert", "ecologie"],
   arbre:      ["nature", "feuille", "racine", "tronc", "foret", "ombre", "bois", "fruit"],
