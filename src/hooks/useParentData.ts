@@ -116,7 +116,14 @@ export function useParentData({ childName, parentSettings, onSettingsChange, onN
     setCloudProfile(profile);
   };
 
-  useEffect(() => { loadData(); loadAlerts(); loadCloudProfile(); }, []);
+  // Stagger loads to reduce auth contention
+  useEffect(() => {
+    loadData();
+    // Defer secondary requests to avoid parallel auth lock contention
+    const t1 = setTimeout(() => loadAlerts(), 300);
+    const t2 = setTimeout(() => loadCloudProfile(), 600);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
 
   // ═══════════════════════════════════════════════════════════════
   // SAFETY ALERTS (eventBus)
