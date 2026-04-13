@@ -122,7 +122,6 @@ function buildMouthShape(curve: number, width: number, openness: number, round: 
   
   return shape;
 }
-}
 
 export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIntensity = 0.7, emotionDuringSpeech, bobbyColor, bobbyColors, expressionOverride, expressionIntensityLevel }: FaceMeshProps) {
   const rootRef = useRef<THREE.Group>(null);
