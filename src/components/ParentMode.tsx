@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
+import LazyImportBoundary from "@/components/LazyImportBoundary";
 import {
   ArrowLeft, Loader2, RefreshCw, Bell,
   BarChart3, MessageSquare, Gamepad2, Settings, CloudUpload, Shield,

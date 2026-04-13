@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from "react";
+import LazyImportBoundary from "@/components/LazyImportBoundary";
 import { Loader2, ChevronLeft, Shield, Lock, Eye, EyeOff, Mic, Calendar, FileText, Database, Scale, UserCheck } from "lucide-react";
 import type { ParentSettings } from "@/components/parentSettings";
 import type { ParentSession as Session } from "@/lib/bobby/parentDashboard";
