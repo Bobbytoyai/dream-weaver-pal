@@ -180,7 +180,13 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color("#FF69B4"), transparent: true, opacity: 0.6,
   }), []);
 
-  // ─── Geometries ───────────────────────────────────────────
+  // ─── Apply bobbyColor tint to iris + cheeks ───────────────
+  useEffect(() => {
+    const tint = COLOR_TINTS[bobbyColor || "green"] || COLOR_TINTS.green;
+    irisOuterMat.color.set(tint.iris);
+    blushMat.color.set(tint.cheek);
+  }, [bobbyColor, irisOuterMat, blushMat]);
+
   const eyeWhiteGeo = useMemo(() => {
     const shape = new THREE.Shape();
     shape.absellipse(0, 0, 0.38, 0.32, 0, Math.PI * 2, false, 0);
