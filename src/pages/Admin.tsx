@@ -867,7 +867,7 @@ const Admin = () => {
   if (editingEntry) {
     const kwString = (editingEntry.keywords || []).join(", ");
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-2xl mx-auto space-y-4">
           <Button variant="ghost" onClick={() => setEditingEntry(null)} className="text-white/70">
             <ArrowLeft className="w-4 h-4 mr-2" /> Retour
@@ -939,7 +939,7 @@ const Admin = () => {
     return (
       <>
       {detailPortal}
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -992,7 +992,7 @@ const Admin = () => {
     return (
       <>
       {detailPortal}
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1067,7 +1067,7 @@ const Admin = () => {
   // ═══════════════════════════════════════════════════════════════════
   if (topSection === "interactions") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1131,7 +1131,7 @@ const Admin = () => {
       if (searchLower) filtered = filtered.filter(e => e.input.toLowerCase().includes(searchLower) || e.responses.some(r => r.text.toLowerCase().includes(searchLower)));
 
       return (
-        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="min-h-screen bg-[#0a0a0f] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
               <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1206,7 +1206,7 @@ const Admin = () => {
     }
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1388,7 +1388,7 @@ const Admin = () => {
       return (
         <>
         {detailPortal}
-        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="min-h-screen bg-[#0a0a0f] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
               <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1414,7 +1414,7 @@ const Admin = () => {
 
     // Jeux grid
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1467,7 +1467,7 @@ const Admin = () => {
       return (
         <>
         {detailPortal}
-        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="min-h-screen bg-[#0a0a0f] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
               <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1510,7 +1510,7 @@ const Admin = () => {
       : qaByIntent;
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1577,7 +1577,7 @@ const Admin = () => {
       return (
         <>
         {detailPortal}
-        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="min-h-screen bg-[#0a0a0f] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
               <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1626,7 +1626,7 @@ const Admin = () => {
     return (
       <>
       {detailPortal}
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1716,7 +1716,7 @@ const Admin = () => {
       const catInfo = CHANSON_CATEGORIES.find(cc => cc.id === selectedChansonCat);
 
       return (
-        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="min-h-screen bg-[#0a0a0f] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
               <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1776,7 +1776,7 @@ const Admin = () => {
 
     // Category grid
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -1874,7 +1874,7 @@ const Admin = () => {
     // ── Story editor form ──
     if (editingStory) {
       return (
-        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="min-h-screen bg-[#0a0a0f] p-4">
           <div className="max-w-2xl mx-auto space-y-4">
             <Button variant="ghost" onClick={() => setEditingStory(null)} className="text-white/70">
               <ArrowLeft className="w-4 h-4 mr-2" /> Retour
@@ -1991,7 +1991,7 @@ const Admin = () => {
       return (
         <>
         {detailPortal}
-        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="min-h-screen bg-[#0a0a0f] p-4">
           <div className="max-w-4xl mx-auto space-y-4">
             <div className="flex items-center gap-3">
               <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -2083,7 +2083,7 @@ const Admin = () => {
 
     // ── Main grid by theme ──
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -2180,7 +2180,7 @@ const Admin = () => {
     ];
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
@@ -2247,7 +2247,7 @@ const Admin = () => {
   if (topSection === "cloud" && cloudSection && currentCloudSection) {
     const Icon = currentCloudSection.icon;
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -2310,7 +2310,7 @@ const Admin = () => {
   // ═══════════════════════════════════════════════════════════════════
   if (topSection === "cloud") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+      <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
