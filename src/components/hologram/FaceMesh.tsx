@@ -297,17 +297,20 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
       if (ref.current) {
         const coverAmount = Math.max(0, Math.min(1, blinkClose));
-        // Smoothstep easing for natural motion
+        
+        // Only show eyelids when actually blinking/closing
+        if (coverAmount < 0.02) {
+          ref.current.visible = false;
+          return;
+        }
+        
+        ref.current.visible = true;
         const easedCover = coverAmount * coverAmount * (3 - 2 * coverAmount);
         
-        // The eyelid is a half-dome sitting above. We slide it down.
-        // Open: dome is fully above the eye, invisible behind forehead area
-        // Closed: dome descends to cover the eye
-        const fullyOpenY = 1.05;   // dome fully retracted above eye
-        const fullyClosed = -0.02; // dome bottom at eye center
+        const fullyOpenY = 1.05;
+        const fullyClosed = -0.02;
         let targetY = fullyOpenY - easedCover * (fullyOpenY - fullyClosed);
         
-        // Sleep: subtle flutter
         if (isSleepingNow && coverAmount > 0.9) {
           const flutterT = performance.now() * 0.001;
           const flutter = Math.sin(flutterT * 0.3) * 0.015 + Math.sin(flutterT * 0.7) * 0.008;
@@ -315,8 +318,6 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         }
         
         ref.current.position.y = targetY;
-        // Always visible — the half-dome naturally hides above the eye when open
-        ref.current.visible = true;
       }
     });
 
