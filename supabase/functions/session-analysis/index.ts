@@ -114,7 +114,7 @@ Sinon laisse le tableau vide.`;
       throw new Error("Invalid AI response format");
     }
 
-    // Upsert into conversation_analyses
+    // Upsert into conversation_analyses (unique constraint on session_id)
     const { error: upsertErr } = await sb
       .from("conversation_analyses")
       .upsert({
@@ -136,23 +136,6 @@ Sinon laisse le tableau vide.`;
 
     if (upsertErr) {
       console.error("Upsert error:", upsertErr);
-      // Try insert if upsert fails (no unique constraint on session_id)
-      await sb.from("conversation_analyses").insert({
-        session_id: sessionId,
-        summary: analysis.summary ?? null,
-        topics_detected: analysis.topics_detected ?? [],
-        emotions: analysis.emotions ?? {},
-        engagement_level: analysis.engagement_level ?? "medium",
-        mood_score: analysis.mood_score ?? "neutre",
-        curiosity_score: analysis.curiosity_score ?? null,
-        sociability_score: analysis.sociability_score ?? null,
-        emotional_stability_score: analysis.emotional_stability_score ?? null,
-        attention_span: analysis.attention_span ?? null,
-        behavior_insights: analysis.behavior_insights ?? [],
-        extracted_interests: analysis.extracted_interests ?? [],
-        alerts: analysis.alerts ?? [],
-        full_transcription: transcript,
-      });
     }
 
     // Update session with AI summary
