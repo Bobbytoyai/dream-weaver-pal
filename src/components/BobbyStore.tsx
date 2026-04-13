@@ -473,7 +473,7 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
                 onClick={() => setSelectedItem(item)}
                 className="shrink-0 w-[110px] bg-card/80 backdrop-blur rounded-2xl p-2 text-center border border-border/30 hover:shadow-md transition-all active:scale-95 overflow-hidden">
                 {item.cover_image_url ? (
-                  <img src={item.cover_image_url} alt={item.name} className="w-full h-16 object-cover rounded-xl mb-1" loading="lazy" />
+                  <img src={item.cover_image_url} alt={item.name} className="w-full h-16 object-cover rounded-xl mb-1" loading="eager" fetchPriority="high" />
                 ) : (
                   <span className="text-3xl block mb-1">{item.emoji}</span>
                 )}
