@@ -7,13 +7,11 @@ const corsHeaders = {
 
 // Voice IDs — native French (France) voices, child-safe
 const VOICE_MAP: Record<string, string> = {
-  // "French Darling" — native FR female, designed for kids stories & audiobooks
-  female: "vTGV06pygfwa2WhLDZFp",
-  child:  "vTGV06pygfwa2WhLDZFp",
-  // Young male French voices
-  male:   "IKne3meq5aSn9XLyUdCD",   // Charlie - young male
-  sister: "vTGV06pygfwa2WhLDZFp",   // French Darling (warm sister feel)
-  brother:"IKne3meq5aSn9XLyUdCD",   // Charlie
+  female: "WQKwBV2Uzw1gSGr69N8I",
+  child:  "WQKwBV2Uzw1gSGr69N8I",
+  male:   "WQKwBV2Uzw1gSGr69N8I",
+  sister: "WQKwBV2Uzw1gSGr69N8I",
+  brother:"WQKwBV2Uzw1gSGr69N8I",
 };
 
 // Speed multiplier per profile
