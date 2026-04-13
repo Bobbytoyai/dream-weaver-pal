@@ -1534,39 +1534,39 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     const moodInfo = moodLabels[(analysis?.mood_score || "neutral")] || moodLabels.neutral;
 
     return (
-      <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>
-        {/* ── Hero Header ── */}
-        <div className="bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/10 rounded-3xl p-5 border border-primary/15">
+      <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
+        {/* ── Hero Header — retro ── */}
+        <div className="retro-card p-5" style={{ backgroundColor: 'var(--retro-blue)' }}>
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center shadow-sm">
-              <MessageSquare className="w-7 h-7 text-primary" />
+            <div className="w-14 h-14 border-4 border-black bg-white flex items-center justify-center">
+              <MessageSquare className="w-7 h-7 text-gray-800" />
             </div>
             <div className="flex-1">
-              <h3 className="text-[18px] font-extrabold text-foreground">{formatDate(selectedSession!.started_at)}</h3>
-              <p className="text-[13px] text-muted-foreground font-medium">{selectedSession!.child_name}, {selectedSession!.child_age} ans</p>
+              <h3 className="text-[18px] font-black text-gray-800 uppercase">{formatDate(selectedSession!.started_at)}</h3>
+              <p className="text-[13px] text-gray-600 font-bold">{selectedSession!.child_name}, {selectedSession!.child_age} ans</p>
             </div>
             <button onClick={() => toggleFavorite(selectedSession!)}
-              className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all ${
-                selectedSession!.is_favorite ? "bg-primary/15 text-primary shadow-sm" : "bg-muted text-muted-foreground hover:text-primary"
+              className={`w-11 h-11 border-2 border-black flex items-center justify-center transition-all ${
+                selectedSession!.is_favorite ? "bg-primary text-primary-foreground" : "bg-white text-gray-800 hover:bg-muted"
               }`}>
-              <Star className={`w-5 h-5 ${selectedSession!.is_favorite ? "fill-primary" : ""}`} />
+              <Star className={`w-5 h-5 ${selectedSession!.is_favorite ? "fill-current" : ""}`} />
             </button>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <div className="text-center py-3 bg-card/80 rounded-2xl border border-border/10 shadow-sm">
+            <div className="text-center py-3 border-2 border-black bg-white">
               <span className="text-2xl block mb-1">⏱️</span>
-              <p className="text-[16px] font-extrabold text-foreground">{formatDuration(selectedSession!.duration_seconds)}</p>
-              <p className="text-[11px] text-muted-foreground font-bold">Durée</p>
+              <p className="text-[16px] font-black text-gray-800">{formatDuration(selectedSession!.duration_seconds)}</p>
+              <p className="text-[11px] text-gray-600 font-bold">Durée</p>
             </div>
-            <div className="text-center py-3 bg-card/80 rounded-2xl border border-border/10 shadow-sm">
+            <div className="text-center py-3 border-2 border-black bg-white">
               <span className="text-2xl block mb-1">💬</span>
-              <p className="text-[16px] font-extrabold text-foreground">{selectedSession!.message_count}</p>
-              <p className="text-[11px] text-muted-foreground font-bold">Messages</p>
+              <p className="text-[16px] font-black text-gray-800">{selectedSession!.message_count}</p>
+              <p className="text-[11px] text-gray-600 font-bold">Messages</p>
             </div>
-            <div className="text-center py-3 bg-card/80 rounded-2xl border border-border/10 shadow-sm">
+            <div className="text-center py-3 border-2 border-black bg-white">
               <span className="text-2xl block mb-1">{moodInfo.emoji}</span>
-              <p className={`text-[16px] font-extrabold ${moodInfo.color}`}>{moodInfo.label}</p>
-              <p className="text-[11px] text-muted-foreground font-bold">Humeur</p>
+              <p className="text-[16px] font-black text-gray-800">{moodInfo.label}</p>
+              <p className="text-[11px] text-gray-600 font-bold">Humeur</p>
             </div>
           </div>
         </div>
@@ -1574,25 +1574,25 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         {/* Audio player moved to bottom of page */}
 
         {keyMoments.length > 0 && (
-          <div className="bg-card rounded-3xl p-5 border border-border/20">
+          <div className="retro-card p-5" style={{ backgroundColor: 'var(--retro-yellow)' }}>
             <div className="flex items-center gap-2.5 mb-4">
               <span className="text-2xl">⭐</span>
-              <h3 className="text-[16px] font-extrabold text-foreground">Moments clés</h3>
+              <h3 className="text-[16px] font-black text-gray-800 uppercase">Moments clés</h3>
             </div>
             <div className="space-y-2.5">
               {keyMoments.map((moment, i) => {
                 const emo = emotionLabels[moment.detected_emotion!] || { emoji: "💬", label: moment.detected_emotion, color: "bg-muted text-muted-foreground" };
                 return (
                   <button key={i} onClick={() => jumpToMoment(moment.idx)}
-                    className="w-full flex items-start gap-3 p-3.5 rounded-2xl bg-muted/40 hover:bg-primary/8 transition-all text-left border border-border/10">
+                    className="w-full flex items-start gap-3 p-3.5 border-2 border-black bg-white hover:bg-muted transition-all text-left">
                     <span className="text-xl mt-0.5">{emo.emoji}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[14px] text-foreground line-clamp-2 leading-relaxed font-medium">{moment.content}</p>
-                      <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold mt-1.5 inline-block ${emo.color}`}>
+                      <p className="text-[14px] text-gray-800 line-clamp-2 leading-relaxed font-bold">{moment.content}</p>
+                      <span className={`text-[11px] px-2 py-0.5 font-bold mt-1.5 inline-block border border-black ${emo.color}`}>
                         {emo.label}
                       </span>
                     </div>
-                    <Play className="w-4 h-4 text-primary mt-1.5 shrink-0" />
+                    <Play className="w-4 h-4 text-gray-800 mt-1.5 shrink-0" />
                   </button>
                 );
               })}
@@ -1601,78 +1601,78 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         )}
 
         {analyzing ? (
-          <div className="bg-card rounded-3xl p-8 flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            <span className="text-[15px] text-muted-foreground font-bold">Analyse en cours…</span>
+          <div className="retro-card p-8 flex flex-col items-center justify-center gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-gray-800" />
+            <span className="text-[15px] text-gray-600 font-black">Analyse en cours…</span>
           </div>
         ) : analysis ? (
           <>
             {analysis.summary && (
-              <div className="bg-gradient-to-br from-primary/10 to-primary/3 rounded-3xl p-5 border border-primary/15">
+              <div className="retro-card p-5" style={{ backgroundColor: 'var(--retro-green)' }}>
                 <div className="flex items-center gap-2.5 mb-3">
-                  <span className="text-2xl">📝</span>
-                  <h3 className="text-[16px] font-extrabold text-foreground">Résumé</h3>
+                  <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">📝</span></div>
+                  <h3 className="text-[16px] font-black text-gray-800 uppercase">Résumé</h3>
                 </div>
-                <p className="text-[15px] text-foreground leading-relaxed font-bold">
+                <p className="text-[15px] text-gray-700 leading-relaxed font-bold">
                   {(() => { const s = humanizeSummary(analysis.summary!).match(/[^.!?]+[.!?]+/g); return s ? s.slice(0, 2).join(" ").trim() : humanizeSummary(analysis.summary!); })()}
                 </p>
               </div>
             )}
 
-            {/* ── Scores grid — colorful squares ── */}
+            {/* ── Scores grid — retro squares ── */}
             <div className="grid grid-cols-3 gap-2">
               {analysis.sociability_score != null && (
                 <>
-                  <div className="bg-gradient-to-br from-blue-500/15 to-blue-400/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-blue-400/15 justify-center">
+                  <div className="retro-card p-3 flex flex-col items-center gap-1 justify-center" style={{ backgroundColor: 'var(--retro-blue)' }}>
                     <span className="text-2xl">🤝</span>
-                    <span className="text-2xl font-extrabold text-foreground">{analysis.sociability_score}</span>
-                    <span className="text-[11px] font-bold text-muted-foreground">Sociabilité</span>
+                    <span className="text-2xl font-black text-gray-800">{analysis.sociability_score}</span>
+                    <span className="text-[11px] font-bold text-gray-600">Sociabilité</span>
                   </div>
-                  <div className="bg-gradient-to-br from-amber-500/15 to-amber-400/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-amber-400/15 justify-center">
+                  <div className="retro-card p-3 flex flex-col items-center gap-1 justify-center" style={{ backgroundColor: 'var(--retro-yellow)' }}>
                     <span className="text-2xl">🔍</span>
-                    <span className="text-2xl font-extrabold text-foreground">{analysis.curiosity_score || 0}</span>
-                    <span className="text-[11px] font-bold text-muted-foreground">Curiosité</span>
+                    <span className="text-2xl font-black text-gray-800">{analysis.curiosity_score || 0}</span>
+                    <span className="text-[11px] font-bold text-gray-600">Curiosité</span>
                   </div>
-                  <div className="bg-gradient-to-br from-emerald-500/15 to-emerald-400/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-emerald-400/15 justify-center">
+                  <div className="retro-card p-3 flex flex-col items-center gap-1 justify-center" style={{ backgroundColor: 'var(--retro-green)' }}>
                     <span className="text-2xl">⚖️</span>
-                    <span className="text-2xl font-extrabold text-foreground">{analysis.emotional_stability_score || 0}</span>
-                    <span className="text-[11px] font-bold text-muted-foreground">Stabilité</span>
+                    <span className="text-2xl font-black text-gray-800">{analysis.emotional_stability_score || 0}</span>
+                    <span className="text-[11px] font-bold text-gray-600">Stabilité</span>
                   </div>
                 </>
               )}
-              <div className="bg-gradient-to-br from-purple-500/15 to-purple-400/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-purple-400/15 justify-center">
+              <div className="retro-card p-3 flex flex-col items-center gap-1 justify-center" style={{ backgroundColor: 'var(--retro-purple)' }}>
                 <span className="text-2xl">{analysis.engagement_level === "high" ? "🔥" : analysis.engagement_level === "medium" ? "👍" : "💤"}</span>
-                <span className="text-xl font-extrabold text-foreground capitalize">{
+                <span className="text-xl font-black text-gray-800 capitalize">{
                   analysis.engagement_level === "high" ? "Élevé" : analysis.engagement_level === "medium" ? "Moyen" : "Faible"
                 }</span>
-                <span className="text-[11px] font-bold text-muted-foreground">Engagement</span>
+                <span className="text-[11px] font-bold text-gray-600">Engagement</span>
               </div>
               {analysis.attention_span && (
-                <div className="bg-gradient-to-br from-pink-500/15 to-pink-400/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-pink-400/15 justify-center">
+                <div className="retro-card p-3 flex flex-col items-center gap-1 justify-center" style={{ backgroundColor: 'var(--retro-red)' }}>
                   <span className="text-2xl">{analysis.attention_span === "long" ? "🟢" : analysis.attention_span === "moyen" ? "🟡" : "🔴"}</span>
-                  <span className="text-xl font-extrabold text-foreground capitalize">{
+                  <span className="text-xl font-black text-gray-800 capitalize">{
                     analysis.attention_span === "long" ? "Longue" : analysis.attention_span === "moyen" ? "Moyenne" : "Courte"
                   }</span>
-                  <span className="text-[11px] font-bold text-muted-foreground">Attention</span>
+                  <span className="text-[11px] font-bold text-gray-600">Attention</span>
                 </div>
               )}
             </div>
 
             {/* ── Emotions — colorful pills ── */}
             {analysis.emotions && Object.keys(analysis.emotions).length > 0 && (
-              <div className="bg-card rounded-3xl p-5 border border-border/20">
+              <div className="retro-card p-5">
                 <div className="flex items-center gap-2.5 mb-4">
-                  <span className="text-2xl">💛</span>
-                  <h3 className="text-[16px] font-extrabold text-foreground">Émotions</h3>
+                  <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">💛</span></div>
+                  <h3 className="text-[16px] font-black text-foreground uppercase">Émotions</h3>
                 </div>
                 <div className="flex flex-wrap gap-2.5">
                   {Object.entries(analysis.emotions).filter(([, v]) => (v as number) > 0).sort(([, a], [, b]) => (b as number) - (a as number)).map(([key, value]) => {
                     const info = emotionScoreLabels[key] || { label: key, emoji: "❓" };
                     return (
-                      <div key={key} className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-muted/60 to-muted/30 border border-border/10">
+                      <div key={key} className="flex items-center gap-2.5 px-4 py-2.5 border-2 border-black bg-white">
                         <span className="text-xl">{info.emoji}</span>
-                        <span className="text-[14px] font-extrabold text-foreground">{info.label}</span>
-                        <span className="text-[14px] text-primary font-bold">{value as number}%</span>
+                        <span className="text-[14px] font-black text-gray-800">{info.label}</span>
+                        <span className="text-[14px] text-primary font-black">{value as number}%</span>
                       </div>
                     );
                   })}
@@ -1684,21 +1684,21 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             {(analysis.extracted_interests?.length > 0 || analysis.topics_detected?.length > 0) && (
               <div className="grid grid-cols-2 gap-3">
                 {analysis.extracted_interests?.length > 0 && (
-                  <div className="bg-gradient-to-br from-accent/12 to-accent/3 rounded-3xl p-4 border border-accent/15">
-                    <h4 className="text-[15px] font-extrabold text-foreground mb-3">✨ Intérêts</h4>
+                  <div className="retro-card p-4" style={{ backgroundColor: 'var(--retro-purple)' }}>
+                    <h4 className="text-[15px] font-black text-gray-800 mb-3 uppercase">✨ Intérêts</h4>
                     <div className="flex flex-wrap gap-2">
                       {analysis.extracted_interests.map((interest, i) => (
-                        <span key={i} className="px-3 py-1.5 rounded-xl bg-accent/15 text-[13px] font-bold text-foreground">{interest}</span>
+                        <span key={i} className="px-3 py-1.5 border-2 border-black bg-white text-[13px] font-bold text-gray-800">{interest}</span>
                       ))}
                     </div>
                   </div>
                 )}
                 {analysis.topics_detected?.length > 0 && (
-                  <div className="bg-gradient-to-br from-primary/8 to-primary/2 rounded-3xl p-4 border border-primary/10">
-                    <h4 className="text-[15px] font-extrabold text-foreground mb-3">💬 Sujets</h4>
+                  <div className="retro-card p-4" style={{ backgroundColor: 'var(--retro-blue)' }}>
+                    <h4 className="text-[15px] font-black text-gray-800 mb-3 uppercase">💬 Sujets</h4>
                     <div className="flex flex-wrap gap-2">
                       {analysis.topics_detected.map((t, i) => (
-                        <span key={i} className="px-3 py-1.5 rounded-xl bg-primary/12 text-[13px] font-bold text-primary">{t}</span>
+                        <span key={i} className="px-3 py-1.5 border-2 border-black bg-white text-[13px] font-bold text-gray-800">{t}</span>
                       ))}
                     </div>
                   </div>
@@ -1708,15 +1708,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
             {/* ── Observations ── */}
             {analysis.behavior_insights?.length > 0 && (
-              <div className="bg-card rounded-3xl p-5 border border-border/20">
+              <div className="retro-card p-5">
                 <div className="flex items-center gap-2.5 mb-4">
-                  <span className="text-2xl">🔎</span>
-                  <h3 className="text-[16px] font-extrabold text-foreground">Observations</h3>
+                  <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">🔎</span></div>
+                  <h3 className="text-[16px] font-black text-foreground uppercase">Observations</h3>
                 </div>
                 <ul className="space-y-3">
                   {analysis.behavior_insights.map((insight, i) => (
-                    <li key={i} className="text-[14px] text-foreground flex items-start gap-3 leading-relaxed font-medium">
-                      <span className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />{insight}
+                    <li key={i} className="text-[14px] text-foreground flex items-start gap-3 leading-relaxed font-bold">
+                      <span className="w-2 h-2 bg-black mt-2 shrink-0" />{insight}
                     </li>
                   ))}
                 </ul>
@@ -1725,24 +1725,24 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
             {/* ── Alerts ── */}
             {analysis.alerts?.length > 0 && (
-              <div className="bg-gradient-to-br from-destructive/10 to-destructive/3 rounded-3xl p-5 border border-destructive/15">
+              <div className="retro-card p-5" style={{ backgroundColor: 'var(--retro-red)' }}>
                 <div className="flex items-center gap-2.5 mb-3">
-                  <AlertTriangle className="w-6 h-6 text-destructive" />
-                  <h3 className="text-[16px] font-extrabold text-destructive">Alertes</h3>
+                  <AlertTriangle className="w-6 h-6 text-gray-800" />
+                  <h3 className="text-[16px] font-black text-gray-800 uppercase">Alertes</h3>
                 </div>
                 {analysis.alerts.map((alert, i) => (
-                  <p key={i} className="text-[14px] text-foreground mb-2 font-medium">⚠️ {alert.message}</p>
+                  <p key={i} className="text-[14px] text-gray-800 mb-2 font-bold">⚠️ {alert.message}</p>
                 ))}
               </div>
             )}
 
             {/* ── Transcription — Apple iMessage style ── */}
             {sessionMessages.length > 0 && (
-              <div className="bg-card rounded-3xl p-5 border border-border/20">
+              <div className="retro-card p-5">
                 <div className="flex items-center gap-2.5 mb-4">
-                  <span className="text-2xl">📖</span>
-                  <h3 className="text-[16px] font-extrabold text-foreground">Transcription</h3>
-                  <span className="ml-auto text-[12px] text-muted-foreground font-bold bg-muted px-2.5 py-1 rounded-full">{sessionMessages.length} msgs</span>
+                  <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">📖</span></div>
+                  <h3 className="text-[16px] font-black text-foreground uppercase">Transcription</h3>
+                  <span className="ml-auto text-[12px] text-muted-foreground font-black bg-muted px-2.5 py-1 border border-black">{sessionMessages.length} msgs</span>
                 </div>
                 <div className="max-h-[500px] overflow-y-auto space-y-3 py-1">
                   {sessionMessages.map((msg, i) => {
@@ -1787,10 +1787,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
             {/* ── Timeline émotionnelle ── */}
             {sessionMessages.filter(m => m.detected_emotion && m.role === "user").length > 0 && (
-              <div className="bg-card rounded-3xl p-5 border border-border/20">
+              <div className="retro-card p-5">
                 <div className="flex items-center gap-2.5 mb-3">
-                  <span className="text-2xl">📈</span>
-                  <h3 className="text-[16px] font-extrabold text-foreground">Timeline émotionnelle</h3>
+                  <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">📈</span></div>
+                  <h3 className="text-[16px] font-black text-foreground uppercase">Timeline émotionnelle</h3>
                 </div>
                 <div className="flex items-center gap-1 overflow-x-auto pb-2">
                   {sessionMessages.map((msg, i) => {
@@ -1815,7 +1815,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
             {/* ── Audio Player — clean, ABOVE Note parent ── */}
             {(analysis?.audio_path || sessionMessages.length > 0) && (
-              <div className="bg-gradient-to-br from-primary/8 via-primary/4 to-accent/6 rounded-3xl p-5 border border-primary/15 shadow-sm">
+              <div className="retro-card p-5" style={{ backgroundColor: 'var(--retro-blue)' }}>
                 <div className="flex items-center gap-3 mb-4">
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
                     playingAudio || fullPlaybackActive ? "bg-primary/20 animate-pulse" : "bg-primary/10"
@@ -1995,10 +1995,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             )}
 
             {/* ── Note du parent ── */}
-            <div className="bg-card rounded-3xl p-5 border border-border/20">
+            <div className="retro-card p-5">
               <div className="flex items-center gap-2.5 mb-3">
-                <span className="text-2xl">📝</span>
-                <h3 className="text-[16px] font-extrabold text-foreground">Note du parent</h3>
+                <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">📝</span></div>
+                <h3 className="text-[16px] font-black text-foreground uppercase">Note du parent</h3>
               </div>
               {editingNote === selectedSession!.id ? (
                 <div className="space-y-3">
@@ -2034,7 +2034,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </>
         ) : (
           <button onClick={() => analyzeSession(selectedSession!)}
-            className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-3xl p-5 font-extrabold text-[16px] hover:opacity-90 transition-all shadow-md shadow-primary/20">
+            className="w-full bg-primary text-primary-foreground border-4 border-black p-5 font-black text-[16px] hover:opacity-90 transition-all active:scale-95 uppercase">
             🧠 Lancer l'analyse IA
           </button>
         )}
@@ -2043,9 +2043,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         <div className="grid grid-cols-3 gap-3">
           <button
             onClick={() => exportSessionPDF(selectedSession!, selectedAnalysis)}
-            className="flex flex-col items-center gap-2 py-4 rounded-3xl bg-gradient-to-br from-blue-500/12 to-blue-400/5 border border-blue-400/15 hover:border-blue-400/30 transition-all active:scale-95">
-            <Download className="w-6 h-6 text-primary" />
-            <span className="text-[13px] font-extrabold text-foreground">Exporter</span>
+            className="flex flex-col items-center gap-2 py-4 border-4 border-black bg-white hover:bg-muted transition-all active:scale-95">
+            <Download className="w-6 h-6 text-gray-800" />
+            <span className="text-[13px] font-black text-gray-800 uppercase">Exporter</span>
           </button>
           <button
             onClick={async () => {
@@ -2057,9 +2057,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 toast.error("Erreur", { description: result.error });
               }
             }}
-            className="flex flex-col items-center gap-2 py-4 rounded-3xl bg-gradient-to-br from-purple-500/12 to-purple-400/5 border border-purple-400/15 hover:border-purple-400/30 transition-all active:scale-95">
-            <CloudUpload className="w-6 h-6 text-primary" />
-            <span className="text-[13px] font-extrabold text-foreground">Bobby Cloud</span>
+            className="flex flex-col items-center gap-2 py-4 border-4 border-black bg-white hover:bg-muted transition-all active:scale-95">
+            <CloudUpload className="w-6 h-6 text-gray-800" />
+            <span className="text-[13px] font-black text-gray-800 uppercase">Cloud</span>
           </button>
           <button
             onClick={() => setConfirmDialog({
@@ -2069,9 +2069,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               variant: "danger",
               onConfirm: () => { deleteSession(selectedSession!.id); setConfirmDialog(null); },
             })}
-            className="flex flex-col items-center gap-2 py-4 rounded-3xl bg-gradient-to-br from-red-500/10 to-red-400/5 border border-destructive/15 hover:border-destructive/30 transition-all active:scale-95">
-            <Trash2 className="w-6 h-6 text-destructive" />
-            <span className="text-[13px] font-extrabold text-destructive">Supprimer</span>
+            className="flex flex-col items-center gap-2 py-4 border-4 border-black hover:bg-muted transition-all active:scale-95" style={{ backgroundColor: 'var(--retro-red)' }}>
+            <Trash2 className="w-6 h-6 text-gray-800" />
+            <span className="text-[13px] font-black text-gray-800 uppercase">Supprimer</span>
           </button>
         </div>
 
@@ -2561,18 +2561,19 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
     return (
       <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
-        <h2 className="text-[18px] font-black text-foreground animate-fadeInUp">⚙️ Réglages</h2>
+        <h2 className="text-[18px] font-black text-foreground animate-fadeInUp uppercase">⚙️ Réglages</h2>
         <div className="grid grid-cols-2 gap-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
           {([
-            ["voix", "🎤", "Voix & Sons", "Profils vocaux, vitesse, ton", "from-blue-400/15 to-blue-300/5"],
-            ["limites", "⏱️", "Limites & Contrôle", "Temps, nuit, interactions, sujets", "from-amber-400/15 to-amber-300/5"],
-            ["profil", "👤", "Profil enfant", "Intérêts, mémoire, préférences", "from-violet-400/15 to-purple-300/5"],
-          ] as const).map(([key, emoji, label, desc, gradient]) => (
+            ["voix", "🎤", "Voix & Sons", "Profils vocaux, vitesse, ton", "var(--retro-blue)"],
+            ["limites", "⏱️", "Limites & Contrôle", "Temps, nuit, interactions, sujets", "var(--retro-yellow)"],
+            ["profil", "👤", "Profil enfant", "Intérêts, mémoire, préférences", "var(--retro-purple)"],
+          ] as const).map(([key, emoji, label, desc, bg]) => (
             <button key={key} onClick={() => setReglagesSection(key)}
-              className={`bg-gradient-to-br ${gradient} rounded-2xl p-5 text-center transition-all duration-200 active:scale-95 border-2 border-transparent hover:border-primary/15`}>
+              className="retro-card retro-card-tilt p-5 text-center transition-all duration-200 active:scale-95"
+              style={{ backgroundColor: bg }}>
               <span className="text-4xl block mb-2">{emoji}</span>
-              <span className="text-[14px] font-black text-foreground block">{label}</span>
-              <span className="text-[10px] text-muted-foreground leading-tight block mt-1">{desc}</span>
+              <span className="text-[14px] font-black text-gray-800 block uppercase">{label}</span>
+              <span className="text-[10px] text-gray-600 leading-tight block mt-1 font-bold">{desc}</span>
             </button>
           ))}
         </div>
@@ -2965,22 +2966,22 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
     // ── Grid of cards ──
     const confCards = [
-      { id: "securite" as const, emoji: "🛡️", label: "Sécurité", desc: "PIN, filtrage, protections", color: "from-red-400/20 to-orange-400/10" },
-      { id: "donnees" as const, emoji: "💾", label: "Données", desc: "Collecte, stockage, suppression", color: "from-blue-400/20 to-cyan-400/10" },
-      { id: "rgpd" as const, emoji: "📜", label: "RGPD", desc: "Accès, export, effacement", color: "from-emerald-400/20 to-green-400/10" },
+      { id: "securite" as const, emoji: "🛡️", label: "Sécurité", desc: "PIN, filtrage, protections", bg: "var(--retro-red)" },
+      { id: "donnees" as const, emoji: "💾", label: "Données", desc: "Collecte, stockage, suppression", bg: "var(--retro-blue)" },
+      { id: "rgpd" as const, emoji: "📜", label: "RGPD", desc: "Accès, export, effacement", bg: "var(--retro-green)" },
     ];
 
     return (
       <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
-        <h2 className="text-[16px] font-extrabold text-foreground animate-fadeInUp" style={{ animationDelay: "0.05s" }}>🔒 Confidentialité</h2>
+        <h2 className="text-[16px] font-black text-foreground animate-fadeInUp uppercase" style={{ animationDelay: "0.05s" }}>🔒 Confidentialité</h2>
         <div className="grid grid-cols-2 gap-3">
           {confCards.map((card, i) => (
             <button key={card.id} onClick={() => setConfSection(card.id)}
-              className={`bg-gradient-to-br ${card.color} rounded-2xl p-4 text-left border border-border/20 hover:border-primary/20 hover:shadow-lg transition-all active:scale-95 animate-fadeInUp`}
-              style={{ animationDelay: `${0.1 + i * 0.05}s` }}>
+              className="retro-card retro-card-tilt p-4 text-left hover:shadow-lg transition-all active:scale-95 animate-fadeInUp"
+              style={{ animationDelay: `${0.1 + i * 0.05}s`, backgroundColor: card.bg }}>
               <span className="text-3xl block mb-2">{card.emoji}</span>
-              <h3 className="text-[14px] font-extrabold text-foreground leading-tight">{card.label}</h3>
-              <p className="text-[10px] text-muted-foreground mt-1 leading-snug">{card.desc}</p>
+              <h3 className="text-[14px] font-black text-gray-800 leading-tight uppercase">{card.label}</h3>
+              <p className="text-[10px] text-gray-600 mt-1 leading-snug font-bold">{card.desc}</p>
             </button>
           ))}
         </div>
@@ -3030,33 +3031,33 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     return (
     <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
       {/* Hero */}
-      <div className="bg-gradient-to-br from-blue-500/20 via-purple-400/15 to-pink-400/10 rounded-3xl p-6 text-center border border-blue-400/20">
+      <div className="retro-card p-6 text-center" style={{ backgroundColor: 'var(--retro-blue)' }}>
         <span className="text-5xl block mb-2">☁️</span>
-        <h2 className="text-[22px] font-extrabold text-foreground mb-1">Bobby Cloud</h2>
-        <p className="text-[13px] text-muted-foreground leading-relaxed">
+        <h2 className="text-[22px] font-black text-gray-800 uppercase">Bobby Cloud</h2>
+        <p className="text-[13px] text-gray-600 leading-relaxed font-bold">
           Sauvegardez, synchronisez et téléchargez tout le contenu de Bobby entre vos appareils.
         </p>
       </div>
 
       {/* ── CONNEXION / SYNC STATUS ── */}
       {cloudProfile ? (
-        <div className="bg-card rounded-3xl p-5 border border-primary/20 space-y-4">
+        <div className="retro-card p-5 space-y-4" style={{ backgroundColor: 'var(--retro-green)' }}>
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-green-500/15 flex items-center justify-center">
+            <div className="w-11 h-11 border-2 border-black bg-white flex items-center justify-center">
               <span className="text-xl">✅</span>
             </div>
             <div className="flex-1">
-              <h3 className="text-[15px] font-extrabold text-foreground">Connecté au Cloud</h3>
-              <p className="text-[12px] text-muted-foreground">{formatSyncTime(cloudProfile.last_synced_at)}</p>
+              <h3 className="text-[15px] font-black text-gray-800 uppercase">Connecté au Cloud</h3>
+              <p className="text-[12px] text-gray-600 font-bold">{formatSyncTime(cloudProfile.last_synced_at)}</p>
             </div>
-            <span className="px-2 py-1 rounded-full bg-green-500/15 text-green-600 text-[10px] font-bold">ACTIF</span>
+            <span className="px-2 py-1 border-2 border-black bg-white text-gray-800 text-[10px] font-black">ACTIF</span>
           </div>
 
           {/* Sync code */}
-          <div className="bg-muted/40 rounded-2xl p-3">
-            <p className="text-[11px] text-muted-foreground font-bold mb-1.5">📋 Code de synchronisation</p>
+          <div className="border-2 border-black bg-white p-3">
+            <p className="text-[11px] text-gray-600 font-black mb-1.5">📋 Code de synchronisation</p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 text-[16px] font-mono font-extrabold text-primary tracking-widest text-center py-2 bg-card rounded-xl border border-primary/20">
+              <code className="flex-1 text-[16px] font-mono font-black text-primary tracking-widest text-center py-2 border-2 border-black bg-white">
                 {cloudProfile.sync_code}
               </code>
               <button
@@ -3066,7 +3067,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   setTimeout(() => setCloudCopied(false), 2000);
                   toast.success("Code copié !");
                 }}
-                className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary hover:bg-primary/20 transition-all active:scale-90">
+                className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-gray-800 hover:bg-muted transition-all active:scale-90">
                 {cloudCopied ? <span>✓</span> : <span>📋</span>}
               </button>
             </div>
@@ -3079,10 +3080,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               { emoji: "📝", value: totalMessages, label: "Messages" },
               { emoji: "🧠", value: totalAnalyses, label: "Analyses" },
             ].map(s => (
-              <div key={s.label} className="bg-muted/30 rounded-xl p-2.5 text-center">
+              <div key={s.label} className="border-2 border-black bg-white p-2.5 text-center">
                 <span className="text-lg">{s.emoji}</span>
-                <p className="text-[16px] font-extrabold text-foreground">{s.value}</p>
-                <p className="text-[9px] text-muted-foreground font-bold">{s.label}</p>
+                <p className="text-[16px] font-black text-gray-800">{s.value}</p>
+                <p className="text-[9px] text-gray-600 font-bold">{s.label}</p>
               </div>
             ))}
           </div>
@@ -3090,9 +3091,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           {/* Action buttons */}
           <div className="grid grid-cols-2 gap-2">
             <button onClick={handleCloudSave} disabled={cloudLoading}
-              className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-gradient-to-br from-blue-500/15 to-blue-400/5 border border-blue-400/20 hover:border-blue-400/40 transition-all active:scale-95 disabled:opacity-50">
-              {cloudLoading ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : <CloudUpload className="w-5 h-5 text-primary" />}
-              <span className="text-[12px] font-extrabold text-foreground">Sauvegarder</span>
+              className="flex flex-col items-center gap-1.5 p-3 border-4 border-black bg-white hover:bg-muted transition-all active:scale-95 disabled:opacity-50">
+              {cloudLoading ? <Loader2 className="w-5 h-5 animate-spin text-gray-800" /> : <CloudUpload className="w-5 h-5 text-gray-800" />}
+              <span className="text-[12px] font-black text-gray-800 uppercase">Sauvegarder</span>
             </button>
             <button onClick={() => {
               setConfirmDialog({
@@ -3103,9 +3104,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 onConfirm: () => { handleCloudDelete(); setConfirmDialog(null); },
               });
             }} disabled={cloudLoading}
-              className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-gradient-to-br from-red-500/10 to-red-400/5 border border-destructive/15 hover:border-destructive/30 transition-all active:scale-95 disabled:opacity-50">
-              <Trash2 className="w-5 h-5 text-destructive" />
-              <span className="text-[12px] font-extrabold text-destructive">Dissocier</span>
+              className="flex flex-col items-center gap-1.5 p-3 border-4 border-black hover:bg-muted transition-all active:scale-95 disabled:opacity-50" style={{ backgroundColor: 'var(--retro-red)' }}>
+              <Trash2 className="w-5 h-5 text-gray-800" />
+              <span className="text-[12px] font-black text-gray-800 uppercase">Dissocier</span>
             </button>
           </div>
         </div>
@@ -3113,22 +3114,22 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         /* Not connected */
         <div className="space-y-3">
           <button onClick={handleCloudSave} disabled={cloudLoading}
-            className="w-full bg-gradient-to-br from-primary/15 to-primary/5 rounded-3xl p-5 border-2 border-primary/20 hover:border-primary/40 transition-all active:scale-[0.98] disabled:opacity-50">
+            className="w-full retro-card p-5 hover:translate-y-[-2px] transition-all active:scale-[0.98] disabled:opacity-50" style={{ backgroundColor: 'var(--retro-blue)' }}>
             <div className="flex items-center gap-4">
-              {cloudLoading ? <Loader2 className="w-9 h-9 animate-spin text-primary" /> : <CloudUpload className="w-9 h-9 text-primary" />}
+              {cloudLoading ? <Loader2 className="w-9 h-9 animate-spin text-gray-800" /> : <CloudUpload className="w-9 h-9 text-gray-800" />}
               <div className="text-left flex-1">
-                <h3 className="text-[16px] font-extrabold text-foreground">Créer un compte Cloud</h3>
-                <p className="text-[12px] text-muted-foreground mt-0.5">Générer un code de synchronisation unique</p>
+                <h3 className="text-[16px] font-black text-gray-800 uppercase">Créer un compte Cloud</h3>
+                <p className="text-[12px] text-gray-600 font-bold mt-0.5">Générer un code de synchronisation unique</p>
               </div>
             </div>
           </button>
 
-          <div className="bg-card rounded-3xl p-4 border border-border/20 space-y-3">
+          <div className="retro-card p-4 space-y-3">
             <div className="flex items-center gap-3">
-              <Download className="w-5 h-5 text-primary" />
-              <h3 className="text-[15px] font-extrabold text-foreground">Connecter un compte existant</h3>
+              <Download className="w-5 h-5 text-gray-800" />
+              <h3 className="text-[15px] font-black text-foreground uppercase">Connecter un compte existant</h3>
             </div>
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-[12px] text-muted-foreground font-bold">
               Entrez le code Bobby Cloud d'un autre appareil.
             </p>
             <input
@@ -3136,10 +3137,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               value={cloudRestoreCode}
               onChange={e => setCloudRestoreCode(e.target.value.toUpperCase())}
               placeholder="BOBBY-XXXX-XXXX"
-              className="w-full text-center text-[16px] font-mono font-extrabold tracking-widest px-3 py-3 rounded-2xl bg-muted text-foreground placeholder:text-muted-foreground/40 outline-none focus:ring-2 focus:ring-primary/30 transition-all border border-border/20"
+              className="w-full text-center text-[16px] font-mono font-black tracking-widest px-3 py-3 border-2 border-black bg-white text-foreground placeholder:text-muted-foreground/40 outline-none focus:ring-2 focus:ring-primary/30 transition-all"
             />
             <button onClick={handleCloudRestore} disabled={cloudLoading || !cloudRestoreCode.trim()}
-              className="w-full py-3 rounded-2xl bg-primary text-primary-foreground font-extrabold text-[14px] hover:opacity-90 transition-all active:scale-95 disabled:opacity-40 shadow-md shadow-primary/20">
+              className="w-full py-3 bg-primary text-primary-foreground border-4 border-black font-black text-[14px] hover:opacity-90 transition-all active:scale-95 disabled:opacity-40 uppercase">
               {cloudLoading ? "Connexion…" : "☁️ Connecter"}
             </button>
           </div>
@@ -3147,21 +3148,21 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       )}
 
       {/* ── CONTENU SYNCHRONISÉ ── */}
-      <div className="bg-card rounded-3xl p-5 border border-border/20">
-        <h3 className="text-[16px] font-extrabold text-foreground mb-3">📦 Contenu inclus dans Bobby Cloud</h3>
+      <div className="retro-card p-5">
+        <h3 className="text-[16px] font-black text-foreground mb-3 uppercase">📦 Contenu inclus dans Bobby Cloud</h3>
         <div className="grid grid-cols-2 gap-2">
           {[
-            { emoji: "🧠", title: "Cerveau complet", desc: "Knowledge base, QA, mémoire enfant", color: "from-purple-500/12 to-purple-400/5" },
-            { emoji: "💬", title: "Conversations", desc: "Toutes les sessions Bobby ↔ enfant", color: "from-blue-500/12 to-blue-400/5" },
-            { emoji: "📚", title: "Bibliothèque", desc: "Histoires, contes et récits", color: "from-amber-500/12 to-amber-400/5" },
-            { emoji: "🎓", title: "Contenu éducatif", desc: "Jeux, quiz, activités", color: "from-green-500/12 to-green-400/5" },
-            { emoji: "🎙️", title: "Voix & TTS", desc: "Cache audio, préférences voix", color: "from-pink-500/12 to-pink-400/5" },
-            { emoji: "📊", title: "Analyses IA", desc: "Rapports émotionnels, scores", color: "from-cyan-500/12 to-cyan-400/5" },
+            { emoji: "🧠", title: "Cerveau complet", desc: "Knowledge base, QA, mémoire enfant", bg: "var(--retro-purple)" },
+            { emoji: "💬", title: "Conversations", desc: "Toutes les sessions Bobby ↔ enfant", bg: "var(--retro-blue)" },
+            { emoji: "📚", title: "Bibliothèque", desc: "Histoires, contes et récits", bg: "var(--retro-yellow)" },
+            { emoji: "🎓", title: "Contenu éducatif", desc: "Jeux, quiz, activités", bg: "var(--retro-green)" },
+            { emoji: "🎙️", title: "Voix & TTS", desc: "Cache audio, préférences voix", bg: "var(--retro-red)" },
+            { emoji: "📊", title: "Analyses IA", desc: "Rapports émotionnels, scores", bg: "#e5e5e5" },
           ].map(c => (
-            <div key={c.title} className={`bg-gradient-to-br ${c.color} rounded-2xl p-3 border border-border/10`}>
+            <div key={c.title} className="border-2 border-black p-3" style={{ backgroundColor: c.bg }}>
               <span className="text-2xl block mb-1">{c.emoji}</span>
-              <h4 className="text-[13px] font-extrabold text-foreground">{c.title}</h4>
-              <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">{c.desc}</p>
+              <h4 className="text-[13px] font-black text-gray-800">{c.title}</h4>
+              <p className="text-[10px] text-gray-600 leading-snug mt-0.5 font-bold">{c.desc}</p>
             </div>
           ))}
         </div>
