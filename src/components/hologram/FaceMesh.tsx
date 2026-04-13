@@ -466,21 +466,16 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={pupilRef} geometry={pupilGeo} position={[0, -0.02, 0.02]} material={pupilMat} />
       <mesh position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       <mesh position={[hl2[0], hl2[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} />
-      {/* Eyelid: curved curtain that slides down naturally */}
+      {/* Eyelid: smooth elliptical curtain */}
       <mesh ref={eyelidRef} position={[0, 0.55, 0.044]} material={eyelidMat}>
         <shapeGeometry args={[(() => {
           const s = new THREE.Shape();
-          const rx = 0.41;
-          const ryTop = 0.20;   // shorter top curve
-          const ryBot = 0.42;   // longer bottom to cover eye when slid down
-          // Curved bottom edge matching eye shape
-          s.moveTo(-rx, 0);
-          // Top: gentle curve (almost flat, like a real eyelid top)
-          s.quadraticCurveTo(-rx * 0.5, ryTop, 0, ryTop * 1.05);
-          s.quadraticCurveTo(rx * 0.5, ryTop, rx, 0);
-          // Bottom: deeper curve matching the eye white shape
-          s.quadraticCurveTo(rx * 0.6, -ryBot * 0.5, 0, -ryBot);
-          s.quadraticCurveTo(-rx * 0.6, -ryBot * 0.5, -rx, 0);
+          const rx = 0.42;
+          // Upper half-ellipse (above y=0) + lower half-ellipse (below y=0)
+          // Top dome
+          s.absellipse(0, 0, rx, 0.22, 0, Math.PI, false, 0);
+          // Bottom dome (covers eye when slid down)
+          s.absellipse(0, 0, rx, 0.40, Math.PI, Math.PI * 2, false, 0);
           return s;
         })(), 32]} />
       </mesh>
