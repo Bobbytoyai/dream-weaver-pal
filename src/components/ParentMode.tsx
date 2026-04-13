@@ -200,6 +200,7 @@ const tabs: { id: Tab; icon: any; label: string; emoji?: string }[] = [
   { id: "dashboard", icon: BarChart3, label: "Tableau", emoji: "📊" },
   { id: "sessions", icon: MessageSquare, label: "Sessions", emoji: "💬" },
   { id: "activites", icon: Gamepad2, label: "Activités", emoji: "🎮" },
+  { id: "personnalisation", icon: Settings, label: "Personnaliser Bobby", emoji: "🎨" },
   { id: "cloud", icon: CloudUpload, label: "Cloud", emoji: "☁️" },
   { id: "reglages", icon: Settings, label: "Réglages", emoji: "⚙️" },
   { id: "confidentialite", icon: Shield, label: "Privé", emoji: "🔒" },
