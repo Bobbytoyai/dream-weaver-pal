@@ -3221,10 +3221,16 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             childAge={settings.childAge}
           />
         );
-        case "profil":
-        case "personnalisation":
-          // Route through reglages
-          return renderReglages();
+        case "profil": return renderReglages();
+        case "personnalisation": return (
+          <BobbyCustomizer
+            settings={settings}
+            onUpdate={updateSetting}
+            onBack={() => setActiveTab("home")}
+            onSave={() => { setSaved(true); setTimeout(() => setSaved(false), 2000); }}
+            saved={saved}
+          />
+        );
         case "reglages": return renderReglages();
         case "cloud": return renderCloud();
         case "confidentialite": return renderConfidentialite();
