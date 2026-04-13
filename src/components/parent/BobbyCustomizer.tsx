@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { ChevronLeft, Shuffle, ChevronDown } from "lucide-react";
 import type { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
+import type { FaceState } from "@/components/hologram/useFaceAnimation";
 
 interface BobbyCustomizerProps {
   settings: ParentSettings;
@@ -68,8 +69,30 @@ const SECTIONS = [
   },
 ] as const;
 
+const EMOTION_BUTTONS: { emoji: string; label: string; face: FaceState }[] = [
+  { emoji: "😊", label: "Joie", face: "happy" },
+  { emoji: "😢", label: "Triste", face: "sad" },
+  { emoji: "😮", label: "Surprise", face: "surprised" },
+  { emoji: "🤔", label: "Curieux", face: "curious" },
+  { emoji: "😴", label: "Dodo", face: "sleepy" },
+  { emoji: "🤩", label: "Excité", face: "excited" },
+  { emoji: "😌", label: "Calme", face: "calm" },
+  { emoji: "🏆", label: "Fier", face: "proud" },
+  { emoji: "😐", label: "Neutre", face: "idle" },
+  { emoji: "🎧", label: "Écoute", face: "listening" },
+  { emoji: "💭", label: "Pense", face: "thinking" },
+  { emoji: "🗣️", label: "Parle", face: "speaking" },
+  { emoji: "😵", label: "Confus", face: "confused" },
+  { emoji: "🤗", label: "Réconfort", face: "reassuring" },
+  { emoji: "👀", label: "Attentif", face: "attentive" },
+  { emoji: "😜", label: "Joueur", face: "playful" },
+];
+
 const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCustomizerProps) => {
   const [openSection, setOpenSection] = useState<string | null>(null);
+  const [activeEmotion, setActiveEmotion] = useState<FaceState | undefined>(undefined);
+  const [showEmotions, setShowEmotions] = useState(true);
+  const emotionTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const colors = settings.bobbyColors || {
     iris: "blue",
@@ -95,6 +118,16 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
     } as any);
   };
 
+  const testEmotion = useCallback((face: FaceState) => {
+    if (emotionTimerRef.current) clearTimeout(emotionTimerRef.current);
+    if (activeEmotion === face) {
+      setActiveEmotion(undefined);
+      return;
+    }
+    setActiveEmotion(face);
+    emotionTimerRef.current = setTimeout(() => setActiveEmotion(undefined), 4000);
+  }, [activeEmotion]);
+
   const selectedBg = SECTIONS[3].colors.find(c => c.id === colors.background) || SECTIONS[3].colors[0];
 
   const getSelectedHex = (sectionKey: string): string => {
@@ -103,6 +136,15 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
     const found = section?.colors.find(c => c.id === selectedId);
     return found?.hex || "#ccc";
   };
+
+  // Map active emotion to voiceState for states that are voiceState-driven
+  const voiceStateMap: Record<string, "idle" | "listening" | "processing" | "speaking"> = {
+    speaking: "speaking",
+    listening: "listening",
+    thinking: "processing",
+  };
+  const previewVoiceState = activeEmotion && voiceStateMap[activeEmotion] ? voiceStateMap[activeEmotion] : "idle";
+  const previewEmotionOverride = activeEmotion && !voiceStateMap[activeEmotion] && activeEmotion !== "idle" ? activeEmotion : undefined;
 
   return (
     <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
@@ -126,8 +168,55 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
         style={{ backgroundColor: selectedBg.hex, aspectRatio: "16/9" }}
       >
         <div className="w-full h-full">
-          <HologramFace voiceState="idle" enableCamera={false} bobbyColor={colors.iris} bobbyColors={colors} />
+          <HologramFace
+            voiceState={previewVoiceState}
+            enableCamera={false}
+            bobbyColor={colors.iris}
+            bobbyColors={colors}
+            emotionOverride={previewEmotionOverride}
+          />
         </div>
+        {activeEmotion && (
+          <div className="absolute top-2 right-2 px-2.5 py-1 rounded-lg bg-foreground/75 text-background text-[10px] font-bold animate-fade-in backdrop-blur-sm">
+            {EMOTION_BUTTONS.find(e => e.face === activeEmotion)?.emoji}{" "}
+            {EMOTION_BUTTONS.find(e => e.face === activeEmotion)?.label}
+          </div>
+        )}
+      </div>
+
+      {/* Emotion test buttons */}
+      <div>
+        <button
+          onClick={() => setShowEmotions(!showEmotions)}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-xl border-2 border-border/30 bg-card hover:border-border/50 transition-all"
+        >
+          <span className="text-[12px] font-bold text-foreground">🎭 Tester les expressions</span>
+          <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${showEmotions ? "rotate-180" : ""}`} />
+        </button>
+
+        {showEmotions && (
+          <div className="grid grid-cols-4 gap-1.5 mt-2 animate-fade-in">
+            {EMOTION_BUTTONS.map((emo) => {
+              const isActive = activeEmotion === emo.face;
+              return (
+                <button
+                  key={emo.face}
+                  onClick={() => testEmotion(emo.face)}
+                  className={`flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-xl transition-all duration-150 active:scale-90 border-2 ${
+                    isActive
+                      ? "border-primary bg-primary/10 shadow-md scale-[1.08]"
+                      : "border-transparent bg-muted/40 hover:bg-muted/70 hover:scale-105"
+                  }`}
+                >
+                  <span className="text-[18px] leading-none">{emo.emoji}</span>
+                  <span className={`text-[9px] font-bold leading-tight ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                    {emo.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Compact cards grid */}
@@ -139,7 +228,6 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
 
           return (
             <div key={section.key} className={`transition-all duration-200 ${isOpen ? "col-span-2" : ""}`}>
-              {/* Card button */}
               <button
                 onClick={() => setOpenSection(isOpen ? null : section.key)}
                 className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border-2 transition-all duration-200 active:scale-[0.97] ${
@@ -150,7 +238,6 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
               >
                 <span className="text-[16px]">{section.emoji}</span>
                 <span className="text-[12px] font-bold text-foreground flex-1 text-left">{section.label}</span>
-                {/* Current color dot */}
                 <div
                   className="w-6 h-6 rounded-lg border-2 border-border/40 shrink-0"
                   style={{
@@ -161,7 +248,6 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
                 <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
               </button>
 
-              {/* Expanded color picker */}
               {isOpen && (
                 <div className="flex gap-2 flex-wrap mt-2 px-1 pb-1 animate-fade-in">
                   {section.colors.map((c) => {
