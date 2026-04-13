@@ -1409,101 +1409,105 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     const moodInfo = moodLabels[(analysis?.mood_score || "neutral")] || moodLabels.neutral;
 
     return (
-      <div className="p-4 space-y-3">
-        {/* Header */}
-        <div className="bg-card rounded-2xl p-4">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <MessageSquare className="w-5 h-5 text-primary" />
+      <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>
+        {/* ── Hero Header ── */}
+        <div className="bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/10 rounded-3xl p-5 border border-primary/15">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center shadow-sm">
+              <MessageSquare className="w-7 h-7 text-primary" />
             </div>
             <div className="flex-1">
-              <h3 className="text-base font-bold text-foreground">{formatDate(selectedSession!.started_at)}</h3>
-              <p className="text-[11px] text-muted-foreground">{selectedSession!.child_name}, {selectedSession!.child_age} ans</p>
+              <h3 className="text-[18px] font-extrabold text-foreground">{formatDate(selectedSession!.started_at)}</h3>
+              <p className="text-[13px] text-muted-foreground font-medium">{selectedSession!.child_name}, {selectedSession!.child_age} ans</p>
             </div>
-            {/* v4.2: Favorite button */}
             <button onClick={() => toggleFavorite(selectedSession!)}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
-                selectedSession!.is_favorite ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground hover:text-primary"
+              className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all ${
+                selectedSession!.is_favorite ? "bg-primary/15 text-primary shadow-sm" : "bg-muted text-muted-foreground hover:text-primary"
               }`}>
-              <Star className={`w-4 h-4 ${selectedSession!.is_favorite ? "fill-primary" : ""}`} />
+              <Star className={`w-5 h-5 ${selectedSession!.is_favorite ? "fill-primary" : ""}`} />
             </button>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <div className="text-center py-2 bg-muted/50 rounded-xl">
-              <Clock className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
-              <p className="text-[13px] font-bold text-foreground">{formatDuration(selectedSession!.duration_seconds)}</p>
-              <p className="text-[9px] text-muted-foreground">Durée</p>
+            <div className="text-center py-3 bg-card/80 rounded-2xl border border-border/10 shadow-sm">
+              <span className="text-2xl block mb-1">⏱️</span>
+              <p className="text-[16px] font-extrabold text-foreground">{formatDuration(selectedSession!.duration_seconds)}</p>
+              <p className="text-[11px] text-muted-foreground font-bold">Durée</p>
             </div>
-            <div className="text-center py-2 bg-muted/50 rounded-xl">
-              <MessageSquare className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
-              <p className="text-[13px] font-bold text-foreground">{selectedSession!.message_count}</p>
-              <p className="text-[9px] text-muted-foreground">Messages</p>
+            <div className="text-center py-3 bg-card/80 rounded-2xl border border-border/10 shadow-sm">
+              <span className="text-2xl block mb-1">💬</span>
+              <p className="text-[16px] font-extrabold text-foreground">{selectedSession!.message_count}</p>
+              <p className="text-[11px] text-muted-foreground font-bold">Messages</p>
             </div>
-            <div className="text-center py-2 bg-muted/50 rounded-xl">
-              <span className="text-base">{moodInfo.emoji}</span>
-              <p className={`text-[13px] font-bold ${moodInfo.color}`}>{moodInfo.label}</p>
-              <p className="text-[9px] text-muted-foreground">Humeur</p>
+            <div className="text-center py-3 bg-card/80 rounded-2xl border border-border/10 shadow-sm">
+              <span className="text-2xl block mb-1">{moodInfo.emoji}</span>
+              <p className={`text-[16px] font-extrabold ${moodInfo.color}`}>{moodInfo.label}</p>
+              <p className="text-[11px] text-muted-foreground font-bold">Humeur</p>
             </div>
           </div>
         </div>
 
-        {/* ── Audio Player ── */}
+        {/* ── Audio Player — Apple-style ── */}
         {analysis?.audio_path && (
-          <div className="bg-card rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Mic className="w-4 h-4 text-muted-foreground" />
-              <h3 className="text-[13px] font-semibold text-foreground">Réécouter</h3>
+          <div className="bg-gradient-to-br from-card to-muted/30 rounded-3xl p-5 border border-border/20 shadow-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-2xl bg-primary/12 flex items-center justify-center">
+                <Mic className="w-5 h-5 text-primary" />
+              </div>
+              <h3 className="text-[16px] font-extrabold text-foreground">🎧 Réécouter</h3>
             </div>
             
-            <div className="mb-3">
-              <div className="w-full h-1.5 bg-muted rounded-full cursor-pointer overflow-hidden"
+            {/* Progress bar */}
+            <div className="mb-4">
+              <div className="w-full h-2.5 bg-muted rounded-full cursor-pointer overflow-hidden shadow-inner"
                 onClick={(e) => {
                   const rect = e.currentTarget.getBoundingClientRect();
                   const pct = ((e.clientX - rect.left) / rect.width) * 100;
                   seekAudio(pct);
                 }}>
-                <div className="h-full bg-primary rounded-full transition-all duration-200" style={{ width: `${audioProgress}%` }} />
+                <div className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full transition-all duration-200" style={{ width: `${audioProgress}%` }} />
               </div>
-              <div className="flex justify-between mt-1">
-                <span className="text-[9px] text-muted-foreground font-mono">
+              <div className="flex justify-between mt-1.5">
+                <span className="text-[11px] text-muted-foreground font-mono font-bold">
                   {audioDuration > 0 ? `${Math.floor((audioProgress / 100) * audioDuration / 60)}:${String(Math.floor((audioProgress / 100) * audioDuration % 60)).padStart(2, "0")}` : "0:00"}
                 </span>
-                <span className="text-[9px] text-muted-foreground font-mono">
+                <span className="text-[11px] text-muted-foreground font-mono font-bold">
                   {audioDuration > 0 ? `${Math.floor(audioDuration / 60)}:${String(Math.floor(audioDuration % 60)).padStart(2, "0")}` : "—"}
                 </span>
               </div>
             </div>
 
+            {/* Controls */}
             <div className="flex items-center justify-center gap-3">
               <button onClick={() => skipAudio(-10)}
-                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors text-[10px] font-bold">
+                className="w-10 h-10 rounded-2xl bg-muted/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors text-[11px] font-extrabold">
                 -10
               </button>
               <button onClick={() => skipMessage(-1)}
-                className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                <SkipBack className="w-4 h-4" />
+                className="w-11 h-11 rounded-2xl bg-muted/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                <SkipBack className="w-5 h-5" />
               </button>
               <button onClick={() => playAudio(analysis.audio_path!)}
-                className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-all shadow-sm">
+                className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-all shadow-md shadow-primary/25">
                 {playingAudio === analysis.audio_path
-                  ? <Pause className="w-5 h-5" />
-                  : <Play className="w-5 h-5 ml-0.5" />}
+                  ? <Pause className="w-6 h-6" />
+                  : <Play className="w-6 h-6 ml-0.5" />}
               </button>
               <button onClick={() => skipMessage(1)}
-                className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                <SkipForward className="w-4 h-4" />
+                className="w-11 h-11 rounded-2xl bg-muted/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                <SkipForward className="w-5 h-5" />
               </button>
               <button onClick={() => skipAudio(10)}
-                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors text-[10px] font-bold">
+                className="w-10 h-10 rounded-2xl bg-muted/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors text-[11px] font-extrabold">
                 +10
               </button>
             </div>
 
-            <div className="flex items-center justify-center gap-1.5 mt-3">
+            {/* Speed */}
+            <div className="flex items-center justify-center gap-2 mt-4">
               {[0.75, 1, 1.25, 1.5, 2].map(speed => (
                 <button key={speed} onClick={() => setAudioSpeed(speed)}
-                  className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
-                    audioSpeed === speed ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  className={`px-3.5 py-1.5 rounded-xl text-[12px] font-extrabold transition-all ${
+                    audioSpeed === speed ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground hover:bg-muted/80"
                   }`}>
                   {speed}×
                 </button>
@@ -1514,117 +1518,129 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
         {/* ── Moments clés ── */}
         {keyMoments.length > 0 && (
-          <Card title="⭐ Moments clés" icon={Star}>
-            <div className="space-y-2">
+          <div className="bg-card rounded-3xl p-5 border border-border/20">
+            <div className="flex items-center gap-2.5 mb-4">
+              <span className="text-2xl">⭐</span>
+              <h3 className="text-[16px] font-extrabold text-foreground">Moments clés</h3>
+            </div>
+            <div className="space-y-2.5">
               {keyMoments.map((moment, i) => {
                 const emo = emotionLabels[moment.detected_emotion!] || { emoji: "💬", label: moment.detected_emotion, color: "bg-muted text-muted-foreground" };
                 return (
                   <button key={i} onClick={() => jumpToMoment(moment.idx)}
-                    className="w-full flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-primary/8 transition-all text-left">
-                    <span className="text-lg mt-0.5">{emo.emoji}</span>
+                    className="w-full flex items-start gap-3 p-3.5 rounded-2xl bg-muted/40 hover:bg-primary/8 transition-all text-left border border-border/10">
+                    <span className="text-xl mt-0.5">{emo.emoji}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[12px] text-foreground line-clamp-2 leading-relaxed">{moment.content}</p>
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium mt-1 inline-block ${emo.color}`}>
+                      <p className="text-[14px] text-foreground line-clamp-2 leading-relaxed font-medium">{moment.content}</p>
+                      <span className={`text-[11px] px-2 py-0.5 rounded-full font-bold mt-1.5 inline-block ${emo.color}`}>
                         {emo.label}
                       </span>
                     </div>
-                    <Play className="w-3 h-3 text-primary mt-1 shrink-0" />
+                    <Play className="w-4 h-4 text-primary mt-1.5 shrink-0" />
                   </button>
                 );
               })}
             </div>
-          </Card>
+          </div>
         )}
 
         {analyzing ? (
-          <div className="bg-card rounded-2xl p-6 flex items-center justify-center gap-3">
-            <Loader2 className="w-5 h-5 animate-spin text-primary" />
-            <span className="text-[13px] text-muted-foreground font-medium">Analyse en cours…</span>
+          <div className="bg-card rounded-3xl p-8 flex flex-col items-center justify-center gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <span className="text-[15px] text-muted-foreground font-bold">Analyse en cours…</span>
           </div>
         ) : analysis ? (
           <>
             {analysis.summary && (
-              <Card title="📝 Résumé" icon={Brain}>
-                <p className="text-[14px] text-foreground leading-relaxed">{analysis.summary}</p>
-              </Card>
+              <div className="bg-gradient-to-br from-primary/10 to-primary/3 rounded-3xl p-5 border border-primary/15">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <span className="text-2xl">📝</span>
+                  <h3 className="text-[16px] font-extrabold text-foreground">Résumé</h3>
+                </div>
+                <p className="text-[15px] text-foreground leading-relaxed font-medium">{analysis.summary}</p>
+              </div>
             )}
 
-            {/* ── Compact colored grid: Scores + Engagement + Attention ── */}
+            {/* ── Scores grid — colorful squares ── */}
             <div className="grid grid-cols-2 gap-3">
               {analysis.sociability_score != null && (
                 <>
-                  <div className="bg-primary/10 rounded-2xl p-4 flex flex-col items-center gap-1">
-                    <span className="text-2xl">🤝</span>
-                    <span className="text-2xl font-extrabold text-foreground">{analysis.sociability_score}</span>
-                    <span className="text-[12px] font-semibold text-muted-foreground">Sociabilité</span>
+                  <div className="bg-gradient-to-br from-blue-500/15 to-blue-400/5 rounded-3xl p-4 flex flex-col items-center gap-1.5 border border-blue-400/15 aspect-square justify-center">
+                    <span className="text-3xl">🤝</span>
+                    <span className="text-3xl font-extrabold text-foreground">{analysis.sociability_score}</span>
+                    <span className="text-[13px] font-bold text-muted-foreground">Sociabilité</span>
                   </div>
-                  <div className="bg-accent/10 rounded-2xl p-4 flex flex-col items-center gap-1">
-                    <span className="text-2xl">🔍</span>
-                    <span className="text-2xl font-extrabold text-foreground">{analysis.curiosity_score || 0}</span>
-                    <span className="text-[12px] font-semibold text-muted-foreground">Curiosité</span>
+                  <div className="bg-gradient-to-br from-amber-500/15 to-amber-400/5 rounded-3xl p-4 flex flex-col items-center gap-1.5 border border-amber-400/15 aspect-square justify-center">
+                    <span className="text-3xl">🔍</span>
+                    <span className="text-3xl font-extrabold text-foreground">{analysis.curiosity_score || 0}</span>
+                    <span className="text-[13px] font-bold text-muted-foreground">Curiosité</span>
                   </div>
-                  <div className="bg-success/10 rounded-2xl p-4 flex flex-col items-center gap-1">
-                    <span className="text-2xl">⚖️</span>
-                    <span className="text-2xl font-extrabold text-foreground">{analysis.emotional_stability_score || 0}</span>
-                    <span className="text-[12px] font-semibold text-muted-foreground">Stabilité</span>
+                  <div className="bg-gradient-to-br from-emerald-500/15 to-emerald-400/5 rounded-3xl p-4 flex flex-col items-center gap-1.5 border border-emerald-400/15 aspect-square justify-center">
+                    <span className="text-3xl">⚖️</span>
+                    <span className="text-3xl font-extrabold text-foreground">{analysis.emotional_stability_score || 0}</span>
+                    <span className="text-[13px] font-bold text-muted-foreground">Stabilité</span>
                   </div>
                 </>
               )}
-              <div className="bg-secondary/10 rounded-2xl p-4 flex flex-col items-center gap-1">
-                <span className="text-2xl">{analysis.engagement_level === "high" ? "🔥" : analysis.engagement_level === "medium" ? "👍" : "💤"}</span>
-                <span className="text-lg font-extrabold text-foreground capitalize">{
+              <div className="bg-gradient-to-br from-purple-500/15 to-purple-400/5 rounded-3xl p-4 flex flex-col items-center gap-1.5 border border-purple-400/15 aspect-square justify-center">
+                <span className="text-3xl">{analysis.engagement_level === "high" ? "🔥" : analysis.engagement_level === "medium" ? "👍" : "💤"}</span>
+                <span className="text-xl font-extrabold text-foreground capitalize">{
                   analysis.engagement_level === "high" ? "Élevé" : analysis.engagement_level === "medium" ? "Moyen" : "Faible"
                 }</span>
-                <span className="text-[12px] font-semibold text-muted-foreground">Engagement</span>
+                <span className="text-[13px] font-bold text-muted-foreground">Engagement</span>
               </div>
               {analysis.attention_span && (
-                <div className="bg-primary/5 rounded-2xl p-4 flex flex-col items-center gap-1">
-                  <span className="text-2xl">{analysis.attention_span === "long" ? "🟢" : analysis.attention_span === "moyen" ? "🟡" : "🔴"}</span>
-                  <span className="text-lg font-extrabold text-foreground capitalize">{
+                <div className="bg-gradient-to-br from-pink-500/15 to-pink-400/5 rounded-3xl p-4 flex flex-col items-center gap-1.5 border border-pink-400/15 aspect-square justify-center">
+                  <span className="text-3xl">{analysis.attention_span === "long" ? "🟢" : analysis.attention_span === "moyen" ? "🟡" : "🔴"}</span>
+                  <span className="text-xl font-extrabold text-foreground capitalize">{
                     analysis.attention_span === "long" ? "Longue" : analysis.attention_span === "moyen" ? "Moyenne" : "Courte"
                   }</span>
-                  <span className="text-[12px] font-semibold text-muted-foreground">Attention</span>
+                  <span className="text-[13px] font-bold text-muted-foreground">Attention</span>
                 </div>
               )}
             </div>
 
-            {/* ── Emotions as colored pills ── */}
+            {/* ── Emotions — colorful pills ── */}
             {analysis.emotions && Object.keys(analysis.emotions).length > 0 && (
-              <Card title="💛 Émotions">
-                <div className="flex flex-wrap gap-2">
+              <div className="bg-card rounded-3xl p-5 border border-border/20">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <span className="text-2xl">💛</span>
+                  <h3 className="text-[16px] font-extrabold text-foreground">Émotions</h3>
+                </div>
+                <div className="flex flex-wrap gap-2.5">
                   {Object.entries(analysis.emotions).filter(([, v]) => (v as number) > 0).sort(([, a], [, b]) => (b as number) - (a as number)).map(([key, value]) => {
                     const info = emotionScoreLabels[key] || { label: key, emoji: "❓" };
                     return (
-                      <div key={key} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/60">
-                        <span className="text-lg">{info.emoji}</span>
-                        <span className="text-[13px] font-bold text-foreground">{info.label}</span>
-                        <span className="text-[13px] text-muted-foreground font-semibold">{value as number}%</span>
+                      <div key={key} className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-muted/60 to-muted/30 border border-border/10">
+                        <span className="text-xl">{info.emoji}</span>
+                        <span className="text-[14px] font-extrabold text-foreground">{info.label}</span>
+                        <span className="text-[14px] text-primary font-bold">{value as number}%</span>
                       </div>
                     );
                   })}
                 </div>
-              </Card>
+              </div>
             )}
 
-            {/* ── Interests + Topics in compact row ── */}
+            {/* ── Interests + Topics ── */}
             {(analysis.extracted_interests?.length > 0 || analysis.topics_detected?.length > 0) && (
               <div className="grid grid-cols-2 gap-3">
                 {analysis.extracted_interests?.length > 0 && (
-                  <div className="bg-accent/8 rounded-2xl p-4">
-                    <h4 className="text-[13px] font-bold text-foreground mb-2">✨ Intérêts</h4>
-                    <div className="flex flex-wrap gap-1.5">
+                  <div className="bg-gradient-to-br from-accent/12 to-accent/3 rounded-3xl p-4 border border-accent/15">
+                    <h4 className="text-[15px] font-extrabold text-foreground mb-3">✨ Intérêts</h4>
+                    <div className="flex flex-wrap gap-2">
                       {analysis.extracted_interests.map((interest, i) => (
-                        <span key={i} className="px-2.5 py-1 rounded-lg bg-accent/15 text-[12px] font-semibold text-foreground">{interest}</span>
+                        <span key={i} className="px-3 py-1.5 rounded-xl bg-accent/15 text-[13px] font-bold text-foreground">{interest}</span>
                       ))}
                     </div>
                   </div>
                 )}
                 {analysis.topics_detected?.length > 0 && (
-                  <div className="bg-primary/5 rounded-2xl p-4">
-                    <h4 className="text-[13px] font-bold text-foreground mb-2">💬 Sujets</h4>
-                    <div className="flex flex-wrap gap-1.5">
+                  <div className="bg-gradient-to-br from-primary/8 to-primary/2 rounded-3xl p-4 border border-primary/10">
+                    <h4 className="text-[15px] font-extrabold text-foreground mb-3">💬 Sujets</h4>
+                    <div className="flex flex-wrap gap-2">
                       {analysis.topics_detected.map((t, i) => (
-                        <span key={i} className="px-2.5 py-1 rounded-lg bg-primary/12 text-[12px] font-semibold text-primary">{t}</span>
+                        <span key={i} className="px-3 py-1.5 rounded-xl bg-primary/12 text-[13px] font-bold text-primary">{t}</span>
                       ))}
                     </div>
                   </div>
@@ -1634,33 +1650,43 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
             {/* ── Observations ── */}
             {analysis.behavior_insights?.length > 0 && (
-              <Card title="🔎 Observations">
-                <ul className="space-y-2.5">
+              <div className="bg-card rounded-3xl p-5 border border-border/20">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <span className="text-2xl">🔎</span>
+                  <h3 className="text-[16px] font-extrabold text-foreground">Observations</h3>
+                </div>
+                <ul className="space-y-3">
                   {analysis.behavior_insights.map((insight, i) => (
-                    <li key={i} className="text-[13px] text-foreground flex items-start gap-2.5 leading-relaxed">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />{insight}
+                    <li key={i} className="text-[14px] text-foreground flex items-start gap-3 leading-relaxed font-medium">
+                      <span className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />{insight}
                     </li>
                   ))}
                 </ul>
-              </Card>
+              </div>
             )}
 
             {/* ── Alerts ── */}
             {analysis.alerts?.length > 0 && (
-              <div className="bg-destructive/8 rounded-2xl p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <AlertTriangle className="w-5 h-5 text-destructive" />
-                  <h3 className="text-[15px] font-bold text-destructive">Alertes</h3>
+              <div className="bg-gradient-to-br from-destructive/10 to-destructive/3 rounded-3xl p-5 border border-destructive/15">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <AlertTriangle className="w-6 h-6 text-destructive" />
+                  <h3 className="text-[16px] font-extrabold text-destructive">Alertes</h3>
                 </div>
                 {analysis.alerts.map((alert, i) => (
-                  <p key={i} className="text-[13px] text-foreground mb-1.5">⚠️ {alert.message}</p>
+                  <p key={i} className="text-[14px] text-foreground mb-2 font-medium">⚠️ {alert.message}</p>
                 ))}
               </div>
             )}
 
+            {/* ── Transcription — Apple iMessage style ── */}
             {sessionMessages.length > 0 && (
-              <Card title="Transcription" icon={FileText}>
-                <div className="max-h-96 overflow-y-auto space-y-3 py-1">
+              <div className="bg-card rounded-3xl p-5 border border-border/20">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <span className="text-2xl">📖</span>
+                  <h3 className="text-[16px] font-extrabold text-foreground">Transcription</h3>
+                  <span className="ml-auto text-[12px] text-muted-foreground font-bold bg-muted px-2.5 py-1 rounded-full">{sessionMessages.length} msgs</span>
+                </div>
+                <div className="max-h-[500px] overflow-y-auto space-y-3 py-1">
                   {sessionMessages.map((msg, i) => {
                     const isChild = msg.role === "user";
                     const isActive = i === activeMessageIdx && (playingAudio || ttsPlaying);
@@ -1668,31 +1694,29 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     const time = new Date(msg.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
                     return (
                       <div key={i} className={`flex ${isChild ? "justify-start" : "justify-end"}`}>
-                        <div className={`max-w-[80%] relative group ${
-                          isActive ? "scale-[1.01]" : ""
+                        <div className={`max-w-[82%] relative group ${
+                          isActive ? "scale-[1.02]" : ""
                         } transition-transform duration-200`}>
-                          {/* Apple-style bubble */}
-                          <div className={`rounded-[20px] px-4 py-2.5 ${
+                          <div className={`rounded-[22px] px-4 py-3 ${
                             isChild
-                              ? "bg-muted/80 rounded-bl-md"
-                              : "bg-primary/12 rounded-br-md"
-                          } ${isActive ? "ring-2 ring-primary/30" : ""}`}>
-                            <p className="text-[13px] text-foreground leading-[1.45]">{msg.content}</p>
+                              ? "bg-gradient-to-br from-muted/80 to-muted/50 rounded-bl-lg"
+                              : "bg-gradient-to-br from-primary/15 to-primary/8 rounded-br-lg"
+                          } ${isActive ? "ring-2 ring-primary/30 shadow-md" : "shadow-sm"}`}>
+                            <p className="text-[14px] text-foreground leading-[1.5] font-medium">{msg.content}</p>
                           </div>
-                          {/* Meta row */}
-                          <div className={`flex items-center gap-1.5 mt-1 px-1 ${isChild ? "" : "justify-end"}`}>
-                            <span className="text-[10px] text-muted-foreground/60">{isChild ? `👦 ${settings.childName || childName}` : "🤖 Bobby"}</span>
-                            <span className="text-[10px] text-muted-foreground/40">{time}</span>
+                          <div className={`flex items-center gap-2 mt-1.5 px-1.5 ${isChild ? "" : "justify-end"}`}>
+                            <span className="text-[11px] text-muted-foreground/70 font-bold">{isChild ? `👦 ${settings.childName || childName}` : "🤖 Bobby"}</span>
+                            <span className="text-[10px] text-muted-foreground/50 font-medium">{time}</span>
                             {msg.detected_emotion && (
-                              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
                                 emotionLabels[msg.detected_emotion]?.color || "bg-muted text-muted-foreground"
                               }`}>
                                 {emotionLabels[msg.detected_emotion]?.emoji}
                               </span>
                             )}
                             <button onClick={() => speakMessage(msg.content)}
-                              className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded-full flex items-center justify-center text-muted-foreground hover:text-primary transition-all">
-                              {isTtsSpeaking ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                              className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/8 transition-all">
+                              {isTtsSpeaking ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                             </button>
                           </div>
                         </div>
@@ -1700,13 +1724,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     );
                   })}
                 </div>
-              </Card>
+              </div>
             )}
 
-            {/* v4.2: Emotion Timeline */}
+            {/* ── Timeline émotionnelle ── */}
             {sessionMessages.filter(m => m.detected_emotion && m.role === "user").length > 0 && (
-              <Card title="Timeline émotionnelle" icon={Activity}>
-                <div className="flex items-center gap-0.5 overflow-x-auto pb-1">
+              <div className="bg-card rounded-3xl p-5 border border-border/20">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <span className="text-2xl">📈</span>
+                  <h3 className="text-[16px] font-extrabold text-foreground">Timeline émotionnelle</h3>
+                </div>
+                <div className="flex items-center gap-1 overflow-x-auto pb-2">
                   {sessionMessages.map((msg, i) => {
                     if (msg.role !== "user" || !msg.detected_emotion) return null;
                     const emo = emotionLabels[msg.detected_emotion] || { emoji: "💬", color: "bg-muted text-muted-foreground" };
@@ -1717,33 +1745,37 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                       : "";
                     return (
                       <button key={i} onClick={() => jumpToMoment(i)}
-                        className="flex flex-col items-center px-1 py-1 rounded-lg hover:bg-primary/5 transition-all min-w-[32px]">
-                        <span className="text-sm">{emo.emoji}</span>
-                        <span className="text-[8px] text-muted-foreground font-mono">{timeStr}</span>
+                        className="flex flex-col items-center px-1.5 py-1.5 rounded-xl hover:bg-primary/8 transition-all min-w-[36px]">
+                        <span className="text-base">{emo.emoji}</span>
+                        <span className="text-[9px] text-muted-foreground font-mono font-bold">{timeStr}</span>
                       </button>
                     );
                   })}
                 </div>
-              </Card>
+              </div>
             )}
 
-            {/* v4.2: Parent Note */}
-            <Card title="Note du parent" icon={Edit3}>
+            {/* ── Note du parent ── */}
+            <div className="bg-card rounded-3xl p-5 border border-border/20">
+              <div className="flex items-center gap-2.5 mb-3">
+                <span className="text-2xl">📝</span>
+                <h3 className="text-[16px] font-extrabold text-foreground">Note du parent</h3>
+              </div>
               {editingNote === selectedSession!.id ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <textarea
                     value={noteText}
                     onChange={e => setNoteText(e.target.value)}
                     placeholder="Ajoutez une note sur cette session…"
-                    className="w-full bg-muted rounded-xl px-3 py-2 text-[12px] text-foreground outline-none focus:ring-2 focus:ring-primary/30 resize-none h-20"
+                    className="w-full bg-muted rounded-2xl px-4 py-3 text-[14px] text-foreground outline-none focus:ring-2 focus:ring-primary/30 resize-none h-24 font-medium"
                   />
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <button onClick={() => saveParentNote(selectedSession!.id, noteText)}
-                      className="flex-1 py-2 rounded-xl bg-primary text-primary-foreground text-[12px] font-medium">
+                      className="flex-1 py-3 rounded-2xl bg-primary text-primary-foreground text-[14px] font-extrabold shadow-sm">
                       💾 Enregistrer
                     </button>
                     <button onClick={() => setEditingNote(null)}
-                      className="px-4 py-2 rounded-xl bg-muted text-muted-foreground text-[12px] font-medium">
+                      className="px-5 py-3 rounded-2xl bg-muted text-muted-foreground text-[14px] font-bold">
                       Annuler
                     </button>
                   </div>
@@ -1751,31 +1783,30 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               ) : (
                 <button
                   onClick={() => { setEditingNote(selectedSession!.id); setNoteText(selectedSession!.parent_note || ""); }}
-                  className="w-full text-left p-2 rounded-xl hover:bg-muted/50 transition-all">
+                  className="w-full text-left p-3 rounded-2xl hover:bg-muted/50 transition-all">
                   {selectedSession!.parent_note ? (
-                    <p className="text-[12px] text-foreground leading-relaxed">{selectedSession!.parent_note}</p>
+                    <p className="text-[14px] text-foreground leading-relaxed font-medium">{selectedSession!.parent_note}</p>
                   ) : (
-                    <p className="text-[12px] text-muted-foreground italic">Appuyez pour ajouter une note…</p>
+                    <p className="text-[14px] text-muted-foreground italic font-medium">Appuyez pour ajouter une note…</p>
                   )}
                 </button>
               )}
-            </Card>
-
+            </div>
           </>
         ) : (
           <button onClick={() => analyzeSession(selectedSession!)}
-            className="w-full bg-primary text-primary-foreground rounded-2xl p-4 font-semibold text-[13px] hover:opacity-90 transition-all">
+            className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-3xl p-5 font-extrabold text-[16px] hover:opacity-90 transition-all shadow-md shadow-primary/20">
             🧠 Lancer l'analyse IA
           </button>
         )}
 
-        {/* ── 3 Action Buttons ── */}
-        <div className="grid grid-cols-3 gap-2">
+        {/* ── 3 Action Buttons — colorful ── */}
+        <div className="grid grid-cols-3 gap-3">
           <button
             onClick={() => exportSessionPDF(selectedSession!, selectedAnalysis)}
-            className="flex flex-col items-center gap-1.5 py-3 rounded-2xl bg-card hover:bg-primary/8 transition-all">
-            <Download className="w-5 h-5 text-primary" />
-            <span className="text-[11px] font-semibold text-foreground">Exporter</span>
+            className="flex flex-col items-center gap-2 py-4 rounded-3xl bg-gradient-to-br from-blue-500/12 to-blue-400/5 border border-blue-400/15 hover:border-blue-400/30 transition-all active:scale-95">
+            <Download className="w-6 h-6 text-primary" />
+            <span className="text-[13px] font-extrabold text-foreground">Exporter</span>
           </button>
           <button
             onClick={async () => {
@@ -1787,9 +1818,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 toast.error("Erreur", { description: result.error });
               }
             }}
-            className="flex flex-col items-center gap-1.5 py-3 rounded-2xl bg-card hover:bg-primary/8 transition-all">
-            <CloudUpload className="w-5 h-5 text-primary" />
-            <span className="text-[11px] font-semibold text-foreground">Bobby Cloud</span>
+            className="flex flex-col items-center gap-2 py-4 rounded-3xl bg-gradient-to-br from-purple-500/12 to-purple-400/5 border border-purple-400/15 hover:border-purple-400/30 transition-all active:scale-95">
+            <CloudUpload className="w-6 h-6 text-primary" />
+            <span className="text-[13px] font-extrabold text-foreground">Bobby Cloud</span>
           </button>
           <button
             onClick={() => setConfirmDialog({
@@ -1799,9 +1830,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               variant: "danger",
               onConfirm: () => { deleteSession(selectedSession!.id); setConfirmDialog(null); },
             })}
-            className="flex flex-col items-center gap-1.5 py-3 rounded-2xl bg-card hover:bg-destructive/10 transition-all">
-            <Trash2 className="w-5 h-5 text-destructive" />
-            <span className="text-[11px] font-semibold text-destructive">Supprimer</span>
+            className="flex flex-col items-center gap-2 py-4 rounded-3xl bg-gradient-to-br from-red-500/10 to-red-400/5 border border-destructive/15 hover:border-destructive/30 transition-all active:scale-95">
+            <Trash2 className="w-6 h-6 text-destructive" />
+            <span className="text-[13px] font-extrabold text-destructive">Supprimer</span>
           </button>
         </div>
       </div>
