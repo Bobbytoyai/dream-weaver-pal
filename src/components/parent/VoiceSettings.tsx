@@ -165,7 +165,7 @@ const VoiceSettings = ({ settings, onUpdate, onBack, onSave, saved }: VoiceSetti
       </div>
 
       {/* Speed */}
-      <div className="retro-card retro-card-tilt-3 p-4" style={{ backgroundColor: "var(--retro-yellow)" }}>
+      <div className="retro-card retro-card-tilt-2 p-4" style={{ backgroundColor: "var(--retro-yellow)" }}>
         <h3 className="text-[14px] font-black text-foreground mb-3 uppercase">⚡ VITESSE DE PAROLE</h3>
         <div className="grid grid-cols-3 gap-2">
           {SPEEDS.map(s => (
@@ -185,7 +185,7 @@ const VoiceSettings = ({ settings, onUpdate, onBack, onSave, saved }: VoiceSetti
       </div>
 
       {/* Personality / Ton */}
-      <div className="retro-card retro-card-tilt-4 p-4" style={{ backgroundColor: "var(--retro-purple)" }}>
+      <div className="retro-card retro-card-tilt-5 p-4" style={{ backgroundColor: "var(--retro-purple)" }}>
         <h3 className="text-[14px] font-black text-foreground mb-1 uppercase">🎭 TON DE BOBBY</h3>
         <p className="text-[11px] text-foreground/70 mb-3 font-bold">Influence la manière dont Bobby s'exprime</p>
         <div className="grid grid-cols-2 gap-2">
@@ -206,7 +206,7 @@ const VoiceSettings = ({ settings, onUpdate, onBack, onSave, saved }: VoiceSetti
       </div>
 
       {/* SFX Volume */}
-      <div className="retro-card retro-card-tilt-5 p-4" style={{ backgroundColor: "var(--retro-green)" }}>
+      <div className="retro-card retro-card-tilt-1 p-4" style={{ backgroundColor: "var(--retro-green)" }}>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-[13px] font-black text-foreground uppercase">🔊 VOLUME DES SONS</h3>
           <span className="text-[12px] font-mono font-black text-foreground border-2 border-black px-2 py-0.5 bg-white">{Math.round(settings.sfxVolume * 100)}%</span>
