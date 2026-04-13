@@ -209,7 +209,7 @@ const INTENT_RULES: IntentRule[] = [
     /punition|puni|grondé|engueulé|parents se disputent|parents se battent/i,
   ]},
   { intent: "CONFLIT_AMI", priority: 88, patterns: [
-    /copain m'a|copine m'a|ami m'a|plus mon ami|disputé avec mon copain|il m'a tapé|elle m'a tapé/i,
+    /copain m'a (?!dit)|copine m'a (?!dit)|ami m'a|plus mon ami|disputé avec mon copain|il m'a tapé|elle m'a tapé/i,
     /mon ami ne veut plus|m'a insulté|moqué de moi/i,
   ]},
   { intent: "SOLITUDE", priority: 87, patterns: [
