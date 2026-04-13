@@ -3389,22 +3389,28 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ── TARIFS ── */}
       <div className="space-y-3">
-        <h3 className="text-[16px] font-extrabold text-foreground px-1">💰 Tarifs Bobby Cloud</h3>
+        <h3 className="text-[16px] font-extrabold text-foreground px-1">💾 Tarifs Bobby Cloud — par stockage</h3>
+        <p className="text-[11px] text-muted-foreground px-1 -mt-1">Utilisation actuelle : <span className="font-extrabold text-foreground">{storageLabel}</span> / 500 Mo</p>
+        {/* Usage bar */}
+        <div className="mx-1 h-2 rounded-full bg-muted overflow-hidden">
+          <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary/60 transition-all" style={{ width: `${Math.min(100, (estimatedStorageMB / 500) * 100)}%` }} />
+        </div>
         {plans.map(plan => (
-          <div key={plan.name} className={`bg-gradient-to-br ${plan.color} rounded-3xl p-4 border ${plan.border} relative ${plan.popular ? "ring-2 ring-primary/30" : ""}`}>
-            {plan.popular && (
+          <div key={plan.name} className={`bg-gradient-to-br ${(plan as any).color} rounded-3xl p-4 border ${(plan as any).border} relative ${(plan as any).popular ? "ring-2 ring-primary/30" : ""}`}>
+            {(plan as any).popular && (
               <span className="absolute -top-2.5 right-4 px-3 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-extrabold shadow-md">
                 ⭐ Recommandé
               </span>
             )}
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-3 mb-2">
               <span className="text-3xl">{plan.emoji}</span>
               <div className="flex-1">
                 <h4 className="text-[17px] font-extrabold text-foreground">{plan.name}</h4>
+                <span className="text-[12px] font-bold text-primary">💾 {(plan as any).storage}</span>
               </div>
               <div className="text-right">
                 <span className="text-[22px] font-extrabold text-foreground">{plan.price}</span>
-                <span className="text-[11px] text-muted-foreground">{plan.period}</span>
+                {plan.period && <span className="text-[11px] text-muted-foreground">{plan.period}</span>}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-3">
