@@ -257,6 +257,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [cloudLoading, setCloudLoading] = useState(false);
   const [cloudRestoreCode, setCloudRestoreCode] = useState("");
   const [cloudCopied, setCloudCopied] = useState(false);
+  const [pendingNameChange, setPendingNameChange] = useState<string | null>(null);
 
   const unreadAlertCount = parentAlerts.filter(a => !a.is_read).length;
 
