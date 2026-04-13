@@ -395,13 +395,13 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         const closedY = 0.10; // much higher = only covers top portion of eye
         let targetY = hiddenY - easedCover * (hiddenY - closedY);
         
-        // Sleeping: slow breathing lifts eyelid UP slightly to reveal bottom sliver
+        // Sleeping: eyelids slowly drop down a few mm then return up (drowsy breathing)
         if (isSleepingNow) {
           const flutterT = performance.now() * 0.001;
-          // Positive = eyelid moves up = reveals bottom of eye
-          const breathLift = Math.sin(flutterT * 0.35) * 0.045;
-          const peekCycle = Math.sin(flutterT * 0.12) > 0.85 ? Math.sin(flutterT * 1.5) * 0.03 : 0;
-          targetY += Math.max(0, breathLift) + Math.max(0, peekCycle);
+          // Negative = eyelid moves DOWN = covers more eye, then returns
+          const breathDrop = Math.sin(flutterT * 0.35) * 0.06;
+          const peekDrop = Math.sin(flutterT * 0.12) > 0.85 ? Math.sin(flutterT * 1.5) * 0.035 : 0;
+          targetY -= Math.max(0, breathDrop) + Math.max(0, peekDrop);
         }
         
         ref.current.position.y = targetY;
