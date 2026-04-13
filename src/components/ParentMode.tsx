@@ -3218,23 +3218,31 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     const totalMessages = sessions.reduce((s, sess) => s + (sess.message_count || 0), 0);
     const totalAnalyses = analyses.length;
 
+    // Estimate storage used (rough: sessions ~2KB, messages ~0.5KB, analyses ~5KB)
+    const estimatedStorageKB = (totalSessions * 2) + (totalMessages * 0.5) + (totalAnalyses * 5);
+    const estimatedStorageMB = Math.max(0.01, estimatedStorageKB / 1024);
+    const storageLabel = estimatedStorageMB < 1 ? `${Math.round(estimatedStorageKB)} Ko` : `${estimatedStorageMB.toFixed(1)} Mo`;
+
     const plans = [
       {
-        name: "Gratuit", price: "0€", period: "/mois", emoji: "🆓",
+        name: "Découverte", price: "0€", period: "", emoji: "🆓",
         color: "from-muted/60 to-muted/30", border: "border-border/30",
-        features: ["5 sessions sauvegardées", "Réglages parents sync", "1 appareil", "Support communauté"],
+        storage: "500 Mo",
+        features: ["500 Mo de stockage cloud", "Bobby Brain V4 de base", "1 profil enfant", "Sync 1 appareil", "Bobby Store — packs gratuits"],
         cta: "Actuel", disabled: true,
       },
       {
         name: "Famille", price: "4,99€", period: "/mois", emoji: "👨‍👩‍👧‍👦",
         color: "from-primary/18 to-primary/5", border: "border-primary/30",
-        features: ["Sessions illimitées", "Cerveau complet sync", "3 appareils", "Bibliothèque complète", "Contenu éducatif", "Export MP3 sessions", "Support prioritaire"],
+        storage: "5 Go",
+        features: ["5 Go de stockage cloud", "Bobby Brain Intelligence V4", "3 profils enfants", "Sync 3 appareils", "Bobby Store complet", "Export MP3 sessions", "Analyses IA détaillées"],
         cta: "Bientôt disponible", disabled: true, popular: true,
       },
       {
         name: "Pro", price: "9,99€", period: "/mois", emoji: "🚀",
         color: "from-amber-500/15 to-amber-400/5", border: "border-amber-400/30",
-        features: ["Tout Famille +", "Appareils illimités", "Bobby Brain Intelligence V4", "Analyses détaillées IA", "Bobby Store Premium", "API développeur", "Support dédié 24/7"],
+        storage: "50 Go",
+        features: ["50 Go de stockage cloud", "Bobby Brain Intelligence V4 max", "Profils illimités", "Appareils illimités", "Bobby Store Premium", "API développeur", "Support dédié 24/7"],
         cta: "Bientôt disponible", disabled: true,
       },
     ];
