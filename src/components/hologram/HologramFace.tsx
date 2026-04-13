@@ -142,6 +142,7 @@ export function HologramFace({
       </Canvas>
       {faceState === "sleepy" && <SleepZzzOverlay />}
     </div>
+  );
 }
 
 // ─── Floating "Z z z" sleep animation — HTML overlay ──────────────────
