@@ -259,9 +259,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         const easedCover = coverAmount * coverAmount * (3 - 2 * coverAmount);
         
         // The eyelid is a half-dome sitting above. We slide it down.
-        // Open: top of eyelid dome is above eye (y = eyeRadius + lidRadius)
-        // Closed: bottom of dome aligns with eye center (y = 0)
-        const fullyOpenY = 0.68;   // dome top well above eye
+        // Open: dome is fully above the eye, invisible behind forehead area
+        // Closed: dome descends to cover the eye
+        const fullyOpenY = 0.95;   // dome fully retracted above eye
         const fullyClosed = -0.02; // dome bottom at eye center
         let targetY = fullyOpenY - easedCover * (fullyOpenY - fullyClosed);
         
