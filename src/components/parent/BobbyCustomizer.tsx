@@ -3,6 +3,8 @@ import { ChevronLeft, Shuffle, ChevronDown } from "lucide-react";
 import type { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
+import { Switch } from "@/components/ui/switch";
+import type { BobbyEmotion } from "@/lib/bobby/expressionEngine";
 
 interface BobbyCustomizerProps {
   settings: ParentSettings;
@@ -88,6 +90,17 @@ const EMOTION_BUTTONS: { emoji: string; label: string; face: FaceState }[] = [
   { emoji: "😜", label: "Joueur", face: "playful" },
 ];
 
+// Map face states to BobbyEmotion for disable toggle
+const FACE_TO_EMOTION: Record<string, BobbyEmotion> = {
+  happy: "joy", sad: "sadness", surprised: "surprise", curious: "curiosity",
+  excited: "excitement", calm: "calm", proud: "pride", confused: "confusion",
+  reassuring: "love", playful: "boredom", attentive: "determination",
+};
+
+// Only these expressions can be disabled (not system states like listening/speaking)
+const TOGGLEABLE_EMOTIONS = EMOTION_BUTTONS.filter(
+  e => !["idle", "listening", "thinking", "speaking", "sleepy"].includes(e.face)
+);
 const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCustomizerProps) => {
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [activeEmotion, setActiveEmotion] = useState<FaceState | undefined>(undefined);
@@ -213,6 +226,47 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
                     {emo.label}
                   </span>
                 </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Expression enable/disable toggles */}
+      <div>
+        <button
+          onClick={() => setOpenSection(openSection === "expr-toggles" ? null : "expr-toggles")}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-xl border-2 border-border/30 bg-card hover:border-border/50 transition-all"
+        >
+          <span className="text-[12px] font-bold text-foreground">🚫 Activer / Désactiver des expressions</span>
+          <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${openSection === "expr-toggles" ? "rotate-180" : ""}`} />
+        </button>
+
+        {openSection === "expr-toggles" && (
+          <div className="mt-2 space-y-1 animate-fade-in">
+            <p className="text-[9px] text-muted-foreground px-1 mb-1.5">Désactivez les expressions que Bobby ne doit jamais utiliser en conversation.</p>
+            {TOGGLEABLE_EMOTIONS.map((emo) => {
+              const emotionKey = FACE_TO_EMOTION[emo.face];
+              if (!emotionKey) return null;
+              const isDisabled = (settings.disabledExpressions || []).includes(emotionKey);
+              return (
+                <div key={emo.face} className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-all">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[16px]">{emo.emoji}</span>
+                    <span className="text-[11px] font-bold text-foreground">{emo.label}</span>
+                  </div>
+                  <Switch
+                    checked={!isDisabled}
+                    onCheckedChange={(enabled) => {
+                      const current = settings.disabledExpressions || [];
+                      const updated = enabled
+                        ? current.filter(e => e !== emotionKey)
+                        : [...current, emotionKey];
+                      onUpdate("disabledExpressions" as keyof ParentSettings, updated as any);
+                    }}
+                    className="scale-75"
+                  />
+                </div>
               );
             })}
           </div>
