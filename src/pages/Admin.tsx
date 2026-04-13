@@ -348,6 +348,64 @@ const Admin = () => {
     });
   }, []);
 
+  // Chart data
+  interface DayData { day: string; sessions: number; messages: number; }
+  interface EmotionData { name: string; value: number; color: string; }
+  const [chartSessions, setChartSessions] = useState<DayData[]>([]);
+  const [chartEmotions, setChartEmotions] = useState<EmotionData[]>([]);
+
+  const EMOTION_COLORS: Record<string, string> = {
+    happy: "#34d399", sad: "#60a5fa", angry: "#f87171", scared: "#fbbf24",
+    surprised: "#a78bfa", neutral: "#94a3b8", excited: "#f472b6", curious: "#2dd4bf",
+    love: "#fb7185", proud: "#818cf8", shy: "#c084fc", frustrated: "#fb923c",
+  };
+
+  const fetchChartData = useCallback(async () => {
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    const [sessionsRes, msgsRes] = await Promise.all([
+      supabase.from("child_sessions").select("started_at, detected_emotions").gte("started_at", weekAgo),
+      supabase.from("session_messages").select("created_at").gte("created_at", weekAgo),
+    ]);
+
+    // Sessions & messages per day
+    const dayMap: Record<string, { sessions: number; messages: number }> = {};
+    const dayNames = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      const key = d.toISOString().slice(0, 10);
+      dayMap[key] = { sessions: 0, messages: 0 };
+    }
+
+    (sessionsRes.data || []).forEach((s: any) => {
+      const key = s.started_at?.slice(0, 10);
+      if (key && dayMap[key]) dayMap[key].sessions++;
+    });
+    (msgsRes.data || []).forEach((m: any) => {
+      const key = m.created_at?.slice(0, 10);
+      if (key && dayMap[key]) dayMap[key].messages++;
+    });
+
+    setChartSessions(Object.entries(dayMap).map(([date, v]) => {
+      const d = new Date(date);
+      return { day: dayNames[d.getDay()], sessions: v.sessions, messages: v.messages };
+    }));
+
+    // Emotions aggregation
+    const emotionCounts: Record<string, number> = {};
+    (sessionsRes.data || []).forEach((s: any) => {
+      (s.detected_emotions || []).forEach((e: string) => {
+        emotionCounts[e] = (emotionCounts[e] || 0) + 1;
+      });
+    });
+
+    const sorted = Object.entries(emotionCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    setChartEmotions(sorted.map(([name, value]) => ({
+      name, value, color: EMOTION_COLORS[name] || "#94a3b8",
+    })));
+  }, []);
+
   const fetchCloudUsers = useCallback(async () => {
     setCloudUsersLoading(true);
     const { data } = await supabase.from("cloud_profiles").select("*").order("created_at", { ascending: false });
