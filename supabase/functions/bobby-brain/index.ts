@@ -131,9 +131,14 @@ serve(async (req) => {
     // ─── Post-processing: fix LLM placeholder leaks ───
     // Replace any literal "childName" / "child_name" / "{childName}" the LLM might output
     reply = reply.replace(/\{?\bchild[_\s]?name\b\}?/gi, childName);
+    reply = reply.replace(/\bchildName\b/g, childName);
     reply = reply.replace(/\[prénom\]/gi, childName);
     reply = reply.replace(/\[nom\]/gi, childName);
     reply = reply.replace(/\[enfant\]/gi, childName);
+    reply = reply.replace(/\{prénom\}/gi, childName);
+    reply = reply.replace(/\{name\}/gi, childName);
+    reply = reply.replace(/\{enfant\}/gi, childName);
+    reply = reply.replace(/\bchild name\b/gi, childName);
 
     // ─── Post-processing safety filter ───
     const BLOCKED_PHRASES = [
