@@ -25,6 +25,8 @@ const CloudTab = ({
   handleCloudSave, handleCloudDelete, setConfirmDialog,
 }: CloudTabProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentPath = location.pathname;
 
   const totalSessions = sessions.length;
   const totalMessages = sessions.reduce((s, sess) => s + (sess.message_count || 0), 0);
