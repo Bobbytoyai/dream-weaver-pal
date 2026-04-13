@@ -50,6 +50,16 @@ export function useSessionTracker(childName: string, childAge: number) {
     const durationSeconds = Math.round((Date.now() - startTimeRef.current.getTime()) / 1000);
     const id = sessionIdRef.current;
     sessionIdRef.current = null; // Clear immediately to prevent double-end
+
+    // ─── Don't save empty sessions (0 messages = spam) ───
+    if (messageCountRef.current === 0) {
+      try {
+        await supabase.from("child_sessions").delete().eq("id", id);
+        console.log("[Session] Deleted empty session (0 messages):", id);
+      } catch (e) { console.warn("[Session] Failed to delete empty session:", e); }
+      return id;
+    }
+
     try {
       await supabase
         .from("child_sessions")
