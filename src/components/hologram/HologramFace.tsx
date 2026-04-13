@@ -59,7 +59,7 @@ export function HologramFace({
   // Connect audio elements for lip sync analysis
   useEffect(() => {
     const unsub1 = eventBus.on("AUDIO_ELEMENT_CREATED", (e) => {
-      connectAudio(e.element);
+      if (e.type === "AUDIO_ELEMENT_CREATED") connectAudio(e.element);
     });
     const unsub2 = eventBus.on("WAKE_DETECTED", () => {
       setWakeFlash(true);
