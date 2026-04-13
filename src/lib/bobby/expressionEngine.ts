@@ -227,16 +227,35 @@ const FALLBACK_COMBO: ExpressionCombo = {
   animation: "blink_auto",
 };
 
+// ─── Disabled expressions config ─────────────────────────────
+
+let _disabledEmotions: Set<string> = new Set();
+
+/** Set which emotions Bobby should never display */
+export function setDisabledExpressions(disabled: string[]) {
+  _disabledEmotions = new Set(disabled);
+}
+
+/** Get current disabled expressions */
+export function getDisabledExpressions(): string[] {
+  return [..._disabledEmotions];
+}
+
 // ─── Main API ────────────────────────────────────────────────
 
 /**
  * Convert an emotion state to a full expression result.
- * Applies intensity, coherence validation, and emoji mapping.
+ * Applies intensity, coherence validation, emoji mapping, and disabled filter.
  */
 export function emotionToExpression(state: EmotionState): ExpressionResult {
-  const { emotion, intensity } = state;
+  let { emotion, intensity } = state;
   const clampedIntensity = Math.max(1, Math.min(5, Math.round(intensity)));
   
+  // If this emotion is disabled, fall back to neutral
+  if (_disabledEmotions.has(emotion)) {
+    emotion = "neutral";
+  }
+
   const variants = EMOTION_EXPRESSIONS[emotion];
   if (!variants) {
     return {
