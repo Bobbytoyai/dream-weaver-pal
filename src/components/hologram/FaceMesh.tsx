@@ -149,6 +149,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const [rightCheekX, rightCheekY] = useMemo(() => svgToWorld(357, 340), []);
 
   // ─── Materials ────────────────────────────────────────────
+  const eyeOutlineMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: new THREE.Color("#3A3A5C"), transparent: true, opacity: 0.35,
+  }), []);
   const eyeWhiteMat = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color("#FFFFFF") }), []);
 
   const irisOuterMat = useMemo(() => new THREE.MeshBasicMaterial({
@@ -213,6 +216,15 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       irisOuterMat.color.set(irisHex);
     }
   }, [bobbyColor, bobbyColors, irisOuterMat, blushMat, eyebrowMat]);
+
+  const eyeOutlineGeo = useMemo(() => {
+    const shape = new THREE.Shape();
+    shape.absellipse(0, 0, 0.41, 0.35, 0, Math.PI * 2, false, 0);
+    const hole = new THREE.Path();
+    hole.absellipse(0, 0, 0.38, 0.32, 0, Math.PI * 2, false, 0);
+    shape.holes.push(hole);
+    return new THREE.ShapeGeometry(shape, 32);
+  }, []);
 
   const eyeWhiteGeo = useMemo(() => {
     const shape = new THREE.Shape();
@@ -436,6 +448,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     hl2: [number, number],
   ) => (
     <group ref={eyeRef} position={[eyeX, eyeY, 0.01]} key={side}>
+      {/* Eye outline ring */}
+      <mesh geometry={eyeOutlineGeo} material={eyeOutlineMat} position={[0, 0, -0.005]} />
       <mesh geometry={eyeWhiteGeo} material={eyeWhiteMat} />
       <mesh ref={irisRef} geometry={irisOuterGeo} position={[0, -0.03, 0.01]} material={irisOuterMat} />
       <mesh ref={pupilRef} geometry={pupilGeo} position={[0, -0.02, 0.02]} material={pupilMat} />
