@@ -427,7 +427,7 @@ export function useFaceAnimation(
     mouthIdlePhase.current += delta * 1.2;
     // Breathing-linked mouth movement (amplified)
     const mouthBreath = Math.sin(mouthIdlePhase.current) * 0.035 + Math.sin(mouthIdlePhase.current * 2.3) * 0.02;
-    const mouthBreathCurve = Math.sin(mouthIdlePhase.current * 0.7) * 0.05;
+    const mouthBreathCurve = Math.abs(Math.sin(mouthIdlePhase.current * 0.7)) * 0.03; // always >= 0, never frown
     const mouthBreathWidth = Math.sin(mouthIdlePhase.current * 1.1) * 0.025;
 
     // Occasional mouth quirks (like a small smile, lip purse, or twitch)

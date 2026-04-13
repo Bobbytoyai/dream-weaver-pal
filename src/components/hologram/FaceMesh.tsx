@@ -92,33 +92,30 @@ function buildMouthShape(curve: number, width: number, openness: number, round: 
   const isOpen = openness > 0.08 || round > 0.1;
   
   if (!isOpen) {
-    // ── MOUTH LINE — curved or straight ──
-    // curve=0 → perfectly straight line (Apple 😐), positive = smile, negative = sad
+    // ── MOUTH LINE — always uses bezier arcs for pointed/tapered ends ──
+    // curve=0 → straight line with pointed ends, positive = smile, negative = sad
+    // The bezier naturally tapers to points at the edges (like Apple emoji mouths)
     const depth = curve * 0.35;
     const sign = curve >= 0 ? 1 : -1;
     
-    if (Math.abs(curve) < 0.02) {
-      // Truly flat/straight line (neutral expression like Apple 😐)
-      shape.moveTo(-halfW, thickness / 2);
-      shape.lineTo(halfW, thickness / 2);
-      shape.lineTo(halfW, -thickness / 2);
-      shape.lineTo(-halfW, -thickness / 2);
-      shape.closePath();
-    } else {
-      // Curved smile/frown arc
-      shape.moveTo(-halfW, 0);
-      shape.bezierCurveTo(
-        -halfW * 0.5, -depth,
-        halfW * 0.5, -depth,
-        halfW, 0
-      );
-      shape.bezierCurveTo(
-        halfW * 0.5, -depth - thickness * sign,
-        -halfW * 0.5, -depth - thickness * sign,
-        -halfW, 0
-      );
-      shape.closePath();
-    }
+    // Use a tiny minimum depth so the bezier still creates a visible shape even when flat
+    const renderDepth = Math.abs(depth) < 0.001 ? 0.001 : depth;
+    const renderSign = renderDepth >= 0 ? 1 : -1;
+    
+    // Upper arc
+    shape.moveTo(-halfW, 0);
+    shape.bezierCurveTo(
+      -halfW * 0.5, -renderDepth,
+      halfW * 0.5, -renderDepth,
+      halfW, 0
+    );
+    // Lower arc (offset by thickness) — creates tapered pointed ends
+    shape.bezierCurveTo(
+      halfW * 0.5, -renderDepth - thickness * renderSign,
+      -halfW * 0.5, -renderDepth - thickness * renderSign,
+      -halfW, 0
+    );
+    shape.closePath();
   } else {
     // ── OPEN MOUTH — ellipse for speech animations ──
     const ellipseW = halfW * (0.7 + (1 - Math.min(1, round * 2)) * 0.3);
