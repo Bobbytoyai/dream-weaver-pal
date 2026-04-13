@@ -2122,9 +2122,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     ];
 
     return (
-      <div className="p-4 space-y-4">
+      <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
         {/* Search bar */}
-        <div className="relative">
+        <div className="relative animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
           <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input type="text" value={sessionSearch} onChange={e => setSessionSearch(e.target.value)}
             placeholder="Rechercher…"
@@ -2132,7 +2132,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </div>
 
         {/* Category cards — 5 on same line */}
-        <div className="flex gap-2 mt-2">
+        <div className="flex gap-2 mt-2 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
           {categoryCards.map(card => (
             <button key={card.key} onClick={card.onClick}
               className={`flex-1 min-w-0 aspect-square rounded-2xl bg-gradient-to-br ${card.bg} flex flex-col items-center justify-center gap-1.5 border-2 transition-all duration-200 active:scale-90 ${
@@ -2146,7 +2146,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </div>
 
         {/* Mini calendar — compact */}
-        <div className="bg-card rounded-3xl px-4 py-3 border border-border/20">
+        <div className="bg-card rounded-3xl px-4 py-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.15s" }}>
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-[14px] font-extrabold text-foreground capitalize">{monthName}</h4>
             <span className="text-base text-muted-foreground">📅</span>
@@ -2204,7 +2204,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         ) : (
           <div className="space-y-3">
             {dailySummaries.map(day => (
-              <div key={day.day} id={`day-${day.day}`} className="bg-card rounded-3xl p-5 border border-border/20 space-y-4 transition-all">
+              <div key={day.day} id={`day-${day.day}`} className="bg-card rounded-3xl p-5 border border-border/20 space-y-4 transition-all animate-fadeInUp" style={{ animationDelay: `${0.2 + dailySummaries.indexOf(day) * 0.05}s` }}>
                 {/* Day header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
@@ -2315,7 +2315,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const renderProfil = () => (
     <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
       {/* Avatar + Name + Age — compact hero card */}
-      <div className="bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/10 rounded-3xl p-4 border border-primary/10">
+      <div className="bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/10 rounded-3xl p-4 border border-primary/10 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-primary/15 flex items-center justify-center text-4xl shrink-0">
             👤
@@ -2343,7 +2343,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       </div>
 
       {/* Personality — square cards grid */}
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-2 gap-2.5 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
         {([
           ["calm", "😌", "Calme", "Doux et rassurant", "from-blue-400/15 to-blue-300/5"],
           ["energetic", "⚡", "Énergique", "Vif et enthousiaste", "from-amber-400/15 to-amber-300/5"],
@@ -2364,7 +2364,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       </div>
 
       {/* Interests — compact colored pills */}
-      <div className="bg-card rounded-2xl p-3 border border-border/20">
+      <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.15s" }}>
         <div className="flex items-center gap-2 mb-2">
           <span className="text-base">💡</span>
           <h4 className="text-[12px] font-extrabold text-foreground">Centres d'intérêt détectés</h4>
@@ -2390,7 +2390,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       </div>
 
       {/* Blocked topics — compact */}
-      <div className="bg-card rounded-2xl p-3 border border-border/20">
+      <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.2s" }}>
         <div className="flex items-center gap-2 mb-2">
           <span className="text-base">🚫</span>
           <h4 className="text-[12px] font-extrabold text-foreground">Sujets bloqués</h4>
@@ -2421,7 +2421,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       </div>
 
       {/* Save button */}
-      <div className="pt-1 pb-2">
+      <div className="pt-1 pb-2 animate-fadeInUp" style={{ animationDelay: "0.25s" }}>
         <button
           onClick={() => {
             onSettingsChange?.(settings);
@@ -2468,7 +2468,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
       {/* Card grid — home of settings */}
       {!reglagesSection && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
           {([
             ["voix", "🎤", "Voix & Sons", "Type, vitesse, couleur, effets", "from-blue-400/15 to-blue-300/5"],
             ["contenu", "📚", "Contenu", "Modes, thèmes, durée", "from-emerald-400/15 to-emerald-300/5"],
