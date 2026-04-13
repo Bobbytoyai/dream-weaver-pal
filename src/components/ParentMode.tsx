@@ -240,6 +240,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [settingsSaved, setSettingsSaved] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressInterval = useRef<number | null>(null);
+  const contentScrollRef = useRef<HTMLDivElement>(null);
   const [piperDownloading, setPiperDownloading] = useState(false);
   const [piperProgress, setPiperProgress] = useState<Record<string, number>>({});
   const [piperDone, setPiperDone] = useState(false);
