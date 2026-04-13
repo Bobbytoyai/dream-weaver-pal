@@ -77,37 +77,47 @@ function buildEyebrowShape(_archHeight: number = 0.06): THREE.Shape {
   return shape;
 }
 
-// ─── Mouth shape builder v4 — smiley arc style ──────────────────
-// At rest: curved arc (smiley smile) with thickness
-// When open: transitions to open mouth (ellipse) for speech
+// ─── Mouth shape builder v5 — smiley arc + open ellipse ──────────────────
+// At rest: visible curved smile arc (like a smiley emoji)
+// When speaking/shocked: opens into ellipse
 // Parameters: curve (-0.3 to 0.6), width (0-1), openness (0-1), round (0-1)
 
 function buildMouthShape(curve: number, width: number, openness: number, round: number): THREE.Shape {
   const shape = new THREE.Shape();
   
-  const halfW = (0.16 + width * 0.10) * (1 - round * 0.35);
-  const depth = curve * 0.22; // smile curve depth
-  const thickness = 0.022; // line thickness
+  const halfW = (0.14 + width * 0.08) * (1 - round * 0.35);
+  const thickness = 0.016;
   
-  // Blend between arc (closed) and ellipse (open)
-  const openBlend = Math.min(1, openness * 3 + round * 2); // 0 = arc, 1 = ellipse
+  // When is mouth "open"? Only for actual speech/surprise
+  const isOpen = openness > 0.08 || round > 0.1;
   
-  if (openBlend < 0.15) {
-    // ── Smiley arc mode (closed mouth) ──
-    // Top edge of smile arc
+  if (!isOpen) {
+    // ── SMILEY ARC — curved smile line ──
+    // depth controls how curved the smile is (positive = happy, negative = sad)
+    const depth = Math.abs(curve) > 0.01 ? curve * 0.35 : 0.06; // minimum visible curve
+    const sign = curve >= 0 ? 1 : -1;
+    const absDepth = Math.abs(depth);
+    
+    // Endpoints at edges
     shape.moveTo(-halfW, 0);
-    shape.quadraticCurveTo(-halfW * 0.3, -depth, 0, -depth);
-    shape.quadraticCurveTo(halfW * 0.3, -depth, halfW, 0);
-    // Bottom edge (thickness below)
-    shape.lineTo(halfW - 0.005, -thickness * 0.3);
-    shape.quadraticCurveTo(halfW * 0.3, -depth - thickness, 0, -depth - thickness);
-    shape.quadraticCurveTo(-halfW * 0.3, -depth - thickness, -halfW + 0.005, -thickness * 0.3);
+    // Main smile curve — single smooth bezier
+    shape.bezierCurveTo(
+      -halfW * 0.5, -depth,
+      halfW * 0.5, -depth,
+      halfW, 0
+    );
+    // Return path (bottom edge with thickness)
+    shape.bezierCurveTo(
+      halfW * 0.5, -depth - thickness * sign,
+      -halfW * 0.5, -depth - thickness * sign,
+      -halfW, 0
+    );
     shape.closePath();
   } else {
-    // ── Open mouth mode (ellipse for speech) ──
-    const ellipseW = halfW * (0.6 + (1 - openBlend) * 0.4);
-    const ellipseH = 0.02 + openness * 0.15 + round * 0.10;
-    const yOff = -depth * (1 - openBlend * 0.5);
+    // ── OPEN MOUTH — ellipse for speech animations ──
+    const ellipseW = halfW * (0.7 + (1 - Math.min(1, round * 2)) * 0.3);
+    const ellipseH = 0.025 + openness * 0.14 + round * 0.10;
+    const yOff = -(curve * 0.08);
     
     const segments = 32;
     for (let i = 0; i <= segments; i++) {
