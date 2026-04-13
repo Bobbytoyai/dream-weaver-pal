@@ -520,7 +520,7 @@ export function useBobbyVoiceCore({
     machineState === "LISTENING"
       ? "attentive"
       : machineState === "PROCESSING"
-        ? "thinking"
+        ? currentEmotion  // Keep child's detected emotion instead of "thinking"
         : machineState === "SPEAKING"
           ? currentEmotion
           : machineState === "ERROR"
