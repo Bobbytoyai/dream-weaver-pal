@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { Loader2, CloudUpload, LogIn, Trash2 } from "lucide-react";
 import type { ParentSession as Session, ParentAnalysis as Analysis } from "@/lib/bobby/parentDashboard";
