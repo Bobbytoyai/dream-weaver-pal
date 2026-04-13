@@ -249,14 +249,33 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(ps);
     if (rightPupilRef.current) rightPupilRef.current.scale.setScalar(ps);
 
-    // Eyelids (blink)
+    // Eyelids (blink) — natural slide from top, like a real eyelid
     const blinkClose = 1 - state.eyeOpenness;
+    const isSleepingNow = faceState === "sleepy";
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
       if (ref.current) {
         const coverAmount = Math.max(0, Math.min(1, blinkClose));
-        ref.current.scale.y = Math.max(0.01, coverAmount * 1.0);
-        ref.current.position.y = 0.68 - coverAmount * 0.76;
-        ref.current.visible = coverAmount > 0.02;
+        // Eyelid always full scale — it slides down from above the eye
+        ref.current.scale.y = 1;
+        ref.current.scale.x = 1;
+        // When open (coverAmount=0): eyelid sits fully above eye (hidden)
+        // When closed (coverAmount=1): eyelid slides down to cover eye center
+        const openY = 0.88;  // fully retracted above eye
+        const closedY = 0.0; // centered on eye = fully closed
+        // Ease the movement for natural feel
+        const easedCover = coverAmount * coverAmount * (3 - 2 * coverAmount); // smoothstep
+        let targetY = openY - easedCover * (openY - closedY);
+        
+        // Sleep mode: subtle eyelid flutter (like almost waking up)
+        if (isSleepingNow && coverAmount > 0.9) {
+          const flutterT = performance.now() * 0.001;
+          // Very subtle periodic lift — like REM sleep or almost waking
+          const flutter = Math.sin(flutterT * 0.3) * 0.02 + Math.sin(flutterT * 0.7) * 0.01;
+          targetY += Math.max(0, flutter);
+        }
+        
+        ref.current.position.y = targetY;
+        ref.current.visible = coverAmount > 0.01;
       }
     });
 
@@ -380,10 +399,11 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={pupilRef} geometry={pupilGeo} position={[0, -0.02, 0.02]} material={pupilMat} />
       <mesh position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       <mesh position={[hl2[0], hl2[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} />
-      <mesh ref={eyelidRef} position={[0, 0.72, 0.05]} material={eyelidMat}>
+      <mesh ref={eyelidRef} position={[0, 0.88, 0.05]} material={eyelidMat}>
         <shapeGeometry args={[(() => {
           const s = new THREE.Shape();
-          s.absellipse(0, 0, 0.42, 0.38, 0, Math.PI * 2, false, 0);
+          // Larger eyelid to fully cover the eye — no bleed-through
+          s.absellipse(0, 0, 0.48, 0.44, 0, Math.PI * 2, false, 0);
           return s;
         })(), 32]} />
       </mesh>
