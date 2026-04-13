@@ -2841,24 +2841,24 @@ const Admin = () => {
 
   // ═══════════════════════════════════════════════════════════════════
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${adminDark ? 'bg-[#0a0a0f]' : 'admin-light bg-gray-50'}`}>
+    <div className={`min-h-screen transition-colors duration-300 ${adminDark ? '' : 'admin-light'}`} style={{ background: "var(--admin-bg)" }}>
       <div className="max-w-4xl mx-auto px-4 py-5 space-y-4">
         {/* ── Header — compact ── */}
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate("/")} className="w-9 h-9 rounded-xl admin-card flex items-center justify-center hover:opacity-80 transition-all active:scale-95">
-            <ArrowLeft className="w-4 h-4 admin-text-muted" />
+          <button onClick={() => navigate("/")} className="w-9 h-9 rounded-xl flex items-center justify-center hover:opacity-80 transition-all active:scale-95" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
+            <ArrowLeft className="w-4 h-4" style={{ color: "var(--admin-text-muted)" }} />
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className={`text-xl font-bold tracking-tight ${adminDark ? 'text-white' : 'text-gray-900'}`}>Bobby Admin</h1>
-            <p className={`text-[11px] ${adminDark ? 'text-white/25' : 'text-gray-400'}`}>Tableau de bord central</p>
+            <h1 className="text-xl font-bold tracking-tight" style={{ color: "var(--admin-text)" }}>Bobby Admin</h1>
+            <p className="text-[11px]" style={{ color: "var(--admin-text-dim)" }}>Tableau de bord central</p>
           </div>
           <button onClick={() => setAdminDark(d => !d)}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95 ${adminDark ? 'bg-white/[0.06] hover:bg-white/[0.1]' : 'bg-gray-200 hover:bg-gray-300'}`}>
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
             {adminDark ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
           </button>
           <button onClick={() => { fetchEntries(); fetchStoreItems(); fetchCloudUsers(); fetchCloudStories(); fetchRealConversations(); fetchLiveStats(); fetchChartData(); toast.success("Données rafraîchies"); }}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95 ${adminDark ? 'bg-white/[0.06] hover:bg-white/[0.1]' : 'bg-gray-200 hover:bg-gray-300'}`}>
-            <RefreshCw className={`w-4 h-4 ${adminDark ? 'text-white/40' : 'text-gray-500'}`} />
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
+            <RefreshCw className="w-4 h-4" style={{ color: "var(--admin-text-muted)" }} />
           </button>
         </div>
 
