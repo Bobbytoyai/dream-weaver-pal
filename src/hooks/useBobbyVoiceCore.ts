@@ -449,6 +449,9 @@ export function useBobbyVoiceCore({
       stopSttRef.current();
       setMicArmed(false);
       setPartialText("");
+      // Clear any pending buffer
+      utteranceBufferRef.current = [];
+      if (utteranceTimerRef.current) { clearTimeout(utteranceTimerRef.current); utteranceTimerRef.current = null; }
       setLastRecognized(trimmedText);
 
       // Empathetic pre-reaction
