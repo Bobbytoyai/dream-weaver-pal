@@ -265,9 +265,7 @@ function FaceScene({ faceState, gazeRef, getViseme, emotionIntensity, emotionDur
     />
   );
 }
-    />
-  );
-}
+
 
 export default memo(HologramFace);
 export type { HologramFaceProps };
