@@ -1069,10 +1069,21 @@ const Admin = () => {
                       </div>
                     ))}
                   </div>
-                  <div className="flex gap-1.5 pt-1 border-t border-white/5">
+                  <div className="flex items-center gap-1.5 pt-1 border-t border-white/5">
                     <span className="text-[9px] text-white/20">{conv.messages.length} messages</span>
                     <span className="text-[9px] text-white/10">•</span>
                     <span className="text-[9px] text-white/20">Session: {conv.session_id.slice(0, 8)}…</span>
+                    <button
+                      onClick={() => learnFromSession(conv)}
+                      disabled={learningSessionId === conv.session_id}
+                      className="ml-auto flex items-center gap-1 text-[10px] px-2.5 py-1 rounded-lg bg-lime-500/15 text-lime-300 hover:bg-lime-500/25 disabled:opacity-50 transition-all font-semibold"
+                    >
+                      {learningSessionId === conv.session_id ? (
+                        <><RefreshCw className="w-3 h-3 animate-spin" /> Analyse…</>
+                      ) : (
+                        <><Brain className="w-3 h-3" /> Apprendre</>
+                      )}
+                    </button>
                   </div>
                 </div>
               ))}
