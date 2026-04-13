@@ -29,22 +29,9 @@ const MIN_SESSION_MS = 90_000;                      // 90s minimum session guara
 const SLEEP_TIMER_MS = 120_000;                     // 2min idle → sleep
 const ANTI_ECHO_COOLDOWN_MS = 400;
 
-// ─── Relance & goodbye messages ──────────────────────
-const RELANCE_MESSAGES = [
-  "Je t'écoute 💛 tu veux me dire quelque chose ?",
-  "Je suis toujours là 💛",
-  "N'hésite pas, je suis là pour toi 💛",
-];
-const GOODBYE_MESSAGES = [
-  "On se reparle après 💛",
-  "À tout à l'heure 💛",
-  "Je serai là quand tu voudras 💛",
-];
-const WELCOME_PHRASES = [
-  "Coucou 💛 je suis là, parle-moi !",
-  "Hey ! Je t'écoute 💛",
-  "Coucou ! Qu'est-ce que tu veux me raconter ? 💛",
-];
+const RELANCE_MESSAGES: string[] = [];
+const GOODBYE_MESSAGES: string[] = [];
+const WELCOME_PHRASES: string[] = [];
 
 function pickRandom(arr: string[]): string {
   return arr[Math.floor(Math.random() * arr.length)];
