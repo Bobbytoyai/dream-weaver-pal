@@ -156,6 +156,7 @@ Sinon laisse le tableau vide.`;
       ai_summary: analysis.summary,
       topics: analysis.topics_detected,
       detected_emotions: Object.keys(analysis.emotions ?? {}),
+      tags: analysis.tags ?? [],
     }).eq("id", sessionId);
 
     // Insert parent alerts if any detected
