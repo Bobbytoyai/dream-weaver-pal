@@ -627,6 +627,26 @@ const Admin = () => {
   }
   const [realConversations, setRealConversations] = useState<RealConversation[]>([]);
   const [realConvLoading, setRealConvLoading] = useState(false);
+  const [learningSessionId, setLearningSessionId] = useState<string | null>(null);
+
+  const learnFromSession = useCallback(async (conv: RealConversation) => {
+    setLearningSessionId(conv.session_id);
+    try {
+      const { data, error } = await supabase.functions.invoke("learn-from-conversations", {
+        body: { mode: "session", sessionId: conv.session_id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const qa = data?.total_qa_learned ?? 0;
+      const gaps = data?.total_gaps_filled ?? 0;
+      toast.success(`🧠 +${qa} Q&A, +${gaps} lacunes comblées depuis cette conversation !`);
+      fetchEntries();
+    } catch (e: any) {
+      toast.error("Erreur : " + (e.message || "inconnue"));
+    } finally {
+      setLearningSessionId(null);
+    }
+  }, [fetchEntries]);
 
   const fetchRealConversations = useCallback(async () => {
     setRealConvLoading(true);
