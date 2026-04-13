@@ -104,6 +104,8 @@ export default function BobbyQR() {
       setStep("sleeping");
     }
   };
+
+  const updateSetting = <K extends keyof ParentSettings>(key: K, val: ParentSettings[K]) => {
     const updated = { ...parentSettings, [key]: val };
     setParentSettings(updated);
     saveToCode(updated);
