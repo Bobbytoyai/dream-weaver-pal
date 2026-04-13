@@ -1345,20 +1345,20 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ ÉMOTIONS — 3 cols compact ═══ */}
       {Object.keys(avgEmotions).length > 0 && (
-        <div className="bg-card rounded-[18px] p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.3s" }}>
+        <div className="retro-card retro-card-tilt-5 p-3">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">💖</span>
-            <h3 className="text-[15px] font-black text-foreground">Émotions</h3>
+            <h3 className="text-[15px] font-black text-foreground uppercase">Émotions</h3>
           </div>
           <div className="grid grid-cols-3 gap-2">
-            {Object.entries(avgEmotions).filter(([, v]) => v > 0).sort(([, a], [, b]) => b - a).slice(0, 6).map(([key, value]) => {
+            {Object.entries(avgEmotions).filter(([, v]) => v > 0).sort(([, a], [, b]) => b - a).slice(0, 6).map(([key, value], ei) => {
               const info = emotionScoreLabels[key] || { label: key, emoji: "❓" };
-              const barColor = key === "joy" ? "from-emerald-400/30 to-emerald-300/10" : key === "curiosity" ? "from-blue-400/30 to-blue-300/10" : key === "excitement" ? "from-amber-400/30 to-amber-300/10" : key === "frustration" ? "from-red-400/30 to-red-300/10" : key === "fear" ? "from-purple-400/30 to-purple-300/10" : "from-muted/30 to-muted/10";
+              const retroBgs = ["var(--retro-green)", "var(--retro-blue)", "var(--retro-yellow)", "var(--retro-red)", "var(--retro-purple)", "var(--retro-orange)"];
               return (
-                <div key={key} className={`bg-gradient-to-br ${barColor} rounded-[14px] p-2 text-center border border-white/10`}>
+                <div key={key} className="border-2 border-black p-2 text-center" style={{ backgroundColor: retroBgs[ei % retroBgs.length] }}>
                   <span className="text-[20px] block">{info.emoji}</span>
                   <p className="text-[16px] font-black text-foreground leading-tight">{value}%</p>
-                  <p className="text-[9px] text-muted-foreground font-bold">{info.label}</p>
+                  <p className="text-[9px] text-foreground/60 font-black uppercase">{info.label}</p>
                 </div>
               );
             })}
@@ -1368,33 +1368,33 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ ÉVOLUTION 7 JOURS — compact chart ═══ */}
       {emotionChartData.some(d => d.hasData) && (
-        <div className="bg-card rounded-3xl p-5 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.35s" }}>
+        <div className="retro-card retro-card-tilt-6 p-5">
           <div className="flex items-center gap-2.5 mb-3">
             <span className="text-2xl">📈</span>
-            <h3 className="text-[17px] font-extrabold text-foreground">Évolution (7j)</h3>
+            <h3 className="text-[17px] font-black text-foreground uppercase">Évolution (7j)</h3>
           </div>
           <div className="w-full h-44">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={emotionChartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }} barCategoryGap="20%">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 9, fill: "hsl(var(--foreground))", fontWeight: 900 }} axisLine={false} tickLine={false} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 8, fill: "hsl(var(--foreground))" }} axisLine={false} tickLine={false} />
                 <Tooltip
-                  cursor={{ fill: "hsl(var(--muted))", opacity: 0.3, radius: 6 }}
+                  cursor={{ fill: "rgba(0,0,0,0.05)" }}
                   content={({ active, payload, label }) => {
                     if (!active || !payload?.length) return null;
                     const dataPoint = emotionChartData.find(d => d.name === label);
                     if (!dataPoint?.hasData) return null;
                     return (
-                      <div className="bg-card border border-border rounded-xl p-2 shadow-lg">
-                        <p className="text-[10px] font-extrabold text-foreground mb-1">{label}</p>
+                      <div className="border-2 border-black bg-white p-2" style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
+                        <p className="text-[10px] font-black text-foreground mb-1">{label}</p>
                         {payload.filter(p => p.dataKey !== "hasData" && (p.value as number) > 0).sort((a, b) => (b.value as number) - (a.value as number)).map(p => {
                           const cfg = emotionConfig[p.name as string] || { emoji: "❓", color: "#888" };
                           return (
                             <div key={p.name} className="flex items-center gap-1 py-0.5">
                               <span className="text-[9px]">{cfg.emoji}</span>
-                              <span className="text-[9px] text-foreground flex-1">{p.name}</span>
-                              <span className="text-[10px] font-bold" style={{ color: cfg.color }}>{p.value}%</span>
+                              <span className="text-[9px] text-foreground flex-1 font-bold">{p.name}</span>
+                              <span className="text-[10px] font-black" style={{ color: cfg.color }}>{p.value}%</span>
                             </div>
                           );
                         })}
@@ -1402,17 +1402,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     );
                   }}
                 />
-                <Bar dataKey="Joie" fill="hsl(145, 65%, 42%)" radius={[4, 4, 0, 0]} maxBarSize={10} />
-                <Bar dataKey="Curiosité" fill="hsl(210, 80%, 55%)" radius={[4, 4, 0, 0]} maxBarSize={10} />
-                <Bar dataKey="Excitation" fill="hsl(36, 90%, 50%)" radius={[4, 4, 0, 0]} maxBarSize={10} />
-                <Bar dataKey="Frustration" fill="hsl(0, 75%, 55%)" radius={[4, 4, 0, 0]} maxBarSize={10} />
+                <Bar dataKey="Joie" fill="hsl(145, 65%, 42%)" radius={[0, 0, 0, 0]} maxBarSize={10} />
+                <Bar dataKey="Curiosité" fill="hsl(210, 80%, 55%)" radius={[0, 0, 0, 0]} maxBarSize={10} />
+                <Bar dataKey="Excitation" fill="hsl(36, 90%, 50%)" radius={[0, 0, 0, 0]} maxBarSize={10} />
+                <Bar dataKey="Frustration" fill="hsl(0, 75%, 55%)" radius={[0, 0, 0, 0]} maxBarSize={10} />
               </BarChart>
             </ResponsiveContainer>
           </div>
           <div className="flex flex-wrap gap-2 mt-1">
             {Object.entries(emotionConfig).slice(0, 4).map(([label, cfg]) => (
-              <span key={label} className="flex items-center gap-1 text-[9px] text-muted-foreground font-bold">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cfg.color }} /> {cfg.emoji} {label}
+              <span key={label} className="flex items-center gap-1 text-[9px] text-foreground/60 font-black">
+                <span className="w-2 h-2" style={{ backgroundColor: cfg.color }} /> {cfg.emoji} {label}
               </span>
             ))}
           </div>
