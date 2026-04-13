@@ -164,8 +164,10 @@ export default function BobbyCloudAuth() {
       <label className="text-xs font-black uppercase text-black/70">{label}</label>
       <input
         {...props}
-        className="w-full px-3 py-2.5 text-sm font-bold border-3 border-black bg-white text-black outline-none focus:ring-2 focus:ring-black/20 placeholder:text-black/30"
-        style={{ borderWidth: "3px" }}
+        className="w-full px-3 py-2.5 text-sm font-bold border-3 border-black bg-white text-black outline-none focus:ring-2 focus:ring-black/20 placeholder:text-black/30 select-text"
+        style={{ borderWidth: "3px", WebkitUserSelect: "text", userSelect: "text" }}
+        autoComplete={props.type === "password" ? "new-password" : props.autoComplete || "on"}
+        onFocus={e => e.target.select()}
       />
     </div>
   );
@@ -213,7 +215,7 @@ export default function BobbyCloudAuth() {
             onClick={() => navigate(returnTo, { replace: true })}
             className="text-xs font-bold text-black/40 hover:text-black/60 underline"
           >
-            Plus tard
+            ← Retour
           </button>
         </div>
       </RetroCard>
