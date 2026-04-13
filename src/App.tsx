@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -27,7 +27,7 @@ function PageFallback() {
 // Fix: clear any orphaned auth locks on startup so Supabase queries don't hang
 try {
   Object.keys(localStorage).forEach(k => {
-    if (k.includes("auth-token-code-verifier") || k.includes("supabase.auth.token")) {
+    if (k.startsWith("lock:sb-") && k.endsWith("-auth-token")) {
       try { localStorage.removeItem(k); } catch {}
     }
   });
