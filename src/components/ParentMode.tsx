@@ -1855,7 +1855,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 )}
                 {!analysis?.audio_path && fullPlaybackActive && (
                   <div className="mb-4">
-                    <div className="w-full h-2 bg-muted/40 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-muted/40 rounded-full overflow-hidden cursor-pointer"
+                      onClick={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const pct = ((e.clientX - rect.left) / rect.width);
+                        const idx = Math.round(pct * (sessionMessages.length - 1));
+                        setFullPlaybackIdx(Math.max(0, Math.min(sessionMessages.length - 1, idx)));
+                      }}>
                       <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-300"
                         style={{ width: `${((fullPlaybackIdx) / Math.max(1, sessionMessages.length)) * 100}%` }} />
                     </div>
@@ -1867,10 +1873,20 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 )}
                 <div className="flex items-center justify-center gap-3">
                   {analysis?.audio_path ? (
-                    <button onClick={() => playAudio(analysis.audio_path!)}
-                      className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-primary/25 active:scale-95">
-                      {playingAudio === analysis.audio_path ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-0.5" />}
-                    </button>
+                    <>
+                      <button onClick={() => skipAudio(-10)}
+                        className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:bg-muted/70 transition-all active:scale-90">
+                        <SkipBack className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => playAudio(analysis.audio_path!)}
+                        className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-primary/25 active:scale-95">
+                        {playingAudio === analysis.audio_path ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-0.5" />}
+                      </button>
+                      <button onClick={() => skipAudio(10)}
+                        className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:bg-muted/70 transition-all active:scale-90">
+                        <SkipForward className="w-4 h-4" />
+                      </button>
+                    </>
                   ) : (
                     <div className="flex items-center gap-2">
                       {!fullPlaybackActive ? (
@@ -1880,9 +1896,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                         </button>
                       ) : (
                         <>
+                          <button onClick={() => { if (fullPlaybackIdx > 0) setFullPlaybackIdx(i => Math.max(0, i - 1)); }}
+                            className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:bg-muted/70 transition-all active:scale-90">
+                            <SkipBack className="w-4 h-4" />
+                          </button>
                           <button onClick={toggleFullPlaybackPause}
                             className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center hover:opacity-90 transition-all shadow-lg shadow-primary/25 active:scale-95">
                             {fullPlaybackLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : fullPlaybackPaused ? <Play className="w-6 h-6 ml-0.5" /> : <Pause className="w-6 h-6" />}
+                          </button>
+                          <button onClick={() => { if (fullPlaybackIdx < sessionMessages.length - 1) setFullPlaybackIdx(i => i + 1); }}
+                            className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:bg-muted/70 transition-all active:scale-90">
+                            <SkipForward className="w-4 h-4" />
                           </button>
                           <button onClick={stopFullPlayback}
                             className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center text-destructive hover:bg-destructive/20 transition-all border border-destructive/15">
@@ -1905,14 +1929,37 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     </button>
                   ))}
                 </div>
-                {activeMessageIdx >= 0 && sessionMessages[activeMessageIdx] && (playingAudio || fullPlaybackActive) && (
-                  <div className={`mt-3 rounded-2xl p-3 text-[12px] leading-relaxed font-medium ${
-                    sessionMessages[activeMessageIdx].role === "user" ? "bg-muted/40 border-l-3 border-l-accent" : "bg-primary/6 border-l-3 border-l-primary"
-                  }`}>
-                    <span className="text-[10px] font-black text-muted-foreground">
-                      {sessionMessages[activeMessageIdx].role === "user" ? `👦 ${displayName}` : "🤖 Bobby"}
-                    </span>
-                    <p className="text-foreground mt-0.5 line-clamp-2">{sessionMessages[activeMessageIdx].content}</p>
+                {/* Karaoke-style transcription — scrolling messages with active highlight */}
+                {(playingAudio || fullPlaybackActive) && sessionMessages.length > 0 && (
+                  <div className="mt-3 max-h-36 overflow-y-auto rounded-2xl bg-muted/20 border border-border/10 scroll-smooth">
+                    {sessionMessages.map((msg, i) => (
+                      <div key={msg.id || i}
+                        onClick={() => {
+                          if (analysis?.audio_path) {
+                            const pct = (i / sessionMessages.length) * 100;
+                            seekAudio(pct);
+                            setActiveMessageIdx(i);
+                          } else if (fullPlaybackActive) {
+                            setFullPlaybackIdx(i);
+                          }
+                        }}
+                        className={`px-3 py-2 cursor-pointer transition-all duration-300 ${
+                          i === activeMessageIdx || (fullPlaybackActive && i === fullPlaybackIdx)
+                            ? "bg-primary/12 border-l-3 border-l-primary"
+                            : i < (fullPlaybackActive ? fullPlaybackIdx : activeMessageIdx)
+                              ? "opacity-40"
+                              : "opacity-70"
+                        }`}>
+                        <span className="text-[9px] font-black text-muted-foreground">
+                          {msg.role === "user" ? `👦 ${displayName}` : "🤖 Bobby"}
+                        </span>
+                        <p className={`text-[11px] leading-snug mt-0.5 font-medium ${
+                          i === activeMessageIdx || (fullPlaybackActive && i === fullPlaybackIdx)
+                            ? "text-foreground font-bold"
+                            : "text-foreground/70"
+                        }`}>{msg.content?.slice(0, 120)}{(msg.content?.length || 0) > 120 ? "…" : ""}</p>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
