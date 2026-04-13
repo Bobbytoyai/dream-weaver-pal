@@ -449,7 +449,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         upperLipRef.current.geometry.dispose();
         upperLipRef.current.geometry = newGeo;
         // Hide smile line when mouth is wide open (oval takes over)
-        (upperLipRef.current.material as THREE.MeshBasicMaterial).opacity = isOpen ? Math.max(0, 1 - mo * 4) : 1;
+        (upperLipRef.current.material as THREE.MeshBasicMaterial).opacity = isOpen ? 0 : 1;
       }
 
       // Open mouth oval (only when speaking/open)
