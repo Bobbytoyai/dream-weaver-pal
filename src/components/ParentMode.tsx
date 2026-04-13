@@ -1221,17 +1221,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           }));
         if (radarData.length < 3) return null;
         return (
-          <div className="bg-card rounded-3xl p-4 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.2s" }}>
+          <div className="retro-card retro-card-tilt-3 p-4" style={{ backgroundColor: 'var(--retro-blue)' }}>
             <div className="flex items-center gap-2.5 mb-2">
               <span className="text-2xl">🎯</span>
-              <h3 className="text-[17px] font-extrabold text-foreground">Intérêts de {displayName}</h3>
+              <h3 className="text-[17px] font-black text-foreground uppercase">Intérêts de {displayName}</h3>
             </div>
             <ResponsiveContainer width="100%" height={200}>
               <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="65%">
-                <PolarGrid stroke="hsl(var(--border))" strokeOpacity={0.4} />
-                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 700 }} />
+                <PolarGrid stroke="rgba(0,0,0,0.15)" />
+                <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "hsl(var(--foreground))", fontWeight: 900 }} />
                 <PolarRadiusAxis tick={false} axisLine={false} />
-                <Radar name="Intérêt" dataKey="score" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.25} strokeWidth={2.5} />
+                <Radar name="Intérêt" dataKey="score" stroke="hsl(var(--foreground))" fill="hsl(var(--foreground))" fillOpacity={0.15} strokeWidth={2.5} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
@@ -1240,55 +1240,52 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ ALERTES BOBBY SÉCURITÉ ═══ */}
       {safetyAlerts.length > 0 && showSafetyAlerts && (
-        <div className="bg-card rounded-2xl p-3 border-2 border-destructive/30">
+        <div className="retro-card p-3 border-4 border-black" style={{ backgroundColor: 'var(--retro-red)' }}>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🛡️</span>
-            <h3 className="text-[14px] font-extrabold text-destructive">Alertes Sécurité</h3>
-            <span className="ml-auto text-[9px] px-2 py-0.5 rounded-full bg-destructive text-destructive-foreground font-bold">{safetyAlerts.length}</span>
+            <h3 className="text-[14px] font-black text-foreground uppercase">Alertes Sécurité</h3>
+            <span className="ml-auto text-[9px] px-2 py-0.5 border-2 border-black bg-white text-foreground font-black">{safetyAlerts.length}</span>
           </div>
           <div className="space-y-1.5 max-h-40 overflow-y-auto">
             {safetyAlerts.slice(0, 10).map((alert, i) => (
-              <div key={i} className={`flex items-start gap-2 p-2 rounded-xl ${
-                alert.severity === "CRITICAL" ? "bg-destructive/10" : "bg-amber-400/10"
-              }`}>
+              <div key={i} className="flex items-start gap-2 p-2 border-2 border-black bg-white">
                 <span className="text-sm mt-0.5">{alert.severity === "CRITICAL" ? "🔴" : "🟡"}</span>
                 <div className="flex-1 min-w-0">
-                  <span className="text-[10px] font-bold text-foreground">{alert.category.replace(/_/g, " ")}</span>
-                  <p className="text-[10px] text-foreground/70">«{alert.keyword}»</p>
+                  <span className="text-[10px] font-black text-foreground">{alert.category.replace(/_/g, " ")}</span>
+                  <p className="text-[10px] text-foreground/70 font-bold">«{alert.keyword}»</p>
                 </div>
               </div>
             ))}
           </div>
           <div className="flex gap-2 mt-2">
             <button onClick={() => { clearSafetyAlertRecords(); setSafetyAlerts([]); }}
-              className="flex-1 text-[10px] font-bold py-1.5 rounded-xl bg-muted text-muted-foreground">Effacer</button>
+              className="flex-1 text-[10px] font-black py-1.5 border-2 border-black bg-white text-foreground uppercase">Effacer</button>
             <button onClick={() => setShowSafetyAlerts(false)}
-              className="flex-1 text-[10px] font-bold py-1.5 rounded-xl bg-destructive/10 text-destructive">Fermer</button>
+              className="flex-1 text-[10px] font-black py-1.5 border-2 border-black bg-foreground text-background uppercase">Fermer</button>
           </div>
         </div>
       )}
       {safetyAlerts.length > 0 && !showSafetyAlerts && (
         <button onClick={() => setShowSafetyAlerts(true)}
-          className="w-full flex items-center justify-center gap-2 py-2 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-[12px] font-extrabold">
+          className="w-full flex items-center justify-center gap-2 py-2 border-4 border-black bg-[var(--retro-red)] text-foreground text-[12px] font-black uppercase"
+          style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
           🛡️ {safetyAlerts.length} alerte{safetyAlerts.length > 1 ? "s" : ""}
         </button>
       )}
 
       {/* ═══ ALERTES SMART ═══ */}
       {smartAlerts.length > 0 && (
-        <div className="bg-card rounded-2xl p-3 border border-destructive/15">
+        <div className="retro-card p-3" style={{ backgroundColor: 'var(--retro-orange)' }}>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🔔</span>
-            <h3 className="text-[14px] font-extrabold text-foreground">Alertes</h3>
-            <span className="ml-auto text-[9px] px-2 py-0.5 rounded-full bg-destructive/10 text-destructive font-bold">{smartAlerts.length}</span>
+            <h3 className="text-[14px] font-black text-foreground uppercase">Alertes</h3>
+            <span className="ml-auto text-[9px] px-2 py-0.5 border-2 border-black bg-white text-foreground font-black">{smartAlerts.length}</span>
           </div>
           <div className="space-y-1.5">
             {smartAlerts.map((alert, i) => (
-              <div key={i} className={`flex items-start gap-2 p-2 rounded-xl ${
-                alert.severity === "critical" ? "bg-destructive/10" : "bg-muted/40"
-              }`}>
+              <div key={i} className="flex items-start gap-2 p-2 border-2 border-black bg-white">
                 <span className="text-sm">{alert.severity === "critical" ? "🔴" : "🟡"}</span>
-                <p className="text-[12px] text-foreground leading-relaxed">{alert.message}</p>
+                <p className="text-[12px] text-foreground leading-relaxed font-bold">{alert.message}</p>
               </div>
             ))}
           </div>
