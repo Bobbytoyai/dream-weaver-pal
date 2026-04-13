@@ -1858,7 +1858,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   const progressPct = fullPlaybackActive ? ((fullPlaybackIdx) / Math.max(1, sessionMessages.length)) * 100 : 0;
                   const elapsedSec = Math.round((progressPct / 100) * totalDur);
                   return (
-                  <div className="mb-4">
+                  <div className="mb-4 relative">
                     <input type="range" min={0} max={100} step={0.5} value={progressPct}
                       onChange={(e) => {
                         const pct = parseFloat(e.target.value) / 100;
@@ -1873,13 +1873,23 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                           startFullPlayback(clampedIdx);
                         }
                       }}
-                      className="w-full h-2 rounded-full appearance-none cursor-pointer bg-muted/40
+                      className={`w-full h-2 rounded-full appearance-none cursor-pointer bg-muted/40
                         [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-md
-                        [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-0"
-                      style={{ background: `linear-gradient(to right, hsl(var(--primary)) ${progressPct}%, hsl(var(--muted)) ${progressPct}%)` }}
+                        [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-0
+                        ${fullPlaybackLoading ? "opacity-60" : ""}`}
+                      style={{ background: fullPlaybackLoading
+                        ? `repeating-linear-gradient(90deg, hsl(var(--primary)/0.4) 0%, hsl(var(--primary)) 50%, hsl(var(--primary)/0.4) 100%)`
+                        : `linear-gradient(to right, hsl(var(--primary)) ${progressPct}%, hsl(var(--muted)) ${progressPct}%)` }}
                     />
+                    {fullPlaybackLoading && (
+                      <div className="absolute inset-x-0 top-0 h-2 rounded-full overflow-hidden pointer-events-none">
+                        <div className="h-full w-1/3 bg-primary/50 rounded-full animate-[shimmer_1.2s_ease-in-out_infinite]"
+                          style={{ marginLeft: `${progressPct - 5}%` }} />
+                      </div>
+                    )}
                     <div className="flex justify-between mt-1.5">
                       <span className="text-[10px] text-muted-foreground font-mono font-bold">
+                        {fullPlaybackLoading && <Loader2 className="w-3 h-3 inline-block mr-1 animate-spin" />}
                         {`${Math.floor(elapsedSec / 60)}:${String(Math.floor(elapsedSec % 60)).padStart(2, "0")}`}
                       </span>
                       <span className="text-[10px] text-muted-foreground font-mono font-bold">
