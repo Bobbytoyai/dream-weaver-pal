@@ -613,6 +613,48 @@ const Admin = () => {
     setLoadingInteractions(false);
   }, [interactions]);
 
+  // Real user conversations from DB
+  interface RealConversation {
+    session_id: string;
+    child_name: string;
+    child_age: number;
+    started_at: string;
+    messages: { role: string; content: string; detected_emotion: string | null; created_at: string }[];
+    topics: string[] | null;
+    detected_emotions: string[] | null;
+  }
+  const [realConversations, setRealConversations] = useState<RealConversation[]>([]);
+  const [realConvLoading, setRealConvLoading] = useState(false);
+
+  const fetchRealConversations = useCallback(async () => {
+    setRealConvLoading(true);
+    const { data: sessions } = await supabase
+      .from("child_sessions")
+      .select("id, child_name, child_age, started_at, topics, detected_emotions")
+      .order("started_at", { ascending: false })
+      .limit(50);
+    if (!sessions?.length) { setRealConvLoading(false); return; }
+
+    const { data: messages } = await supabase
+      .from("session_messages")
+      .select("session_id, role, content, detected_emotion, created_at")
+      .in("session_id", sessions.map(s => s.id))
+      .order("created_at", { ascending: true });
+
+    const convs: RealConversation[] = sessions.map(s => ({
+      session_id: s.id,
+      child_name: s.child_name,
+      child_age: s.child_age,
+      started_at: s.started_at,
+      topics: s.topics,
+      detected_emotions: s.detected_emotions,
+      messages: (messages || []).filter(m => m.session_id === s.id),
+    })).filter(c => c.messages.length > 0);
+
+    setRealConversations(convs);
+    setRealConvLoading(false);
+  }, []);
+
   const fetchEntries = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase.from("knowledge_base").select("*").order("priority", { ascending: false });
@@ -639,7 +681,7 @@ const Admin = () => {
   }, []);
 
   useEffect(() => {
-    if (authenticated) { fetchEntries(); fetchCloudStories(); fetchStoreItems(); fetchCloudUsers(); }
+    if (authenticated) { fetchEntries(); fetchCloudStories(); fetchStoreItems(); fetchCloudUsers(); loadInteractions(); fetchRealConversations(); }
   }, [authenticated, fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers]);
 
   // ─── Derived ───
@@ -882,7 +924,7 @@ const Admin = () => {
   // ═══════════════════════════════════════════════════════════════════
   // INTERACTIONS 10K — Category detail (age filter + list)
   // ═══════════════════════════════════════════════════════════════════
-  if (topSection === "interactions" && interactionCat) {
+  if (topSection === "interactions" && interactionCat && interactionCat !== "real_conversations") {
     const catConfig = INTERACTION_CATEGORIES.find(c => c.id === interactionCat);
     const totalForCat = interactions?.filter(i => i.category === interactionCat).length || 0;
 
@@ -937,6 +979,81 @@ const Admin = () => {
     );
   }
 
+  // ── Real user conversations detail view ──
+  if (topSection === "interactions" && interactionCat === "real_conversations") {
+    return (
+      <>
+      {detailPortal}
+      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+            <span className="text-2xl">💬</span>
+            <div>
+              <h1 className="text-xl font-bold text-white">Conversations réelles</h1>
+              <p className="text-white/40 text-xs">{realConversations.length} sessions enregistrées — données pour améliorer Bobby</p>
+            </div>
+          </div>
+
+          {realConvLoading ? (
+            <div className="text-center text-white/50 py-12 animate-pulse">Chargement des conversations…</div>
+          ) : realConversations.length === 0 ? (
+            <div className="text-center py-12">
+              <span className="text-4xl block mb-2">📭</span>
+              <p className="text-white/30 text-sm">Aucune conversation enregistrée pour le moment</p>
+              <p className="text-white/20 text-xs mt-1">Les conversations des utilisateurs apparaîtront ici</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {realConversations.map(conv => (
+                <div key={conv.session_id} className="bg-white/5 backdrop-blur rounded-2xl p-4 border border-white/10 space-y-3">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-bold">{conv.child_name}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">{conv.child_age} ans</span>
+                      {conv.detected_emotions?.map((e, i) => (
+                        <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300">{e}</span>
+                      ))}
+                    </div>
+                    <span className="text-[10px] text-white/20">{new Date(conv.started_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                  </div>
+                  {conv.topics?.length ? (
+                    <div className="flex gap-1 flex-wrap">
+                      {conv.topics.map((t, i) => (
+                        <span key={i} className="text-[8px] px-1.5 py-0.5 rounded bg-white/10 text-white/40">#{t}</span>
+                      ))}
+                    </div>
+                  ) : null}
+                  <div className="space-y-1.5 max-h-60 overflow-y-auto">
+                    {conv.messages.map((msg, i) => (
+                      <div key={i} className="flex gap-2">
+                        <span className={`text-[10px] shrink-0 mt-0.5 ${msg.role === "user" ? "text-blue-400" : "text-green-400"}`}>
+                          {msg.role === "user" ? "👦" : "🤖"}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-[11px] ${msg.role === "user" ? "text-white/80" : "text-white/50"}`}>{msg.content}</p>
+                          {msg.detected_emotion && (
+                            <span className="text-[8px] text-pink-400/50">{msg.detected_emotion}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-1.5 pt-1 border-t border-white/5">
+                    <span className="text-[9px] text-white/20">{conv.messages.length} messages</span>
+                    <span className="text-[9px] text-white/10">•</span>
+                    <span className="text-[9px] text-white/20">Session: {conv.session_id.slice(0, 8)}…</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      </>
+    );
+  }
+
   // ═══════════════════════════════════════════════════════════════════
   // INTERACTIONS — Category grid
   // ═══════════════════════════════════════════════════════════════════
@@ -957,6 +1074,18 @@ const Admin = () => {
             <div className="text-center text-white/50 py-12">Chargement des interactions…</div>
           ) : (
             <div className="grid grid-cols-3 gap-3">
+              {/* Real conversations card — always first */}
+              <button onClick={() => { setInteractionCat("real_conversations"); setSearch(""); }}
+                className="aspect-square bg-gradient-to-br from-emerald-500/10 to-teal-500/10 hover:from-emerald-500/20 hover:to-teal-500/20 backdrop-blur rounded-2xl p-3 border border-emerald-500/20 hover:border-emerald-500/40 transition-all text-left flex flex-col justify-between group"
+              >
+                <span className="text-2xl">💬</span>
+                <div>
+                  <p className="text-lg font-bold text-white">{realConversations.length}</p>
+                  <h3 className="text-[11px] font-semibold text-emerald-400">Conversations réelles</h3>
+                  <p className="text-[8px] text-white/30 mt-0.5">Sessions utilisateurs enregistrées</p>
+                </div>
+              </button>
+
               {INTERACTION_CATEGORIES.map(cat => {
                 const count = interactionCategoryCounts[cat.id] || 0;
                 if (count === 0) return null;
@@ -2578,7 +2707,6 @@ const Admin = () => {
               onClick={() => {
                 setTopSection(section.id);
                 setSearch("");
-                if (section.id === "interactions") loadInteractions();
               }}
             />
           ))}
