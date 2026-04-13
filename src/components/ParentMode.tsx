@@ -1930,7 +1930,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   ))}
                 </div>
                 {/* Karaoke-style transcription — scrolling messages with active highlight */}
-                {(playingAudio || fullPlaybackActive) && sessionMessages.length > 0 && (
+                {(playingAudio || fullPlaybackActive) && sessionMessages.length > 0 && (() => {
+                  const activeIdx = fullPlaybackActive ? fullPlaybackIdx : activeMessageIdx;
+                  // Auto-scroll: after render, scroll active item into view
+                  setTimeout(() => {
+                    document.getElementById(`karaoke-msg-${activeIdx}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }, 50);
+                  return (
                   <div className="mt-3 max-h-36 overflow-y-auto rounded-2xl bg-muted/20 border border-border/10 scroll-smooth">
                     {sessionMessages.map((msg, i) => (
                       <div key={i}
