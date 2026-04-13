@@ -201,9 +201,7 @@ const tabs: { id: Tab; icon: any; label: string; emoji?: string }[] = [
   { id: "sessions", icon: MessageSquare, label: "Sessions", emoji: "💬" },
   { id: "activites", icon: Gamepad2, label: "Activités", emoji: "🎮" },
   { id: "cloud", icon: CloudUpload, label: "Cloud", emoji: "☁️" },
-  { id: "profil", icon: User, label: "Profil", emoji: "👤" },
   { id: "reglages", icon: Settings, label: "Réglages", emoji: "⚙️" },
-  { id: "personnalisation", icon: Eye, label: "Perso", emoji: "🎨" },
   { id: "confidentialite", icon: Shield, label: "Privé", emoji: "🔒" },
 ];
 
@@ -234,7 +232,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [audioDuration, setAudioDuration] = useState(0);
   const [newBlockedTopic, setNewBlockedTopic] = useState("");
   const [activeMessageIdx, setActiveMessageIdx] = useState<number>(-1);
-  const [reglagesSection, setReglagesSection] = useState<"voix" | "limites" | null>(null);
+  const [reglagesSection, setReglagesSection] = useState<"voix" | "limites" | "personnalisation" | "profil" | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string; description: string; confirmLabel?: string;
     variant?: "danger" | "warning"; onConfirm: () => void;
@@ -2281,6 +2279,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const renderProfil = () => (
     <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
+      {/* Back button when accessed from Réglages */}
+      {reglagesSection === "profil" && (
+        <button onClick={() => setReglagesSection(null)} className="flex items-center gap-1.5 text-primary text-[13px] font-bold mb-1">
+          <ArrowLeft className="w-4 h-4" /> Retour aux réglages
+        </button>
+      )}
       {/* Avatar + Name + Age — compact hero card */}
       <div className="bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/10 rounded-3xl p-4 border border-primary/10 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         <div className="flex items-center gap-4">
@@ -2471,6 +2475,22 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       );
     }
 
+    if (reglagesSection === "personnalisation") {
+      return (
+        <BobbyCustomizer
+          settings={settings}
+          onUpdate={(key, value) => updateSetting(key, value)}
+          onBack={() => setReglagesSection(null)}
+          onSave={handleSave}
+          saved={settingsSaved}
+        />
+      );
+    }
+
+    if (reglagesSection === "profil") {
+      return renderProfil();
+    }
+
     return (
       <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
         <h2 className="text-[18px] font-black text-foreground animate-fadeInUp">⚙️ Réglages</h2>
@@ -2478,6 +2498,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           {([
             ["voix", "🎤", "Voix & Sons", "Profils vocaux, vitesse, ton", "from-blue-400/15 to-blue-300/5"],
             ["limites", "⏱️", "Limites & Contrôle", "Temps, nuit, interactions, sujets", "from-amber-400/15 to-amber-300/5"],
+            ["personnalisation", "🎨", "Personnaliser", "Apparence, couleurs, style", "from-rose-400/15 to-pink-300/5"],
+            ["profil", "👤", "Profil enfant", "Intérêts, mémoire, préférences", "from-violet-400/15 to-purple-300/5"],
           ] as const).map(([key, emoji, label, desc, gradient]) => (
             <button key={key} onClick={() => setReglagesSection(key)}
               className={`bg-gradient-to-br ${gradient} rounded-2xl p-5 text-center transition-all duration-200 active:scale-95 border-2 border-transparent hover:border-primary/15`}>
@@ -3187,18 +3209,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             childAge={settings.childAge}
           />
         );
-        case "profil": return renderProfil();
+        case "profil":
+        case "personnalisation":
+          // Route through reglages
+          return renderReglages();
         case "reglages": return renderReglages();
         case "cloud": return renderCloud();
-        case "personnalisation": return (
-          <BobbyCustomizer
-            settings={settings}
-            onUpdate={(key, value) => updateSetting(key, value)}
-            onBack={() => setActiveTab("home")}
-            onSave={() => { onSettingsChange?.(settings); setSettingsSaved(true); setTimeout(() => setSettingsSaved(false), 2000); }}
-            saved={settingsSaved}
-          />
-        );
         case "confidentialite": return renderConfidentialite();
         default: return renderDashboard();
       }
@@ -3348,7 +3364,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           ) : null;
         })()}
 
-        {/* ── 6 square cards — 3x2 grid ── */}
+        {/* ── 5 square cards — grid ── */}
         <div className="grid grid-cols-3 gap-2.5">
           {[
             { id: "dashboard" as Tab, emoji: "📊", label: "Tableau de bord", color: "from-blue-400/25 to-indigo-400/10", border: "border-blue-300/25" },
@@ -3356,8 +3372,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               badge: sessions.filter(s => !analyses.some(a => a.session_id === s.id)).length || undefined },
             { id: "activites" as Tab, emoji: "🛒", label: "Bobby Store", color: "from-orange-400/25 to-amber-400/10", border: "border-orange-300/25" },
             { id: "cloud" as Tab, emoji: "☁️", label: "Bobby Cloud", color: "from-violet-400/25 to-purple-400/10", border: "border-violet-300/25" },
-            { id: "personnalisation" as Tab, emoji: "🎨", label: "Personnaliser", color: "from-rose-400/25 to-pink-400/10", border: "border-rose-300/25" },
-            { id: "profil" as Tab, emoji: "👤", label: "Profil", color: "from-pink-400/25 to-rose-400/10", border: "border-pink-300/25" },
             { id: "reglages" as Tab, emoji: "⚙️", label: "Réglages", color: "from-cyan-400/25 to-sky-400/10", border: "border-cyan-300/25" },
           ].map((card, i) => (
             <button key={card.id} onClick={() => setActiveTab(card.id)}
@@ -3372,23 +3386,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             </button>
           ))}
         </div>
-
-        {/* ── Last session quick preview ── */}
-        {sessions.length > 0 && (
-          <button onClick={() => { analyzeSession(sessions[0]); }}
-            className="w-full bg-card rounded-3xl p-4 border border-border/15 hover:border-primary/20 transition-all text-left flex items-center gap-4 active:scale-[0.98]">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-              <span className="text-2xl">🕐</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-extrabold text-foreground">Dernière session</p>
-              <p className="text-[12px] text-muted-foreground font-medium truncate">
-                {formatDate(sessions[0].started_at)} • {sessions[0].message_count} messages • {formatDuration(sessions[0].duration_seconds)}
-              </p>
-            </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
-          </button>
-        )}
       </div>
     );
   };
