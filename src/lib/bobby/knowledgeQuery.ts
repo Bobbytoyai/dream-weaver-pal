@@ -404,6 +404,322 @@ const SEMANTIC_FIELDS: Record<string, string[]> = {
   "pleurer emotion":["larme", "tristesse", "emotion", "soulager", "exprimer", "douleur", "consoler"],
   "respiration calme":["calmer", "stress", "detendre", "technique", "zen", "meditation", "souffle"],
   consoler:   ["tristesse", "calin", "ecouter", "ami", "soutenir", "empathie", "reconforter"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🚽 Corps & Besoins quotidiens (pipi, caca, hygiène, etc.)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  pipi:       ["toilette", "wc", "envie", "vessie", "propre", "corps", "urine", "pot", "couche", "nuit"],
+  caca:       ["toilette", "wc", "corps", "ventre", "propre", "pot", "couche", "constipe", "digestion"],
+  toilette:   ["pipi", "caca", "wc", "propre", "hygiene", "laver", "papier", "tirer chasse", "pot"],
+  pot:        ["bebe", "propre", "pipi", "caca", "apprentissage", "couche", "toilette"],
+  couche:     ["bebe", "pipi", "caca", "changer", "propre", "nuit", "pot"],
+  propre:     ["toilette", "hygiene", "laver", "douche", "bain", "savon", "mains"],
+  prout:      ["pet", "gaz", "ventre", "drole", "corps", "bruit", "rigolo", "digestion"],
+  pet:        ["prout", "gaz", "ventre", "drole", "corps", "bruit", "digestion"],
+  rot:        ["boire", "manger", "estomac", "gaz", "corps", "bruit", "bebe"],
+  crotte:     ["nez", "morve", "caca", "animal", "degueu", "hygiene", "corps"],
+  morve:      ["nez", "rhume", "mouchoir", "moucher", "malade", "crotte de nez"],
+  mouchoir:   ["nez", "morve", "moucher", "rhume", "propre", "hygiene"],
+  eternuer:   ["nez", "rhume", "microbe", "bruit", "atchoum", "corps"],
+  tousser:    ["gorge", "malade", "rhume", "microbe", "corps", "sirop"],
+  vomir:      ["malade", "ventre", "nausee", "degouter", "medecin", "corps"],
+  bobo:       ["douleur", "pleurer", "bisou", "pansement", "sang", "tomber", "corps"],
+  pansement:  ["bobo", "sang", "blessure", "soigner", "coller", "medecin"],
+  "sang corps":["rouge", "blessure", "bobo", "corps", "coeur", "veine", "peur"],
+  dent:       ["mordre", "lait", "tomber", "souris", "brosser", "dentiste", "carie"],
+  dentiste:   ["dent", "carie", "brosser", "docteur", "bouche", "peur"],
+  docteur:    ["medecin", "malade", "soigner", "stethoscope", "hopital", "ordonnance"],
+  medecin:    ["docteur", "malade", "soigner", "hopital", "medicament", "consultation"],
+  hopital:    ["medecin", "docteur", "malade", "ambulance", "soigner", "urgence"],
+  medicament: ["medecin", "malade", "sirop", "comprime", "soigner", "pharmacie"],
+  piqure:     ["vaccin", "medecin", "aiguille", "peur", "sang", "moustique", "douleur"],
+  fievre:     ["chaud", "malade", "temperature", "thermometre", "medecin", "repos"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🏠 Vie quotidienne & Maison
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  maison:     ["chambre", "cuisine", "salon", "jardin", "famille", "habiter", "toit", "porte", "fenetre"],
+  chambre:    ["lit", "dormir", "jouer", "rangement", "maison", "doudou", "reveil"],
+  lit:        ["dormir", "drap", "oreiller", "couverture", "chambre", "nuit", "reve"],
+  doudou:     ["calin", "dormir", "peluche", "ami", "bebe", "chambre", "securite"],
+  peluche:    ["doudou", "jouet", "ours", "lapin", "calin", "doux", "mignon"],
+  jouet:      ["jouer", "peluche", "lego", "poupee", "voiture", "ballon", "cadeau"],
+  lego:       ["construire", "jouet", "brique", "creatif", "jouer", "assembler"],
+  poupee:     ["jouet", "jouer", "habiller", "maison", "barbie", "imaginer"],
+  bain:       ["eau", "savon", "laver", "propre", "mousse", "canard", "chaud", "douche"],
+  douche:     ["eau", "laver", "propre", "savon", "shampoing", "bain", "hygiene"],
+  savon:      ["laver", "propre", "main", "bulle", "mousse", "hygiene", "bain"],
+  shampoing:  ["cheveux", "laver", "douche", "mousse", "propre", "tete"],
+  brosser:    ["dent", "cheveux", "propre", "matin", "soir", "hygiene", "routine"],
+  dormir:     ["lit", "nuit", "reve", "fatigue", "dodo", "sommeil", "reveil", "histoire"],
+  dodo:       ["dormir", "nuit", "bebe", "lit", "bonne nuit", "fatigue", "calme"],
+  reveil:     ["matin", "dormir", "horloge", "sonnerie", "lever", "heure"],
+  matin:      ["lever", "reveil", "petit dejeuner", "ecole", "soleil", "jour"],
+  soir:       ["nuit", "dormir", "repas", "bain", "histoire", "coucher", "etoile"],
+  "nuit routine":["dormir", "etoile", "lune", "noir", "reve", "cauchemar", "peur"],
+  "reveil matin":["matin", "dormir", "sonnerie", "lever", "heure", "ecole"],
+  manger:     ["nourriture", "repas", "faim", "table", "cuillere", "fourchette", "assiette"],
+  faim:       ["manger", "ventre", "gouter", "repas", "nourriture", "estomac"],
+  soif:       ["boire", "eau", "jus", "verre", "chaud", "deshydrater"],
+  boire:      ["eau", "jus", "verre", "soif", "lait", "biberon", "paille"],
+  gouter:     ["manger", "apres-midi", "biscuit", "fruit", "ecole", "faim"],
+  "petit dejeuner": ["matin", "cereale", "tartine", "lait", "jus", "croissant", "manger"],
+  repas:      ["manger", "midi", "soir", "table", "famille", "cuisine", "assiette"],
+  assiette:   ["manger", "repas", "table", "rond", "verre", "couverts"],
+  cuillere:   ["manger", "soupe", "dessert", "couverts", "table"],
+  fourchette: ["manger", "couverts", "table", "piquer", "repas"],
+  couteau:    ["couper", "couverts", "table", "attention", "danger"],
+  
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🎒 École & Vie scolaire
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  maitresse:  ["ecole", "apprendre", "classe", "prof", "lecon", "gentille"],
+  maitre:     ["ecole", "apprendre", "classe", "prof", "lecon", "enseignant"],
+  recreation: ["ecole", "jouer", "cour", "copain", "pause", "courir", "crier"],
+  cour:       ["ecole", "recreation", "jouer", "courir", "copain", "dehors"],
+  copain:     ["ami", "ecole", "jouer", "recreation", "partager", "rigoler"],
+  copine:     ["amie", "ecole", "jouer", "recreation", "partager", "secret"],
+  cantine:    ["ecole", "manger", "midi", "repas", "plateau", "dessert"],
+  devoirs:    ["ecole", "maison", "apprendre", "cahier", "exercice", "soir"],
+  cahier:     ["ecole", "ecrire", "devoirs", "ligne", "page", "stylo"],
+  crayon:     ["dessiner", "ecrire", "ecole", "couleur", "gomme", "papier"],
+  gomme:      ["effacer", "crayon", "ecole", "erreur", "caoutchouc"],
+  cartable:   ["ecole", "sac", "cahier", "livre", "lourd", "dos"],
+  trousse:    ["ecole", "crayon", "stylo", "gomme", "regle", "feutre"],
+  dictee:     ["ecole", "ecrire", "mot", "orthographe", "maitresse", "note"],
+  "note ecole":["ecole", "resultat", "bonne", "mauvaise", "controle", "bulletin"],
+  controle:   ["ecole", "note", "apprendre", "reviser", "stress", "reussir"],
+  bulletin:   ["ecole", "note", "trimestre", "parent", "resultat", "commentaire"],
+  punition:   ["ecole", "betise", "coin", "injuste", "triste", "regle"],
+  harcelement:["ecole", "mechant", "moquer", "triste", "adulte", "parler", "securite"],
+  moquer:     ["mechant", "triste", "rire", "harcelement", "blesser", "parole"],
+  bagarre:    ["frapper", "dispute", "mechant", "colere", "ecole", "punition"],
+  dispute:    ["copain", "colere", "pardonner", "facher", "reconcilier", "ami"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 👨‍👩‍👧‍👦 Famille & Relations
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  soeur:      ["famille", "frere", "jouer", "partager", "aimer", "dispute"],
+  grandpere:  ["famille", "papy", "ancien", "histoire", "sage", "amour"],
+  grandmere:  ["famille", "mamie", "gateau", "calin", "histoire", "amour"],
+  papy:       ["grandpere", "famille", "sage", "histoire", "jardin", "peche"],
+  mamie:      ["grandmere", "famille", "gateau", "calin", "tricoter", "amour"],
+  tonton:     ["oncle", "famille", "jouer", "cadeau", "fete", "rigolo"],
+  tata:       ["tante", "famille", "calin", "cadeau", "fete", "gentille"],
+  cousin:     ["famille", "jouer", "vacances", "fete", "copain", "noel"],
+  cousine:    ["famille", "jouer", "vacances", "fete", "copine", "noel"],
+  calin:      ["amour", "bras", "doux", "reconfort", "parent", "doudou", "bisou"],
+  bisou:      ["amour", "calin", "joue", "bonne nuit", "parent", "doux"],
+  separation: ["parent", "triste", "deux maisons", "divorce", "aimer", "famille"],
+  divorce:    ["parent", "separation", "deux maisons", "triste", "aimer", "normal"],
+  "nouveau bebe": ["famille", "frere", "soeur", "jaloux", "partager", "grandir"],
+  adoption:   ["famille", "amour", "parent", "coeur", "choisir", "aimer"],
+  demenagement:["maison", "nouvelle", "ami", "ecole", "triste", "aventure", "carton"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🎉 Fêtes & Occasions
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  noel:       ["cadeau", "sapin", "pere noel", "hiver", "fete", "famille", "neige", "guirlande"],
+  "pere noel":["noel", "cadeau", "traineau", "renne", "cheminee", "barbe", "rouge"],
+  anniversaire:["gateau", "cadeau", "bougie", "fete", "age", "ami", "ballon", "surprise"],
+  halloween:  ["citrouille", "deguisement", "fantome", "sorciere", "bonbon", "peur", "fete"],
+  paques:     ["oeuf", "chocolat", "lapin", "cloche", "fete", "chasse", "printemps"],
+  carnaval:   ["deguisement", "masque", "fete", "confetti", "musique", "danse", "costume"],
+  fete:       ["joie", "ami", "musique", "danse", "cadeau", "famille", "gateau", "ballon"],
+  cadeau:     ["noel", "anniversaire", "surprise", "papier", "ouvrir", "joie", "offrir"],
+  vacances:   ["repos", "plage", "montagne", "voyage", "famille", "jouer", "ete", "camping"],
+  camping:    ["vacances", "tente", "nature", "feu de camp", "dormir", "aventure", "etoile"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🎮 Jeux & Activités
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  jouer:      ["jeu", "amusement", "copain", "jouet", "recreation", "rire", "imaginer"],
+  "cache cache":["jouer", "cacher", "trouver", "chercher", "compter", "recreation"],
+  "chat jeu": ["jouer", "courir", "attraper", "touche", "recreation", "cour"],
+  marelle:    ["jouer", "sauter", "case", "recreation", "cour", "caillou"],
+  toboggan:   ["glisser", "parc", "jouer", "hauteur", "enfant", "recreation"],
+  balancoire: ["parc", "jouer", "balancer", "haut", "air", "enfant"],
+  "bac a sable":["jouer", "sable", "construire", "chateau", "pelle", "seau", "parc"],
+  parc:       ["jouer", "balancoire", "toboggan", "herbe", "arbre", "promenade"],
+  piscine:    ["eau", "nager", "plonger", "bouee", "maillot", "ete", "eclabousser"],
+  plage:      ["mer", "sable", "vague", "coquillage", "soleil", "chateau", "vacances"],
+  coloriage:  ["couleur", "dessin", "crayon", "feutre", "creatif", "calme", "mandala"],
+  puzzle:     ["assembler", "piece", "image", "patience", "logique", "jeu"],
+  "jeu de societe":["jouer", "famille", "des", "pion", "regle", "gagner", "plateau"],
+  minecraft:  ["jeu video", "construire", "bloc", "creatif", "aventure", "survie"],
+  pokemon:    ["attraper", "combat", "evolution", "creature", "jeu", "dessin anime"],
+  mario:      ["jeu video", "sauter", "champignon", "nintendo", "princesse", "plombier"],
+  fortnite:   ["jeu video", "construire", "danser", "emote", "victoire"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 👔 Vêtements & Apparence
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  vetement:   ["habiller", "pantalon", "tshirt", "robe", "chaussure", "manteau", "pull"],
+  pantalon:   ["vetement", "jambe", "jean", "habiller", "ceinture", "poche"],
+  robe:       ["vetement", "fille", "princesse", "joli", "habiller", "fete"],
+  chaussure:  ["pied", "lacet", "basket", "botte", "marcher", "vetement"],
+  manteau:    ["vetement", "froid", "hiver", "fermeture", "chaud", "dehors"],
+  bonnet:     ["tete", "froid", "hiver", "laine", "chaud", "vetement"],
+  echarpe:    ["cou", "froid", "hiver", "laine", "chaud", "vetement"],
+  pyjama:     ["dormir", "nuit", "vetement", "chambre", "doux", "confortable"],
+  maillot:    ["bain", "piscine", "plage", "nager", "sport", "vetement"],
+  deguisement:["costume", "jouer", "carnaval", "halloween", "imaginer", "personnage"],
+  lunettes:   ["voir", "yeux", "soleil", "monture", "ophtalmo", "lire"],
+  chapeau:    ["tete", "soleil", "cowboy", "magicien", "mode", "proteger"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🌿 Écologie & Environnement
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ecologie:   ["nature", "recycler", "proteger", "planete", "pollution", "vert", "environnement"],
+  recycler:   ["poubelle", "tri", "plastique", "papier", "verre", "ecologie", "dechets"],
+  pollution:  ["sale", "air", "eau", "plastique", "voiture", "usine", "ecologie", "malade"],
+  plastique:  ["pollution", "recycler", "bouteille", "ocean", "dechets", "ecologie"],
+  dechets:    ["poubelle", "recycler", "pollution", "plastique", "tri", "propre"],
+  poubelle:   ["dechets", "jeter", "recycler", "tri", "propre", "nettoyer"],
+  compost:    ["dechet", "jardin", "terre", "plante", "ecologie", "ver", "naturel"],
+  "rechauffement climatique":["temperature", "glace", "polar", "co2", "planete", "ecologie"],
+  "energie solaire":["soleil", "panneau", "electricite", "renouvelable", "ecologie", "propre"],
+  eolienne:   ["vent", "electricite", "energie", "renouvelable", "helice", "ecologie"],
+  deforestation:["arbre", "foret", "couper", "animaux", "ecologie", "danger", "amazonie"],
+  extinction: ["animal", "disparaitre", "espece", "proteger", "ecologie", "danger"],
+  "espece menacee":["animal", "disparaitre", "proteger", "panda", "baleine", "ecologie"],
+  "parc national":["nature", "proteger", "animal", "foret", "reserve", "ecologie"],
+  eau_potable:["boire", "propre", "robinet", "ressource", "ecologie", "gaspiller"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🐾 Animaux (enrichi — vie quotidienne)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  hamster:    ["animal", "roue", "cage", "petit", "poil", "mignon", "compagnie"],
+  lapin:      ["animal", "carotte", "oreille", "doux", "terrier", "sauter", "mignon"],
+  tortue:     ["animal", "carapace", "lent", "sage", "longtemps", "salade"],
+  serpent:    ["animal", "reptile", "ramper", "ecaille", "peur", "siffler", "muer"],
+  araignee:   ["toile", "pattes", "insecte", "peur", "attraper", "tisser"],
+  fourmi:     ["insecte", "colonie", "travailleur", "petit", "fort", "fourmiliere"],
+  abeille:    ["miel", "fleur", "pollen", "ruche", "piquer", "insecte", "reine", "ecologie"],
+  coccinelle: ["insecte", "rouge", "point", "chance", "jardin", "puceron"],
+  escargot:   ["coquille", "lent", "bave", "pluie", "jardin", "antenne"],
+  grenouille: ["mare", "sauter", "coasser", "tetard", "eau", "verte", "mouche"],
+  requin:     ["mer", "ocean", "dent", "predateur", "nager", "peur", "poisson"],
+  baleine:    ["ocean", "grand", "mammifere", "chanter", "bleu", "proteger"],
+  dauphin:    ["ocean", "intelligent", "nager", "saut", "ami", "jouer", "mammifere"],
+  hippopotame:["afrique", "eau", "gros", "dangereux", "riviere", "herbivore"],
+  girafe:     ["afrique", "cou", "grand", "tache", "savane", "feuille"],
+  elephant:   ["afrique", "trompe", "grand", "defense", "memoire", "intelligent"],
+  singe:      ["arbre", "grimper", "banane", "malin", "gorille", "chimpanze"],
+  koala:      ["australie", "eucalyptus", "dormir", "mignon", "arbre", "marsupial"],
+  kangourou:  ["australie", "sauter", "poche", "bebe", "marsupial"],
+  panda:      ["bambou", "chine", "noir", "blanc", "mignon", "proteger", "espece menacee"],
+  pingouin:   ["froid", "glace", "antarctique", "nager", "marcher", "drole"],
+  perroquet:  ["parler", "couleur", "oiseau", "tropical", "repeter", "plume"],
+  aigle:      ["oiseau", "rapace", "voler", "montagne", "puissant", "vue"],
+  hibou:      ["nuit", "oiseau", "hululer", "yeux", "sage", "plume"],
+  chauve_souris:["nuit", "voler", "ultrason", "grotte", "mammifere", "vampire"],
+  loup:       ["hurler", "meute", "foret", "lune", "predateur", "conte"],
+  renard:     ["ruse", "foret", "queue", "orange", "malin", "petit prince"],
+  ours:       ["foret", "hiberner", "griffe", "gros", "polaire", "brun", "peluche"],
+  cerf:       ["foret", "bois", "automne", "bambi", "herbivore", "majestueux"],
+  ecureuil:   ["arbre", "noisette", "queue", "foret", "grimper", "automne"],
+  herisson:   ["piquant", "jardin", "nocturne", "boule", "insecte", "mignon"],
+  vache:      ["lait", "ferme", "meuh", "herbe", "fromage", "campagne"],
+  cochon:     ["ferme", "boue", "rose", "groin", "truffe", "cochonnet"],
+  mouton:     ["ferme", "laine", "beler", "berger", "doux", "compter"],
+  poule:      ["ferme", "oeuf", "poussin", "cot", "grain", "poulailler"],
+  canard:     ["eau", "mare", "coin coin", "nager", "bec", "plume"],
+  cheval:     ["galop", "criniere", "equitation", "poney", "ferme", "sabot"],
+  poney:      ["cheval", "petit", "equitation", "monter", "criniere", "gentil"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🍬 Nourriture & Goûts d'enfants
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  bonbon:     ["sucre", "gourmand", "halloween", "gout", "couleur", "macher"],
+  glace:      ["froid", "vanille", "chocolat", "ete", "cornet", "boule", "dessert"],
+  biscuit:    ["gouter", "croquant", "chocolat", "cuisine", "sucre", "cereale"],
+  frite:      ["pomme de terre", "sel", "ketchup", "manger", "fast food", "croustillant"],
+  hamburger:  ["pain", "viande", "salade", "fromage", "fast food", "manger"],
+  pate:       ["manger", "bolognaise", "fromage", "cuire", "italien", "carbonara"],
+  cereale:    ["petit dejeuner", "lait", "bol", "matin", "croquant", "manger"],
+  tartine:    ["pain", "beurre", "confiture", "petit dejeuner", "manger", "matin"],
+  jus:        ["fruit", "orange", "boire", "vitamine", "verre", "frais"],
+  lait:       ["vache", "boire", "blanc", "cereale", "calcium", "biberon", "chocolat"],
+  yaourt:     ["lait", "fruit", "cuillere", "dessert", "calcium", "manger"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 💫 Imaginaire & Créatures
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  dragon:     ["feu", "voler", "aile", "legende", "chevalier", "ecaille", "grotte"],
+  licorne:    ["magie", "arc-en-ciel", "corne", "cheval", "feerie", "paillette"],
+  fee:        ["magie", "baguette", "aile", "clochette", "voeu", "paillette", "conte"],
+  sorciere:   ["magie", "balai", "potion", "halloween", "chapeau", "chat noir"],
+  fantome:    ["peur", "halloween", "invisible", "nuit", "boo", "chateau"],
+  monstre:    ["peur", "nuit", "cauchemar", "imaginaire", "placard", "lit"],
+  vampire:    ["nuit", "dent", "halloween", "sang", "chauve-souris", "conte"],
+  zombie:     ["halloween", "peur", "mort-vivant", "cerveau", "lent"],
+  "super heros":["pouvoir", "sauver", "cape", "masque", "force", "voler", "mechant"],
+  ninja:      ["combat", "rapide", "silencieux", "japon", "epee", "noir"],
+  princesse:  ["chateau", "robe", "couronne", "roi", "conte", "prince"],
+  prince:     ["chateau", "epee", "princesse", "roi", "conte", "cheval"],
+  "pirate imaginaire":["bateau", "tresor", "mer", "ile", "drapeau", "aventure", "carte"],
+  extraterrestre:["espace", "ovni", "planete", "vert", "antenne", "alien"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // ⏰ Temps & Routine
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  heure:      ["temps", "horloge", "minute", "seconde", "montre", "reveil"],
+  minute:     ["temps", "heure", "seconde", "court", "attendre", "vite"],
+  seconde:    ["temps", "minute", "rapide", "instant", "court"],
+  hier:       ["temps", "passe", "jour", "avant", "souvenir"],
+  demain:     ["temps", "futur", "jour", "apres", "attendre"],
+  "aujourd hui":["temps", "jour", "present", "maintenant", "programme"],
+  semaine:    ["jour", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "weekend"],
+  weekend:    ["samedi", "dimanche", "repos", "jouer", "famille", "sortir"],
+  anniversaire_temps:["age", "grandir", "gateau", "bougie", "fete", "an"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🚗 Déplacements & Moyens de transport (enrichi)
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  bus:        ["transport", "ecole", "ville", "arret", "conduire", "passager"],
+  metro:      ["transport", "souterrain", "ville", "station", "rapide", "tunnel"],
+  trottinette:["rouler", "roue", "jouer", "electrique", "rue", "transport"],
+  skateboard: ["rouler", "planche", "figure", "parc", "sport", "equilibre"],
+  roller:     ["rouler", "roue", "pied", "glisser", "sport", "patin"],
+  moto:       ["rouler", "rapide", "casque", "roue", "bruit", "transport"],
+  helicoptere:["voler", "helice", "sauvetage", "ciel", "transport", "bruit"],
+  sous_marin: ["eau", "profond", "ocean", "explorer", "hublot", "capitaine"],
+  ambulance:  ["urgence", "hopital", "sirene", "medecin", "sauver", "rapide"],
+  pompier:    ["feu", "sauver", "camion", "casque", "echelle", "hero", "eau"],
+  policier:   ["securite", "loi", "voiture", "uniforme", "aider", "proteger"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 💩 Humour enfantin & Expressions rigolotes
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  rigolo:     ["drole", "rire", "amusant", "blague", "marrant", "humour"],
+  blague:     ["drole", "rire", "humour", "devinette", "toc toc", "marrant"],
+  devinette:  ["question", "reponse", "reflechir", "drole", "jeu", "blague"],
+  chatouille: ["rire", "doigt", "pieds", "ventre", "arreter", "rigoler"],
+  grimace:    ["visage", "drole", "bouche", "yeux", "rigoler", "miroir"],
+  betise:     ["erreur", "pardon", "drole", "interdit", "oups", "accident"],
+  mensonge:   ["verite", "mentir", "confiance", "pinocchio", "secret", "culpabilite"],
+  secret:     ["cacher", "chuchoter", "ami", "confiance", "surprise", "oreille"],
+  "gros mot":   ["interdit", "mechant", "parole", "colere", "pardon", "regle"],
+  baver:      ["bebe", "bouche", "dormir", "drole", "manger", "corps"],
+  ronfler:    ["dormir", "bruit", "nuit", "nez", "drole", "fatigue"],
+  hoquet:     ["bruit", "corps", "boire", "diaphragme", "arreter", "drole"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🧒 Grandir & Corps qui change
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  grandir:    ["age", "taille", "adulte", "changer", "corps", "apprendre", "responsable"],
+  taille:     ["grandir", "mesurer", "centimetre", "petit", "grand", "corps"],
+  cheveux:    ["tete", "coiffer", "couper", "long", "court", "couleur", "shampoing"],
+  yeux:       ["voir", "couleur", "regard", "cligner", "larme", "lunettes"],
+  main:       ["doigt", "toucher", "droite", "gauche", "ecrire", "attraper"],
+  pied:       ["marcher", "chaussure", "orteil", "courir", "sauter", "chatouille"],
+  ventre:     ["manger", "faim", "mal", "nombril", "digerer", "gargouiller"],
+  dos:        ["colonne", "cartable", "droit", "mal", "vertebre", "posture"],
+  nombril:    ["ventre", "cordon", "bebe", "corps", "drole", "milieu"],
+  cicatrice:  ["blessure", "peau", "guerir", "bobo", "souvenir", "corps"],
+  tache_rousseur:["peau", "visage", "soleil", "mignon", "genetique", "unique"],
+  grain_beaute:["peau", "marron", "petit", "corps", "unique", "soleil"],
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
