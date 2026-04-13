@@ -3102,6 +3102,7 @@ const Admin = () => {
               TOP_SECTIONS_CONFIG.find(s => s.id === "cloud")!,
               TOP_SECTIONS_CONFIG.find(s => s.id === "interactions")!,
               TOP_SECTIONS_CONFIG.find(s => s.id === "autolearn")!,
+              TOP_SECTIONS_CONFIG.find(s => s.id === "kbdebug")!,
             ].map(section => (
               <DashCard key={section.id} label={section.label} emoji={section.emoji}
                 count={sectionCounts[section.id] ?? "…"} desc={section.desc}
