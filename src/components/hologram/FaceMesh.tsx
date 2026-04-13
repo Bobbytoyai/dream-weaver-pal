@@ -57,12 +57,12 @@ function svgToWorld(sx: number, sy: number): [number, number] {
   return [(sx - cx) * S, (cy - sy) * S];
 }
 
-// ─── Eyebrow builder — rounded rectangle ─────────────────────
+// ─── Eyebrow builder — slightly rounded rectangle ─────────────────────
 function buildEyebrowShape(_archHeight: number = 0.06): THREE.Shape {
   const shape = new THREE.Shape();
-  const w = 0.30;   // half width (longer)
-  const h = 0.09;   // half height (thicker)
-  const r = 0.015;  // corner radius
+  const w = 0.30;   // half width
+  const h = 0.09;   // half height
+  const r = 0.045;  // corner radius — slightly rounded (was 0.015)
 
   shape.moveTo(-w + r, -h);
   shape.lineTo(w - r, -h);
