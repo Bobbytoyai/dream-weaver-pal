@@ -9,11 +9,24 @@ import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/parentSett
 import { useChildMemory } from "@/hooks/useChildMemory";
 import { eventBus } from "@/lib/eventBus";
 
+const SETTINGS_STORAGE_KEY = "bobby_parent_settings";
+
+function loadSavedSettings(): ParentSettings {
+  try {
+    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      return { ...DEFAULT_PARENT_SETTINGS, ...saved };
+    }
+  } catch {}
+  return DEFAULT_PARENT_SETTINGS;
+}
+
 const Index = () => {
   const [mode, setMode] = useState<"voice" | "story" | "parent" | "activities">("voice");
   const [pendingNarration, setPendingNarration] = useState<PendingNarration | null>(null);
   const [activeGameCategory, setActiveGameCategory] = useState<string | null>(null);
-  const [parentSettings, setParentSettings] = useState<ParentSettings>(DEFAULT_PARENT_SETTINGS);
+  const [parentSettings, setParentSettings] = useState<ParentSettings>(loadSavedSettings);
 
   const childName = parentSettings.childName;
   const childAge = parentSettings.childAge;
@@ -35,17 +48,24 @@ const Index = () => {
     return unsub;
   }, []);
 
-  // Restore parent settings from memory on load
+  // Also restore from cloud memory if available (cloud takes priority over stale local)
   useEffect(() => {
     if (!memory?.preferences?.parentSettings) return;
     try {
       const saved = memory.preferences.parentSettings as Record<string, unknown>;
-      setParentSettings((prev) => ({ ...prev, ...saved }));
+      setParentSettings((prev) => {
+        const merged = { ...prev, ...saved };
+        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));
+        return merged;
+      });
     } catch { /* ignore */ }
   }, [memory]);
 
   const handleSettingsChange = (settings: ParentSettings) => {
     setParentSettings(settings);
+    // Persist immediately to localStorage (reliable, instant)
+    try { localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings)); } catch {}
+    // Also sync to cloud memory (async)
     saveSettings({ parentSettings: settings });
   };
 
