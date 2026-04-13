@@ -1784,40 +1784,40 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             )}
 
             {/* ── Scores grid — colorful squares ── */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               {analysis.sociability_score != null && (
                 <>
-                  <div className="bg-gradient-to-br from-blue-500/15 to-blue-400/5 rounded-3xl p-4 flex flex-col items-center gap-1.5 border border-blue-400/15 aspect-square justify-center">
-                    <span className="text-3xl">🤝</span>
-                    <span className="text-3xl font-extrabold text-foreground">{analysis.sociability_score}</span>
-                    <span className="text-[13px] font-bold text-muted-foreground">Sociabilité</span>
+                  <div className="bg-gradient-to-br from-blue-500/15 to-blue-400/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-blue-400/15 justify-center">
+                    <span className="text-2xl">🤝</span>
+                    <span className="text-2xl font-extrabold text-foreground">{analysis.sociability_score}</span>
+                    <span className="text-[11px] font-bold text-muted-foreground">Sociabilité</span>
                   </div>
-                  <div className="bg-gradient-to-br from-amber-500/15 to-amber-400/5 rounded-3xl p-4 flex flex-col items-center gap-1.5 border border-amber-400/15 aspect-square justify-center">
-                    <span className="text-3xl">🔍</span>
-                    <span className="text-3xl font-extrabold text-foreground">{analysis.curiosity_score || 0}</span>
-                    <span className="text-[13px] font-bold text-muted-foreground">Curiosité</span>
+                  <div className="bg-gradient-to-br from-amber-500/15 to-amber-400/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-amber-400/15 justify-center">
+                    <span className="text-2xl">🔍</span>
+                    <span className="text-2xl font-extrabold text-foreground">{analysis.curiosity_score || 0}</span>
+                    <span className="text-[11px] font-bold text-muted-foreground">Curiosité</span>
                   </div>
-                  <div className="bg-gradient-to-br from-emerald-500/15 to-emerald-400/5 rounded-3xl p-4 flex flex-col items-center gap-1.5 border border-emerald-400/15 aspect-square justify-center">
-                    <span className="text-3xl">⚖️</span>
-                    <span className="text-3xl font-extrabold text-foreground">{analysis.emotional_stability_score || 0}</span>
-                    <span className="text-[13px] font-bold text-muted-foreground">Stabilité</span>
+                  <div className="bg-gradient-to-br from-emerald-500/15 to-emerald-400/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-emerald-400/15 justify-center">
+                    <span className="text-2xl">⚖️</span>
+                    <span className="text-2xl font-extrabold text-foreground">{analysis.emotional_stability_score || 0}</span>
+                    <span className="text-[11px] font-bold text-muted-foreground">Stabilité</span>
                   </div>
                 </>
               )}
-              <div className="bg-gradient-to-br from-purple-500/15 to-purple-400/5 rounded-3xl p-4 flex flex-col items-center gap-1.5 border border-purple-400/15 aspect-square justify-center">
-                <span className="text-3xl">{analysis.engagement_level === "high" ? "🔥" : analysis.engagement_level === "medium" ? "👍" : "💤"}</span>
+              <div className="bg-gradient-to-br from-purple-500/15 to-purple-400/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-purple-400/15 justify-center">
+                <span className="text-2xl">{analysis.engagement_level === "high" ? "🔥" : analysis.engagement_level === "medium" ? "👍" : "💤"}</span>
                 <span className="text-xl font-extrabold text-foreground capitalize">{
                   analysis.engagement_level === "high" ? "Élevé" : analysis.engagement_level === "medium" ? "Moyen" : "Faible"
                 }</span>
-                <span className="text-[13px] font-bold text-muted-foreground">Engagement</span>
+                <span className="text-[11px] font-bold text-muted-foreground">Engagement</span>
               </div>
               {analysis.attention_span && (
-                <div className="bg-gradient-to-br from-pink-500/15 to-pink-400/5 rounded-3xl p-4 flex flex-col items-center gap-1.5 border border-pink-400/15 aspect-square justify-center">
-                  <span className="text-3xl">{analysis.attention_span === "long" ? "🟢" : analysis.attention_span === "moyen" ? "🟡" : "🔴"}</span>
+                <div className="bg-gradient-to-br from-pink-500/15 to-pink-400/5 rounded-2xl p-3 flex flex-col items-center gap-1 border border-pink-400/15 justify-center">
+                  <span className="text-2xl">{analysis.attention_span === "long" ? "🟢" : analysis.attention_span === "moyen" ? "🟡" : "🔴"}</span>
                   <span className="text-xl font-extrabold text-foreground capitalize">{
                     analysis.attention_span === "long" ? "Longue" : analysis.attention_span === "moyen" ? "Moyenne" : "Courte"
                   }</span>
-                  <span className="text-[13px] font-bold text-muted-foreground">Attention</span>
+                  <span className="text-[11px] font-bold text-muted-foreground">Attention</span>
                 </div>
               )}
             </div>
