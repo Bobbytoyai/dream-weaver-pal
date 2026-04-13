@@ -2682,7 +2682,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           style={{ boxShadow: suggestionText.trim() && !suggestionSent ? "3px 3px 0px rgba(0,0,0,0.2)" : "none" }}>
           {suggestionSent ? "✅ MERCI POUR VOTRE IDÉE !" : "ENVOYER MA SUGGESTION"}
         </button>
-        </button>
       </Card>
       </div>
     </div>
