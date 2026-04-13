@@ -1930,42 +1930,37 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   ))}
                 </div>
                 {/* Karaoke-style transcription — scrolling messages with active highlight */}
-                {(playingAudio || fullPlaybackActive) && sessionMessages.length > 0 && (() => {
-                  const activeIdx = fullPlaybackActive ? fullPlaybackIdx : activeMessageIdx;
-                  // Auto-scroll: after render, scroll active item into view
-                  setTimeout(() => {
-                    document.getElementById(`karaoke-msg-${activeIdx}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-                  }, 50);
-                  return (
+                {(playingAudio || fullPlaybackActive) && sessionMessages.length > 0 && (
                   <div className="mt-3 max-h-36 overflow-y-auto rounded-2xl bg-muted/20 border border-border/10 scroll-smooth">
-                    {sessionMessages.map((msg, i) => (
-                      <div key={i}
-                        onClick={() => {
-                          if (analysis?.audio_path) {
-                            const pct = (i / sessionMessages.length) * 100;
-                            seekAudio(pct);
-                            setActiveMessageIdx(i);
-                          } else if (fullPlaybackActive) {
-                            setFullPlaybackIdx(i);
-                          }
-                        }}
-                        className={`px-3 py-2 cursor-pointer transition-all duration-300 ${
-                          i === activeMessageIdx || (fullPlaybackActive && i === fullPlaybackIdx)
-                            ? "bg-primary/12 border-l-3 border-l-primary"
-                            : i < (fullPlaybackActive ? fullPlaybackIdx : activeMessageIdx)
-                              ? "opacity-40"
-                              : "opacity-70"
-                        }`}>
-                        <span className="text-[9px] font-black text-muted-foreground">
-                          {msg.role === "user" ? `👦 ${displayName}` : "🤖 Bobby"}
-                        </span>
-                        <p className={`text-[11px] leading-snug mt-0.5 font-medium ${
-                          i === activeMessageIdx || (fullPlaybackActive && i === fullPlaybackIdx)
-                            ? "text-foreground font-bold"
-                            : "text-foreground/70"
-                        }`}>{msg.content?.slice(0, 120)}{(msg.content?.length || 0) > 120 ? "…" : ""}</p>
-                      </div>
-                    ))}
+                    {sessionMessages.map((msg, i) => {
+                      const isActive = i === activeMessageIdx || (fullPlaybackActive && i === fullPlaybackIdx);
+                      const isPast = i < (fullPlaybackActive ? fullPlaybackIdx : activeMessageIdx);
+                      return (
+                        <div key={i}
+                          ref={el => { if (isActive && el) el.scrollIntoView({ behavior: "smooth", block: "center" }); }}
+                          onClick={() => {
+                            if (analysis?.audio_path) {
+                              const pct = (i / sessionMessages.length) * 100;
+                              seekAudio(pct);
+                              setActiveMessageIdx(i);
+                            } else if (fullPlaybackActive) {
+                              setFullPlaybackIdx(i);
+                            }
+                          }}
+                          className={`px-3 py-2 cursor-pointer transition-all duration-300 ${
+                            isActive
+                              ? "bg-primary/12 border-l-3 border-l-primary"
+                              : isPast ? "opacity-40" : "opacity-70"
+                          }`}>
+                          <span className="text-[9px] font-black text-muted-foreground">
+                            {msg.role === "user" ? `👦 ${displayName}` : "🤖 Bobby"}
+                          </span>
+                          <p className={`text-[11px] leading-snug mt-0.5 font-medium ${
+                            isActive ? "text-foreground font-bold" : "text-foreground/70"
+                          }`}>{msg.content?.slice(0, 120)}{(msg.content?.length || 0) > 120 ? "…" : ""}</p>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
