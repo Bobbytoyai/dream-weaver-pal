@@ -395,8 +395,39 @@ const INTENT_RULES: IntentRule[] = [
   ]},
 ];
 
+function isGarbledText(text: string): boolean {
+  const lower = text.toLowerCase().trim();
+  const words = lower.split(/\s+/).filter(w => w.length > 1);
+  if (words.length === 0) return true;
+  
+  // Very short with no French vowel patterns → likely garbled STT
+  const frenchWords = /[àâäéèêëïîôùûüÿçœæ]|le |la |les |un |une |des |je |tu |il |elle |nous |vous |est |et |ou |de |du |en |au |ce |mon |ton |son |qui |que |pour |pas |avec |sur |dans |mais |comme |très |trop |bien |tout /i;
+  const englishWords = /\b(the|is|are|was|were|have|has|had|will|would|could|should|can|do|does|did|not|and|but|or|for|with|this|that|from|what|how|why|when|where|who|your|you|my|his|her|its|our|speak|talk|say|tell|want|need|like|love|go|come|get|make|know|think|see|look|find|give|take|play|run|eat|sleep|help|work|call|try|ask|use|put|keep|let|begin|show|hear|turn|move|live|believe|bring|happen|write|sit|stand|lose|pay|meet|include|continue|set|learn|change|lead|understand|watch|follow|stop|create|open|walk|win|offer|remember|appear|buy|wait|serve|die|send|expect|build|stay|fall|cut|reach|kill|remain)\b/i;
+
+  // Check if it's mostly English
+  const engMatch = lower.match(englishWords);
+  if (engMatch && engMatch.length >= 2) return false; // It's English, not garbled — let DEMANDE_LANGUE or LLM handle
+  
+  // Check for garbled: no French structure, too many consonant clusters, or very short nonsense
+  if (words.length <= 2 && !frenchWords.test(lower) && !/^(oui|non|ok|ouais|nan|hey|oh|ah|euh|hein|bah|ben|bof|pff)$/i.test(lower)) {
+    // Could be garbled — check if it looks like real words
+    const consonantHeavy = words.filter(w => {
+      const vowels = (w.match(/[aeiouyàâäéèêëïîôùûü]/gi) || []).length;
+      return vowels < w.length * 0.25 && w.length > 3;
+    });
+    if (consonantHeavy.length > 0) return true;
+  }
+  
+  return false;
+}
+
 function detectLocalIntent(text: string): LocalIntent {
   const lower = text.toLowerCase().trim();
+  
+  // Check for garbled/incomprehensible text first
+  if (isGarbledText(lower)) {
+    return "NOT_UNDERSTOOD";
+  }
   
   // Sort by priority (highest first)
   const sorted = [...INTENT_RULES].sort((a, b) => b.priority - a.priority);
