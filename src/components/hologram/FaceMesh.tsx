@@ -209,10 +209,12 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   // Eyelid — matches background with slight tint for contrast
   const bgKey = bobbyColors?.background || "soft-blue";
   const bgHex = BG_HEX[bgKey] || BG_HEX["soft-blue"];
-  const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
+  const eyelidMat = useMemo(() => new THREE.MeshStandardMaterial({
     color: new THREE.Color(bgHex),
-    transparent: true,
+    transparent: false,
     opacity: 1.0,
+    roughness: 0.6,
+    metalness: 0.05,
   }), []);
   
   // Keep eyelid color synced — always a noticeably darker shade of the background
