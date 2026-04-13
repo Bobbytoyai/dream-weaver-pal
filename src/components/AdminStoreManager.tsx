@@ -59,7 +59,7 @@ interface AdminStoreManagerProps {
   onBack: () => void;
 }
 
-const STORE_CATEGORIES = ["jeux", "educatif", "histoires", "blagues"];
+const STORE_CATEGORIES = ["jeux", "educatif", "histoires", "blagues", "langues"];
 const DATA_TYPES = ["qa", "story", "joke", "game", "song", "exercise"];
 const EMOTIONS = ["happy", "curious", "excited", "calm", "surprised", "proud", "playful", "sad", "scared"];
 

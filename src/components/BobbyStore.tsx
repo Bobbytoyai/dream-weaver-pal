@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 // ─── Types ──────────────────────────────────────────────────────────
 
-type StoreCategory = "all" | "jeux" | "histoires" | "educatif" | "blagues" | "nouveautes";
+type StoreCategory = "all" | "jeux" | "histoires" | "educatif" | "blagues" | "nouveautes" | "langues";
 
 interface ContentItem {
   title: string;
@@ -51,13 +51,14 @@ interface StoreItem {
 const CATEGORIES: { id: StoreCategory; emoji: string; label: string; color: string }[] = [
   { id: "all", emoji: "🏠", label: "Tout", color: "from-primary/20 to-primary/10" },
   { id: "nouveautes", emoji: "✨", label: "Nouveau", color: "from-amber-400/25 to-amber-300/10" },
+  { id: "langues", emoji: "🌍", label: "Langues", color: "from-cyan-400/20 to-sky-400/10" },
   { id: "jeux", emoji: "🎮", label: "Jeux", color: "from-blue-400/20 to-indigo-400/10" },
   { id: "educatif", emoji: "🧠", label: "Éducatif", color: "from-emerald-400/20 to-teal-400/10" },
   { id: "histoires", emoji: "📚", label: "Histoires", color: "from-purple-400/20 to-pink-400/10" },
   { id: "blagues", emoji: "😂", label: "Blagues", color: "from-orange-400/20 to-yellow-400/10" },
 ];
 
-const LANG_LABELS: Record<string, string> = { fr: "🇫🇷 Français", en: "🇬🇧 English", es: "🇪🇸 Español" };
+const LANG_LABELS: Record<string, string> = { fr: "🇫🇷 Français", en: "🇬🇧 English", es: "🇪🇸 Español", ar: "🇸🇦 العربية", de: "🇩🇪 Deutsch" };
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
