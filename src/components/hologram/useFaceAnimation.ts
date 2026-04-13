@@ -373,6 +373,14 @@ export function useFaceAnimation(
       curiousTiltZ = Math.sin(breathPhase.current * 1.5) * 0.03;
     }
 
+    // --- LISTENING: subtle eyebrow micro-movements (attentive, alive) ---
+    let listeningEyebrowPulse = 0;
+    if (faceState === "listening") {
+      const listenT = breathPhase.current * 1.8;
+      // Gentle asymmetric raise — one brow slightly higher, alternating
+      listeningEyebrowPulse = Math.sin(listenT) * 0.04 + Math.sin(listenT * 2.5) * 0.02;
+    }
+
     // --- SLEEPY: eyes nearly closed with drowsy flutter, ready to wake ---
     let sleepyEyeWobble = 0;
     let sleepyHeadBob = 0;
@@ -551,7 +559,7 @@ export function useFaceAnimation(
 
     // v3.0: EYEBROW ANTICIPATION — eyebrows lead speech by ~50ms
     // Buffer the eyebrow target and use it slightly ahead of audio
-    const eyebrowTarget = (targets.eyebrowHeight ?? 0) + microOffset.current.eyebrow + speechEyebrowLift;
+    const eyebrowTarget = (targets.eyebrowHeight ?? 0) + microOffset.current.eyebrow + speechEyebrowLift + listeningEyebrowPulse;
     const anticipatedEyebrow = eyebrowTarget + (eyebrowTarget - eyebrowAnticipationBuffer.current) * 0.3;
     eyebrowAnticipationBuffer.current = eyebrowTarget;
     c.eyebrowHeight = lerp(c.eyebrowHeight, anticipatedEyebrow, delta * (faceState === "speaking" ? baseSpeed * 4 : baseSpeed));
