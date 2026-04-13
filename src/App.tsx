@@ -10,6 +10,7 @@ import Admin from "./pages/Admin.tsx";
 import Auth from "./pages/Auth.tsx";
 import BobbyQR from "./pages/BobbyQR.tsx";
 import BobbyCloudAuth from "./pages/BobbyCloudAuth.tsx";
+import ResetPassword from "./pages/ResetPassword.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/bobby-cloud" element={<BobbyCloudAuth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/b/:code" element={<BobbyQR />} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />

@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-type AuthStep = "choice" | "signup-info" | "signup-password" | "confirm-email" | "login";
+type AuthStep = "choice" | "signup-info" | "signup-password" | "confirm-email" | "login" | "forgot-password" | "forgot-sent";
 
 export default function BobbyCloudAuth() {
   const navigate = useNavigate();
@@ -25,6 +25,7 @@ export default function BobbyCloudAuth() {
   // Login fields
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [forgotEmail, setForgotEmail] = useState("");
 
   // Check if already authenticated
   useEffect(() => {
@@ -121,6 +122,20 @@ export default function BobbyCloudAuth() {
 
       toast.success("Compte Bobby Cloud créé ! 🎉");
       navigate(returnTo, { replace: true });
+    }
+    setSubmitting(false);
+  };
+
+  const handleForgotPassword = async () => {
+    if (!forgotEmail.trim()) { toast.error("Entrez votre email"); return; }
+    setSubmitting(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setStep("forgot-sent");
     }
     setSubmitting(false);
   };
@@ -338,20 +353,79 @@ export default function BobbyCloudAuth() {
             {submitting ? "Connexion…" : "Se connecter →"}
           </RetroButton>
 
-          <div className="flex gap-2 pt-1">
+          <div className="flex flex-col gap-1 pt-1">
             <button
-              onClick={() => setStep("choice")}
-              className="flex-1 py-2 text-xs font-black text-black/50 hover:text-black/70 underline"
+              onClick={() => { setForgotEmail(loginEmail); setStep("forgot-password"); }}
+              className="py-2 text-xs font-black text-black/50 hover:text-black/70 underline"
             >
-              ← Retour
+              Mot de passe oublié ?
             </button>
-            <button
-              onClick={() => setStep("signup-info")}
-              className="flex-1 py-2 text-xs font-black text-black/50 hover:text-black/70 underline"
-            >
-              Créer un compte
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setStep("choice")}
+                className="flex-1 py-2 text-xs font-black text-black/50 hover:text-black/70 underline"
+              >
+                ← Retour
+              </button>
+              <button
+                onClick={() => setStep("signup-info")}
+                className="flex-1 py-2 text-xs font-black text-black/50 hover:text-black/70 underline"
+              >
+                Créer un compte
+              </button>
+            </div>
           </div>
+        </div>
+      </RetroCard>
+    );
+  }
+
+  // ─── Forgot password ──────────────────────────────
+  if (step === "forgot-password") {
+    return (
+      <RetroCard color="var(--retro-yellow)">
+        <div className="space-y-4">
+          <div className="text-center space-y-1">
+            <span className="text-4xl block">🔑</span>
+            <h2 className="text-xl font-black uppercase text-black">Mot de passe oublié</h2>
+            <p className="text-xs font-bold text-black/60">Entrez votre email pour recevoir un lien de réinitialisation</p>
+          </div>
+
+          <RetroInput label="Email" type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} placeholder="parent@email.com" autoFocus />
+
+          <RetroButton onClick={handleForgotPassword} disabled={submitting || !forgotEmail.trim()}>
+            {submitting ? "Envoi…" : "Envoyer le lien 📧"}
+          </RetroButton>
+
+          <button
+            onClick={() => setStep("login")}
+            className="w-full py-2 text-xs font-black text-black/50 hover:text-black/70 underline"
+          >
+            ← Retour à la connexion
+          </button>
+        </div>
+      </RetroCard>
+    );
+  }
+
+  // ─── Forgot sent confirmation ─────────────────────
+  if (step === "forgot-sent") {
+    return (
+      <RetroCard color="var(--retro-green)">
+        <div className="space-y-5 text-center">
+          <div className="space-y-2">
+            <span className="text-5xl block">📬</span>
+            <h2 className="text-xl font-black uppercase text-black">Email envoyé !</h2>
+            <p className="text-sm font-bold text-black/70">
+              Un lien de réinitialisation a été envoyé à<br />
+              <span className="text-black underline">{forgotEmail}</span>
+            </p>
+            <p className="text-xs font-bold text-black/50">Vérifiez aussi vos spams</p>
+          </div>
+
+          <RetroButton onClick={() => setStep("login")}>
+            Retour à la connexion →
+          </RetroButton>
         </div>
       </RetroCard>
     );
