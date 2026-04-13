@@ -127,7 +127,7 @@ const CloudTab = ({
                   setTimeout(() => setCloudCopied(false), 2000);
                   toast.success("Code copié !");
                 }}
-                className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-gray-800 hover:bg-muted transition-all active:scale-90">
+                className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-gray-800 hover:bg-muted transition-all">
                 {cloudCopied ? <span>✓</span> : <span>📋</span>}
               </button>
             </div>
@@ -151,7 +151,7 @@ const CloudTab = ({
           {/* Action buttons */}
           <div className="grid grid-cols-2 gap-2">
             <button onClick={handleCloudSave} disabled={cloudLoading}
-              className="flex flex-col items-center gap-1.5 p-3 border-4 border-black bg-white hover:bg-muted transition-all active:scale-95 disabled:opacity-50">
+              className="flex flex-col items-center gap-1.5 p-3 border-4 border-black bg-white hover:bg-muted transition-all disabled:opacity-50">
               {cloudLoading ? <Loader2 className="w-5 h-5 animate-spin text-gray-800" /> : <CloudUpload className="w-5 h-5 text-gray-800" />}
               <span className="text-[12px] font-black text-gray-800 uppercase">Sauvegarder</span>
             </button>
@@ -164,7 +164,7 @@ const CloudTab = ({
                 onConfirm: () => { handleCloudDelete(); setConfirmDialog(null); },
               });
             }} disabled={cloudLoading}
-              className="flex flex-col items-center gap-1.5 p-3 border-4 border-black hover:bg-muted transition-all active:scale-95 disabled:opacity-50" style={{ backgroundColor: 'var(--retro-red)' }}>
+              className="flex flex-col items-center gap-1.5 p-3 border-4 border-black hover:bg-muted transition-all disabled:opacity-50" style={{ backgroundColor: 'var(--retro-red)' }}>
               <Trash2 className="w-5 h-5 text-gray-800" />
               <span className="text-[12px] font-black text-gray-800 uppercase">Dissocier</span>
             </button>
@@ -173,7 +173,7 @@ const CloudTab = ({
       ) : (
         <div className="space-y-3">
           <button onClick={() => navigate(`/bobby-cloud?returnTo=${encodeURIComponent(currentPath)}`)} disabled={cloudLoading}
-            className="w-full retro-card p-5 hover:translate-y-[-2px] transition-all active:scale-[0.98] disabled:opacity-50" style={{ backgroundColor: 'var(--retro-blue)' }}>
+            className="w-full retro-card p-5 hover:translate-y-[-2px] transition-all disabled:opacity-50" style={{ backgroundColor: 'var(--retro-blue)' }}>
             <div className="flex items-center gap-4">
               <CloudUpload className="w-9 h-9 text-gray-800" />
               <div className="text-left flex-1">
@@ -184,7 +184,7 @@ const CloudTab = ({
           </button>
 
           <button onClick={() => navigate(`/bobby-cloud?returnTo=${encodeURIComponent(currentPath)}`)} disabled={cloudLoading}
-            className="w-full retro-card p-5 hover:translate-y-[-2px] transition-all active:scale-[0.98] disabled:opacity-50" style={{ backgroundColor: 'var(--retro-green)' }}>
+            className="w-full retro-card p-5 hover:translate-y-[-2px] transition-all disabled:opacity-50" style={{ backgroundColor: 'var(--retro-green)' }}>
             <div className="flex items-center gap-4">
               <LogIn className="w-9 h-9 text-gray-800" />
               <div className="text-left flex-1">
@@ -255,7 +255,7 @@ const CloudTab = ({
                 ))}
               </div>
               <button disabled={plan.disabled}
-                className={`w-full py-2.5 font-black text-[13px] transition-all active:scale-95 border-4 border-black uppercase ${
+                className={`w-full py-2.5 font-black text-[13px] transition-all border-4 border-black uppercase ${
                   plan.disabled
                     ? "bg-white/50 text-foreground/40 cursor-not-allowed"
                     : "bg-foreground text-background hover:opacity-90"

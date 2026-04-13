@@ -178,7 +178,7 @@ export default function BobbyCloudAuth() {
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`w-full py-3 text-sm font-black uppercase border-3 border-black transition-all active:scale-95 disabled:opacity-40 ${
+      className={`w-full py-3 text-sm font-black uppercase border-3 border-black transition-all disabled:opacity-40 ${
         variant === "primary"
           ? "bg-black text-white hover:opacity-90"
           : "bg-white text-black hover:bg-gray-100"
@@ -241,7 +241,7 @@ export default function BobbyCloudAuth() {
           <div className="flex gap-2 pt-2">
             <button
               onClick={() => setStep("choice")}
-              className="px-4 py-3 text-xs font-black uppercase border-3 border-black bg-white text-black hover:bg-gray-100 active:scale-95"
+              className="px-4 py-3 text-xs font-black uppercase border-3 border-black bg-white text-black hover:bg-gray-100"
               style={{ borderWidth: "3px", boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}
             >
               ← Retour
@@ -288,7 +288,7 @@ export default function BobbyCloudAuth() {
           <div className="flex gap-2 pt-2">
             <button
               onClick={() => setStep("signup-info")}
-              className="px-4 py-3 text-xs font-black uppercase border-3 border-black bg-white text-black hover:bg-gray-100 active:scale-95"
+              className="px-4 py-3 text-xs font-black uppercase border-3 border-black bg-white text-black hover:bg-gray-100"
               style={{ borderWidth: "3px", boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}
             >
               ← Retour

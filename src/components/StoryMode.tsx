@@ -215,7 +215,7 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
             <div className="grid grid-cols-3 gap-3 mb-4">
               {THEMES.map((t) => (
                 <button key={t.id} onClick={() => startStory(t.id)}
-                  className="flex flex-col items-center gap-1.5 py-4 px-2 rounded-3xl bg-white/70 backdrop-blur-sm border border-border/40 shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300">
+                  className="flex flex-col items-center gap-1.5 py-4 px-2 rounded-3xl bg-white/70 backdrop-blur-sm border border-border/40 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300">
                   <span className="text-3xl">{t.emoji}</span>
                   <span className="text-xs font-bold text-foreground">{t.label}</span>
                 </button>
@@ -231,7 +231,7 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
 
         {(phase === "telling" || phase === "loading") && (
           <button onClick={stopStory}
-            className="flex items-center justify-center gap-2 w-full py-3.5 rounded-full bg-white/60 backdrop-blur-sm border border-destructive/20 text-destructive font-bold text-sm hover:bg-destructive/10 transition-all duration-300 active:scale-95">
+            className="flex items-center justify-center gap-2 w-full py-3.5 rounded-full bg-white/60 backdrop-blur-sm border border-destructive/20 text-destructive font-bold text-sm hover:bg-destructive/10 transition-all duration-300">
             <X className="w-4 h-4" />
             Arrêter l'histoire
           </button>
@@ -240,7 +240,7 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
         {phase === "done" && (
           <div className="flex flex-col gap-3">
             <button onClick={() => currentTheme && startStory(currentTheme)}
-              className="w-full py-3.5 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] font-bold text-sm shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300 active:scale-95">
+              className="w-full py-3.5 rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] font-bold text-sm shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-300">
               🔄 Encore une !
             </button>
             <button onClick={() => { setPhase("pick"); setSentences([]); setIsStoryComplete(false); }}

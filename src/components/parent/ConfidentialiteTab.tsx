@@ -42,7 +42,7 @@ const ConfidentialiteTab = ({
   // ── Sub-section: Sécurité ──
   if (confSection === "securite") return (
     <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-      <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
+      <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
         <ChevronLeft className="w-4 h-4" /> CONFIDENTIALITÉ
       </button>
       <Card title="Code PIN parental" icon={Lock}>
@@ -121,7 +121,7 @@ const ConfidentialiteTab = ({
   // ── Sub-section: Données ──
   if (confSection === "donnees") return (
     <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-      <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
+      <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
         <ChevronLeft className="w-4 h-4" /> CONFIDENTIALITÉ
       </button>
       <Card title="Collecte de données" icon={Eye}>
@@ -204,7 +204,7 @@ const ConfidentialiteTab = ({
   // ── Sub-section: RGPD ──
   if (confSection === "rgpd") return (
     <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-      <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
+      <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
         <ChevronLeft className="w-4 h-4" /> CONFIDENTIALITÉ
       </button>
       <Card title="Vos droits (RGPD)" icon={FileText}>
@@ -255,7 +255,7 @@ const ConfidentialiteTab = ({
                   });
                 } else if (id === "rectify") { setActiveTab("profil"); }
               }}
-              className="p-3 text-left transition-all border-2 border-black bg-white hover:bg-[var(--retro-yellow)] active:scale-95">
+              className="p-3 text-left transition-all border-2 border-black bg-white hover:bg-[var(--retro-yellow)]">
               <span className="text-xl block mb-1">{emoji}</span>
               <h4 className="text-[12px] font-black text-foreground uppercase">{label}</h4>
               <p className="text-[9px] text-foreground/60 font-bold">{desc}</p>
@@ -279,7 +279,7 @@ const ConfidentialiteTab = ({
       <div className="grid grid-cols-2 gap-3">
         {confCards.map((card, i) => (
           <button key={card.id} onClick={() => setConfSection(card.id)}
-            className="retro-card retro-card-tilt p-4 text-left hover:shadow-lg transition-all active:scale-95 animate-fadeInUp"
+            className="retro-card retro-card-tilt p-4 text-left hover:shadow-lg transition-all animate-fadeInUp"
             style={{ animationDelay: `${0.1 + i * 0.05}s`, backgroundColor: card.bg }}>
             <span className="text-3xl block mb-2">{card.emoji}</span>
             <h3 className="text-[14px] font-black text-gray-800 leading-tight uppercase">{card.label}</h3>

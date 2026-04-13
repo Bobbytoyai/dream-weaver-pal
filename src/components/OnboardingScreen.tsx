@@ -132,7 +132,7 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
             </p>
             <button
               onClick={() => goStep(1)}
-              className="animate-fadeInUp group relative w-full py-4 rounded-2xl bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] font-bold text-lg shadow-lg shadow-[hsla(215,85%,58%,0.3)] hover:shadow-xl hover:shadow-[hsla(215,85%,58%,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+              className="animate-fadeInUp group relative w-full py-4 rounded-2xl bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] font-bold text-lg shadow-lg shadow-[hsla(215,85%,58%,0.3)] hover:shadow-xl hover:shadow-[hsla(215,85%,58%,0.4)] hover:scale-[1.02] transition-all duration-200"
               style={{ animationDelay: "0.25s" }}
             >
               C'est parti ! 🚀
@@ -169,7 +169,7 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
             <button
               onClick={() => goStep(2)}
               disabled={name.trim().length < 2}
-              className="animate-fadeInUp mt-5 w-full py-4 rounded-2xl bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] font-bold text-lg shadow-lg shadow-[hsla(215,85%,58%,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed"
+              className="animate-fadeInUp mt-5 w-full py-4 rounded-2xl bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] font-bold text-lg shadow-lg shadow-[hsla(215,85%,58%,0.3)] hover:scale-[1.02] transition-all duration-200 disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed"
               style={{ animationDelay: "0.25s" }}
             >
               Suivant ✨
@@ -213,7 +213,7 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
             <button
               onClick={() => age && goStep(3)}
               disabled={!age}
-              className="animate-fadeInUp w-full py-4 rounded-2xl bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] font-bold text-lg shadow-lg shadow-[hsla(215,85%,58%,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed"
+              className="animate-fadeInUp w-full py-4 rounded-2xl bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] font-bold text-lg shadow-lg shadow-[hsla(215,85%,58%,0.3)] hover:scale-[1.02] transition-all duration-200 disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-not-allowed"
               style={{ animationDelay: "0.5s" }}
             >
               Suivant ✨

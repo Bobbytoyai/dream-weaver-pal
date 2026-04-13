@@ -107,7 +107,7 @@ const ReglagesTab = ({
           ["profil", "👤", "Profil enfant", "Intérêts, mémoire, préférences", "var(--retro-purple)"],
         ] as const).map(([key, emoji, label, desc, bg], i) => (
           <button key={key} onClick={() => setReglagesSection(key)}
-            className={`retro-card retro-card-tilt-${(i % 6) + 1} p-5 text-center transition-all duration-200 active:scale-95 hover:translate-y-[-2px]`}
+            className={`retro-card retro-card-tilt-${(i % 6) + 1} p-5 text-center transition-all duration-200 hover:translate-y-[-2px]`}
             style={{ backgroundColor: bg, boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}>
             <span className="text-4xl block mb-2">{emoji}</span>
             <span className="text-[14px] font-black text-foreground block uppercase">{label}</span>

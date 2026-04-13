@@ -530,16 +530,16 @@ const SessionDetailView = ({
                 {analysis?.audio_path ? (
                   <>
                     <button onClick={() => skipAudio(-10)}
-                      className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all active:scale-90">
+                      className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all">
                       <SkipBack className="w-4 h-4" />
                     </button>
                     <button onClick={() => playAudio(analysis.audio_path!)}
-                      className="w-14 h-14 border-4 border-black bg-foreground text-background flex items-center justify-center hover:opacity-90 transition-all active:scale-95"
+                      className="w-14 h-14 border-4 border-black bg-foreground text-background flex items-center justify-center hover:opacity-90 transition-all"
                       style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
                       {playingAudio === analysis.audio_path ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-0.5" />}
                     </button>
                     <button onClick={() => skipAudio(10)}
-                      className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all active:scale-90">
+                      className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all">
                       <SkipForward className="w-4 h-4" />
                     </button>
                   </>
@@ -547,23 +547,23 @@ const SessionDetailView = ({
                   <div className="flex items-center gap-2">
                     {!fullPlaybackActive ? (
                       <button onClick={() => startFullPlayback(0)}
-                        className="w-14 h-14 border-4 border-black bg-foreground text-background flex items-center justify-center hover:opacity-90 transition-all active:scale-95"
+                        className="w-14 h-14 border-4 border-black bg-foreground text-background flex items-center justify-center hover:opacity-90 transition-all"
                         style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
                         <Play className="w-6 h-6 ml-0.5" />
                       </button>
                     ) : (
                       <>
                         <button onClick={() => { if (fullPlaybackIdx > 0) setFullPlaybackIdx(i => Math.max(0, i - 1)); }}
-                          className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all active:scale-90">
+                          className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all">
                           <SkipBack className="w-4 h-4" />
                         </button>
                         <button onClick={toggleFullPlaybackPause}
-                          className="w-14 h-14 border-4 border-black bg-foreground text-background flex items-center justify-center hover:opacity-90 transition-all active:scale-95"
+                          className="w-14 h-14 border-4 border-black bg-foreground text-background flex items-center justify-center hover:opacity-90 transition-all"
                           style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
                           {fullPlaybackLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : fullPlaybackPaused ? <Play className="w-6 h-6 ml-0.5" /> : <Pause className="w-6 h-6" />}
                         </button>
                         <button onClick={() => { if (fullPlaybackIdx < sessionMessages.length - 1) setFullPlaybackIdx(i => i + 1); }}
-                          className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all active:scale-90">
+                          className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all">
                           <SkipForward className="w-4 h-4" />
                         </button>
                         <button onClick={stopFullPlayback}
@@ -667,7 +667,7 @@ const SessionDetailView = ({
         </>
       ) : (
         <button onClick={() => analyzeSession(session)}
-          className="w-full bg-primary text-primary-foreground border-4 border-black p-5 font-black text-[16px] hover:opacity-90 transition-all active:scale-95 uppercase">
+          className="w-full bg-primary text-primary-foreground border-4 border-black p-5 font-black text-[16px] hover:opacity-90 transition-all uppercase">
           🧠 Lancer l'analyse IA
         </button>
       )}
@@ -675,12 +675,12 @@ const SessionDetailView = ({
       {/* Action Buttons */}
       <div className="grid grid-cols-3 gap-3">
         <button onClick={() => exportSessionPDF(session, analysis)}
-          className="flex flex-col items-center gap-2 py-4 border-4 border-black bg-white hover:bg-muted transition-all active:scale-95">
+          className="flex flex-col items-center gap-2 py-4 border-4 border-black bg-white hover:bg-muted transition-all">
           <Download className="w-6 h-6 text-gray-800" />
           <span className="text-[13px] font-black text-gray-800 uppercase">Exporter</span>
         </button>
         <button onClick={onCloudSave}
-          className="flex flex-col items-center gap-2 py-4 border-4 border-black bg-white hover:bg-muted transition-all active:scale-95">
+          className="flex flex-col items-center gap-2 py-4 border-4 border-black bg-white hover:bg-muted transition-all">
           <CloudUpload className="w-6 h-6 text-gray-800" />
           <span className="text-[13px] font-black text-gray-800 uppercase">Cloud</span>
         </button>
@@ -692,7 +692,7 @@ const SessionDetailView = ({
             variant: "danger",
             onConfirm: () => { deleteSession(session.id); },
           })}
-          className="flex flex-col items-center gap-2 py-4 border-4 border-black hover:bg-muted transition-all active:scale-95" style={{ backgroundColor: 'var(--retro-red)' }}>
+          className="flex flex-col items-center gap-2 py-4 border-4 border-black hover:bg-muted transition-all" style={{ backgroundColor: 'var(--retro-red)' }}>
           <Trash2 className="w-6 h-6 text-gray-800" />
           <span className="text-[13px] font-black text-gray-800 uppercase">Supprimer</span>
         </button>

@@ -293,14 +293,14 @@ export default function StoryNarrationPlayer({
         <button
           onClick={skipBack}
           disabled={currentIndex <= 0}
-          className="w-10 h-10 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center text-foreground/70 hover:bg-white/70 hover:text-foreground disabled:opacity-30 transition-all active:scale-90"
+          className="w-10 h-10 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center text-foreground/70 hover:bg-white/70 hover:text-foreground disabled:opacity-30 transition-all"
         >
           <SkipBack className="w-4 h-4" />
         </button>
 
         <button
           onClick={togglePause}
-          className="w-14 h-14 rounded-full bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--secondary))] flex items-center justify-center text-white shadow-lg shadow-[hsla(215,85%,58%,0.3)] hover:scale-105 active:scale-95 transition-all"
+          className="w-14 h-14 rounded-full bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--secondary))] flex items-center justify-center text-white shadow-lg shadow-[hsla(215,85%,58%,0.3)] hover:scale-105 transition-all"
         >
           {isPaused ? (
             <Play className="w-6 h-6 ml-0.5" />
@@ -312,7 +312,7 @@ export default function StoryNarrationPlayer({
         <button
           onClick={skipForward}
           disabled={currentIndex >= segments.length - 1}
-          className="w-10 h-10 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center text-foreground/70 hover:bg-white/70 hover:text-foreground disabled:opacity-30 transition-all active:scale-90"
+          className="w-10 h-10 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center text-foreground/70 hover:bg-white/70 hover:text-foreground disabled:opacity-30 transition-all"
         >
           <SkipForward className="w-4 h-4" />
         </button>

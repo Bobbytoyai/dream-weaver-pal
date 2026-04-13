@@ -23,7 +23,7 @@ const ProfilTab = ({
   return (
     <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
       {showBackButton && onBack && (
-        <button onClick={onBack} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 transition-all border-2 border-black px-3 py-1.5 bg-white">
           <ArrowLeft className="w-4 h-4" /> RÉGLAGES
         </button>
       )}
@@ -41,7 +41,7 @@ const ProfilTab = ({
             {settings.childName.trim() !== "" && settings.childName.trim() !== childName && (
               <button
                 onClick={() => onPendingNameChange(settings.childName.trim())}
-                className="mt-2 w-full py-2 border-2 border-black bg-foreground text-background text-[13px] font-black active:scale-95 transition-all uppercase"
+                className="mt-2 w-full py-2 border-2 border-black bg-foreground text-background text-[13px] font-black transition-all uppercase"
                 style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
                 Enregistrer le prénom
               </button>
@@ -51,7 +51,7 @@ const ProfilTab = ({
         <div className="flex gap-1.5 mt-3 overflow-x-auto">
           {[4, 5, 6, 7, 8, 9, 10, 11, 12].map(age => (
             <button key={age} onClick={() => onUpdate("childAge", age)}
-              className={`shrink-0 w-10 h-10 border-2 border-black text-[13px] font-black transition-all duration-200 active:scale-90 ${
+              className={`shrink-0 w-10 h-10 border-2 border-black text-[13px] font-black transition-all duration-200 ${
                 settings.childAge === age
                   ? "bg-foreground text-background"
                   : "bg-white text-foreground/60 hover:bg-[var(--retro-yellow)]"
@@ -70,7 +70,7 @@ const ProfilTab = ({
           ["balanced", "🎯", "Équilibré", "Un peu de tout", "var(--retro-purple)"],
         ] as const).map(([val, emoji, label, desc, bg]) => (
           <button key={val} onClick={() => onUpdate("personality", val)}
-            className={`retro-card p-3 text-center transition-all duration-200 active:scale-95 ${
+            className={`retro-card p-3 text-center transition-all duration-200 ${
               settings.personality === val ? "ring-2 ring-foreground/30" : ""
             }`}
             style={{ backgroundColor: bg }}>
@@ -113,7 +113,7 @@ const ProfilTab = ({
         <div className="flex flex-wrap gap-1.5 mb-2">
           {settings.blockedTopics.map(t => (
             <button key={t} onClick={() => onUpdate("blockedTopics", settings.blockedTopics.filter(x => x !== t))}
-              className="flex items-center gap-1 px-2.5 py-1 border-2 border-black bg-white text-foreground text-[10px] font-black hover:bg-foreground hover:text-background transition-all active:scale-95">
+              className="flex items-center gap-1 px-2.5 py-1 border-2 border-black bg-white text-foreground text-[10px] font-black hover:bg-foreground hover:text-background transition-all">
               {t} <X className="w-2.5 h-2.5" />
             </button>
           ))}
@@ -139,7 +139,7 @@ const ProfilTab = ({
       <div className="pt-1 pb-2">
         <button
           onClick={onSave}
-          className={`w-full py-3.5 text-[14px] font-black transition-all active:scale-95 border-4 border-black uppercase ${
+          className={`w-full py-3.5 text-[14px] font-black transition-all border-4 border-black uppercase ${
             saved
               ? "bg-[var(--retro-green)] text-foreground"
               : "bg-foreground text-background hover:opacity-90"
