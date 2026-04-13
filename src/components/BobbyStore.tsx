@@ -508,7 +508,7 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
               boxShadow: activeCategory === cat.id ? "3px 3px 0px rgba(0,0,0,0.25)" : "1px 1px 0px rgba(0,0,0,0.1)",
             }}>
             <span className="text-base">{cat.emoji}</span>
-            <span className="whitespace-nowrap">{cat.label}</span>
+            <span className="whitespace-nowrap text-black font-black">{cat.label}</span>
             {cat.id === "nouveautes" && newCount > 0 && (
               <span className="min-w-[16px] h-[16px] px-1 border border-black bg-[var(--retro-red)] text-foreground text-[8px] font-black flex items-center justify-center">
                 {newCount}
