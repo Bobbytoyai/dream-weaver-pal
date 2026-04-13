@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   ArrowLeft, Clock, MessageSquare, Heart, Brain, Loader2, RefreshCw,
@@ -3245,12 +3246,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       switch (tab) {
         case "dashboard": return renderDashboard();
         case "sessions": return renderSessionsList();
-        case "activites": return (
-          <BobbyStore
-            childName={settings.childName}
-            childAge={settings.childAge}
-          />
-        );
+        case "activites": {
+          // Gate Store behind authentication
+          const { data: { session: authSession } } = /* check inline */ { data: { session: null as any } };
+          return (
+            <StoreGate childName={settings.childName} childAge={settings.childAge} />
+          );
+        }
         case "profil": return renderReglages();
         case "personnalisation": return (
           <BobbyCustomizer
