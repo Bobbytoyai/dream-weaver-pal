@@ -1853,39 +1853,42 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     </div>
                   </div>
                 )}
-                {!analysis?.audio_path && sessionMessages.length > 0 && (
+                {!analysis?.audio_path && sessionMessages.length > 0 && (() => {
+                  const totalDur = selectedSession?.duration_seconds || sessionMessages.length * 8;
+                  const progressPct = fullPlaybackActive ? ((fullPlaybackIdx) / Math.max(1, sessionMessages.length)) * 100 : 0;
+                  const elapsedSec = Math.round((progressPct / 100) * totalDur);
+                  return (
                   <div className="mb-4">
-                    <div className="w-full h-2 bg-muted/40 rounded-full overflow-hidden cursor-pointer"
-                      onClick={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const pct = ((e.clientX - rect.left) / rect.width);
+                    <input type="range" min={0} max={100} step={0.5} value={progressPct}
+                      onChange={(e) => {
+                        const pct = parseFloat(e.target.value) / 100;
                         const idx = Math.round(pct * (sessionMessages.length - 1));
                         const clampedIdx = Math.max(0, Math.min(sessionMessages.length - 1, idx));
                         if (fullPlaybackActive) {
-                          // Stop current audio before seeking
                           fullPlaybackRef.current.audio?.pause();
                           fullPlaybackRef.current.audio = null;
+                          setFullPlaybackPaused(false);
                           setFullPlaybackIdx(clampedIdx);
                         } else {
-                          // Start playback from clicked position
                           startFullPlayback(clampedIdx);
                         }
-                      }}>
-                      <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-300"
-                        style={{ width: `${(fullPlaybackActive ? (fullPlaybackIdx / Math.max(1, sessionMessages.length)) * 100 : 0)}%` }} />
-                    </div>
+                      }}
+                      className="w-full h-2 rounded-full appearance-none cursor-pointer bg-muted/40
+                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-md
+                        [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-0"
+                      style={{ background: `linear-gradient(to right, hsl(var(--primary)) ${progressPct}%, hsl(var(--muted)) ${progressPct}%)` }}
+                    />
                     <div className="flex justify-between mt-1.5">
                       <span className="text-[10px] text-muted-foreground font-mono font-bold">
-                        {fullPlaybackActive ? `${fullPlaybackIdx + 1} / ${sessionMessages.length}` : "0:00"}
+                        {`${Math.floor(elapsedSec / 60)}:${String(Math.floor(elapsedSec % 60)).padStart(2, "0")}`}
                       </span>
                       <span className="text-[10px] text-muted-foreground font-mono font-bold">
-                        {selectedSession?.duration_seconds
-                          ? formatDuration(selectedSession.duration_seconds)
-                          : `${sessionMessages.length} msgs`}
+                        {`${Math.floor(totalDur / 60)}:${String(Math.floor(totalDur % 60)).padStart(2, "0")}`}
                       </span>
                     </div>
                   </div>
-                )}
+                  );
+                })()}
                 <div className="flex items-center justify-center gap-3">
                   {analysis?.audio_path ? (
                     <>
