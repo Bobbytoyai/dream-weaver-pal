@@ -3113,31 +3113,21 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               {cloudLoading ? <Loader2 className="w-9 h-9 animate-spin text-gray-800" /> : <CloudUpload className="w-9 h-9 text-gray-800" />}
               <div className="text-left flex-1">
                 <h3 className="text-[16px] font-black text-gray-800 uppercase">Créer un compte Cloud</h3>
-                <p className="text-[12px] text-gray-600 font-bold mt-0.5">Générer un code de synchronisation unique</p>
+                <p className="text-[12px] text-gray-600 font-bold mt-0.5">Inscription avec email et mot de passe</p>
               </div>
             </div>
           </button>
 
-          <div className="retro-card p-4 space-y-3">
-            <div className="flex items-center gap-3">
-              <Download className="w-5 h-5 text-gray-800" />
-              <h3 className="text-[15px] font-black text-foreground uppercase">Connecter un compte existant</h3>
+          <button onClick={() => navigate("/bobby-cloud?returnTo=/")} disabled={cloudLoading}
+            className="w-full retro-card p-5 hover:translate-y-[-2px] transition-all active:scale-[0.98] disabled:opacity-50" style={{ backgroundColor: 'var(--retro-green)' }}>
+            <div className="flex items-center gap-4">
+              <LogIn className="w-9 h-9 text-gray-800" />
+              <div className="text-left flex-1">
+                <h3 className="text-[16px] font-black text-gray-800 uppercase">J'ai déjà un compte</h3>
+                <p className="text-[12px] text-gray-600 font-bold mt-0.5">Se connecter avec email et mot de passe</p>
+              </div>
             </div>
-            <p className="text-[12px] text-muted-foreground font-bold">
-              Entrez le code Bobby Cloud d'un autre appareil.
-            </p>
-            <input
-              type="text"
-              value={cloudRestoreCode}
-              onChange={e => setCloudRestoreCode(e.target.value.toUpperCase())}
-              placeholder="BOBBY-XXXX-XXXX"
-              className="w-full text-center text-[16px] font-mono font-black tracking-widest px-3 py-3 border-2 border-black bg-white text-foreground placeholder:text-muted-foreground/40 outline-none focus:ring-2 focus:ring-primary/30 transition-all"
-            />
-            <button onClick={handleCloudRestore} disabled={cloudLoading || !cloudRestoreCode.trim()}
-              className="w-full py-3 bg-primary text-primary-foreground border-4 border-black font-black text-[14px] hover:opacity-90 transition-all active:scale-95 disabled:opacity-40 uppercase">
-              {cloudLoading ? "Connexion…" : "☁️ Connecter"}
-            </button>
-          </div>
+          </button>
         </div>
       )}
 
