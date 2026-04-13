@@ -178,7 +178,7 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
 
       {/* Preview */}
       <div
-        className="retro-card retro-card-tilt-1 overflow-hidden relative"
+        className="retro-card retro-card-tilt-3 overflow-hidden relative"
         style={{ backgroundColor: selectedBg.hex, aspectRatio: "16/9" }}
       >
         <div className="w-full h-full">
