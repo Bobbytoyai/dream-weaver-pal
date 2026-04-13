@@ -189,7 +189,7 @@ const VoiceScreen = ({
         </div>
       )}
 
-      <FloatingParticles />
+      {/* FloatingParticles removed */}
 
       {/* Top bar */}
       <div className="w-full flex items-center justify-between px-2 relative z-10">
