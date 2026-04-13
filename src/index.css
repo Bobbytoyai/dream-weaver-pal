@@ -343,6 +343,14 @@
 .retro-glitch-enter {
   animation: retro-glitch-in 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
+@keyframes retro-glitch-out {
+  0%   { opacity: 1; transform: translateX(0) skewX(0deg); filter: blur(0); }
+  40%  { opacity: 0.5; transform: translateX(-3px) skewX(2deg); filter: blur(1px); }
+  100% { opacity: 0; transform: translateX(5px) skewX(-1deg); filter: blur(3px); }
+}
+.retro-glitch-exit {
+  animation: retro-glitch-out 0.12s ease-in both;
+}
 
 /* ── Retro button bounce ── */
 @keyframes retro-btn-press {
