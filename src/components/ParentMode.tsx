@@ -790,108 +790,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   // SESSION DETAIL + SESSIONS LIST: extracted to SessionDetailView + SessionsListTab
   // ═══════════════════════════════════════════════════════════════
   // PROFIL: extracted to ProfilTab.tsx
-
-  // ═══════════════════════════════════════════════════════════════
-  // RENDER: RÉGLAGES (merged: Voix + Contenu + Limites)
-  // ═══════════════════════════════════════════════════════════════
-
-  const VOICE_MAP: Record<string, { label: string; emoji: string; desc: string; voiceName: string }> = {
-    child: { label: "Mélodie", emoji: "🧒", voiceName: "Enfant", desc: "Voix fun et dynamique" },
-    female: { label: "Mila", emoji: "👩", voiceName: "Maman", desc: "Voix douce et rassurante" },
-    male: { label: "Vincent", emoji: "👨", voiceName: "Papa", desc: "Voix calme et chaleureuse" },
-    sister: { label: "Marine", emoji: "👧", voiceName: "Grande Sœur", desc: "Cool et complice" },
-    brother: { label: "Yanis", emoji: "👦", voiceName: "Grand Frère", desc: "Aventurier et drôle" },
-    custom: { label: "Personnaliser", emoji: "🎨", voiceName: "", desc: "Bientôt disponible" },
-  };
-
-  const [previewPlaying, setPreviewPlaying] = useState<string | false>(false);
-
-  const previewVoice = async (voiceType: string) => {
-    if (previewPlaying || voiceType === "custom") return;
-    setPreviewPlaying(voiceType);
-    try {
-      const { previewVoiceProfile } = await import("@/lib/voicePipeline");
-      await previewVoiceProfile(voiceType as any);
-    } catch (e) { console.warn("Preview error:", e); }
-    finally { setPreviewPlaying(false); }
-  };
-
-  const renderReglages = () => {
-    const handleSave = () => {
-      onSettingsChange?.(settings);
-      setSettingsSaved(true);
-      setTimeout(() => setSettingsSaved(false), 2000);
-    };
-
-    const handleUpdate = <K extends keyof ParentSettings>(key: K, value: ParentSettings[K]) => {
-      updateSetting(key, value);
-    };
-
-    if (reglagesSection === "voix") {
-      return (
-        <VoiceSettings
-          settings={settings}
-          onUpdate={handleUpdate}
-          onBack={() => setReglagesSection(null)}
-          onSave={handleSave}
-          saved={settingsSaved}
-        />
-      );
-    }
-
-    if (reglagesSection === "limites") {
-      const today = new Date().toLocaleDateString("fr-FR");
-      const todaySessions = sessions.filter(s => new Date(s.started_at).toLocaleDateString("fr-FR") === today);
-      const todayDur = todaySessions.reduce((a, s) => a + (s.duration_seconds || 0), 0);
-      return (
-        <LimitsSettings
-          settings={settings}
-          onUpdate={handleUpdate}
-          onUpdateNested={updateNested}
-          todayDuration={todayDur}
-          onBack={() => setReglagesSection(null)}
-          onSave={handleSave}
-          saved={settingsSaved}
-        />
-      );
-    }
-
-    if (reglagesSection === "personnalisation") {
-      return (
-        <BobbyCustomizer
-          settings={settings}
-          onUpdate={(key, value) => updateSetting(key, value)}
-          onBack={() => setReglagesSection(null)}
-          onSave={handleSave}
-          saved={settingsSaved}
-        />
-      );
-    }
-
-    if (reglagesSection === "profil") {
-      return renderProfil();
-    }
-
-    return (
-      <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
-        <h2 className="text-[18px] font-black text-foreground animate-fadeInUp uppercase">⚙️ Réglages</h2>
-        <div className="grid grid-cols-2 gap-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-          {([
-            ["voix", "🎤", "Voix & Sons", "Profils vocaux, vitesse, ton", "var(--retro-blue)"],
-            ["limites", "⏱️", "Limites & Contrôle", "Temps, nuit, interactions, sujets", "var(--retro-yellow)"],
-            ["profil", "👤", "Profil enfant", "Intérêts, mémoire, préférences", "var(--retro-purple)"],
-          ] as const).map(([key, emoji, label, desc, bg], i) => (
-            <button key={key} onClick={() => setReglagesSection(key)}
-              className={`retro-card retro-card-tilt-${(i % 6) + 1} p-5 text-center transition-all duration-200 active:scale-95 hover:translate-y-[-2px]`}
-              style={{ backgroundColor: bg, boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}>
-              <span className="text-4xl block mb-2">{emoji}</span>
-              <span className="text-[14px] font-black text-foreground block uppercase">{label}</span>
-              <span className="text-[10px] text-foreground/60 leading-tight block mt-1 font-bold">{desc}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
+  // RÉGLAGES: extracted to ReglagesTab.tsx
+  const handleSave = () => {
+    onSettingsChange?.(settings);
+    setSettingsSaved(true);
+    setTimeout(() => setSettingsSaved(false), 2000);
   };
 
   // ═══════════════════════════════════════════════════════════════
