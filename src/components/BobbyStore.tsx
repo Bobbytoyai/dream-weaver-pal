@@ -426,8 +426,22 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
+      <div className="flex flex-col items-center justify-center py-16 gap-3">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-[12px] text-muted-foreground font-medium">Chargement du Bobby Store…</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-3">
+        <span className="text-4xl">😕</span>
+        <p className="text-[14px] text-foreground font-bold">Impossible de charger le Store</p>
+        <p className="text-[12px] text-muted-foreground">Vérifie ta connexion et réessaie</p>
+        <button onClick={() => fetchData(0)} className="mt-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-[13px] font-bold active:scale-95 transition-transform">
+          🔄 Réessayer
+        </button>
       </div>
     );
   }
