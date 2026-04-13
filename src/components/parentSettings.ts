@@ -49,7 +49,7 @@ export const BOBBY_COLORS = [
 ];
 
 export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
-  childName: "Bobby",
+  childName: "Mon ami",
   personality: "balanced",
   childAge: 7,
   voiceType: "female",
