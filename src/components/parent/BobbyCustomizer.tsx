@@ -90,17 +90,18 @@ const EMOTION_BUTTONS: { emoji: string; label: string; face: FaceState }[] = [
   { emoji: "😜", label: "Joueur", face: "playful" },
 ];
 
-// Map face states to BobbyEmotion for disable toggle
 const FACE_TO_EMOTION: Record<string, BobbyEmotion> = {
   happy: "joy", sad: "sadness", surprised: "surprise", curious: "curiosity",
   excited: "excitement", calm: "calm", proud: "pride", confused: "confusion",
   reassuring: "love", playful: "boredom", attentive: "determination",
 };
 
-// Only these expressions can be disabled (not system states like listening/speaking)
 const TOGGLEABLE_EMOTIONS = EMOTION_BUTTONS.filter(
   e => !["idle", "listening", "thinking", "speaking", "sleepy"].includes(e.face)
 );
+
+const RETRO_COLORS = ["var(--retro-blue)", "var(--retro-yellow)", "var(--retro-green)", "var(--retro-red)"];
+
 const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCustomizerProps) => {
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [activeEmotion, setActiveEmotion] = useState<FaceState | undefined>(undefined);
@@ -150,7 +151,6 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
     return found?.hex || "#ccc";
   };
 
-  // Map active emotion to voiceState for states that are voiceState-driven
   const voiceStateMap: Record<string, "idle" | "listening" | "processing" | "speaking"> = {
     speaking: "speaking",
     listening: "listening",
@@ -164,21 +164,22 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
       {/* Header */}
       <div className="flex items-center justify-between">
         <button onClick={onBack}
-          className="flex items-center gap-1 text-[13px] font-extrabold text-primary hover:underline active:scale-95 transition-all">
-          <ChevronLeft className="w-4 h-4" /> Retour
+          className="flex items-center gap-1 text-[13px] font-black uppercase text-foreground hover:opacity-70 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white">
+          <ChevronLeft className="w-4 h-4" /> RETOUR
         </button>
         <button
           onClick={randomizeBobby}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-accent text-accent-foreground text-[12px] font-extrabold hover:opacity-90 active:scale-95 transition-all shadow-sm"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--retro-yellow)] text-foreground text-[12px] font-black uppercase hover:opacity-90 active:scale-95 transition-all border-4 border-black"
+          style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.25)" }}
         >
-          <Shuffle className="w-3.5 h-3.5" /> Aléatoire
+          <Shuffle className="w-3.5 h-3.5" /> ALÉATOIRE
         </button>
       </div>
 
       {/* Preview */}
       <div
-        className="rounded-2xl overflow-hidden border-2 border-border/20 relative"
-        style={{ backgroundColor: selectedBg.hex, aspectRatio: "16/9" }}
+        className="overflow-hidden border-4 border-black relative"
+        style={{ backgroundColor: selectedBg.hex, aspectRatio: "16/9", boxShadow: "6px 6px 0px rgba(0,0,0,0.25)" }}
       >
         <div className="w-full h-full">
           <HologramFace
@@ -190,7 +191,7 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
           />
         </div>
         {activeEmotion && (
-          <div className="absolute top-2 right-2 px-2.5 py-1 rounded-lg bg-foreground/75 text-background text-[10px] font-bold animate-fade-in backdrop-blur-sm">
+          <div className="absolute top-2 right-2 px-2.5 py-1 border-2 border-black bg-white text-foreground text-[10px] font-black uppercase">
             {EMOTION_BUTTONS.find(e => e.face === activeEmotion)?.emoji}{" "}
             {EMOTION_BUTTONS.find(e => e.face === activeEmotion)?.label}
           </div>
@@ -201,28 +202,30 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
       <div>
         <button
           onClick={() => setShowEmotions(!showEmotions)}
-          className="w-full flex items-center justify-between px-3 py-2 rounded-xl border-2 border-border/30 bg-card hover:border-border/50 transition-all"
+          className="w-full flex items-center justify-between px-3 py-2 border-4 border-black bg-[var(--retro-purple)] hover:opacity-90 transition-all"
+          style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}
         >
-          <span className="text-[12px] font-bold text-foreground">🎭 Tester les expressions</span>
-          <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${showEmotions ? "rotate-180" : ""}`} />
+          <span className="text-[12px] font-black text-foreground uppercase">🎭 TESTER LES EXPRESSIONS</span>
+          <ChevronDown className={`w-3.5 h-3.5 text-foreground transition-transform duration-200 ${showEmotions ? "rotate-180" : ""}`} />
         </button>
 
         {showEmotions && (
-          <div className="grid grid-cols-4 gap-1.5 mt-2 animate-fade-in">
+          <div className="grid grid-cols-4 gap-1.5 mt-2">
             {EMOTION_BUTTONS.map((emo) => {
               const isActive = activeEmotion === emo.face;
               return (
                 <button
                   key={emo.face}
                   onClick={() => testEmotion(emo.face)}
-                  className={`flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-xl transition-all duration-150 active:scale-90 border-2 ${
+                  className={`flex flex-col items-center gap-0.5 py-1.5 px-1 transition-all duration-150 active:scale-90 border-2 border-black ${
                     isActive
-                      ? "border-primary bg-primary/10 shadow-md scale-[1.08]"
-                      : "border-transparent bg-muted/40 hover:bg-muted/70 hover:scale-105"
+                      ? "bg-[var(--retro-yellow)] shadow-md scale-[1.08]"
+                      : "bg-white hover:bg-[var(--retro-blue)]/30 hover:scale-105"
                   }`}
+                  style={{ boxShadow: isActive ? "3px 3px 0px rgba(0,0,0,0.2)" : "1px 1px 0px rgba(0,0,0,0.1)" }}
                 >
                   <span className="text-[18px] leading-none">{emo.emoji}</span>
-                  <span className={`text-[9px] font-bold leading-tight ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                  <span className={`text-[9px] font-black leading-tight uppercase ${isActive ? "text-foreground" : "text-foreground/60"}`}>
                     {emo.label}
                   </span>
                 </button>
@@ -236,24 +239,25 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
       <div>
         <button
           onClick={() => setOpenSection(openSection === "expr-toggles" ? null : "expr-toggles")}
-          className="w-full flex items-center justify-between px-3 py-2 rounded-xl border-2 border-border/30 bg-card hover:border-border/50 transition-all"
+          className="w-full flex items-center justify-between px-3 py-2 border-4 border-black bg-[var(--retro-red)] hover:opacity-90 transition-all"
+          style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}
         >
-          <span className="text-[12px] font-bold text-foreground">🚫 Activer / Désactiver des expressions</span>
-          <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${openSection === "expr-toggles" ? "rotate-180" : ""}`} />
+          <span className="text-[12px] font-black text-foreground uppercase">🚫 ACTIVER / DÉSACTIVER</span>
+          <ChevronDown className={`w-3.5 h-3.5 text-foreground transition-transform duration-200 ${openSection === "expr-toggles" ? "rotate-180" : ""}`} />
         </button>
 
         {openSection === "expr-toggles" && (
-          <div className="mt-2 space-y-1 animate-fade-in">
-            <p className="text-[9px] text-muted-foreground px-1 mb-1.5">Désactivez les expressions que Bobby ne doit jamais utiliser en conversation.</p>
+          <div className="mt-2 space-y-1">
+            <p className="text-[9px] text-foreground/60 px-1 mb-1.5 font-bold">Désactivez les expressions que Bobby ne doit jamais utiliser en conversation.</p>
             {TOGGLEABLE_EMOTIONS.map((emo) => {
               const emotionKey = FACE_TO_EMOTION[emo.face];
               if (!emotionKey) return null;
               const isDisabled = (settings.disabledExpressions || []).includes(emotionKey);
               return (
-                <div key={emo.face} className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-all">
+                <div key={emo.face} className="flex items-center justify-between px-3 py-1.5 bg-white border-2 border-black hover:bg-[var(--retro-blue)]/20 transition-all">
                   <div className="flex items-center gap-2">
                     <span className="text-[16px]">{emo.emoji}</span>
-                    <span className="text-[11px] font-bold text-foreground">{emo.label}</span>
+                    <span className="text-[11px] font-black text-foreground uppercase">{emo.label}</span>
                   </div>
                   <Switch
                     checked={!isDisabled}
@@ -273,37 +277,38 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
         )}
       </div>
 
-      {/* Compact cards grid */}
+      {/* Compact color cards grid */}
       <div className="grid grid-cols-2 gap-2.5">
-        {SECTIONS.map((section) => {
+        {SECTIONS.map((section, idx) => {
           const isOpen = openSection === section.key;
           const currentHex = getSelectedHex(section.key);
           const isTransparent = currentHex === "transparent";
+          const retroBg = RETRO_COLORS[idx % RETRO_COLORS.length];
 
           return (
             <div key={section.key} className={`transition-all duration-200 ${isOpen ? "col-span-2" : ""}`}>
               <button
                 onClick={() => setOpenSection(isOpen ? null : section.key)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl border-2 transition-all duration-200 active:scale-[0.97] ${
-                  isOpen
-                    ? "border-primary/40 bg-primary/5 shadow-md"
-                    : "border-border/30 bg-card hover:border-border/50 hover:shadow-sm"
-                }`}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 border-4 border-black transition-all duration-200 active:scale-[0.97]"
+                style={{
+                  backgroundColor: isOpen ? retroBg : "var(--card)",
+                  boxShadow: isOpen ? "4px 4px 0px rgba(0,0,0,0.25)" : "2px 2px 0px rgba(0,0,0,0.15)",
+                }}
               >
                 <span className="text-[16px]">{section.emoji}</span>
-                <span className="text-[12px] font-bold text-foreground flex-1 text-left">{section.label}</span>
+                <span className="text-[12px] font-black text-foreground flex-1 text-left uppercase">{section.label}</span>
                 <div
-                  className="w-6 h-6 rounded-lg border-2 border-border/40 shrink-0"
+                  className="w-6 h-6 border-2 border-black shrink-0"
                   style={{
                     backgroundColor: isTransparent ? undefined : currentHex,
                     ...(isTransparent ? { background: "repeating-conic-gradient(#ddd 0% 25%, transparent 0% 50%) 50% / 8px 8px" } : {}),
                   }}
                 />
-                <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                <ChevronDown className={`w-3.5 h-3.5 text-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
               </button>
 
               {isOpen && (
-                <div className="flex gap-2 flex-wrap mt-2 px-1 pb-1 animate-fade-in">
+                <div className="flex gap-2 flex-wrap mt-2 px-1 pb-1">
                   {section.colors.map((c) => {
                     const isSelected = (colors as any)[section.key] === c.id;
                     const isTrans = c.hex === "transparent";
@@ -311,18 +316,19 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
                       <button
                         key={c.id}
                         onClick={() => updateColor(section.key, c.id)}
-                        className={`w-9 h-9 rounded-xl transition-all duration-150 active:scale-90 border-[2.5px] flex items-center justify-center ${
+                        className={`w-9 h-9 transition-all duration-150 active:scale-90 border-4 flex items-center justify-center ${
                           isSelected
-                            ? "border-primary shadow-md scale-110 ring-2 ring-primary/25"
-                            : "border-transparent hover:scale-105 hover:border-border/40"
+                            ? "border-black scale-110 ring-2 ring-foreground/25"
+                            : "border-black/30 hover:scale-105 hover:border-black"
                         }`}
                         style={{
                           backgroundColor: isTrans ? undefined : c.hex,
+                          boxShadow: isSelected ? "3px 3px 0px rgba(0,0,0,0.25)" : "none",
                           ...(isTrans ? { background: "repeating-conic-gradient(#ddd 0% 25%, transparent 0% 50%) 50% / 10px 10px" } : {}),
                         }}
                         title={c.label}
                       >
-                        {isTrans && <span className="text-[9px] text-muted-foreground font-bold">∅</span>}
+                        {isTrans && <span className="text-[9px] text-foreground/60 font-black">∅</span>}
                       </button>
                     );
                   })}
@@ -335,12 +341,13 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
 
       {/* Save */}
       <button onClick={onSave}
-        className={`w-full py-3 rounded-2xl text-[13px] font-black transition-all active:scale-95 ${
+        className={`w-full py-3 text-[13px] font-black transition-all active:scale-95 border-4 border-black uppercase ${
           saved
-            ? "bg-success/15 text-success border-2 border-success/30"
-            : "bg-primary text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25"
-        }`}>
-        {saved ? "✅ Enregistré !" : "💾 Enregistrer"}
+            ? "bg-[var(--retro-green)] text-foreground"
+            : "bg-foreground text-background hover:opacity-90"
+        }`}
+        style={{ boxShadow: "5px 5px 0px rgba(0,0,0,0.3)" }}>
+        {saved ? "✅ ENREGISTRÉ !" : "💾 ENREGISTRER"}
       </button>
     </div>
   );

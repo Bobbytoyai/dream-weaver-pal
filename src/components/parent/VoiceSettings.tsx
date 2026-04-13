@@ -90,6 +90,8 @@ const PERSONALITIES = [
   { value: "educational" as const, emoji: "🎓", label: "Éducatif", desc: "Focus sur l'apprentissage" },
 ];
 
+const RETRO_COLORS = ["var(--retro-blue)", "var(--retro-yellow)", "var(--retro-green)", "var(--retro-red)", "var(--retro-purple)", "var(--retro-orange)"];
+
 const VoiceSettings = ({ settings, onUpdate, onBack, onSave, saved }: VoiceSettingsProps) => {
   const [previewPlaying, setPreviewPlaying] = useState<string | false>(false);
 
@@ -106,12 +108,12 @@ const VoiceSettings = ({ settings, onUpdate, onBack, onSave, saved }: VoiceSetti
   return (
     <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
       <button onClick={onBack}
-        className="flex items-center gap-1.5 text-[13px] font-extrabold text-primary hover:underline mb-1 active:scale-95 transition-all">
-        <ChevronLeft className="w-4 h-4" /> Réglages
+        className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white">
+        <ChevronLeft className="w-4 h-4" /> RÉGLAGES
       </button>
 
-      <h2 className="text-[18px] font-black text-foreground animate-fadeInUp">🎤 Voix de Bobby</h2>
-      <p className="text-[12px] text-muted-foreground -mt-2 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
+      <h2 className="text-[18px] font-black text-foreground uppercase tracking-wide">🎤 VOIX DE BOBBY</h2>
+      <p className="text-[12px] text-muted-foreground -mt-2 font-bold">
         Choisissez la voix et le caractère qui conviennent le mieux à votre enfant
       </p>
 
@@ -120,42 +122,39 @@ const VoiceSettings = ({ settings, onUpdate, onBack, onSave, saved }: VoiceSetti
         {VOICES.map((v, i) => {
           const selected = settings.voiceType === v.type;
           const isPlaying = previewPlaying === v.type;
+          const retroBg = RETRO_COLORS[i % RETRO_COLORS.length];
           return (
             <button
               key={v.type}
               onClick={() => !v.locked && onUpdate("voiceType", v.type)}
               disabled={v.locked}
-              className={`animate-fadeInUp w-full text-left rounded-2xl p-4 transition-all duration-200 border-2 ${
-                v.locked ? "opacity-40 cursor-not-allowed border-border/20 bg-muted/20" :
-                selected
-                  ? "bg-primary/8 border-primary/30 shadow-md shadow-primary/10"
-                  : "bg-card border-border/20 hover:border-primary/15 hover:shadow-sm"
+              className={`retro-card w-full text-left p-4 transition-all duration-200 ${
+                v.locked ? "opacity-40 cursor-not-allowed" :
+                selected ? "ring-4 ring-foreground/20" : "hover:translate-y-[-2px]"
               }`}
-              style={{ animationDelay: `${0.05 + i * 0.04}s` }}
+              style={{ backgroundColor: selected ? retroBg : "var(--card)" }}
             >
               <div className="flex items-start gap-3">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shrink-0 ${
-                  selected ? "bg-primary/15" : "bg-muted/50"
-                }`}>
+                <div className="w-14 h-14 border-4 border-black flex items-center justify-center text-3xl shrink-0 bg-white">
                   {v.emoji}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className={`text-[15px] font-black ${selected ? "text-primary" : "text-foreground"}`}>{v.label}</h3>
-                    <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
-                      selected ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"
-                    }`}>{v.character}</span>
+                    <h3 className="text-[15px] font-black text-foreground uppercase">{v.label}</h3>
+                    <span className="text-[9px] px-2 py-0.5 border-2 border-black font-black bg-white text-foreground">
+                      {v.character}
+                    </span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground font-semibold mt-0.5">{v.tone}</p>
-                  <p className="text-[10px] text-muted-foreground/70 mt-1 leading-snug">{v.desc}</p>
-                  <p className="text-[9px] mt-1.5 font-bold text-primary/70">✨ {v.bestFor}</p>
+                  <p className="text-[11px] text-foreground/70 font-bold mt-0.5">{v.tone}</p>
+                  <p className="text-[10px] text-foreground/60 mt-1 leading-snug">{v.desc}</p>
+                  <p className="text-[9px] mt-1.5 font-black text-foreground/80">✨ {v.bestFor}</p>
                 </div>
-                {/* Preview button */}
                 {!v.locked && selected && (
                   <button
                     onClick={(e) => { e.stopPropagation(); previewVoice(v.type); }}
                     disabled={!!previewPlaying}
-                    className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 hover:opacity-90 active:scale-90 transition-all shadow-md shadow-primary/30">
+                    className="w-10 h-10 border-4 border-black bg-white text-foreground flex items-center justify-center shrink-0 hover:opacity-90 active:scale-90 transition-all"
+                    style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.3)" }}>
                     {isPlaying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                   </button>
                 )}
@@ -166,67 +165,70 @@ const VoiceSettings = ({ settings, onUpdate, onBack, onSave, saved }: VoiceSetti
       </div>
 
       {/* Speed */}
-      <div className="animate-fadeInUp" style={{ animationDelay: "0.3s" }}>
-        <h3 className="text-[14px] font-black text-foreground mb-2">⚡ Vitesse de parole</h3>
+      <div className="retro-card p-4" style={{ backgroundColor: "var(--retro-yellow)" }}>
+        <h3 className="text-[14px] font-black text-foreground mb-3 uppercase">⚡ VITESSE DE PAROLE</h3>
         <div className="grid grid-cols-3 gap-2">
           {SPEEDS.map(s => (
             <button key={s.value} onClick={() => onUpdate("voiceSpeed", s.value)}
-              className={`p-3 rounded-2xl text-center transition-all border-2 ${
+              className={`p-3 text-center transition-all border-4 border-black ${
                 settings.voiceSpeed === s.value
-                  ? "bg-primary/8 border-primary/30 shadow-sm"
-                  : "bg-card border-border/20 hover:border-primary/15"
-              }`}>
+                  ? "bg-white ring-2 ring-foreground/20"
+                  : "bg-white/60 hover:bg-white"
+              }`}
+              style={{ boxShadow: settings.voiceSpeed === s.value ? "4px 4px 0px rgba(0,0,0,0.25)" : "2px 2px 0px rgba(0,0,0,0.15)" }}>
               <span className="text-2xl block">{s.emoji}</span>
-              <span className={`text-[11px] font-black block mt-1 ${settings.voiceSpeed === s.value ? "text-primary" : "text-foreground"}`}>{s.label}</span>
-              <span className="text-[9px] text-muted-foreground leading-tight block mt-0.5">{s.desc}</span>
+              <span className="text-[11px] font-black block mt-1 text-foreground uppercase">{s.label}</span>
+              <span className="text-[9px] text-foreground/60 leading-tight block mt-0.5 font-bold">{s.desc}</span>
             </button>
           ))}
         </div>
       </div>
 
       {/* Personality / Ton */}
-      <div className="animate-fadeInUp" style={{ animationDelay: "0.35s" }}>
-        <h3 className="text-[14px] font-black text-foreground mb-2">🎭 Ton de Bobby</h3>
-        <p className="text-[11px] text-muted-foreground mb-2 -mt-1">Influence la manière dont Bobby s'exprime</p>
+      <div className="retro-card p-4" style={{ backgroundColor: "var(--retro-purple)" }}>
+        <h3 className="text-[14px] font-black text-foreground mb-1 uppercase">🎭 TON DE BOBBY</h3>
+        <p className="text-[11px] text-foreground/70 mb-3 font-bold">Influence la manière dont Bobby s'exprime</p>
         <div className="grid grid-cols-2 gap-2">
           {PERSONALITIES.map(p => (
             <button key={p.value} onClick={() => onUpdate("personality", p.value)}
-              className={`p-3 rounded-2xl text-left transition-all border-2 ${
+              className={`p-3 text-left transition-all border-4 border-black ${
                 settings.personality === p.value
-                  ? "bg-primary/8 border-primary/30"
-                  : "bg-card border-border/20 hover:border-primary/15"
-              }`}>
+                  ? "bg-white ring-2 ring-foreground/20"
+                  : "bg-white/60 hover:bg-white"
+              }`}
+              style={{ boxShadow: settings.personality === p.value ? "4px 4px 0px rgba(0,0,0,0.25)" : "2px 2px 0px rgba(0,0,0,0.15)" }}>
               <span className="text-2xl">{p.emoji}</span>
-              <h4 className={`text-[12px] font-black mt-1 ${settings.personality === p.value ? "text-primary" : "text-foreground"}`}>{p.label}</h4>
-              <p className="text-[9px] text-muted-foreground mt-0.5">{p.desc}</p>
+              <h4 className="text-[12px] font-black mt-1 text-foreground uppercase">{p.label}</h4>
+              <p className="text-[9px] text-foreground/60 mt-0.5 font-bold">{p.desc}</p>
             </button>
           ))}
         </div>
       </div>
 
       {/* SFX Volume */}
-      <div className="bg-card rounded-2xl p-4 border-2 border-border/20 animate-fadeInUp" style={{ animationDelay: "0.4s" }}>
+      <div className="retro-card p-4" style={{ backgroundColor: "var(--retro-green)" }}>
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-[13px] font-black text-foreground">🔊 Volume des sons</h3>
-          <span className="text-[12px] font-mono font-bold text-primary">{Math.round(settings.sfxVolume * 100)}%</span>
+          <h3 className="text-[13px] font-black text-foreground uppercase">🔊 VOLUME DES SONS</h3>
+          <span className="text-[12px] font-mono font-black text-foreground border-2 border-black px-2 py-0.5 bg-white">{Math.round(settings.sfxVolume * 100)}%</span>
         </div>
         <input type="range" min="0" max="100" value={Math.round(settings.sfxVolume * 100)}
           onChange={(e) => onUpdate("sfxVolume", Number(e.target.value) / 100)}
-          className="w-full h-2 rounded-full appearance-none bg-muted accent-primary" />
-        <div className="flex justify-between text-[9px] text-muted-foreground mt-1">
-          <span>🔇 Muet</span><span>🔊 Max</span>
+          className="w-full h-3 appearance-none bg-white border-2 border-black accent-foreground" />
+        <div className="flex justify-between text-[9px] text-foreground/60 mt-1 font-black">
+          <span>🔇 MUET</span><span>🔊 MAX</span>
         </div>
       </div>
 
       {/* Save */}
       <button
         onClick={onSave}
-        className={`w-full py-3.5 rounded-2xl text-[14px] font-black transition-all active:scale-95 ${
+        className={`w-full py-3.5 text-[14px] font-black transition-all active:scale-95 border-4 border-black uppercase ${
           saved
-            ? "bg-emerald-500/15 text-emerald-700 border-2 border-emerald-500/30"
-            : "bg-primary text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25"
-        }`}>
-        {saved ? "✅ Enregistré !" : "💾 Enregistrer"}
+            ? "bg-[var(--retro-green)] text-foreground"
+            : "bg-foreground text-background hover:opacity-90"
+        }`}
+        style={{ boxShadow: "5px 5px 0px rgba(0,0,0,0.3)" }}>
+        {saved ? "✅ ENREGISTRÉ !" : "💾 ENREGISTRER"}
       </button>
     </div>
   );
