@@ -382,7 +382,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(ps);
     if (rightPupilRef.current) rightPupilRef.current.scale.setScalar(ps);
 
-    // Eyelids — fast curtain blink, semi-transparent except sleep
+    // Eyelids — scale from top within eye bounds
     const blinkClose = 1 - state.eyeOpenness;
     const isSleepingNow = faceState === "sleepy";
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
@@ -398,38 +398,31 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         
         ref.current.visible = true;
         
-        // Fast snap blink — steeper ease curve
+        // Fast snap blink — steep ease curve
         const t = coverAmount;
         const easedCover = t < 0.5
           ? 4 * t * t * t
-          : 1 - Math.pow(-2 * t + 2, 3) / 2; // cubic in-out, snappier
+          : 1 - Math.pow(-2 * t + 2, 3) / 2;
         
-        // Slide from fully hidden above to fully covering the eye
-        const hiddenY = 0.58;
-        const closedY = -0.05; // lower = covers entire eye including bottom
-        let targetY = hiddenY - easedCover * (hiddenY - closedY);
+        // Scale Y from 0 (open) to 1 (closed) — eyelid grows from top of eye downward
+        let scaleY = easedCover;
         
         // Sleeping: slow breathing + occasional flutter
         if (isSleepingNow) {
           const flutterT = performance.now() * 0.001;
-          const breathDrop = Math.sin(flutterT * 0.35) * 0.06;
-          const peekDrop = Math.sin(flutterT * 0.12) > 0.85 ? Math.sin(flutterT * 1.5) * 0.035 : 0;
-          targetY -= Math.max(0, breathDrop) + Math.max(0, peekDrop);
+          const breathPulse = Math.sin(flutterT * 0.35) * 0.04;
+          const peekPulse = Math.sin(flutterT * 0.12) > 0.85 ? Math.sin(flutterT * 1.5) * 0.025 : 0;
+          scaleY = Math.min(1, scaleY + breathPulse - Math.max(0, peekPulse));
         }
         
-        ref.current.position.y = targetY;
+        ref.current.scale.set(1, Math.max(0, scaleY), 1);
         
         // Transparency: semi-transparent during blinks, opaque when sleeping
         if (isSleepingNow) {
           eyelidMat.opacity = 1.0;
         } else {
-          // Slight transparency during fast blinks for a softer look
           eyelidMat.opacity = 0.55 + easedCover * 0.45;
         }
-        
-        // Slight squash for organic feel
-        const squashX = 1 + easedCover * 0.06;
-        ref.current.scale.set(squashX, 1, 1);
       }
     });
 
