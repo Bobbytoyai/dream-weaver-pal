@@ -36,7 +36,7 @@ export type Database = {
           session_patterns: Json
           total_stories_heard: number
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           behavior_patterns?: Json
@@ -59,7 +59,7 @@ export type Database = {
           session_patterns?: Json
           total_stories_heard?: number
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           behavior_patterns?: Json
@@ -82,7 +82,7 @@ export type Database = {
           session_patterns?: Json
           total_stories_heard?: number
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
@@ -110,7 +110,7 @@ export type Database = {
           started_at: string
           tags: string[] | null
           topics: string[] | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           ai_summary?: string | null
@@ -127,7 +127,7 @@ export type Database = {
           started_at?: string
           tags?: string[] | null
           topics?: string[] | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           ai_summary?: string | null
@@ -144,7 +144,7 @@ export type Database = {
           started_at?: string
           tags?: string[] | null
           topics?: string[] | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -159,7 +159,7 @@ export type Database = {
           parent_settings: Json
           sync_code: string
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           child_memory_snapshot?: Json
@@ -171,7 +171,7 @@ export type Database = {
           parent_settings?: Json
           sync_code: string
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           child_memory_snapshot?: Json
@@ -183,7 +183,7 @@ export type Database = {
           parent_settings?: Json
           sync_code?: string
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -269,7 +269,7 @@ export type Database = {
           sociability_score: number | null
           summary: string | null
           topics_detected: string[]
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           alerts?: Json
@@ -290,7 +290,7 @@ export type Database = {
           sociability_score?: number | null
           summary?: string | null
           topics_detected?: string[]
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           alerts?: Json
@@ -311,7 +311,7 @@ export type Database = {
           sociability_score?: number | null
           summary?: string | null
           topics_detected?: string[]
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
@@ -425,7 +425,7 @@ export type Database = {
           message: string
           session_id: string
           severity: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           alert_type?: string
@@ -437,7 +437,7 @@ export type Database = {
           message: string
           session_id: string
           severity?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           alert_type?: string
@@ -449,7 +449,7 @@ export type Database = {
           message?: string
           session_id?: string
           severity?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
@@ -469,7 +469,7 @@ export type Database = {
           id: string
           role: string
           session_id: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           content: string
@@ -478,7 +478,7 @@ export type Database = {
           id?: string
           role: string
           session_id: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           content?: string
@@ -487,7 +487,7 @@ export type Database = {
           id?: string
           role?: string
           session_id?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
