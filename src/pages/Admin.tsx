@@ -1099,7 +1099,7 @@ const Admin = () => {
                 if (count === 0) return null;
                 return (
                   <button key={cat.id} onClick={() => { setInteractionCat(cat.id); setSearch(""); }}
-                    className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group"
+                    className="aspect-square bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-3 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between group"
                   >
                     <span className="text-2xl">{cat.emoji}</span>
                     <div>
@@ -1240,7 +1240,7 @@ const Admin = () => {
           <div className="grid grid-cols-3 gap-3">
             {filteredCats.map(cat => (
               <button key={cat} onClick={() => { setInteractionCat(cat); setSearch(""); setAgeFilter(null); }}
-                className="bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group aspect-square"
+                className="bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-3 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between group aspect-square"
               >
                 <span className="text-lg capitalize text-white/70">{cat.replace(/_/g, " ")}</span>
                 <div>
@@ -1428,7 +1428,7 @@ const Admin = () => {
           <div className="grid grid-cols-2 gap-3">
             {GAME_SECTIONS.map(section => (
               <button key={section.id} onClick={() => { setInteractionCat(section.id); setSearch(""); }}
-                className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group"
+                className="aspect-square bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between group"
               >
                 <span className="text-3xl">{section.emoji}</span>
                 <div>
@@ -1530,7 +1530,7 @@ const Admin = () => {
           <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
             {filteredIntents.map(([intent, entries]) => (
               <button key={intent} onClick={() => { setInteractionCat(intent); setSearch(""); }}
-                className="bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-3 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between aspect-square"
+                className="bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-3 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between aspect-square"
               >
                 <span className="text-2xl">{QA_INTENT_EMOJIS[intent] || "❓"}</span>
                 <div>
@@ -1663,7 +1663,7 @@ const Admin = () => {
                 const EMOJIS: Record<string, string> = { animaux: "🐾", ecole: "📚", nourriture: "🍕", absurde: "🤪", famille: "👨‍👩‍👧", science: "🔬" };
                 return (
                   <button key={cat} onClick={() => { setInteractionCat(cat); setSearch(""); }}
-                    className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between">
+                    className="aspect-square bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between">
                     <span className="text-3xl">{EMOJIS[cat] || "😂"}</span>
                     <div>
                       <p className="text-xl font-bold text-white">{catBlagues.length}</p>
@@ -1813,7 +1813,7 @@ const Admin = () => {
                 const count = CHANSONS.filter(c => c.categorie === cat.id).length;
                 return (
                   <button key={cat.id} onClick={() => { setInteractionCat(cat.id); setSearch(""); }}
-                    className={`aspect-square ${cat.color} hover:opacity-90 backdrop-blur rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between`}>
+                    className={`aspect-square ${cat.color} hover:opacity-90 backdrop-blur rounded-2xl p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between`}>
                     <span className="text-3xl">{cat.emoji}</span>
                     <div>
                       <p className="text-xl font-bold text-white">{count}</p>
@@ -2105,7 +2105,7 @@ const Admin = () => {
               const cloudCount = cloudStories.filter(s => s.theme === theme.id).length;
               return (
                 <button key={theme.id} onClick={() => { setInteractionCat(theme.id); setSearch(""); setAgeFilter(null); }}
-                  className={`aspect-square ${theme.color} hover:opacity-90 backdrop-blur rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between`}>
+                  className={`aspect-square ${theme.color} hover:opacity-90 backdrop-blur rounded-2xl p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between`}>
                   <span className="text-3xl">{theme.emoji}</span>
                   <div>
                     <p className="text-xl font-bold text-white">{count}</p>
@@ -2331,7 +2331,7 @@ const Admin = () => {
               const count = categoryCounts[section.id]?.total ?? 0;
               return (
                 <button key={section.id} onClick={() => { setCloudSection(section.id); setSearch(""); }}
-                  className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group"
+                  className="aspect-square bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between group"
                 >
                   <div className={`w-10 h-10 rounded-xl ${section.bgColor} flex items-center justify-center`}>
                     <Icon className={`w-5 h-5 ${section.color}`} />
