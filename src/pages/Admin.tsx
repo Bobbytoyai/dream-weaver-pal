@@ -613,6 +613,48 @@ const Admin = () => {
     setLoadingInteractions(false);
   }, [interactions]);
 
+  // Real user conversations from DB
+  interface RealConversation {
+    session_id: string;
+    child_name: string;
+    child_age: number;
+    started_at: string;
+    messages: { role: string; content: string; detected_emotion: string | null; created_at: string }[];
+    topics: string[] | null;
+    detected_emotions: string[] | null;
+  }
+  const [realConversations, setRealConversations] = useState<RealConversation[]>([]);
+  const [realConvLoading, setRealConvLoading] = useState(false);
+
+  const fetchRealConversations = useCallback(async () => {
+    setRealConvLoading(true);
+    const { data: sessions } = await supabase
+      .from("child_sessions")
+      .select("id, child_name, child_age, started_at, topics, detected_emotions")
+      .order("started_at", { ascending: false })
+      .limit(50);
+    if (!sessions?.length) { setRealConvLoading(false); return; }
+
+    const { data: messages } = await supabase
+      .from("session_messages")
+      .select("session_id, role, content, detected_emotion, created_at")
+      .in("session_id", sessions.map(s => s.id))
+      .order("created_at", { ascending: true });
+
+    const convs: RealConversation[] = sessions.map(s => ({
+      session_id: s.id,
+      child_name: s.child_name,
+      child_age: s.child_age,
+      started_at: s.started_at,
+      topics: s.topics,
+      detected_emotions: s.detected_emotions,
+      messages: (messages || []).filter(m => m.session_id === s.id),
+    })).filter(c => c.messages.length > 0);
+
+    setRealConversations(convs);
+    setRealConvLoading(false);
+  }, []);
+
   const fetchEntries = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase.from("knowledge_base").select("*").order("priority", { ascending: false });
@@ -639,7 +681,7 @@ const Admin = () => {
   }, []);
 
   useEffect(() => {
-    if (authenticated) { fetchEntries(); fetchCloudStories(); fetchStoreItems(); fetchCloudUsers(); }
+    if (authenticated) { fetchEntries(); fetchCloudStories(); fetchStoreItems(); fetchCloudUsers(); loadInteractions(); fetchRealConversations(); }
   }, [authenticated, fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers]);
 
   // ─── Derived ───
