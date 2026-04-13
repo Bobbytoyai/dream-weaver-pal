@@ -76,7 +76,7 @@ serve(async (req) => {
         ? " Utilise un vocabulaire simple mais pas bébé."
         : " Tu peux utiliser un vocabulaire un peu plus riche.";
 
-    const systemContent = `${SYSTEM_PROMPT}\n\nCONTEXTE DE SESSION :\n- L'enfant s'appelle ${childName}.\n- Il/elle a ${childAge} ans.${ageHint}${personalityHint}\n- RAPPEL : utilise "${childName}" naturellement dans ~30% de tes réponses.`;
+    const systemContent = `${SYSTEM_PROMPT}\n\nCONTEXTE DE SESSION :\n- L'enfant s'appelle ${childName}. Utilise EXACTEMENT "${childName}" quand tu t'adresses à lui/elle. NE JAMAIS écrire "childName", "child_name", "l'enfant", ou tout autre placeholder.\n- Il/elle a ${childAge} ans.${ageHint}${personalityHint}\n- RAPPEL CRITIQUE : le prénom est "${childName}". Utilise-le tel quel ~30% du temps.`;
 
     // Inject a reminder about the child's name in the conversation if history is long
     const sanitizedMessages = (messages || []).slice(-12).map((m: { role: string; content: string }) => ({
@@ -127,6 +127,13 @@ serve(async (req) => {
 
     const data = await response.json();
     let reply = data.choices?.[0]?.message?.content ?? "";
+
+    // ─── Post-processing: fix LLM placeholder leaks ───
+    // Replace any literal "childName" / "child_name" / "{childName}" the LLM might output
+    reply = reply.replace(/\{?\bchild[_\s]?name\b\}?/gi, childName);
+    reply = reply.replace(/\[prénom\]/gi, childName);
+    reply = reply.replace(/\[nom\]/gi, childName);
+    reply = reply.replace(/\[enfant\]/gi, childName);
 
     // ─── Post-processing safety filter ───
     const BLOCKED_PHRASES = [
