@@ -2828,7 +2828,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const renderNouveautes = () => (
     <div className="p-4 space-y-3">
       {/* Version banner */}
-      <div className="bg-gradient-to-br from-primary/15 to-primary/5 rounded-2xl p-4">
+      <div className="bg-gradient-to-br from-primary/15 to-primary/5 rounded-2xl p-4 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         <div className="flex items-center gap-2 mb-1">
           <Sparkles className="w-4 h-4 text-primary" />
           <h3 className="text-[13px] font-bold text-foreground">Bobby v2.0</h3>
@@ -2959,7 +2959,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
     // ── Sub-section: Sécurité ──
     if (confSection === "securite") return (
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         <button onClick={() => setConfSection(null)} className="flex items-center gap-2 text-primary text-[13px] font-extrabold mb-1" style={{ fontFamily: "'Nunito', sans-serif" }}>
           <ChevronLeft className="w-4 h-4" /> Confidentialité
         </button>
@@ -3038,7 +3038,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
     // ── Sub-section: Données ──
     if (confSection === "donnees") return (
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         <button onClick={() => setConfSection(null)} className="flex items-center gap-2 text-primary text-[13px] font-extrabold mb-1" style={{ fontFamily: "'Nunito', sans-serif" }}>
           <ChevronLeft className="w-4 h-4" /> Confidentialité
         </button>
@@ -3121,7 +3121,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
     // ── Sub-section: RGPD ──
     if (confSection === "rgpd") return (
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         <button onClick={() => setConfSection(null)} className="flex items-center gap-2 text-primary text-[13px] font-extrabold mb-1" style={{ fontFamily: "'Nunito', sans-serif" }}>
           <ChevronLeft className="w-4 h-4" /> Confidentialité
         </button>
