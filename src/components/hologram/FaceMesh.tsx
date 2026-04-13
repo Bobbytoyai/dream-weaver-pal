@@ -187,8 +187,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   }), []);
 
   // Eyelid
+  const defaultBgHex = (bobbyColors?.background && BG_HEX[bobbyColors.background]) || BG_HEX["soft-blue"];
   const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#E8F0FE"), transparent: false, opacity: 1.0, depthWrite: true,
+    color: new THREE.Color(defaultBgHex), transparent: false, opacity: 1.0, depthWrite: true,
   }), []);
 
   // Cheeks — #FF69B4
