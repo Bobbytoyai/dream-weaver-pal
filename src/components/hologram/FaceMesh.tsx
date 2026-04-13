@@ -171,15 +171,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const eyeOutlineMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("#3A3A5C"), transparent: true, opacity: 0.22,
   }), []);
-  const eyeWhiteMat = useMemo(() => {
-    const m = new THREE.MeshBasicMaterial({ color: new THREE.Color("#FFFFFF") });
-    // Write stencil to mask eyelid
-    m.stencilWrite = true;
-    m.stencilRef = 1;
-    m.stencilFunc = THREE.AlwaysStencilFunc;
-    m.stencilZPass = THREE.ReplaceStencilOp;
-    return m;
-  }, []);
+  const eyeWhiteMat = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color("#FFFFFF") }), []);
 
   const irisOuterMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("#1B5E20"), transparent: true, opacity: 0.95,
@@ -217,21 +209,11 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   // Eyelid — matches background with slight tint for contrast
   const bgKey = bobbyColors?.background || "soft-blue";
   const bgHex = BG_HEX[bgKey] || BG_HEX["soft-blue"];
-  const eyelidMat = useMemo(() => {
-    const m = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(bgHex),
-      transparent: true,
-      opacity: 1.0,
-      depthWrite: false,
-      depthTest: false,
-      side: THREE.DoubleSide,
-    });
-    // Only render where stencil = 1 (inside eye white)
-    m.stencilWrite = false;
-    m.stencilRef = 1;
-    m.stencilFunc = THREE.EqualStencilFunc;
-    return m;
-  }, []);
+  const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
+    color: new THREE.Color(bgHex),
+    transparent: true,
+    opacity: 1.0,
+  }), []);
   
   // Keep eyelid color synced — always a noticeably darker shade of the background
   useEffect(() => {
@@ -402,7 +384,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(ps);
     if (rightPupilRef.current) rightPupilRef.current.scale.setScalar(ps);
 
-    // Eyelids — top layer clipped inside the eye, moving up from below
+    // Eyelids — scaleY approach: geometry anchored at top of eye, scales downward
+    // This guarantees the eyelid NEVER exits the eye circle
     const blinkClose = 1 - state.eyeOpenness;
     const isSleepingNow = faceState === "sleepy";
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
@@ -423,15 +406,11 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
           ? 4 * t * t * t
           : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-        // Eyelid travels only within eye bounds: from just below eye (-0.27) to closed (0.03)
-        const hiddenY = -0.27;
-        const closedY = 0.03;
-        let targetY = hiddenY + easedCover * (closedY - hiddenY);
+        let scaleY = easedCover;
 
-        // Sleep: fully closed with more pronounced upward rebounds
+        // Sleep: nearly fully closed with gentle breathing bounces
         if (isSleepingNow) {
           const sleepT = performance.now() * 0.001;
-          // Slow breathing — lifts lid noticeably
           const breathLift = Math.max(0, Math.sin(sleepT * 0.4)) * 0.03;
           const bigPeek = Math.sin(sleepT * 0.1) > 0.75
             ? Math.max(0, Math.sin(sleepT * 1.2)) * 0.06
@@ -439,11 +418,13 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
           const dramaticFlutter = Math.sin(sleepT * 0.04) > 0.95
             ? Math.max(0, Math.sin(sleepT * 2.5)) * 0.09
             : 0;
-          targetY = closedY + Math.max(breathLift, bigPeek, dramaticFlutter);
+          // Slightly less than 1 to show a thin white strip, then bounces reduce further
+          scaleY = 0.94 - Math.max(breathLift, bigPeek, dramaticFlutter);
         }
 
-        ref.current.position.y = targetY;
-        ref.current.scale.set(1, 1, 1);
+        // Position is always at top of eye; scaleY controls coverage
+        ref.current.position.y = 0.27;
+        ref.current.scale.set(1, Math.max(0, Math.min(1, scaleY)), 1);
 
         if (isSleepingNow) {
           eyelidMat.opacity = 1.0;
@@ -561,17 +542,18 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   ) => (
     <group ref={eyeRef} position={[eyeX, eyeY, 0.01]} key={side}>
       <mesh geometry={eyeWhiteGeo} material={eyeWhiteMat} renderOrder={1} />
-      <mesh geometry={eyeOutlineGeo} material={eyeOutlineMat} position={[0, 0, 0.02]} renderOrder={2} />
+      {/* Eye outline — on top of everything */}
+      <mesh geometry={eyeOutlineGeo} material={eyeOutlineMat} position={[0, 0, 0.05]} />
       <mesh ref={irisRef} geometry={irisOuterGeo} position={[0, -0.03, 0.01]} material={irisOuterMat} />
       <mesh ref={pupilRef} geometry={pupilGeo} position={[0, -0.02, 0.02]} material={pupilMat} />
       <mesh ref={hl1Ref} position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
-      {/* hl2 hidden — single highlight per eye */}
       <mesh ref={hl2Ref} position={[hl1[0], hl1[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} visible={false} />
-      {/* Eyelid — same eye shape, drawn last, rising from below and clipped inside the white eye area */}
-      <mesh ref={eyelidRef} position={[0, -0.62, 0.044]} material={eyelidMat} renderOrder={30}>
+      {/* Eyelid — geometry anchored at top (y=0), extends downward to y=-0.54 */}
+      {/* Positioned at top of eye (y=0.27). scaleY 0→1 grows it from invisible line to full eye coverage */}
+      <mesh ref={eyelidRef} position={[0, 0.27, 0.04]} material={eyelidMat} scale={[1, 0, 1]}>
         <shapeGeometry args={[(() => {
           const s = new THREE.Shape();
-          s.absellipse(0, 0, 0.33, 0.27, 0, Math.PI * 2, false, 0);
+          s.absellipse(0, -0.27, 0.33, 0.27, 0, Math.PI * 2, false, 0);
           return s;
         })(), 32]} />
       </mesh>
