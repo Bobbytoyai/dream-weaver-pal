@@ -74,7 +74,7 @@ const moodLabels: Record<string, { label: string; color: string; emoji: string }
 
 const tagLabels: Record<string, { label: string; emoji: string; color: string }> = {
   fun: { label: "Fun", emoji: "🎉", color: "bg-secondary/60 text-secondary-foreground" },
-  learning: { label: "Apprentissage", emoji: "📚", color: "bg-primary/15 text-primary" },
+  learning: { label: "Apprendre", emoji: "📚", color: "bg-primary/15 text-primary" },
   emotion: { label: "Émotion", emoji: "💛", color: "bg-accent/60 text-accent-foreground" },
   story: { label: "Histoire", emoji: "📖", color: "bg-muted text-muted-foreground" },
 };
