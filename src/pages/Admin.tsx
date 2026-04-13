@@ -2707,7 +2707,6 @@ const Admin = () => {
               onClick={() => {
                 setTopSection(section.id);
                 setSearch("");
-                if (section.id === "interactions") loadInteractions();
               }}
             />
           ))}
