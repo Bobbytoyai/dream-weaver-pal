@@ -398,15 +398,17 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={pupilRef} geometry={pupilGeo} position={[0, -0.02, 0.02]} material={pupilMat} />
       <mesh position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       <mesh position={[hl2[0], hl2[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} />
-      {/* Eyelid: half-dome (upper semicircle) — descends like a real eyelid */}
-      <mesh ref={eyelidRef} position={[0, 0.68, 0.05]} material={eyelidMat}>
+      {/* Eyelid: half-dome descending from above like a real eyelid */}
+      <mesh ref={eyelidRef} position={[0, 0.95, 0.05]} material={eyelidMat}>
         <shapeGeometry args={[(() => {
           const s = new THREE.Shape();
-          const rx = 0.50; // wider than eye (0.38) for full coverage
-          const ry = 0.46; // tall enough to cover fully
-          // Upper semicircle only — flat bottom, curved top
+          const rx = 0.50;
+          const ry = 0.48;
+          // Draw upper half-dome: flat bottom at y=0, dome goes UP
+          // When this descends, the flat edge acts as the eyelid line
           s.moveTo(-rx, 0);
-          s.absellipse(0, 0, rx, ry, Math.PI, 0, false, 0);
+          // Arc from left to right going upward (0 to PI)
+          s.absellipse(0, 0, rx, ry, Math.PI, Math.PI * 2, false, 0);
           s.lineTo(-rx, 0);
           return s;
         })(), 32]} />
