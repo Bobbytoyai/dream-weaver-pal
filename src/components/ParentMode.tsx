@@ -28,6 +28,11 @@ import {
 import { ParentSettings, DEFAULT_PARENT_SETTINGS, BOBBY_COLORS } from "./parentSettings";
 import { getSafetyAlertRecords, clearSafetyAlertRecords, type SafetyAlertRecord } from "@/lib/offlineEngine";
 import { eventBus } from "@/lib/eventBus";
+import {
+  saveToCloud, restoreFromCloud, getCloudProfile, deleteCloudProfile,
+  getLocalSyncCode, formatSyncTime,
+  type CloudProfile,
+} from "@/lib/bobby/cloudSync";
 export type { ParentSettings };
 export { DEFAULT_PARENT_SETTINGS };
 
