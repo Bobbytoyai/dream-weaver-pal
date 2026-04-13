@@ -2886,42 +2886,35 @@ const Admin = () => {
         })()}
 
         {/* ── Live Activity Widget ── */}
-        <div className="bg-gradient-to-r from-emerald-500/[0.06] to-cyan-500/[0.06] backdrop-blur-xl rounded-2xl p-3 border border-emerald-500/10">
+        <div className="bg-gradient-to-r from-emerald-500/[0.08] to-cyan-500/[0.08] rounded-2xl p-3" style={{ border: "1px solid var(--admin-border)" }}>
           <div className="flex items-center gap-2 mb-2.5">
             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <p className="text-[11px] font-bold text-emerald-400 tracking-wide">ACTIVITÉ EN DIRECT</p>
-            <p className="text-[9px] text-white/20 ml-auto">⟳ 30s</p>
+            <p className="text-[11px] font-bold text-emerald-500 tracking-wide">ACTIVITÉ EN DIRECT</p>
+            <p className="text-[9px] ml-auto" style={{ color: "var(--admin-text-faint)" }}>⟳ 30s</p>
           </div>
           <div className="grid grid-cols-3 gap-2">
-            <div className="bg-white/[0.04] rounded-xl p-2.5 text-center">
-              <p className="text-[22px] font-extrabold text-emerald-400 leading-none">{liveStats.activeSessions}</p>
-              <p className="text-[9px] text-white/30 mt-1">actives maintenant</p>
-            </div>
-            <div className="bg-white/[0.04] rounded-xl p-2.5 text-center">
-              <p className="text-[22px] font-extrabold text-cyan-400 leading-none">{liveStats.todaySessions}</p>
-              <p className="text-[9px] text-white/30 mt-1">sessions aujourd'hui</p>
-            </div>
-            <div className="bg-white/[0.04] rounded-xl p-2.5 text-center">
-              <p className="text-[22px] font-extrabold text-blue-400 leading-none">{liveStats.todayMessages}</p>
-              <p className="text-[9px] text-white/30 mt-1">messages aujourd'hui</p>
-            </div>
+            {[
+              { val: liveStats.activeSessions, label: "actives maintenant", color: "text-emerald-500" },
+              { val: liveStats.todaySessions, label: "sessions aujourd'hui", color: "text-cyan-500" },
+              { val: liveStats.todayMessages, label: "messages aujourd'hui", color: "text-blue-500" },
+            ].map(s => (
+              <div key={s.label} className="rounded-xl p-2.5 text-center" style={{ background: "var(--admin-card)" }}>
+                <p className={`text-[22px] font-extrabold leading-none ${s.color}`}>{s.val}</p>
+                <p className="text-[9px] mt-1" style={{ color: "var(--admin-text-muted)" }}>{s.label}</p>
+              </div>
+            ))}
           </div>
           <div className="flex items-center justify-between mt-2.5 px-1">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[9px] text-white/20">⏱ Durée moy:</span>
-              <span className="text-[10px] font-bold text-white/50">{liveStats.avgDuration > 0 ? `${Math.floor(liveStats.avgDuration / 60)}m${(liveStats.avgDuration % 60).toString().padStart(2, "0")}s` : "—"}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[9px] text-white/20">😊 Top émotion:</span>
-              <span className="text-[10px] font-bold text-white/50">{liveStats.topEmotion}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[9px] text-white/20">🕐 Dernière:</span>
-              <span className="text-[10px] font-bold text-white/50">{liveStats.lastActivity ? (() => {
-                const diff = Math.round((Date.now() - new Date(liveStats.lastActivity).getTime()) / 60000);
-                return diff < 1 ? "à l'instant" : diff < 60 ? `il y a ${diff}m` : `il y a ${Math.floor(diff / 60)}h`;
-              })() : "—"}</span>
-            </div>
+            {[
+              { icon: "⏱", label: "Durée moy:", value: liveStats.avgDuration > 0 ? `${Math.floor(liveStats.avgDuration / 60)}m${(liveStats.avgDuration % 60).toString().padStart(2, "0")}s` : "—" },
+              { icon: "😊", label: "Top émotion:", value: liveStats.topEmotion },
+              { icon: "🕐", label: "Dernière:", value: liveStats.lastActivity ? (() => { const diff = Math.round((Date.now() - new Date(liveStats.lastActivity).getTime()) / 60000); return diff < 1 ? "à l'instant" : diff < 60 ? `il y a ${diff}m` : `il y a ${Math.floor(diff / 60)}h`; })() : "—" },
+            ].map(s => (
+              <div key={s.label} className="flex items-center gap-1.5">
+                <span className="text-[9px]" style={{ color: "var(--admin-text-faint)" }}>{s.icon} {s.label}</span>
+                <span className="text-[10px] font-bold" style={{ color: "var(--admin-text-secondary)" }}>{s.value}</span>
+              </div>
+            ))}
           </div>
         </div>
 
