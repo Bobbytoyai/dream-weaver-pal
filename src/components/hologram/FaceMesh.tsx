@@ -388,7 +388,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
       if (ref.current) {
         const coverAmount = isSleepingNow
-          ? 0.97
+          ? 1.0
           : Math.max(0, Math.min(1, blinkClose));
         
         if (coverAmount < 0.01) {
@@ -407,12 +407,16 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         // Scale Y from 0 (open) to 1 (closed) — eyelid grows from top of eye downward
         let scaleY = easedCover;
         
-        // Sleeping: slow breathing + occasional flutter
+        // Sleeping: full cover with gentle bounces revealing bottom of eyes
         if (isSleepingNow) {
           const flutterT = performance.now() * 0.001;
-          const breathPulse = Math.sin(flutterT * 0.35) * 0.04;
-          const peekPulse = Math.sin(flutterT * 0.12) > 0.85 ? Math.sin(flutterT * 1.5) * 0.025 : 0;
-          scaleY = Math.min(1, scaleY + breathPulse - Math.max(0, peekPulse));
+          // Slow breathing bounce — lifts lid slightly to peek bottom of eye
+          const breathBounce = Math.max(0, Math.sin(flutterT * 0.4)) * 0.12;
+          // Occasional bigger peek — shows more of the eye bottom briefly
+          const bigPeek = Math.sin(flutterT * 0.08) > 0.88
+            ? Math.max(0, Math.sin(flutterT * 0.7)) * 0.18
+            : 0;
+          scaleY = 1.0 - Math.max(breathBounce, bigPeek);
         }
         
         ref.current.scale.set(1, Math.max(0, scaleY), 1);
