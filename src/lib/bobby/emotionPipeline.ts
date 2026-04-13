@@ -97,8 +97,8 @@ const EMOTION_PATTERNS: EmotionPattern[] = [
   {
     emotion: "surprise",
     patterns: [
-      /vraiment\s*[?!]|sérieux|c'est fou|impossible|dingue|incroyable|😲|😮|🤯/i,
-      /pas possible|je crois pas|wow|waouh|oh la/i,
+      /c'est fou|impossible|dingue|incroyable|😲|😮|🤯/i,
+      /pas possible|je crois pas|waouh/i,
     ],
     baseIntensity: 3,
   },
@@ -262,6 +262,12 @@ function getContextBoost(): { emotion?: BobbyEmotion; boost: number } {
  */
 export function detectEmotion(text: string): EmotionState {
   const lower = text.toLowerCase();
+  
+  // Short or trivial text → always neutral (prevents false detections on "oh", "ok", etc.)
+  if (text.trim().length < 8) {
+    return { emotion: "neutral", intensity: 2 };
+  }
+  
   let bestMatch: { emotion: BobbyEmotion; score: number; baseIntensity: number } | null = null;
   let secondaryMatch: BobbyEmotion | undefined;
 
