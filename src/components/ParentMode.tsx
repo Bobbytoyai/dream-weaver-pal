@@ -3114,22 +3114,22 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         /* Not connected */
         <div className="space-y-3">
           <button onClick={handleCloudSave} disabled={cloudLoading}
-            className="w-full bg-gradient-to-br from-primary/15 to-primary/5 rounded-3xl p-5 border-2 border-primary/20 hover:border-primary/40 transition-all active:scale-[0.98] disabled:opacity-50">
+            className="w-full retro-card p-5 hover:translate-y-[-2px] transition-all active:scale-[0.98] disabled:opacity-50" style={{ backgroundColor: 'var(--retro-blue)' }}>
             <div className="flex items-center gap-4">
-              {cloudLoading ? <Loader2 className="w-9 h-9 animate-spin text-primary" /> : <CloudUpload className="w-9 h-9 text-primary" />}
+              {cloudLoading ? <Loader2 className="w-9 h-9 animate-spin text-gray-800" /> : <CloudUpload className="w-9 h-9 text-gray-800" />}
               <div className="text-left flex-1">
-                <h3 className="text-[16px] font-extrabold text-foreground">Créer un compte Cloud</h3>
-                <p className="text-[12px] text-muted-foreground mt-0.5">Générer un code de synchronisation unique</p>
+                <h3 className="text-[16px] font-black text-gray-800 uppercase">Créer un compte Cloud</h3>
+                <p className="text-[12px] text-gray-600 font-bold mt-0.5">Générer un code de synchronisation unique</p>
               </div>
             </div>
           </button>
 
-          <div className="bg-card rounded-3xl p-4 border border-border/20 space-y-3">
+          <div className="retro-card p-4 space-y-3">
             <div className="flex items-center gap-3">
-              <Download className="w-5 h-5 text-primary" />
-              <h3 className="text-[15px] font-extrabold text-foreground">Connecter un compte existant</h3>
+              <Download className="w-5 h-5 text-gray-800" />
+              <h3 className="text-[15px] font-black text-foreground uppercase">Connecter un compte existant</h3>
             </div>
-            <p className="text-[12px] text-muted-foreground">
+            <p className="text-[12px] text-muted-foreground font-bold">
               Entrez le code Bobby Cloud d'un autre appareil.
             </p>
             <input
@@ -3137,10 +3137,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               value={cloudRestoreCode}
               onChange={e => setCloudRestoreCode(e.target.value.toUpperCase())}
               placeholder="BOBBY-XXXX-XXXX"
-              className="w-full text-center text-[16px] font-mono font-extrabold tracking-widest px-3 py-3 rounded-2xl bg-muted text-foreground placeholder:text-muted-foreground/40 outline-none focus:ring-2 focus:ring-primary/30 transition-all border border-border/20"
+              className="w-full text-center text-[16px] font-mono font-black tracking-widest px-3 py-3 border-2 border-black bg-white text-foreground placeholder:text-muted-foreground/40 outline-none focus:ring-2 focus:ring-primary/30 transition-all"
             />
             <button onClick={handleCloudRestore} disabled={cloudLoading || !cloudRestoreCode.trim()}
-              className="w-full py-3 rounded-2xl bg-primary text-primary-foreground font-extrabold text-[14px] hover:opacity-90 transition-all active:scale-95 disabled:opacity-40 shadow-md shadow-primary/20">
+              className="w-full py-3 bg-primary text-primary-foreground border-4 border-black font-black text-[14px] hover:opacity-90 transition-all active:scale-95 disabled:opacity-40 uppercase">
               {cloudLoading ? "Connexion…" : "☁️ Connecter"}
             </button>
           </div>
@@ -3148,21 +3148,21 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       )}
 
       {/* ── CONTENU SYNCHRONISÉ ── */}
-      <div className="bg-card rounded-3xl p-5 border border-border/20">
-        <h3 className="text-[16px] font-extrabold text-foreground mb-3">📦 Contenu inclus dans Bobby Cloud</h3>
+      <div className="retro-card p-5">
+        <h3 className="text-[16px] font-black text-foreground mb-3 uppercase">📦 Contenu inclus dans Bobby Cloud</h3>
         <div className="grid grid-cols-2 gap-2">
           {[
-            { emoji: "🧠", title: "Cerveau complet", desc: "Knowledge base, QA, mémoire enfant", color: "from-purple-500/12 to-purple-400/5" },
-            { emoji: "💬", title: "Conversations", desc: "Toutes les sessions Bobby ↔ enfant", color: "from-blue-500/12 to-blue-400/5" },
-            { emoji: "📚", title: "Bibliothèque", desc: "Histoires, contes et récits", color: "from-amber-500/12 to-amber-400/5" },
-            { emoji: "🎓", title: "Contenu éducatif", desc: "Jeux, quiz, activités", color: "from-green-500/12 to-green-400/5" },
-            { emoji: "🎙️", title: "Voix & TTS", desc: "Cache audio, préférences voix", color: "from-pink-500/12 to-pink-400/5" },
-            { emoji: "📊", title: "Analyses IA", desc: "Rapports émotionnels, scores", color: "from-cyan-500/12 to-cyan-400/5" },
+            { emoji: "🧠", title: "Cerveau complet", desc: "Knowledge base, QA, mémoire enfant", bg: "var(--retro-purple)" },
+            { emoji: "💬", title: "Conversations", desc: "Toutes les sessions Bobby ↔ enfant", bg: "var(--retro-blue)" },
+            { emoji: "📚", title: "Bibliothèque", desc: "Histoires, contes et récits", bg: "var(--retro-yellow)" },
+            { emoji: "🎓", title: "Contenu éducatif", desc: "Jeux, quiz, activités", bg: "var(--retro-green)" },
+            { emoji: "🎙️", title: "Voix & TTS", desc: "Cache audio, préférences voix", bg: "var(--retro-red)" },
+            { emoji: "📊", title: "Analyses IA", desc: "Rapports émotionnels, scores", bg: "#e5e5e5" },
           ].map(c => (
-            <div key={c.title} className={`bg-gradient-to-br ${c.color} rounded-2xl p-3 border border-border/10`}>
+            <div key={c.title} className="border-2 border-black p-3" style={{ backgroundColor: c.bg }}>
               <span className="text-2xl block mb-1">{c.emoji}</span>
-              <h4 className="text-[13px] font-extrabold text-foreground">{c.title}</h4>
-              <p className="text-[10px] text-muted-foreground leading-snug mt-0.5">{c.desc}</p>
+              <h4 className="text-[13px] font-black text-gray-800">{c.title}</h4>
+              <p className="text-[10px] text-gray-600 leading-snug mt-0.5 font-bold">{c.desc}</p>
             </div>
           ))}
         </div>
