@@ -127,7 +127,7 @@ export default function AdminDetailDialog({ item, onClose, onSave, onDelete, onD
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       {/* Dialog */}
-      <div className="relative w-full max-w-lg max-h-[90vh] bg-[hsl(240,30%,12%)] border border-white/15 rounded-t-3xl sm:rounded-3xl overflow-hidden flex flex-col shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
+      <div className="relative w-full max-w-lg max-h-[90vh] bg-[#0f0f18] border border-white/15 rounded-t-3xl sm:rounded-3xl overflow-hidden flex flex-col shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
         {/* Header */}
         <div className="flex items-center gap-3 p-4 border-b border-white/10">
           <span className="text-3xl">{item.emoji}</span>
