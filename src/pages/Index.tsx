@@ -1,152 +1,45 @@
-import { useState, useEffect, lazy, Suspense } from "react";
-import LazyImportBoundary from "@/components/LazyImportBoundary";
-import RetroLoader from "@/components/RetroLoader";
-import type { PendingNarration } from "@/hooks/useConversationStateMachine";
+// ─── Bobby LCD Screen ───────────────────────────────────────
+// Cette page simule l'écran LCD du jouet Bobby.
+// Elle ne doit JAMAIS changer de page, afficher de loader,
+// ou être interrompue. Toujours le visage de Bobby, point.
+// Le Mode Parent est accessible uniquement via QR code dédié (/parent/:code).
 
+import { useState, useEffect } from "react";
 import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/parentSettings";
-import { useChildMemory } from "@/hooks/useChildMemory";
-import { eventBus } from "@/lib/eventBus";
-
-const VoiceScreen = lazy(() => import("@/components/VoiceScreen"));
-const StoryMode = lazy(() => import("@/components/StoryMode"));
-const ContentCategories = lazy(() => import("@/components/ContentCategories"));
-const ParentMode = lazy(() => import("@/components/ParentMode"));
+import VoiceScreen from "@/components/VoiceScreen";
 
 const SETTINGS_STORAGE_KEY = "bobby_parent_settings";
 
 function loadSavedSettings(): ParentSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
-    if (raw) {
-      const saved = JSON.parse(raw);
-      return { ...DEFAULT_PARENT_SETTINGS, ...saved };
-    }
+    if (raw) return { ...DEFAULT_PARENT_SETTINGS, ...JSON.parse(raw) };
   } catch {}
   return DEFAULT_PARENT_SETTINGS;
 }
 
 const Index = () => {
-  const [mode, setMode] = useState<"voice" | "story" | "parent" | "activities">("voice");
-  const [pendingNarration, setPendingNarration] = useState<PendingNarration | null>(null);
-  const [activeGameCategory, setActiveGameCategory] = useState<string | null>(null);
   const [parentSettings, setParentSettings] = useState<ParentSettings>(loadSavedSettings);
 
-  const childName = parentSettings.childName;
-  const childAge = parentSettings.childAge;
-
-  const { memory, loading, saveSettings } = useChildMemory(childName);
-
-  // Listen for NARRATE_STORY events from StoryLibrary
+  // Sync settings from localStorage changes (e.g. parent updated via QR page)
   useEffect(() => {
-    const unsub = eventBus.on("NARRATE_STORY", (event) => {
-      if (event.type === "NARRATE_STORY") {
-        setPendingNarration({
-          storyId: event.storyId,
-          title: event.title,
-          text: event.text,
-        });
-        setMode("voice");
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === SETTINGS_STORAGE_KEY && e.newValue) {
+        try { setParentSettings({ ...DEFAULT_PARENT_SETTINGS, ...JSON.parse(e.newValue) }); } catch {}
       }
-    });
-    return unsub;
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  // Restore from cloud memory ONLY if localStorage has no settings (first visit / new device)
-  // localStorage is the source of truth; cloud is backup for cross-device sync
-  useEffect(() => {
-    if (!memory?.preferences?.parentSettings) return;
-    const hasLocalSettings = !!localStorage.getItem(SETTINGS_STORAGE_KEY);
-    if (hasLocalSettings) {
-      // Local exists → push local to cloud (local is truth)
-      const localSettings = loadSavedSettings();
-      saveSettings({ parentSettings: localSettings });
-      return;
-    }
-    // No local settings → restore from cloud (new device)
-    try {
-      const saved = memory.preferences.parentSettings as Record<string, unknown>;
-      setParentSettings((prev) => {
-        const merged = { ...DEFAULT_PARENT_SETTINGS, ...saved };
-        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));
-        return merged;
-      });
-    } catch { /* ignore */ }
-  }, [memory, saveSettings]);
-
-  const handleSettingsChange = (settings: ParentSettings) => {
-    setParentSettings(settings);
-    // Persist immediately to localStorage (reliable, instant)
-    try { localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings)); } catch {}
-    // Also sync to cloud memory (async)
-    saveSettings({ parentSettings: settings });
-  };
-
-  if (mode === "parent") {
-    return (
-      <LazyImportBoundary label="Parent mode">
-        <Suspense fallback={<RetroLoader message="Mode parent…" />}>
-          <ParentMode
-            childName={childName}
-            onClose={() => setMode("voice")}
-            parentSettings={parentSettings}
-            onSettingsChange={handleSettingsChange}
-          />
-        </Suspense>
-      </LazyImportBoundary>
-    );
-  }
-
-  if (mode === "activities") {
-    return (
-      <LazyImportBoundary label="Activities">
-        <Suspense fallback={<RetroLoader message="Activités…" />}>
-          <ContentCategories
-            childName={childName}
-            voiceProfile={parentSettings.voiceType || "female"}
-            onSelectCategory={(cat) => {
-              setActiveGameCategory(cat);
-              setMode("voice");
-            }}
-            onBack={() => setMode("voice")}
-          />
-        </Suspense>
-      </LazyImportBoundary>
-    );
-  }
-
-  if (mode === "story") {
-    return (
-      <LazyImportBoundary label="Story mode">
-        <Suspense fallback={<RetroLoader message="Histoire…" />}>
-          <StoryMode
-            childName={childName}
-            childAge={childAge}
-            onBack={() => setMode("voice")}
-            parentSettings={parentSettings}
-            onParentMode={() => setMode("parent")}
-          />
-        </Suspense>
-      </LazyImportBoundary>
-    );
-  }
-
   return (
-    <LazyImportBoundary label="Voice screen">
-      <Suspense fallback={<RetroLoader />}>
-        <VoiceScreen
-          childName={childName}
-          childAge={childAge}
-          onSwitchToChat={() => {}}
-          onSwitchToStory={() => setMode("story")}
-          onParentMode={() => setMode("parent")}
-          parentSettings={parentSettings}
-          activeGameCategory={activeGameCategory}
-          onClearGame={() => setActiveGameCategory(null)}
-          pendingNarration={pendingNarration}
-          onNarrationConsumed={() => setPendingNarration(null)}
-        />
-      </Suspense>
-    </LazyImportBoundary>
+    <VoiceScreen
+      childName={parentSettings.childName}
+      childAge={parentSettings.childAge}
+      onSwitchToChat={() => {}}
+      onParentMode={() => {}}
+      parentSettings={parentSettings}
+    />
   );
 };
 
