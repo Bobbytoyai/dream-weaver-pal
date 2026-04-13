@@ -3409,9 +3409,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           const hasAnyData = chartData.some(d => d["😊 Joie"] > 0 || d["😢 Triste"] > 0 || d["🧐 Curiosité"] > 0);
 
           return hasAnyData ? (
-            <div className="hero-fade-in bg-gradient-to-br from-violet-400/15 via-pink-400/10 to-blue-400/8 rounded-[22px] p-4 border-2 border-violet-300/20">
-              <h3 className="text-[16px] font-black text-foreground mb-2 flex items-center gap-2" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>
-                <Activity className="w-5 h-5 text-violet-500" /> Émotions sur 7 jours
+            <div className="hero-fade-in retro-card p-4" style={{ backgroundColor: 'var(--retro-purple)' }}>
+              <h3 className="text-[16px] font-black text-gray-800 mb-2 flex items-center gap-2">
+                <Activity className="w-5 h-5 text-gray-800" /> Émotions sur 7 jours
               </h3>
               <ResponsiveContainer width="100%" height={160}>
                 <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
@@ -3422,10 +3422,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     <linearGradient id="emoFrust" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#f87171" stopOpacity={0.5}/><stop offset="100%" stopColor="#f87171" stopOpacity={0}/></linearGradient>
                     <linearGradient id="emoExcite" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#34d399" stopOpacity={0.5}/><stop offset="100%" stopColor="#34d399" stopOpacity={0}/></linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                  <XAxis dataKey="day" tick={{ fontSize: 11, fontWeight: 800 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" domain={[0, 100]} />
-                  <Tooltip contentStyle={{ borderRadius: 14, fontWeight: 700, fontSize: 12 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#000" opacity={0.15} />
+                  <XAxis dataKey="day" tick={{ fontSize: 11, fontWeight: 800, fill: '#333' }} stroke="#333" />
+                  <YAxis tick={{ fontSize: 10, fill: '#333' }} stroke="#333" domain={[0, 100]} />
+                  <Tooltip contentStyle={{ border: '3px solid #000', borderRadius: 0, fontWeight: 700, fontSize: 12, boxShadow: '4px 4px 0 rgba(0,0,0,0.2)' }} />
                   <Area type="monotone" dataKey="😊 Joie" stroke="#facc15" fill="url(#emoJoy)" strokeWidth={2.5} dot={{ r: 3 }} />
                   <Area type="monotone" dataKey="😢 Triste" stroke="#60a5fa" fill="url(#emoSad)" strokeWidth={2} dot={{ r: 3 }} />
                   <Area type="monotone" dataKey="🧐 Curiosité" stroke="#a78bfa" fill="url(#emoCurio)" strokeWidth={2} dot={{ r: 3 }} />
@@ -3437,23 +3437,24 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           ) : null;
         })()}
 
-        {/* ── 5 square cards — grid ── */}
-        <div className="grid grid-cols-3 gap-2">
+        {/* ── Navigation cards — retro grid ── */}
+        <div className="grid grid-cols-3 gap-3">
           {[
-            { id: "dashboard" as Tab, emoji: "📊", label: "Tableau de\nbord", color: "from-blue-400/25 to-indigo-400/10", border: "border-blue-300/25" },
-            { id: "sessions" as Tab, emoji: "💬", label: "Sessions", color: "from-emerald-400/25 to-teal-400/10", border: "border-emerald-300/25",
+            { id: "dashboard" as Tab, emoji: "📊", label: "Tableau de\nbord", bg: "var(--retro-blue)" },
+            { id: "sessions" as Tab, emoji: "💬", label: "Sessions", bg: "var(--retro-green)",
               badge: sessions.filter(s => !analyses.some(a => a.session_id === s.id)).length || undefined },
-            { id: "activites" as Tab, emoji: "🛒", label: "Bobby Store", color: "from-orange-400/25 to-amber-400/10", border: "border-orange-300/25" },
-            { id: "personnalisation" as Tab, emoji: "🎨", label: "Personnaliser", color: "from-rose-400/25 to-pink-400/10", border: "border-rose-300/25" },
-            { id: "cloud" as Tab, emoji: "☁️", label: "Bobby Cloud", color: "from-violet-400/25 to-purple-400/10", border: "border-violet-300/25" },
-            { id: "reglages" as Tab, emoji: "⚙️", label: "Réglages", color: "from-cyan-400/25 to-sky-400/10", border: "border-cyan-300/25" },
+            { id: "activites" as Tab, emoji: "🛒", label: "Bobby Store", bg: "var(--retro-yellow)" },
+            { id: "personnalisation" as Tab, emoji: "🎨", label: "Personnaliser", bg: "var(--retro-red)" },
+            { id: "cloud" as Tab, emoji: "☁️", label: "Bobby Cloud", bg: "var(--retro-purple)" },
+            { id: "reglages" as Tab, emoji: "⚙️", label: "Réglages", bg: "#e5e5e5" },
           ].map((card, i) => (
             <button key={card.id} onClick={() => setActiveTab(card.id)}
-              className={`card-stagger-${i + 1} relative bg-gradient-to-br ${card.color} rounded-[20px] p-2.5 flex flex-col items-center justify-center border-2 ${card.border} hover:shadow-lg hover:scale-[1.03] transition-all active:scale-[0.94] aspect-square`}>
+              className={`card-stagger-${i + 1} retro-card retro-card-tilt relative p-3 flex flex-col items-center justify-center aspect-square hover:shadow-lg active:scale-95 transition-all`}
+              style={{ backgroundColor: card.bg }}>
               <span className="text-[32px] mb-1 drop-shadow-sm">{card.emoji}</span>
-              <span className="text-[11px] font-black text-foreground leading-tight text-center whitespace-pre-line" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>{card.label}</span>
+              <span className="text-[11px] font-black text-gray-800 leading-tight text-center whitespace-pre-line">{card.label}</span>
               {card.badge && card.badge > 0 && (
-                <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-black flex items-center justify-center shadow-md">
+                <span className="absolute top-1 right-1 min-w-[20px] h-[20px] px-1 bg-black text-white text-[9px] font-black flex items-center justify-center shadow-md">
                   {card.badge}
                 </span>
               )}
