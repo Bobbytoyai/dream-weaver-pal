@@ -622,7 +622,7 @@ export function useFaceAnimation(
     }
 
     return { ...c };
-  }, [audioAmplitude, faceState, gazeRef, viseme, emotionIntensity, emotionDuringSpeech]);
+  }, [audioAmplitude, faceState, gazeRef, viseme, emotionIntensity, emotionDuringSpeech, expressionOverride, expressionIntensityLevel]);
 
   return { update, current };
 }
