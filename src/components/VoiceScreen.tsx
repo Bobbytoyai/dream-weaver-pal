@@ -198,34 +198,7 @@ const VoiceScreen = ({
         />
       )}
 
-      {sm.networkOffline && (
-        <div className="fixed top-2 left-2 z-40 px-3 py-1 rounded-full bg-orange-500/90 text-white text-[10px] font-bold animate-pulse">
-          ⚡ Mode Offline
-        </div>
-      )}
-
-      {/* FloatingParticles removed */}
-
-      {/* Top bar */}
-      <div className="w-full flex items-center justify-between px-2 relative z-10">
-        <div>
-          {onActivities && (
-            <button onClick={onActivities}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/50 text-muted-foreground text-sm font-semibold shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300">
-              <Gamepad2 className="w-4 h-4" />
-              Activités
-            </button>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {parentSettings?.enableCamera && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 backdrop-blur-sm border border-primary/20 text-primary">
-              <Camera className="w-3.5 h-3.5" />
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            </div>
-          )}
-        </div>
-      </div>
+      {/* No UI chrome — LCD screen shows only Bobby's face */}
 
       {/* Hologram area */}
       <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 relative z-10">
