@@ -189,7 +189,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   // Eyelid
   const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(230, 22%, 78%)"), transparent: true, opacity: 1.0, depthWrite: true,
+    color: new THREE.Color("hsl(225, 25%, 82%)"), transparent: true, opacity: 0.97, depthWrite: true,
   }), []);
 
   // Cheeks — #FF69B4
@@ -305,33 +305,42 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(ps);
     if (rightPupilRef.current) rightPupilRef.current.scale.setScalar(ps);
 
-    // Eyelids (blink) — slide down from above to cover the eye
+    // Eyelids (blink) — smooth curtain sliding down naturally
     const blinkClose = 1 - state.eyeOpenness;
     const isSleepingNow = faceState === "sleepy";
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
       if (ref.current) {
         const coverAmount = Math.max(0, Math.min(1, blinkClose));
         
-        if (coverAmount < 0.02) {
+        if (coverAmount < 0.01) {
           ref.current.visible = false;
           return;
         }
         
         ref.current.visible = true;
-        const easedCover = coverAmount * coverAmount * (3 - 2 * coverAmount);
         
-        // Slide from above (hidden) to covering the eye
-        const hiddenY = 0.7;    // fully above the eye
-        const closedY = 0.0;    // centered on eye = fully closed
+        // Smooth quintic ease for very natural, organic slide
+        const t = coverAmount;
+        const easedCover = t * t * t * (t * (t * 6 - 15) + 10);
+        
+        // Slide from fully hidden above to covering center of eye
+        // Position: top of eye (hidden) → center of eye (fully closed)
+        const hiddenY = 0.55;   // just above the visible eye area
+        const closedY = -0.05;  // slightly below center = fully shut
         let targetY = hiddenY - easedCover * (hiddenY - closedY);
         
+        // Sleeping: gentle breathing-like flutter
         if (isSleepingNow && coverAmount > 0.9) {
           const flutterT = performance.now() * 0.001;
-          const flutter = Math.sin(flutterT * 0.3) * 0.02 + Math.sin(flutterT * 0.7) * 0.01;
-          targetY += Math.max(0, flutter) * 0.05;
+          const flutter = Math.sin(flutterT * 0.5) * 0.025;
+          targetY += Math.max(0, flutter);
         }
         
         ref.current.position.y = targetY;
+        
+        // Slightly squash the eyelid shape as it closes for organic feel
+        const squashX = 1 + easedCover * 0.04;
+        ref.current.scale.set(squashX, 1, 1);
       }
     });
 
@@ -457,16 +466,21 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={pupilRef} geometry={pupilGeo} position={[0, -0.02, 0.02]} material={pupilMat} />
       <mesh position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       <mesh position={[hl2[0], hl2[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} />
-      {/* Eyelid: half-ellipse that slides down over the eye */}
-      <mesh ref={eyelidRef} position={[0, 0.7, 0.045]} material={eyelidMat}>
+      {/* Eyelid: curved curtain that slides down naturally */}
+      <mesh ref={eyelidRef} position={[0, 0.55, 0.044]} material={eyelidMat}>
         <shapeGeometry args={[(() => {
           const s = new THREE.Shape();
-          const rx = 0.42;
-          const ry = 0.36;
-          // Half-ellipse: flat top at y=0, curved bottom
+          const rx = 0.41;
+          const ryTop = 0.20;   // shorter top curve
+          const ryBot = 0.42;   // longer bottom to cover eye when slid down
+          // Curved bottom edge matching eye shape
           s.moveTo(-rx, 0);
-          s.absellipse(0, 0, rx, ry, Math.PI, Math.PI * 2, false, 0);
-          s.lineTo(-rx, 0);
+          // Top: gentle curve (almost flat, like a real eyelid top)
+          s.quadraticCurveTo(-rx * 0.5, ryTop, 0, ryTop * 1.05);
+          s.quadraticCurveTo(rx * 0.5, ryTop, rx, 0);
+          // Bottom: deeper curve matching the eye white shape
+          s.quadraticCurveTo(rx * 0.6, -ryBot * 0.5, 0, -ryBot);
+          s.quadraticCurveTo(-rx * 0.6, -ryBot * 0.5, -rx, 0);
           return s;
         })(), 32]} />
       </mesh>
