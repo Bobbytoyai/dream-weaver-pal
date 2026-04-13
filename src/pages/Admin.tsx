@@ -167,25 +167,28 @@ const TOP_SECTIONS_CONFIG: {
 // SUB-COMPONENTS
 // ═══════════════════════════════════════════════════════════════════
 
-function SquareCard({ label, emoji, count, desc, color, bgColor, onClick }: {
+function DashCard({ label, emoji, count, desc, color, bgColor, onClick, badge }: {
   label: string; emoji: string; count: string | number; desc: string;
-  color: string; bgColor: string; onClick: () => void;
+  color: string; bgColor: string; onClick: () => void; badge?: string;
 }) {
   return (
     <button onClick={onClick}
-      className="bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300 text-left flex flex-col justify-between group active:scale-[0.97] hover:shadow-lg hover:shadow-black/20"
-      style={{ aspectRatio: "1" }}
+      className="bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-2xl p-3 border border-white/[0.06] hover:border-white/[0.12] transition-all duration-200 text-left flex items-center gap-3 group active:scale-[0.98] hover:shadow-lg hover:shadow-black/20 w-full"
     >
-      <div className="flex items-start justify-between">
-        <div className={`w-11 h-11 rounded-2xl ${bgColor} flex items-center justify-center`}>
-          <span className="text-2xl">{emoji}</span>
+      <div className={`w-10 h-10 shrink-0 rounded-xl ${bgColor} flex items-center justify-center`}>
+        <span className="text-xl">{emoji}</span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <h3 className={`text-[13px] font-bold ${color} truncate`}>{label}</h3>
+          {badge && <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold shrink-0">{badge}</span>}
         </div>
+        <p className="text-[10px] text-white/25 truncate leading-tight">{desc}</p>
       </div>
-      <div>
-        <p className="text-[22px] font-bold text-white tracking-tight">{count}</p>
-        <h3 className={`text-[13px] font-semibold ${color} mt-0.5`}>{label}</h3>
-        <p className="text-[10px] text-white/30 mt-0.5 line-clamp-2 leading-tight">{desc}</p>
+      <div className="text-right shrink-0">
+        <p className="text-[18px] font-bold text-white tabular-nums">{count}</p>
       </div>
+      <ChevronRight className="w-3.5 h-3.5 text-white/15 shrink-0 group-hover:text-white/30 transition-colors" />
     </button>
   );
 }
