@@ -3581,7 +3581,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             { id: "cloud" as Tab, emoji: "☁️", label: "Bobby Cloud", color: "from-violet-400/25 to-purple-400/10", border: "border-violet-300/25" },
             { id: "profil" as Tab, emoji: "👤", label: "Profil", color: "from-pink-400/25 to-rose-400/10", border: "border-pink-300/25" },
             { id: "reglages" as Tab, emoji: "⚙️", label: "Réglages", color: "from-cyan-400/25 to-sky-400/10", border: "border-cyan-300/25" },
-          ].map(card => (
+          ].map((card, i) => (
             <button key={card.id} onClick={() => setActiveTab(card.id)}
               className={`card-stagger-${i + 1} relative bg-gradient-to-br ${card.color} rounded-[20px] p-3 flex flex-col items-center justify-center border-2 ${card.border} hover:shadow-lg hover:scale-[1.03] transition-all active:scale-[0.94] aspect-square`}>
               <span className="text-[36px] mb-1 drop-shadow-sm">{card.emoji}</span>
