@@ -136,6 +136,9 @@ export function useBobbyVoiceCore({
   const sessionStartTimeRef = useRef(0);
   // Track relance count during conversation
   const convRelanceCountRef = useRef(0);
+  // Utterance accumulation buffer — don't cut the child mid-sentence
+  const utteranceBufferRef = useRef<string[]>([]);
+  const utteranceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { startSession, addMessage, endSession, sessionIdRef } = useSessionTracker(childName, childAge);
   const { startRecording, stopRecording } = useConversationRecorder();
