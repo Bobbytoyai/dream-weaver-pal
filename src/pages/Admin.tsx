@@ -2637,71 +2637,54 @@ const Admin = () => {
 
   // ═══════════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" onClick={() => navigate("/")} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
-          <div className="w-11 h-11 rounded-xl bg-purple-500/20 flex items-center justify-center">
-            <Brain className="w-6 h-6 text-purple-400" />
+    <div className="min-h-screen bg-[#0a0a0f]">
+      <div className="max-w-4xl mx-auto px-4 py-6 space-y-5">
+        {/* ── Header — iOS large title style ── */}
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate("/")} className="w-10 h-10 rounded-2xl bg-white/[0.06] flex items-center justify-center hover:bg-white/[0.1] transition-all active:scale-95">
+            <ArrowLeft className="w-5 h-5 text-white/60" />
+          </button>
+          <div className="flex-1">
+            <h1 className="text-[28px] font-bold text-white tracking-tight">Cerveau Bobby</h1>
+            <p className="text-white/30 text-[13px]">Base opérationnelle</p>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-white">Cerveau Bobby</h1>
-            <p className="text-white/40 text-xs">Tout le contenu embarqué & cloud</p>
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
+            <Brain className="w-6 h-6 text-purple-400" />
           </div>
         </div>
 
-        {/* Total counter */}
+        {/* ── Hero counter ── */}
         {(() => {
           const intCount = typeof sectionCounts.interactions === "number" ? sectionCounts.interactions : 0;
           const total = intCount + BOBBY_MULTI_RESPONSES.length + QA_DATABASE.length + BLAGUES.length + HISTOIRES.length + CHANSONS.length + (sectionCounts.jeux as number) + entries.length;
           return (
-            <div className="bg-gradient-to-r from-purple-500/20 to-cyan-500/20 backdrop-blur rounded-xl p-4 border border-purple-500/30 text-center">
-              <p className="text-3xl font-extrabold text-white">{total.toLocaleString("fr-FR")}</p>
-              <p className="text-xs text-white/50 mt-1">contenus totaux dans le cerveau de Bobby</p>
+            <div className="bg-gradient-to-r from-purple-500/10 via-blue-500/8 to-cyan-500/10 backdrop-blur-xl rounded-[20px] p-5 border border-purple-500/10">
+              <p className="text-[36px] font-extrabold text-white tracking-tight">{total.toLocaleString("fr-FR")}</p>
+              <p className="text-[13px] text-white/40 -mt-0.5">contenus dans le cerveau</p>
             </div>
           );
         })()}
 
-        {/* Stats bar */}
-        <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10">
-          <div className="grid grid-cols-4 md:grid-cols-8 gap-3 text-center">
-            <div>
-              <p className="text-sm font-bold text-cyan-400">{sectionCounts.interactions}</p>
-              <p className="text-[8px] text-white/40">Interactions</p>
+        {/* ── Stats pills ── */}
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+          {[
+            { label: "Interactions", count: sectionCounts.interactions, color: "text-cyan-400" },
+            { label: "Multi-Rép.", count: BOBBY_MULTI_RESPONSES.length, color: "text-orange-400" },
+            { label: "QA", count: QA_DATABASE.length, color: "text-amber-400" },
+            { label: "Blagues", count: BLAGUES.length, color: "text-green-400" },
+            { label: "Histoires", count: HISTOIRES.length, color: "text-purple-400" },
+            { label: "Chansons", count: CHANSONS.length, color: "text-rose-400" },
+            { label: "Jeux", count: sectionCounts.jeux, color: "text-blue-400" },
+            { label: "Cloud", count: entries.length, color: "text-sky-400" },
+          ].map(stat => (
+            <div key={stat.label} className="flex-shrink-0 bg-white/[0.04] rounded-2xl px-4 py-2.5 border border-white/[0.05] text-center min-w-[72px]">
+              <p className={`text-[15px] font-bold ${stat.color}`}>{stat.count}</p>
+              <p className="text-[9px] text-white/30 font-medium">{stat.label}</p>
             </div>
-            <div>
-              <p className="text-sm font-bold text-orange-400">{BOBBY_MULTI_RESPONSES.length}</p>
-              <p className="text-[8px] text-white/40">Multi-Rép.</p>
-            </div>
-            <div>
-              <p className="text-sm font-bold text-amber-400">{QA_DATABASE.length}</p>
-              <p className="text-[8px] text-white/40">QA Offline</p>
-            </div>
-            <div>
-              <p className="text-sm font-bold text-green-400">{BLAGUES.length}</p>
-              <p className="text-[8px] text-white/40">Blagues</p>
-            </div>
-            <div>
-              <p className="text-sm font-bold text-purple-400">{HISTOIRES.length}</p>
-              <p className="text-[8px] text-white/40">Histoires</p>
-            </div>
-            <div>
-              <p className="text-sm font-bold text-rose-400">{CHANSONS.length}</p>
-              <p className="text-[8px] text-white/40">Chansons</p>
-            </div>
-            <div>
-              <p className="text-sm font-bold text-blue-400">{sectionCounts.jeux}</p>
-              <p className="text-[8px] text-white/40">Jeux</p>
-            </div>
-            <div>
-              <p className="text-sm font-bold text-sky-400">{entries.length}</p>
-              <p className="text-[8px] text-white/40">Cloud KB</p>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Main grid — square cards */}
+        {/* ── Main grid — Apple-style cards ── */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {TOP_SECTIONS_CONFIG.map(section => (
             <SquareCard
@@ -2720,7 +2703,7 @@ const Admin = () => {
           ))}
         </div>
 
-        <p className="text-[10px] text-white/20 text-center">Les données embarquées (Interactions, QA, Blagues, Histoires, Personnalité) sont en lecture seule. Le Cloud KB est modifiable.</p>
+        <p className="text-[10px] text-white/15 text-center pt-2">Données embarquées en lecture seule · Cloud KB modifiable</p>
         {detailPortal}
       </div>
     </div>
