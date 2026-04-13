@@ -257,8 +257,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [cloudLoading, setCloudLoading] = useState(false);
   const [cloudRestoreCode, setCloudRestoreCode] = useState("");
   const [cloudCopied, setCloudCopied] = useState(false);
+  const [pendingNameChange, setPendingNameChange] = useState<string | null>(null);
 
   const unreadAlertCount = parentAlerts.filter(a => !a.is_read).length;
+  // Always use settings.childName as the display name — it's the source of truth
+  const displayName = settings.childName || childName;
 
   useEffect(() => { loadData(); loadAlerts(); loadCloudProfile(); }, []);
 
@@ -286,7 +289,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const handleCloudSave = async () => {
     setCloudLoading(true);
     try {
-      const result = await saveToCloud(settings.childName || childName, settings);
+      const result = await saveToCloud(displayName, settings);
       if (result.success && result.profile) {
         setCloudProfile(result.profile);
         toast.success(result.isNew ? "☁️ Profil Bobby Cloud créé !" : "☁️ Synchronisé avec Bobby Cloud !");
@@ -310,7 +313,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           const merged = {
             ...DEFAULT_PARENT_SETTINGS,
             ...restored,
-            childName: settings.childName || childName,
+            childName: displayName,
             childAge: settings.childAge,
             contentModes: { ...DEFAULT_PARENT_SETTINGS.contentModes, ...(restored as any).contentModes },
             nightMode: { ...DEFAULT_PARENT_SETTINGS.nightMode, ...(restored as any).nightMode },
@@ -531,7 +534,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const exportSessionPDF = (session: Session, analysis: Analysis | null) => {
     const lines: string[] = [
-      `RAPPORT DE SESSION — ${childName}`,
+      `RAPPORT DE SESSION — ${displayName}`,
       `═══════════════════════════════════════`,
       `Date : ${formatDate(session.started_at)}`,
       `Durée : ${formatDuration(session.duration_seconds)}`,
@@ -574,7 +577,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `rapport-${childName}-${new Date(session.started_at).toISOString().slice(0, 10)}.txt`;
+    a.download = `rapport-${displayName}-${new Date(session.started_at).toISOString().slice(0, 10)}.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -824,7 +827,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       const [topEmo, topVal] = sortedEmotions[0];
       const info = emotionScoreLabels[topEmo];
       if (info && topVal > 40) {
-        insights.push(`${info.emoji} ${childName} est principalement ${info.label.toLowerCase()} (${topVal}%) dans ses échanges.`);
+        insights.push(`${info.emoji} ${displayName} est principalement ${info.label.toLowerCase()} (${topVal}%) dans ses échanges.`);
       }
     }
 
@@ -846,7 +849,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     }
 
     return insights;
-  }, [recentAnalyses, avgEmotions, allInterests, engagementDist, avgScores, childName]);
+  }, [recentAnalyses, avgEmotions, allInterests, engagementDist, avgScores, displayName]);
 
   // v4.0: Daily AI summary
   const dailySummary = useMemo(() => {
@@ -856,12 +859,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       return s && new Date(s.started_at).toDateString() === new Date().toDateString();
     });
     if (todayAnalyses.length === 0 && todaySessions.length > 0) {
-      return `${childName} a eu ${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} aujourd'hui (${formatDuration(todayDuration)}).`;
+      return `${displayName} a eu ${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} aujourd'hui (${formatDuration(todayDuration)}).`;
     }
     const summaries = todayAnalyses.map(a => a.summary).filter(Boolean);
     if (summaries.length === 0) return null;
     return summaries.join(" ");
-  }, [todaySessions, recentAnalyses, sessions, childName, todayDuration]);
+  }, [todaySessions, recentAnalyses, sessions, displayName, todayDuration]);
 
   // v4.0: Parent recommendations based on data
   const parentRecommendations = useMemo(() => {
@@ -885,7 +888,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         recs.push({ emoji: "🤗", text: `Les émotions varient beaucoup. Un moment calme ensemble pourrait aider à stabiliser l'humeur.` });
       }
       if (avgScores.sociability > 70) {
-        recs.push({ emoji: "👫", text: `${childName} est très sociable ! Invitez un ami à jouer avec Bobby ensemble.` });
+        recs.push({ emoji: "👫", text: `${displayName} est très sociable ! Invitez un ami à jouer avec Bobby ensemble.` });
       }
       if (avgScores.curiosity > 70) {
         recs.push({ emoji: "📚", text: `Curiosité élevée ! Activez le mode éducatif pour explorer de nouveaux sujets.` });
@@ -900,11 +903,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
     // Always suggest at least one
     if (recs.length === 0) {
-      recs.push({ emoji: "✨", text: `Continuez ainsi ! ${childName} utilise Bobby de manière équilibrée.` });
+      recs.push({ emoji: "✨", text: `Continuez ainsi ! ${displayName} utilise Bobby de manière équilibrée.` });
     }
 
     return recs.slice(0, 4);
-  }, [recentAnalyses, allInterests, engagementDist, avgScores, childName, totalDuration, totalSessions]);
+  }, [recentAnalyses, allInterests, engagementDist, avgScores, displayName, totalDuration, totalSessions]);
 
   // ─── Key moments (emotional highlights) ───────────────────────
   const keyMoments = useMemo(() => {
@@ -1195,7 +1198,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           <div className="bg-card rounded-3xl p-4 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.2s" }}>
             <div className="flex items-center gap-2.5 mb-2">
               <span className="text-2xl">🎯</span>
-              <h3 className="text-[17px] font-extrabold text-foreground">Intérêts de {childName}</h3>
+              <h3 className="text-[17px] font-extrabold text-foreground">Intérêts de {displayName}</h3>
             </div>
             <ResponsiveContainer width="100%" height={200}>
               <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="65%">
@@ -1488,7 +1491,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         <div className="bg-card rounded-2xl p-6 text-center border border-border/20">
           <span className="text-5xl block mb-2">🎙️</span>
           <h3 className="text-lg font-extrabold text-foreground mb-1">Pas encore de sessions</h3>
-          <p className="text-[12px] text-muted-foreground">Les métriques apparaîtront après la première conversation de {childName} avec Bobby.</p>
+          <p className="text-[12px] text-muted-foreground">Les métriques apparaîtront après la première conversation de {displayName} avec Bobby.</p>
         </div>
       )}
     </div>
@@ -1730,7 +1733,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                             <p className="text-[14px] text-foreground leading-[1.5] font-medium">{msg.content}</p>
                           </div>
                           <div className={`flex items-center gap-2 mt-1.5 px-1.5 ${isChild ? "" : "justify-end"}`}>
-                            <span className="text-[11px] text-muted-foreground/70 font-bold">{isChild ? `👦 ${settings.childName || childName}` : "🤖 Bobby"}</span>
+                            <span className="text-[11px] text-muted-foreground/70 font-bold">{isChild ? `👦 ${displayName}` : "🤖 Bobby"}</span>
                             <span className="text-[10px] text-muted-foreground/50 font-medium">{time}</span>
                             {msg.detected_emotion && (
                               <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
@@ -1835,7 +1838,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </button>
           <button
             onClick={async () => {
-              const result = await saveToCloud(settings.childName || childName, settings);
+              const result = await saveToCloud(displayName, settings);
               if (result.success) {
                 setCloudProfile(result.profile!);
                 toast.success("☁️ Session sauvegardée dans Bobby Cloud", { description: `Code : ${result.profile!.sync_code}` });
@@ -2009,7 +2012,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   : "bg-primary/6 border-l-3 border-l-violet-400"
               }`}>
                 <span className="text-[10px] font-black text-muted-foreground">
-                  {sessionMessages[activeMessageIdx].role === "user" ? `👦 ${settings.childName || childName}` : "🤖 Bobby"}
+                  {sessionMessages[activeMessageIdx].role === "user" ? `👦 ${displayName}` : "🤖 Bobby"}
                 </span>
                 <p className="text-foreground mt-0.5 line-clamp-2">{sessionMessages[activeMessageIdx].content}</p>
               </div>
@@ -2289,7 +2292,21 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
           <div className="flex-1 min-w-0">
             <input type="text" value={settings.childName}
-              onChange={(e) => updateSetting("childName", e.target.value)}
+              onChange={(e) => {
+                const newName = e.target.value;
+                // If significantly different from original, ask surnom vs session change
+                if (newName.length > 1 && childName && newName.toLowerCase() !== childName.toLowerCase() && newName.trim() !== "") {
+                  setPendingNameChange(newName);
+                } else {
+                  updateSetting("childName", newName);
+                }
+              }}
+              onBlur={() => {
+                // If name changed on blur without dialog, trigger it
+                if (settings.childName !== childName && settings.childName.length > 1 && !pendingNameChange) {
+                  setPendingNameChange(settings.childName);
+                }
+              }}
               placeholder="Prénom"
               className="w-full bg-transparent text-xl font-extrabold text-foreground outline-none placeholder:text-muted-foreground/50 border-b border-primary/20 pb-1 focus:border-primary transition-colors" />
             <p className="text-[11px] text-muted-foreground mt-1">Profil enfant</p>
@@ -2807,7 +2824,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               }},
               { emoji: "🧠", label: "Réinitialiser la mémoire", desc: "Bobby oublie les préférences", action: () => {
                 setConfirmDialog({ title: "Réinitialiser la mémoire ?", description: "Bobby oubliera toutes les préférences et intérêts.", confirmLabel: "Réinitialiser", variant: "warning" as const, onConfirm: () => {
-                  supabase.from("child_memories").delete().eq("child_name", childName).then(() => loadData());
+                  supabase.from("child_memories").delete().eq("child_name", displayName).then(() => loadData());
                   setConfirmDialog(null);
                 }});
               }},
@@ -2860,7 +2877,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     const blob = new Blob([JSON.stringify(allData, null, 2)], { type: "application/json" });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
-                    a.href = url; a.download = `bobby-rgpd-export-${childName}-${new Date().toISOString().slice(0, 10)}.json`;
+                    a.href = url; a.download = `bobby-rgpd-export-${displayName}-${new Date().toISOString().slice(0, 10)}.json`;
                     a.click(); URL.revokeObjectURL(url);
                   } else if (id === "access") { setActiveTab("sessions"); }
                   else if (id === "delete") {
@@ -2873,8 +2890,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                         Promise.all([
                           supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
                           supabase.from("session_messages").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
-                          supabase.from("child_sessions").delete().eq("child_name", childName),
-                          supabase.from("child_memories").delete().eq("child_name", childName),
+                          supabase.from("child_sessions").delete().eq("child_name", displayName),
+                          supabase.from("child_memories").delete().eq("child_name", displayName),
                         ]).then(() => loadData());
                         setConfirmDialog(null);
                       },
@@ -3264,8 +3281,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               <h2 className="text-[22px] font-black text-foreground">Bonjour 👋</h2>
               <p className="text-[12px] text-muted-foreground font-bold mt-0.5">
                 {todaySessions.length > 0
-                  ? `${childName} a eu ${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} aujourd'hui`
-                  : `${childName} n'a pas encore parlé à Bobby`
+                  ? `${displayName} a eu ${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} aujourd'hui`
+                  : `${displayName} n'a pas encore parlé à Bobby`
                 }
               </p>
             </div>
@@ -3529,6 +3546,48 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         onConfirm={() => confirmDialog?.onConfirm()}
         onCancel={() => setConfirmDialog(null)}
       />
+
+      {/* Name Change Dialog — surnom vs session */}
+      {pendingNameChange !== null && (
+        <div className="fixed inset-0 z-[200] bg-black/40 flex items-center justify-center p-6" onClick={() => setPendingNameChange(null)}>
+          <div className="bg-card rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-border/20 space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="text-center">
+              <span className="text-4xl block mb-2">✏️</span>
+              <h3 className="text-[18px] font-black text-foreground">Changer le prénom ?</h3>
+              <p className="text-[13px] text-muted-foreground mt-1">
+                <span className="font-bold">{childName}</span> → <span className="font-bold text-primary">{pendingNameChange}</span>
+              </p>
+            </div>
+
+            <div className="space-y-2.5">
+              <button
+                onClick={() => {
+                  updateSetting("childName", pendingNameChange);
+                  setPendingNameChange(null);
+                  toast.success(`✅ Surnom changé en "${pendingNameChange}"`);
+                }}
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-extrabold text-[14px] hover:opacity-90 transition-all active:scale-95 shadow-md shadow-primary/20">
+                🏷️ C'est un surnom
+              </button>
+              <button
+                onClick={() => {
+                  setPendingNameChange(null);
+                  toast.info("🔜 Changement de session bientôt disponible !", {
+                    description: "Cette fonctionnalité permettra de gérer plusieurs enfants.",
+                  });
+                }}
+                className="w-full py-3.5 rounded-2xl bg-muted/60 text-foreground font-extrabold text-[14px] hover:bg-muted transition-all active:scale-95 border border-border/15">
+                👦 Changer d'enfant <span className="text-[11px] font-bold text-muted-foreground ml-1">(bientôt)</span>
+              </button>
+              <button
+                onClick={() => setPendingNameChange(null)}
+                className="w-full py-2.5 text-[13px] text-muted-foreground font-bold hover:text-foreground transition-colors">
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
