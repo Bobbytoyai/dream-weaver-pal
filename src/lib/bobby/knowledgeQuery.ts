@@ -984,6 +984,66 @@ const SEMANTIC_FIELDS: Record<string, string[]> = {
   "machine a laver":["invention", "vetement", "propre", "eau", "electricite", "maison", "quotidien"],
   photographie_inv:["invention", "photo", "image", "lumiere", "souvenir", "appareil", "niepce"],
   fusee_invention:["invention", "espace", "propulsion", "astronaute", "explorer", "lune", "science"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🚀 Métiers du futur
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  "metier futur":     ["travail", "futur", "technologie", "robot", "innovation", "demain", "inventer"],
+  "pilote drone":     ["metier futur", "drone", "voler", "technologie", "telecommande", "livraison", "camera"],
+  "ingenieur robot":  ["metier futur", "robot", "construire", "programmer", "intelligence artificielle", "technologie", "machine"],
+  "architecte spatial":["metier futur", "espace", "construire", "station", "lune", "mars", "habitat", "astronaute"],
+  "medecin robot":    ["metier futur", "sante", "robot", "chirurgie", "precision", "technologie", "soigner"],
+  "fermier vertical": ["metier futur", "agriculture", "ville", "plante", "etage", "ecologie", "nourriture", "hydroponique"],
+  "designer 3d":      ["metier futur", "creer", "imprimante 3d", "objet", "design", "technologie", "art"],
+  "explorateur ocean":["metier futur", "ocean", "profond", "sous-marin", "decouverte", "science", "mer"],
+  "coach ia":         ["metier futur", "intelligence artificielle", "apprendre", "technologie", "humain", "ethique"],
+  "specialiste cyber":["metier futur", "securite", "internet", "proteger", "hacker", "code", "technologie"],
+  "bio-ingenieur":    ["metier futur", "biologie", "genetique", "sante", "science", "innovation", "cellule"],
+  "urbaniste futur":  ["metier futur", "ville", "ecologie", "transport", "durable", "construire", "planifier"],
+  "technicien eolien":["metier futur", "eolienne", "energie", "renouvelable", "reparer", "hauteur", "ecologie"],
+  "createur realite virtuelle":["metier futur", "jeu video", "3d", "immersion", "technologie", "creer", "casque"],
+  "data scientist":   ["metier futur", "donnee", "analyser", "ordinateur", "mathematique", "intelligence", "prediction"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🏆 Records du monde
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  record:             ["monde", "plus", "incroyable", "champion", "exploit", "extreme", "guinness"],
+  "record vitesse":   ["record", "rapide", "voiture", "avion", "courir", "usain bolt", "km/h", "sport"],
+  "record taille":    ["record", "grand", "petit", "haut", "bas", "geant", "minuscule", "monde"],
+  "record distance":  ["record", "loin", "marcher", "nager", "voler", "espace", "voyage", "exploration"],
+  "record age":       ["record", "vieux", "ancien", "longtemps", "tortue", "arbre", "vivre", "centenaire"],
+  "record animal":    ["record", "animal", "rapide", "grand", "fort", "guepard", "baleine", "elephant"],
+  "record construction":["record", "batiment", "haut", "long", "pont", "tour", "gratte-ciel", "monde"],
+  "record temperature":["record", "chaud", "froid", "desert", "pole", "extreme", "meteo", "climat"],
+  "record profondeur":["record", "ocean", "fosse", "mariana", "profond", "pression", "exploration", "mer"],
+  "record altitude":  ["record", "montagne", "everest", "haut", "sommet", "escalade", "alpiniste"],
+  "record sport":     ["record", "olympique", "medaille", "champion", "athlete", "exploit", "score"],
+  "record espace":    ["record", "astronaute", "loin", "longtemps", "orbite", "sortie", "iss", "espace"],
+  "record nourriture":["record", "manger", "gros", "long", "gateau", "pizza", "cuisine", "incroyable"],
+  guinness:           ["record", "livre", "monde", "officiel", "exploit", "incroyable", "certification"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🌋 Phénomènes naturels
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  "phenomene naturel":["nature", "terre", "puissant", "spectacle", "science", "catastrophe", "climat"],
+  eruption:           ["volcan", "lave", "cendre", "magma", "explosion", "montagne", "phenomene naturel"],
+  tornade:            ["vent", "tourbillon", "destructeur", "nuage", "vitesse", "meteo", "phenomene naturel"],
+  ouragan:            ["vent", "tempete", "pluie", "ocean", "tropique", "oeil", "catastrophe", "phenomene naturel"],
+  cyclone:            ["ouragan", "vent", "tempete", "ocean", "tropique", "phenomene naturel", "danger"],
+  avalanche:          ["neige", "montagne", "glisser", "danger", "ski", "froid", "phenomene naturel"],
+  "arc en ciel":      ["pluie", "soleil", "couleur", "lumiere", "refraction", "ciel", "phenomene naturel", "beau"],
+  geyser:             ["eau", "chaud", "jaillir", "terre", "vapeur", "islande", "yellowstone", "phenomene naturel"],
+  maree:              ["mer", "lune", "eau", "monter", "descendre", "plage", "gravite", "phenomene naturel"],
+  foudre:             ["eclair", "orage", "electricite", "tonnerre", "danger", "ciel", "phenomene naturel"],
+  brouillard:         ["eau", "nuage", "sol", "froid", "visibilite", "matin", "meteo", "phenomene naturel"],
+  mirage:             ["desert", "chaud", "illusion", "lumiere", "eau", "optique", "phenomene naturel"],
+  raz_de_maree:       ["tsunami", "vague", "ocean", "seisme", "cote", "catastrophe", "phenomene naturel"],
+  "aurore polaire":   ["lumiere", "pole", "nuit", "couleur", "magnetique", "ciel", "spectacle", "phenomene naturel"],
+  eclipse_naturel:    ["soleil", "lune", "ombre", "alignement", "rare", "ciel", "phenomene naturel", "spectacle"],
+  grele:              ["glace", "pluie", "orage", "boule", "froid", "meteo", "phenomene naturel", "degat"],
+  canicule:           ["chaleur", "ete", "temperature", "soleil", "eau", "sante", "meteo", "phenomene naturel"],
+  mousson:            ["pluie", "asie", "saison", "inondation", "tropical", "vent", "phenomene naturel"],
+  sable_mouvant:      ["sable", "piege", "enfoncer", "eau", "danger", "nature", "phenomene naturel"],
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
