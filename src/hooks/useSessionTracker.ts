@@ -61,8 +61,8 @@ export function useSessionTracker(childName: string, childAge: number) {
     const id = sessionIdRef.current;
     sessionIdRef.current = null;
 
-    const MIN_SESSION_DURATION = 90;
-    const shouldDelete = messageCountRef.current === 0 || durationSeconds < MIN_SESSION_DURATION;
+    const MIN_SESSION_DURATION = 30;
+    const shouldDelete = messageCountRef.current === 0 && durationSeconds < MIN_SESSION_DURATION;
     if (shouldDelete) {
       try {
         await supabase.from("session_messages").delete().eq("session_id", id);
