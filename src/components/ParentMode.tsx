@@ -3571,6 +3571,76 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           )}
         </div>
 
+        {/* ── 7-day Emotion Evolution Chart ── */}
+        {(() => {
+          const last7 = [...sessions]
+            .filter(s => {
+              const d = new Date(s.started_at);
+              return d >= new Date(Date.now() - 7 * 86400000);
+            })
+            .sort((a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime());
+
+          const dayMap = new Map<string, { joy: number[]; sadness: number[]; curiosity: number[]; frustration: number[]; excitement: number[] }>();
+          for (let i = 6; i >= 0; i--) {
+            const d = new Date(Date.now() - i * 86400000);
+            const key = d.toLocaleDateString("fr-FR", { weekday: "short" });
+            dayMap.set(key, { joy: [], sadness: [], curiosity: [], frustration: [], excitement: [] });
+          }
+
+          last7.forEach(s => {
+            const a = analyses.find(an => an.session_id === s.id);
+            if (!a?.emotions) return;
+            const key = new Date(s.started_at).toLocaleDateString("fr-FR", { weekday: "short" });
+            const bucket = dayMap.get(key);
+            if (!bucket) return;
+            const emo = a.emotions as Record<string, number>;
+            if (emo.joy) bucket.joy.push(emo.joy);
+            if (emo.sadness) bucket.sadness.push(emo.sadness);
+            if (emo.curiosity) bucket.curiosity.push(emo.curiosity);
+            if (emo.frustration) bucket.frustration.push(emo.frustration);
+            if (emo.excitement) bucket.excitement.push(emo.excitement);
+          });
+
+          const chartData = Array.from(dayMap.entries()).map(([day, vals]) => ({
+            day,
+            "😊 Joie": vals.joy.length ? Math.round(vals.joy.reduce((a, b) => a + b, 0) / vals.joy.length) : 0,
+            "😢 Triste": vals.sadness.length ? Math.round(vals.sadness.reduce((a, b) => a + b, 0) / vals.sadness.length) : 0,
+            "🧐 Curiosité": vals.curiosity.length ? Math.round(vals.curiosity.reduce((a, b) => a + b, 0) / vals.curiosity.length) : 0,
+            "😤 Frustration": vals.frustration.length ? Math.round(vals.frustration.reduce((a, b) => a + b, 0) / vals.frustration.length) : 0,
+            "🤩 Excitation": vals.excitement.length ? Math.round(vals.excitement.reduce((a, b) => a + b, 0) / vals.excitement.length) : 0,
+          }));
+
+          const hasAnyData = chartData.some(d => d["😊 Joie"] > 0 || d["😢 Triste"] > 0 || d["🧐 Curiosité"] > 0);
+
+          return hasAnyData ? (
+            <div className="hero-fade-in bg-gradient-to-br from-violet-400/15 via-pink-400/10 to-blue-400/8 rounded-[22px] p-4 border-2 border-violet-300/20">
+              <h3 className="text-[16px] font-black text-foreground mb-2 flex items-center gap-2" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>
+                <Activity className="w-5 h-5 text-violet-500" /> Émotions sur 7 jours
+              </h3>
+              <ResponsiveContainer width="100%" height={160}>
+                <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="emoJoy" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#facc15" stopOpacity={0.5}/><stop offset="100%" stopColor="#facc15" stopOpacity={0}/></linearGradient>
+                    <linearGradient id="emoSad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#60a5fa" stopOpacity={0.5}/><stop offset="100%" stopColor="#60a5fa" stopOpacity={0}/></linearGradient>
+                    <linearGradient id="emoCurio" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#a78bfa" stopOpacity={0.5}/><stop offset="100%" stopColor="#a78bfa" stopOpacity={0}/></linearGradient>
+                    <linearGradient id="emoFrust" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#f87171" stopOpacity={0.5}/><stop offset="100%" stopColor="#f87171" stopOpacity={0}/></linearGradient>
+                    <linearGradient id="emoExcite" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#34d399" stopOpacity={0.5}/><stop offset="100%" stopColor="#34d399" stopOpacity={0}/></linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                  <XAxis dataKey="day" tick={{ fontSize: 11, fontWeight: 800 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" domain={[0, 100]} />
+                  <Tooltip contentStyle={{ borderRadius: 14, fontWeight: 700, fontSize: 12 }} />
+                  <Area type="monotone" dataKey="😊 Joie" stroke="#facc15" fill="url(#emoJoy)" strokeWidth={2.5} dot={{ r: 3 }} />
+                  <Area type="monotone" dataKey="😢 Triste" stroke="#60a5fa" fill="url(#emoSad)" strokeWidth={2} dot={{ r: 3 }} />
+                  <Area type="monotone" dataKey="🧐 Curiosité" stroke="#a78bfa" fill="url(#emoCurio)" strokeWidth={2} dot={{ r: 3 }} />
+                  <Area type="monotone" dataKey="😤 Frustration" stroke="#f87171" fill="url(#emoFrust)" strokeWidth={2} dot={{ r: 3 }} />
+                  <Area type="monotone" dataKey="🤩 Excitation" stroke="#34d399" fill="url(#emoExcite)" strokeWidth={2} dot={{ r: 3 }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          ) : null;
+        })()}
+
         {/* ── 6 square cards — 3x2 grid ── */}
         <div className="grid grid-cols-3 gap-2.5">
           {[
