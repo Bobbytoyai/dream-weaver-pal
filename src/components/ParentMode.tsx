@@ -2085,7 +2085,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         <div className="flex gap-2.5 mt-2 overflow-x-auto pb-2 scrollbar-hide animate-fadeInUp" style={{ animationDelay: "0.1s", WebkitOverflowScrolling: "touch" }}>
           {categoryCards.map(card => (
             <button key={card.key} onClick={card.onClick}
-              className={`relative flex-shrink-0 min-w-[72px] px-2 py-3 rounded-2xl bg-gradient-to-br ${card.bg} flex flex-col items-center justify-center gap-1.5 transition-all duration-200 active:scale-90 ${
+              className={`relative flex-shrink-0 min-w-[80px] w-auto px-3 py-3 rounded-2xl bg-gradient-to-br ${card.bg} flex flex-col items-center justify-center gap-1.5 transition-all duration-200 active:scale-90 ${
                 card.active ? "ring-2 ring-primary ring-offset-2 ring-offset-background shadow-lg shadow-primary/20 scale-[1.03]" : "hover:ring-1 hover:ring-primary/20"
               }`}
               style={{ fontFamily: "'Nunito', sans-serif" }}>
