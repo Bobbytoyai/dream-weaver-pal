@@ -107,6 +107,8 @@ export default function ExpressionPreview({ onBack }: { onBack: () => void }) {
           voiceState="idle"
           expressionOverride={combo}
           expressionIntensityLevel={currentIntensity}
+          bobbyColor={savedSettings.bobbyColor}
+          bobbyColors={savedSettings.bobbyColors}
         />
       </div>
 
