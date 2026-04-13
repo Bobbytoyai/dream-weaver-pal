@@ -51,12 +51,16 @@ export function useSessionTracker(childName: string, childAge: number) {
     const id = sessionIdRef.current;
     sessionIdRef.current = null; // Clear immediately to prevent double-end
 
-    // ─── Don't save empty sessions (0 messages = spam) ───
-    if (messageCountRef.current === 0) {
+    const MIN_SESSION_DURATION = 90; // 1m30 minimum
+
+    // ─── Don't save empty or too-short sessions ───
+    const shouldDelete = messageCountRef.current === 0 || durationSeconds < MIN_SESSION_DURATION;
+    if (shouldDelete) {
       try {
+        await supabase.from("session_messages").delete().eq("session_id", id);
         await supabase.from("child_sessions").delete().eq("id", id);
-        console.log("[Session] Deleted empty session (0 messages):", id);
-      } catch (e) { console.warn("[Session] Failed to delete empty session:", e); }
+        console.log(`[Session] Deleted short/empty session (${messageCountRef.current} msgs, ${durationSeconds}s):`, id);
+      } catch (e) { console.warn("[Session] Failed to delete session:", e); }
       return id;
     }
 
