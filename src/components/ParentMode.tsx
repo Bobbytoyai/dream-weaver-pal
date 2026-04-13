@@ -1258,23 +1258,22 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </div>
       )}
 
-      {/* ═══ SCORES COMPORTEMENTAUX — compact ═══ */}
+      {/* ═══ SCORES COMPORTEMENTAUX — 3 cols compact ═══ */}
       {avgScores && (
-        <div className="bg-card rounded-3xl p-5 border border-border/20">
-          <div className="flex items-center gap-2.5 mb-4">
-            <span className="text-2xl">🧠</span>
-            <h3 className="text-[17px] font-extrabold text-foreground">Développement</h3>
+        <div className="bg-card rounded-[18px] p-3 border border-border/20">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg">🧠</span>
+            <h3 className="text-[15px] font-black text-foreground">Développement</h3>
           </div>
-          <div className="flex justify-around mb-4">
+          <div className="grid grid-cols-3 gap-2 mb-2">
             <ScoreGauge label="Sociabilité" score={avgScores.sociability} emoji="🤝" color="hsl(var(--primary))" size="lg" />
             <ScoreGauge label="Curiosité" score={avgScores.curiosity} emoji="🔍" color="hsl(36, 90%, 50%)" size="lg" />
             <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="hsl(145, 65%, 42%)" size="lg" />
           </div>
-          {/* Engagement + Mood mini */}
-          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border/20">
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/20">
             <div>
-              <p className="text-[13px] text-muted-foreground font-bold mb-1.5">Engagement</p>
-              <div className="flex gap-0.5 h-3.5 rounded-full overflow-hidden">
+              <p className="text-[11px] text-muted-foreground font-bold mb-1">Engagement</p>
+              <div className="flex gap-0.5 h-3 rounded-full overflow-hidden">
                 {recentAnalyses.length > 0 ? (
                   <>
                     <div className="bg-primary rounded-l-full" style={{ width: `${(engagementDist.high / recentAnalyses.length) * 100}%` }} />
@@ -1283,15 +1282,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   </>
                 ) : <div className="bg-muted w-full rounded-full" />}
               </div>
-              <div className="flex justify-between mt-1">
-                <span className="text-[11px] text-muted-foreground font-bold">🔥{engagementDist.high}</span>
-                <span className="text-[11px] text-muted-foreground font-bold">👍{engagementDist.medium}</span>
-                <span className="text-[11px] text-muted-foreground font-bold">💤{engagementDist.low}</span>
+              <div className="flex justify-between mt-0.5">
+                <span className="text-[9px] text-muted-foreground font-bold">🔥{engagementDist.high}</span>
+                <span className="text-[9px] text-muted-foreground font-bold">👍{engagementDist.medium}</span>
+                <span className="text-[9px] text-muted-foreground font-bold">💤{engagementDist.low}</span>
               </div>
             </div>
             <div>
-              <p className="text-[13px] text-muted-foreground font-bold mb-1.5">Humeur</p>
-              <div className="flex gap-0.5 h-3.5 rounded-full overflow-hidden">
+              <p className="text-[11px] text-muted-foreground font-bold mb-1">Humeur</p>
+              <div className="flex gap-0.5 h-3 rounded-full overflow-hidden">
                 {recentAnalyses.length > 0 ? (
                   <>
                     <div className="bg-primary/80 rounded-l-full" style={{ width: `${(moodDist.positive / recentAnalyses.length) * 100}%` }} />
@@ -1300,35 +1299,32 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   </>
                 ) : <div className="bg-muted w-full rounded-full" />}
               </div>
-              <div className="flex justify-between mt-1">
-                <span className="text-[11px] text-muted-foreground font-bold">🟢{moodDist.positive}</span>
-                <span className="text-[11px] text-muted-foreground font-bold">🟡{moodDist.neutral}</span>
-                <span className="text-[11px] text-muted-foreground font-bold">🔴{moodDist.low}</span>
+              <div className="flex justify-between mt-0.5">
+                <span className="text-[9px] text-muted-foreground font-bold">🟢{moodDist.positive}</span>
+                <span className="text-[9px] text-muted-foreground font-bold">🟡{moodDist.neutral}</span>
+                <span className="text-[9px] text-muted-foreground font-bold">🔴{moodDist.low}</span>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ═══ ÉMOTIONS — compact bars ═══ */}
+      {/* ═══ ÉMOTIONS — 3 cols compact ═══ */}
       {Object.keys(avgEmotions).length > 0 && (
-        <div className="bg-card rounded-3xl p-5 border border-border/20">
-          <div className="flex items-center gap-2.5 mb-3">
-            <span className="text-2xl">💖</span>
-            <h3 className="text-[17px] font-extrabold text-foreground">Émotions</h3>
+        <div className="bg-card rounded-[18px] p-3 border border-border/20">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg">💖</span>
+            <h3 className="text-[15px] font-black text-foreground">Émotions</h3>
           </div>
-          <div className="space-y-2.5">
-            {Object.entries(avgEmotions).filter(([, v]) => v > 0).sort(([, a], [, b]) => b - a).map(([key, value]) => {
+          <div className="grid grid-cols-3 gap-2">
+            {Object.entries(avgEmotions).filter(([, v]) => v > 0).sort(([, a], [, b]) => b - a).slice(0, 6).map(([key, value]) => {
               const info = emotionScoreLabels[key] || { label: key, emoji: "❓" };
-              const barColor = key === "joy" ? "bg-emerald-500" : key === "curiosity" ? "bg-blue-500" : key === "excitement" ? "bg-amber-400" : key === "frustration" ? "bg-red-400" : key === "fear" ? "bg-purple-400" : "bg-muted-foreground";
+              const barColor = key === "joy" ? "from-emerald-400/30 to-emerald-300/10" : key === "curiosity" ? "from-blue-400/30 to-blue-300/10" : key === "excitement" ? "from-amber-400/30 to-amber-300/10" : key === "frustration" ? "from-red-400/30 to-red-300/10" : key === "fear" ? "from-purple-400/30 to-purple-300/10" : "from-muted/30 to-muted/10";
               return (
-                <div key={key} className="flex items-center gap-3">
-                  <span className="text-xl w-7 text-center">{info.emoji}</span>
-                  <span className="text-[14px] text-foreground w-20 font-extrabold">{info.label}</span>
-                  <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
-                    <div className={`h-full ${barColor} rounded-full transition-all duration-700`} style={{ width: `${value}%` }} />
-                  </div>
-                  <span className="text-[14px] text-foreground w-10 text-right font-extrabold">{value}%</span>
+                <div key={key} className={`bg-gradient-to-br ${barColor} rounded-[14px] p-2 text-center border border-white/10`}>
+                  <span className="text-[20px] block">{info.emoji}</span>
+                  <p className="text-[16px] font-black text-foreground leading-tight">{value}%</p>
+                  <p className="text-[9px] text-muted-foreground font-bold">{info.label}</p>
                 </div>
               );
             })}
@@ -1410,25 +1406,25 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </div>
       )}
 
-      {/* ═══ STATS DÉTAILLÉES — compact grid ═══ */}
-      <div className="bg-card rounded-3xl p-5 border border-border/20">
-        <div className="flex items-center gap-2.5 mb-3">
-          <span className="text-2xl">📊</span>
-          <h3 className="text-[17px] font-extrabold text-foreground">Statistiques</h3>
+      {/* ═══ STATS — 3 cols compact ═══ */}
+      <div className="bg-card rounded-[18px] p-3 border border-border/20">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-lg">📊</span>
+          <h3 className="text-[15px] font-black text-foreground">Statistiques</h3>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-2">
           {[
-            { label: "Moy. / session", value: formatDuration(avgSessionDuration), emoji: "⏱️" },
-            { label: "Msg / session", value: avgMessagesPerSession, emoji: "💬" },
-            { label: "Analysées", value: `${recentAnalyses.length}/${totalSessions}`, emoji: "🔬" },
-            { label: "Aujourd'hui", value: formatDuration(todayDuration), emoji: "📅" },
+            { label: "Moy/session", value: formatDuration(avgSessionDuration), emoji: "⏱️", gradient: "from-purple-400/25 to-violet-300/10", border: "border-purple-300/20" },
+            { label: "Msg/session", value: avgMessagesPerSession, emoji: "💬", gradient: "from-blue-400/25 to-indigo-300/10", border: "border-blue-300/20" },
+            { label: "Analysées", value: `${recentAnalyses.length}/${totalSessions}`, emoji: "🔬", gradient: "from-emerald-400/25 to-teal-300/10", border: "border-emerald-300/20" },
+            { label: "Aujourd'hui", value: formatDuration(todayDuration), emoji: "📅", gradient: "from-amber-400/25 to-orange-300/10", border: "border-amber-300/20" },
+            { label: "Total msgs", value: totalMessages, emoji: "📝", gradient: "from-pink-400/25 to-rose-300/10", border: "border-pink-300/20" },
+            { label: "Sessions", value: totalSessions, emoji: "🎯", gradient: "from-cyan-400/25 to-sky-300/10", border: "border-cyan-300/20" },
           ].map((stat) => (
-            <div key={stat.label} className="flex items-center gap-3 p-3 rounded-2xl bg-muted/30">
-              <span className="text-xl">{stat.emoji}</span>
-              <div className="min-w-0">
-                <p className="text-[16px] font-extrabold text-foreground">{stat.value}</p>
-                <p className="text-[11px] text-muted-foreground font-bold">{stat.label}</p>
-              </div>
+            <div key={stat.label} className={`bg-gradient-to-br ${stat.gradient} rounded-[14px] p-2 text-center border ${stat.border}`}>
+              <span className="text-[18px] block">{stat.emoji}</span>
+              <p className="text-[15px] font-black text-foreground leading-tight">{stat.value}</p>
+              <p className="text-[8px] text-muted-foreground font-bold">{stat.label}</p>
             </div>
           ))}
         </div>
