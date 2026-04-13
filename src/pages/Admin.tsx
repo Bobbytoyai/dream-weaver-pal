@@ -729,8 +729,9 @@ const Admin = () => {
       cerveau: "16",
       cloud: entries.length,
       store: storeItems.length,
+      cloudusers: cloudUsers.length,
     } as Record<string, string | number>;
-  }, [interactions, entries, cloudStories, storeItems]);
+  }, [interactions, entries, cloudStories, storeItems, cloudUsers]);
 
   // ─── Handlers ───
   const handleSave = async () => {
