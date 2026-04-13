@@ -141,8 +141,8 @@ const Card = ({ title, icon: Icon, children, noPad, className: cx }: { title?: s
   <div className={`bg-card rounded-2xl overflow-hidden ${cx || ""}`}>
     {title && (
       <div className="flex items-center gap-2.5 px-5 pt-4 pb-2">
-        {Icon && <Icon className="w-4 h-4 text-muted-foreground" />}
-        <h3 className="text-[13px] font-semibold text-foreground tracking-tight">{title}</h3>
+        {Icon && <Icon className="w-5 h-5 text-muted-foreground" />}
+        <h3 className="text-[15px] font-bold text-foreground tracking-tight">{title}</h3>
       </div>
     )}
     <div className={noPad ? "" : "px-5 pb-4"}>{children}</div>
