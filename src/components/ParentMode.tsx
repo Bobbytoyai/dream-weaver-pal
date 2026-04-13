@@ -2150,36 +2150,43 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     return (
       <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
         {/* Search bar */}
-        <div className="relative animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-          <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <div className="relative">
+          <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-foreground/40" />
           <input type="text" value={sessionSearch} onChange={e => setSessionSearch(e.target.value)}
             placeholder="Rechercher…"
-            className="w-full pl-11 pr-4 py-3 rounded-2xl bg-muted text-[15px] font-semibold text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 transition-all" />
+            className="w-full pl-11 pr-4 py-3 bg-white text-[15px] font-black text-foreground placeholder:text-foreground/40 border-4 border-black outline-none focus:ring-2 focus:ring-foreground/20 transition-all" />
         </div>
 
-        {/* Category cards — horizontal scroll */}
-        <div className="grid grid-cols-6 gap-1.5 mt-2 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
-          {categoryCards.map(card => (
-            <button key={card.key} onClick={card.onClick}
-              className={`relative px-1 py-2.5 rounded-xl bg-gradient-to-br ${card.bg} flex flex-col items-center justify-center gap-1 transition-all duration-200 active:scale-90 ${
-                card.active ? "ring-2 ring-primary ring-offset-1 ring-offset-background shadow-lg shadow-primary/20 scale-[1.03]" : "hover:ring-1 hover:ring-primary/20"
-              }`}
-              style={{ fontFamily: "'Nunito', sans-serif" }}>
-              <span className="text-xl">{card.emoji}</span>
-              <span className={`text-[9px] font-extrabold leading-tight text-center ${card.active ? "text-primary" : "text-foreground/70"}`}>{card.label}</span>
-            </button>
-          ))}
+        {/* Category cards — retro grid */}
+        <div className="grid grid-cols-6 gap-1.5 mt-2">
+          {categoryCards.map((card, ci) => {
+            const retroBgs = ["var(--retro-blue)", "var(--retro-yellow)", "var(--retro-red)", "var(--retro-blue)", "var(--retro-yellow)", "var(--retro-green)"];
+            return (
+              <button key={card.key} onClick={card.onClick}
+                className={`relative px-1 py-2.5 flex flex-col items-center justify-center gap-1 transition-all duration-200 active:scale-90 border-2 border-black ${
+                  card.active ? "ring-2 ring-foreground/20 scale-[1.03]" : "hover:translate-y-[-1px]"
+                }`}
+                style={{
+                  backgroundColor: card.active ? retroBgs[ci % retroBgs.length] : "white",
+                  boxShadow: card.active ? "3px 3px 0px rgba(0,0,0,0.25)" : "1px 1px 0px rgba(0,0,0,0.1)",
+                  fontFamily: "'Nunito', sans-serif",
+                }}>
+                <span className="text-xl">{card.emoji}</span>
+                <span className={`text-[9px] font-black leading-tight text-center uppercase ${card.active ? "text-foreground" : "text-foreground/60"}`}>{card.label}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Mini calendar — compact */}
-        <div className="bg-card rounded-3xl px-4 py-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.15s" }}>
+        {/* Mini calendar — retro */}
+        <div className="retro-card px-4 py-3">
           <div className="flex items-center justify-between mb-2">
-            <h4 className="text-[14px] font-extrabold text-foreground capitalize">{monthName}</h4>
-            <span className="text-base text-muted-foreground">📅</span>
+            <h4 className="text-[14px] font-black text-foreground capitalize uppercase">{monthName}</h4>
+            <span className="text-base">📅</span>
           </div>
           <div className="grid grid-cols-7 gap-px">
             {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
-              <span key={i} className="text-[10px] font-bold text-muted-foreground text-center py-1">{d}</span>
+              <span key={i} className="text-[10px] font-black text-foreground/40 text-center py-1 uppercase">{d}</span>
             ))}
             {Array.from({ length: startDow }, (_, i) => (
               <div key={`e-${i}`} />
@@ -2202,18 +2209,18 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                         const el = document.getElementById(`day-${target.day}`);
                         if (el) {
                           el.scrollIntoView({ behavior: "smooth", block: "center" });
-                          el.classList.add("ring-2", "ring-primary");
-                          setTimeout(() => el.classList.remove("ring-2", "ring-primary"), 2000);
+                          el.classList.add("ring-2", "ring-foreground");
+                          setTimeout(() => el.classList.remove("ring-2", "ring-foreground"), 2000);
                         }
                       }
                     }
                   }}
-                  className={`w-full aspect-square rounded-lg flex items-center justify-center text-[11px] font-bold transition-all ${
+                  className={`w-full aspect-square flex items-center justify-center text-[11px] font-black transition-all border ${
                     dayData
-                      ? "bg-primary/15 text-primary hover:bg-primary/25 cursor-pointer active:scale-90"
+                      ? "bg-[var(--retro-blue)] text-foreground border-black hover:bg-[var(--retro-yellow)] cursor-pointer active:scale-90"
                       : isToday
-                        ? "bg-muted ring-1 ring-primary/30 text-foreground"
-                        : "text-muted-foreground/60 cursor-default"
+                        ? "bg-white border-black text-foreground ring-1 ring-foreground/30"
+                        : "text-foreground/30 border-transparent cursor-default"
                   }`}>
                   {dayNum}
                 </button>
@@ -2224,110 +2231,112 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
         {/* Daily summaries list */}
         {loading ? (
-          <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+          <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-foreground" /></div>
         ) : dailySummaries.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground"><p className="text-sm">Aucune session{tagFilter || sessionSearch || sessionFavFilter ? " trouvée" : " enregistrée"}.</p></div>
+          <div className="text-center py-8 text-foreground/50"><p className="text-sm font-black">Aucune session{tagFilter || sessionSearch || sessionFavFilter ? " trouvée" : " enregistrée"}.</p></div>
         ) : (
           <div className="space-y-3">
-            {dailySummaries.map(day => (
-              <div key={day.day} id={`day-${day.day}`} className="bg-card rounded-3xl p-5 border border-border/20 space-y-4 transition-all animate-fadeInUp" style={{ animationDelay: `${0.2 + dailySummaries.indexOf(day) * 0.05}s` }}>
-                {/* Day header */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <Calendar className="w-5 h-5 text-primary" />
-                    <h4 className="text-[17px] font-extrabold text-foreground">{formatDayHeader(day.daySessions[0].started_at)}</h4>
-                    {day.hasFavorite && <span className="text-base">⭐</span>}
+            {dailySummaries.map((day, dayIdx) => {
+              const tiltClass = `retro-card-tilt-${(dayIdx % 6) + 1}`;
+              return (
+                <div key={day.day} id={`day-${day.day}`} className={`retro-card ${tiltClass} p-5 space-y-4 transition-all`}>
+                  {/* Day header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <Calendar className="w-5 h-5 text-foreground" />
+                      <h4 className="text-[17px] font-black text-foreground uppercase">{formatDayHeader(day.daySessions[0].started_at)}</h4>
+                      {day.hasFavorite && <span className="text-base">⭐</span>}
+                    </div>
+                    <span className="text-3xl">{day.mood.emoji}</span>
                   </div>
-                  <span className="text-3xl">{day.mood.emoji}</span>
-                </div>
 
-                {/* KPIs row */}
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="bg-gradient-to-br from-blue-500/15 to-blue-400/5 rounded-2xl p-3 text-center">
-                    <p className="text-xl font-extrabold text-foreground">{day.daySessions.length}</p>
-                    <p className="text-[11px] text-muted-foreground font-bold">session{day.daySessions.length > 1 ? "s" : ""}</p>
-                  </div>
-                  <div className="bg-gradient-to-br from-emerald-500/15 to-emerald-400/5 rounded-2xl p-3 text-center">
-                    <p className="text-xl font-extrabold text-foreground">{day.totalMessages}</p>
-                    <p className="text-[11px] text-muted-foreground font-bold">messages</p>
-                  </div>
-                  <div className="bg-gradient-to-br from-purple-500/15 to-purple-400/5 rounded-2xl p-3 text-center">
-                    <p className="text-xl font-extrabold text-foreground">{formatDuration(day.totalDuration)}</p>
-                    <p className="text-[11px] text-muted-foreground font-bold">durée</p>
-                  </div>
-                </div>
-
-                {/* Summary */}
-                {day.daySummary && (
-                  <p className="text-[14px] text-foreground/70 leading-relaxed bg-gradient-to-r from-primary/8 to-accent/5 rounded-2xl px-4 py-3">
-                    💡 {day.daySummary}
-                  </p>
-                )}
-
-                {/* Scores mini */}
-                {day.avgSociability !== null && (
-                  <div className="grid grid-cols-3 gap-2">
+                  {/* KPIs row */}
+                  <div className="grid grid-cols-3 gap-2.5">
                     {[
-                      { label: "Sociabilité", score: day.avgSociability, emoji: "🤝", color: "from-blue-500/15 to-blue-400/5" },
-                      { label: "Curiosité", score: day.avgCuriosity, emoji: "🔍", color: "from-amber-500/15 to-amber-400/5" },
-                      { label: "Stabilité", score: day.avgStability, emoji: "⚖️", color: "from-emerald-500/15 to-emerald-400/5" },
-                    ].map(s => (
-                      <div key={s.label} className={`bg-gradient-to-br ${s.color} rounded-2xl p-2.5 flex flex-col items-center gap-1`}>
-                        <span className="text-lg">{s.emoji}</span>
-                        <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
-                          <div className="h-full rounded-full bg-primary/60 transition-all" style={{ width: `${s.score}%` }} />
-                        </div>
-                        <span className="text-[13px] font-extrabold text-foreground">{s.score}</span>
+                      { value: day.daySessions.length, label: `session${day.daySessions.length > 1 ? "s" : ""}`, bg: "var(--retro-blue)" },
+                      { value: day.totalMessages, label: "messages", bg: "var(--retro-green)" },
+                      { value: formatDuration(day.totalDuration), label: "durée", bg: "var(--retro-purple)" },
+                    ].map(kpi => (
+                      <div key={kpi.label} className="border-2 border-black p-3 text-center" style={{ backgroundColor: kpi.bg }}>
+                        <p className="text-xl font-black text-foreground">{kpi.value}</p>
+                        <p className="text-[11px] text-foreground/60 font-black uppercase">{kpi.label}</p>
                       </div>
                     ))}
                   </div>
-                )}
 
-                {/* Tags */}
-                {(day.topTopics.length > 0 || day.topEmotions.length > 0) && (
-                  <div className="flex flex-wrap gap-2">
-                    {day.topTopics.map(t => (
-                      <span key={t} className="px-3 py-1 rounded-xl bg-primary/12 text-primary text-[12px] font-bold">#{t}</span>
-                    ))}
-                    {day.topEmotions.map(e => (
-                      <span key={e} className="px-3 py-1 rounded-xl bg-accent/30 text-accent-foreground text-[12px] font-bold">{e}</span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Expand sessions */}
-                <div className="border-t border-border/20 pt-3">
-                  <details className="group">
-                    <summary className="text-[14px] text-primary font-bold cursor-pointer flex items-center gap-1.5 hover:underline">
-                      <ChevronRight className="w-4 h-4 transition-transform group-open:rotate-90" />
-                      Voir les {day.daySessions.length} session{day.daySessions.length > 1 ? "s" : ""}
-                    </summary>
-                    <div className="mt-3 space-y-2">
-                      {day.daySessions.map(session => {
-                        const analysis = analyses.find(a => a.session_id === session.id);
-                        const sMood = moodLabels[(analysis?.mood_score || "neutral")] || moodLabels.neutral;
-                        return (
-                          <button key={session.id} onClick={() => analyzeSession(session)}
-                            className="w-full text-left bg-muted/30 rounded-2xl p-4 hover:bg-muted/60 transition-all flex items-center gap-3">
-                            <span className="text-lg">{sMood.emoji}</span>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="text-[14px] font-bold text-foreground">
-                                  {new Date(session.started_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-                                </span>
-                                <span className="text-[12px] text-muted-foreground font-semibold">{formatDuration(session.duration_seconds)} • {session.message_count} msg</span>
-                              </div>
-                              {analysis?.summary && <p className="text-[12px] text-muted-foreground mt-1 truncate">{humanizeSummary(analysis.summary)}</p>}
-                            </div>
-                            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                          </button>
-                        );
-                      })}
+                  {/* Summary */}
+                  {day.daySummary && (
+                    <div className="border-2 border-black bg-[var(--retro-yellow)] px-4 py-3">
+                      <p className="text-[14px] text-foreground/70 leading-relaxed font-bold">💡 {day.daySummary}</p>
                     </div>
-                  </details>
+                  )}
+
+                  {/* Scores mini */}
+                  {day.avgSociability !== null && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { label: "Sociabilité", score: day.avgSociability, emoji: "🤝", bg: "var(--retro-blue)" },
+                        { label: "Curiosité", score: day.avgCuriosity, emoji: "🔍", bg: "var(--retro-yellow)" },
+                        { label: "Stabilité", score: day.avgStability, emoji: "⚖️", bg: "var(--retro-green)" },
+                      ].map(s => (
+                        <div key={s.label} className="border-2 border-black p-2.5 flex flex-col items-center gap-1" style={{ backgroundColor: s.bg }}>
+                          <span className="text-lg">{s.emoji}</span>
+                          <div className="w-full h-2 bg-white border border-black overflow-hidden">
+                            <div className="h-full bg-foreground transition-all" style={{ width: `${s.score}%` }} />
+                          </div>
+                          <span className="text-[13px] font-black text-foreground">{s.score}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Tags */}
+                  {(day.topTopics.length > 0 || day.topEmotions.length > 0) && (
+                    <div className="flex flex-wrap gap-2">
+                      {day.topTopics.map(t => (
+                        <span key={t} className="px-3 py-1 border-2 border-black bg-[var(--retro-blue)] text-foreground text-[12px] font-black">#{t}</span>
+                      ))}
+                      {day.topEmotions.map(e => (
+                        <span key={e} className="px-3 py-1 border-2 border-black bg-[var(--retro-purple)] text-foreground text-[12px] font-black">{e}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Expand sessions */}
+                  <div className="border-t-2 border-black/20 pt-3">
+                    <details className="group">
+                      <summary className="text-[14px] text-foreground font-black cursor-pointer flex items-center gap-1.5 hover:opacity-70 uppercase">
+                        <ChevronRight className="w-4 h-4 transition-transform group-open:rotate-90" />
+                        Voir les {day.daySessions.length} session{day.daySessions.length > 1 ? "s" : ""}
+                      </summary>
+                      <div className="mt-3 space-y-2">
+                        {day.daySessions.map(session => {
+                          const analysis = analyses.find(a => a.session_id === session.id);
+                          const sMood = moodLabels[(analysis?.mood_score || "neutral")] || moodLabels.neutral;
+                          return (
+                            <button key={session.id} onClick={() => analyzeSession(session)}
+                              className="w-full text-left bg-white border-2 border-black p-4 hover:bg-[var(--retro-blue)]/30 transition-all flex items-center gap-3"
+                              style={{ boxShadow: "2px 2px 0px rgba(0,0,0,0.15)" }}>
+                              <span className="text-lg">{sMood.emoji}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[14px] font-black text-foreground">
+                                    {new Date(session.started_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                                  </span>
+                                  <span className="text-[12px] text-foreground/60 font-bold">{formatDuration(session.duration_seconds)} • {session.message_count} msg</span>
+                                </div>
+                                {analysis?.summary && <p className="text-[12px] text-foreground/50 mt-1 truncate font-bold">{humanizeSummary(analysis.summary)}</p>}
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-foreground/40 shrink-0" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </details>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -3170,52 +3179,58 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ── TARIFS ── */}
       <div className="space-y-3">
-        <h3 className="text-[16px] font-extrabold text-foreground px-1">💾 Tarifs Bobby Cloud — par stockage</h3>
-        <p className="text-[11px] text-muted-foreground px-1 -mt-1">Utilisation actuelle : <span className="font-extrabold text-foreground">{storageLabel}</span> / 500 Mo</p>
+        <h3 className="text-[16px] font-black text-foreground px-1 uppercase">💾 TARIFS BOBBY CLOUD</h3>
+        <p className="text-[11px] text-foreground/60 px-1 -mt-1 font-bold">Utilisation actuelle : <span className="font-black text-foreground">{storageLabel}</span> / 500 Mo</p>
         {/* Usage bar */}
-        <div className="mx-1 h-2 rounded-full bg-muted overflow-hidden">
-          <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary/60 transition-all" style={{ width: `${Math.min(100, (estimatedStorageMB / 500) * 100)}%` }} />
+        <div className="mx-1 h-3 bg-white border-2 border-black overflow-hidden">
+          <div className="h-full bg-foreground transition-all" style={{ width: `${Math.min(100, (estimatedStorageMB / 500) * 100)}%` }} />
         </div>
-        {plans.map(plan => (
-          <div key={plan.name} className={`bg-gradient-to-br ${(plan as any).color} rounded-3xl p-4 border ${(plan as any).border} relative ${(plan as any).popular ? "ring-2 ring-primary/30" : ""}`}>
-            {(plan as any).popular && (
-              <span className="absolute -top-2.5 right-4 px-3 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-extrabold shadow-md">
-                ⭐ Recommandé
-              </span>
-            )}
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-3xl">{plan.emoji}</span>
-              <div className="flex-1">
-                <h4 className="text-[17px] font-extrabold text-foreground">{plan.name}</h4>
-                <span className="text-[12px] font-bold text-primary">💾 {(plan as any).storage}</span>
-              </div>
-              <div className="text-right">
-                <span className="text-[22px] font-extrabold text-foreground">{plan.price}</span>
-                {plan.period && <span className="text-[11px] text-muted-foreground">{plan.period}</span>}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-3">
-              {plan.features.map(f => (
-                <div key={f} className="flex items-center gap-1.5">
-                  <span className="text-green-500 text-[12px]">✓</span>
-                  <span className="text-[11px] text-foreground font-medium">{f}</span>
+        {plans.map((plan, pi) => {
+          const planBgs = ["white", "var(--retro-blue)", "var(--retro-yellow)"];
+          const tiltClass = `retro-card-tilt-${(pi % 6) + 1}`;
+          return (
+            <div key={plan.name} className={`retro-card ${tiltClass} p-4 relative ${(plan as any).popular ? "ring-2 ring-foreground/20" : ""}`}
+              style={{ backgroundColor: planBgs[pi] || "white" }}>
+              {(plan as any).popular && (
+                <span className="absolute -top-2.5 right-4 px-3 py-0.5 border-2 border-black bg-[var(--retro-yellow)] text-foreground text-[10px] font-black">
+                  ⭐ Recommandé
+                </span>
+              )}
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-3xl">{plan.emoji}</span>
+                <div className="flex-1">
+                  <h4 className="text-[17px] font-black text-foreground uppercase">{plan.name}</h4>
+                  <span className="text-[12px] font-black text-foreground/70">💾 {(plan as any).storage}</span>
                 </div>
-              ))}
+                <div className="text-right">
+                  <span className="text-[22px] font-black text-foreground">{plan.price}</span>
+                  {plan.period && <span className="text-[11px] text-foreground/60 font-bold">{plan.period}</span>}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-3">
+                {plan.features.map(f => (
+                  <div key={f} className="flex items-center gap-1.5">
+                    <span className="text-foreground text-[12px] font-black">✓</span>
+                    <span className="text-[11px] text-foreground font-bold">{f}</span>
+                  </div>
+                ))}
+              </div>
+              <button disabled={plan.disabled}
+                className={`w-full py-2.5 font-black text-[13px] transition-all active:scale-95 border-4 border-black uppercase ${
+                  plan.disabled
+                    ? "bg-white/50 text-foreground/40 cursor-not-allowed"
+                    : "bg-foreground text-background hover:opacity-90"
+                }`}
+                style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
+                {plan.cta}
+              </button>
             </div>
-            <button disabled={plan.disabled}
-              className={`w-full py-2.5 rounded-2xl font-extrabold text-[13px] transition-all active:scale-95 ${
-                plan.disabled
-                  ? "bg-muted/50 text-muted-foreground cursor-not-allowed"
-                  : "bg-primary text-primary-foreground hover:opacity-90 shadow-md shadow-primary/20"
-              }`}>
-              {plan.cta}
-            </button>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* ── INFRASTRUCTURE FOOTER ── */}
-      <div className="mt-4 pt-4 border-t border-border/15">
+      <div className="mt-4 pt-4 border-t-2 border-black/10">
         <div className="flex items-center justify-center gap-3 flex-wrap">
           {[
             { emoji: "🔒", label: "AES-256" },
@@ -3224,12 +3239,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             { emoji: "🔄", label: "Sync auto" },
             { emoji: "📈", label: "Scalable" },
           ].map(f => (
-            <span key={f.label} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-muted/40 text-[9px] font-bold text-muted-foreground">
+            <span key={f.label} className="inline-flex items-center gap-1 px-2.5 py-1 border border-black bg-white text-[9px] font-black text-foreground">
               {f.emoji} {f.label}
             </span>
           ))}
         </div>
-        <p className="text-center text-[9px] text-muted-foreground/60 mt-2">
+        <p className="text-center text-[9px] text-foreground/40 mt-2 font-bold">
           ☁️ Infrastructure sécurisée • Chiffrement bout en bout • Serveurs EU
         </p>
       </div>
