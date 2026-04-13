@@ -38,10 +38,12 @@ const tabs: { id: Tab; icon: any; label: string }[] = [
 ];
 
 // ─── Suspense wrapper ───────────────────────────────────────────
-const SuspenseTab = ({ children }: { children: React.ReactNode }) => (
-  <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
-    {children}
-  </Suspense>
+const SuspenseTab = ({ children, label = "tab" }: { children: React.ReactNode; label?: string }) => (
+  <LazyImportBoundary label={label}>
+    <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
+      {children}
+    </Suspense>
+  </LazyImportBoundary>
 );
 
 // ─── Props ──────────────────────────────────────────────────────
