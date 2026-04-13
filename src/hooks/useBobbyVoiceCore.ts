@@ -393,7 +393,7 @@ export function useBobbyVoiceCore({
       await speakSystemMessage(msg, "reassuring");
 
       // After speaking relance, go back to listening with relance timer
-      if (machineRef.current === "RELANCE" || machineRef.current === "SPEAKING") {
+      if (["RELANCE", "SPEAKING"].includes(machineRef.current)) {
         go("LISTENING");
         setMicArmed(true);
         try {
@@ -597,7 +597,7 @@ export function useBobbyVoiceCore({
     await speakSystemMessage(welcome, "happy");
 
     // After welcome, start listening
-    if (machineRef.current === "SPEAKING" || machineRef.current === "IDLE") {
+    if (["SPEAKING", "IDLE"].includes(machineRef.current)) {
       await startListening();
     }
   }, [clearSleepTimer, go, interrupt, speakSystemMessage, startListening]);
