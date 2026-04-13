@@ -227,13 +227,14 @@ function SleepZzz() {
   );
 }
 
-function FaceScene({ faceState, gazeRef, getViseme, emotionIntensity, emotionDuringSpeech, bobbyColor, expressionOverride, expressionIntensityLevel }: {
+function FaceScene({ faceState, gazeRef, getViseme, emotionIntensity, emotionDuringSpeech, bobbyColor, bobbyColors, expressionOverride, expressionIntensityLevel }: {
   faceState: FaceState;
   gazeRef: React.MutableRefObject<{ x: number; y: number }>;
   getViseme: () => VisemeState;
   emotionIntensity: number;
   emotionDuringSpeech?: FaceState;
   bobbyColor?: string;
+  bobbyColors?: BobbyColors;
   expressionOverride?: ExpressionCombo;
   expressionIntensityLevel?: number;
 }) {
@@ -258,8 +259,12 @@ function FaceScene({ faceState, gazeRef, getViseme, emotionIntensity, emotionDur
       emotionIntensity={emotionIntensity}
       emotionDuringSpeech={emotionDuringSpeech}
       bobbyColor={bobbyColor}
+      bobbyColors={bobbyColors}
       expressionOverride={expressionOverride}
       expressionIntensityLevel={expressionIntensityLevel}
+    />
+  );
+}
     />
   );
 }
