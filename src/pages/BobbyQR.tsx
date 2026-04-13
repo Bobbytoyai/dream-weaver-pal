@@ -130,10 +130,25 @@ export default function BobbyQR() {
   if (step === "invalid") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FDF6EC] p-6">
-        <div className="retro-card p-8 text-center max-w-sm space-y-4" style={{ backgroundColor: "var(--retro-red)" }}>
-          <span className="text-5xl">❌</span>
+        <div className="retro-card p-8 text-center max-w-sm w-full space-y-5" style={{ backgroundColor: "white" }}>
+          <div className="mx-auto w-16 h-16 border-4 border-black bg-red-100 flex items-center justify-center">
+            <span className="text-4xl">❌</span>
+          </div>
           <h2 className="text-xl font-black text-foreground uppercase">Code invalide</h2>
-          <p className="text-sm font-bold text-foreground/70">Ce QR code Bobby n'existe pas ou n'est plus valide.</p>
+          <p className="text-sm font-bold text-foreground/80 leading-relaxed">
+            Ce QR code Bobby n'existe pas ou n'est plus valide.
+          </p>
+          <div className="border-4 border-black bg-amber-50 p-3 text-left space-y-1">
+            <p className="text-[11px] font-black text-foreground uppercase">💡 Besoin d'aide ?</p>
+            <p className="text-[10px] font-bold text-foreground/70">
+              Vérifie que tu scannes bien le QR code fourni avec ton Bobby.
+            </p>
+          </div>
+          <button onClick={() => navigate("/")}
+            className="w-full py-3 text-[13px] font-black uppercase border-4 border-black bg-foreground text-background hover:opacity-90 transition-all"
+            style={{ boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}>
+            ← Retour à l'accueil
+          </button>
         </div>
       </div>
     );
