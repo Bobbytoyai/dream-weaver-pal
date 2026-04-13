@@ -96,7 +96,7 @@ export const EYEBROWS: Record<string, EyebrowPreset> = {
 // ─── Mouth Library (27 presets) ──────────────────────────────
 
 export const MOUTHS: Record<string, MouthPreset> = {
-  neutral:       { openness: 0,    width: 0.5,  curve: 0.08,  round: 0,    jawDrop: 0 },
+  neutral:       { openness: 0,    width: 0.5,  curve: 0,     round: 0,    jawDrop: 0 },
   smile_small:   { openness: 0.05, width: 0.58, curve: 0.22,  round: 0,    jawDrop: 0.02 },
   smile_big:     { openness: 0.2,  width: 0.78, curve: 0.55,  round: 0,    jawDrop: 0.1 },
   smile_closed:  { openness: 0,    width: 0.62, curve: 0.35,  round: 0,    jawDrop: 0 },
