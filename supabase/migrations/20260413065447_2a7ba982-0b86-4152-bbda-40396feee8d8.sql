@@ -1,0 +1,1 @@
+DELETE FROM child_sessions WHERE message_count = 0;
