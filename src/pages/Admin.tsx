@@ -2685,6 +2685,140 @@ const Admin = () => {
           ))}
         </div>
 
+        {/* ── Global Search ── */}
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher dans tout le cerveau…"
+            className="bg-white/[0.04] border-white/[0.06] text-white pl-11 h-12 rounded-2xl placeholder:text-white/25 focus:border-purple-500/30 focus:ring-purple-500/10" />
+          {search.trim() && (
+            <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 text-xs">✕</button>
+          )}
+        </div>
+
+        {/* ── Global search results ── */}
+        {search.trim() ? (() => {
+          const q = search.toLowerCase();
+          const kbResults = entries.filter(e => e.question.toLowerCase().includes(q) || e.answer.toLowerCase().includes(q) || e.keywords.some(k => k.toLowerCase().includes(q))).slice(0, 8);
+          const qaResults = QA_DATABASE.filter(e => e.triggers.some(t => t.toLowerCase().includes(q)) || e.responses.some(r => r.toLowerCase().includes(q))).slice(0, 8);
+          const blagueResults = BLAGUES.filter(b => b.question.toLowerCase().includes(q) || b.reponse.toLowerCase().includes(q)).slice(0, 8);
+          const storyResults = [...HISTOIRES.map(h => ({ ...h, source: "local" as const })), ...cloudStories.map(s => ({ id: s.id, titre: s.title, theme: s.theme, texte: s.full_text || s.template_text, source: "cloud" as const }))].filter(s => s.titre.toLowerCase().includes(q) || s.texte?.toLowerCase().includes(q)).slice(0, 8);
+          const chansonResults = CHANSONS.filter(c => c.titre.toLowerCase().includes(q) || c.description.toLowerCase().includes(q)).slice(0, 8);
+          const interactionResults = (interactions || []).filter(i => i.child_input.toLowerCase().includes(q) || i.ai_response.toLowerCase().includes(q)).slice(0, 8);
+          const multiResults = BOBBY_MULTI_RESPONSES.filter(e => e.input.toLowerCase().includes(q) || e.responses.some(r => r.text.toLowerCase().includes(q))).slice(0, 8);
+          const total = kbResults.length + qaResults.length + blagueResults.length + storyResults.length + chansonResults.length + interactionResults.length + multiResults.length;
+
+          if (total === 0) return (
+            <div className="text-center py-10">
+              <span className="text-3xl block mb-2">🔍</span>
+              <p className="text-white/30 text-sm">Aucun résultat pour « {search} »</p>
+            </div>
+          );
+
+          return (
+            <div className="space-y-4">
+              <p className="text-[11px] text-white/30">{total}+ résultats pour « {search} »</p>
+
+              {kbResults.length > 0 && (
+                <div>
+                  <h3 className="text-[11px] font-semibold text-sky-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">☁️ Cloud KB ({kbResults.length})</h3>
+                  <div className="space-y-1.5">
+                    {kbResults.map(e => (
+                      <div key={e.id} onClick={() => openKBDetail(e)} className="bg-white/[0.04] rounded-[14px] p-3 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all">
+                        <p className="text-[12px] text-white/80 font-medium">{e.question}</p>
+                        <p className="text-[11px] text-white/30 mt-0.5 line-clamp-1">{e.answer}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {interactionResults.length > 0 && (
+                <div>
+                  <h3 className="text-[11px] font-semibold text-cyan-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">🧠 Interactions ({interactionResults.length})</h3>
+                  <div className="space-y-1.5">
+                    {interactionResults.map((i, idx) => (
+                      <div key={idx} onClick={() => openInteractionDetail(i)} className="bg-white/[0.04] rounded-[14px] p-3 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all">
+                        <p className="text-[12px] text-white/80">👦 {i.child_input}</p>
+                        <p className="text-[11px] text-white/30 mt-0.5 line-clamp-1">🤖 {i.ai_response}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {qaResults.length > 0 && (
+                <div>
+                  <h3 className="text-[11px] font-semibold text-amber-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">❓ QA ({qaResults.length})</h3>
+                  <div className="space-y-1.5">
+                    {qaResults.map((e, idx) => (
+                      <div key={idx} onClick={() => openQADetail(e)} className="bg-white/[0.04] rounded-[14px] p-3 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all">
+                        <p className="text-[12px] text-white/80">🎯 {e.triggers.slice(0, 3).join(" • ")}</p>
+                        <p className="text-[11px] text-white/30 mt-0.5 line-clamp-1">🤖 {e.responses[0]}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {blagueResults.length > 0 && (
+                <div>
+                  <h3 className="text-[11px] font-semibold text-green-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">😂 Blagues ({blagueResults.length})</h3>
+                  <div className="space-y-1.5">
+                    {blagueResults.map((b, idx) => (
+                      <div key={idx} onClick={() => openBlagueDetail(b, idx)} className="bg-white/[0.04] rounded-[14px] p-3 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all">
+                        <p className="text-[12px] text-white/80">{b.question}</p>
+                        <p className="text-[11px] text-white/30 mt-0.5">→ {b.reponse}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {storyResults.length > 0 && (
+                <div>
+                  <h3 className="text-[11px] font-semibold text-purple-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">📖 Histoires ({storyResults.length})</h3>
+                  <div className="space-y-1.5">
+                    {storyResults.map((s, idx) => (
+                      <div key={idx} className="bg-white/[0.04] rounded-[14px] p-3 border border-white/[0.06]">
+                        <p className="text-[12px] text-white/80 font-medium">{s.titre}</p>
+                        <p className="text-[11px] text-white/30 mt-0.5">🎭 {s.theme} • {s.source === "cloud" ? "☁️" : "📦"}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {chansonResults.length > 0 && (
+                <div>
+                  <h3 className="text-[11px] font-semibold text-rose-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">🎵 Chansons ({chansonResults.length})</h3>
+                  <div className="space-y-1.5">
+                    {chansonResults.map(c => (
+                      <div key={c.id} className="bg-white/[0.04] rounded-[14px] p-3 border border-white/[0.06]">
+                        <p className="text-[12px] text-white/80 font-medium">{c.titre}</p>
+                        <p className="text-[11px] text-white/30 mt-0.5">{c.description.slice(0, 60)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {multiResults.length > 0 && (
+                <div>
+                  <h3 className="text-[11px] font-semibold text-orange-400 mb-2 uppercase tracking-wider flex items-center gap-1.5">⚡ Multi-Réponses ({multiResults.length})</h3>
+                  <div className="space-y-1.5">
+                    {multiResults.map((e, idx) => (
+                      <div key={idx} className="bg-white/[0.04] rounded-[14px] p-3 border border-white/[0.06]">
+                        <p className="text-[12px] text-white/80">👦 {e.input}</p>
+                        <p className="text-[11px] text-white/30 mt-0.5 line-clamp-1">🤖 {e.responses[0]?.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })() : (
+        <>
         {/* ── Main grid — Apple-style cards ── */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {TOP_SECTIONS_CONFIG.map(section => (
@@ -2703,6 +2837,8 @@ const Admin = () => {
             />
           ))}
         </div>
+        </>
+        )}
 
         <p className="text-[10px] text-white/15 text-center pt-2">Données embarquées en lecture seule · Cloud KB modifiable</p>
         {detailPortal}
