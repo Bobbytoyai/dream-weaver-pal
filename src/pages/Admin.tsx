@@ -173,16 +173,18 @@ function SquareCard({ label, emoji, count, desc, color, bgColor, onClick }: {
 }) {
   return (
     <button onClick={onClick}
-      className="aspect-square bg-white/5 hover:bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10 hover:border-white/20 transition-all text-left flex flex-col justify-between group"
+      className="bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300 text-left flex flex-col justify-between group active:scale-[0.97] hover:shadow-lg hover:shadow-black/20"
+      style={{ aspectRatio: "1" }}
     >
       <div className="flex items-start justify-between">
-        <span className="text-3xl">{emoji}</span>
-        <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors" />
+        <div className={`w-11 h-11 rounded-2xl ${bgColor} flex items-center justify-center`}>
+          <span className="text-2xl">{emoji}</span>
+        </div>
       </div>
       <div>
-        <p className="text-xl font-bold text-white">{count}</p>
-        <h3 className={`text-sm font-semibold ${color} mt-0.5`}>{label}</h3>
-        <p className="text-[10px] text-white/40 mt-1 line-clamp-2">{desc}</p>
+        <p className="text-[22px] font-bold text-white tracking-tight">{count}</p>
+        <h3 className={`text-[13px] font-semibold ${color} mt-0.5`}>{label}</h3>
+        <p className="text-[10px] text-white/30 mt-0.5 line-clamp-2 leading-tight">{desc}</p>
       </div>
     </button>
   );
