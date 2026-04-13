@@ -13,6 +13,12 @@ const queryClient = new QueryClient();
 
 // Fix: clear any orphaned auth locks on startup so Supabase queries don't hang
 try {
+  // Remove stale PKCE and lock keys that block getSession
+  Object.keys(localStorage).forEach(k => {
+    if (k.includes("auth-token-code-verifier") || k.includes("supabase.auth.token")) {
+      try { localStorage.removeItem(k); } catch {}
+    }
+  });
   supabase.auth.getSession().catch(() => {});
 } catch {}
 
