@@ -562,16 +562,16 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={rightEyebrowRef} position={[rightBrowX, rightBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
 
       {/* Upper lip */}
-      <mesh ref={upperLipRef} position={[0, -0.65, 0.008]} geometry={upperLipGeo} material={lipMat} />
+      <mesh ref={upperLipRef} position={[0, -0.58, 0.008]} geometry={upperLipGeo} material={lipMat} />
 
       {/* Lower lip — moves down when mouth opens */}
-      <mesh ref={lowerLipRef} position={[0, -0.65, 0.007]} geometry={lowerLipGeo} material={lipMat} />
+      <mesh ref={lowerLipRef} position={[0, -0.58, 0.007]} geometry={lowerLipGeo} material={lipMat} />
 
       {/* Mouth interior — dark, visible when open */}
-      <mesh ref={mouthInteriorRef} position={[0, -0.65, 0.005]} geometry={mouthInteriorGeo} material={mouthInteriorMat} />
+      <mesh ref={mouthInteriorRef} position={[0, -0.58, 0.005]} geometry={mouthInteriorGeo} material={mouthInteriorMat} />
 
       {/* Tongue */}
-      <mesh ref={tongueRef} position={[0, -0.73, 0.006]} material={tongueMat}>
+      <mesh ref={tongueRef} position={[0, -0.66, 0.006]} material={tongueMat}>
         <circleGeometry args={[0.06, 24]} />
       </mesh>
     </group>
