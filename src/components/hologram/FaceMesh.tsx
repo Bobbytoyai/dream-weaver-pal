@@ -392,7 +392,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         
         // Slide from fully hidden above to well below center
         const hiddenY = 0.55;
-        const closedY = -0.20; // much lower = covers almost entire eye
+        const closedY = 0.10; // much higher = only covers top portion of eye
         let targetY = hiddenY - easedCover * (hiddenY - closedY);
         
         // Sleeping: slow breathing lifts eyelid UP slightly to reveal bottom sliver
