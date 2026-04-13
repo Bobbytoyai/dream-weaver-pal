@@ -921,6 +921,94 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const [ttsPlaying, setTtsPlaying] = useState<string | null>(null);
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
 
+  // ─── Full Session Playback (YouTube-style) ─────────────────────
+  const [fullPlaybackActive, setFullPlaybackActive] = useState(false);
+  const [fullPlaybackIdx, setFullPlaybackIdx] = useState(0);
+  const [fullPlaybackPaused, setFullPlaybackPaused] = useState(false);
+  const [fullPlaybackSpeed, setFullPlaybackSpeed] = useState(1);
+  const [fullPlaybackLoading, setFullPlaybackLoading] = useState(false);
+  const fullPlaybackRef = useRef<{ cancelled: boolean; audio: HTMLAudioElement | null }>({ cancelled: false, audio: null });
+
+  const startFullPlayback = useCallback((fromIdx = 0) => {
+    setFullPlaybackActive(true);
+    setFullPlaybackIdx(fromIdx);
+    setFullPlaybackPaused(false);
+    fullPlaybackRef.current.cancelled = false;
+  }, []);
+
+  const stopFullPlayback = useCallback(() => {
+    fullPlaybackRef.current.cancelled = true;
+    fullPlaybackRef.current.audio?.pause();
+    fullPlaybackRef.current.audio = null;
+    setFullPlaybackActive(false);
+    setFullPlaybackPaused(false);
+    setFullPlaybackLoading(false);
+    setActiveMessageIdx(-1);
+  }, []);
+
+  const toggleFullPlaybackPause = useCallback(() => {
+    if (fullPlaybackPaused) {
+      fullPlaybackRef.current.audio?.play();
+      setFullPlaybackPaused(false);
+    } else {
+      fullPlaybackRef.current.audio?.pause();
+      setFullPlaybackPaused(true);
+    }
+  }, [fullPlaybackPaused]);
+
+  // Effect: drive sequential TTS playback
+  useEffect(() => {
+    if (!fullPlaybackActive || fullPlaybackPaused || fullPlaybackRef.current.cancelled) return;
+    if (sessionMessages.length === 0) { stopFullPlayback(); return; }
+    if (fullPlaybackIdx >= sessionMessages.length) { stopFullPlayback(); return; }
+
+    let cancelled = false;
+    const playNext = async () => {
+      const msg = sessionMessages[fullPlaybackIdx];
+      if (!msg?.content) { if (!cancelled) setFullPlaybackIdx(i => i + 1); return; }
+
+      setActiveMessageIdx(fullPlaybackIdx);
+      setFullPlaybackLoading(true);
+
+      try {
+        const { fetchTTSAudio } = await import("@/lib/voicePipeline");
+        // Use different voice for child vs Bobby
+        const voice = msg.role === "user" ? "child" : "female";
+        const url = await fetchTTSAudio(msg.content.slice(0, 500), undefined, voice);
+        if (cancelled || fullPlaybackRef.current.cancelled) return;
+        if (url === "__silent__") { setFullPlaybackIdx(i => i + 1); return; }
+
+        const audio = new Audio(url);
+        audio.playbackRate = fullPlaybackSpeed;
+        fullPlaybackRef.current.audio = audio;
+        setFullPlaybackLoading(false);
+
+        await new Promise<void>((resolve) => {
+          audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
+          audio.onerror = () => { URL.revokeObjectURL(url); resolve(); };
+          audio.play().catch(() => resolve());
+        });
+
+        if (!cancelled && !fullPlaybackRef.current.cancelled) {
+          setFullPlaybackIdx(i => i + 1);
+        }
+      } catch {
+        setFullPlaybackLoading(false);
+        if (!cancelled) setFullPlaybackIdx(i => i + 1);
+      }
+    };
+
+    playNext();
+    return () => { cancelled = true; };
+  }, [fullPlaybackActive, fullPlaybackIdx, fullPlaybackPaused, sessionMessages, fullPlaybackSpeed]);
+
+  // Update speed on existing playback audio
+  useEffect(() => {
+    if (fullPlaybackRef.current.audio) {
+      fullPlaybackRef.current.audio.playbackRate = fullPlaybackSpeed;
+    }
+  }, [fullPlaybackSpeed]);
+
   const speakMessage = async (text: string) => {
     if (!text) return;
     
