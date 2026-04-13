@@ -1800,8 +1800,14 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             <span className="text-[11px] font-semibold text-foreground">Exporter</span>
           </button>
           <button
-            onClick={() => {
-              toast.success("✅ Session sauvegardée dans Bobby Cloud", { description: "Les données sont synchronisées et sécurisées." });
+            onClick={async () => {
+              const result = await saveToCloud(settings.childName || childName, settings);
+              if (result.success) {
+                setCloudProfile(result.profile!);
+                toast.success("☁️ Session sauvegardée dans Bobby Cloud", { description: `Code : ${result.profile!.sync_code}` });
+              } else {
+                toast.error("Erreur", { description: result.error });
+              }
             }}
             className="flex flex-col items-center gap-1.5 py-3 rounded-2xl bg-card hover:bg-primary/8 transition-all">
             <CloudUpload className="w-5 h-5 text-primary" />
