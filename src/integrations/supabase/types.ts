@@ -489,6 +489,7 @@ export type Database = {
           changelog: string
           content_count: number
           content_items: Json
+          cover_image_url: string | null
           created_at: string
           creator_name: string
           creator_role: string
@@ -526,6 +527,7 @@ export type Database = {
           changelog?: string
           content_count?: number
           content_items?: Json
+          cover_image_url?: string | null
           created_at?: string
           creator_name?: string
           creator_role?: string
@@ -563,6 +565,7 @@ export type Database = {
           changelog?: string
           content_count?: number
           content_items?: Json
+          cover_image_url?: string | null
           created_at?: string
           creator_name?: string
           creator_role?: string
