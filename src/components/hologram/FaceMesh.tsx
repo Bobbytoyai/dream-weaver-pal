@@ -171,7 +171,15 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const eyeOutlineMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("#3A3A5C"), transparent: true, opacity: 0.22,
   }), []);
-  const eyeWhiteMat = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color("#FFFFFF") }), []);
+  const eyeWhiteMat = useMemo(() => {
+    const m = new THREE.MeshBasicMaterial({ color: new THREE.Color("#FFFFFF") });
+    // Write stencil to mask eyelid
+    m.stencilWrite = true;
+    m.stencilRef = 1;
+    m.stencilFunc = THREE.AlwaysStencilFunc;
+    m.stencilZPass = THREE.ReplaceStencilOp;
+    return m;
+  }, []);
 
   const irisOuterMat = useMemo(() => new THREE.MeshBasicMaterial({
     color: new THREE.Color("#1B5E20"), transparent: true, opacity: 0.95,
@@ -209,9 +217,16 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   // Eyelid — matches background with slight tint for contrast
   const bgKey = bobbyColors?.background || "soft-blue";
   const bgHex = BG_HEX[bgKey] || BG_HEX["soft-blue"];
-  const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color(bgHex), transparent: true, opacity: 1.0, depthWrite: true,
-  }), []);
+  const eyelidMat = useMemo(() => {
+    const m = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(bgHex), transparent: true, opacity: 1.0, depthWrite: true,
+    });
+    // Only render where stencil = 1 (inside eye white)
+    m.stencilWrite = false;
+    m.stencilRef = 1;
+    m.stencilFunc = THREE.EqualStencilFunc;
+    return m;
+  }, []);
   
   // Keep eyelid color synced — always a noticeably darker shade of the background
   useEffect(() => {
