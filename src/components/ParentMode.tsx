@@ -11,7 +11,7 @@ import {
   SkipForward, SkipBack, Activity, Bell, ChevronDown, ChevronLeft, Star, Edit3
 } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
-const LazyDashboardTab = lazy(() => import("@/components/parent/DashboardTab"));
+const LazyDashboardTab = lazy(() => import("@/components/parent/DashboardTab").then(m => ({ default: m.default })));
 import { getInterestSnapshot, INTEREST_KEYWORDS_PUBLIC } from "@/lib/bobby/interestTracker";
 import { supabase } from "@/integrations/supabase/client";
 import StoryLibrary from "@/components/StoryLibrary";
@@ -672,35 +672,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     };
   }, [analyses]);
 
-  // Scores evolution over last 7 days for line chart
-  const scoresEvolutionData = useMemo(() => {
-    const scored = analyses.filter(a => a.sociability_score != null);
-    if (scored.length < 2) return [];
-    const days: { name: string; Sociabilité: number | null; Curiosité: number | null; Stabilité: number | null; hasData: boolean }[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
-      const label = d.toLocaleDateString("fr-FR", { weekday: "short" }).slice(0, 3);
-      const dayAnalyses = scored.filter(a => {
-        const session = sessions.find(s => s.id === a.session_id);
-        return session?.started_at?.startsWith(key);
-      });
-      if (dayAnalyses.length > 0) {
-        days.push({
-          name: label,
-          Sociabilité: Math.round(dayAnalyses.reduce((s, a) => s + (a.sociability_score || 0), 0) / dayAnalyses.length),
-          Curiosité: Math.round(dayAnalyses.reduce((s, a) => s + (a.curiosity_score || 0), 0) / dayAnalyses.length),
-          Stabilité: Math.round(dayAnalyses.reduce((s, a) => s + (a.emotional_stability_score || 0), 0) / dayAnalyses.length),
-          hasData: true,
-        });
-      } else {
-        days.push({ name: label, Sociabilité: null, Curiosité: null, Stabilité: null, hasData: false });
-      }
-    }
-    return days;
-  }, [analyses, sessions]);
-
-  // Real emotion averages from actual analyses only
   const avgEmotions = useMemo(() => {
     if (recentAnalyses.length === 0) return {};
     return Object.keys(emotionScoreLabels).reduce((acc, key) => {
@@ -719,80 +690,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     });
     return Object.entries(counts).sort(([, a], [, b]) => b - a).slice(0, 12);
   }, [analyses]);
-
-  // Chart data — only real data, no interpolation
-  const emotionChartData = useMemo(() => {
-    const days: { date: string; label: string; joy: number; curiosity: number; frustration: number; fear: number; sadness: number; excitement: number; count: number }[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().slice(0, 10);
-      const label = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
-      days.push({ date: dateStr, label, joy: 0, curiosity: 0, frustration: 0, fear: 0, sadness: 0, excitement: 0, count: 0 });
-    }
-    for (const a of analyses) {
-      const aDate = a.created_at.slice(0, 10);
-      const day = days.find(d => d.date === aDate);
-      if (!day) continue;
-      const emo = (a.emotions || {}) as Record<string, number>;
-      day.joy += emo.joy || 0;
-      day.curiosity += emo.curiosity || 0;
-      day.frustration += emo.frustration || 0;
-      day.fear += emo.fear || 0;
-      day.sadness += emo.sadness || 0;
-      day.excitement += emo.excitement || 0;
-      day.count++;
-    }
-    return days.map(d => ({
-      name: d.label,
-      Joie: d.count > 0 ? Math.round(d.joy / d.count) : 0,
-      Curiosité: d.count > 0 ? Math.round(d.curiosity / d.count) : 0,
-      Excitation: d.count > 0 ? Math.round(d.excitement / d.count) : 0,
-      Frustration: d.count > 0 ? Math.round(d.frustration / d.count) : 0,
-      Peur: d.count > 0 ? Math.round(d.fear / d.count) : 0,
-      Tristesse: d.count > 0 ? Math.round(d.sadness / d.count) : 0,
-      hasData: d.count > 0,
-    }));
-  }, [analyses]);
-
-  // Session duration per day (line chart data)
-  const sessionDurationChartData = useMemo(() => {
-    const days: { date: string; label: string; totalMin: number; count: number }[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().slice(0, 10);
-      const label = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
-      days.push({ date: dateStr, label, totalMin: 0, count: 0 });
-    }
-    for (const s of sessions) {
-      if (!s.duration_seconds || s.duration_seconds <= 0) continue;
-      const sDate = s.started_at.slice(0, 10);
-      const day = days.find(d => d.date === sDate);
-      if (!day) continue;
-      day.totalMin += s.duration_seconds / 60;
-      day.count++;
-    }
-    return days.map(d => ({
-      name: d.label,
-      minutes: Math.round(d.totalMin),
-      sessions: d.count,
-      hasData: d.count > 0,
-    }));
-  }, [sessions]);
-
-  // Average session duration
-  const avgSessionDuration = useMemo(() => {
-    const withDuration = sessions.filter(s => s.duration_seconds && s.duration_seconds > 0);
-    if (withDuration.length === 0) return 0;
-    return Math.round(withDuration.reduce((s, ses) => s + (ses.duration_seconds || 0), 0) / withDuration.length);
-  }, [sessions]);
-
-  // Average messages per session
-  const avgMessagesPerSession = useMemo(() => {
-    if (sessions.length === 0) return 0;
-    return Math.round(sessions.reduce((s, ses) => s + ses.message_count, 0) / sessions.length);
-  }, [sessions]);
 
   // Engagement distribution
   const engagementDist = useMemo(() => {
@@ -817,18 +714,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     return dist;
   }, [recentAnalyses]);
 
-  // Weekly activity (sessions per day of week)
-  const weeklyActivity = useMemo(() => {
-    const days = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
-    const counts = new Array(7).fill(0);
-    sessions.forEach(s => {
-      const d = new Date(s.started_at).getDay();
-      counts[d === 0 ? 6 : d - 1]++;
-    });
-    return days.map((label, i) => ({ label, count: counts[i] }));
-  }, [sessions]);
-
-  // Last session info
   const lastSession = sessions[0] || null;
   const lastAnalysis = lastSession ? analyses.find(a => a.session_id === lastSession.id) : null;
 
@@ -852,102 +737,6 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     }
     return list;
   }, [sessions, tagFilter, sessionFavFilter, sessionSearch, analyses]);
-
-  // Smart daily insights — picks one relevant insight
-  const dailyInsights = useMemo(() => {
-    const insights: string[] = [];
-    if (recentAnalyses.length === 0) return insights;
-
-    // Dominant emotion
-    const sortedEmotions = Object.entries(avgEmotions).sort(([, a], [, b]) => b - a);
-    if (sortedEmotions.length > 0) {
-      const [topEmo, topVal] = sortedEmotions[0];
-      const info = emotionScoreLabels[topEmo];
-      if (info && topVal > 40) {
-        insights.push(`${info.emoji} ${displayName} est principalement ${info.label.toLowerCase()} (${topVal}%) dans ses échanges.`);
-      }
-    }
-
-    // Interests
-    if (allInterests.length > 0) {
-      const top3 = allInterests.slice(0, 3).map(([i]) => i).join(", ");
-      insights.push(`🎯 Centres d'intérêt principaux : ${top3}.`);
-    }
-
-    // Engagement
-    if (engagementDist.high > 0) {
-      const pct = Math.round((engagementDist.high / recentAnalyses.length) * 100);
-      insights.push(`🔥 ${pct}% des sessions sont très engagées.`);
-    }
-
-    // Scores
-    if (avgScores && avgScores.curiosity > 60) {
-      insights.push(`🔍 Curiosité élevée (${avgScores.curiosity}/100) — Bobby stimule l'apprentissage !`);
-    }
-
-    return insights;
-  }, [recentAnalyses, avgEmotions, allInterests, engagementDist, avgScores, displayName]);
-
-  // v4.0: Daily AI summary
-  const dailySummary = useMemo(() => {
-    if (todaySessions.length === 0) return null;
-    const todayAnalyses = recentAnalyses.filter(a => {
-      const s = sessions.find(s => s.id === a.session_id);
-      return s && new Date(s.started_at).toDateString() === new Date().toDateString();
-    });
-    if (todayAnalyses.length === 0 && todaySessions.length > 0) {
-      return `${displayName} a eu ${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} aujourd'hui (${formatDuration(todayDuration)}).`;
-    }
-    const summaries = todayAnalyses.map(a => a.summary).filter(Boolean);
-    if (summaries.length === 0) return null;
-    // Take only first 2 sentences from the combined text
-    const full = summaries.join(" ");
-    const sentences = full.match(/[^.!?]+[.!?]+/g) || [full];
-    return humanizeSummary(sentences.slice(0, 2).join(" ").trim());
-  }, [todaySessions, recentAnalyses, sessions, displayName, todayDuration]);
-
-  // v4.0: Parent recommendations based on data
-  const parentRecommendations = useMemo(() => {
-    const recs: { emoji: string; text: string }[] = [];
-    if (recentAnalyses.length === 0) return recs;
-
-    // Recommend based on interests
-    if (allInterests.length > 0) {
-      const topInterest = allInterests[0][0];
-      recs.push({ emoji: "🎨", text: `Proposez une activité créative autour de « ${topInterest} » pour prolonger sa curiosité.` });
-    }
-
-    // Recommend based on low engagement
-    if (engagementDist.low > engagementDist.high) {
-      recs.push({ emoji: "💡", text: `L'engagement est un peu faible. Essayez les jeux interactifs ou les histoires personnalisées.` });
-    }
-
-    // Recommend based on emotional state
-    if (avgScores) {
-      if (avgScores.stability < 40) {
-        recs.push({ emoji: "🤗", text: `Les émotions varient beaucoup. Un moment calme ensemble pourrait aider à stabiliser l'humeur.` });
-      }
-      if (avgScores.sociability > 70) {
-        recs.push({ emoji: "👫", text: `${displayName} est très sociable ! Invitez un ami à jouer avec Bobby ensemble.` });
-      }
-      if (avgScores.curiosity > 70) {
-        recs.push({ emoji: "📚", text: `Curiosité élevée ! Activez le mode éducatif pour explorer de nouveaux sujets.` });
-      }
-    }
-
-    // Recommend based on usage patterns
-    const avgDur = totalDuration / Math.max(totalSessions, 1);
-    if (avgDur > 900) { // >15min avg
-      recs.push({ emoji: "⏰", text: `Les sessions sont longues (${formatDuration(Math.round(avgDur))} en moyenne). Pensez à activer une limite de temps.` });
-    }
-
-    // Always suggest at least one
-    if (recs.length === 0) {
-      recs.push({ emoji: "✨", text: `Continuez ainsi ! ${displayName} utilise Bobby de manière équilibrée.` });
-    }
-
-    return recs.slice(0, 4);
-  }, [recentAnalyses, allInterests, engagementDist, avgScores, displayName, totalDuration, totalSessions]);
 
   // ─── Key moments (emotional highlights) ───────────────────────
   const keyMoments = useMemo(() => {
