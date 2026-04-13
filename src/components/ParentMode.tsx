@@ -1826,28 +1826,28 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </div>
 
         {/* Category cards — 5 on same line */}
-        <div className="flex gap-1.5 mt-2">
+        <div className="flex gap-2 mt-2">
           {categoryCards.map(card => (
             <button key={card.key} onClick={card.onClick}
-              className={`flex-1 min-w-0 aspect-square rounded-2xl bg-gradient-to-br ${card.bg} flex flex-col items-center justify-center gap-1 border-2 transition-all duration-200 active:scale-90 ${
+              className={`flex-1 min-w-0 aspect-square rounded-2xl bg-gradient-to-br ${card.bg} flex flex-col items-center justify-center gap-1.5 border-2 transition-all duration-200 active:scale-90 ${
                 card.active ? "border-primary shadow-lg shadow-primary/25 scale-[1.03]" : "border-transparent hover:border-primary/20"
               }`}
               style={{ fontFamily: "'Nunito', sans-serif" }}>
-              <span className="text-xl">{card.emoji}</span>
-              <span className={`text-[9px] font-extrabold leading-tight ${card.active ? "text-primary" : "text-foreground/70"}`}>{card.label}</span>
+              <span className="text-2xl">{card.emoji}</span>
+              <span className={`text-[12px] font-extrabold leading-tight ${card.active ? "text-primary" : "text-foreground/70"}`}>{card.label}</span>
             </button>
           ))}
         </div>
 
         {/* Mini calendar — compact */}
-        <div className="bg-card rounded-2xl px-3 py-2 border border-border/20">
-          <div className="flex items-center justify-between mb-1">
-            <h4 className="text-[11px] font-extrabold text-foreground capitalize">{monthName}</h4>
-            <span className="text-[8px] text-muted-foreground">📅</span>
+        <div className="bg-card rounded-3xl px-4 py-3 border border-border/20">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-[14px] font-extrabold text-foreground capitalize">{monthName}</h4>
+            <span className="text-base text-muted-foreground">📅</span>
           </div>
           <div className="grid grid-cols-7 gap-px">
             {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
-              <span key={i} className="text-[7px] font-bold text-muted-foreground text-center py-0.5">{d}</span>
+              <span key={i} className="text-[10px] font-bold text-muted-foreground text-center py-1">{d}</span>
             ))}
             {Array.from({ length: startDow }, (_, i) => (
               <div key={`e-${i}`} />
@@ -1876,11 +1876,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                       }
                     }
                   }}
-                  className={`w-full aspect-square rounded-md flex items-center justify-center text-[9px] transition-all ${
+                  className={`w-full aspect-square rounded-lg flex items-center justify-center text-[11px] font-bold transition-all ${
                     dayData
-                      ? "bg-primary/15 text-primary font-bold hover:bg-primary/25 cursor-pointer active:scale-90"
+                      ? "bg-primary/15 text-primary hover:bg-primary/25 cursor-pointer active:scale-90"
                       : isToday
-                        ? "bg-muted ring-1 ring-primary/30 text-foreground font-bold"
+                        ? "bg-muted ring-1 ring-primary/30 text-foreground"
                         : "text-muted-foreground/60 cursor-default"
                   }`}>
                   {dayNum}
