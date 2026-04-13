@@ -74,7 +74,7 @@ const moodLabels: Record<string, { label: string; color: string; emoji: string }
 
 const tagLabels: Record<string, { label: string; emoji: string; color: string }> = {
   fun: { label: "Fun", emoji: "🎉", color: "bg-secondary/60 text-secondary-foreground" },
-  learning: { label: "Apprentissage", emoji: "📚", color: "bg-primary/15 text-primary" },
+  learning: { label: "Apprendre", emoji: "📚", color: "bg-primary/15 text-primary" },
   emotion: { label: "Émotion", emoji: "💛", color: "bg-accent/60 text-accent-foreground" },
   story: { label: "Histoire", emoji: "📖", color: "bg-muted text-muted-foreground" },
 };
@@ -2132,15 +2132,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         </div>
 
         {/* Category cards — 5 on same line */}
-        <div className="flex gap-2 mt-2 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
+        <div className="flex gap-2 mt-2 overflow-x-auto pb-1 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
           {categoryCards.map(card => (
             <button key={card.key} onClick={card.onClick}
-              className={`flex-1 min-w-0 aspect-square rounded-2xl bg-gradient-to-br ${card.bg} flex flex-col items-center justify-center gap-1.5 border-2 transition-all duration-200 active:scale-90 ${
+              className={`flex-shrink-0 w-[60px] aspect-square rounded-2xl bg-gradient-to-br ${card.bg} flex flex-col items-center justify-center gap-1 border-2 transition-all duration-200 active:scale-90 ${
                 card.active ? "border-primary shadow-lg shadow-primary/25 scale-[1.03]" : "border-transparent hover:border-primary/20"
               }`}
               style={{ fontFamily: "'Nunito', sans-serif" }}>
               <span className="text-2xl">{card.emoji}</span>
-              <span className={`text-[12px] font-extrabold leading-tight ${card.active ? "text-primary" : "text-foreground/70"}`}>{card.label}</span>
+              <span className={`text-[10px] font-extrabold leading-tight truncate max-w-full px-1 ${card.active ? "text-primary" : "text-foreground/70"}`}>{card.label}</span>
             </button>
           ))}
         </div>
