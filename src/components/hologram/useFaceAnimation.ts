@@ -117,10 +117,10 @@ const STATE_TARGETS: Record<FaceState, Partial<FaceAnimationState>> = {
     pupilSize: 0.85, cheekGlow: 0.05, irisGlow: 0.25, eyeSparkle: 0.2,
   },
   sleepy: {
-    eyeOpenness: 0.0, eyebrowHeight: -0.12, eyebrowTilt: 0,
+    eyeOpenness: -0.2, eyebrowHeight: -0.15, eyebrowTilt: 0,
     mouthOpenness: 0, mouthWidth: 0.38, mouthCurve: 0.02, mouthRound: 0, jawDrop: 0,
-    headTiltX: -0.06, headTiltZ: 0.08, glowIntensity: 0.08,
-    pupilSize: 0.5, cheekGlow: 0.05, irisGlow: 0.1, eyeSparkle: 0.05,
+    headTiltX: -0.08, headTiltZ: 0.1, glowIntensity: 0.05,
+    pupilSize: 0.3, cheekGlow: 0.05, irisGlow: 0.05, eyeSparkle: 0.0,
   },
   curious: {
     eyeOpenness: 1.3, eyebrowHeight: 0.22, eyebrowTilt: 0.08,
