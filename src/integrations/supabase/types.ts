@@ -44,6 +44,44 @@ export type Database = {
         }
         Relationships: []
       }
+      bobby_parent_codes: {
+        Row: {
+          bobby_code_id: string
+          claimed_at: string | null
+          code: string
+          created_at: string
+          device_token: string | null
+          id: string
+          is_active: boolean
+        }
+        Insert: {
+          bobby_code_id: string
+          claimed_at?: string | null
+          code: string
+          created_at?: string
+          device_token?: string | null
+          id?: string
+          is_active?: boolean
+        }
+        Update: {
+          bobby_code_id?: string
+          claimed_at?: string | null
+          code?: string
+          created_at?: string
+          device_token?: string | null
+          id?: string
+          is_active?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bobby_parent_codes_bobby_code_id_fkey"
+            columns: ["bobby_code_id"]
+            isOneToOne: false
+            referencedRelation: "bobby_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       child_memories: {
         Row: {
           behavior_patterns: Json
