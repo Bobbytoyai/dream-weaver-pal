@@ -141,14 +141,12 @@ export default function BobbyQR() {
 
   if (step === "claimed") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 parent-light"
+      <div className="min-h-screen flex flex-col items-center justify-center p-6"
         style={{ background: "repeating-linear-gradient(0deg, #FDF6EC 0px, #FDF6EC 28px, #e8ddd0 28px, #e8ddd0 30px)" }}>
-        {/* Decorative tape strip */}
         <div className="w-16 h-6 bg-[var(--retro-yellow)] border-2 border-black rotate-[-3deg] mb-[-12px] z-10 opacity-80" />
 
         <div className="retro-card retro-card-tilt-1 p-8 text-center max-w-sm w-full space-y-5"
           style={{ backgroundColor: "var(--retro-red)" }}>
-          {/* Lock icon in retro box */}
           <div className="mx-auto w-20 h-20 border-4 border-black bg-white flex items-center justify-center">
             <span className="text-5xl">🔒</span>
           </div>
@@ -159,17 +157,24 @@ export default function BobbyQR() {
 
           <div className="border-t-4 border-black pt-4 space-y-2">
             <p className="text-[13px] font-bold text-foreground/70 leading-relaxed">
-              Ce code QR a déjà été utilisé pour activer un Bobby sur un autre appareil.
+              Ce Bobby a été activé <strong>définitivement</strong> sur un autre appareil. L'activation est permanente et irréversible.
             </p>
             <p className="text-[11px] font-bold text-foreground/50">
-              Chaque Bobby est unique et ne peut être activé qu'une seule fois.
+              Même après une réinitialisation de l'appareil, ce code ne peut plus être réutilisé.
             </p>
           </div>
 
-          <div className="retro-card p-3 text-left space-y-1.5" style={{ backgroundColor: "var(--retro-yellow)" }}>
+          <div className="retro-card p-3 text-left space-y-2" style={{ backgroundColor: "var(--retro-yellow)" }}>
+            <p className="text-[11px] font-black text-foreground uppercase">⚠️ Liaison permanente</p>
+            <p className="text-[10px] font-bold text-foreground/60 leading-relaxed">
+              Chaque Bobby est lié <strong>à vie</strong> à l'appareil qui l'a activé en premier. Il est impossible de le transférer, le supprimer ou le réactiver — même après une réinitialisation usine de l'appareil.
+            </p>
+          </div>
+
+          <div className="retro-card p-3 text-left space-y-1.5" style={{ backgroundColor: "var(--retro-blue)" }}>
             <p className="text-[11px] font-black text-foreground uppercase">💡 Tu as perdu ton Bobby ?</p>
             <p className="text-[10px] font-bold text-foreground/60 leading-relaxed">
-              Demande à tes parents de contacter le support Bobby pour récupérer ton profil.
+              Contacte le support Bobby avec ta preuve d'achat pour obtenir un nouveau code d'activation.
             </p>
           </div>
 
@@ -181,9 +186,8 @@ export default function BobbyQR() {
           </button>
         </div>
 
-        {/* Bottom decorative stamp */}
         <div className="mt-6 text-center">
-          <span className="text-[10px] font-black text-foreground/30 uppercase tracking-widest">Bobby™ — Code à usage unique</span>
+          <span className="text-[10px] font-black text-foreground/30 uppercase tracking-widest">Bobby™ — Activation unique & permanente</span>
         </div>
       </div>
     );
