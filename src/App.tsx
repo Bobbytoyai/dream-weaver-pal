@@ -11,6 +11,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 const Index = lazy(() => import("./pages/Index.tsx"));
 const Admin = lazy(() => import("./pages/Admin.tsx"));
 const BobbyQR = lazy(() => import("./pages/BobbyQR.tsx"));
+const BobbyParent = lazy(() => import("./pages/BobbyParent.tsx"));
 const BobbyCloudAuth = lazy(() => import("./pages/BobbyCloudAuth.tsx"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
