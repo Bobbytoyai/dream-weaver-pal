@@ -1,4 +1,4 @@
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Shuffle } from "lucide-react";
 import type { ParentSettings } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
 
@@ -65,6 +65,16 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
     } as any);
   };
 
+  const randomizeBobby = () => {
+    const pick = <T extends { id: string }>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)].id;
+    onUpdate("bobbyColors" as keyof ParentSettings, {
+      iris: pick(IRIS_COLORS),
+      cheek: pick(CHEEK_COLORS),
+      eyebrow: pick(EYEBROW_COLORS),
+      background: pick(BG_COLORS),
+    } as any);
+  };
+
   const selectedBg = BG_COLORS.find(c => c.id === colors.background) || BG_COLORS[0];
 
   return (
@@ -74,7 +84,15 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
         <ChevronLeft className="w-4 h-4" /> Retour
       </button>
 
-      <h2 className="text-[18px] font-black text-foreground animate-fadeInUp">🎨 Personnaliser Bobby</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-[18px] font-black text-foreground animate-fadeInUp">🎨 Personnaliser Bobby</h2>
+        <button
+          onClick={randomizeBobby}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-accent text-accent-foreground text-[13px] font-extrabold hover:opacity-90 active:scale-95 transition-all animate-fadeInUp shadow-sm"
+        >
+          <Shuffle className="w-4 h-4" /> Aléatoire
+        </button>
+      </div>
 
       {/* Full-width landscape preview */}
       <div
