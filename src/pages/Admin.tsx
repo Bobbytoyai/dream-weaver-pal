@@ -924,7 +924,7 @@ const Admin = () => {
   // ═══════════════════════════════════════════════════════════════════
   // INTERACTIONS 10K — Category detail (age filter + list)
   // ═══════════════════════════════════════════════════════════════════
-  if (topSection === "interactions" && interactionCat) {
+  if (topSection === "interactions" && interactionCat && interactionCat !== "real_conversations") {
     const catConfig = INTERACTION_CATEGORIES.find(c => c.id === interactionCat);
     const totalForCat = interactions?.filter(i => i.category === interactionCat).length || 0;
 
