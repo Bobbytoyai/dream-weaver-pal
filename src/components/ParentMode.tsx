@@ -1534,39 +1534,39 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     const moodInfo = moodLabels[(analysis?.mood_score || "neutral")] || moodLabels.neutral;
 
     return (
-      <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>
-        {/* ── Hero Header ── */}
-        <div className="bg-gradient-to-br from-primary/15 via-accent/10 to-secondary/10 rounded-3xl p-5 border border-primary/15">
+      <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
+        {/* ── Hero Header — retro ── */}
+        <div className="retro-card p-5" style={{ backgroundColor: 'var(--retro-blue)' }}>
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-14 h-14 rounded-2xl bg-primary/15 flex items-center justify-center shadow-sm">
-              <MessageSquare className="w-7 h-7 text-primary" />
+            <div className="w-14 h-14 border-4 border-black bg-white flex items-center justify-center">
+              <MessageSquare className="w-7 h-7 text-gray-800" />
             </div>
             <div className="flex-1">
-              <h3 className="text-[18px] font-extrabold text-foreground">{formatDate(selectedSession!.started_at)}</h3>
-              <p className="text-[13px] text-muted-foreground font-medium">{selectedSession!.child_name}, {selectedSession!.child_age} ans</p>
+              <h3 className="text-[18px] font-black text-gray-800 uppercase">{formatDate(selectedSession!.started_at)}</h3>
+              <p className="text-[13px] text-gray-600 font-bold">{selectedSession!.child_name}, {selectedSession!.child_age} ans</p>
             </div>
             <button onClick={() => toggleFavorite(selectedSession!)}
-              className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all ${
-                selectedSession!.is_favorite ? "bg-primary/15 text-primary shadow-sm" : "bg-muted text-muted-foreground hover:text-primary"
+              className={`w-11 h-11 border-2 border-black flex items-center justify-center transition-all ${
+                selectedSession!.is_favorite ? "bg-primary text-primary-foreground" : "bg-white text-gray-800 hover:bg-muted"
               }`}>
-              <Star className={`w-5 h-5 ${selectedSession!.is_favorite ? "fill-primary" : ""}`} />
+              <Star className={`w-5 h-5 ${selectedSession!.is_favorite ? "fill-current" : ""}`} />
             </button>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <div className="text-center py-3 bg-card/80 rounded-2xl border border-border/10 shadow-sm">
+            <div className="text-center py-3 border-2 border-black bg-white">
               <span className="text-2xl block mb-1">⏱️</span>
-              <p className="text-[16px] font-extrabold text-foreground">{formatDuration(selectedSession!.duration_seconds)}</p>
-              <p className="text-[11px] text-muted-foreground font-bold">Durée</p>
+              <p className="text-[16px] font-black text-gray-800">{formatDuration(selectedSession!.duration_seconds)}</p>
+              <p className="text-[11px] text-gray-600 font-bold">Durée</p>
             </div>
-            <div className="text-center py-3 bg-card/80 rounded-2xl border border-border/10 shadow-sm">
+            <div className="text-center py-3 border-2 border-black bg-white">
               <span className="text-2xl block mb-1">💬</span>
-              <p className="text-[16px] font-extrabold text-foreground">{selectedSession!.message_count}</p>
-              <p className="text-[11px] text-muted-foreground font-bold">Messages</p>
+              <p className="text-[16px] font-black text-gray-800">{selectedSession!.message_count}</p>
+              <p className="text-[11px] text-gray-600 font-bold">Messages</p>
             </div>
-            <div className="text-center py-3 bg-card/80 rounded-2xl border border-border/10 shadow-sm">
+            <div className="text-center py-3 border-2 border-black bg-white">
               <span className="text-2xl block mb-1">{moodInfo.emoji}</span>
-              <p className={`text-[16px] font-extrabold ${moodInfo.color}`}>{moodInfo.label}</p>
-              <p className="text-[11px] text-muted-foreground font-bold">Humeur</p>
+              <p className="text-[16px] font-black text-gray-800">{moodInfo.label}</p>
+              <p className="text-[11px] text-gray-600 font-bold">Humeur</p>
             </div>
           </div>
         </div>
