@@ -261,7 +261,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   const unreadAlertCount = parentAlerts.filter(a => !a.is_read).length;
   // Always use settings.childName as the display name — it's the source of truth
-  const displayName = settings.childName || childName;
+  const displayName = displayName;
 
   useEffect(() => { loadData(); loadAlerts(); loadCloudProfile(); }, []);
 
@@ -289,7 +289,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   const handleCloudSave = async () => {
     setCloudLoading(true);
     try {
-      const result = await saveToCloud(settings.childName || childName, settings);
+      const result = await saveToCloud(displayName, settings);
       if (result.success && result.profile) {
         setCloudProfile(result.profile);
         toast.success(result.isNew ? "☁️ Profil Bobby Cloud créé !" : "☁️ Synchronisé avec Bobby Cloud !");
@@ -313,7 +313,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           const merged = {
             ...DEFAULT_PARENT_SETTINGS,
             ...restored,
-            childName: settings.childName || childName,
+            childName: displayName,
             childAge: settings.childAge,
             contentModes: { ...DEFAULT_PARENT_SETTINGS.contentModes, ...(restored as any).contentModes },
             nightMode: { ...DEFAULT_PARENT_SETTINGS.nightMode, ...(restored as any).nightMode },
@@ -1733,7 +1733,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                             <p className="text-[14px] text-foreground leading-[1.5] font-medium">{msg.content}</p>
                           </div>
                           <div className={`flex items-center gap-2 mt-1.5 px-1.5 ${isChild ? "" : "justify-end"}`}>
-                            <span className="text-[11px] text-muted-foreground/70 font-bold">{isChild ? `👦 ${settings.childName || childName}` : "🤖 Bobby"}</span>
+                            <span className="text-[11px] text-muted-foreground/70 font-bold">{isChild ? `👦 ${displayName}` : "🤖 Bobby"}</span>
                             <span className="text-[10px] text-muted-foreground/50 font-medium">{time}</span>
                             {msg.detected_emotion && (
                               <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
@@ -1838,7 +1838,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </button>
           <button
             onClick={async () => {
-              const result = await saveToCloud(settings.childName || childName, settings);
+              const result = await saveToCloud(displayName, settings);
               if (result.success) {
                 setCloudProfile(result.profile!);
                 toast.success("☁️ Session sauvegardée dans Bobby Cloud", { description: `Code : ${result.profile!.sync_code}` });
@@ -2012,7 +2012,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   : "bg-primary/6 border-l-3 border-l-violet-400"
               }`}>
                 <span className="text-[10px] font-black text-muted-foreground">
-                  {sessionMessages[activeMessageIdx].role === "user" ? `👦 ${settings.childName || childName}` : "🤖 Bobby"}
+                  {sessionMessages[activeMessageIdx].role === "user" ? `👦 ${displayName}` : "🤖 Bobby"}
                 </span>
                 <p className="text-foreground mt-0.5 line-clamp-2">{sessionMessages[activeMessageIdx].content}</p>
               </div>
