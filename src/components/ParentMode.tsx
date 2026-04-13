@@ -168,11 +168,11 @@ const SettingRow = ({ icon: Icon, title, desc, children }: {
 );
 
 const Card = ({ title, icon: Icon, children, noPad, className: cx }: { title?: string; icon?: any; children: React.ReactNode; noPad?: boolean; className?: string }) => (
-  <div className={`bg-card rounded-2xl overflow-hidden ${cx || ""}`}>
+  <div className={`retro-card overflow-hidden ${cx || ""}`}>
     {title && (
       <div className="flex items-center gap-2.5 px-5 pt-4 pb-2">
-        {Icon && <Icon className="w-5 h-5 text-muted-foreground" />}
-        <h3 className="text-[15px] font-bold text-foreground tracking-tight">{title}</h3>
+        {Icon && <div className="w-8 h-8 bg-black flex items-center justify-center"><Icon className="w-4 h-4 text-white" /></div>}
+        <h3 className="text-[15px] font-black text-foreground tracking-tight uppercase">{title}</h3>
       </div>
     )}
     <div className={noPad ? "" : "px-5 pb-4"}>{children}</div>
@@ -1138,34 +1138,34 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     const hasAnalysis = recentAnalyses.length > 0;
 
     return (
-    <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>
+    <div className="p-4 space-y-4" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif" }}>
 
-      {/* ═══ 1. KPI HERO — 3 cols colorful ═══ */}
-      <div className="grid grid-cols-3 gap-2 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
+      {/* ═══ 1. KPI HERO — retro grid ═══ */}
+      <div className="grid grid-cols-3 gap-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         {[
-          { value: totalSessions, label: "Sessions", emoji: "💬", gradient: "from-blue-400/30 to-indigo-400/10", border: "border-blue-300/25" },
-          { value: totalMessages, label: "Messages", emoji: "📝", gradient: "from-emerald-400/30 to-teal-400/10", border: "border-emerald-300/25" },
-          { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", gradient: "from-purple-400/30 to-violet-400/10", border: "border-purple-300/25" },
-          { value: todaySessions.length, label: "Aujourd'hui", emoji: "📅", gradient: "from-amber-400/30 to-orange-400/10", border: "border-amber-300/25" },
-          { value: avgMessagesPerSession, label: "Msg/session", emoji: "📊", gradient: "from-pink-400/30 to-rose-400/10", border: "border-pink-300/25" },
-          { value: `${recentAnalyses.length}/${totalSessions}`, label: "Analysées", emoji: "🔬", gradient: "from-cyan-400/30 to-sky-400/10", border: "border-cyan-300/25" },
+          { value: totalSessions, label: "Sessions", emoji: "💬", bg: "var(--retro-blue)" },
+          { value: totalMessages, label: "Messages", emoji: "📝", bg: "var(--retro-green)" },
+          { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", bg: "var(--retro-purple)" },
+          { value: todaySessions.length, label: "Aujourd'hui", emoji: "📅", bg: "var(--retro-yellow)" },
+          { value: avgMessagesPerSession, label: "Msg/session", emoji: "📊", bg: "var(--retro-red)" },
+          { value: `${recentAnalyses.length}/${totalSessions}`, label: "Analysées", emoji: "🔬", bg: "#e5e5e5" },
         ].map((kpi) => (
-          <div key={kpi.label} className={`bg-gradient-to-br ${kpi.gradient} rounded-[18px] p-2.5 border-2 ${kpi.border} text-center`}>
+          <div key={kpi.label} className="retro-card p-2.5 text-center" style={{ backgroundColor: kpi.bg }}>
             <span className="text-[24px] block mb-0.5 drop-shadow-sm">{kpi.emoji}</span>
-            <p className="text-[17px] font-black text-foreground leading-none truncate">{kpi.value}</p>
-            <p className="text-[9px] text-muted-foreground font-bold mt-0.5 truncate">{kpi.label}</p>
+            <p className="text-[17px] font-black text-gray-800 leading-none truncate">{kpi.value}</p>
+            <p className="text-[9px] text-gray-600 font-bold mt-0.5 truncate">{kpi.label}</p>
           </div>
         ))}
       </div>
 
       {/* ═══ 2. RÉSUMÉ DU JOUR ═══ */}
       {dailySummary && (
-        <div className="bg-gradient-to-br from-primary/15 to-primary/5 rounded-3xl p-5 border border-primary/20 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
+        <div className="retro-card p-5 animate-fadeInUp" style={{ animationDelay: "0.1s", backgroundColor: 'var(--retro-blue)' }}>
           <div className="flex items-center gap-2.5 mb-2">
-            <span className="text-2xl">📋</span>
-            <h3 className="text-[17px] font-extrabold text-foreground">Résumé du jour</h3>
+            <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">📋</span></div>
+            <h3 className="text-[17px] font-black text-gray-800">Résumé du jour</h3>
           </div>
-          <p className="text-[15px] text-foreground/80 leading-relaxed font-bold">{dailySummary}</p>
+          <p className="text-[15px] text-gray-700 leading-relaxed font-bold">{dailySummary}</p>
         </div>
       )}
 
@@ -3320,26 +3320,26 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       : 0;
 
     return (
-      <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>
+      <div className="p-4 space-y-4" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif" }}>
         {/* Quick alerts */}
         {unreadAlertCount > 0 && (
           <button onClick={() => setShowNotifPanel(true)}
-            className="w-full bg-destructive/5 border-2 border-destructive/20 rounded-[18px] p-3 flex items-center gap-3 hover:bg-destructive/10 transition-colors">
+            className="w-full retro-card p-3 flex items-center gap-3 hover:translate-y-[-2px] transition-all" style={{ backgroundColor: 'var(--retro-red)' }}>
             <span className="text-xl">🔔</span>
             <div className="flex-1 text-left">
-              <p className="text-[13px] font-black text-destructive">{unreadAlertCount} alerte{unreadAlertCount > 1 ? "s" : ""}</p>
-              <p className="text-[10px] text-muted-foreground font-bold">Touchez pour voir</p>
+              <p className="text-[13px] font-black text-gray-800">{unreadAlertCount} alerte{unreadAlertCount > 1 ? "s" : ""}</p>
+              <p className="text-[10px] text-gray-600 font-bold">Touchez pour voir</p>
             </div>
-            <ChevronRight className="w-4 h-4 text-destructive" />
+            <ChevronRight className="w-4 h-4 text-gray-800" />
           </button>
         )}
 
-        {/* ── Hero: Daily Summary ── */}
-        <div className="hero-fade-in bg-gradient-to-br from-blue-400/20 via-violet-400/12 to-pink-400/10 rounded-[22px] p-5 border-2 border-blue-300/20">
+        {/* ── Hero: Daily Summary — retro card ── */}
+        <div className="hero-fade-in retro-card p-5" style={{ backgroundColor: 'var(--retro-blue)' }}>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-[22px] font-black text-foreground">Bonjour 👋</h2>
-              <p className="text-[12px] text-muted-foreground font-bold mt-0.5">
+              <h2 className="text-[22px] font-black text-gray-800">Bonjour 👋</h2>
+              <p className="text-[12px] text-gray-600 font-bold mt-0.5">
                 {todaySessions.length > 0
                   ? `${displayName} a eu ${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} aujourd'hui`
                   : `${displayName} n'a pas encore parlé à Bobby`
@@ -3350,17 +3350,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
 
           {todaySessions.length > 0 && (
-            <div className="grid grid-cols-4 gap-1">
+            <div className="grid grid-cols-4 gap-2">
               {[
-                { emoji: "💬", value: todayMessages, label: "Messages", bg: "from-blue-400/20 to-blue-300/5" },
-                { emoji: "⏱️", value: todayDuration >= 60 ? `${Math.round(todayDuration / 60)}m` : `${todayDuration}s`, label: "Durée", bg: "from-emerald-400/20 to-emerald-300/5" },
-                { emoji: avgEngagement > 0.5 ? "🔥" : avgEngagement > 0 ? "👍" : "💤", value: avgEngagement > 0.5 ? "Fort" : avgEngagement > 0 ? "Bon" : "—", label: "Engage.", bg: "from-orange-400/20 to-orange-300/5" },
-                { emoji: topEmotion ? (emotionLabels[topEmotion[0]]?.emoji || "😊") : "—", value: topEmotion ? (emotionLabels[topEmotion[0]]?.label || topEmotion[0]).slice(0, 5) : "—", label: "Émotion", bg: "from-pink-400/20 to-pink-300/5" },
+                { emoji: "💬", value: todayMessages, label: "Messages", bg: "var(--retro-green)" },
+                { emoji: "⏱️", value: todayDuration >= 60 ? `${Math.round(todayDuration / 60)}m` : `${todayDuration}s`, label: "Durée", bg: "var(--retro-yellow)" },
+                { emoji: avgEngagement > 0.5 ? "🔥" : avgEngagement > 0 ? "👍" : "💤", value: avgEngagement > 0.5 ? "Fort" : avgEngagement > 0 ? "Bon" : "—", label: "Engage.", bg: "var(--retro-purple)" },
+                { emoji: topEmotion ? (emotionLabels[topEmotion[0]]?.emoji || "😊") : "—", value: topEmotion ? (emotionLabels[topEmotion[0]]?.label || topEmotion[0]).slice(0, 5) : "—", label: "Émotion", bg: "var(--retro-red)" },
               ].map(s => (
-                <div key={s.label} className={`bg-gradient-to-br ${s.bg} rounded-[14px] py-2 px-1 text-center border border-white/10`}>
+                <div key={s.label} className="border-2 border-black py-2 px-1 text-center" style={{ backgroundColor: s.bg }}>
                   <span className="text-[14px] block">{s.emoji}</span>
-                  <p className="text-[13px] font-black text-foreground leading-tight truncate">{s.value}</p>
-                  <p className="text-[7px] text-muted-foreground font-bold truncate">{s.label}</p>
+                  <p className="text-[13px] font-black text-gray-800 leading-tight truncate">{s.value}</p>
+                  <p className="text-[7px] text-gray-600 font-bold truncate">{s.label}</p>
                 </div>
               ))}
             </div>
@@ -3409,9 +3409,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           const hasAnyData = chartData.some(d => d["😊 Joie"] > 0 || d["😢 Triste"] > 0 || d["🧐 Curiosité"] > 0);
 
           return hasAnyData ? (
-            <div className="hero-fade-in bg-gradient-to-br from-violet-400/15 via-pink-400/10 to-blue-400/8 rounded-[22px] p-4 border-2 border-violet-300/20">
-              <h3 className="text-[16px] font-black text-foreground mb-2 flex items-center gap-2" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>
-                <Activity className="w-5 h-5 text-violet-500" /> Émotions sur 7 jours
+            <div className="hero-fade-in retro-card p-4" style={{ backgroundColor: 'var(--retro-purple)' }}>
+              <h3 className="text-[16px] font-black text-gray-800 mb-2 flex items-center gap-2">
+                <Activity className="w-5 h-5 text-gray-800" /> Émotions sur 7 jours
               </h3>
               <ResponsiveContainer width="100%" height={160}>
                 <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
@@ -3422,10 +3422,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     <linearGradient id="emoFrust" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#f87171" stopOpacity={0.5}/><stop offset="100%" stopColor="#f87171" stopOpacity={0}/></linearGradient>
                     <linearGradient id="emoExcite" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#34d399" stopOpacity={0.5}/><stop offset="100%" stopColor="#34d399" stopOpacity={0}/></linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                  <XAxis dataKey="day" tick={{ fontSize: 11, fontWeight: 800 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" domain={[0, 100]} />
-                  <Tooltip contentStyle={{ borderRadius: 14, fontWeight: 700, fontSize: 12 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#000" opacity={0.15} />
+                  <XAxis dataKey="day" tick={{ fontSize: 11, fontWeight: 800, fill: '#333' }} stroke="#333" />
+                  <YAxis tick={{ fontSize: 10, fill: '#333' }} stroke="#333" domain={[0, 100]} />
+                  <Tooltip contentStyle={{ border: '3px solid #000', borderRadius: 0, fontWeight: 700, fontSize: 12, boxShadow: '4px 4px 0 rgba(0,0,0,0.2)' }} />
                   <Area type="monotone" dataKey="😊 Joie" stroke="#facc15" fill="url(#emoJoy)" strokeWidth={2.5} dot={{ r: 3 }} />
                   <Area type="monotone" dataKey="😢 Triste" stroke="#60a5fa" fill="url(#emoSad)" strokeWidth={2} dot={{ r: 3 }} />
                   <Area type="monotone" dataKey="🧐 Curiosité" stroke="#a78bfa" fill="url(#emoCurio)" strokeWidth={2} dot={{ r: 3 }} />
@@ -3437,23 +3437,24 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           ) : null;
         })()}
 
-        {/* ── 5 square cards — grid ── */}
-        <div className="grid grid-cols-3 gap-2">
+        {/* ── Navigation cards — retro grid ── */}
+        <div className="grid grid-cols-3 gap-3">
           {[
-            { id: "dashboard" as Tab, emoji: "📊", label: "Tableau de\nbord", color: "from-blue-400/25 to-indigo-400/10", border: "border-blue-300/25" },
-            { id: "sessions" as Tab, emoji: "💬", label: "Sessions", color: "from-emerald-400/25 to-teal-400/10", border: "border-emerald-300/25",
+            { id: "dashboard" as Tab, emoji: "📊", label: "Tableau de\nbord", bg: "var(--retro-blue)" },
+            { id: "sessions" as Tab, emoji: "💬", label: "Sessions", bg: "var(--retro-green)",
               badge: sessions.filter(s => !analyses.some(a => a.session_id === s.id)).length || undefined },
-            { id: "activites" as Tab, emoji: "🛒", label: "Bobby Store", color: "from-orange-400/25 to-amber-400/10", border: "border-orange-300/25" },
-            { id: "personnalisation" as Tab, emoji: "🎨", label: "Personnaliser", color: "from-rose-400/25 to-pink-400/10", border: "border-rose-300/25" },
-            { id: "cloud" as Tab, emoji: "☁️", label: "Bobby Cloud", color: "from-violet-400/25 to-purple-400/10", border: "border-violet-300/25" },
-            { id: "reglages" as Tab, emoji: "⚙️", label: "Réglages", color: "from-cyan-400/25 to-sky-400/10", border: "border-cyan-300/25" },
+            { id: "activites" as Tab, emoji: "🛒", label: "Bobby Store", bg: "var(--retro-yellow)" },
+            { id: "personnalisation" as Tab, emoji: "🎨", label: "Personnaliser", bg: "var(--retro-red)" },
+            { id: "cloud" as Tab, emoji: "☁️", label: "Bobby Cloud", bg: "var(--retro-purple)" },
+            { id: "reglages" as Tab, emoji: "⚙️", label: "Réglages", bg: "#e5e5e5" },
           ].map((card, i) => (
             <button key={card.id} onClick={() => setActiveTab(card.id)}
-              className={`card-stagger-${i + 1} relative bg-gradient-to-br ${card.color} rounded-[20px] p-2.5 flex flex-col items-center justify-center border-2 ${card.border} hover:shadow-lg hover:scale-[1.03] transition-all active:scale-[0.94] aspect-square`}>
+              className={`card-stagger-${i + 1} retro-card retro-card-tilt relative p-3 flex flex-col items-center justify-center aspect-square hover:shadow-lg active:scale-95 transition-all`}
+              style={{ backgroundColor: card.bg }}>
               <span className="text-[32px] mb-1 drop-shadow-sm">{card.emoji}</span>
-              <span className="text-[11px] font-black text-foreground leading-tight text-center whitespace-pre-line" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>{card.label}</span>
+              <span className="text-[11px] font-black text-gray-800 leading-tight text-center whitespace-pre-line">{card.label}</span>
               {card.badge && card.badge > 0 && (
-                <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-black flex items-center justify-center shadow-md">
+                <span className="absolute top-1 right-1 min-w-[20px] h-[20px] px-1 bg-black text-white text-[9px] font-black flex items-center justify-center shadow-md">
                   {card.badge}
                 </span>
               )}
@@ -3478,38 +3479,37 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   return (
     <div className={`min-h-screen bg-background max-w-lg mx-auto flex flex-col transition-colors duration-300 ${lightMode ? "parent-light" : ""}`}>
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-card border-b border-border">
+      {/* Header — retro style */}
+      <div className="flex items-center gap-3 px-4 py-3 bg-card border-b-4 border-black">
         <button
           onClick={selectedSession ? () => { setSelectedSession(null); setSelectedAnalysis(null); setSessionMessages([]); setPlayingAudio(null); setAudioProgress(0); setActiveMessageIdx(-1); if (audioRef.current) audioRef.current.pause(); if (progressInterval.current) clearInterval(progressInterval.current); } : activeTab !== "home" ? () => setActiveTab("home") : onClose}
-          className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+          className="w-9 h-9 border-2 border-black bg-white flex items-center justify-center text-black hover:bg-muted transition-colors">
           <ArrowLeft className="w-4.5 h-4.5" />
         </button>
         <div className="flex-1">
-          <h2 className="text-base font-bold text-foreground">
-            {activeTab === "home" ? "Mode Parent" : tabs.find(t => t.id === activeTab)?.label || "Mode Parent"}
+          <h2 className="text-lg font-black text-foreground uppercase tracking-tight">
+            {activeTab === "home" ? "BOBBY" : (tabs.find(t => t.id === activeTab)?.label || "BOBBY").toUpperCase()}
           </h2>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[11px] text-muted-foreground font-bold">
             {selectedSession ? formatDate(selectedSession.started_at) : `${childName}`}
           </p>
         </div>
         {!selectedSession && (
           <div className="flex items-center gap-1.5">
-            {/* Notification bell */}
             <button onClick={() => { setShowNotifPanel(!showNotifPanel); }}
-              className="relative w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
+              className="relative w-9 h-9 border-2 border-black bg-white flex items-center justify-center text-black hover:bg-muted transition-all">
               <Bell className="w-4 h-4" />
               {unreadAlertCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-destructive text-white text-[10px] font-bold flex items-center justify-center px-1 animate-pulse">
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-destructive text-white text-[10px] font-bold flex items-center justify-center px-1 animate-pulse">
                   {unreadAlertCount}
                 </span>
               )}
             </button>
             <button onClick={toggleLight}
-              className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
+              className="w-9 h-9 border-2 border-black bg-white flex items-center justify-center text-black hover:bg-muted transition-all">
               {lightMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </button>
-            <button onClick={() => { loadData(); loadAlerts(); }} className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+            <button onClick={() => { loadData(); loadAlerts(); }} className="w-9 h-9 border-2 border-black bg-white flex items-center justify-center text-black">
               <RefreshCw className="w-4 h-4" />
             </button>
           </div>
