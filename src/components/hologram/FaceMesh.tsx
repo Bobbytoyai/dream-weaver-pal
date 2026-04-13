@@ -248,10 +248,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   // Initial eyebrow geometry
   const eyebrowGeo = useMemo(() => new THREE.ShapeGeometry(buildEyebrowShape(0.06), 16), []);
 
-  // Initial mouth geometries — kawaii single line + open oval
-  const upperLipGeo = useMemo(() => new THREE.ShapeGeometry(buildSmileLine(0.18, 0.5), 16), []);
-  const lowerLipGeo = useMemo(() => new THREE.ShapeGeometry(buildMouthOpenShape(0.18, 0.5, 0, 0), 16), []);
-  const mouthInteriorGeo = useMemo(() => new THREE.ShapeGeometry(buildMouthOpenShape(0.18, 0.5, 0, 0), 16), []);
+  // Single mouth geometry — unified shape
+  const mouthGeo = useMemo(() => new THREE.ShapeGeometry(buildMouthShape(0.18, 0.5, 0, 0), 32), []);
+  const mouthInteriorGeo = useMemo(() => new THREE.ShapeGeometry(buildMouthShape(0.18, 0.5, 0, 0), 32), []);
 
   // Cheek oval
   const cheekGeo = useMemo(() => {
