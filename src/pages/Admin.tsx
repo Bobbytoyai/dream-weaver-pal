@@ -135,7 +135,7 @@ interface KBEntry {
 }
 
 // ─── Top-level brain sections shown as big square cards ─────────────
-type TopSection = "interactions" | "multiresponses" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons" | "store" | "expressions" | "autolearn";
+type TopSection = "interactions" | "multiresponses" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons" | "store" | "expressions" | "autolearn" | "cloudusers";
 
 // Counts are computed dynamically below in the component
 const TOP_SECTIONS_CONFIG: {
@@ -159,6 +159,7 @@ const TOP_SECTIONS_CONFIG: {
   { id: "store", label: "Bobby Store", icon: Star, color: "text-emerald-400", bgColor: "bg-emerald-500/20", desc: "Gérer le catalogue du store (CRUD)", emoji: "🛒" },
   { id: "expressions", label: "Expressions", icon: Eye, color: "text-fuchsia-400", bgColor: "bg-fuchsia-500/20", desc: "Preview & test des expressions faciales", emoji: "🎭" },
   { id: "autolearn", label: "Auto-Learning", icon: Microscope, color: "text-lime-400", bgColor: "bg-lime-500/20", desc: "IA auto-complétion depuis les conversations", emoji: "🧬" },
+  { id: "cloudusers", label: "Bobby Cloud", icon: Users, color: "text-sky-400", bgColor: "bg-sky-500/20", desc: "Utilisateurs Bobby Cloud, profils sync", emoji: "☁️👥" },
 ];
 
 // ═══════════════════════════════════════════════════════════════════
@@ -285,6 +286,24 @@ const Admin = () => {
   const [savingStoreItem, setSavingStoreItem] = useState(false);
   const [liveInstallCounts, setLiveInstallCounts] = useState<Record<string, number>>({});
   const [detailItem, setDetailItem] = useState<DetailItem | null>(null);
+
+  // Bobby Cloud Users
+  interface CloudUser {
+    id: string; sync_code: string; child_name: string; parent_settings: any;
+    child_memory_snapshot: any; device_info: string | null;
+    last_synced_at: string; created_at: string; updated_at: string;
+  }
+  const [cloudUsers, setCloudUsers] = useState<CloudUser[]>([]);
+  const [cloudUsersLoading, setCloudUsersLoading] = useState(false);
+  const [cloudUserSearch, setCloudUserSearch] = useState("");
+  const [selectedCloudUser, setSelectedCloudUser] = useState<CloudUser | null>(null);
+
+  const fetchCloudUsers = useCallback(async () => {
+    setCloudUsersLoading(true);
+    const { data } = await supabase.from("cloud_profiles").select("*").order("created_at", { ascending: false });
+    setCloudUsers((data as unknown as CloudUser[]) || []);
+    setCloudUsersLoading(false);
+  }, []);
 
   // ─── Detail dialog helpers ─────────────────────────────────────
   const openInteractionDetail = (interaction: BobbyInteraction) => {
@@ -619,8 +638,8 @@ const Admin = () => {
   }, []);
 
   useEffect(() => {
-    if (authenticated) { fetchEntries(); fetchCloudStories(); fetchStoreItems(); }
-  }, [authenticated, fetchEntries, fetchCloudStories, fetchStoreItems]);
+    if (authenticated) { fetchEntries(); fetchCloudStories(); fetchStoreItems(); fetchCloudUsers(); }
+  }, [authenticated, fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers]);
 
   // ─── Derived ───
   const categoryCounts = useMemo(() => {
@@ -710,8 +729,9 @@ const Admin = () => {
       cerveau: "16",
       cloud: entries.length,
       store: storeItems.length,
+      cloudusers: cloudUsers.length,
     } as Record<string, string | number>;
-  }, [interactions, entries, cloudStories, storeItems]);
+  }, [interactions, entries, cloudStories, storeItems, cloudUsers]);
 
   // ─── Handlers ───
   const handleSave = async () => {
@@ -2188,6 +2208,249 @@ const Admin = () => {
             })}
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // BOBBY CLOUD USERS — admin panel
+  // ═══════════════════════════════════════════════════════════════════
+  if (topSection === "cloudusers") {
+    const filteredCloudUsers = cloudUsers.filter(u => {
+      if (!cloudUserSearch) return true;
+      const q = cloudUserSearch.toLowerCase();
+      return u.child_name.toLowerCase().includes(q) || u.sync_code.toLowerCase().includes(q) || u.device_info?.toLowerCase().includes(q);
+    });
+
+    const formatDate = (iso: string) => {
+      const d = new Date(iso);
+      return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    };
+
+    const timeSince = (iso: string) => {
+      const diff = Date.now() - new Date(iso).getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 60) return `${mins}m`;
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) return `${hours}h`;
+      return `${Math.floor(hours / 24)}j`;
+    };
+
+    if (selectedCloudUser) {
+      const u = selectedCloudUser;
+      const ps = u.parent_settings || {};
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white p-4 max-w-4xl mx-auto">
+          <button onClick={() => setSelectedCloudUser(null)} className="flex items-center gap-2 text-white/60 hover:text-white mb-4">
+            <ArrowLeft className="w-4 h-4" /> Retour
+          </button>
+
+          {/* User hero */}
+          <div className="bg-gradient-to-br from-sky-500/20 to-blue-600/10 rounded-2xl p-6 border border-sky-500/20 mb-4">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-16 h-16 rounded-2xl bg-sky-500/20 flex items-center justify-center text-3xl">👤</div>
+              <div>
+                <h2 className="text-2xl font-bold">{u.child_name}</h2>
+                <p className="text-white/50 text-sm font-mono">{u.sync_code}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-white/5 rounded-xl p-3 text-center">
+                <p className="text-lg font-bold">{formatDate(u.created_at)}</p>
+                <p className="text-[10px] text-white/40">Créé le</p>
+              </div>
+              <div className="bg-white/5 rounded-xl p-3 text-center">
+                <p className="text-lg font-bold">{timeSince(u.last_synced_at)}</p>
+                <p className="text-[10px] text-white/40">Dernière sync</p>
+              </div>
+              <div className="bg-white/5 rounded-xl p-3 text-center">
+                <p className="text-lg font-bold">{u.device_info ? "✅" : "❌"}</p>
+                <p className="text-[10px] text-white/40">Appareil</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Parent Settings */}
+          <div className="bg-white/5 rounded-2xl p-5 border border-white/10 mb-4">
+            <h3 className="text-lg font-bold mb-3 flex items-center gap-2">⚙️ Réglages parents</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: "Nom enfant", value: ps.childName || "—", emoji: "👦" },
+                { label: "Âge", value: ps.childAge ? `${ps.childAge} ans` : "—", emoji: "🎂" },
+                { label: "Voix", value: ps.voiceType || "—", emoji: "🎙️" },
+                { label: "Personnalité", value: ps.personality || "—", emoji: "🧠" },
+                { label: "Vitesse voix", value: ps.voiceSpeed || "—", emoji: "⚡" },
+                { label: "Filtre contenu", value: ps.contentFilter || "—", emoji: "🛡️" },
+                { label: "Ultra sécurisé", value: ps.ultraSafe ? "✅ Oui" : "❌ Non", emoji: "🔒" },
+                { label: "Durée max", value: ps.timeLimitMinutes ? `${ps.timeLimitMinutes}min` : "Illimité", emoji: "⏱️" },
+                { label: "Mode nuit", value: ps.nightMode?.active ? `${ps.nightMode.startHour}-${ps.nightMode.endHour}` : "Désactivé", emoji: "🌙" },
+                { label: "Enregistrement", value: ps.recordConversations ? "✅" : "❌", emoji: "🎤" },
+                { label: "Couleur Bobby", value: ps.bobbyColor || "blue", emoji: "🎨" },
+                { label: "Niveau langue", value: ps.languageLevel || "—", emoji: "📖" },
+              ].map(item => (
+                <div key={item.label} className="bg-white/5 rounded-xl p-3 flex items-center gap-3">
+                  <span className="text-lg">{item.emoji}</span>
+                  <div>
+                    <p className="text-[10px] text-white/40">{item.label}</p>
+                    <p className="text-sm font-semibold">{item.value}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Thèmes activés */}
+          {ps.enabledThemes?.length > 0 && (
+            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 mb-4">
+              <h3 className="text-lg font-bold mb-3">🎨 Thèmes activés</h3>
+              <div className="flex flex-wrap gap-2">
+                {ps.enabledThemes.map((t: string) => (
+                  <span key={t} className="px-3 py-1.5 rounded-lg bg-sky-500/15 text-sky-300 text-sm font-medium">{t}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Sujets bloqués */}
+          {ps.blockedTopics?.length > 0 && (
+            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 mb-4">
+              <h3 className="text-lg font-bold mb-3">🚫 Sujets bloqués</h3>
+              <div className="flex flex-wrap gap-2">
+                {ps.blockedTopics.map((t: string) => (
+                  <span key={t} className="px-3 py-1.5 rounded-lg bg-red-500/15 text-red-300 text-sm font-medium">{t}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Device info */}
+          {u.device_info && (
+            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 mb-4">
+              <h3 className="text-lg font-bold mb-2">📱 Appareil</h3>
+              <p className="text-sm text-white/50 font-mono break-all">{u.device_info}</p>
+            </div>
+          )}
+
+          {/* Danger zone */}
+          <div className="bg-red-500/5 rounded-2xl p-5 border border-red-500/20">
+            <h3 className="text-lg font-bold text-red-400 mb-2">⚠️ Zone danger</h3>
+            <p className="text-sm text-white/40 mb-3">Supprimer ce profil Bobby Cloud. L'utilisateur devra recréer un compte.</p>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                await supabase.from("cloud_profiles").delete().eq("id", u.id);
+                setSelectedCloudUser(null);
+                fetchCloudUsers();
+                toast.success("Profil Bobby Cloud supprimé");
+              }}
+              className="bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30"
+            >
+              <Trash2 className="w-4 h-4 mr-2" /> Supprimer le profil
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    // Cloud Users List
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white p-4 max-w-4xl mx-auto">
+        <button onClick={() => setTopSection(null)} className="flex items-center gap-2 text-white/60 hover:text-white mb-4">
+          <ArrowLeft className="w-4 h-4" /> Retour
+        </button>
+
+        {/* Header */}
+        <div className="bg-gradient-to-br from-sky-500/15 to-blue-600/10 rounded-2xl p-6 border border-sky-500/20 mb-4">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="text-4xl">☁️👥</span>
+            <div>
+              <h2 className="text-2xl font-bold">Bobby Cloud</h2>
+              <p className="text-white/50 text-sm">{cloudUsers.length} profil{cloudUsers.length > 1 ? "s" : ""} enregistré{cloudUsers.length > 1 ? "s" : ""}</p>
+            </div>
+          </div>
+
+          {/* Stats row */}
+          <div className="grid grid-cols-4 gap-2 mt-4">
+            <div className="bg-white/5 rounded-xl p-3 text-center">
+              <p className="text-xl font-bold text-sky-400">{cloudUsers.length}</p>
+              <p className="text-[9px] text-white/40">Total</p>
+            </div>
+            <div className="bg-white/5 rounded-xl p-3 text-center">
+              <p className="text-xl font-bold text-green-400">
+                {cloudUsers.filter(u => Date.now() - new Date(u.last_synced_at).getTime() < 86400000).length}
+              </p>
+              <p className="text-[9px] text-white/40">Actifs 24h</p>
+            </div>
+            <div className="bg-white/5 rounded-xl p-3 text-center">
+              <p className="text-xl font-bold text-amber-400">
+                {cloudUsers.filter(u => Date.now() - new Date(u.last_synced_at).getTime() < 604800000).length}
+              </p>
+              <p className="text-[9px] text-white/40">Actifs 7j</p>
+            </div>
+            <div className="bg-white/5 rounded-xl p-3 text-center">
+              <p className="text-xl font-bold text-purple-400">
+                {new Set(cloudUsers.map(u => u.child_name.toLowerCase())).size}
+              </p>
+              <p className="text-[9px] text-white/40">Enfants</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="relative mb-4">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+          <input
+            type="text"
+            value={cloudUserSearch}
+            onChange={e => setCloudUserSearch(e.target.value)}
+            placeholder="Rechercher par nom, code sync ou appareil…"
+            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-white/30 outline-none focus:border-sky-500/40"
+          />
+        </div>
+
+        {/* Refresh */}
+        <div className="flex justify-end mb-3">
+          <Button size="sm" variant="outline" onClick={fetchCloudUsers} disabled={cloudUsersLoading}
+            className="text-white/60 border-white/10 hover:border-white/20 hover:text-white text-xs">
+            {cloudUsersLoading ? "…" : "🔄 Rafraîchir"}
+          </Button>
+        </div>
+
+        {/* Users list */}
+        {filteredCloudUsers.length === 0 ? (
+          <div className="bg-white/5 rounded-2xl p-8 text-center border border-white/10">
+            <span className="text-5xl block mb-3">☁️</span>
+            <p className="text-white/50">Aucun profil Bobby Cloud trouvé</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {filteredCloudUsers.map(user => (
+              <button key={user.id} onClick={() => setSelectedCloudUser(user)}
+                className="w-full bg-white/5 hover:bg-white/8 rounded-xl p-4 border border-white/10 hover:border-sky-500/20 transition-all text-left flex items-center gap-4 group">
+                <div className="w-12 h-12 rounded-xl bg-sky-500/15 flex items-center justify-center text-xl shrink-0">
+                  👤
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className="font-bold text-white">{user.child_name}</p>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 font-mono">{user.sync_code}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-[11px] text-white/40">
+                    <span>📅 {formatDate(user.created_at)}</span>
+                    <span>🔄 {timeSince(user.last_synced_at)}</span>
+                    {(user.parent_settings as any)?.voiceType && (
+                      <span>🎙️ {(user.parent_settings as any).voiceType}</span>
+                    )}
+                    {(user.parent_settings as any)?.childAge && (
+                      <span>🎂 {(user.parent_settings as any).childAge} ans</span>
+                    )}
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors shrink-0" />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
