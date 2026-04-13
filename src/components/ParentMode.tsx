@@ -1104,7 +1104,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>
 
       {/* ═══ 1. KPI HERO — 3 cols colorful ═══ */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         {[
           { value: totalSessions, label: "Sessions", emoji: "💬", gradient: "from-blue-400/30 to-indigo-400/10", border: "border-blue-300/25" },
           { value: totalMessages, label: "Messages", emoji: "📝", gradient: "from-emerald-400/30 to-teal-400/10", border: "border-emerald-300/25" },
@@ -1123,7 +1123,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ 2. RÉSUMÉ DU JOUR ═══ */}
       {dailySummary && (
-        <div className="bg-gradient-to-br from-primary/15 to-primary/5 rounded-3xl p-5 border border-primary/20">
+        <div className="bg-gradient-to-br from-primary/15 to-primary/5 rounded-3xl p-5 border border-primary/20 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
           <div className="flex items-center gap-2.5 mb-2">
             <span className="text-2xl">📋</span>
             <h3 className="text-[17px] font-extrabold text-foreground">Résumé du jour</h3>
@@ -1134,7 +1134,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ 3. RECOMMANDATIONS ═══ */}
       {parentRecommendations.length > 0 && (
-        <div className="bg-card rounded-3xl p-5 border border-border/20">
+        <div className="bg-card rounded-3xl p-5 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.15s" }}>
           <div className="flex items-center gap-2.5 mb-3">
             <span className="text-2xl">✨</span>
             <h3 className="text-[17px] font-extrabold text-foreground">Recommandations</h3>
@@ -1184,7 +1184,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           }));
         if (radarData.length < 3) return null;
         return (
-          <div className="bg-card rounded-3xl p-4 border border-border/20">
+          <div className="bg-card rounded-3xl p-4 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.2s" }}>
             <div className="flex items-center gap-2.5 mb-2">
               <span className="text-2xl">🎯</span>
               <h3 className="text-[17px] font-extrabold text-foreground">Intérêts de {childName}</h3>
@@ -1260,7 +1260,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ SCORES COMPORTEMENTAUX — 3 cols compact ═══ */}
       {avgScores && (
-        <div className="bg-card rounded-[18px] p-3 border border-border/20">
+        <div className="bg-card rounded-[18px] p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.25s" }}>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🧠</span>
             <h3 className="text-[15px] font-black text-foreground">Développement</h3>
@@ -1311,7 +1311,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ ÉMOTIONS — 3 cols compact ═══ */}
       {Object.keys(avgEmotions).length > 0 && (
-        <div className="bg-card rounded-[18px] p-3 border border-border/20">
+        <div className="bg-card rounded-[18px] p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.3s" }}>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">💖</span>
             <h3 className="text-[15px] font-black text-foreground">Émotions</h3>
@@ -1334,7 +1334,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ ÉVOLUTION 7 JOURS — compact chart ═══ */}
       {emotionChartData.some(d => d.hasData) && (
-        <div className="bg-card rounded-3xl p-5 border border-border/20">
+        <div className="bg-card rounded-3xl p-5 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.35s" }}>
           <div className="flex items-center gap-2.5 mb-3">
             <span className="text-2xl">📈</span>
             <h3 className="text-[17px] font-extrabold text-foreground">Évolution (7j)</h3>
@@ -1387,7 +1387,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* ═══ TEMPS DE SESSION ═══ */}
       {sessionDurationChartData.some(d => d.hasData) && (
-        <div className="bg-card rounded-2xl p-3 border border-border/20">
+        <div className="bg-card rounded-2xl p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.4s" }}>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">⏱️</span>
             <h3 className="text-[14px] font-extrabold text-foreground">Temps (7j)</h3>
@@ -1407,7 +1407,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       )}
 
       {/* ═══ STATS — 3 cols compact ═══ */}
-      <div className="bg-card rounded-[18px] p-3 border border-border/20">
+      <div className="bg-card rounded-[18px] p-3 border border-border/20 animate-fadeInUp" style={{ animationDelay: "0.45s" }}>
         <div className="flex items-center gap-2 mb-2">
           <span className="text-lg">📊</span>
           <h3 className="text-[15px] font-black text-foreground">Statistiques</h3>
