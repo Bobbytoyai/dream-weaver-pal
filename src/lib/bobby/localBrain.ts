@@ -191,7 +191,10 @@ const INTENT_RULES: IntentRule[] = [
     /fier|fière|j'ai réussi|j'ai gagné|champion|regarde ce que|bien joué/i,
   ]},
   { intent: "AMOUR", priority: 80, patterns: [
-    /je t'aime|t'adore|câlin|bisou|tu es mon ami|meilleur ami|aime bobby|amoureux|amoureuse/i,
+    /je t'aime|t'adore|câlin|bisou|tu es mon ami|meilleur ami|aime bobby/i,
+  ]},
+  { intent: "AMOUREUX", priority: 82, patterns: [
+    /amoureux|amoureuse|petite copine|petit copain|petite amie|petit ami|crush|je l'aime|lui dire que je l'aime|elle me plaît|il me plaît|je kiffe/i,
   ]},
   { intent: "TIMIDITE", priority: 80, patterns: [
     /timide|j'ose pas|gêné|rouge|devant tout le monde/i,
