@@ -638,8 +638,8 @@ const Admin = () => {
   }, []);
 
   useEffect(() => {
-    if (authenticated) { fetchEntries(); fetchCloudStories(); fetchStoreItems(); }
-  }, [authenticated, fetchEntries, fetchCloudStories, fetchStoreItems]);
+    if (authenticated) { fetchEntries(); fetchCloudStories(); fetchStoreItems(); fetchCloudUsers(); }
+  }, [authenticated, fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers]);
 
   // ─── Derived ───
   const categoryCounts = useMemo(() => {
