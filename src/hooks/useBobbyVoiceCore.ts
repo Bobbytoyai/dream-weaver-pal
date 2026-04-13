@@ -20,6 +20,36 @@ import { useSessionTracker } from "./useSessionTracker";
 import { useSmartSTT } from "./useSmartSTT";
 import { useConversationRecorder } from "./useConversationRecorder";
 
+// ─── Timing constants ────────────────────────────────
+const WAIT_SILENCE_BEFORE_RELANCE_MS = 60_000;   // 60s no voice in LISTENING → relance
+const RELANCE_SILENCE_BEFORE_OFF_MS = 30_000;     // 30s no voice after relance → off
+const CONV_SILENCE_RELANCE_MS = 20_000;            // 20s silence during conversation → relance
+const CONV_SILENCE_OFF_MS = 60_000;                // 60s silence after conv relance → goodbye
+const MIN_SESSION_MS = 90_000;                      // 90s minimum session guarantee
+const SLEEP_TIMER_MS = 120_000;                     // 2min idle → sleep
+const ANTI_ECHO_COOLDOWN_MS = 400;
+
+// ─── Relance & goodbye messages ──────────────────────
+const RELANCE_MESSAGES = [
+  "Je t'écoute 💛 tu veux me dire quelque chose ?",
+  "Je suis toujours là 💛",
+  "N'hésite pas, je suis là pour toi 💛",
+];
+const GOODBYE_MESSAGES = [
+  "On se reparle après 💛",
+  "À tout à l'heure 💛",
+  "Je serai là quand tu voudras 💛",
+];
+const WELCOME_PHRASES = [
+  "Coucou 💛 je suis là, parle-moi !",
+  "Hey ! Je t'écoute 💛",
+  "Coucou ! Qu'est-ce que tu veux me raconter ? 💛",
+];
+
+function pickRandom(arr: string[]): string {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 interface UseBobbyVoiceCoreOptions {
   childName: string;
   childAge: number;
@@ -101,14 +131,19 @@ export function useBobbyVoiceCore({
   const finalTranscriptRef = useRef<(text: string) => void>(() => {});
   const sttErrorRef = useRef<(error: string) => void>(() => {});
   const sleepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const listenTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const lastSpeechEndRef = useRef(0);
-  // Track ALL recent Bobby messages for anti-echo (not just the last one)
   const recentBobbyMessagesRef = useRef<string[]>([]);
   const handledNarrationIdRef = useRef<string | null>(null);
   const sessionOpenRef = useRef(false);
   const startListeningRef = useRef<() => Promise<void>>(async () => {});
+  // Track whether voice was detected at least once in this activation
+  const voiceDetectedRef = useRef(false);
+  // Track session start time for minimum session guarantee
+  const sessionStartTimeRef = useRef(0);
+  // Track relance count during conversation
+  const convRelanceCountRef = useRef(0);
 
   const { startSession, addMessage, endSession, sessionIdRef } = useSessionTracker(childName, childAge);
   const { startRecording, stopRecording } = useConversationRecorder();
@@ -120,10 +155,18 @@ export function useBobbyVoiceCore({
     eventBus.emit({ type: "STATE_CHANGED", state: toVoiceState(nextState), prev: toVoiceState(previousState) });
   }, []);
 
+  // ─── Timer management ──────────────────────────────
   const clearSleepTimer = useCallback(() => {
     if (sleepTimerRef.current) {
       clearTimeout(sleepTimerRef.current);
       sleepTimerRef.current = null;
+    }
+  }, []);
+
+  const clearSilenceTimer = useCallback(() => {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
     }
   }, []);
 
@@ -135,7 +178,7 @@ export function useBobbyVoiceCore({
         setBobbyText(getBobbySleepMessage());
         go("SLEEP");
       }
-    }, 120_000);
+    }, SLEEP_TIMER_MS);
   }, [clearSleepTimer, go]);
 
   const stopPlayback = useCallback(() => {
@@ -143,10 +186,10 @@ export function useBobbyVoiceCore({
     abortRef.current = null;
   }, []);
 
+  // ─── Session management ────────────────────────────
   const closeSession = useCallback(async () => {
     if (!sessionOpenRef.current) return;
     const sid = sessionIdRef.current;
-    // Stop recording and upload audio
     if (sid) {
       const audioPath = await stopRecording(sid);
       if (audioPath) {
@@ -166,7 +209,6 @@ export function useBobbyVoiceCore({
     sessionOpenRef.current = false;
     eventBus.emit({ type: "SESSION_END" });
 
-    // Trigger AI analysis in background (fire & forget)
     if (sid) {
       console.log("[BobbyVoiceCore] 🧠 Triggering AI session analysis for:", sid);
       fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/session-analysis`, {
@@ -186,8 +228,8 @@ export function useBobbyVoiceCore({
     const sessionId = await startSession();
     if (sessionId) {
       sessionOpenRef.current = true;
+      sessionStartTimeRef.current = Date.now();
       eventBus.emit({ type: "SESSION_START" });
-      // Start recording the conversation audio
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         await startRecording(stream);
@@ -200,13 +242,43 @@ export function useBobbyVoiceCore({
     return sessionId;
   }, [sessionIdRef, startSession, startRecording]);
 
-  // Track consecutive silence timeouts to know when to end conversation
-  const silenceCountRef = useRef(0);
+  // ─── Speak a short system message (relance, welcome, goodbye) ──────
+  const speakSystemMessage = useCallback(async (text: string, emotion: FaceState = "idle") => {
+    stopPlayback();
+    stopSttRef.current();
+    setMicArmed(false);
 
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setCurrentEmotion(emotion);
+    setBobbyText(text);
+    setLastAiResponse(text);
+    lastAiResponseRef.current = text;
+    recentBobbyMessagesRef.current = [text.toLowerCase(), ...recentBobbyMessagesRef.current.slice(0, 4)];
+
+    eventBus.emit({ type: "SPEECH_START" });
+
+    try {
+      const audioUrl = await fetchTTSAudio(text, controller.signal, resolveVoiceProfile(parentSettings));
+      if (!controller.signal.aborted) {
+        await playGeneratedAudio(audioUrl, controller.signal);
+      }
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError")) {
+        console.warn("[BobbyVoiceCore] System TTS failed:", error);
+      }
+    }
+
+    if (!controller.signal.aborted) {
+      eventBus.emit({ type: "SPEECH_STOP" });
+      lastSpeechEndRef.current = Date.now();
+    }
+  }, [parentSettings, stopPlayback]);
+
+  // ─── Speak a brain reply ───────────────────────────
   const speakReply = useCallback(async (reply: BobbyBrainReply) => {
     stopPlayback();
-
-    // ─── CRITICAL: Stop STT before Bobby speaks to prevent self-listening ───
     stopSttRef.current();
     setMicArmed(false);
 
@@ -214,29 +286,22 @@ export function useBobbyVoiceCore({
     abortRef.current = controller;
 
     setCurrentEmotion(reply.emotion);
-    // Modular expression from new pipeline
     const exprResult = detectBobbyExpression(reply.text, parentSettings?.childAge ?? 7);
     setCurrentExpressionCombo(exprResult.expression.combo);
     setCurrentExpressionIntensity(exprResult.expression.intensity);
     setBobbyText(reply.text);
     setLastAiResponse(reply.text);
     lastAiResponseRef.current = reply.text;
-    // Track last 5 Bobby messages for multi-message anti-echo
-    recentBobbyMessagesRef.current = [
-      reply.text.toLowerCase(),
-      ...recentBobbyMessagesRef.current.slice(0, 4),
-    ];
+    recentBobbyMessagesRef.current = [reply.text.toLowerCase(), ...recentBobbyMessagesRef.current.slice(0, 4)];
     go("SPEAKING");
     eventBus.emit({ type: "RESPONSE_READY", text: reply.text });
     eventBus.emit({ type: "SPEECH_START" });
 
-    // Double-stop STT to be absolutely sure it's off during playback
     stopSttRef.current();
 
     try {
       const audioUrl = await fetchTTSAudio(reply.text, controller.signal, resolveVoiceProfile(parentSettings));
       if (!controller.signal.aborted) {
-        // Stop STT again right before playback (belt and suspenders)
         stopSttRef.current();
         await playGeneratedAudio(audioUrl, controller.signal);
       }
@@ -249,15 +314,97 @@ export function useBobbyVoiceCore({
     if (!controller.signal.aborted) {
       eventBus.emit({ type: "SPEECH_STOP" });
       lastSpeechEndRef.current = Date.now();
-      silenceCountRef.current = 0;
-      // ─── Reduced delay for snappier tac-o-tac flow ───
-      await new Promise(r => setTimeout(r, 400));
+      convRelanceCountRef.current = 0;
+      await new Promise(r => setTimeout(r, ANTI_ECHO_COOLDOWN_MS));
       if (!abortRef.current?.signal.aborted && machineRef.current === "SPEAKING") {
         void startListeningRef.current();
       }
     }
   }, [go, parentSettings, stopPlayback]);
 
+  // ─── Deactivate Bobby (go idle/sleep) ──────────────
+  const deactivate = useCallback(async (withGoodbye: boolean = false) => {
+    clearSilenceTimer();
+
+    // Minimum session guarantee: don't deactivate before 90s if voice was detected
+    if (voiceDetectedRef.current && sessionStartTimeRef.current > 0) {
+      const elapsed = Date.now() - sessionStartTimeRef.current;
+      if (elapsed < MIN_SESSION_MS) {
+        console.log("[BobbyVoiceCore] Min session not reached, extending...");
+        // Schedule another check after remaining time
+        silenceTimerRef.current = setTimeout(() => {
+          void deactivate(withGoodbye);
+        }, MIN_SESSION_MS - elapsed);
+        return;
+      }
+    }
+
+    if (withGoodbye) {
+      const msg = pickRandom(GOODBYE_MESSAGES);
+      go("SPEAKING");
+      await speakSystemMessage(msg, "calm");
+    }
+
+    stopSttRef.current();
+    setMicArmed(false);
+    setPartialText("");
+    setCurrentEmotion("idle");
+    voiceDetectedRef.current = false;
+    convRelanceCountRef.current = 0;
+    go("IDLE");
+    void closeSession();
+    scheduleSleep();
+  }, [clearSilenceTimer, closeSession, go, scheduleSleep, speakSystemMessage]);
+
+  // ─── Schedule silence timer based on current context ───
+  const scheduleSilenceWatch = useCallback((context: "waiting" | "conversation" | "relance") => {
+    clearSilenceTimer();
+
+    let timeout: number;
+    switch (context) {
+      case "waiting":
+        // First activation, no voice yet — 60s then relance
+        timeout = WAIT_SILENCE_BEFORE_RELANCE_MS;
+        break;
+      case "conversation":
+        // During active conversation — 20s then relance
+        timeout = CONV_SILENCE_RELANCE_MS;
+        break;
+      case "relance":
+        // After relance — 30s (initial) or 60s (conversation) then off
+        timeout = voiceDetectedRef.current ? CONV_SILENCE_OFF_MS : RELANCE_SILENCE_BEFORE_OFF_MS;
+        break;
+    }
+
+    silenceTimerRef.current = setTimeout(async () => {
+      if (machineRef.current !== "LISTENING" && machineRef.current !== "RELANCE") return;
+
+      if (context === "relance") {
+        // Already relanced — deactivate with goodbye
+        console.log("[BobbyVoiceCore] Silence after relance — deactivating");
+        void deactivate(true);
+        return;
+      }
+
+      // Perform relance
+      console.log("[BobbyVoiceCore] Silence detected — relancing");
+      go("RELANCE");
+      const msg = pickRandom(RELANCE_MESSAGES);
+      await speakSystemMessage(msg, "reassuring");
+
+      // After speaking relance, go back to listening with relance timer
+      if (["RELANCE", "SPEAKING"].includes(machineRef.current)) {
+        go("LISTENING");
+        setMicArmed(true);
+        try {
+          await smartSTTRef.current.start();
+        } catch { /* ignore */ }
+        scheduleSilenceWatch("relance");
+      }
+    }, timeout);
+  }, [clearSilenceTimer, deactivate, go, speakSystemMessage]);
+
+  // ─── STT error handler ─────────────────────────────
   const handleSttError = useCallback((error: string) => {
     console.warn("[BobbyVoiceCore] STT error:", error);
     processingRef.current = false;
@@ -277,6 +424,7 @@ export function useBobbyVoiceCore({
     scheduleSleep();
   }, [closeSession, go, networkOffline, scheduleSleep, stopPlayback]);
 
+  // ─── Final transcript handler ──────────────────────
   const handleFinalTranscript = useCallback(async (text: string) => {
     const trimmedText = text.trim();
     if (!trimmedText) {
@@ -284,30 +432,27 @@ export function useBobbyVoiceCore({
       return;
     }
 
-    // ─── HARD BLOCK: reject if Bobby is speaking or processing ───
     if (machineRef.current === "SPEAKING" || machineRef.current === "PROCESSING") {
-      console.warn("[BobbyVoiceCore] 🔇 Rejected transcript during", machineRef.current, "state:", trimmedText.slice(0, 40));
+      console.warn("[BobbyVoiceCore] 🔇 Rejected transcript during", machineRef.current);
       return;
     }
 
-    // ─── Cooldown: reject transcripts arriving too soon after Bobby stopped speaking ───
     const msSinceSpeech = Date.now() - lastSpeechEndRef.current;
-    if (msSinceSpeech < 400) {
+    if (msSinceSpeech < ANTI_ECHO_COOLDOWN_MS) {
       console.warn("[BobbyVoiceCore] 🔇 Anti-echo cooldown:", msSinceSpeech, "ms");
       return;
     }
 
-    // ─── Anti-echo: reject transcript if it's nearly identical to Bobby's last message ───
-    // Only reject at very high similarity (>0.7) to avoid blocking legitimate user input
+    // Anti-echo: reject if too similar to recent Bobby messages
     const incoming = trimmedText.toLowerCase();
-    const incomingWords = incoming.split(/\s+/).filter(w => w.length > 2); // ignore short words
+    const incomingWords = incoming.split(/\s+/).filter(w => w.length > 2);
     for (const recentMsg of recentBobbyMessagesRef.current) {
       if (recentMsg.length < 15) continue;
       const bobbyWords = new Set(recentMsg.split(/\s+/).filter(w => w.length > 2));
       const matchCount = incomingWords.filter(w => bobbyWords.has(w)).length;
       const similarity = matchCount / Math.max(incomingWords.length, 1);
       if (similarity > 0.7) {
-        console.warn("[BobbyVoiceCore] 🔇 Anti-echo: rejected (similarity:", similarity.toFixed(2), "):", trimmedText.slice(0, 50));
+        console.warn("[BobbyVoiceCore] 🔇 Anti-echo rejected:", similarity.toFixed(2));
         processingRef.current = false;
         void startListeningRef.current();
         return;
@@ -318,20 +463,22 @@ export function useBobbyVoiceCore({
     processingRef.current = true;
 
     try {
-      if (listenTimeoutRef.current) { clearTimeout(listenTimeoutRef.current); listenTimeoutRef.current = null; }
+      // Voice detected! Mark session as active conversation
+      voiceDetectedRef.current = true;
+      clearSilenceTimer();
+
       stopSttRef.current();
       setMicArmed(false);
       setPartialText("");
       setLastRecognized(trimmedText);
 
-      // ─── Empathetic pre-reaction: detect child's emotion BEFORE processing ───
+      // Empathetic pre-reaction
       const { detectChildExpression } = await import("@/lib/emotionMapper");
       const childExpr = detectChildExpression(trimmedText, parentSettings?.childAge ?? 7);
       setCurrentEmotion(childExpr.faceState);
       setCurrentExpressionCombo(childExpr.expression.combo);
       setCurrentExpressionIntensity(childExpr.expression.intensity);
 
-      // ─── SKIP "PROCESSING" state — go straight to brain + speak for tac-o-tac feel ───
       eventBus.emit({ type: "VOICE_INPUT", transcript: trimmedText });
 
       await ensureSession();
@@ -343,14 +490,21 @@ export function useBobbyVoiceCore({
     } finally {
       processingRef.current = false;
     }
-  }, [addMessage, childAge, childName, ensureSession, go, handleSttError, speakReply]);
+  }, [addMessage, childAge, childName, clearSilenceTimer, ensureSession, handleSttError, parentSettings, speakReply]);
 
+  // ─── STT setup ─────────────────────────────────────
   const smartSTT = useSmartSTT({
     onPartial: useCallback((text: string) => {
       if (machineRef.current !== "LISTENING" || !text.trim()) return;
       setPartialText(text);
       setCurrentEmotion("attentive");
-    }, []),
+      // Reset silence timer on partial speech detection
+      if (voiceDetectedRef.current) {
+        // During conversation, reset the 20s silence timer
+        clearSilenceTimer();
+        scheduleSilenceWatch("conversation");
+      }
+    }, [clearSilenceTimer, scheduleSilenceWatch]),
     onFinal: useCallback((text: string) => {
       finalTranscriptRef.current(text);
     }, []),
@@ -364,6 +518,9 @@ export function useBobbyVoiceCore({
     language: "fr",
   });
 
+  // Keep a ref to smartSTT for use in scheduleSilenceWatch
+  const smartSTTRef = useRef(smartSTT);
+  smartSTTRef.current = smartSTT;
   stopSttRef.current = smartSTT.stop;
 
   useEffect(() => {
@@ -376,8 +533,10 @@ export function useBobbyVoiceCore({
     sttErrorRef.current = handleSttError;
   }, [handleSttError]);
 
+  // ─── Start listening (activation) ──────────────────
   const startListening = useCallback(async () => {
     clearSleepTimer();
+    clearSilenceTimer();
     stopPlayback();
     processingRef.current = false;
     setPartialText("");
@@ -387,70 +546,63 @@ export function useBobbyVoiceCore({
     go("LISTENING");
     eventBus.emit({ type: "WAKE_DETECTED", confidence: 1 });
 
-    // 60s silence watchdog — if no speech, Bobby relaunches the child
-    if (listenTimeoutRef.current) clearTimeout(listenTimeoutRef.current);
-    listenTimeoutRef.current = setTimeout(() => {
-      if (machineRef.current !== "LISTENING") return;
-      silenceCountRef.current++;
-
-      if (silenceCountRef.current >= 1) {
-        // Already waited once — end conversation silently
-        console.log("[BobbyVoiceCore] Silence timeout — ending conversation");
-        stopSttRef.current();
-        setMicArmed(false);
-        setPartialText("");
-        setCurrentEmotion("idle");
-        go("IDLE");
-        void closeSession();
-        scheduleSleep();
-        return;
-      }
-
-      // First timeout — show text prompt only, NO SPEECH (avoids echo loop)
-      console.log("[BobbyVoiceCore] 60s silence — showing text prompt (no speech)");
-      setBobbyText(`${childName}, touche Bobby si tu veux me parler ! 😊`);
-      setCurrentEmotion("idle");
-      stopSttRef.current();
-      setMicArmed(false);
-      go("IDLE");
-      scheduleSleep();
-    }, 60_000);
+    // Schedule silence watch based on context
+    if (voiceDetectedRef.current) {
+      // Already in a conversation — use shorter timer
+      scheduleSilenceWatch("conversation");
+    } else {
+      // Fresh activation — wait 60s for first voice
+      scheduleSilenceWatch("waiting");
+    }
 
     try {
-      // Native SpeechRecognition manages its own mic — just start it
       await smartSTT.start();
       console.log("[BobbyVoiceCore] ✅ Native STT started");
     } catch (err: any) {
       handleSttError("STT_START_FAILED");
     }
-  }, [childName, clearSleepTimer, closeSession, go, handleSttError, scheduleSleep, smartSTT, speakReply, stopPlayback]);
+  }, [clearSleepTimer, clearSilenceTimer, go, handleSttError, scheduleSilenceWatch, smartSTT, stopPlayback]);
 
-  // Keep the ref in sync so speakReply can call it without circular deps
   useEffect(() => { startListeningRef.current = startListening; }, [startListening]);
 
+  // ─── Interrupt ─────────────────────────────────────
   const interrupt = useCallback(() => {
     processingRef.current = false;
-    if (listenTimeoutRef.current) { clearTimeout(listenTimeoutRef.current); listenTimeoutRef.current = null; }
+    clearSilenceTimer();
     stopSttRef.current();
     setMicArmed(false);
     setPartialText("");
     stopPlayback();
     setCurrentEmotion("idle");
+    voiceDetectedRef.current = false;
+    convRelanceCountRef.current = 0;
     go("IDLE");
     scheduleSleep();
-  }, [go, scheduleSleep, stopPlayback]);
+  }, [clearSilenceTimer, go, scheduleSleep, stopPlayback]);
 
-  const wakeWordEnabled = false;
-
+  // ─── Tap Bobby handler ────────────────────────────
   const handleTapBobby = useCallback(async () => {
     if (machineRef.current === "SPEAKING" || machineRef.current === "PROCESSING" || machineRef.current === "LISTENING") {
       interrupt();
       return;
     }
 
-    await startListening();
-  }, [interrupt, startListening]);
+    // Wake up Bobby — speak welcome phrase then listen
+    clearSleepTimer();
+    voiceDetectedRef.current = false;
+    convRelanceCountRef.current = 0;
 
+    const welcome = pickRandom(WELCOME_PHRASES);
+    go("SPEAKING");
+    await speakSystemMessage(welcome, "happy");
+
+    // After welcome, start listening
+    if (["SPEAKING", "IDLE"].includes(machineRef.current)) {
+      await startListening();
+    }
+  }, [clearSleepTimer, go, interrupt, speakSystemMessage, startListening]);
+
+  // ─── Init on child change ──────────────────────────
   useEffect(() => {
     const welcome = getBobbyWelcomeMessage(childName);
     handledNarrationIdRef.current = null;
@@ -461,16 +613,19 @@ export function useBobbyVoiceCore({
     setLastAiResponse(welcome);
     lastAiResponseRef.current = welcome;
     setCurrentEmotion("idle");
+    voiceDetectedRef.current = false;
     go("IDLE");
     scheduleSleep();
   }, [childName, go, scheduleSleep]);
 
+  // ─── Network change ───────────────────────────────
   useEffect(() => {
     return onNetworkChange((mode) => {
       setNetworkOffline(mode === "OFFLINE");
     });
   }, []);
 
+  // ─── Pending narration ────────────────────────────
   useEffect(() => {
     if (!pendingNarration || pendingNarration.storyId === handledNarrationIdRef.current) return;
 
@@ -504,39 +659,47 @@ export function useBobbyVoiceCore({
     })();
   }, [addMessage, childAge, childName, ensureSession, go, onNarrationConsumed, pendingNarration, speakReply]);
 
+  // ─── Cleanup ──────────────────────────────────────
   useEffect(() => {
     return () => {
       clearSleepTimer();
-      if (listenTimeoutRef.current) clearTimeout(listenTimeoutRef.current);
+      clearSilenceTimer();
       stopSttRef.current();
       stopPlayback();
       resetBobbyBrainSession();
       resetEmotionPipeline();
       void closeSession();
     };
-  }, [clearSleepTimer, closeSession, stopPlayback]);
+  }, [clearSleepTimer, clearSilenceTimer, closeSession, stopPlayback]);
 
+  // ─── Computed face state ──────────────────────────
   const bobbyFaceEmotion: FaceState =
     machineState === "LISTENING"
       ? "attentive"
-      : machineState === "PROCESSING"
-        ? currentEmotion  // Keep child's detected emotion instead of "thinking"
-        : machineState === "SPEAKING"
+      : machineState === "RELANCE"
+        ? "reassuring"
+        : machineState === "PROCESSING"
           ? currentEmotion
-          : machineState === "ERROR"
-            ? "confused"
-            : machineState === "SLEEP"
-              ? "sleepy"
-              : "idle";
+          : machineState === "SPEAKING"
+            ? currentEmotion
+            : machineState === "ERROR"
+              ? "confused"
+              : machineState === "SLEEP"
+                ? "sleepy"
+                : "idle";
 
   const bobbyEmotionIntensity =
     machineState === "SPEAKING"
       ? 0.95
       : machineState === "LISTENING"
         ? 0.75
-        : machineState === "ERROR"
+        : machineState === "RELANCE"
           ? 0.6
-          : 0.4;
+          : machineState === "ERROR"
+            ? 0.6
+            : 0.4;
+
+  const wakeWordEnabled = false;
 
   return {
     state: machineState,

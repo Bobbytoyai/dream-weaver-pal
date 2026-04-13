@@ -1,6 +1,6 @@
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
 
-export type ConversationState = "IDLE" | "LISTENING" | "PROCESSING" | "SPEAKING" | "ERROR" | "SLEEP";
+export type ConversationState = "IDLE" | "LISTENING" | "PROCESSING" | "SPEAKING" | "ERROR" | "SLEEP" | "RELANCE";
 export type VoiceState = "idle" | "listening" | "processing" | "speaking" | "interrupted" | "session_end";
 
 export interface PendingNarration {
@@ -33,6 +33,7 @@ export function toVoiceState(state: ConversationState): VoiceState {
     case "IDLE":
       return "idle";
     case "LISTENING":
+    case "RELANCE":
       return "listening";
     case "PROCESSING":
       return "processing";

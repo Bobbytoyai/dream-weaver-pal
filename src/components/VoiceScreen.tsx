@@ -155,6 +155,7 @@ const VoiceScreen = ({
     LISTENING: sm.partialText ? `"${sm.partialText}"` : "",
     PROCESSING: "",
     SPEAKING: "",
+    RELANCE: "",
     ERROR: "Dis-moi !",
     SLEEP: "💤 Bobby dort… touche Bobby pour le réveiller !",
   }[sm.machineState];
