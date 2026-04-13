@@ -77,6 +77,10 @@ async function playGeneratedAudio(audioUrl: string, signal: AbortSignal): Promis
 
   await new Promise<void>((resolve) => {
     const audio = new Audio(audioUrl);
+    audio.crossOrigin = "anonymous";
+
+    // Emit so HologramFace can connect its analyser for lip sync
+    eventBus.emit({ type: "AUDIO_ELEMENT_CREATED", element: audio });
 
     const cleanup = () => {
       audio.onended = null;
