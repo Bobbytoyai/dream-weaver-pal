@@ -45,7 +45,7 @@ export async function getLLMReply(
 ): Promise<BobbyBrainReply | null> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000); // 8s timeout
+    const timeout = setTimeout(() => controller.abort(), 6000); // 6s timeout
 
     // Combine external signal with timeout
     if (signal) {

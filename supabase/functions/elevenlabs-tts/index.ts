@@ -6,42 +6,30 @@ const corsHeaders = {
 };
 
 // Voice IDs for French voices (ElevenLabs)
+// Voice IDs — cartoon-friendly animated French voices
 const VOICE_MAP: Record<string, string> = {
-  // Natural French voices
-  female: "FGY2WhTYpPnrIDTdsKH5",   // Laura - warm female
-  child:  "XrExE9yKIg1WjnnlVkGX",    // Matilda - more natural childlike tone
-  male:   "JBFqnCBsd6RMkjVDRZzb",    // George - warm male
-  sister: "EXAVITQu4vr4xnSDxMaL",    // Sarah - young female
-  brother:"IKne3meq5aSn9XLyUdCD",    // Charlie - young male
+  female: "XrExE9yKIg1WjnnlVkGX",   // Matilda - warm childlike (default cartoon feel)
+  child:  "XrExE9yKIg1WjnnlVkGX",   // Matilda - animated & expressive
+  male:   "IKne3meq5aSn9XLyUdCD",   // Charlie - young playful male
+  sister: "EXAVITQu4vr4xnSDxMaL",   // Sarah - young female
+  brother:"IKne3meq5aSn9XLyUdCD",   // Charlie - young male
 };
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+// Speed multiplier per profile for natural pacing
+const SPEED_MAP: Record<string, number> = {
+  female: 1.05,
+  child:  1.05,
+  male:   1.0,
+  sister: 1.05,
+  brother: 1.0,
+};
 
-  try {
-    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
-    if (!ELEVENLABS_API_KEY) {
-      return new Response(JSON.stringify({ error: "Missing API key" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const voiceId = VOICE_MAP[voiceProfile || "child"] || VOICE_MAP.child;
+    const speed = SPEED_MAP[voiceProfile || "child"] || 1.05;
 
-    const { text, voiceProfile } = await req.json();
-    if (!text || text.trim().length < 1) {
-      return new Response(JSON.stringify({ error: "No text provided" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const voiceId = VOICE_MAP[voiceProfile || "female"] || VOICE_MAP.female;
-
-    // Use higher-quality multilingual model to avoid robotic output
+    // Use turbo model for lowest latency + cartoon-style voice settings
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_22050_32`,
       {
         method: "POST",
         headers: {
@@ -49,14 +37,14 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          text: text.slice(0, 2000), // Safety limit
-          model_id: "eleven_multilingual_v2",
+          text: text.slice(0, 2000),
+          model_id: "eleven_turbo_v2_5",
           voice_settings: {
-            stability: 0.58,
-            similarity_boost: 0.8,
-            style: 0.18,
+            stability: 0.35,         // Lower = more expressive/animated
+            similarity_boost: 0.65,
+            style: 0.55,             // Higher = more cartoon-like character
             use_speaker_boost: true,
-            speed: 1.0,
+            speed,
           },
         }),
       }
