@@ -1964,27 +1964,28 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     value={noteText}
                     onChange={e => setNoteText(e.target.value)}
                     placeholder="Ajoutez une note sur cette session…"
-                    className="w-full bg-muted rounded-2xl px-4 py-3 text-[14px] text-foreground outline-none focus:ring-2 focus:ring-primary/30 resize-none h-24 font-medium"
+                    className="w-full bg-white px-4 py-3 text-[14px] text-foreground outline-none border-4 border-black resize-none h-24 font-bold"
                   />
                   <div className="flex gap-3">
                     <button onClick={() => saveParentNote(selectedSession!.id, noteText)}
-                      className="flex-1 py-3 rounded-2xl bg-primary text-primary-foreground text-[14px] font-extrabold shadow-sm">
-                      💾 Enregistrer
+                      className="flex-1 py-3 border-4 border-black bg-foreground text-background text-[14px] font-black uppercase"
+                      style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
+                      💾 ENREGISTRER
                     </button>
                     <button onClick={() => setEditingNote(null)}
-                      className="px-5 py-3 rounded-2xl bg-muted text-muted-foreground text-[14px] font-bold">
-                      Annuler
+                      className="px-5 py-3 border-4 border-black bg-white text-foreground text-[14px] font-black uppercase">
+                      ANNULER
                     </button>
                   </div>
                 </div>
               ) : (
                 <button
                   onClick={() => { setEditingNote(selectedSession!.id); setNoteText(selectedSession!.parent_note || ""); }}
-                  className="w-full text-left p-3 rounded-2xl hover:bg-muted/50 transition-all">
+                  className="w-full text-left p-3 border-2 border-dashed border-black/30 hover:bg-[var(--retro-yellow)] transition-all">
                   {selectedSession!.parent_note ? (
-                    <p className="text-[14px] text-foreground leading-relaxed font-medium">{selectedSession!.parent_note}</p>
+                    <p className="text-[14px] text-foreground leading-relaxed font-bold">{selectedSession!.parent_note}</p>
                   ) : (
-                    <p className="text-[14px] text-muted-foreground italic font-medium">Appuyez pour ajouter une note…</p>
+                    <p className="text-[14px] text-foreground/50 italic font-bold">Appuyez pour ajouter une note…</p>
                   )}
                 </button>
               )}
@@ -3475,22 +3476,22 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* Notification Panel */}
       {showNotifPanel && (
-        <div className="absolute top-14 right-2 z-50 w-80 max-h-96 bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <div className="absolute top-14 right-2 z-50 w-80 max-h-96 bg-white border-4 border-black overflow-hidden" style={{ boxShadow: "6px 6px 0px rgba(0,0,0,0.25)" }}>
+          <div className="flex items-center justify-between px-4 py-3 border-b-2 border-black">
             <div className="flex items-center gap-2">
-              <Bell className="w-4 h-4 text-destructive" />
-              <h3 className="text-[13px] font-bold text-foreground">Notifications</h3>
+              <Bell className="w-4 h-4 text-foreground" />
+              <h3 className="text-[13px] font-black text-foreground uppercase">Notifications</h3>
               {unreadAlertCount > 0 && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/10 text-destructive font-bold">{unreadAlertCount}</span>
+                <span className="text-[10px] px-2 py-0.5 border-2 border-black bg-[var(--retro-red)] text-foreground font-black">{unreadAlertCount}</span>
               )}
             </div>
             <div className="flex items-center gap-1">
               {unreadAlertCount > 0 && (
-                <button onClick={markAllRead} className="text-[10px] text-primary font-semibold hover:underline">
-                  Tout marquer lu
+                <button onClick={markAllRead} className="text-[10px] text-foreground font-black hover:underline uppercase">
+                  Tout lu
                 </button>
               )}
-              <button onClick={() => setShowNotifPanel(false)} className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground">
+              <button onClick={() => setShowNotifPanel(false)} className="w-7 h-7 border border-black flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)]">
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -3499,15 +3500,15 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             {parentAlerts.length === 0 ? (
               <div className="p-6 text-center">
                 <span className="text-2xl">✅</span>
-                <p className="text-[12px] text-muted-foreground mt-2">Aucune alerte</p>
+                <p className="text-[12px] text-foreground/60 mt-2 font-bold">Aucune alerte</p>
               </div>
             ) : (
               parentAlerts.slice(0, 20).map(alert => {
-                const severityConfig: Record<string, { icon: string; borderColor: string }> = {
-                  critical: { icon: "🚨", borderColor: "border-l-destructive" },
-                  high: { icon: "⚠️", borderColor: "border-l-destructive/60" },
-                  medium: { icon: "🔔", borderColor: "border-l-accent" },
-                  low: { icon: "ℹ️", borderColor: "border-l-muted-foreground" },
+                const severityConfig: Record<string, { icon: string; bg: string }> = {
+                  critical: { icon: "🚨", bg: "bg-[var(--retro-red)]" },
+                  high: { icon: "⚠️", bg: "bg-[var(--retro-orange)]" },
+                  medium: { icon: "🔔", bg: "bg-[var(--retro-yellow)]" },
+                  low: { icon: "ℹ️", bg: "bg-white" },
                 };
                 const cfg = severityConfig[alert.severity] || severityConfig.medium;
                 const timeAgo = (() => {
@@ -3524,18 +3525,16 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                       const session = sessions.find(s => s.id === alert.session_id);
                       if (session) { analyzeSession(session); setShowNotifPanel(false); }
                     }}
-                    className={`w-full text-left px-4 py-3 border-l-4 ${cfg.borderColor} ${!alert.is_read ? "bg-primary/5" : ""} hover:bg-muted/50 transition-colors border-b border-border/30`}>
+                    className={`w-full text-left px-4 py-3 border-b-2 border-black/15 ${!alert.is_read ? cfg.bg : ""} hover:bg-[var(--retro-yellow)] transition-colors`}>
                     <div className="flex items-start gap-2">
                       <span className="text-sm mt-0.5">{cfg.icon}</span>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className={`text-[12px] ${!alert.is_read ? "font-bold text-foreground" : "font-medium text-muted-foreground"} line-clamp-2`}>
-                            {alert.message}
-                          </p>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">{alert.child_name} • {timeAgo}</p>
+                        <p className={`text-[12px] ${!alert.is_read ? "font-black text-foreground" : "font-bold text-foreground/60"} line-clamp-2`}>
+                          {alert.message}
+                        </p>
+                        <p className="text-[10px] text-foreground/50 mt-0.5 font-bold">{alert.child_name} • {timeAgo}</p>
                       </div>
-                      {!alert.is_read && <span className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />}
+                      {!alert.is_read && <span className="w-2 h-2 bg-foreground mt-1.5 shrink-0" />}
                     </div>
                   </button>
                 );
