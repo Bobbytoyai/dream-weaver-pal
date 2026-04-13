@@ -151,7 +151,7 @@ const SEMANTIC_FIELDS: Record<string, string[]> = {
   imprimante: ["technologie", "papier", "imprimer", "encre", "3d", "machine"],
   camera:     ["technologie", "photo", "filmer", "video", "image", "objectif"],
   ecran:      ["technologie", "regarder", "ordinateur", "telephone", "tablette", "television"],
-  invention:  ["technologie", "creer", "inventer", "nouveau", "science", "decouverte", "genie"],
+  "invention tech":["technologie", "creer", "inventer", "nouveau", "science", "decouverte", "genie"],
   // 🚀 Espace (enrichi)
   espace:     ["galaxie", "univers", "etoile", "planete", "fusee", "astronaute", "cosmos", "infini", "satellite", "station spatiale"],
   astronaute: ["espace", "fusee", "lune", "mars", "combinaison", "flotter", "station spatiale", "thomas pesquet"],
