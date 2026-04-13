@@ -376,7 +376,11 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       <mesh position={[hl2[0], hl2[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} />
       <mesh ref={eyelidRef} position={[0, 0.72, 0.05]} material={eyelidMat}>
-        <planeGeometry args={[0.82, 0.74]} />
+        <shapeGeometry args={[(() => {
+          const s = new THREE.Shape();
+          s.absellipse(0, 0, 0.42, 0.38, 0, Math.PI * 2, false, 0);
+          return s;
+        })(), 32]} />
       </mesh>
     </group>
   );
