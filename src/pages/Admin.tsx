@@ -276,6 +276,7 @@ const Admin = () => {
   const [search, setSearch] = useState("");
   const [editingEntry, setEditingEntry] = useState<Partial<KBEntry> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [autoLearnCount, setAutoLearnCount] = useState<number | null>(null);
 
   // Navigation
   const [topSection, setTopSection] = useState<TopSection | null>(null);
