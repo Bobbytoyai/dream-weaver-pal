@@ -163,7 +163,7 @@ function ProductDetail({ item, installed, installing, detailsLoading, onInstall,
         <div className="flex items-start gap-4">
           <div className="w-20 h-20 border-4 border-black bg-white flex items-center justify-center text-[44px] shrink-0 overflow-hidden">
             {item.cover_image_url ? (
-              <img src={item.cover_image_url} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
+              <img src={item.cover_image_url} alt={item.name} className="w-full h-full object-cover" loading="eager" />
             ) : item.emoji}
           </div>
           <div className="flex-1 min-w-0">
@@ -681,7 +681,7 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
                 <div className="flex items-center gap-3 p-3">
                   <div className="w-14 h-14 border-2 border-black bg-white flex items-center justify-center shrink-0 text-3xl overflow-hidden">
                     {item.cover_image_url ? (
-                      <img src={item.cover_image_url} alt={item.name} className="w-full h-full object-cover" loading="lazy" />
+                      <img src={item.cover_image_url} alt={item.name} className="w-full h-full object-cover" loading="eager" />
                     ) : item.emoji}
                   </div>
                   <div className="flex-1 min-w-0">
