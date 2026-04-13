@@ -262,6 +262,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
   useEffect(() => { loadData(); loadAlerts(); loadCloudProfile(); }, []);
 
+  // Scroll to top on tab/section change
+  useEffect(() => {
+    contentScrollRef.current?.scrollTo({ top: 0, behavior: "instant" });
+  }, [activeTab, reglagesSection, selectedSession]);
+
   const loadAlerts = async () => {
     try {
       const { data } = await supabase
