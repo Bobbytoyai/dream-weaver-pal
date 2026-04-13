@@ -191,10 +191,14 @@ export function useBobbyVoiceCore({
         console.log("[BobbyVoiceCore] 🎙️ Audio saved:", audioPath);
         try {
           const { supabase } = await import("@/integrations/supabase/client");
-          await supabase.from("conversation_analyses").upsert({
-            session_id: sid,
-            audio_path: audioPath,
-          }, { onConflict: "session_id" });
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase.from("conversation_analyses").upsert({
+              session_id: sid,
+              audio_path: audioPath,
+              user_id: user.id,
+            }, { onConflict: "session_id" });
+          }
         } catch (e) {
           console.warn("[BobbyVoiceCore] Failed to save audio path:", e);
         }
