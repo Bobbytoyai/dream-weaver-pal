@@ -864,7 +864,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     }
     const summaries = todayAnalyses.map(a => a.summary).filter(Boolean);
     if (summaries.length === 0) return null;
-    return summaries.join(" ");
+    // Take only first 2 sentences from the combined text
+    const full = summaries.join(" ");
+    const sentences = full.match(/[^.!?]+[.!?]+/g) || [full];
+    return sentences.slice(0, 2).join(" ").trim();
   }, [todaySessions, recentAnalyses, sessions, displayName, todayDuration]);
 
   // v4.0: Parent recommendations based on data
@@ -1140,7 +1143,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             <span className="text-2xl">📋</span>
             <h3 className="text-[17px] font-extrabold text-foreground">Résumé du jour</h3>
           </div>
-          <p className="text-[15px] text-foreground/80 leading-relaxed">{dailySummary}</p>
+          <p className="text-[15px] text-foreground/80 leading-relaxed font-bold">{dailySummary}</p>
         </div>
       )}
 
@@ -1482,7 +1485,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             ))}
           </div>
           {lastAnalysis?.summary && (
-            <p className="text-[11px] text-foreground/70 leading-relaxed bg-muted/20 rounded-xl p-2">{lastAnalysis.summary}</p>
+            <p className="text-[11px] text-foreground/70 leading-relaxed bg-muted/20 rounded-xl p-2 font-bold">
+              {(() => { const s = lastAnalysis.summary.match(/[^.!?]+[.!?]+/g); return s ? s.slice(0, 2).join(" ").trim() : lastAnalysis.summary; })()}
+            </p>
           )}
         </div>
       )}
@@ -1586,7 +1591,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                   <span className="text-2xl">📝</span>
                   <h3 className="text-[16px] font-extrabold text-foreground">Résumé</h3>
                 </div>
-                <p className="text-[15px] text-foreground leading-relaxed font-medium">{analysis.summary}</p>
+                <p className="text-[15px] text-foreground leading-relaxed font-bold">
+                  {(() => { const s = analysis.summary!.match(/[^.!?]+[.!?]+/g); return s ? s.slice(0, 2).join(" ").trim() : analysis.summary; })()}
+                </p>
               </div>
             )}
 
