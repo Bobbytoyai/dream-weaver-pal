@@ -296,3 +296,52 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* ── Admin Light Mode ── */
+.admin-light .bg-white\/\[0\.04\],
+.admin-light .bg-white\/\[0\.06\] {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.admin-light .text-white {
+  color: hsl(220, 10%, 15%) !important;
+}
+
+.admin-light .text-white\/25,
+.admin-light .text-white\/20,
+.admin-light .text-white\/30,
+.admin-light .text-white\/40,
+.admin-light .text-white\/50,
+.admin-light .text-white\/60 {
+  color: hsl(220, 8%, 46%) !important;
+}
+
+.admin-light .text-white\/10,
+.admin-light .text-white\/15 {
+  color: hsl(220, 8%, 70%) !important;
+}
+
+.admin-light .bg-white\/\[0\.08\] {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.admin-light .hover\:bg-white\/\[0\.08\]:hover,
+.admin-light .hover\:bg-white\/\[0\.06\]:hover,
+.admin-light .hover\:bg-white\/\[0\.1\]:hover {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+.admin-light .border-white\/\[0\.06\],
+.admin-light .border-white\/\[0\.08\],
+.admin-light .border-white\/\[0\.12\] {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.admin-light .shadow-lg {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+}
+
+.admin-light .backdrop-blur-xl {
+  backdrop-filter: blur(20px) !important;
+}
