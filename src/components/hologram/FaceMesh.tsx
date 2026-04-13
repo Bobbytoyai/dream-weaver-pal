@@ -160,9 +160,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color("#FF80AB"), transparent: true, opacity: 0,
   }), []);
 
-  // Eyelid — match background
+  // Eyelid — match the VoiceScreen light background gradient
   const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(240, 40%, 18%)"), transparent: false, opacity: 1.0,
+    color: new THREE.Color("hsl(230, 22%, 78%)"), transparent: false, opacity: 1.0,
     depthWrite: true,
   }), []);
 
@@ -253,14 +253,10 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     const blinkClose = 1 - state.eyeOpenness;
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
       if (ref.current) {
-        // When fully closed (blinkClose=1), eyelid must cover entire eye
-        // Eye ellipse goes from -0.32 to +0.32 (height 0.64)
-        // Eyelid plane is 0.86 wide x 0.80 tall
         const coverAmount = Math.max(0, Math.min(1, blinkClose));
         ref.current.scale.y = Math.max(0.01, coverAmount * 1.0);
-        // Position: start above eye (hidden), slide down to center of eye when fully closed
-        // At coverAmount=0: y=0.72 (above, hidden). At coverAmount=1: y=-0.08 (centered over eye)
-        ref.current.position.y = 0.72 - coverAmount * 0.80;
+        // Slide from above eye (hidden) to centered over eye when fully closed
+        ref.current.position.y = 0.68 - coverAmount * 0.76;
         ref.current.visible = coverAmount > 0.02;
       }
     });
@@ -367,7 +363,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       <mesh position={[hl2[0], hl2[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} />
       <mesh ref={eyelidRef} position={[0, 0.72, 0.05]} material={eyelidMat}>
-        <planeGeometry args={[0.86, 0.80]} />
+        <planeGeometry args={[0.82, 0.74]} />
       </mesh>
     </group>
   );
