@@ -18,8 +18,11 @@ const queryClient = new QueryClient();
 
 function PageFallback() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#0a0a2e] to-[#1a1a4e]">
-      <div className="text-white text-lg animate-pulse">Chargement…</div>
+    <div className="min-h-screen flex flex-col items-center justify-center" style={{ backgroundColor: "#FDF6EC" }}>
+      <span className="text-5xl mb-4 animate-bounce">🤖</span>
+      <div className="text-lg font-black text-gray-700 animate-pulse" style={{ fontFamily: "'Nunito', sans-serif" }}>
+        Chargement…
+      </div>
     </div>
   );
 }
@@ -37,8 +40,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#0a0a2e] to-[#1a1a4e]">
-        <div className="text-white text-lg animate-pulse">Chargement…</div>
+      <div className="min-h-screen flex flex-col items-center justify-center" style={{ backgroundColor: "#FDF6EC" }}>
+        <span className="text-5xl mb-4 animate-bounce">🤖</span>
+        <div className="text-lg font-black text-gray-700 animate-pulse" style={{ fontFamily: "'Nunito', sans-serif" }}>
+          Chargement…
+        </div>
       </div>
     );
   }
