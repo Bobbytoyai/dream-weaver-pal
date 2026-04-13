@@ -307,9 +307,6 @@
   60%  { opacity: 1; transform: translateY(-4px) rotate(var(--card-tilt, -0.8deg)) scale(1.01); }
   100% { opacity: 1; transform: translateY(0) rotate(var(--card-tilt, -0.8deg)) scale(1); }
 }
-  70%  { transform: translateY(4px) rotate(var(--card-tilt, -0.8deg)) scale(0.99); }
-  100% { transform: translateY(0) rotate(var(--card-tilt, -0.8deg)) scale(1); }
-}
 
 /* Alternating tilts for visual variety */
 .retro-card-tilt-1 { --card-tilt: -1.2deg; }
