@@ -124,6 +124,8 @@ export type LocalIntent =
   | "SALUT" | "AU_REVOIR" | "OUI" | "NON" | "QUESTION_SIMPLE" | "QUESTION_COMPLEXE" | "IDENTITE_BOBBY" | "COMPLIMENT"
   // Safety
   | "CONTENU_BLOQUE" | "CRISE_SECURITE"
+  // Comprehension
+  | "NOT_UNDERSTOOD" | "DEMANDE_LANGUE"
   // Situational
   | "FATIGUE" | "ECHEC" | "OBJECTIF" | "SANTE" | "PERTE" | "REVE_AVENIR"
   | "ANXIETE" | "ABANDON" | "MENSONGE" | "EXCITATION" | "AMOUREUX"
@@ -142,6 +144,11 @@ interface IntentRule {
 }
 
 const INTENT_RULES: IntentRule[] = [
+  // Language request — child asks Bobby to speak another language
+  { intent: "DEMANDE_LANGUE", priority: 110, patterns: [
+    /speak english|parle anglais|parle en anglais|talk english|in english|en anglais|speak french|parle espagnol|speak spanish|habla español/i,
+    /tu parles anglais|tu sais parler anglais|dis.+en anglais|mot.+anglais|apprends.+anglais/i,
+  ]},
   // Safety crisis — empathetic redirect (NOT blocked)
   { intent: "CRISE_SECURITE", priority: 105, patterns: [
     /je veux mourir|je veux disparaître|veux plus vivre|veux pas exister|à quoi ça sert de vivre/i,
@@ -388,8 +395,39 @@ const INTENT_RULES: IntentRule[] = [
   ]},
 ];
 
+function isGarbledText(text: string): boolean {
+  const lower = text.toLowerCase().trim();
+  const words = lower.split(/\s+/).filter(w => w.length > 1);
+  if (words.length === 0) return true;
+  
+  // Very short with no French vowel patterns → likely garbled STT
+  const frenchWords = /[àâäéèêëïîôùûüÿçœæ]|le |la |les |un |une |des |je |tu |il |elle |nous |vous |est |et |ou |de |du |en |au |ce |mon |ton |son |qui |que |pour |pas |avec |sur |dans |mais |comme |très |trop |bien |tout /i;
+  const englishWords = /\b(the|is|are|was|were|have|has|had|will|would|could|should|can|do|does|did|not|and|but|or|for|with|this|that|from|what|how|why|when|where|who|your|you|my|his|her|its|our|speak|talk|say|tell|want|need|like|love|go|come|get|make|know|think|see|look|find|give|take|play|run|eat|sleep|help|work|call|try|ask|use|put|keep|let|begin|show|hear|turn|move|live|believe|bring|happen|write|sit|stand|lose|pay|meet|include|continue|set|learn|change|lead|understand|watch|follow|stop|create|open|walk|win|offer|remember|appear|buy|wait|serve|die|send|expect|build|stay|fall|cut|reach|kill|remain)\b/i;
+
+  // Check if it's mostly English
+  const engMatch = lower.match(englishWords);
+  if (engMatch && engMatch.length >= 2) return false; // It's English, not garbled — let DEMANDE_LANGUE or LLM handle
+  
+  // Check for garbled: no French structure, too many consonant clusters, or very short nonsense
+  if (words.length <= 2 && !frenchWords.test(lower) && !/^(oui|non|ok|ouais|nan|hey|oh|ah|euh|hein|bah|ben|bof|pff)$/i.test(lower)) {
+    // Could be garbled — check if it looks like real words
+    const consonantHeavy = words.filter(w => {
+      const vowels = (w.match(/[aeiouyàâäéèêëïîôùûü]/gi) || []).length;
+      return vowels < w.length * 0.25 && w.length > 3;
+    });
+    if (consonantHeavy.length > 0) return true;
+  }
+  
+  return false;
+}
+
 function detectLocalIntent(text: string): LocalIntent {
   const lower = text.toLowerCase().trim();
+  
+  // Check for garbled/incomprehensible text first
+  if (isGarbledText(lower)) {
+    return "NOT_UNDERSTOOD";
+  }
   
   // Sort by priority (highest first)
   const sorted = [...INTENT_RULES].sort((a, b) => b.priority - a.priority);
@@ -1149,6 +1187,46 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
         "Tu veux t'entraîner sur quoi ?",
         "C'est quoi ta stratégie pour y arriver ?",
         "Tu veux qu'on fasse un plan ensemble ?",
+      ],
+    },
+  },
+
+  NOT_UNDERSTOOD: {
+    default: {
+      empathy: [
+        "Hmm, je n'ai pas bien compris 🤔",
+        "Oups, j'ai pas bien entendu !",
+        "Attends, j'ai pas capté…",
+      ],
+      response: [
+        "Tu peux me redire ça ?",
+        "Répète-moi un peu plus fort ?",
+        "Dis-le moi encore, je veux bien comprendre !",
+      ],
+      opening: [
+        "Je t'écoute, vas-y !",
+        "Prends ton temps, je suis là 😊",
+        "Parle bien fort pour Bobby !",
+      ],
+    },
+  },
+
+  DEMANDE_LANGUE: {
+    default: {
+      empathy: [
+        "Oh, tu veux parler une autre langue ? 😊",
+        "C'est trop bien de s'intéresser aux langues !",
+        "Ah, les langues c'est super cool !",
+      ],
+      response: [
+        "Moi je parle français, mais on peut apprendre des mots ensemble !",
+        "Bobby parle français, mais je peux t'apprendre des mots en anglais si tu veux !",
+        "Je suis un Bobby français ! Mais on peut jouer avec des mots d'autres langues !",
+      ],
+      opening: [
+        "Tu veux que je t'apprenne un mot ?",
+        "Quel mot tu voudrais apprendre ?",
+        "On joue au jeu des mots dans d'autres langues ?",
       ],
     },
   },
