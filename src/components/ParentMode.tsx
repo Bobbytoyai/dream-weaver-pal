@@ -1141,21 +1141,24 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     <div className="p-4 space-y-4" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif" }}>
 
       {/* ═══ 1. KPI HERO — retro grid ═══ */}
-      <div className="grid grid-cols-3 gap-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-        {[
-          { value: totalSessions, label: "Sessions", emoji: "💬", bg: "var(--retro-blue)" },
-          { value: totalMessages, label: "Messages", emoji: "📝", bg: "var(--retro-green)" },
-          { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", bg: "var(--retro-purple)" },
-          { value: todaySessions.length, label: "Aujourd'hui", emoji: "📅", bg: "var(--retro-yellow)" },
-          { value: avgMessagesPerSession, label: "Msg/session", emoji: "📊", bg: "var(--retro-red)" },
-          { value: `${recentAnalyses.length}/${totalSessions}`, label: "Analysées", emoji: "🔬", bg: "#e5e5e5" },
-        ].map((kpi) => (
-          <div key={kpi.label} className="retro-card p-2.5 text-center" style={{ backgroundColor: kpi.bg }}>
-            <span className="text-[24px] block mb-0.5 drop-shadow-sm">{kpi.emoji}</span>
-            <p className="text-[17px] font-black text-gray-800 leading-none truncate">{kpi.value}</p>
-            <p className="text-[9px] text-gray-600 font-bold mt-0.5 truncate">{kpi.label}</p>
-          </div>
-        ))}
+      <div className="animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
+        <div className="flex items-center gap-2.5 mb-3">
+          <span className="text-xl">📊</span>
+          <h3 className="text-[17px] font-black text-foreground uppercase">Statistiques</h3>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { value: totalSessions, label: "Sessions", emoji: "💬", bg: "var(--retro-blue)" },
+            { value: totalMessages, label: "Messages", emoji: "📝", bg: "var(--retro-green)" },
+            { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", bg: "var(--retro-purple)" },
+          ].map((kpi) => (
+            <div key={kpi.label} className="retro-card p-2.5 text-center" style={{ backgroundColor: kpi.bg }}>
+              <span className="text-[24px] block mb-0.5 drop-shadow-sm">{kpi.emoji}</span>
+              <p className="text-[17px] font-black text-gray-800 leading-none truncate">{kpi.value}</p>
+              <p className="text-[9px] text-gray-600 font-bold mt-0.5 truncate">{kpi.label}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* ═══ 2. RÉSUMÉ DU JOUR ═══ */}
