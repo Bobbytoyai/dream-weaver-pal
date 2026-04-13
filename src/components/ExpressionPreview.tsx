@@ -1,10 +1,11 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { HologramFace } from "@/components/hologram/HologramFace";
 import { EYES, EYEBROWS, MOUTHS, ANIMATIONS, type ExpressionCombo } from "@/lib/bobby/expressionLibrary";
 import { type BobbyEmotion, emotionToExpression } from "@/lib/bobby/expressionEngine";
+import { DEFAULT_PARENT_SETTINGS } from "@/components/parentSettings";
 
 const EMOTIONS: BobbyEmotion[] = [
   "joy", "sadness", "fear", "anger", "love", "curiosity", "pride",
@@ -26,6 +27,15 @@ const animKeys = Object.keys(ANIMATIONS);
 
 export default function ExpressionPreview({ onBack }: { onBack: () => void }) {
   const [mode, setMode] = useState<"emotion" | "manual">("emotion");
+
+  // Load saved parent settings for consistent Bobby appearance
+  const [savedSettings] = useState(() => {
+    try {
+      const raw = localStorage.getItem("bobby_parent_settings");
+      if (raw) return { ...DEFAULT_PARENT_SETTINGS, ...JSON.parse(raw) };
+    } catch {}
+    return DEFAULT_PARENT_SETTINGS;
+  });
 
   // Emotion mode
   const [selectedEmotion, setSelectedEmotion] = useState<BobbyEmotion>("joy");
@@ -97,6 +107,8 @@ export default function ExpressionPreview({ onBack }: { onBack: () => void }) {
           voiceState="idle"
           expressionOverride={combo}
           expressionIntensityLevel={currentIntensity}
+          bobbyColor={savedSettings.bobbyColor}
+          bobbyColors={savedSettings.bobbyColors}
         />
       </div>
 
