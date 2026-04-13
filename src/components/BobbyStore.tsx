@@ -339,12 +339,30 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
     setInstalling(contentId);
     const isInstalled = installedIds.has(contentId);
 
-    if (isInstalled) {
-      await supabase.from("installed_content").delete().eq("child_name", childName).eq("content_id", contentId);
-      setInstalledIds(prev => { const next = new Set(prev); next.delete(contentId); return next; });
-    } else {
-      await supabase.from("installed_content").insert({ child_name: childName, content_id: contentId });
-      setInstalledIds(prev => new Set(prev).add(contentId));
+    try {
+      if (isInstalled) {
+        const result = await uninstallContentPack(contentId, childName);
+        if (result.success) {
+          setInstalledIds(prev => { const next = new Set(prev); next.delete(contentId); return next; });
+          toast.success("Contenu désinstallé", { description: "Les données ont été retirées du cerveau de Bobby" });
+        }
+      } else {
+        const result = await installContentPack(contentId, childName);
+        if (result.success) {
+          setInstalledIds(prev => new Set(prev).add(contentId));
+          if (result.itemsInstalled > 0) {
+            toast.success(`${result.itemsInstalled} contenus installés !`, { 
+              description: `Bobby a appris ${result.itemsInstalled} nouvelles choses 🧠${result.cachedLocally ? " • Disponible hors-ligne" : ""}` 
+            });
+          } else {
+            toast.success("Pack activé", { description: result.error || "Aucun contenu trouvé dans ce pack" });
+          }
+        } else {
+          toast.error("Erreur d'installation", { description: result.error });
+        }
+      }
+    } catch (e: any) {
+      toast.error("Erreur", { description: e.message });
     }
     setInstalling(null);
   };
