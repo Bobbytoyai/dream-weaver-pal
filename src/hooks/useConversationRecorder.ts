@@ -20,12 +20,11 @@ export function useConversationRecorder() {
       let stream: MediaStream;
       if (externalStream && externalStream.active) {
         stream = externalStream;
-        ownsStreamRef.current = true; // Take ownership to stop tracks on end
+        ownsStreamRef.current = false; // Don't stop external stream tracks
       } else {
-        // Create own stream if none provided
         try {
           stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          ownsStreamRef.current = true;
+          ownsStreamRef.current = true; // We own this stream
         } catch {
           console.warn("[Recorder] No mic access — skip recording");
           return false;
@@ -33,19 +32,27 @@ export function useConversationRecorder() {
       }
       streamRef.current = stream;
 
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-          ? "audio/webm;codecs=opus"
-          : "audio/webm",
-      });
+      // Pick best supported format
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm")
+        ? "audio/webm"
+        : MediaRecorder.isTypeSupported("audio/mp4")
+        ? "audio/mp4"
+        : "";
+
+      const mediaRecorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
 
       chunksRef.current = [];
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
 
-      mediaRecorder.start(5000);
+      mediaRecorder.start(3000); // Smaller chunks for reliability
       mediaRecorderRef.current = mediaRecorder;
+      console.log("[Recorder] ✅ Recording started, format:", mediaRecorder.mimeType);
       return true;
     } catch (err) {
       console.warn("[Recorder] Could not start:", err);
@@ -57,12 +64,13 @@ export function useConversationRecorder() {
     return new Promise((resolve) => {
       const recorder = mediaRecorderRef.current;
       if (!recorder || recorder.state === "inactive") {
+        console.warn("[Recorder] No active recorder to stop");
         resolve(null);
         return;
       }
 
       recorder.onstop = async () => {
-        // Only stop tracks if we own the stream
+        // Only stop tracks if we created the stream ourselves
         if (ownsStreamRef.current && streamRef.current) {
           streamRef.current.getTracks().forEach((t) => t.stop());
         }
@@ -70,22 +78,28 @@ export function useConversationRecorder() {
         mediaRecorderRef.current = null;
 
         if (chunksRef.current.length === 0) {
+          console.warn("[Recorder] No audio chunks recorded");
           resolve(null);
           return;
         }
 
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const mimeType = recorder.mimeType || "audio/webm";
+        const ext = mimeType.includes("mp4") ? "mp4" : "webm";
+        const blob = new Blob(chunksRef.current, { type: mimeType });
         chunksRef.current = [];
 
-        const path = `${sessionId}.webm`;
+        console.log(`[Recorder] 📦 Audio blob: ${(blob.size / 1024).toFixed(1)}KB, ${ext}`);
+
+        const path = `${sessionId}.${ext}`;
         const { error } = await supabase.storage
           .from("conversation-audio")
-          .upload(path, blob, { contentType: "audio/webm", upsert: true });
+          .upload(path, blob, { contentType: mimeType, upsert: true });
 
         if (error) {
           console.error("[Recorder] Upload error:", error);
           resolve(null);
         } else {
+          console.log("[Recorder] ✅ Audio uploaded:", path);
           resolve(path);
         }
       };
