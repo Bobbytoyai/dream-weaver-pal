@@ -167,7 +167,7 @@ const HomeTab: React.FC<HomeTabProps> = ({
       <div className="grid grid-cols-2 gap-3">
         {navCards.map((card, i) => (
           <button key={card.id} onClick={() => onNavigate(card.id)}
-            className={`card-stagger-${i + 1} retro-card relative p-3 flex flex-col items-center justify-center aspect-square active:scale-95 transition-all`}
+            className={`card-stagger-${i + 1} retro-card relative p-3 flex flex-col items-center justify-center aspect-square transition-all`}
             style={{ backgroundColor: card.bg }}>
             <span className="text-[32px] mb-1 drop-shadow-sm">{card.emoji}</span>
             <span className="text-[11px] font-black text-gray-800 leading-tight text-center whitespace-pre-line">{card.label}</span>
