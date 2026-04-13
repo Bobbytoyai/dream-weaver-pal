@@ -142,6 +142,42 @@ export type Database = {
         }
         Relationships: []
       }
+      cloud_profiles: {
+        Row: {
+          child_memory_snapshot: Json
+          child_name: string
+          created_at: string
+          device_info: string | null
+          id: string
+          last_synced_at: string
+          parent_settings: Json
+          sync_code: string
+          updated_at: string
+        }
+        Insert: {
+          child_memory_snapshot?: Json
+          child_name: string
+          created_at?: string
+          device_info?: string | null
+          id?: string
+          last_synced_at?: string
+          parent_settings?: Json
+          sync_code: string
+          updated_at?: string
+        }
+        Update: {
+          child_memory_snapshot?: Json
+          child_name?: string
+          created_at?: string
+          device_info?: string | null
+          id?: string
+          last_synced_at?: string
+          parent_settings?: Json
+          sync_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conversation_analyses: {
         Row: {
           alerts: Json
