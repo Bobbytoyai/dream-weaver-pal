@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import ExpressionPreview from "@/components/ExpressionPreview";
 import AutoLearnPanel from "@/components/AutoLearnPanel";
 import AdminDetailDialog, { type DetailItem, type DetailField } from "@/components/AdminDetailDialog";
+import AdminStoreManager from "@/components/AdminStoreManager";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -2467,230 +2468,33 @@ const Admin = () => {
   }
 
   if (topSection === "store") {
-    const STORE_CATEGORIES = ["jeux", "educatif", "histoires", "blagues"];
-    const storeCatFilter = interactionCat;
-    const filteredStore = storeItems.filter(item => {
-      if (storeCatFilter && item.category !== storeCatFilter) return false;
-      if (search.trim()) {
-        const q = search.toLowerCase();
-        return item.name.toLowerCase().includes(q) || item.slug.toLowerCase().includes(q) || item.description.toLowerCase().includes(q);
-      }
-      return true;
-    });
-
-    const handleSaveStoreItem = async () => {
-      if (!editingStoreItem?.name?.trim() || !editingStoreItem?.slug?.trim()) {
-        toast.error("Nom et slug requis"); return;
-      }
-      setSavingStoreItem(true);
-      const payload = {
-        slug: editingStoreItem.slug!.trim(),
-        name: editingStoreItem.name!.trim(),
-        emoji: editingStoreItem.emoji || "📦",
-        description: editingStoreItem.description || "",
-        category: editingStoreItem.category || "jeux",
-        age_min: editingStoreItem.age_min || 3,
-        age_max: editingStoreItem.age_max || 12,
-        tags: editingStoreItem.tags || [],
-        size_label: editingStoreItem.size_label || "1 Mo",
-        is_new: editingStoreItem.is_new || false,
-        is_popular: editingStoreItem.is_popular || false,
-        is_featured: editingStoreItem.is_featured || false,
-        is_active: editingStoreItem.is_active !== false,
-      };
-      if (editingStoreItem.id) {
-        const { error } = await supabase.from("store_content").update(payload).eq("id", editingStoreItem.id);
-        if (error) toast.error(error.message); else toast.success("Mis à jour !");
-      } else {
-        const { error } = await supabase.from("store_content").insert(payload);
-        if (error) toast.error(error.message); else toast.success("Ajouté au store !");
-      }
-      setEditingStoreItem(null);
-      setSavingStoreItem(false);
-      fetchStoreItems();
-    };
-
-    const handleDeleteStoreItem = async (id: string) => {
-      if (!confirm("Supprimer ce contenu du store ?")) return;
-      const { error } = await supabase.from("store_content").delete().eq("id", id);
-      if (error) toast.error(error.message); else toast.success("Supprimé");
-      fetchStoreItems();
-    };
-
-    // Edit form
-    if (editingStoreItem) {
-      return (
-        <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
-          <div className="max-w-2xl mx-auto space-y-4">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={() => setEditingStoreItem(null)} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
-              <h1 className="text-lg font-bold text-white">{editingStoreItem.id ? "Modifier" : "Nouveau"} contenu store</h1>
-            </div>
-            <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-white/50 mb-1 block">Slug (unique)</label>
-                  <Input value={editingStoreItem.slug || ""} onChange={e => setEditingStoreItem(p => ({ ...p!, slug: e.target.value }))}
-                    placeholder="quiz_animaux" className="bg-white/10 border-white/20 text-white" />
-                </div>
-                <div>
-                  <label className="text-xs text-white/50 mb-1 block">Emoji</label>
-                  <Input value={editingStoreItem.emoji || ""} onChange={e => setEditingStoreItem(p => ({ ...p!, emoji: e.target.value }))}
-                    placeholder="🐾" className="bg-white/10 border-white/20 text-white" />
-                </div>
-              </div>
-              <div>
-                <label className="text-xs text-white/50 mb-1 block">Nom</label>
-                <Input value={editingStoreItem.name || ""} onChange={e => setEditingStoreItem(p => ({ ...p!, name: e.target.value }))}
-                  placeholder="Quiz Animaux" className="bg-white/10 border-white/20 text-white" />
-              </div>
-              <div>
-                <label className="text-xs text-white/50 mb-1 block">Description</label>
-                <Textarea value={editingStoreItem.description || ""} onChange={e => setEditingStoreItem(p => ({ ...p!, description: e.target.value }))}
-                  placeholder="Description du contenu…" className="bg-white/10 border-white/20 text-white" rows={2} />
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="text-xs text-white/50 mb-1 block">Catégorie</label>
-                  <Select value={editingStoreItem.category || "jeux"} onValueChange={v => setEditingStoreItem(p => ({ ...p!, category: v }))}>
-                    <SelectTrigger className="bg-white/10 border-white/20 text-white"><SelectValue /></SelectTrigger>
-                    <SelectContent>{STORE_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-xs text-white/50 mb-1 block">Âge min</label>
-                  <Input type="number" value={editingStoreItem.age_min || 3} onChange={e => setEditingStoreItem(p => ({ ...p!, age_min: +e.target.value }))}
-                    className="bg-white/10 border-white/20 text-white" />
-                </div>
-                <div>
-                  <label className="text-xs text-white/50 mb-1 block">Âge max</label>
-                  <Input type="number" value={editingStoreItem.age_max || 12} onChange={e => setEditingStoreItem(p => ({ ...p!, age_max: +e.target.value }))}
-                    className="bg-white/10 border-white/20 text-white" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-white/50 mb-1 block">Taille affichée</label>
-                  <Input value={editingStoreItem.size_label || ""} onChange={e => setEditingStoreItem(p => ({ ...p!, size_label: e.target.value }))}
-                    placeholder="2 Mo" className="bg-white/10 border-white/20 text-white" />
-                </div>
-                <div>
-                  <label className="text-xs text-white/50 mb-1 block">Tags (virgules)</label>
-                  <Input value={(editingStoreItem.tags || []).join(", ")}
-                    onChange={e => setEditingStoreItem(p => ({ ...p!, tags: e.target.value.split(",").map(t => t.trim()).filter(Boolean) }))}
-                    placeholder="interactif, vocal" className="bg-white/10 border-white/20 text-white" />
-                </div>
-              </div>
-              <div className="flex gap-4 items-center">
-                <label className="flex items-center gap-2 text-xs text-white/70">
-                  <Switch checked={editingStoreItem.is_new || false} onCheckedChange={v => setEditingStoreItem(p => ({ ...p!, is_new: v }))} /> NEW
-                </label>
-                <label className="flex items-center gap-2 text-xs text-white/70">
-                  <Switch checked={editingStoreItem.is_popular || false} onCheckedChange={v => setEditingStoreItem(p => ({ ...p!, is_popular: v }))} /> Populaire
-                </label>
-                <label className="flex items-center gap-2 text-xs text-white/70">
-                  <Switch checked={editingStoreItem.is_featured || false} onCheckedChange={v => setEditingStoreItem(p => ({ ...p!, is_featured: v }))} /> Featured
-                </label>
-                <label className="flex items-center gap-2 text-xs text-white/70">
-                  <Switch checked={editingStoreItem.is_active !== false} onCheckedChange={v => setEditingStoreItem(p => ({ ...p!, is_active: v }))} /> Actif
-                </label>
-              </div>
-              <div className="flex gap-2 pt-2">
-                <Button onClick={handleSaveStoreItem} disabled={savingStoreItem} className="bg-emerald-600 hover:bg-emerald-700 flex-1">
-                  {savingStoreItem ? "…" : editingStoreItem.id ? "💾 Sauvegarder" : "➕ Ajouter"}
-                </Button>
-                <Button variant="ghost" onClick={() => setEditingStoreItem(null)} className="text-white/50">Annuler</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
-        <div className="max-w-4xl mx-auto space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
-              <span className="text-2xl">🛒</span>
-              <div>
-                <h1 className="text-xl font-bold text-white">Bobby Store — Catalogue</h1>
-                <p className="text-white/40 text-xs">{storeItems.length} contenus • {storeItems.filter(i => i.is_active).length} actifs</p>
-              </div>
-            </div>
-            <Button onClick={() => setEditingStoreItem({ tags: [], category: "jeux", is_active: true, age_min: 3, age_max: 12, emoji: "📦", size_label: "1 Mo" })}
-              className="bg-emerald-600 hover:bg-emerald-700"><Plus className="w-4 h-4 mr-1" /> Ajouter</Button>
-          </div>
-
-          {/* Category filter + search */}
-          <div className="flex gap-2 items-center">
-            <div className="flex gap-1.5 overflow-x-auto">
-              <button onClick={() => setInteractionCat(null)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${!storeCatFilter ? "bg-white/20 text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}>
-                Tous
-              </button>
-              {STORE_CATEGORIES.map(cat => (
-                <button key={cat} onClick={() => setInteractionCat(storeCatFilter === cat ? null : cat)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all capitalize ${storeCatFilter === cat ? "bg-white/20 text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}>
-                  {cat}
-                </button>
-              ))}
-            </div>
-            <div className="relative flex-1">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30" />
-              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
-                className="bg-white/5 border-white/10 text-white pl-8 h-8 text-xs" />
-            </div>
-          </div>
-
-          {/* Items list */}
-          <div className="space-y-2">
-            {filteredStore.map(item => (
-              <div key={item.id} onClick={() => openStoreDetail(item)} className={`bg-white/5 backdrop-blur rounded-xl p-3 border transition-all cursor-pointer hover:bg-white/8 ${item.is_active ? "border-white/10" : "border-red-500/20 opacity-50"}`}>
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{item.emoji}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <h4 className="text-sm font-bold text-white truncate">{item.name}</h4>
-                      <span className="text-[9px] text-white/30 font-mono">{item.slug}</span>
-                      {item.is_new && <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 text-[8px] font-bold">NEW</span>}
-                      {item.is_popular && <Star className="w-3 h-3 text-amber-400 fill-amber-400" />}
-                      {item.is_featured && <Sparkles className="w-3 h-3 text-purple-400" />}
-                      {!item.is_active && <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 text-[8px] font-bold">OFF</span>}
-                    </div>
-                    <p className="text-[10px] text-white/40 truncate">{item.description}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[9px] text-white/30 capitalize">{item.category}</span>
-                      <span className="text-[9px] text-white/30">•</span>
-                      <span className="text-[9px] text-white/30">{item.age_min}-{item.age_max} ans</span>
-                      <span className="text-[9px] text-white/30">•</span>
-                      <span className="text-[9px] text-white/30">{item.size_label}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-center gap-1 shrink-0 mr-1">
-                    <span className={`text-sm font-extrabold tabular-nums ${(liveInstallCounts[item.id] || 0) > 0 ? "text-emerald-400" : "text-white/20"}`}>
-                      {liveInstallCounts[item.id] || 0}
-                    </span>
-                    <span className="text-[8px] text-white/30">installs</span>
-                  </div>
-                  <div className="flex gap-1 shrink-0">
-                    <Button variant="ghost" size="sm" onClick={() => setEditingStoreItem(item)} className="text-white/40 hover:text-white h-7 w-7 p-0">
-                      <Pencil className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDeleteStoreItem(item.id)} className="text-red-400/40 hover:text-red-400 h-7 w-7 p-0">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-            {filteredStore.length === 0 && (
-              <div className="text-center py-8 text-white/30 text-sm">Aucun contenu trouvé</div>
-            )}
-          </div>
-        </div>
-      </div>
+      <AdminStoreManager
+        storeItems={storeItems.map((s: any) => ({
+          ...s,
+          detailed_description: s.detailed_description || "",
+          is_premium: s.is_premium ?? false,
+          version_label: s.version_label || "1.0",
+          rating: s.rating ?? 4.5,
+          rating_count: s.rating_count ?? 0,
+          content_count: s.content_count ?? 0,
+          changelog: s.changelog || "",
+          creator_name: s.creator_name || "Équipe Bobby",
+          creator_role: s.creator_role || "Éducation & Divertissement",
+          learning_objectives: s.learning_objectives ?? [],
+          skills_developed: s.skills_developed ?? [],
+          duration_estimate: s.duration_estimate || "10-15 min",
+          difficulty_level: s.difficulty_level || "adaptatif",
+          languages: s.languages ?? ["fr"],
+          cover_image_url: s.cover_image_url || "",
+          screenshots: s.screenshots ?? [],
+          last_updated_at: s.last_updated_at || s.updated_at || s.created_at,
+          content_items: Array.isArray(s.content_items) ? s.content_items : [],
+        }))}
+        installCounts={liveInstallCounts}
+        onRefresh={fetchStoreItems}
+        onBack={goBack}
+      />
     );
   }
 
