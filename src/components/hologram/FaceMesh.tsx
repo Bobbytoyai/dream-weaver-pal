@@ -220,6 +220,19 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     const state = animation.update(delta);
     if (!rootRef.current) return;
 
+    // ── Breathing animation when sleeping ──
+    const isSleeping = faceState === "sleepy";
+    if (isSleeping) {
+      const breathT = performance.now() * 0.001;
+      const breathScale = 1 + Math.sin(breathT * 0.8) * 0.035; // slow gentle pulse
+      const breathY = Math.sin(breathT * 0.8) * 0.02;
+      rootRef.current.scale.set(breathScale, breathScale, 1);
+      rootRef.current.position.y = breathY;
+    } else {
+      rootRef.current.scale.set(1, 1, 1);
+      rootRef.current.position.y = 0;
+    }
+
     rootRef.current.rotation.z = state.headTiltZ * 0.3;
     rootRef.current.rotation.y = state.headTiltY * 0.15;
     rootRef.current.rotation.x = state.headTiltX * 0.08;
