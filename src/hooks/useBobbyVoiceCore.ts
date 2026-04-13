@@ -504,7 +504,24 @@ export function useBobbyVoiceCore({
 
   useEffect(() => {
     finalTranscriptRef.current = (text) => {
-      void handleFinalTranscript(text);
+      // Accumulate fragments — don't process immediately, wait for child to finish
+      const trimmed = text.trim();
+      if (!trimmed) return;
+
+      utteranceBufferRef.current.push(trimmed);
+      setPartialText(utteranceBufferRef.current.join(" "));
+
+      // Reset the debounce timer each time a new fragment arrives
+      if (utteranceTimerRef.current) clearTimeout(utteranceTimerRef.current);
+      utteranceTimerRef.current = setTimeout(() => {
+        // Child has been silent for UTTERANCE_BUFFER_MS — now process the full sentence
+        const fullText = utteranceBufferRef.current.join(" ").trim();
+        utteranceBufferRef.current = [];
+        utteranceTimerRef.current = null;
+        if (fullText) {
+          void handleFinalTranscript(fullText);
+        }
+      }, UTTERANCE_BUFFER_MS);
     };
   }, [handleFinalTranscript]);
 
