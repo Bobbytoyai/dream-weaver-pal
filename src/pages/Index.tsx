@@ -25,37 +25,30 @@ const Index = () => {
 
   // ── Bind this LCD to a bobby_code for realtime sync ──
   useEffect(() => {
-    // Try to find the bobby code this device is linked to
-    const findLinkedCode = async () => {
-      let codeId = localStorage.getItem(BOBBY_CODE_KEY);
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
 
-      if (!codeId) {
-        // Find any claimed bobby code (for dev, grab the first one with session_data)
-        const { data } = await supabase
-          .from("bobby_codes")
-          .select("id, session_data")
-          .not("claimed_at", "is", null)
-          .limit(1)
-          .maybeSingle();
+    const bindToCode = async (codeId: string) => {
+      if (cancelled) return;
+      localStorage.setItem(BOBBY_CODE_KEY, codeId);
 
-        if (data) {
-          codeId = data.id;
-          localStorage.setItem(BOBBY_CODE_KEY, codeId);
+      // Load initial settings
+      const { data } = await supabase
+        .from("bobby_codes")
+        .select("session_data")
+        .eq("id", codeId)
+        .maybeSingle();
 
-          // Load initial settings from DB
-          const sd = data.session_data as Record<string, any> | null;
-          if (sd?.parentSettings) {
-            const merged = { ...DEFAULT_PARENT_SETTINGS, ...sd.parentSettings };
-            setParentSettings(merged);
-            localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));
-          }
-        }
+      if (cancelled) return;
+      const sd = data?.session_data as Record<string, any> | null;
+      if (sd?.parentSettings) {
+        const merged = { ...DEFAULT_PARENT_SETTINGS, ...sd.parentSettings };
+        setParentSettings(merged);
+        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));
       }
 
-      if (!codeId) return;
-
-      // ── Subscribe to realtime changes on this bobby_code ──
-      const channel = supabase
+      // Subscribe to realtime changes
+      channel = supabase
         .channel(`lcd-sync-${codeId}`)
         .on(
           "postgres_changes",
@@ -71,18 +64,56 @@ const Index = () => {
               const merged = { ...DEFAULT_PARENT_SETTINGS, ...sd.parentSettings };
               setParentSettings(merged);
               localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));
-              console.log("[LCD] ⚡ Realtime sync — settings updated from parent");
+              console.log("[LCD] ⚡ Realtime sync — settings updated");
             }
           }
         )
         .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
     };
 
-    findLinkedCode();
+    const init = async () => {
+      // 1. Check localStorage first
+      const savedId = localStorage.getItem(BOBBY_CODE_KEY);
+      if (savedId) {
+        await bindToCode(savedId);
+        return;
+      }
+
+      // 2. Find any claimed bobby_code
+      const { data } = await supabase
+        .from("bobby_codes")
+        .select("id")
+        .not("claimed_at", "is", null)
+        .limit(1)
+        .maybeSingle();
+
+      if (data) {
+        await bindToCode(data.id);
+        return;
+      }
+
+      // 3. No claimed code yet — poll every 3s until one appears
+      const poll = setInterval(async () => {
+        if (cancelled) { clearInterval(poll); return; }
+        const { data } = await supabase
+          .from("bobby_codes")
+          .select("id")
+          .not("claimed_at", "is", null)
+          .limit(1)
+          .maybeSingle();
+        if (data) {
+          clearInterval(poll);
+          await bindToCode(data.id);
+        }
+      }, 3000);
+    };
+
+    init();
+
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+    };
   }, []);
 
   // Also keep localStorage sync for same-device tabs
