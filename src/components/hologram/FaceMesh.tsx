@@ -382,7 +382,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(ps);
     if (rightPupilRef.current) rightPupilRef.current.scale.setScalar(ps);
 
-    // Eyelids — scale from top within eye bounds
+    // Eyelids — slide rectangle down from above to cover eye
     const blinkClose = 1 - state.eyeOpenness;
     const isSleepingNow = faceState === "sleepy";
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
@@ -398,28 +398,29 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         
         ref.current.visible = true;
         
-        // Fast snap blink — steep ease curve
+        // Fast snap blink easing
         const t = coverAmount;
         const easedCover = t < 0.5
           ? 4 * t * t * t
           : 1 - Math.pow(-2 * t + 2, 3) / 2;
         
-        // Scale Y from 0 (open) to 1 (closed) — eyelid grows from top of eye downward
-        let scaleY = easedCover;
+        // Slide from hidden above (0.60) to fully covering (-0.02)
+        const hiddenY = 0.60;
+        const closedY = -0.02;
+        let targetY = hiddenY - easedCover * (hiddenY - closedY);
         
-        // Sleeping: full cover with gentle bounces revealing bottom of eyes
+        // Sleeping: gentle bounces that lift lid to reveal bottom of eyes
         if (isSleepingNow) {
           const flutterT = performance.now() * 0.001;
-          // Slow breathing bounce — lifts lid slightly to peek bottom of eye
-          const breathBounce = Math.max(0, Math.sin(flutterT * 0.4)) * 0.12;
-          // Occasional bigger peek — shows more of the eye bottom briefly
+          const breathLift = Math.max(0, Math.sin(flutterT * 0.4)) * 0.08;
           const bigPeek = Math.sin(flutterT * 0.08) > 0.88
-            ? Math.max(0, Math.sin(flutterT * 0.7)) * 0.18
+            ? Math.max(0, Math.sin(flutterT * 0.7)) * 0.14
             : 0;
-          scaleY = 1.0 - Math.max(breathBounce, bigPeek);
+          targetY += Math.max(breathLift, bigPeek);
         }
         
-        ref.current.scale.set(1, Math.max(0, scaleY), 1);
+        ref.current.position.y = targetY;
+        ref.current.scale.set(1, 1, 1);
         
         // Transparency: semi-transparent during blinks, opaque when sleeping
         if (isSleepingNow) {
@@ -545,14 +546,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={hl1Ref} position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       {/* hl2 hidden — single highlight per eye */}
       <mesh ref={hl2Ref} position={[hl1[0], hl1[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} visible={false} />
-      {/* Eyelid — clipped to eye shape, scales from top */}
-      <mesh ref={eyelidRef} position={[0, 0.27, 0.044]} material={eyelidMat} scale={[1, 0, 1]}>
-        <shapeGeometry args={[(() => {
-          const s = new THREE.Shape();
-          // Same ellipse as eye white (0.33, 0.27) but shifted so top edge is at y=0
-          s.absellipse(0, -0.27, 0.33, 0.27, 0, Math.PI * 2, false, 0);
-          return s;
-        })(), 32]} />
+      {/* Eyelid — large rect sliding down from above */}
+      <mesh ref={eyelidRef} position={[0, 0.60, 0.044]} material={eyelidMat}>
+        <planeGeometry args={[0.72, 0.58]} />
       </mesh>
     </group>
   );
