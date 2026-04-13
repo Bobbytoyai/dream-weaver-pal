@@ -146,31 +146,32 @@ function SleepZzz() {
     if (!groupRef.current) return;
     zLetters.current.forEach((mesh, i) => {
       if (!mesh) return;
-      phases.current[i] += delta * 0.6;
-      const p = phases.current[i] % 3; // 3s cycle
-      const t = p / 3; // 0→1
+      phases.current[i] += delta * 0.5;
+      const p = phases.current[i] % 4; // 4s cycle
+      const t = p / 4; // 0→1
 
-      // Float up and right, growing then fading
-      mesh.position.x = 0.6 + t * 0.5 + i * 0.15;
-      mesh.position.y = 0.2 + t * 1.2;
-      mesh.position.z = 0.1;
+      // Float up and right, growing then fading — 5x bigger
+      mesh.position.x = 0.8 + t * 1.2 + i * 0.4;
+      mesh.position.y = 0.3 + t * 2.5;
+      mesh.position.z = 0.15;
 
-      const scale = (0.5 + i * 0.25) * (0.3 + Math.sin(t * Math.PI) * 0.7);
+      const scale = (2.5 + i * 1.2) * (0.3 + Math.sin(t * Math.PI) * 0.7);
       mesh.scale.setScalar(scale);
 
       // Gentle wobble
-      mesh.rotation.z = Math.sin(phases.current[i] * 2) * 0.15;
+      mesh.rotation.z = Math.sin(phases.current[i] * 1.8) * 0.2;
 
       const mat = mesh.material as THREE.MeshBasicMaterial;
-      // Fade in then out
-      mat.opacity = Math.sin(t * Math.PI) * 0.7;
+      // Fade in then out — stronger opacity
+      mat.opacity = Math.sin(t * Math.PI) * 0.9;
     });
   });
 
+  // Dark purple colors for Z's
   const zMat = useMemo(() => [
-    new THREE.MeshBasicMaterial({ color: "#8888ff", transparent: true, opacity: 0 }),
-    new THREE.MeshBasicMaterial({ color: "#aaaaff", transparent: true, opacity: 0 }),
-    new THREE.MeshBasicMaterial({ color: "#ccccff", transparent: true, opacity: 0 }),
+    new THREE.MeshBasicMaterial({ color: "#6B21A8", transparent: true, opacity: 0 }),
+    new THREE.MeshBasicMaterial({ color: "#7C3AED", transparent: true, opacity: 0 }),
+    new THREE.MeshBasicMaterial({ color: "#8B5CF6", transparent: true, opacity: 0 }),
   ], []);
 
   // Simple Z shape using a plane (text would need font loading)
@@ -198,19 +199,19 @@ function SleepZzz() {
           material={zMat[i]}
           position={[0.6 + i * 0.15, 0.2, 0.1]}
         >
-          {/* Z shape built from 3 thin boxes */}
+          {/* Z shape built from 3 thick boxes — 5x bigger */}
           <group>
             {/* Top bar */}
             <mesh position={[0, 0.06, 0]} material={zMat[i]}>
-              <boxGeometry args={[0.14, 0.025, 0.01]} />
+              <boxGeometry args={[0.16, 0.035, 0.02]} />
             </mesh>
             {/* Diagonal */}
             <mesh position={[0, 0, 0]} rotation={[0, 0, -0.65]} material={zMat[i]}>
-              <boxGeometry args={[0.18, 0.02, 0.01]} />
+              <boxGeometry args={[0.20, 0.03, 0.02]} />
             </mesh>
             {/* Bottom bar */}
             <mesh position={[0, -0.06, 0]} material={zMat[i]}>
-              <boxGeometry args={[0.14, 0.025, 0.01]} />
+              <boxGeometry args={[0.16, 0.035, 0.02]} />
             </mesh>
           </group>
         </mesh>

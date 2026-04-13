@@ -377,7 +377,7 @@ export function useFaceAnimation(
     let sleepyEyeWobble = 0;
     let sleepyHeadBob = 0;
     if (faceState === "sleepy") {
-      sleepyEyeWobble = -0.2; // Force eyes shut
+      sleepyEyeWobble = -1.0; // Force eyes completely shut
       sleepyHeadBob = Math.sin(breathPhase.current * 0.4) * 0.03; // slow nod
     }
 
