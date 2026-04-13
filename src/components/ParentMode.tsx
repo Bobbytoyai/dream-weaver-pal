@@ -3577,42 +3577,26 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           )}
         </div>
 
-        {/* ── Quick actions: 2 large + 2 medium ── */}
-        <div className="grid grid-cols-2 gap-3">
-          {/* Dashboard */}
-          <button onClick={() => setActiveTab("dashboard")}
-            className="bg-gradient-to-br from-primary/18 to-primary/5 rounded-3xl p-4 flex flex-col items-center justify-center border-2 border-border/15 hover:border-primary/40 hover:shadow-lg transition-all active:scale-[0.96] aspect-[4/3]">
-            <span className="text-4xl mb-2">📊</span>
-            <h3 className="text-[15px] font-extrabold text-foreground">Tableau de bord</h3>
-            <p className="text-[10px] text-muted-foreground font-medium mt-0.5">Vue d'ensemble</p>
-          </button>
-          {/* Sessions */}
-          <button onClick={() => setActiveTab("sessions")}
-            className="relative bg-gradient-to-br from-accent/25 to-accent/5 rounded-3xl p-4 flex flex-col items-center justify-center border-2 border-border/15 hover:border-primary/40 hover:shadow-lg transition-all active:scale-[0.96] aspect-[4/3]">
-            <span className="text-4xl mb-2">💬</span>
-            <h3 className="text-[15px] font-extrabold text-foreground">Sessions</h3>
-            <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{sessions.length} conversations</p>
-            {(sessions.filter(s => !analyses.some(a => a.session_id === s.id)).length || 0) > 0 && (
-              <span className="absolute top-2.5 right-2.5 min-w-[22px] h-[22px] px-1.5 rounded-full bg-destructive text-destructive-foreground text-[11px] font-bold flex items-center justify-center shadow-md">
-                {sessions.filter(s => !analyses.some(a => a.session_id === s.id)).length}
-              </span>
-            )}
-          </button>
-        </div>
-
-        {/* ── Secondary grid: smaller cards ── */}
+        {/* ── 6 square cards — 3x2 grid ── */}
         <div className="grid grid-cols-3 gap-2.5">
           {[
-            { id: "activites" as Tab, emoji: "🛒", label: "Bobby Store", color: "from-secondary/25 to-secondary/5" },
-            { id: "cloud" as Tab, emoji: "☁️", label: "Cloud", color: "from-blue-500/18 to-purple-400/8" },
-            { id: "profil" as Tab, emoji: "👤", label: "Profil", color: "from-primary/12 to-primary/3" },
-            { id: "reglages" as Tab, emoji: "⚙️", label: "Réglages", color: "from-muted/80 to-muted/30" },
-            { id: "confidentialite" as Tab, emoji: "🔒", label: "Sécurité", color: "from-destructive/10 to-destructive/3" },
+            { id: "dashboard" as Tab, emoji: "📊", label: "Tableau de bord", color: "from-blue-400/25 to-indigo-400/10", border: "border-blue-300/25" },
+            { id: "sessions" as Tab, emoji: "💬", label: "Sessions", color: "from-emerald-400/25 to-teal-400/10", border: "border-emerald-300/25",
+              badge: sessions.filter(s => !analyses.some(a => a.session_id === s.id)).length || undefined },
+            { id: "activites" as Tab, emoji: "🛒", label: "Bobby Store", color: "from-orange-400/25 to-amber-400/10", border: "border-orange-300/25" },
+            { id: "cloud" as Tab, emoji: "☁️", label: "Bobby Cloud", color: "from-violet-400/25 to-purple-400/10", border: "border-violet-300/25" },
+            { id: "profil" as Tab, emoji: "👤", label: "Profil", color: "from-pink-400/25 to-rose-400/10", border: "border-pink-300/25" },
+            { id: "reglages" as Tab, emoji: "⚙️", label: "Réglages", color: "from-cyan-400/25 to-sky-400/10", border: "border-cyan-300/25" },
           ].map(card => (
             <button key={card.id} onClick={() => setActiveTab(card.id)}
-              className={`bg-gradient-to-br ${card.color} rounded-2xl p-3 flex flex-col items-center justify-center border border-border/15 hover:border-primary/30 hover:shadow-md transition-all active:scale-[0.95] aspect-square`}>
-              <span className="text-3xl mb-1">{card.emoji}</span>
-              <span className="text-[12px] font-extrabold text-foreground leading-tight text-center">{card.label}</span>
+              className={`relative bg-gradient-to-br ${card.color} rounded-[20px] p-3 flex flex-col items-center justify-center border-2 ${card.border} hover:shadow-lg hover:scale-[1.03] transition-all active:scale-[0.94] aspect-square`}>
+              <span className="text-[36px] mb-1 drop-shadow-sm">{card.emoji}</span>
+              <span className="text-[13px] font-black text-foreground leading-tight text-center tracking-tight" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>{card.label}</span>
+              {card.badge && card.badge > 0 && (
+                <span className="absolute top-1.5 right-1.5 min-w-[20px] h-[20px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-black flex items-center justify-center shadow-md">
+                  {card.badge}
+                </span>
+              )}
             </button>
           ))}
         </div>
