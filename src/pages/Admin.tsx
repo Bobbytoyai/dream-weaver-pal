@@ -367,9 +367,17 @@ const Admin = () => {
   const [chartEmotions, setChartEmotions] = useState<EmotionData[]>([]);
 
   const EMOTION_COLORS: Record<string, string> = {
-    happy: "#34d399", sad: "#60a5fa", angry: "#f87171", scared: "#fbbf24",
-    surprised: "#a78bfa", neutral: "#94a3b8", excited: "#f472b6", curious: "#2dd4bf",
-    love: "#fb7185", proud: "#818cf8", shy: "#c084fc", frustrated: "#fb923c",
+    happy: "#22c55e", sad: "#3b82f6", angry: "#ef4444", scared: "#eab308",
+    surprised: "#8b5cf6", neutral: "#64748b", excited: "#ec4899", curious: "#06b6d4",
+    love: "#f43f5e", proud: "#6366f1", shy: "#a855f7", frustrated: "#f97316",
+    joie: "#22c55e", tristesse: "#3b82f6", colère: "#ef4444", peur: "#eab308",
+    anxiété: "#f59e0b", frustration: "#f97316", curiosité: "#06b6d4", amour: "#f43f5e",
+    fierté: "#6366f1", timidité: "#a855f7", surprise: "#8b5cf6", excité: "#ec4899",
+  };
+  const EMOTION_LABELS: Record<string, string> = {
+    happy: "joie", sad: "tristesse", angry: "colère", scared: "peur",
+    surprised: "surprise", neutral: "neutre", excited: "excité", curious: "curiosité",
+    love: "amour", proud: "fierté", shy: "timidité", frustrated: "frustration",
   };
 
   const fetchChartData = useCallback(async () => {
@@ -2984,12 +2992,12 @@ const Admin = () => {
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="flex-1 space-y-1.5">
+                <div className="flex-1 space-y-2">
                   {chartEmotions.map((e, i) => (
                     <div key={i} className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: e.color }} />
-                      <span className="text-[11px] flex-1" style={{ color: "var(--admin-text-secondary)" }}>{e.name}</span>
-                      <span className="text-[11px] font-bold tabular-nums" style={{ color: "var(--admin-text-muted)" }}>{e.value}</span>
+                      <div className="w-3 h-3 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: e.color }} />
+                      <span className="text-[12px] font-bold flex-1" style={{ color: "var(--admin-text)" }}>{EMOTION_LABELS[e.name] || e.name}</span>
+                      <span className="text-[13px] font-black tabular-nums" style={{ color: e.color }}>{e.value}</span>
                     </div>
                   ))}
                 </div>
