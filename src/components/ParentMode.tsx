@@ -1148,12 +1148,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           { value: formatDuration(totalDuration), label: "Temps total", emoji: "⏱️", gradient: "from-purple-400/30 to-violet-400/10", border: "border-purple-300/25" },
           { value: todaySessions.length, label: "Aujourd'hui", emoji: "📅", gradient: "from-amber-400/30 to-orange-400/10", border: "border-amber-300/25" },
           { value: avgMessagesPerSession, label: "Msg/session", emoji: "📊", gradient: "from-pink-400/30 to-rose-400/10", border: "border-pink-300/25" },
-          { value: `${recentAnalyses.length}`, label: "Analyses", emoji: "🔬", gradient: "from-cyan-400/30 to-sky-400/10", border: "border-cyan-300/25" },
+          { value: `${recentAnalyses.length}/${totalSessions}`, label: "Analysées", emoji: "🔬", gradient: "from-cyan-400/30 to-sky-400/10", border: "border-cyan-300/25" },
         ].map((kpi) => (
-          <div key={kpi.label} className={`bg-gradient-to-br ${kpi.gradient} rounded-[18px] p-3 border-2 ${kpi.border} text-center`}>
-            <span className="text-[28px] block mb-0.5 drop-shadow-sm">{kpi.emoji}</span>
-            <p className="text-[20px] font-black text-foreground leading-none">{kpi.value}</p>
-            <p className="text-[10px] text-muted-foreground font-bold mt-1">{kpi.label}</p>
+          <div key={kpi.label} className={`bg-gradient-to-br ${kpi.gradient} rounded-[18px] p-2.5 border-2 ${kpi.border} text-center`}>
+            <span className="text-[24px] block mb-0.5 drop-shadow-sm">{kpi.emoji}</span>
+            <p className="text-[17px] font-black text-foreground leading-none truncate">{kpi.value}</p>
+            <p className="text-[9px] text-muted-foreground font-bold mt-0.5 truncate">{kpi.label}</p>
           </div>
         ))}
       </div>
@@ -3274,17 +3274,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
 
           {todaySessions.length > 0 && (
-            <div className="grid grid-cols-4 gap-1.5">
+            <div className="grid grid-cols-4 gap-1">
               {[
                 { emoji: "💬", value: todayMessages, label: "Messages", bg: "from-blue-400/20 to-blue-300/5" },
                 { emoji: "⏱️", value: todayDuration >= 60 ? `${Math.round(todayDuration / 60)}m` : `${todayDuration}s`, label: "Durée", bg: "from-emerald-400/20 to-emerald-300/5" },
-                { emoji: avgEngagement > 0.5 ? "🔥" : avgEngagement > 0 ? "👍" : "💤", value: avgEngagement > 0.5 ? "Fort" : avgEngagement > 0 ? "Bon" : "—", label: "Engagement", bg: "from-orange-400/20 to-orange-300/5" },
-                { emoji: topEmotion ? (emotionLabels[topEmotion[0]]?.emoji || "😊") : "—", value: topEmotion ? (emotionLabels[topEmotion[0]]?.label || topEmotion[0]).slice(0, 6) : "—", label: "Émotion", bg: "from-pink-400/20 to-pink-300/5" },
+                { emoji: avgEngagement > 0.5 ? "🔥" : avgEngagement > 0 ? "👍" : "💤", value: avgEngagement > 0.5 ? "Fort" : avgEngagement > 0 ? "Bon" : "—", label: "Engage.", bg: "from-orange-400/20 to-orange-300/5" },
+                { emoji: topEmotion ? (emotionLabels[topEmotion[0]]?.emoji || "😊") : "—", value: topEmotion ? (emotionLabels[topEmotion[0]]?.label || topEmotion[0]).slice(0, 5) : "—", label: "Émotion", bg: "from-pink-400/20 to-pink-300/5" },
               ].map(s => (
-                <div key={s.label} className={`bg-gradient-to-br ${s.bg} rounded-[14px] p-2 text-center border border-white/10`}>
-                  <span className="text-[16px] block">{s.emoji}</span>
-                  <p className="text-[14px] font-black text-foreground leading-tight">{s.value}</p>
-                  <p className="text-[8px] text-muted-foreground font-bold">{s.label}</p>
+                <div key={s.label} className={`bg-gradient-to-br ${s.bg} rounded-[14px] py-2 px-1 text-center border border-white/10`}>
+                  <span className="text-[14px] block">{s.emoji}</span>
+                  <p className="text-[13px] font-black text-foreground leading-tight truncate">{s.value}</p>
+                  <p className="text-[7px] text-muted-foreground font-bold truncate">{s.label}</p>
                 </div>
               ))}
             </div>
@@ -3362,9 +3362,9 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
         })()}
 
         {/* ── 5 square cards — grid ── */}
-        <div className="grid grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-3 gap-2">
           {[
-            { id: "dashboard" as Tab, emoji: "📊", label: "Tableau de bord", color: "from-blue-400/25 to-indigo-400/10", border: "border-blue-300/25" },
+            { id: "dashboard" as Tab, emoji: "📊", label: "Tableau de\nbord", color: "from-blue-400/25 to-indigo-400/10", border: "border-blue-300/25" },
             { id: "sessions" as Tab, emoji: "💬", label: "Sessions", color: "from-emerald-400/25 to-teal-400/10", border: "border-emerald-300/25",
               badge: sessions.filter(s => !analyses.some(a => a.session_id === s.id)).length || undefined },
             { id: "activites" as Tab, emoji: "🛒", label: "Bobby Store", color: "from-orange-400/25 to-amber-400/10", border: "border-orange-300/25" },
@@ -3373,11 +3373,11 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             { id: "reglages" as Tab, emoji: "⚙️", label: "Réglages", color: "from-cyan-400/25 to-sky-400/10", border: "border-cyan-300/25" },
           ].map((card, i) => (
             <button key={card.id} onClick={() => setActiveTab(card.id)}
-              className={`card-stagger-${i + 1} relative bg-gradient-to-br ${card.color} rounded-[20px] p-3 flex flex-col items-center justify-center border-2 ${card.border} hover:shadow-lg hover:scale-[1.03] transition-all active:scale-[0.94] aspect-square`}>
-              <span className="text-[36px] mb-1 drop-shadow-sm">{card.emoji}</span>
-              <span className="text-[13px] font-black text-foreground leading-tight text-center tracking-tight" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>{card.label}</span>
+              className={`card-stagger-${i + 1} relative bg-gradient-to-br ${card.color} rounded-[20px] p-2.5 flex flex-col items-center justify-center border-2 ${card.border} hover:shadow-lg hover:scale-[1.03] transition-all active:scale-[0.94] aspect-square`}>
+              <span className="text-[32px] mb-1 drop-shadow-sm">{card.emoji}</span>
+              <span className="text-[11px] font-black text-foreground leading-tight text-center whitespace-pre-line" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>{card.label}</span>
               {card.badge && card.badge > 0 && (
-                <span className="absolute top-1.5 right-1.5 min-w-[20px] h-[20px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-black flex items-center justify-center shadow-md">
+                <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-black flex items-center justify-center shadow-md">
                   {card.badge}
                 </span>
               )}
