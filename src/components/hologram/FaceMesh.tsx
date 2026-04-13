@@ -81,9 +81,9 @@ function buildEyebrowShape(_archHeight: number = 0.06): THREE.Shape {
 // Upper lip: a curved arc (smile/frown)
 function buildUpperLipShape(curve: number, width: number): THREE.Shape {
   const shape = new THREE.Shape();
-  const halfW = 0.14 + width * 0.10;
-  const depth = curve * 0.14;
-  const thickness = 0.032;
+  const halfW = 0.20 + width * 0.12;
+  const depth = curve * 0.20;
+  const thickness = 0.035;
 
   shape.moveTo(-halfW, 0);
   shape.quadraticCurveTo(0, -depth, halfW, 0);
@@ -95,15 +95,13 @@ function buildUpperLipShape(curve: number, width: number): THREE.Shape {
 // Lower lip: drops down when mouth opens
 function buildLowerLipShape(curve: number, width: number, openness: number, round: number): THREE.Shape {
   const shape = new THREE.Shape();
-  const halfW = (0.14 + width * 0.10) * (1 - round * 0.3);
-  const depth = curve * 0.14;
-  const dropAmount = openness * 0.25 + round * 0.18;
-  const thickness = 0.025;
+  const halfW = (0.20 + width * 0.12) * (1 - round * 0.3);
+  const depth = curve * 0.20;
+  const dropAmount = openness * 0.28 + round * 0.18;
+  const thickness = 0.028;
 
-  // Start from lip line
   shape.moveTo(-halfW, 0);
   shape.quadraticCurveTo(0, -depth, halfW, 0);
-  // Drop down for open mouth
   shape.quadraticCurveTo(0, -depth + dropAmount + thickness, -halfW, 0);
 
   return shape;
@@ -112,9 +110,9 @@ function buildLowerLipShape(curve: number, width: number, openness: number, roun
 // Interior fill when mouth is open (dark inside)
 function buildMouthInteriorShape(curve: number, width: number, openness: number, round: number): THREE.Shape {
   const shape = new THREE.Shape();
-  const halfW = (0.10 + width * 0.08) * (1 - round * 0.3);
-  const depth = curve * 0.10;
-  const dropAmount = openness * 0.22 + round * 0.15;
+  const halfW = (0.15 + width * 0.10) * (1 - round * 0.3);
+  const depth = curve * 0.15;
+  const dropAmount = openness * 0.24 + round * 0.15;
 
   shape.moveTo(-halfW, -0.01);
   shape.quadraticCurveTo(0, -depth - 0.01, halfW, -0.01);
