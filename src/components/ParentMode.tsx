@@ -3320,26 +3320,26 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       : 0;
 
     return (
-      <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>
+      <div className="p-4 space-y-4" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif" }}>
         {/* Quick alerts */}
         {unreadAlertCount > 0 && (
           <button onClick={() => setShowNotifPanel(true)}
-            className="w-full bg-destructive/5 border-2 border-destructive/20 rounded-[18px] p-3 flex items-center gap-3 hover:bg-destructive/10 transition-colors">
+            className="w-full retro-card p-3 flex items-center gap-3 hover:translate-y-[-2px] transition-all" style={{ backgroundColor: 'var(--retro-red)' }}>
             <span className="text-xl">🔔</span>
             <div className="flex-1 text-left">
-              <p className="text-[13px] font-black text-destructive">{unreadAlertCount} alerte{unreadAlertCount > 1 ? "s" : ""}</p>
-              <p className="text-[10px] text-muted-foreground font-bold">Touchez pour voir</p>
+              <p className="text-[13px] font-black text-gray-800">{unreadAlertCount} alerte{unreadAlertCount > 1 ? "s" : ""}</p>
+              <p className="text-[10px] text-gray-600 font-bold">Touchez pour voir</p>
             </div>
-            <ChevronRight className="w-4 h-4 text-destructive" />
+            <ChevronRight className="w-4 h-4 text-gray-800" />
           </button>
         )}
 
-        {/* ── Hero: Daily Summary ── */}
-        <div className="hero-fade-in bg-gradient-to-br from-blue-400/20 via-violet-400/12 to-pink-400/10 rounded-[22px] p-5 border-2 border-blue-300/20">
+        {/* ── Hero: Daily Summary — retro card ── */}
+        <div className="hero-fade-in retro-card p-5" style={{ backgroundColor: 'var(--retro-blue)' }}>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-[22px] font-black text-foreground">Bonjour 👋</h2>
-              <p className="text-[12px] text-muted-foreground font-bold mt-0.5">
+              <h2 className="text-[22px] font-black text-gray-800">Bonjour 👋</h2>
+              <p className="text-[12px] text-gray-600 font-bold mt-0.5">
                 {todaySessions.length > 0
                   ? `${displayName} a eu ${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} aujourd'hui`
                   : `${displayName} n'a pas encore parlé à Bobby`
@@ -3350,17 +3350,17 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           </div>
 
           {todaySessions.length > 0 && (
-            <div className="grid grid-cols-4 gap-1">
+            <div className="grid grid-cols-4 gap-2">
               {[
-                { emoji: "💬", value: todayMessages, label: "Messages", bg: "from-blue-400/20 to-blue-300/5" },
-                { emoji: "⏱️", value: todayDuration >= 60 ? `${Math.round(todayDuration / 60)}m` : `${todayDuration}s`, label: "Durée", bg: "from-emerald-400/20 to-emerald-300/5" },
-                { emoji: avgEngagement > 0.5 ? "🔥" : avgEngagement > 0 ? "👍" : "💤", value: avgEngagement > 0.5 ? "Fort" : avgEngagement > 0 ? "Bon" : "—", label: "Engage.", bg: "from-orange-400/20 to-orange-300/5" },
-                { emoji: topEmotion ? (emotionLabels[topEmotion[0]]?.emoji || "😊") : "—", value: topEmotion ? (emotionLabels[topEmotion[0]]?.label || topEmotion[0]).slice(0, 5) : "—", label: "Émotion", bg: "from-pink-400/20 to-pink-300/5" },
+                { emoji: "💬", value: todayMessages, label: "Messages", bg: "var(--retro-green)" },
+                { emoji: "⏱️", value: todayDuration >= 60 ? `${Math.round(todayDuration / 60)}m` : `${todayDuration}s`, label: "Durée", bg: "var(--retro-yellow)" },
+                { emoji: avgEngagement > 0.5 ? "🔥" : avgEngagement > 0 ? "👍" : "💤", value: avgEngagement > 0.5 ? "Fort" : avgEngagement > 0 ? "Bon" : "—", label: "Engage.", bg: "var(--retro-purple)" },
+                { emoji: topEmotion ? (emotionLabels[topEmotion[0]]?.emoji || "😊") : "—", value: topEmotion ? (emotionLabels[topEmotion[0]]?.label || topEmotion[0]).slice(0, 5) : "—", label: "Émotion", bg: "var(--retro-red)" },
               ].map(s => (
-                <div key={s.label} className={`bg-gradient-to-br ${s.bg} rounded-[14px] py-2 px-1 text-center border border-white/10`}>
+                <div key={s.label} className="border-2 border-black py-2 px-1 text-center" style={{ backgroundColor: s.bg }}>
                   <span className="text-[14px] block">{s.emoji}</span>
-                  <p className="text-[13px] font-black text-foreground leading-tight truncate">{s.value}</p>
-                  <p className="text-[7px] text-muted-foreground font-bold truncate">{s.label}</p>
+                  <p className="text-[13px] font-black text-gray-800 leading-tight truncate">{s.value}</p>
+                  <p className="text-[7px] text-gray-600 font-bold truncate">{s.label}</p>
                 </div>
               ))}
             </div>
