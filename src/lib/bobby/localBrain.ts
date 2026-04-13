@@ -1750,26 +1750,6 @@ const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, Respons
     },
   },
 
-  AMOUREUX: {
-    default: {
-      empathy: [
-        "Ohhh, c'est trop mignon ! 😊💛",
-        "Aww, l'amour c'est beau !",
-        "Oh là là, c'est une grande nouvelle ! 💛",
-      ],
-      response: [
-        "C'est super d'avoir quelqu'un qu'on aime bien !",
-        "Tu dois être content ! L'amour ça rend heureux 😊",
-        "C'est vraiment chouette de ressentir ça !",
-      ],
-      opening: [
-        "Tu veux me raconter ? Comment tu l'as rencontrée ?",
-        "Et elle, tu sais si elle t'aime bien aussi ? 😊",
-        "Qu'est-ce que tu aimes le plus chez elle ?",
-      ],
-    },
-  },
-
   ACTIVITE: {
     default: {
       empathy: [
