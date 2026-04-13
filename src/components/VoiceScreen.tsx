@@ -256,12 +256,6 @@ const VoiceScreen = ({
           />
         </div>
 
-        {/* State label — only shown when there's text to display */}
-        {stateLabel && (
-          <p className="mt-4 text-sm font-bold text-foreground/70 tracking-wide text-center px-4">
-            {stateLabel}
-          </p>
-        )}
 
         {/* Bobby text (AI response) */}
         {sm.machineState === "SPEAKING" && sm.bobbyText && (
