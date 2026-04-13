@@ -1964,30 +1964,30 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                 )}
 
                 {/* Expand sessions */}
-                <div className="border-t border-border/20 pt-2">
+                <div className="border-t border-border/20 pt-3">
                   <details className="group">
-                    <summary className="text-[11px] text-primary font-semibold cursor-pointer flex items-center gap-1 hover:underline">
-                      <ChevronRight className="w-3 h-3 transition-transform group-open:rotate-90" />
+                    <summary className="text-[14px] text-primary font-bold cursor-pointer flex items-center gap-1.5 hover:underline">
+                      <ChevronRight className="w-4 h-4 transition-transform group-open:rotate-90" />
                       Voir les {day.daySessions.length} session{day.daySessions.length > 1 ? "s" : ""}
                     </summary>
-                    <div className="mt-2 space-y-1.5">
+                    <div className="mt-3 space-y-2">
                       {day.daySessions.map(session => {
                         const analysis = analyses.find(a => a.session_id === session.id);
                         const sMood = moodLabels[(analysis?.mood_score || "neutral")] || moodLabels.neutral;
                         return (
                           <button key={session.id} onClick={() => analyzeSession(session)}
-                            className="w-full text-left bg-muted/30 rounded-xl p-3 hover:bg-muted/60 transition-all flex items-center gap-3">
-                            <span className="text-[13px]">{sMood.emoji}</span>
+                            className="w-full text-left bg-muted/30 rounded-2xl p-4 hover:bg-muted/60 transition-all flex items-center gap-3">
+                            <span className="text-lg">{sMood.emoji}</span>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className="text-[12px] font-semibold text-foreground">
+                                <span className="text-[14px] font-bold text-foreground">
                                   {new Date(session.started_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
                                 </span>
-                                <span className="text-[10px] text-muted-foreground">{formatDuration(session.duration_seconds)} • {session.message_count} msg</span>
+                                <span className="text-[12px] text-muted-foreground font-semibold">{formatDuration(session.duration_seconds)} • {session.message_count} msg</span>
                               </div>
-                              {analysis?.summary && <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{analysis.summary}</p>}
+                              {analysis?.summary && <p className="text-[12px] text-muted-foreground mt-1 truncate">{analysis.summary}</p>}
                             </div>
-                            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                           </button>
                         );
                       })}
