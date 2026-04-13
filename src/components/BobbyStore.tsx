@@ -614,7 +614,7 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
                       src={item.cover_image_url}
                       alt={item.name}
                       className="w-full h-full object-cover"
-                      loading={index === 0 ? "eager" : "lazy"}
+                      loading="eager"
                       fetchPriority={index === 0 ? "high" : "auto"}
                     />
                   </div>
