@@ -728,7 +728,7 @@ const SEMANTIC_FIELDS: Record<string, string[]> = {
   environnement:  ["ecologie", "nature", "planete", "proteger", "pollution", "foret", "ocean", "biodiversite"],
   recycler_tri:   ["dechet", "poubelle", "tri", "plastique", "verre", "papier", "ecologie", "planete"],
   pollution_air:  ["air", "eau", "plastique", "dechet", "usine", "voiture", "ecologie", "danger", "sante"],
-  "rechauffement climatique":["terre", "temperature", "glace", "co2", "gaz", "effet de serre", "ecologie", "urgence"],
+  "rechauffement climat":["terre", "temperature", "glace", "co2", "gaz", "effet de serre", "ecologie", "urgence"],
   "effet de serre":["atmosphere", "co2", "chaleur", "rechauffement", "climat", "ecologie", "terre"],
   co2:            ["gaz", "carbone", "atmosphere", "pollution", "respirer", "plante", "ecologie"],
   deforestation_eco:["foret", "arbre", "couper", "animaux", "biodiversite", "amazonie", "ecologie", "danger"],
