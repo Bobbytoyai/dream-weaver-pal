@@ -137,96 +137,90 @@ export function HologramFace({
             expressionOverride={expressionOverride}
             expressionIntensityLevel={expressionIntensityLevel}
           />
-          {faceState === "sleepy" && <SleepZzz />}
+          {/* Zzz removed from 3D — now HTML overlay */}
         </Suspense>
       </Canvas>
+      {faceState === "sleepy" && <SleepZzzOverlay />}
     </div>
-  );
 }
 
-// ─── Floating "Z z z" sleep animation ─────────────────────────────────
-function SleepZzz() {
-  const groupRef = useRef<THREE.Group>(null);
-  const zLetters = useRef<THREE.Mesh[]>([]);
-  const phases = useRef([0, 0.7, 1.5]); // staggered start
+// ─── Floating "Z z z" sleep animation — HTML overlay ──────────────────
+function SleepZzzOverlay() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const zRefs = useRef<(HTMLSpanElement | null)[]>([null, null, null]);
+  const phases = useRef([0, 2.5, 5]);
 
-  useFrame((_, delta) => {
-    if (!groupRef.current) return;
-    zLetters.current.forEach((mesh, i) => {
-      if (!mesh) return;
-      phases.current[i] += delta * 0.25;
-      const p = phases.current[i] % 8;
-      const t = p / 8;
+  useEffect(() => {
+    let raf: number;
+    let lastTime = performance.now();
 
-      // Float up to top-right corner of screen and disappear
-      mesh.position.x = 0.3 + t * 1.2 + i * 0.15;
-      mesh.position.y = 0.15 + t * 8.0; // travel very high — off screen
-      mesh.position.z = 0.15;
+    const animate = (now: number) => {
+      const delta = (now - lastTime) / 1000;
+      lastTime = now;
 
-      const scale = (1.5 + i * 0.6) * (0.3 + Math.sin(t * Math.PI) * 0.7);
-      mesh.scale.setScalar(scale);
+      zRefs.current.forEach((el, i) => {
+        if (!el) return;
+        phases.current[i] += delta * 0.15;
+        const t = (phases.current[i] % 1); // 0→1 cycle
 
-      // Gentle wobble
-      mesh.rotation.z = Math.sin(phases.current[i] * 1.8) * 0.15;
+        // Start from ~60% down, float to top-right corner
+        const startX = 55; // % from left
+        const startY = 60; // % from top
+        const x = startX + t * 25 + i * 5; // drift right
+        const y = startY - t * 75; // travel up to ~-15% (off screen)
 
-      const mat = mesh.material as THREE.MeshBasicMaterial;
-      // Fade in at start, fade out as it reaches the top
-      const fadeIn = Math.min(1, t * 5);
-      const fadeOut = Math.max(0, 1 - (t - 0.7) / 0.3);
-      mat.opacity = fadeIn * fadeOut * 0.85;
-    });
-  });
+        el.style.left = `${x}%`;
+        el.style.top = `${y}%`;
 
-  // Dark purple colors for Z's
-  const zMat = useMemo(() => [
-    new THREE.MeshBasicMaterial({ color: "#6B21A8", transparent: true, opacity: 0 }),
-    new THREE.MeshBasicMaterial({ color: "#7C3AED", transparent: true, opacity: 0 }),
-    new THREE.MeshBasicMaterial({ color: "#8B5CF6", transparent: true, opacity: 0 }),
-  ], []);
+        // Scale: grow then shrink
+        const scale = 0.8 + i * 0.3 + Math.sin(t * Math.PI) * 0.5;
+        // Fade in then fade out
+        const fadeIn = Math.min(1, t * 6);
+        const fadeOut = Math.max(0, 1 - (t - 0.65) / 0.35);
+        const opacity = fadeIn * fadeOut * 0.85;
 
-  // Simple Z shape using a plane (text would need font loading)
-  const zGeo = useMemo(() => {
-    const shape = new THREE.Shape();
-    // Z letter path
-    shape.moveTo(-0.08, 0.08);
-    shape.lineTo(0.08, 0.08);
-    shape.lineTo(-0.06, -0.08);
-    shape.lineTo(0.08, -0.08);
-    // Thicken with lines
-    const geo = new THREE.ShapeGeometry(shape, 1);
-    return geo;
+        // Wobble rotation
+        const rot = Math.sin(phases.current[i] * 3) * 12;
+
+        el.style.transform = `scale(${scale}) rotate(${rot}deg)`;
+        el.style.opacity = `${opacity}`;
+      });
+
+      raf = requestAnimationFrame(animate);
+    };
+
+    raf = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(raf);
   }, []);
 
-  // Use simple text-like planes for Z
-  const planeGeo = useMemo(() => new THREE.PlaneGeometry(0.18, 0.18), []);
-
   return (
-    <group ref={groupRef}>
+    <div
+      ref={containerRef}
+      style={{
+        position: "absolute",
+        inset: 0,
+        pointerEvents: "none",
+        overflow: "visible",
+        zIndex: 10,
+      }}
+    >
       {[0, 1, 2].map(i => (
-        <mesh
+        <span
           key={i}
-          ref={(el) => { if (el) zLetters.current[i] = el; }}
-          material={zMat[i]}
-          position={[0.3 + i * 0.1, 0.1, 0.1]}
+          ref={el => { zRefs.current[i] = el; }}
+          style={{
+            position: "absolute",
+            fontWeight: 900,
+            fontSize: `${20 + i * 8}px`,
+            color: ["#6B21A8", "#7C3AED", "#8B5CF6"][i],
+            opacity: 0,
+            willChange: "transform, opacity",
+          }}
         >
-          {/* Z shape built from 3 thick boxes — 5x bigger */}
-          <group>
-            {/* Top bar */}
-            <mesh position={[0, 0.06, 0]} material={zMat[i]}>
-              <boxGeometry args={[0.16, 0.035, 0.02]} />
-            </mesh>
-            {/* Diagonal */}
-            <mesh position={[0, 0, 0]} rotation={[0, 0, -0.65]} material={zMat[i]}>
-              <boxGeometry args={[0.20, 0.03, 0.02]} />
-            </mesh>
-            {/* Bottom bar */}
-            <mesh position={[0, -0.06, 0]} material={zMat[i]}>
-              <boxGeometry args={[0.16, 0.035, 0.02]} />
-            </mesh>
-          </group>
-        </mesh>
+          Z
+        </span>
       ))}
-    </group>
+    </div>
   );
 }
 
