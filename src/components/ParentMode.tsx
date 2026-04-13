@@ -3524,57 +3524,49 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       : 0;
 
     return (
-      <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
+      <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', 'Comic Sans MS', sans-serif" }}>
         {/* Quick alerts */}
         {unreadAlertCount > 0 && (
           <button onClick={() => setShowNotifPanel(true)}
-            className="w-full bg-destructive/5 border border-destructive/20 rounded-2xl p-3 flex items-center gap-3 hover:bg-destructive/10 transition-colors">
+            className="w-full bg-destructive/5 border-2 border-destructive/20 rounded-[18px] p-3 flex items-center gap-3 hover:bg-destructive/10 transition-colors">
             <span className="text-xl">🔔</span>
             <div className="flex-1 text-left">
-              <p className="text-[13px] font-bold text-destructive">{unreadAlertCount} alerte{unreadAlertCount > 1 ? "s" : ""}</p>
-              <p className="text-[11px] text-muted-foreground">Touchez pour voir les détails</p>
+              <p className="text-[13px] font-black text-destructive">{unreadAlertCount} alerte{unreadAlertCount > 1 ? "s" : ""}</p>
+              <p className="text-[10px] text-muted-foreground font-bold">Touchez pour voir</p>
             </div>
             <ChevronRight className="w-4 h-4 text-destructive" />
           </button>
         )}
 
         {/* ── Hero: Daily Summary ── */}
-        <div className="bg-gradient-to-br from-primary/15 via-accent/8 to-secondary/8 rounded-3xl p-5 border border-primary/15">
+        <div className="bg-gradient-to-br from-blue-400/20 via-violet-400/12 to-pink-400/10 rounded-[22px] p-5 border-2 border-blue-300/20">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-[20px] font-extrabold text-foreground">Bonjour 👋</h2>
-              <p className="text-[13px] text-muted-foreground font-medium mt-0.5">
+              <h2 className="text-[22px] font-black text-foreground">Bonjour 👋</h2>
+              <p className="text-[12px] text-muted-foreground font-bold mt-0.5">
                 {todaySessions.length > 0
                   ? `${childName} a eu ${todaySessions.length} session${todaySessions.length > 1 ? "s" : ""} aujourd'hui`
-                  : `${childName} n'a pas encore parlé à Bobby aujourd'hui`
+                  : `${childName} n'a pas encore parlé à Bobby`
                 }
               </p>
             </div>
-            <div className="text-4xl">{todaySessions.length > 0 ? (topEmotion ? (emotionLabels[topEmotion[0]]?.emoji || "😊") : "😊") : "💤"}</div>
+            <div className="text-[42px] drop-shadow-md">{todaySessions.length > 0 ? (topEmotion ? (emotionLabels[topEmotion[0]]?.emoji || "😊") : "😊") : "💤"}</div>
           </div>
 
           {todaySessions.length > 0 && (
-            <div className="grid grid-cols-4 gap-2">
-              <div className="bg-card/80 rounded-2xl p-2.5 text-center border border-border/10">
-                <span className="text-lg block">💬</span>
-                <p className="text-[15px] font-extrabold text-foreground">{todayMessages}</p>
-                <p className="text-[9px] text-muted-foreground font-bold">Messages</p>
-              </div>
-              <div className="bg-card/80 rounded-2xl p-2.5 text-center border border-border/10">
-                <span className="text-lg block">⏱️</span>
-                <p className="text-[15px] font-extrabold text-foreground">{todayDuration >= 60 ? `${Math.round(todayDuration / 60)}m` : `${todayDuration}s`}</p>
-                <p className="text-[9px] text-muted-foreground font-bold">Durée</p>
-              </div>
-              <div className="bg-card/80 rounded-2xl p-2.5 text-center border border-border/10">
-                <span className="text-lg block">{avgEngagement > 0.5 ? "🔥" : avgEngagement > 0 ? "👍" : "💤"}</span>
-                <p className="text-[15px] font-extrabold text-foreground">{avgEngagement > 0.5 ? "Fort" : avgEngagement > 0 ? "Bon" : "—"}</p>
-                <p className="text-[9px] text-muted-foreground font-bold">Engagement</p>
-              </div>
-              <div className="bg-card/80 rounded-2xl p-2.5 text-center border border-border/10">
-                <span className="text-lg block">{topEmotion ? (emotionLabels[topEmotion[0]]?.emoji || "😊") : "—"}</span>
-                <p className="text-[15px] font-extrabold text-foreground">{topEmotion ? (emotionLabels[topEmotion[0]]?.label || topEmotion[0]).slice(0, 6) : "—"}</p>
-                <p className="text-[9px] text-muted-foreground font-bold">Émotion</p>
-              </div>
+            <div className="grid grid-cols-4 gap-1.5">
+              {[
+                { emoji: "💬", value: todayMessages, label: "Messages", bg: "from-blue-400/20 to-blue-300/5" },
+                { emoji: "⏱️", value: todayDuration >= 60 ? `${Math.round(todayDuration / 60)}m` : `${todayDuration}s`, label: "Durée", bg: "from-emerald-400/20 to-emerald-300/5" },
+                { emoji: avgEngagement > 0.5 ? "🔥" : avgEngagement > 0 ? "👍" : "💤", value: avgEngagement > 0.5 ? "Fort" : avgEngagement > 0 ? "Bon" : "—", label: "Engagement", bg: "from-orange-400/20 to-orange-300/5" },
+                { emoji: topEmotion ? (emotionLabels[topEmotion[0]]?.emoji || "😊") : "—", value: topEmotion ? (emotionLabels[topEmotion[0]]?.label || topEmotion[0]).slice(0, 6) : "—", label: "Émotion", bg: "from-pink-400/20 to-pink-300/5" },
+              ].map(s => (
+                <div key={s.label} className={`bg-gradient-to-br ${s.bg} rounded-[14px] p-2 text-center border border-white/10`}>
+                  <span className="text-[16px] block">{s.emoji}</span>
+                  <p className="text-[14px] font-black text-foreground leading-tight">{s.value}</p>
+                  <p className="text-[8px] text-muted-foreground font-bold">{s.label}</p>
+                </div>
+              ))}
             </div>
           )}
         </div>
