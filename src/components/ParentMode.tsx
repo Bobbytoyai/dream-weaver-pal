@@ -2028,7 +2028,13 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           }, "neutral" as string)
         : "neutral";
       const mood = moodLabels[avgMood] || moodLabels.neutral;
-      const daySummary = dayAnalyses.map(a => a.summary).filter(Boolean).join(" • ");
+      const rawSummaries = dayAnalyses.map(a => a.summary).filter(Boolean);
+      // Extract only the first sentence from each summary for a brief overview
+      const briefParts = rawSummaries.map(s => {
+        const sentences = s!.match(/[^.!?]+[.!?]+/g);
+        return sentences ? sentences[0].trim() : s!.slice(0, 80).trim();
+      });
+      const daySummary = humanizeSummary(briefParts.slice(0, 3).join(" • "));
       const avgSociability = dayAnalyses.length > 0 ? Math.round(dayAnalyses.reduce((s, a) => s + (a.sociability_score ?? 0), 0) / dayAnalyses.length) : null;
       const avgCuriosity = dayAnalyses.length > 0 ? Math.round(dayAnalyses.reduce((s, a) => s + (a.curiosity_score ?? 0), 0) / dayAnalyses.length) : null;
       const avgStability = dayAnalyses.length > 0 ? Math.round(dayAnalyses.reduce((s, a) => s + (a.emotional_stability_score ?? 0), 0) / dayAnalyses.length) : null;
