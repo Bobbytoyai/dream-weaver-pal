@@ -151,7 +151,7 @@ const VoiceScreen = ({
   const stateLabel = {
     IDLE: sm.partialText ? `"${sm.partialText}"` : 'Touche Bobby pour parler !',
     LISTENING: sm.partialText ? `"${sm.partialText}"` : "",
-    PROCESSING: "Je réfléchis…",
+    PROCESSING: "",
     SPEAKING: "",
     ERROR: "Dis-moi !",
     SLEEP: "💤 Bobby dort… touche Bobby pour le réveiller !",

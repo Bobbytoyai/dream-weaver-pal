@@ -250,11 +250,8 @@ export function useBobbyVoiceCore({
       eventBus.emit({ type: "SPEECH_STOP" });
       lastSpeechEndRef.current = Date.now();
       silenceCountRef.current = 0;
-      // ─── Wait 800ms after Bobby finishes before restarting STT ───
-      // Reduced for snappier conversation flow
-      console.log("[BobbyVoiceCore] 🔄 Waiting 800ms before restarting listening");
-      await new Promise(r => setTimeout(r, 800));
-      // Verify we're still in SPEAKING state (user hasn't interrupted)
+      // ─── Reduced delay for snappier tac-o-tac flow ───
+      await new Promise(r => setTimeout(r, 400));
       if (!abortRef.current?.signal.aborted && machineRef.current === "SPEAKING") {
         void startListeningRef.current();
       }
@@ -295,8 +292,8 @@ export function useBobbyVoiceCore({
 
     // ─── Cooldown: reject transcripts arriving too soon after Bobby stopped speaking ───
     const msSinceSpeech = Date.now() - lastSpeechEndRef.current;
-    if (msSinceSpeech < 800) {
-      console.warn("[BobbyVoiceCore] 🔇 Anti-echo cooldown: rejected transcript", msSinceSpeech, "ms after speech end");
+    if (msSinceSpeech < 400) {
+      console.warn("[BobbyVoiceCore] 🔇 Anti-echo cooldown:", msSinceSpeech, "ms");
       return;
     }
 
@@ -333,9 +330,8 @@ export function useBobbyVoiceCore({
       setCurrentEmotion(childExpr.faceState);
       setCurrentExpressionCombo(childExpr.expression.combo);
       setCurrentExpressionIntensity(childExpr.expression.intensity);
-      console.log("[BobbyVoiceCore] 🎭 Child emotion detected:", childExpr.expression.emotion, "→ Bobby reacts:", childExpr.faceState);
 
-      go("PROCESSING");
+      // ─── SKIP "PROCESSING" state — go straight to brain + speak for tac-o-tac feel ───
       eventBus.emit({ type: "VOICE_INPUT", transcript: trimmedText });
 
       await ensureSession();
@@ -524,7 +520,7 @@ export function useBobbyVoiceCore({
     machineState === "LISTENING"
       ? "attentive"
       : machineState === "PROCESSING"
-        ? "thinking"
+        ? currentEmotion  // Keep child's detected emotion instead of "thinking"
         : machineState === "SPEAKING"
           ? currentEmotion
           : machineState === "ERROR"
