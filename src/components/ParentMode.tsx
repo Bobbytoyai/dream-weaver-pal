@@ -2866,8 +2866,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     // ── Sub-section: RGPD ──
     if (confSection === "rgpd") return (
       <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-        <button onClick={() => setConfSection(null)} className="flex items-center gap-2 text-primary text-[13px] font-extrabold mb-1" style={{ fontFamily: "'Nunito', sans-serif" }}>
-          <ChevronLeft className="w-4 h-4" /> Confidentialité
+        <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 active:scale-95 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
+          <ChevronLeft className="w-4 h-4" /> CONFIDENTIALITÉ
         </button>
         <Card title="Vos droits (RGPD)" icon={FileText}>
           <div className="grid grid-cols-2 gap-2">
@@ -2917,10 +2917,10 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                     });
                   } else if (id === "rectify") { setActiveTab("profil"); }
                 }}
-                className="p-3 rounded-xl text-left transition-all bg-muted/50 hover:bg-muted active:scale-95">
+                className="p-3 text-left transition-all border-2 border-black bg-white hover:bg-[var(--retro-yellow)] active:scale-95">
                 <span className="text-xl block mb-1">{emoji}</span>
-                <h4 className="text-[12px] font-semibold text-foreground">{label}</h4>
-                <p className="text-[9px] text-muted-foreground">{desc}</p>
+                <h4 className="text-[12px] font-black text-foreground uppercase">{label}</h4>
+                <p className="text-[9px] text-foreground/60 font-bold">{desc}</p>
               </button>
             ))}
           </div>
