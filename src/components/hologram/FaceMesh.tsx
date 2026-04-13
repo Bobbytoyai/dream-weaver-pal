@@ -436,42 +436,30 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       rightEyebrowRef.current.scale.set(furrow, 1, 1);
     }
 
-    // ─── KAWAII MOUTH — smile line + open oval + tongue ────────
+    // ─── MOUTH v3 — single unified shape ────────
     const mc = state.mouthCurve;
     const mw = state.mouthWidth;
     const mo = state.mouthOpenness;
     const mr = state.mouthRound;
     const mouthKey = `${mc.toFixed(2)}_${mw.toFixed(2)}_${mo.toFixed(2)}_${mr.toFixed(2)}`;
-    const isOpen = mo > 0.03 || mr > 0.05;
     
     if (mouthKey !== prevMouthKey.current) {
       prevMouthKey.current = mouthKey;
 
-      // Smile line — static shape, no animation on curve changes
+      // Main mouth shape — always visible, morphs between all states
       if (upperLipRef.current) {
-        // Only hide when mouth is open, never rebuild shape
-        (upperLipRef.current.material as THREE.MeshBasicMaterial).opacity = isOpen ? 0 : 1;
+        const newShape = buildMouthShape(mc, mw, mo, mr);
+        const newGeo = new THREE.ShapeGeometry(newShape, 32);
+        upperLipRef.current.geometry.dispose();
+        upperLipRef.current.geometry = newGeo;
       }
 
-      // Open mouth oval (only when speaking/open)
-      if (lowerLipRef.current) {
-        if (isOpen) {
-          const newShape = buildMouthOpenShape(mc, mw, mo, mr);
-          const newGeo = new THREE.ShapeGeometry(newShape, 16);
-          lowerLipRef.current.geometry.dispose();
-          lowerLipRef.current.geometry = newGeo;
-          lowerLipRef.current.visible = true;
-          lowerLipRef.current.position.y = -0.58;
-        } else {
-          lowerLipRef.current.visible = false;
-        }
-      }
-
-      // Mouth interior (dark fill inside open mouth)
+      // Interior (dark fill) — visible when mouth is open
+      const isOpen = mo > 0.03 || mr > 0.05;
       if (mouthInteriorRef.current) {
         if (isOpen) {
-          const newShape = buildMouthOpenShape(mc, mw, mo * 0.85, mr * 0.85);
-          const newGeo = new THREE.ShapeGeometry(newShape, 16);
+          const newShape = buildMouthShape(mc, mw, mo * 0.8, mr * 0.8);
+          const newGeo = new THREE.ShapeGeometry(newShape, 32);
           mouthInteriorRef.current.geometry.dispose();
           mouthInteriorRef.current.geometry = newGeo;
           mouthInteriorMat.opacity = Math.min(0.85, mo * 3 + mr * 2);
@@ -551,11 +539,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={leftEyebrowRef} position={[leftBrowX, leftBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
       <mesh ref={rightEyebrowRef} position={[rightBrowX, rightBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
 
-      {/* Kawaii smile line */}
-      <mesh ref={upperLipRef} position={[0, -0.52, 0.008]} geometry={upperLipGeo} material={lipMat} />
-
-      {/* Open mouth oval (hidden when closed) */}
-      <mesh ref={lowerLipRef} position={[0, -0.52, 0.007]} geometry={lowerLipGeo} material={lipMat} visible={false} />
+      {/* Mouth — single unified shape */}
+      <mesh ref={upperLipRef} position={[0, -0.52, 0.008]} geometry={mouthGeo} material={lipMat} />
 
       {/* Mouth interior — dark fill */}
       <mesh ref={mouthInteriorRef} position={[0, -0.52, 0.005]} geometry={mouthInteriorGeo} material={mouthInteriorMat} />
