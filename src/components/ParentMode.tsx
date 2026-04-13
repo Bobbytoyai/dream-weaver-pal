@@ -2824,7 +2824,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
               }},
               { emoji: "🧠", label: "Réinitialiser la mémoire", desc: "Bobby oublie les préférences", action: () => {
                 setConfirmDialog({ title: "Réinitialiser la mémoire ?", description: "Bobby oubliera toutes les préférences et intérêts.", confirmLabel: "Réinitialiser", variant: "warning" as const, onConfirm: () => {
-                  supabase.from("child_memories").delete().eq("child_name", childName).then(() => loadData());
+                  supabase.from("child_memories").delete().eq("child_name", displayName).then(() => loadData());
                   setConfirmDialog(null);
                 }});
               }},
@@ -2890,8 +2890,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
                         Promise.all([
                           supabase.from("conversation_analyses").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
                           supabase.from("session_messages").delete().neq("id", "00000000-0000-0000-0000-000000000000"),
-                          supabase.from("child_sessions").delete().eq("child_name", childName),
-                          supabase.from("child_memories").delete().eq("child_name", childName),
+                          supabase.from("child_sessions").delete().eq("child_name", displayName),
+                          supabase.from("child_memories").delete().eq("child_name", displayName),
                         ]).then(() => loadData());
                         setConfirmDialog(null);
                       },
