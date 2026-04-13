@@ -213,11 +213,17 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     color: new THREE.Color(bgHex), transparent: false, opacity: 1.0, depthWrite: true,
   }), []);
   
-  // Keep eyelid color synced every render
+  // Keep eyelid color synced — always a noticeably darker shade of the background
   useEffect(() => {
     const col = new THREE.Color(bgHex);
-    // Slight darkening for subtle contrast
-    col.lerp(new THREE.Color("#000000"), 0.03);
+    // Darken significantly so eyelids are visible on ALL backgrounds (light & dark)
+    const hsl = { h: 0, s: 0, l: 0 };
+    col.getHSL(hsl);
+    // Target lightness: 30-45% darker than the background, clamped
+    const darkenedL = Math.max(0.15, hsl.l - 0.32);
+    // Boost saturation slightly for richer lid color
+    const boostedS = Math.min(1, hsl.s * 1.25 + 0.05);
+    col.setHSL(hsl.h, boostedS, darkenedL);
     eyelidMat.color.set(col);
   }, [bgHex, eyelidMat]);
 
