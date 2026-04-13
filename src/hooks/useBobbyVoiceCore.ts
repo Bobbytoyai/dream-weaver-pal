@@ -330,11 +330,7 @@ export function useBobbyVoiceCore({
       }
     }
 
-    if (withGoodbye) {
-      const msg = pickRandom(GOODBYE_MESSAGES);
-      go("SPEAKING");
-      await speakSystemMessage(msg, "calm");
-    }
+    // No generic goodbye — just deactivate silently
 
     stopSttRef.current();
     setMicArmed(false);
@@ -371,27 +367,15 @@ export function useBobbyVoiceCore({
       if (machineRef.current !== "LISTENING" && machineRef.current !== "RELANCE") return;
 
       if (context === "relance") {
-        // Already relanced — deactivate with goodbye
+        // Already relanced — deactivate silently
         console.log("[BobbyVoiceCore] Silence after relance — deactivating");
-        void deactivate(true);
+        void deactivate(false);
         return;
       }
 
-      // Perform relance
-      console.log("[BobbyVoiceCore] Silence detected — relancing");
-      go("RELANCE");
-      const msg = pickRandom(RELANCE_MESSAGES);
-      await speakSystemMessage(msg, "reassuring");
-
-      // After speaking relance, go back to listening with relance timer
-      if (["RELANCE", "SPEAKING"].includes(machineRef.current)) {
-        go("LISTENING");
-        setMicArmed(true);
-        try {
-          await smartSTTRef.current.start();
-        } catch { /* ignore */ }
-        scheduleSilenceWatch("relance");
-      }
+      // Silence detected — just deactivate silently (no generic relance phrase)
+      console.log("[BobbyVoiceCore] Silence detected — deactivating");
+      void deactivate(false);
     }, timeout);
   }, [clearSilenceTimer, deactivate, go, speakSystemMessage]);
 
