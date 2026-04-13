@@ -188,7 +188,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
   // Eyelid
   const eyelidMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("hsl(225, 25%, 82%)"), transparent: false, opacity: 1.0, depthWrite: true,
+    color: new THREE.Color("#E8F0FE"), transparent: false, opacity: 1.0, depthWrite: true,
   }), []);
 
   // Cheeks — #FF69B4
@@ -210,19 +210,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       }
       const browHex = EYEBROW_HEX[bobbyColors.eyebrow] || EYEBROW_HEX.brown;
       eyebrowMat.color.set(browHex);
-      // Eyelid matches background with slight darkening for contrast
+      // Eyelid matches background EXACTLY — no tint offset
       const bgHex = BG_HEX[bobbyColors.background] || BG_HEX["soft-blue"];
-      const bgColor = new THREE.Color(bgHex);
-      // Darken slightly for eyelid contrast (mix with a darker shade)
-      const isDark = bgColor.getHSL({ h: 0, s: 0, l: 0 }).l < 0.3;
-      if (isDark) {
-        // For dark backgrounds, lighten slightly
-        bgColor.lerp(new THREE.Color("#FFFFFF"), 0.08);
-      } else {
-        // For light backgrounds, darken slightly
-        bgColor.lerp(new THREE.Color("#000000"), 0.06);
-      }
-      eyelidMat.color.set(bgColor);
+      eyelidMat.color.set(bgHex);
     } else if (bobbyColor) {
       const irisHex = IRIS_HEX[bobbyColor] || IRIS_HEX.blue;
       irisOuterMat.color.set(irisHex);
