@@ -8,7 +8,7 @@ import {
   Play, Pause, AlertTriangle, TrendingUp, Trash2, ChevronRight, Gamepad2,
   BarChart3, Calendar, User, Zap, Moon, Sun, Hand, Lock, Search,
   Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X, CloudUpload, LogIn,
-  SkipForward, SkipBack, Activity, Bell, ChevronDown, ChevronLeft, Star, Edit3
+  SkipForward, SkipBack, Bell, ChevronDown, ChevronLeft, Star, Edit3
 } from "lucide-react";
 const LazyDashboardTab = lazy(() => import("@/components/parent/DashboardTab"));
 const LazySessionsListTab = lazy(() => import("@/components/parent/SessionsListTab"));
