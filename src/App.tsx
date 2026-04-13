@@ -40,6 +40,7 @@ const App = () => (
                 {/* Bobby accessible sans auth — QR code only */}
                 <Route path="/" element={<Index />} />
                 <Route path="/b/:code" element={<BobbyQR />} />
+                <Route path="/parent/:code" element={<BobbyParent />} />
                 
                 {/* Cloud auth dédié */}
                 <Route path="/bobby-cloud" element={<BobbyCloudAuth />} />
