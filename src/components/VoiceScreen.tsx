@@ -18,22 +18,38 @@ import {
 // UI COMPONENTS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const SoundWave = ({ active }: { active: boolean }) => {
-  const bars = 5;
+const MicListeningAnimation = ({ hasVoice }: { hasVoice: boolean }) => {
+  const bars = 7;
   return (
-    <div className="flex items-center gap-[3px] h-5">
-      {Array.from({ length: bars }, (_, i) => (
-        <div key={i} className="w-[3px] rounded-full transition-all duration-150"
-          style={{
-            backgroundColor: "hsl(var(--primary))",
-            height: active ? `${8 + Math.sin(Date.now() / 200 + i * 1.2) * 6 + Math.random() * 4}px` : "4px",
-            opacity: active ? 0.9 : 0.3,
-            animation: active ? `soundbar-${i} 0.4s ease-in-out infinite alternate` : "none",
-          }} />
-      ))}
-      <style>{`${Array.from({ length: bars }, (_, i) => `
-        @keyframes soundbar-${i} { 0% { height: ${4 + i * 2}px; } 100% { height: ${12 + ((i + 2) % bars) * 3}px; } }
-      `).join("")}`}</style>
+    <div className="flex flex-col items-center gap-3">
+      {/* Pulsing rings */}
+      <div className="relative w-16 h-16 flex items-center justify-center">
+        <div className={`absolute inset-0 rounded-full border-2 border-primary/40 ${hasVoice ? 'animate-ping' : 'animate-pulse'}`} 
+          style={{ animationDuration: hasVoice ? '1s' : '2s' }} />
+        <div className={`absolute inset-1 rounded-full border border-primary/25 ${hasVoice ? 'animate-ping' : ''}`}
+          style={{ animationDuration: '1.5s', animationDelay: '0.3s' }} />
+        <div className="w-10 h-10 rounded-full bg-primary/15 backdrop-blur-sm flex items-center justify-center">
+          <div className={`w-4 h-4 rounded-full ${hasVoice ? 'bg-primary animate-pulse' : 'bg-primary/50'}`} 
+            style={{ animationDuration: '0.6s' }} />
+        </div>
+      </div>
+      {/* Sound bars */}
+      <div className="flex items-end gap-[3px] h-8">
+        {Array.from({ length: bars }, (_, i) => (
+          <div key={i} className="rounded-full transition-all"
+            style={{
+              backgroundColor: "hsl(var(--primary))",
+              width: "4px",
+              height: hasVoice ? `${10 + Math.sin(Date.now() / 150 + i * 0.9) * 10 + Math.random() * 6}px` : "4px",
+              opacity: hasVoice ? 0.85 : 0.25,
+              transition: hasVoice ? 'height 0.1s ease-out' : 'height 0.4s ease-out',
+              animation: hasVoice ? `soundbar-${i} ${0.25 + (i % 3) * 0.1}s ease-in-out infinite alternate` : "none",
+            }} />
+        ))}
+        <style>{`${Array.from({ length: bars }, (_, i) => `
+          @keyframes soundbar-${i} { 0% { height: ${5 + (i % 3) * 3}px; } 100% { height: ${16 + ((i + 1) % bars) * 4}px; } }
+        `).join("")}`}</style>
+      </div>
     </div>
   );
 };
@@ -150,15 +166,7 @@ const VoiceScreen = ({
     }
   }, []);
 
-  const stateLabel = {
-    IDLE: sm.partialText ? `"${sm.partialText}"` : 'Touche Bobby pour parler !',
-    LISTENING: sm.partialText ? `"${sm.partialText}"` : "",
-    PROCESSING: "",
-    SPEAKING: "",
-    RELANCE: "",
-    ERROR: "Dis-moi !",
-    SLEEP: "💤 Bobby dort… touche Bobby pour le réveiller !",
-  }[sm.machineState];
+  // stateLabel removed — transcription shown directly at bottom
 
   // Background color from customization
   const BG_HEX_MAP: Record<string, string> = {
@@ -248,24 +256,52 @@ const VoiceScreen = ({
           />
         </div>
 
-        {/* State label — only shown when there's text to display */}
-        {stateLabel && (
-          <p className="mt-4 text-sm font-bold text-foreground/70 tracking-wide text-center px-4">
-            {stateLabel}
-          </p>
-        )}
 
-        {/* Listening animation — no text, just visual feedback */}
-        {sm.machineState === "LISTENING" && (
-          <div className="mt-3 flex items-center gap-3 px-6 py-3 rounded-full bg-white/40 backdrop-blur-md transition-all duration-500 animate-in fade-in slide-in-from-bottom-2">
-            <SoundWave active />
-            <div className="w-2 h-2 rounded-full bg-primary/60 animate-pulse" />
-            <SoundWave active />
-          </div>
+        {/* Bobby text (AI response) */}
+        {sm.machineState === "SPEAKING" && sm.bobbyText && (
+          <p className="mt-4 text-sm font-bold text-foreground/70 tracking-wide text-center px-4">
+            {sm.bobbyText}
+          </p>
         )}
       </div>
 
-      <div className="pb-4" />
+      {/* Bottom section — fixed at bottom */}
+      <div className="w-full flex flex-col items-center gap-3 pb-6 relative z-10">
+        {/* Live transcription — big, bold, at the bottom */}
+        {sm.machineState === "LISTENING" && sm.partialText && (
+          <div className="w-full px-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
+            <p className="text-xl font-extrabold text-foreground/80 text-center leading-tight">
+              "{sm.partialText}"
+            </p>
+          </div>
+        )}
+
+        {/* Recognized text confirmation */}
+        {sm.machineState === "PROCESSING" && sm.lastRecognized && (
+          <div className="w-full px-6 animate-in fade-in duration-200">
+            <p className="text-lg font-bold text-primary/70 text-center">
+              ✅ "{sm.lastRecognized}"
+            </p>
+          </div>
+        )}
+
+        {/* Listening animation */}
+        {sm.machineState === "LISTENING" && (
+          <MicListeningAnimation hasVoice={!!sm.partialText} />
+        )}
+
+        {/* Idle / Sleep labels */}
+        {sm.machineState === "IDLE" && (
+          <p className="text-sm font-semibold text-foreground/50 text-center">
+            Touche Bobby pour parler !
+          </p>
+        )}
+        {sm.machineState === "SLEEP" && (
+          <p className="text-sm font-semibold text-foreground/50 text-center">
+            💤 Bobby dort… touche Bobby pour le réveiller !
+          </p>
+        )}
+      </div>
     </div>
   );
 };
