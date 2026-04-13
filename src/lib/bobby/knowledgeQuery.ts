@@ -921,6 +921,69 @@ const SEMANTIC_FIELDS: Record<string, string[]> = {
   acropole:       ["grece", "athenes", "temple", "monument", "antique", "colline", "parthenon"],
   petra:          ["jordanie", "roche", "rose", "monument", "ancien", "tresor", "desert"],
   "angkor wat":   ["cambodge", "temple", "monument", "jungle", "hindou", "bouddhiste", "ancien"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🤔 Philosophie enfantine
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  philosophie:    ["reflechir", "question", "sens", "vie", "penser", "sagesse", "idee", "pourquoi"],
+  bonheur:        ["philosophie", "joie", "content", "vie", "sourire", "gratitude", "sens", "aimer"],
+  liberte:        ["philosophie", "choix", "droit", "libre", "decision", "autonomie", "voler"],
+  justice:        ["philosophie", "juste", "injuste", "egal", "droit", "partager", "regle", "equite"],
+  verite:         ["philosophie", "vrai", "faux", "mentir", "honnetete", "confiance", "savoir"],
+  amour_philo:    ["philosophie", "aimer", "coeur", "famille", "ami", "partager", "lien", "sentir"],
+  bien_mal:       ["philosophie", "morale", "choix", "conscience", "juste", "regle", "valeur"],
+  mort_philo:     ["philosophie", "vie", "cycle", "triste", "souvenir", "nature", "etoile", "memoire"],
+  temps_philo:    ["philosophie", "passer", "grandir", "souvenir", "futur", "present", "attendre"],
+  reve_philo:     ["philosophie", "imaginer", "dormir", "espoir", "futur", "desir", "possible"],
+  difference:     ["philosophie", "unique", "respect", "diversite", "egal", "tolerance", "richesse"],
+  partager_philo: ["philosophie", "generosite", "ami", "donner", "ensemble", "bonheur", "solidarite"],
+  conscience:     ["philosophie", "penser", "savoir", "moral", "choix", "cerveau", "reflexion"],
+  imagination:    ["philosophie", "creer", "reve", "inventer", "histoire", "possible", "art", "jeu"],
+  sagesse:        ["philosophie", "reflechir", "calme", "experience", "ancien", "conseil", "patience"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🎊 Fêtes du monde
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  diwali:         ["inde", "lumiere", "lampe", "fete", "joie", "hindou", "couleur", "famille"],
+  ramadan:        ["islam", "jeuner", "lune", "fete", "partager", "priere", "famille", "solidarite"],
+  hanukkah:       ["juif", "lumiere", "bougie", "menorah", "fete", "hiver", "miracle", "huit"],
+  "nouvel an chinois":["chine", "dragon", "rouge", "fete", "lanterne", "zodiaque", "famille", "feu artifice"],
+  holi:           ["inde", "couleur", "poudre", "fete", "printemps", "joie", "eau", "hindou"],
+  "dia de muertos":["mexique", "mort", "fete", "souvenir", "fleur", "squelette", "famille", "tradition"],
+  "fete lumiere": ["lyon", "france", "lumiere", "nuit", "spectacle", "decembre", "fete", "ville"],
+  thanksgiving:   ["amerique", "repas", "famille", "gratitude", "dinde", "automne", "fete", "partage"],
+  "fete nationale":["pays", "celebrer", "drapeau", "feu artifice", "juillet", "fete", "histoire", "liberte"],
+  epiphanie:      ["galette", "roi", "feve", "couronne", "janvier", "fete", "partager"],
+  chandeleur:     ["crepe", "fevrier", "bougie", "lumiere", "fete", "cuisine", "tradition"],
+  mardi_gras:     ["carnaval", "deguisement", "fete", "beignet", "masque", "confetti", "danse"],
+  "fete musique":  ["musique", "juin", "concert", "rue", "chanter", "jouer", "fete", "ete"],
+  saint_valentin: ["amour", "coeur", "fleur", "fete", "fevrier", "carte", "bisou", "rouge"],
+  poisson_avril:  ["blague", "dos", "rire", "avril", "fete", "farce", "humour", "poisson"],
+  "nouvel an":    ["janvier", "minuit", "fete", "feu artifice", "voeux", "champagne", "compte a rebours"],
+  "fete mere":    ["maman", "cadeau", "amour", "fleur", "fete", "mai", "poeme", "famille"],
+  "fete pere":    ["papa", "cadeau", "amour", "fete", "juin", "famille", "bricolage"],
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 💡 Inventions célèbres
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  inventeur:      ["creer", "decouverte", "genie", "idee", "science", "technologie", "invention", "histoire"],
+  ampoule:        ["invention", "edison", "lumiere", "electricite", "filament", "eclairage", "nuit"],
+  imprimerie:     ["invention", "gutenberg", "livre", "papier", "lettre", "ecriture", "revolution"],
+  roue:           ["invention", "ancien", "transport", "tourner", "voiture", "mouvement", "prehistoire"],
+  boussole:       ["invention", "nord", "navigation", "aimant", "direction", "explorer", "chine"],
+  parachute:      ["invention", "vinci", "voler", "tomber", "air", "securite", "saut"],
+  vaccin_invention:["invention", "pasteur", "maladie", "proteger", "medecine", "sauver", "science"],
+  dynamite:       ["invention", "nobel", "explosion", "puissant", "chimie", "construction"],
+  "machine vapeur":["invention", "train", "revolution", "industrielle", "eau", "energie", "watt"],
+  avion_invention:["invention", "wright", "voler", "moteur", "aile", "transport", "ciel"],
+  telephone_invention:["invention", "bell", "parler", "distance", "communication", "son", "fil"],
+  "internet invention":["invention", "reseau", "monde", "connecter", "information", "numerique", "revolution"],
+  gps:            ["invention", "satellite", "position", "carte", "navigation", "technologie", "direction"],
+  penicilline:    ["invention", "fleming", "bacterie", "medecine", "antibiotique", "sauver", "science"],
+  lunette_invention:["invention", "galilee", "voir", "telescope", "lentille", "optique", "decouverte"],
+  "machine a laver":["invention", "vetement", "propre", "eau", "electricite", "maison", "quotidien"],
+  photographie_inv:["invention", "photo", "image", "lumiere", "souvenir", "appareil", "niepce"],
+  fusee_invention:["invention", "espace", "propulsion", "astronaute", "explorer", "lune", "science"],
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
