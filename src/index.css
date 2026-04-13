@@ -315,17 +315,17 @@
 }
 
 .admin-light {
-  --admin-bg: #f5f5f7;
-  --admin-card: rgba(255, 255, 255, 0.85);
-  --admin-card-hover: rgba(0, 0, 0, 0.04);
-  --admin-border: rgba(0, 0, 0, 0.08);
-  --admin-border-hover: rgba(0, 0, 0, 0.14);
-  --admin-text: #1d1d1f;
-  --admin-text-secondary: #636366;
-  --admin-text-muted: #86868b;
-  --admin-text-dim: #aeaeb2;
-  --admin-text-faint: #c7c7cc;
-  --admin-shadow: rgba(0, 0, 0, 0.06);
+  --admin-bg: #f2f2f7;
+  --admin-card: rgba(255, 255, 255, 0.92);
+  --admin-card-hover: rgba(0, 0, 0, 0.05);
+  --admin-border: rgba(0, 0, 0, 0.12);
+  --admin-border-hover: rgba(0, 0, 0, 0.20);
+  --admin-text: #1a1a1f;
+  --admin-text-secondary: #3a3a3f;
+  --admin-text-muted: #6e6e73;
+  --admin-text-dim: #8e8e93;
+  --admin-text-faint: #aeaeb2;
+  --admin-shadow: rgba(0, 0, 0, 0.08);
   --admin-tooltip-bg: #ffffff;
-  --admin-tooltip-border: rgba(0, 0, 0, 0.1);
+  --admin-tooltip-border: rgba(0, 0, 0, 0.12);
 }

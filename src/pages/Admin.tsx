@@ -149,19 +149,19 @@ const TOP_SECTIONS_CONFIG: {
   desc: string;
   emoji: string;
 }[] = [
-  { id: "interactions", label: "Interactions", icon: MessageSquare, color: "text-cyan-400", bgColor: "bg-cyan-500/20", desc: "Base d'interactions enfant par âge & catégorie", emoji: "🧠" },
-  { id: "multiresponses", label: "Multi-Réponses", icon: Zap, color: "text-orange-400", bgColor: "bg-orange-500/20", desc: "Réponses adaptatives multi-tags (offline)", emoji: "⚡" },
-  { id: "jeux", label: "Jeux & Quiz", icon: Gamepad2, color: "text-blue-400", bgColor: "bg-blue-500/20", desc: "Quiz animaux, sciences, vrai/faux, devinettes", emoji: "🎮" },
-  { id: "qa", label: "QA Database", icon: HelpCircle, color: "text-amber-400", bgColor: "bg-amber-500/20", desc: "Questions-réponses offline structurées", emoji: "❓" },
-  { id: "blagues", label: "Blagues", icon: Laugh, color: "text-green-400", bgColor: "bg-green-500/20", desc: "Blagues adaptées par âge & catégorie", emoji: "😂" },
-  { id: "histoires", label: "Histoires", icon: BookOpen, color: "text-purple-400", bgColor: "bg-purple-500/20", desc: "Contes & aventures personnalisées", emoji: "📖" },
-  { id: "chansons", label: "Chansons", icon: Music, color: "text-rose-400", bgColor: "bg-rose-500/20", desc: "Comptines, berceuses, éducatif, activités", emoji: "🎵" },
-  { id: "cerveau", label: "Personnalité", icon: Sparkles, color: "text-pink-400", bgColor: "bg-pink-500/20", desc: "Personnalité, réactions, phrases Bobby", emoji: "✨" },
-  { id: "cloud", label: "Cloud KB", icon: Globe, color: "text-blue-400", bgColor: "bg-blue-500/20", desc: "Base cloud extensible (ajout via admin)", emoji: "☁️" },
-  { id: "store", label: "Bobby Store", icon: Star, color: "text-emerald-400", bgColor: "bg-emerald-500/20", desc: "Gérer le catalogue du store (CRUD)", emoji: "🛒" },
-  { id: "expressions", label: "Expressions", icon: Eye, color: "text-fuchsia-400", bgColor: "bg-fuchsia-500/20", desc: "Preview & test des expressions faciales", emoji: "🎭" },
-  { id: "autolearn", label: "Auto-Learning", icon: Microscope, color: "text-lime-400", bgColor: "bg-lime-500/20", desc: "IA auto-complétion depuis les conversations", emoji: "🧬" },
-  { id: "cloudusers", label: "Bobby Cloud", icon: Users, color: "text-sky-400", bgColor: "bg-sky-500/20", desc: "Utilisateurs Bobby Cloud, profils sync", emoji: "☁️👥" },
+  { id: "interactions", label: "Interactions", icon: MessageSquare, color: "text-cyan-500", bgColor: "bg-cyan-500/20", desc: "Base d'interactions enfant par âge & catégorie", emoji: "🧠" },
+  { id: "multiresponses", label: "Multi-Réponses", icon: Zap, color: "text-orange-500", bgColor: "bg-orange-500/20", desc: "Réponses adaptatives multi-tags (offline)", emoji: "⚡" },
+  { id: "jeux", label: "Jeux & Quiz", icon: Gamepad2, color: "text-blue-500", bgColor: "bg-blue-500/20", desc: "Quiz animaux, sciences, vrai/faux, devinettes", emoji: "🎮" },
+  { id: "qa", label: "QA Database", icon: HelpCircle, color: "text-amber-500", bgColor: "bg-amber-500/20", desc: "Questions-réponses offline structurées", emoji: "❓" },
+  { id: "blagues", label: "Blagues", icon: Laugh, color: "text-green-500", bgColor: "bg-green-500/20", desc: "Blagues adaptées par âge & catégorie", emoji: "😂" },
+  { id: "histoires", label: "Histoires", icon: BookOpen, color: "text-purple-500", bgColor: "bg-purple-500/20", desc: "Contes & aventures personnalisées", emoji: "📖" },
+  { id: "chansons", label: "Chansons", icon: Music, color: "text-rose-500", bgColor: "bg-rose-500/20", desc: "Comptines, berceuses, éducatif, activités", emoji: "🎵" },
+  { id: "cerveau", label: "Personnalité", icon: Sparkles, color: "text-pink-500", bgColor: "bg-pink-500/20", desc: "Personnalité, réactions, phrases Bobby", emoji: "✨" },
+  { id: "cloud", label: "Cloud KB", icon: Globe, color: "text-blue-500", bgColor: "bg-blue-500/20", desc: "Base cloud extensible (ajout via admin)", emoji: "☁️" },
+  { id: "store", label: "Bobby Store", icon: Star, color: "text-emerald-500", bgColor: "bg-emerald-500/20", desc: "Gérer le catalogue du store (CRUD)", emoji: "🛒" },
+  { id: "expressions", label: "Expressions", icon: Eye, color: "text-fuchsia-500", bgColor: "bg-fuchsia-500/20", desc: "Preview & test des expressions faciales", emoji: "🎭" },
+  { id: "autolearn", label: "Auto-Learning", icon: Microscope, color: "text-lime-500", bgColor: "bg-lime-500/20", desc: "IA auto-complétion depuis les conversations", emoji: "🧬" },
+  { id: "cloudusers", label: "Bobby Cloud", icon: Users, color: "text-sky-500", bgColor: "bg-sky-500/20", desc: "Utilisateurs Bobby Cloud, profils sync", emoji: "☁️👥" },
 ];
 
 // ═══════════════════════════════════════════════════════════════════
@@ -276,6 +276,7 @@ const Admin = () => {
   const [search, setSearch] = useState("");
   const [editingEntry, setEditingEntry] = useState<Partial<KBEntry> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [autoLearnCount, setAutoLearnCount] = useState<number | null>(null);
 
   // Navigation
   const [topSection, setTopSection] = useState<TopSection | null>(null);
@@ -793,9 +794,13 @@ const Admin = () => {
 
   const fetchEntries = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("knowledge_base").select("*").order("priority", { ascending: false });
-    if (error) toast.error("Erreur: " + error.message);
-    else setEntries((data as unknown as KBEntry[]) || []);
+    const [kbRes, autoLearnRes] = await Promise.all([
+      supabase.from("knowledge_base").select("*").order("priority", { ascending: false }),
+      supabase.from("knowledge_base").select("id", { count: "exact", head: true }).not("category", "eq", "général"),
+    ]);
+    if (kbRes.error) toast.error("Erreur: " + kbRes.error.message);
+    else setEntries((kbRes.data as unknown as KBEntry[]) || []);
+    setAutoLearnCount(autoLearnRes.count ?? 0);
     setLoading(false);
   }, []);
 
@@ -914,10 +919,11 @@ const Admin = () => {
       chansons: CHANSONS.length,
       cerveau: "16",
       cloud: entries.length,
+      autolearn: autoLearnCount ?? "…",
       store: storeItems.length,
       cloudusers: cloudUsers.length,
     } as Record<string, string | number>;
-  }, [interactions, entries, cloudStories, storeItems, cloudUsers]);
+  }, [interactions, entries, cloudStories, storeItems, cloudUsers, autoLearnCount]);
 
   // ─── Handlers ───
   const handleSave = async () => {
@@ -3089,7 +3095,7 @@ const Admin = () => {
               <DashCard key={section.id} label={section.label} emoji={section.emoji}
                 count={sectionCounts[section.id] ?? "…"} desc={section.desc}
                 color={section.color} bgColor={section.bgColor}
-                badge={section.id === "cloud" ? `${entries.filter(e => e.is_active).length} actifs` : undefined}
+                badge={section.id === "cloud" ? `${entries.filter(e => e.is_active).length} actifs` : section.id === "autolearn" && autoLearnCount !== null ? "live" : undefined}
                 onClick={() => { setTopSection(section.id); setSearch(""); }} />
             ))}
           </div>
