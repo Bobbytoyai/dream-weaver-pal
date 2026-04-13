@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      bobby_codes: {
+        Row: {
+          child_age: number | null
+          child_name: string | null
+          claimed_at: string | null
+          code: string
+          created_at: string
+          id: string
+          session_data: Json | null
+        }
+        Insert: {
+          child_age?: number | null
+          child_name?: string | null
+          claimed_at?: string | null
+          code: string
+          created_at?: string
+          id?: string
+          session_data?: Json | null
+        }
+        Update: {
+          child_age?: number | null
+          child_name?: string | null
+          claimed_at?: string | null
+          code?: string
+          created_at?: string
+          id?: string
+          session_data?: Json | null
+        }
+        Relationships: []
+      }
       child_memories: {
         Row: {
           behavior_patterns: Json
