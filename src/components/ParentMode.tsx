@@ -3227,7 +3227,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             settings={settings}
             onUpdate={(key, value) => updateSetting(key, value)}
             onBack={() => setActiveTab("home")}
-            onSave={handleSave}
+            onSave={() => { onSettingsChange?.(settings); setSettingsSaved(true); setTimeout(() => setSettingsSaved(false), 2000); }}
             saved={settingsSaved}
           />
         );
