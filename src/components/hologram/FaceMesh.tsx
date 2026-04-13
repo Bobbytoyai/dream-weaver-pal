@@ -229,10 +229,6 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   // ─── Apply per-element colors ───────────────
   const bobbyColorsKey = bobbyColors ? JSON.stringify(bobbyColors) : "";
   useEffect(() => {
-    // Always sync eyelid to background — even without bobbyColors
-    const bgKey = bobbyColors?.background || "soft-blue";
-    const bgHex = BG_HEX[bgKey] || BG_HEX["soft-blue"];
-    eyelidMat.color.set(bgHex);
 
     if (bobbyColors) {
       const irisHex = IRIS_HEX[bobbyColors.iris] || IRIS_HEX.blue;
