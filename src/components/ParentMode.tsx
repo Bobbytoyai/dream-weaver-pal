@@ -1,15 +1,22 @@
-import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import {
-  ArrowLeft, Clock, MessageSquare, Heart, Brain, Loader2, RefreshCw,
-  Mic, BookOpen, Timer, Sparkles, Shield, Camera, Volume2, VolumeX,
-  Play, Pause, AlertTriangle, TrendingUp, Trash2, ChevronRight, Gamepad2,
-  BarChart3, Calendar, User, Zap, Moon, Sun, Hand, Lock, Search,
-  Download, ToggleLeft, Settings, Eye, EyeOff, FileText, Tag, X, CloudUpload, LogIn,
-  SkipForward, SkipBack, Bell, ChevronDown, ChevronLeft, Star, Edit3
+  ArrowLeft, Loader2, RefreshCw, Bell,
+  BarChart3, MessageSquare, Gamepad2, Settings, CloudUpload, Shield,
 } from "lucide-react";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import StoreGateWrapper from "@/components/StoreGateWrapper";
+import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "./parentSettings";
+import { useParentData } from "@/hooks/useParentData";
+import { useAudioPlayer } from "@/hooks/useAudioPlayer";
+import NotificationPanel from "@/components/parent/NotificationPanel";
+import NameChangeDialog from "@/components/parent/NameChangeDialog";
+import { formatDate } from "@/components/parent/parentTypes";
+import type { Tab } from "@/components/parent/parentTypes";
+
+export type { ParentSettings };
+export { DEFAULT_PARENT_SETTINGS };
+
+// ─── Lazy tabs ──────────────────────────────────────────────────
 const LazyDashboardTab = lazy(() => import("@/components/parent/DashboardTab"));
 const LazySessionsListTab = lazy(() => import("@/components/parent/SessionsListTab"));
 const LazySessionDetailView = lazy(() => import("@/components/parent/SessionDetailView"));
@@ -17,37 +24,26 @@ const LazyReglagesTab = lazy(() => import("@/components/parent/ReglagesTab"));
 const LazyConfidentialiteTab = lazy(() => import("@/components/parent/ConfidentialiteTab"));
 const LazyCloudTab = lazy(() => import("@/components/parent/CloudTab"));
 const LazyHomeTab = lazy(() => import("@/components/parent/HomeTab"));
-import { getInterestSnapshot, INTEREST_KEYWORDS_PUBLIC } from "@/lib/bobby/interestTracker";
-import { supabase } from "@/integrations/supabase/client";
-import StoryLibrary from "@/components/StoryLibrary";
-import ContentCategories from "@/components/ContentCategories";
-import BobbyStore from "@/components/BobbyStore";
-import StoreGateWrapper from "@/components/StoreGateWrapper";
-// VoiceSettings, BobbyCustomizer, LimitsSettings now lazy-loaded via ReglagesTab
-// Piper TTS removed — ElevenLabs only
-import ConfirmDialog from "@/components/ConfirmDialog";
-import {
-  loadParentDashboardSnapshot,
-  loadParentSessionMessages,
-  requestParentSessionAnalysis,
-  type ParentAnalysis as Analysis,
-  type ParentSession as Session,
-  type ParentSessionMessage,
-} from "@/lib/bobby/parentDashboard";
 
-import { ParentSettings, DEFAULT_PARENT_SETTINGS, BOBBY_COLORS } from "./parentSettings";
-import { getSafetyAlertRecords, clearSafetyAlertRecords, type SafetyAlertRecord } from "@/lib/offlineEngine";
-import { eventBus } from "@/lib/eventBus";
-import {
-  saveToCloud, restoreFromCloud, getCloudProfile, deleteCloudProfile,
-  getLocalSyncCode, formatSyncTime,
-  type CloudProfile,
-} from "@/lib/bobby/cloudSync";
-export type { ParentSettings };
-export { DEFAULT_PARENT_SETTINGS };
+// ─── Tab config ─────────────────────────────────────────────────
+const tabs: { id: Tab; icon: any; label: string }[] = [
+  { id: "dashboard", icon: BarChart3, label: "Tableau" },
+  { id: "sessions", icon: MessageSquare, label: "Sessions" },
+  { id: "activites", icon: Gamepad2, label: "Activités" },
+  { id: "personnalisation", icon: Settings, label: "Personnaliser Bobby" },
+  { id: "cloud", icon: CloudUpload, label: "Cloud" },
+  { id: "reglages", icon: Settings, label: "Réglages" },
+  { id: "confidentialite", icon: Shield, label: "Privé" },
+];
 
-// ─── Types ───────────────────────────────────────────────────────────
+// ─── Suspense wrapper ───────────────────────────────────────────
+const SuspenseTab = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
+    {children}
+  </Suspense>
+);
 
+// ─── Props ──────────────────────────────────────────────────────
 interface ParentModeProps {
   childName: string;
   onClose: () => void;
@@ -55,939 +51,194 @@ interface ParentModeProps {
   onSettingsChange?: (settings: ParentSettings) => void;
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────
-/** Replace generic AI references with "Bobby" in summaries */
-function humanizeSummary(text: string): string {
-  return text.replace(/\bl'IA\b/gi, "Bobby").replace(/\bl'intelligence artificielle\b/gi, "Bobby").replace(/\ble chatbot\b/gi, "Bobby").replace(/\ble bot\b/gi, "Bobby").replace(/\bl'assistant\b/gi, "Bobby");
-}
-
-const emotionLabels: Record<string, { label: string; color: string; emoji: string }> = {
-  happy: { label: "Joyeux", color: "bg-secondary text-secondary-foreground", emoji: "😊" },
-  sad: { label: "Triste", color: "bg-accent text-accent-foreground", emoji: "😢" },
-  scared: { label: "Effrayé", color: "bg-destructive/20 text-destructive", emoji: "😰" },
-  excited: { label: "Excité", color: "bg-secondary/60 text-secondary-foreground", emoji: "🤩" },
-  bored: { label: "Ennuyé", color: "bg-muted text-muted-foreground", emoji: "😴" },
-  curious: { label: "Curieux", color: "bg-primary/20 text-primary", emoji: "🧐" },
-  angry: { label: "En colère", color: "bg-destructive/30 text-destructive", emoji: "😠" },
-};
-
-const emotionScoreLabels: Record<string, { label: string; emoji: string }> = {
-  joy: { label: "Joie", emoji: "😊" },
-  joie: { label: "Joie", emoji: "😊" },
-  curiosity: { label: "Curiosité", emoji: "🧐" },
-  curiosité: { label: "Curiosité", emoji: "🧐" },
-  frustration: { label: "Frustration", emoji: "😤" },
-  fear: { label: "Peur", emoji: "😰" },
-  peur: { label: "Peur", emoji: "😰" },
-  sadness: { label: "Tristesse", emoji: "😢" },
-  tristesse: { label: "Tristesse", emoji: "😢" },
-  excitement: { label: "Excitation", emoji: "🤩" },
-  excitation: { label: "Excitation", emoji: "🤩" },
-  anger: { label: "Colère", emoji: "😠" },
-  colère: { label: "Colère", emoji: "😠" },
-  surprise: { label: "Surprise", emoji: "😲" },
-  calm: { label: "Calme", emoji: "😌" },
-  calme: { label: "Calme", emoji: "😌" },
-  love: { label: "Amour", emoji: "❤️" },
-  amour: { label: "Amour", emoji: "❤️" },
-  boredom: { label: "Ennui", emoji: "😴" },
-  ennui: { label: "Ennui", emoji: "😴" },
-  confidence: { label: "Confiance", emoji: "💪" },
-  confiance: { label: "Confiance", emoji: "💪" },
-  neutral: { label: "Neutre", emoji: "😐" },
-  neutre: { label: "Neutre", emoji: "😐" },
-};
-
-const moodLabels: Record<string, { label: string; color: string; emoji: string }> = {
-  positive: { label: "Positif", color: "text-success", emoji: "🟢" },
-  neutral: { label: "Neutre", color: "text-muted-foreground", emoji: "🟡" },
-  low: { label: "Bas", color: "text-destructive", emoji: "🔴" },
-};
-
-const tagLabels: Record<string, { label: string; emoji: string; color: string }> = {
-  fun: { label: "Fun", emoji: "🎉", color: "bg-secondary/60 text-secondary-foreground" },
-  learning: { label: "Apprendre", emoji: "📚", color: "bg-primary/15 text-primary" },
-  emotion: { label: "Émotion", emoji: "💛", color: "bg-accent/60 text-accent-foreground" },
-  story: { label: "Histoire", emoji: "📖", color: "bg-muted text-muted-foreground" },
-};
-
-const ALL_THEMES = [
-  { id: "princesse", label: "👑 Princesse" },
-  { id: "pirate", label: "🏴‍☠️ Pirate" },
-  { id: "espace", label: "🚀 Espace" },
-  { id: "animaux", label: "🐉 Animaux" },
-  { id: "éducatif", label: "🧠 Éducatif" },
-  { id: "magie", label: "✨ Magie" },
-];
-
-const formatDuration = (seconds: number | null): string => {
-  if (!seconds) return "—";
-  if (seconds < 60) return `${seconds}s`;
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}min ${secs}s`;
-};
-
-const formatDate = (date: string): string => {
-  const d = new Date(date);
-  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-};
-
-const formatDateShort = (date: string): string => {
-  const d = new Date(date);
-  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
-};
-
-const formatDayHeader = (date: string): string => {
-  const d = new Date(date);
-  const today = new Date();
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  if (d.toDateString() === today.toDateString()) return "Aujourd'hui";
-  if (d.toDateString() === yesterday.toDateString()) return "Hier";
-  return d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
-};
-
-// ─── Reusable UI Components ──────────────────────────────────────────
-
-const Toggle = ({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) => (
-  <button onClick={() => onChange(!value)}
-    className={`relative w-12 h-7 border-4 border-black transition-all duration-300 ${value ? "bg-foreground" : "bg-white"}`}>
-    <div className={`w-4 h-4 bg-white border-2 border-black transition-all duration-300 ${value ? "translate-x-5 bg-[var(--retro-green)]" : "translate-x-0.5"}`} style={{ marginTop: "-2px" }} />
-  </button>
-);
-
-const SettingRow = ({ icon: Icon, title, desc, children }: {
-  icon: any; title: string; desc?: string; children: React.ReactNode;
-}) => (
-  <div className="flex items-center justify-between py-3 px-1 border-b-2 border-black/10 last:border-0">
-    <div className="flex items-center gap-3 flex-1 min-w-0">
-      <div className="w-9 h-9 border-2 border-black bg-white flex items-center justify-center shrink-0">
-        <Icon className="w-4.5 h-4.5 text-foreground" />
-      </div>
-      <div className="min-w-0">
-        <h4 className="text-[14px] font-black text-foreground uppercase">{title}</h4>
-        {desc && <p className="text-[12px] text-foreground/60 leading-tight mt-0.5 font-bold">{desc}</p>}
-      </div>
-    </div>
-    <div className="shrink-0 ml-3">{children}</div>
-  </div>
-);
-
-const Card = ({ title, icon: Icon, children, noPad, className: cx }: { title?: string; icon?: any; children: React.ReactNode; noPad?: boolean; className?: string }) => (
-  <div className={`retro-card overflow-hidden ${cx || ""}`}>
-    {title && (
-      <div className="flex items-center gap-2.5 px-5 pt-4 pb-2">
-        {Icon && <div className="w-8 h-8 bg-black flex items-center justify-center"><Icon className="w-4 h-4 text-white" /></div>}
-        <h3 className="text-[15px] font-black text-foreground tracking-tight uppercase">{title}</h3>
-      </div>
-    )}
-    <div className={noPad ? "" : "px-5 pb-4"}>{children}</div>
-  </div>
-);
-
-const ScoreGauge = ({ label, score, emoji, color, size = "md" }: { label: string; score: number; emoji: string; color: string; size?: "sm" | "md" | "lg" }) => {
-  const dims = size === "lg" ? "w-20 h-20" : size === "sm" ? "w-12 h-12" : "w-14 h-14";
-  const textSize = size === "lg" ? "text-lg" : "text-sm";
-  const labelSize = size === "lg" ? "text-[11px]" : "text-[10px]";
-  const scoreLevel = score >= 75 ? "Excellent" : score >= 50 ? "Bien" : score >= 30 ? "À suivre" : "Faible";
-  const levelColor = score >= 75 ? "text-green-600" : score >= 50 ? "text-primary" : score >= 30 ? "text-orange-500" : "text-destructive";
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <div className={`relative ${dims}`}>
-        <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-          <path d="M18 2.0845a15.9155 15.9155 0 010 31.831 15.9155 15.9155 0 010-31.831"
-            fill="none" stroke="hsl(var(--muted))" strokeWidth="3" />
-          <path d="M18 2.0845a15.9155 15.9155 0 010 31.831 15.9155 15.9155 0 010-31.831"
-            fill="none" stroke={color} strokeWidth="3"
-            strokeDasharray={`${score}, 100`}
-            strokeLinecap="round"
-            className="transition-all duration-1000 ease-out" />
-        </svg>
-        <span className="absolute inset-0 flex items-center justify-center text-base">{emoji}</span>
-      </div>
-      <span className={`${labelSize} text-muted-foreground font-medium text-center`}>{label}</span>
-      <span className={`${textSize} font-bold text-foreground`}>{score}</span>
-      {size === "lg" && <span className={`text-[9px] font-semibold ${levelColor}`}>{scoreLevel}</span>}
-    </div>
-  );
-};
-
-const StatPill = ({ emoji, value, label }: { emoji: string; value: string | number; label: string }) => (
-  <div className="flex flex-col items-center gap-0.5">
-    <span className="text-xl">{emoji}</span>
-    <span className="text-lg font-bold text-foreground">{value}</span>
-    <span className="text-[10px] text-muted-foreground">{label}</span>
-  </div>
-);
-
-// ─── Tab config (6 tabs) ────────────────────────────────────────
-
-type Tab = "home" | "dashboard" | "sessions" | "activites" | "profil" | "reglages" | "confidentialite" | "cloud" | "personnalisation";
-
-const tabs: { id: Tab; icon: any; label: string; emoji?: string }[] = [
-  { id: "dashboard", icon: BarChart3, label: "Tableau", emoji: "📊" },
-  { id: "sessions", icon: MessageSquare, label: "Sessions", emoji: "💬" },
-  { id: "activites", icon: Gamepad2, label: "Activités", emoji: "🎮" },
-  { id: "personnalisation", icon: Settings, label: "Personnaliser Bobby", emoji: "🎨" },
-  { id: "cloud", icon: CloudUpload, label: "Cloud", emoji: "☁️" },
-  { id: "reglages", icon: Settings, label: "Réglages", emoji: "⚙️" },
-  { id: "confidentialite", icon: Shield, label: "Privé", emoji: "🔒" },
-];
-
-// ─── Main Component ───────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// COMPONENT
+// ═══════════════════════════════════════════════════════════════
 
 const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: ParentModeProps) => {
+  // ── Local UI state ──
   const [activeTab, setActiveTab] = useState<Tab>("home");
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const [safetyAlerts, setSafetyAlerts] = useState<SafetyAlertRecord[]>([]);
-  const [showSafetyAlerts, setShowSafetyAlerts] = useState(true);
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [analyses, setAnalyses] = useState<Analysis[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
-  const [selectedAnalysis, setSelectedAnalysis] = useState<Analysis | null>(null);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [sessionMessages, setSessionMessages] = useState<ParentSessionMessage[]>([]);
-  const [tagFilter, setTagFilter] = useState<string | null>(null);
-  const [settings, setSettings] = useState<ParentSettings>(() => ({
-    ...DEFAULT_PARENT_SETTINGS,
-    ...(parentSettings || {}),
-    contentModes: { ...DEFAULT_PARENT_SETTINGS.contentModes, ...(parentSettings?.contentModes || {}) },
-    nightMode: { ...DEFAULT_PARENT_SETTINGS.nightMode, ...(parentSettings?.nightMode || {}) },
-    interactions: { ...DEFAULT_PARENT_SETTINGS.interactions, ...(parentSettings?.interactions || {}) },
-  }));
-  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
-  const [audioSpeed, setAudioSpeed] = useState<number>(1);
-  const [audioProgress, setAudioProgress] = useState(0);
-  const [audioDuration, setAudioDuration] = useState(0);
-  const [newBlockedTopic, setNewBlockedTopic] = useState("");
-  const [activeMessageIdx, setActiveMessageIdx] = useState<number>(-1);
-  const [reglagesSection, setReglagesSection] = useState<"voix" | "limites" | "personnalisation" | "profil" | null>(null);
-  const [confirmDialog, setConfirmDialog] = useState<{
-    title: string; description: string; confirmLabel?: string;
-    variant?: "danger" | "warning"; onConfirm: () => void;
-  } | null>(null);
-  const [settingsSaved, setSettingsSaved] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const progressInterval = useRef<number | null>(null);
+  const [displayedTab, setDisplayedTab] = useState<Tab>("home");
+  const prevTabRef = useRef<Tab>("home");
   const contentScrollRef = useRef<HTMLDivElement>(null);
-  const [piperDownloading, setPiperDownloading] = useState(false);
-  const [piperProgress, setPiperProgress] = useState<Record<string, number>>({});
-  const [piperDone, setPiperDone] = useState(false);
-  const [sessionSearch, setSessionSearch] = useState("");
-  const [sessionFavFilter, setSessionFavFilter] = useState(false);
-  const [editingNote, setEditingNote] = useState<string | null>(null);
-  const [noteText, setNoteText] = useState("");
-  const [parentAlerts, setParentAlerts] = useState<Array<{ id: string; session_id: string; child_name: string; alert_type: string; severity: string; message: string; context: string | null; is_read: boolean; created_at: string }>>([]);
   const [showNotifPanel, setShowNotifPanel] = useState(false);
-  // Bobby Store now manages its own state via Supabase (see BobbyStore.tsx)
 
-  // Bobby Cloud sync state
-  const [cloudProfile, setCloudProfile] = useState<CloudProfile | null>(null);
-  const [cloudLoading, setCloudLoading] = useState(false);
-  const [cloudRestoreCode, setCloudRestoreCode] = useState("");
-  const [cloudCopied, setCloudCopied] = useState(false);
-  const [pendingNameChange, setPendingNameChange] = useState<string | null>(null);
+  // ── Business hooks ──
+  const data = useParentData({
+    childName,
+    parentSettings,
+    onSettingsChange,
+    onNavigateTab: useCallback((tab: string) => setActiveTab(tab as Tab), []),
+  });
 
-  const unreadAlertCount = parentAlerts.filter(a => !a.is_read).length;
-  // Always use settings.childName as the display name — it's the source of truth
-  const displayName = settings.childName || childName;
+  const audio = useAudioPlayer(data.sessionMessages);
 
-  useEffect(() => { loadData(); loadAlerts(); loadCloudProfile(); }, []);
-
-  // Scroll to top on tab/section change
-  useEffect(() => {
-    contentScrollRef.current?.scrollTo({ top: 0, behavior: "instant" });
-  }, [activeTab, reglagesSection, selectedSession]);
-
-  const loadAlerts = async () => {
-    try {
-      const { data } = await supabase
-        .from("parent_alerts")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(50);
-      if (data) setParentAlerts(data as any);
-    } catch (e) { console.warn("Failed to load alerts:", e); }
-  };
-
-  const loadCloudProfile = async () => {
-    const profile = await getCloudProfile();
-    setCloudProfile(profile);
-  };
-
-  const handleCloudSave = async () => {
-    if (!user) {
-      navigate("/bobby-cloud?returnTo=/");
-      return;
-    }
-    setCloudLoading(true);
-    try {
-      const result = await saveToCloud(displayName, settings, undefined, user.id);
-      if (result.success && result.profile) {
-        setCloudProfile(result.profile);
-        toast.success(result.isNew ? "☁️ Profil Bobby Cloud créé !" : "☁️ Synchronisé avec Bobby Cloud !");
-      } else {
-        toast.error("Erreur de synchronisation", { description: result.error });
-      }
-    } finally { setCloudLoading(false); }
-  };
-
-  const handleCloudRestore = async () => {
-    if (!cloudRestoreCode.trim()) return;
-    if (!user) {
-      navigate("/bobby-cloud?returnTo=/");
-      return;
-    }
-    setCloudLoading(true);
-    try {
-      const result = await restoreFromCloud(cloudRestoreCode);
-      if (result.success && result.profile) {
-        setCloudProfile(result.profile);
-        // Restore parent settings
-        const restored = result.profile.parent_settings;
-        if (restored && typeof restored === "object") {
-          // Keep local childName/childAge priority
-          const merged = {
-            ...DEFAULT_PARENT_SETTINGS,
-            ...restored,
-            childName: displayName,
-            childAge: settings.childAge,
-            contentModes: { ...DEFAULT_PARENT_SETTINGS.contentModes, ...(restored as any).contentModes },
-            nightMode: { ...DEFAULT_PARENT_SETTINGS.nightMode, ...(restored as any).nightMode },
-            interactions: { ...DEFAULT_PARENT_SETTINGS.interactions, ...(restored as any).interactions },
-          };
-          setSettings(merged as ParentSettings);
-          onSettingsChange?.(merged as ParentSettings);
-        }
-        setCloudRestoreCode("");
-        toast.success("☁️ Profil restauré depuis Bobby Cloud !");
-      } else {
-        toast.error("Code introuvable", { description: result.error });
-      }
-    } finally { setCloudLoading(false); }
-  };
-
-  const handleCloudDelete = async () => {
-    setCloudLoading(true);
-    const ok = await deleteCloudProfile();
-    setCloudLoading(false);
-    if (ok) {
-      setCloudProfile(null);
-      toast.success("Profil Bobby Cloud supprimé");
-    }
-  };
-
-  const markAlertRead = async (alertId: string) => {
-    await supabase.from("parent_alerts").update({ is_read: true }).eq("id", alertId);
-    setParentAlerts(prev => prev.map(a => a.id === alertId ? { ...a, is_read: true } : a));
-  };
-
-  const markAllRead = async () => {
-    const unread = parentAlerts.filter(a => !a.is_read);
-    if (unread.length === 0) return;
-    await supabase.from("parent_alerts").update({ is_read: true }).in("id", unread.map(a => a.id));
-    setParentAlerts(prev => prev.map(a => ({ ...a, is_read: true })));
-  };
-
-  // Load safety alerts from localStorage on mount + real-time via eventBus
-  useEffect(() => {
-    setSafetyAlerts(getSafetyAlertRecords());
-
-    const handleStorage = () => setSafetyAlerts(getSafetyAlertRecords());
-    window.addEventListener("storage", handleStorage);
-
-    // Real-time alert listener via eventBus
-    const unsub = eventBus.on("SAFETY_ALERT", (event: any) => {
-      // Refresh alerts list
-      setSafetyAlerts(getSafetyAlertRecords());
-      setShowSafetyAlerts(true);
-
-      // Immediate toast notification
-      const severityLabels: Record<string, string> = {
-        CRITICAL: "🚨 ALERTE CRITIQUE",
-        HIGH: "⚠️ Alerte importante",
-        MEDIUM: "🔔 Alerte",
-      };
-      const label = severityLabels[event.severity] || "🔔 Alerte";
-      toast.error(`${label} — ${event.childName}`, {
-        description: `Catégorie: ${event.category} • "${event.fullText?.slice(0, 80)}…"`,
-        duration: 15000,
-        action: {
-          label: "Voir",
-          onClick: () => {
-            setActiveTab("dashboard");
-            setShowSafetyAlerts(true);
-          },
-        },
-      });
-    });
-
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      unsub();
-    };
-  }, []);
-
-  const updateSetting = <K extends keyof ParentSettings>(key: K, value: ParentSettings[K]) => {
-    const next = { ...settings, [key]: value };
-    setSettings(next);
-    onSettingsChange?.(next);
-  };
-
-  const updateNested = <K extends keyof ParentSettings>(key: K, subKey: string, value: any) => {
-    const current = settings[key] as any;
-    const next = { ...settings, [key]: { ...current, [subKey]: value } };
-    setSettings(next);
-    onSettingsChange?.(next);
-  };
-
-  const toggleTheme = (theme: string) => {
-    const themes = settings.enabledThemes.includes(theme)
-      ? settings.enabledThemes.filter(t => t !== theme)
-      : [...settings.enabledThemes, theme];
-    updateSetting("enabledThemes", themes);
-  };
-
-  const loadData = async () => {
-    setLoading(true);
-    const snapshot = await loadParentDashboardSnapshot(50);
-    setSessions(snapshot.sessions.filter(s => s.message_count > 0));
-    setAnalyses(snapshot.analyses);
-    setLoading(false);
-  };
-
-  const analyzeSession = async (session: Session) => {
-    setSelectedSession(session);
-    setSessionMessages(await loadParentSessionMessages(session.id));
-
-    const existing = analyses.find(a => a.session_id === session.id);
-    // Show existing analysis if it has actual AI data (summary)
-    if (existing?.summary) { setSelectedAnalysis(existing); return; }
-    setAnalyzing(true);
-    try {
-      const analysis = await requestParentSessionAnalysis(session.id);
-      if (analysis) {
-        setSelectedAnalysis(analysis);
-        loadData(); // Refresh to pick up merged audio_path + AI data
-      }
-    } catch { /* ignore */ } finally { setAnalyzing(false); }
-  };
-
-  // ─── Audio Player ──────────────────────────────────────────────
-
-  const playAudio = async (audioPath: string) => {
-    if (playingAudio === audioPath) {
-      audioRef.current?.pause();
-      setPlayingAudio(null);
-      if (progressInterval.current) clearInterval(progressInterval.current);
-      return;
-    }
-    const { data } = await supabase.storage.from("conversation-audio").createSignedUrl(audioPath, 3600);
-    if (data?.signedUrl) {
-      if (audioRef.current) { audioRef.current.pause(); }
-      if (progressInterval.current) clearInterval(progressInterval.current);
-      const audio = new Audio(data.signedUrl);
-      audioRef.current = audio;
-      audio.playbackRate = audioSpeed;
-      audio.onloadedmetadata = () => setAudioDuration(audio.duration);
-      audio.onended = () => {
-        setPlayingAudio(null);
-        setAudioProgress(0);
-        setActiveMessageIdx(-1);
-        if (progressInterval.current) clearInterval(progressInterval.current);
-      };
-      audio.play();
-      setPlayingAudio(audioPath);
-      progressInterval.current = window.setInterval(() => {
-        if (audio.duration > 0) {
-          setAudioProgress((audio.currentTime / audio.duration) * 100);
-          if (sessionMessages.length > 0) {
-            const msgIdx = Math.min(
-              Math.floor((audio.currentTime / audio.duration) * sessionMessages.length),
-              sessionMessages.length - 1
-            );
-            setActiveMessageIdx(msgIdx);
-          }
-        }
-      }, 200);
-    }
-  };
-
-  const seekAudio = (pct: number) => {
-    if (audioRef.current && audioDuration > 0) {
-      audioRef.current.currentTime = (pct / 100) * audioDuration;
-      setAudioProgress(pct);
-    }
-  };
-
-  const skipMessage = (direction: 1 | -1) => {
-    if (!audioRef.current || !audioDuration || sessionMessages.length === 0) return;
-    const nextIdx = Math.max(0, Math.min(sessionMessages.length - 1, activeMessageIdx + direction));
-    const pct = (nextIdx / sessionMessages.length) * 100;
-    seekAudio(pct);
-    setActiveMessageIdx(nextIdx);
-  };
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.playbackRate = audioSpeed;
-    }
-  }, [audioSpeed]);
-
-  const deleteSession = async (sessionId: string) => {
-    await supabase.from("conversation_analyses").delete().eq("session_id", sessionId);
-    await supabase.from("session_messages").delete().eq("session_id", sessionId);
-    await supabase.from("child_sessions").delete().eq("id", sessionId);
-    await supabase.storage.from("conversation-audio").remove([`${sessionId}.webm`, `${sessionId}.mp4`]);
-    loadData();
-    setSelectedSession(null);
-    setSelectedAnalysis(null);
-  };
-
-  // v4.2: Skip audio ±10 seconds
-  const skipAudio = (seconds: number) => {
-    if (!audioRef.current || !audioDuration) return;
-    const newTime = Math.max(0, Math.min(audioDuration, audioRef.current.currentTime + seconds));
-    audioRef.current.currentTime = newTime;
-    setAudioProgress((newTime / audioDuration) * 100);
-  };
-
-  // v4.2: Toggle favorite
-  const toggleFavorite = async (session: Session) => {
-    const newVal = !session.is_favorite;
-    await supabase.from("child_sessions").update({ is_favorite: newVal }).eq("id", session.id);
-    setSessions(prev => prev.map(s => s.id === session.id ? { ...s, is_favorite: newVal } : s));
-    if (selectedSession?.id === session.id) setSelectedSession({ ...selectedSession, is_favorite: newVal });
-  };
-
-  // v4.2: Save parent note
-  const saveParentNote = async (sessionId: string, note: string) => {
-    const trimmed = note.trim() || null;
-    await supabase.from("child_sessions").update({ parent_note: trimmed }).eq("id", sessionId);
-    setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, parent_note: trimmed } : s));
-    if (selectedSession?.id === sessionId) setSelectedSession({ ...selectedSession, parent_note: trimmed });
-    setEditingNote(null);
-  };
-
-  const exportSessionPDF = (session: Session, analysis: Analysis | null) => {
-    const lines: string[] = [
-      `RAPPORT DE SESSION — ${displayName}`,
-      `═══════════════════════════════════════`,
-      `Date : ${formatDate(session.started_at)}`,
-      `Durée : ${formatDuration(session.duration_seconds)}`,
-      `Messages : ${session.message_count}`,
-      ``,
-    ];
-    if (analysis) {
-      lines.push(`RÉSUMÉ`, `───────`, analysis.summary || "Aucun résumé", ``);
-      if (analysis.emotions && Object.keys(analysis.emotions).length > 0) {
-        lines.push(`ÉMOTIONS`, `───────`);
-        Object.entries(analysis.emotions).filter(([, v]) => v > 0).forEach(([k, v]) => {
-          const info = emotionScoreLabels[k] || { label: k, emoji: "" };
-          lines.push(`  ${info.emoji} ${info.label}: ${v}%`);
-        });
-        lines.push(``);
-      }
-      if (analysis.sociability_score != null) {
-        lines.push(`SCORES`, `───────`);
-        lines.push(`  🤝 Sociabilité : ${analysis.sociability_score}/100`);
-        lines.push(`  🔍 Curiosité : ${analysis.curiosity_score}/100`);
-        lines.push(`  ⚖️ Stabilité : ${analysis.emotional_stability_score}/100`);
-        lines.push(``);
-      }
-      if (analysis.extracted_interests?.length) {
-        lines.push(`INTÉRÊTS`, `───────`, `  ${analysis.extracted_interests.join(", ")}`, ``);
-      }
-      if (analysis.topics_detected?.length) {
-        lines.push(`SUJETS`, `───────`, `  ${analysis.topics_detected.join(", ")}`, ``);
-      }
-      if (analysis.behavior_insights?.length) {
-        lines.push(`OBSERVATIONS`, `───────`);
-        analysis.behavior_insights.forEach(i => lines.push(`  • ${i}`));
-        lines.push(``);
-      }
-      if (analysis.full_transcription) {
-        lines.push(`TRANSCRIPTION`, `───────`, analysis.full_transcription);
-      }
-    }
-    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `rapport-${displayName}-${new Date(session.started_at).toISOString().slice(0, 10)}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // ─── Computed ─────────────────────────────────────────────────
-
-  const totalSessions = sessions.length;
-  const totalMessages = sessions.reduce((acc, s) => acc + s.message_count, 0);
-  const totalDuration = sessions.reduce((acc, s) => acc + (s.duration_seconds || 0), 0);
-  const allEmotions = sessions.flatMap(s => s.detected_emotions || []);
-  const emotionCounts = allEmotions.reduce((acc, e) => { acc[e] = (acc[e] || 0) + 1; return acc; }, {} as Record<string, number>);
-
-  const recentAnalyses = analyses.slice(0, 7);
-
-  const allAlerts = analyses.flatMap(a => (a.alerts || []).map(alert => ({
-    ...alert, date: a.created_at, sessionId: a.session_id,
-  })));
-
-  const smartAlerts = useMemo(() => {
-    const alerts: Array<{ type: string; message: string; severity: "info" | "warning" | "critical" }> = [];
-    const recentSadness = recentAnalyses.filter(a => ((a.emotions as any)?.sadness || 0) > 40);
-    if (recentSadness.length >= 3) {
-      alerts.push({ type: "sadness", message: "Tristesse répétée détectée sur plusieurs sessions", severity: "warning" });
-    }
-    const recentFrustration = recentAnalyses.filter(a => ((a.emotions as any)?.frustration || 0) > 50);
-    if (recentFrustration.length >= 2) {
-      alerts.push({ type: "frustration", message: "Pattern de frustration observé récemment", severity: "warning" });
-    }
-    const lowEngagement = recentAnalyses.filter(a => a.engagement_level === "low");
-    if (lowEngagement.length >= 3) {
-      alerts.push({ type: "engagement", message: "Engagement faible sur les dernières sessions", severity: "info" });
-    }
-    allAlerts.slice(0, 3).forEach(a => {
-      alerts.push({ type: a.type, message: a.message, severity: "warning" });
-    });
-    return alerts;
-  }, [recentAnalyses, allAlerts]);
-
-  const allTopics = analyses.flatMap(a => a.topics_detected || []);
-  const topicCounts = allTopics.reduce((acc, t) => { acc[t] = (acc[t] || 0) + 1; return acc; }, {} as Record<string, number>);
-  const topTopics = Object.entries(topicCounts).sort(([, a], [, b]) => b - a).slice(0, 8);
-
-  const today = new Date().toDateString();
-  const todaySessions = sessions.filter(s => new Date(s.started_at).toDateString() === today);
-  const todayDuration = todaySessions.reduce((acc, s) => acc + (s.duration_seconds || 0), 0);
-  const dominantMood = Object.entries(emotionCounts).sort(([, a], [, b]) => b - a)[0];
-
-  const avgScores = useMemo(() => {
-    const scored = analyses.filter(a => a.sociability_score != null);
-    if (scored.length === 0) return null;
-    return {
-      sociability: Math.round(scored.reduce((s, a) => s + (a.sociability_score || 0), 0) / scored.length),
-      curiosity: Math.round(scored.reduce((s, a) => s + (a.curiosity_score || 0), 0) / scored.length),
-      stability: Math.round(scored.reduce((s, a) => s + (a.emotional_stability_score || 0), 0) / scored.length),
-    };
-  }, [analyses]);
-
-  const avgEmotions = useMemo(() => {
-    if (recentAnalyses.length === 0) return {};
-    return Object.keys(emotionScoreLabels).reduce((acc, key) => {
-      const values = recentAnalyses.map(a => ((a.emotions as any)?.[key] || 0)).filter(v => v > 0);
-      if (values.length > 0) {
-        acc[key] = Math.round(values.reduce((s, v) => s + v, 0) / values.length);
-      }
-      return acc;
-    }, {} as Record<string, number>);
-  }, [recentAnalyses]);
-
-  const allInterests = useMemo(() => {
-    const counts: Record<string, number> = {};
-    analyses.forEach(a => {
-      (a.extracted_interests || []).forEach(i => { counts[i] = (counts[i] || 0) + 1; });
-    });
-    return Object.entries(counts).sort(([, a], [, b]) => b - a).slice(0, 12);
-  }, [analyses]);
-
-  // Engagement distribution
-  const engagementDist = useMemo(() => {
-    const dist = { high: 0, medium: 0, low: 0 };
-    recentAnalyses.forEach(a => {
-      if (a.engagement_level === "high") dist.high++;
-      else if (a.engagement_level === "medium") dist.medium++;
-      else dist.low++;
-    });
-    return dist;
-  }, [recentAnalyses]);
-
-  // Mood distribution
-  const moodDist = useMemo(() => {
-    const dist = { positive: 0, neutral: 0, low: 0 };
-    recentAnalyses.forEach(a => {
-      const mood = a.mood_score || "neutral";
-      if (mood === "positive") dist.positive++;
-      else if (mood === "low") dist.low++;
-      else dist.neutral++;
-    });
-    return dist;
-  }, [recentAnalyses]);
-
-  const lastSession = sessions[0] || null;
-  const lastAnalysis = lastSession ? analyses.find(a => a.session_id === lastSession.id) : null;
-
-  const filteredSessions = useMemo(() => {
-    let list = sessions;
-    if (tagFilter) list = list.filter(s => s.tags?.includes(tagFilter));
-    if (sessionFavFilter) list = list.filter(s => s.is_favorite);
-    if (sessionSearch.trim()) {
-      const q = sessionSearch.toLowerCase();
-      list = list.filter(s => {
-        const analysis = analyses.find(a => a.session_id === s.id);
-        return (
-          s.ai_summary?.toLowerCase().includes(q) ||
-          s.tags?.some(t => t.toLowerCase().includes(q)) ||
-          s.topics?.some(t => t.toLowerCase().includes(q)) ||
-          analysis?.summary?.toLowerCase().includes(q) ||
-          analysis?.topics_detected?.some(t => t.toLowerCase().includes(q)) ||
-          analysis?.extracted_interests?.some(i => i.toLowerCase().includes(q))
-        );
-      });
-    }
-    return list;
-  }, [sessions, tagFilter, sessionFavFilter, sessionSearch, analyses]);
-
-
-  // ─── Sessions grouped by day ──────────────────────────────────
-  const groupedSessions = useMemo(() => {
-    const groups: { day: string; sessions: Session[] }[] = [];
-    for (const session of filteredSessions) {
-      const dayKey = new Date(session.started_at).toDateString();
-      const existing = groups.find(g => g.day === dayKey);
-      if (existing) {
-        existing.sessions.push(session);
-      } else {
-        groups.push({ day: dayKey, sessions: [session] });
-      }
-    }
-    return groups;
-  }, [filteredSessions]);
-
-  // ─── Presets ──────────────────────────────────────────────────
-
-  const applyPreset = (name: string) => {
-    let next = { ...settings };
-    switch (name) {
-      case "calm":
-        next.voiceSpeed = "slow"; next.personality = "calm";
-        next.storyDuration = "longue"; next.sfxVolume = 0.3;
-        break;
-      case "game":
-        next.contentModes = { ...next.contentModes, games: true };
-        next.personality = "energetic"; next.voiceSpeed = "fast";
-        break;
-      case "night":
-        next.nightMode = { ...next.nightMode, active: true };
-        next.personality = "calm"; next.voiceSpeed = "slow"; next.sfxVolume = 0.2;
-        break;
-      case "education":
-        next.personality = "educational";
-        next.contentModes = { ...next.contentModes, educational: true };
-        break;
-    }
-    setSettings(next);
-    onSettingsChange?.(next);
-  };
-
-  // ═══════════════════════════════════════════════════════════════
-  // RENDER: SESSION DETAIL
-  // ═══════════════════════════════════════════════════════════════
-  // SESSION DETAIL + SESSIONS LIST: extracted to SessionDetailView + SessionsListTab
-  // ═══════════════════════════════════════════════════════════════
-  // PROFIL: extracted to ProfilTab.tsx
-  // RÉGLAGES: extracted to ReglagesTab.tsx
-  const handleSave = () => {
-    onSettingsChange?.(settings);
-    setSettingsSaved(true);
-    setTimeout(() => setSettingsSaved(false), 2000);
-  };
-
-  // NOUVEAUTÉS + CLOUD: extracted to NouveautesTab.tsx + CloudTab.tsx
-
-
-  const allTabIds: Tab[] = ["home", ...tabs.map(t => t.id)];
-  const prevTabRef = useRef(activeTab);
-  
-  const [displayedTab, setDisplayedTab] = useState(activeTab);
-
+  // ── Tab sync ──
   useEffect(() => {
     if (activeTab === prevTabRef.current) return;
     setDisplayedTab(activeTab);
     prevTabRef.current = activeTab;
   }, [activeTab]);
 
+  // Scroll to top on navigation
+  useEffect(() => {
+    contentScrollRef.current?.scrollTo({ top: 0, behavior: "instant" });
+  }, [activeTab, data.reglagesSection, data.selectedSession]);
+
+  // ── Back handler ──
+  const handleBack = () => {
+    if (data.selectedSession) {
+      data.setSelectedSession(null);
+      data.setSelectedAnalysis(null);
+      data.setSessionMessages([]);
+      audio.cleanup();
+    } else if (activeTab !== "home") {
+      setActiveTab("home");
+    } else {
+      onClose();
+    }
+  };
+
   // ═══════════════════════════════════════════════════════════════
-  // RENDER: MAIN
+  // TAB ROUTER
   // ═══════════════════════════════════════════════════════════════
 
   const renderTabContent = () => {
-    if (selectedSession) return (
-      <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
+    if (data.selectedSession) return (
+      <SuspenseTab>
         <LazySessionDetailView
-          session={selectedSession}
-          analysis={selectedAnalysis || analyses.find(a => a.session_id === selectedSession.id) || null}
-          analyses={analyses}
-          sessionMessages={sessionMessages}
-          analyzing={analyzing}
-          displayName={displayName}
-          analyzeSession={analyzeSession}
-          toggleFavorite={toggleFavorite}
-          exportSessionPDF={exportSessionPDF}
-          deleteSession={deleteSession}
-          saveParentNote={saveParentNote}
-          onCloudSave={handleCloudSave}
-          setConfirmDialog={setConfirmDialog}
-          playingAudio={playingAudio}
-          audioProgress={audioProgress}
-          audioDuration={audioDuration}
-          audioSpeed={audioSpeed}
-          activeMessageIdx={activeMessageIdx}
-          playAudio={playAudio}
-          seekAudio={seekAudio}
-          skipAudio={skipAudio}
-          setAudioSpeed={setAudioSpeed}
+          session={data.selectedSession}
+          analysis={data.selectedAnalysis || data.analyses.find(a => a.session_id === data.selectedSession!.id) || null}
+          analyses={data.analyses}
+          sessionMessages={data.sessionMessages}
+          analyzing={data.analyzing}
+          displayName={data.displayName}
+          analyzeSession={data.analyzeSession}
+          toggleFavorite={data.toggleFavorite}
+          exportSessionPDF={data.exportSessionPDF}
+          deleteSession={data.deleteSession}
+          saveParentNote={data.saveParentNote}
+          onCloudSave={data.handleCloudSave}
+          setConfirmDialog={data.setConfirmDialog}
+          playingAudio={audio.playingAudio}
+          audioProgress={audio.audioProgress}
+          audioDuration={audio.audioDuration}
+          audioSpeed={audio.audioSpeed}
+          activeMessageIdx={audio.activeMessageIdx}
+          playAudio={audio.playAudio}
+          seekAudio={audio.seekAudio}
+          skipAudio={audio.skipAudio}
+          setAudioSpeed={audio.setAudioSpeed}
         />
-      </Suspense>
+      </SuspenseTab>
     );
-    const tab = displayedTab;
-    // If a category is selected, render that category
-    if (tab !== "home") {
-      switch (tab) {
-        case "dashboard": return (
-          <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
-            <LazyDashboardTab
-              sessions={sessions}
-              analyses={analyses}
-              displayName={displayName}
-              safetyAlerts={safetyAlerts}
-              showSafetyAlerts={showSafetyAlerts}
-              setShowSafetyAlerts={setShowSafetyAlerts}
-              clearSafetyAlerts={() => { clearSafetyAlertRecords(); setSafetyAlerts([]); }}
-            />
-          </Suspense>
-        );
-        case "sessions": return (
-          <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
-            <LazySessionsListTab
-              sessions={sessions}
-              analyses={analyses}
-              loading={loading}
-              displayName={displayName}
-              tagFilter={tagFilter}
-              setTagFilter={setTagFilter}
-              sessionFavFilter={sessionFavFilter}
-              setSessionFavFilter={setSessionFavFilter}
-              sessionSearch={sessionSearch}
-              setSessionSearch={setSessionSearch}
-              analyzeSession={analyzeSession}
-              groupedSessions={groupedSessions}
-            />
-          </Suspense>
-        );
-        case "activites": return <StoreGateWrapper childName={settings.childName} childAge={settings.childAge} />;
-        case "profil":
-        case "reglages": return (
-          <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
-            <LazyReglagesTab
-              settings={settings}
-              sessions={sessions}
-              childName={childName}
-              allInterests={allInterests}
-              settingsSaved={settingsSaved}
-              reglagesSection={reglagesSection}
-              setReglagesSection={setReglagesSection}
-              onUpdate={updateSetting}
-              onUpdateNested={updateNested}
-              onSave={handleSave}
-              onPendingNameChange={(name) => setPendingNameChange(name)}
-            />
-          </Suspense>
-        );
-        case "personnalisation": {
-          // Route personnalisation to reglages with personnalisation section pre-selected
-          return (
-            <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
-              <LazyReglagesTab
-                settings={settings}
-                sessions={sessions}
-                childName={childName}
-                allInterests={allInterests}
-                settingsSaved={settingsSaved}
-                reglagesSection="personnalisation"
-                setReglagesSection={(s) => { if (!s) setActiveTab("home"); else setReglagesSection(s); }}
-                onUpdate={updateSetting}
-                onUpdateNested={updateNested}
-                onSave={handleSave}
-                onPendingNameChange={(name) => setPendingNameChange(name)}
-              />
-            </Suspense>
-          );
-        }
-        case "cloud": return (
-          <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
-            <LazyCloudTab
-              sessions={sessions}
-              analyses={analyses}
-              user={user}
-              cloudProfile={cloudProfile}
-              cloudLoading={cloudLoading}
-              cloudCopied={cloudCopied}
-              setCloudCopied={setCloudCopied}
-              handleCloudSave={handleCloudSave}
-              handleCloudDelete={handleCloudDelete}
-              setConfirmDialog={setConfirmDialog}
-            />
-          </Suspense>
-        );
-        case "confidentialite": return (
-          <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
-            <LazyConfidentialiteTab
-              settings={settings}
-              sessions={sessions}
-              analyses={analyses}
-              displayName={displayName}
-              childName={childName}
-              onUpdate={updateSetting}
-              setConfirmDialog={setConfirmDialog}
-              setActiveTab={(tab: string) => setActiveTab(tab as any)}
-              loadData={loadData}
-            />
-          </Suspense>
-        );
-        default: return (
-          <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
-            <LazyDashboardTab
-              sessions={sessions}
-              analyses={analyses}
-              displayName={displayName}
-              safetyAlerts={safetyAlerts}
-              showSafetyAlerts={showSafetyAlerts}
-              setShowSafetyAlerts={setShowSafetyAlerts}
-              clearSafetyAlerts={() => { clearSafetyAlertRecords(); setSafetyAlerts([]); }}
-            />
-          </Suspense>
-        );
-      }
-    }
 
-    // ─── HOME ───
-    return (
-      <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>}>
+    const tab = displayedTab;
+
+    if (tab === "home") return (
+      <SuspenseTab>
         <LazyHomeTab
-          sessions={sessions}
-          analyses={analyses}
-          displayName={displayName}
-          cloudProfile={cloudProfile}
-          unreadAlertCount={unreadAlertCount}
+          sessions={data.sessions}
+          analyses={data.analyses}
+          displayName={data.displayName}
+          cloudProfile={data.cloudProfile}
+          unreadAlertCount={data.unreadAlertCount}
           onOpenNotifPanel={() => setShowNotifPanel(true)}
           onNavigate={setActiveTab}
         />
-      </Suspense>
+      </SuspenseTab>
     );
+
+    switch (tab) {
+      case "dashboard": return (
+        <SuspenseTab>
+          <LazyDashboardTab
+            sessions={data.sessions} analyses={data.analyses} displayName={data.displayName}
+            safetyAlerts={data.safetyAlerts} showSafetyAlerts={data.showSafetyAlerts}
+            setShowSafetyAlerts={data.setShowSafetyAlerts}
+            clearSafetyAlerts={data.clearSafetyAlerts}
+          />
+        </SuspenseTab>
+      );
+      case "sessions": return (
+        <SuspenseTab>
+          <LazySessionsListTab
+            sessions={data.sessions} analyses={data.analyses} loading={data.loading}
+            displayName={data.displayName} tagFilter={data.tagFilter} setTagFilter={data.setTagFilter}
+            sessionFavFilter={data.sessionFavFilter} setSessionFavFilter={data.setSessionFavFilter}
+            sessionSearch={data.sessionSearch} setSessionSearch={data.setSessionSearch}
+            analyzeSession={data.analyzeSession} groupedSessions={data.groupedSessions}
+          />
+        </SuspenseTab>
+      );
+      case "activites": return <StoreGateWrapper childName={data.settings.childName} childAge={data.settings.childAge} />;
+      case "profil":
+      case "reglages": return (
+        <SuspenseTab>
+          <LazyReglagesTab
+            settings={data.settings} sessions={data.sessions} childName={childName}
+            allInterests={data.allInterests} settingsSaved={data.settingsSaved}
+            reglagesSection={data.reglagesSection} setReglagesSection={data.setReglagesSection}
+            onUpdate={data.updateSetting} onUpdateNested={data.updateNested}
+            onSave={data.handleSave} onPendingNameChange={(name) => data.setPendingNameChange(name)}
+          />
+        </SuspenseTab>
+      );
+      case "personnalisation": return (
+        <SuspenseTab>
+          <LazyReglagesTab
+            settings={data.settings} sessions={data.sessions} childName={childName}
+            allInterests={data.allInterests} settingsSaved={data.settingsSaved}
+            reglagesSection="personnalisation"
+            setReglagesSection={(s) => { if (!s) setActiveTab("home"); else data.setReglagesSection(s); }}
+            onUpdate={data.updateSetting} onUpdateNested={data.updateNested}
+            onSave={data.handleSave} onPendingNameChange={(name) => data.setPendingNameChange(name)}
+          />
+        </SuspenseTab>
+      );
+      case "cloud": return (
+        <SuspenseTab>
+          <LazyCloudTab
+            sessions={data.sessions} analyses={data.analyses} user={data.user}
+            cloudProfile={data.cloudProfile} cloudLoading={data.cloudLoading}
+            cloudCopied={data.cloudCopied} setCloudCopied={data.setCloudCopied}
+            handleCloudSave={data.handleCloudSave} handleCloudDelete={data.handleCloudDelete}
+            setConfirmDialog={data.setConfirmDialog}
+          />
+        </SuspenseTab>
+      );
+      case "confidentialite": return (
+        <SuspenseTab>
+          <LazyConfidentialiteTab
+            settings={data.settings} sessions={data.sessions} analyses={data.analyses}
+            displayName={data.displayName} childName={childName}
+            onUpdate={data.updateSetting} setConfirmDialog={data.setConfirmDialog}
+            setActiveTab={(t: string) => setActiveTab(t as Tab)} loadData={data.loadData}
+          />
+        </SuspenseTab>
+      );
+      default: return (
+        <SuspenseTab>
+          <LazyDashboardTab
+            sessions={data.sessions} analyses={data.analyses} displayName={data.displayName}
+            safetyAlerts={data.safetyAlerts} showSafetyAlerts={data.showSafetyAlerts}
+            setShowSafetyAlerts={data.setShowSafetyAlerts}
+            clearSafetyAlerts={data.clearSafetyAlerts}
+          />
+        </SuspenseTab>
+      );
+    }
   };
 
-  const lightMode = true;
+  // ═══════════════════════════════════════════════════════════════
+  // RENDER
+  // ═══════════════════════════════════════════════════════════════
 
   return (
-    <div className={`min-h-screen bg-background max-w-lg mx-auto flex flex-col transition-colors duration-300 ${lightMode ? "parent-light" : ""}`}>
-      {/* Header — retro style */}
+    <div className="min-h-screen bg-background max-w-lg mx-auto flex flex-col transition-colors duration-300 parent-light">
+      {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 bg-card border-b-4 border-black">
-        <button
-          onClick={selectedSession ? () => { setSelectedSession(null); setSelectedAnalysis(null); setSessionMessages([]); setPlayingAudio(null); setAudioProgress(0); setActiveMessageIdx(-1); if (audioRef.current) audioRef.current.pause(); if (progressInterval.current) clearInterval(progressInterval.current); } : activeTab !== "home" ? () => setActiveTab("home") : onClose}
+        <button onClick={handleBack}
           className="w-9 h-9 border-2 border-black bg-white flex items-center justify-center text-black hover:bg-muted transition-colors">
           <ArrowLeft className="w-4.5 h-4.5" />
         </button>
@@ -996,21 +247,22 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
             {activeTab === "home" ? "BOBBY" : (tabs.find(t => t.id === activeTab)?.label || "BOBBY").toUpperCase()}
           </h2>
           <p className="text-[11px] text-muted-foreground font-bold">
-            {selectedSession ? formatDate(selectedSession.started_at) : `${childName}`}
+            {data.selectedSession ? formatDate(data.selectedSession.started_at) : childName}
           </p>
         </div>
-        {!selectedSession && (
+        {!data.selectedSession && (
           <div className="flex items-center gap-1.5">
-            <button onClick={() => { setShowNotifPanel(!showNotifPanel); }}
+            <button onClick={() => setShowNotifPanel(!showNotifPanel)}
               className="relative w-9 h-9 border-2 border-black bg-white flex items-center justify-center text-black hover:bg-muted transition-all">
               <Bell className="w-4 h-4" />
-              {unreadAlertCount > 0 && (
+              {data.unreadAlertCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-destructive text-white text-[10px] font-bold flex items-center justify-center px-1 animate-pulse">
-                  {unreadAlertCount}
+                  {data.unreadAlertCount}
                 </span>
               )}
             </button>
-            <button onClick={() => { loadData(); loadAlerts(); }} className="w-9 h-9 border-2 border-black bg-white flex items-center justify-center text-black">
+            <button onClick={() => { data.loadData(); data.loadAlerts(); }}
+              className="w-9 h-9 border-2 border-black bg-white flex items-center justify-center text-black">
               <RefreshCw className="w-4 h-4" />
             </button>
           </div>
@@ -1019,75 +271,16 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* Notification Panel */}
       {showNotifPanel && (
-        <div className="absolute top-14 right-2 z-50 w-80 max-h-96 bg-white border-4 border-black overflow-hidden" style={{ boxShadow: "6px 6px 0px rgba(0,0,0,0.25)" }}>
-          <div className="flex items-center justify-between px-4 py-3 border-b-2 border-black">
-            <div className="flex items-center gap-2">
-              <Bell className="w-4 h-4 text-foreground" />
-              <h3 className="text-[13px] font-black text-foreground uppercase">Notifications</h3>
-              {unreadAlertCount > 0 && (
-                <span className="text-[10px] px-2 py-0.5 border-2 border-black bg-[var(--retro-red)] text-foreground font-black">{unreadAlertCount}</span>
-              )}
-            </div>
-            <div className="flex items-center gap-1">
-              {unreadAlertCount > 0 && (
-                <button onClick={markAllRead} className="text-[10px] text-foreground font-black hover:underline uppercase">
-                  Tout lu
-                </button>
-              )}
-              <button onClick={() => setShowNotifPanel(false)} className="w-7 h-7 border border-black flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)]">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-          <div className="overflow-y-auto max-h-72">
-            {parentAlerts.length === 0 ? (
-              <div className="p-6 text-center">
-                <span className="text-2xl">✅</span>
-                <p className="text-[12px] text-foreground/60 mt-2 font-bold">Aucune alerte</p>
-              </div>
-            ) : (
-              parentAlerts.slice(0, 20).map(alert => {
-                const severityConfig: Record<string, { icon: string; bg: string }> = {
-                  critical: { icon: "🚨", bg: "bg-[var(--retro-red)]" },
-                  high: { icon: "⚠️", bg: "bg-[var(--retro-orange)]" },
-                  medium: { icon: "🔔", bg: "bg-[var(--retro-yellow)]" },
-                  low: { icon: "ℹ️", bg: "bg-white" },
-                };
-                const cfg = severityConfig[alert.severity] || severityConfig.medium;
-                const timeAgo = (() => {
-                  const mins = Math.floor((Date.now() - new Date(alert.created_at).getTime()) / 60000);
-                  if (mins < 60) return `il y a ${mins}min`;
-                  const hrs = Math.floor(mins / 60);
-                  if (hrs < 24) return `il y a ${hrs}h`;
-                  return `il y a ${Math.floor(hrs / 24)}j`;
-                })();
-                return (
-                  <button key={alert.id}
-                    onClick={() => {
-                      markAlertRead(alert.id);
-                      const session = sessions.find(s => s.id === alert.session_id);
-                      if (session) { analyzeSession(session); setShowNotifPanel(false); }
-                    }}
-                    className={`w-full text-left px-4 py-3 border-b-2 border-black/15 ${!alert.is_read ? cfg.bg : ""} hover:bg-[var(--retro-yellow)] transition-colors`}>
-                    <div className="flex items-start gap-2">
-                      <span className="text-sm mt-0.5">{cfg.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-[12px] ${!alert.is_read ? "font-black text-foreground" : "font-bold text-foreground/60"} line-clamp-2`}>
-                          {alert.message}
-                        </p>
-                        <p className="text-[10px] text-foreground/50 mt-0.5 font-bold">{alert.child_name} • {timeAgo}</p>
-                      </div>
-                      {!alert.is_read && <span className="w-2 h-2 bg-foreground mt-1.5 shrink-0" />}
-                    </div>
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </div>
+        <NotificationPanel
+          alerts={data.parentAlerts}
+          unreadCount={data.unreadAlertCount}
+          sessions={data.sessions}
+          onMarkRead={data.markAlertRead}
+          onMarkAllRead={data.markAllRead}
+          onSelectSession={(session) => { data.analyzeSession(session); setShowNotifPanel(false); }}
+          onClose={() => setShowNotifPanel(false)}
+        />
       )}
-
-      {/* No tab bar — using card grid on home */}
 
       {/* Content */}
       <div ref={contentScrollRef} data-scroll-container className="flex-1 overflow-y-auto overflow-x-hidden">
@@ -1098,57 +291,23 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
 
       {/* Confirm Dialog */}
       <ConfirmDialog
-        open={!!confirmDialog}
-        title={confirmDialog?.title || ""}
-        description={confirmDialog?.description || ""}
-        confirmLabel={confirmDialog?.confirmLabel}
-        variant={confirmDialog?.variant}
-        onConfirm={() => confirmDialog?.onConfirm()}
-        onCancel={() => setConfirmDialog(null)}
+        open={!!data.confirmDialog}
+        title={data.confirmDialog?.title || ""}
+        description={data.confirmDialog?.description || ""}
+        confirmLabel={data.confirmDialog?.confirmLabel}
+        variant={data.confirmDialog?.variant}
+        onConfirm={() => data.confirmDialog?.onConfirm()}
+        onCancel={() => data.setConfirmDialog(null)}
       />
 
-      {/* Name Change Dialog — surnom vs session */}
-      {pendingNameChange !== null && (
-        <div className="fixed inset-0 z-[200] bg-black/40 flex items-center justify-center p-6" onClick={() => setPendingNameChange(null)}>
-          <div className="bg-white border-4 border-black p-6 w-full max-w-sm space-y-4" style={{ boxShadow: "8px 8px 0px rgba(0,0,0,0.3)" }} onClick={e => e.stopPropagation()}>
-            <div className="text-center">
-              <span className="text-4xl block mb-2">✏️</span>
-              <h3 className="text-[18px] font-black text-foreground uppercase">Changer le prénom ?</h3>
-              <p className="text-[13px] text-foreground/60 mt-1 font-bold">
-                <span className="font-black">{childName}</span> → <span className="font-black">{pendingNameChange}</span>
-              </p>
-            </div>
-
-            <div className="space-y-2.5">
-              <button
-                onClick={() => {
-                  updateSetting("childName", pendingNameChange);
-                  setPendingNameChange(null);
-                  toast.success(`✅ Surnom changé en "${pendingNameChange}"`);
-                }}
-                className="w-full py-3.5 border-4 border-black bg-foreground text-background font-black text-[14px] hover:opacity-90 transition-all active:scale-95 uppercase"
-                style={{ boxShadow: "4px 4px 0px rgba(0,0,0,0.2)" }}>
-                🏷️ C'EST UN SURNOM
-              </button>
-              <button
-                onClick={() => {
-                  setPendingNameChange(null);
-                  toast.info("🔜 Changement de session bientôt disponible !", {
-                    description: "Cette fonctionnalité permettra de gérer plusieurs enfants.",
-                  });
-                }}
-                className="w-full py-3.5 border-4 border-black bg-white text-foreground font-black text-[14px] hover:bg-[var(--retro-yellow)] transition-all active:scale-95 uppercase"
-                style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.15)" }}>
-                👦 CHANGER D'ENFANT <span className="text-[11px] font-bold text-foreground/50 ml-1">(bientôt)</span>
-              </button>
-              <button
-                onClick={() => setPendingNameChange(null)}
-                className="w-full py-2.5 text-[13px] text-foreground/60 font-black hover:text-foreground transition-colors uppercase">
-                ANNULER
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Name Change Dialog */}
+      {data.pendingNameChange !== null && (
+        <NameChangeDialog
+          pendingName={data.pendingNameChange}
+          currentName={childName}
+          onConfirm={(name) => { data.updateSetting("childName", name); data.setPendingNameChange(null); }}
+          onCancel={() => data.setPendingNameChange(null)}
+        />
       )}
     </div>
   );
