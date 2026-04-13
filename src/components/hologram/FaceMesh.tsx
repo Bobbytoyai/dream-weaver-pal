@@ -61,7 +61,7 @@ function svgToWorld(sx: number, sy: number): [number, number] {
 function buildEyebrowShape(_archHeight: number = 0.06): THREE.Shape {
   const shape = new THREE.Shape();
   const w = 0.30;   // half width (longer)
-  const h = 0.075;  // half height (thicker)
+  const h = 0.09;   // half height (thicker)
   const r = 0.015;  // corner radius
 
   shape.moveTo(-w + r, -h);
@@ -84,8 +84,8 @@ function buildEyebrowShape(_archHeight: number = 0.06): THREE.Shape {
 function buildSmileLine(curve: number, width: number): THREE.Shape {
   const shape = new THREE.Shape();
   const halfW = 0.18 + width * 0.10;
-  const depth = curve * 0.18; // how much it curves down (smile)
-  const thickness = 0.018; // thin cute line
+  const depth = curve * 0.25; // more curved smile
+  const thickness = 0.028; // thicker line
 
   // Top edge of the line (the smile curve)
   shape.moveTo(-halfW, 0);
@@ -561,16 +561,16 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       <mesh ref={rightEyebrowRef} position={[rightBrowX, rightBrowY, 0.01]} material={eyebrowMat} geometry={eyebrowGeo} />
 
       {/* Kawaii smile line */}
-      <mesh ref={upperLipRef} position={[0, -0.58, 0.008]} geometry={upperLipGeo} material={lipMat} />
+      <mesh ref={upperLipRef} position={[0, -0.52, 0.008]} geometry={upperLipGeo} material={lipMat} />
 
       {/* Open mouth oval (hidden when closed) */}
-      <mesh ref={lowerLipRef} position={[0, -0.58, 0.007]} geometry={lowerLipGeo} material={lipMat} visible={false} />
+      <mesh ref={lowerLipRef} position={[0, -0.52, 0.007]} geometry={lowerLipGeo} material={lipMat} visible={false} />
 
       {/* Mouth interior — dark fill */}
-      <mesh ref={mouthInteriorRef} position={[0, -0.58, 0.005]} geometry={mouthInteriorGeo} material={mouthInteriorMat} />
+      <mesh ref={mouthInteriorRef} position={[0, -0.52, 0.005]} geometry={mouthInteriorGeo} material={mouthInteriorMat} />
 
       {/* Tongue */}
-      <mesh ref={tongueRef} position={[0, -0.66, 0.006]} material={tongueMat}>
+      <mesh ref={tongueRef} position={[0, -0.60, 0.006]} material={tongueMat}>
         <circleGeometry args={[0.06, 24]} />
       </mesh>
     </group>
