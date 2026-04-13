@@ -494,7 +494,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     await supabase.from("conversation_analyses").delete().eq("session_id", sessionId);
     await supabase.from("session_messages").delete().eq("session_id", sessionId);
     await supabase.from("child_sessions").delete().eq("id", sessionId);
-    await supabase.storage.from("conversation-audio").remove([`${sessionId}.webm`]);
+    await supabase.storage.from("conversation-audio").remove([`${sessionId}.webm`, `${sessionId}.mp4`]);
     loadData();
     setSelectedSession(null);
     setSelectedAnalysis(null);
