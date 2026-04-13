@@ -397,7 +397,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     if (leftPupilRef.current) leftPupilRef.current.scale.setScalar(ps);
     if (rightPupilRef.current) rightPupilRef.current.scale.setScalar(ps);
 
-    // Eyelids — slide rectangle down from above to cover eye
+    // Eyelids — anchored inside the eye shape, never leaving the white area
     const blinkClose = 1 - state.eyeOpenness;
     const isSleepingNow = faceState === "sleepy";
     [leftEyelidRef, rightEyelidRef].forEach(ref => {
@@ -405,39 +405,34 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
         const coverAmount = isSleepingNow
           ? 1.0
           : Math.max(0, Math.min(1, blinkClose));
-        
+
         if (coverAmount < 0.01) {
           ref.current.visible = false;
           return;
         }
-        
+
         ref.current.visible = true;
-        
-        // Fast snap blink easing
+
         const t = coverAmount;
         const easedCover = t < 0.5
           ? 4 * t * t * t
           : 1 - Math.pow(-2 * t + 2, 3) / 2;
-        
-        // Slide from hidden above (0.60) to fully covering (-0.02)
-        const hiddenY = 0.60;
-        const closedY = -0.02;
-        let targetY = hiddenY - easedCover * (hiddenY - closedY);
-        
-        // Sleeping: gentle bounces that lift lid to reveal bottom of eyes
+
+        let scaleY = easedCover;
+
+        // Sleep: fully closed with tiny upward rebounds that reveal only a sliver at the bottom
         if (isSleepingNow) {
-          const flutterT = performance.now() * 0.001;
-          const breathLift = Math.max(0, Math.sin(flutterT * 0.4)) * 0.08;
-          const bigPeek = Math.sin(flutterT * 0.08) > 0.88
-            ? Math.max(0, Math.sin(flutterT * 0.7)) * 0.14
+          const sleepT = performance.now() * 0.001;
+          const breathPeek = Math.max(0, Math.sin(sleepT * 0.35)) * 0.04;
+          const microPeek = Math.sin(sleepT * 0.08) > 0.9
+            ? Math.max(0, Math.sin(sleepT * 0.9)) * 0.06
             : 0;
-          targetY += Math.max(breathLift, bigPeek);
+          scaleY = 1 - Math.max(breathPeek, microPeek);
         }
-        
-        ref.current.position.y = targetY;
-        ref.current.scale.set(1, 1, 1);
-        
-        // Transparency: semi-transparent during blinks, opaque when sleeping
+
+        ref.current.position.y = 0.27;
+        ref.current.scale.set(1, Math.min(1, Math.max(0, scaleY)), 1);
+
         if (isSleepingNow) {
           eyelidMat.opacity = 1.0;
         } else {
@@ -553,22 +548,23 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     hl2: [number, number],
   ) => (
     <group ref={eyeRef} position={[eyeX, eyeY, 0.01]} key={side}>
-      {/* Eye outline ring */}
-      <mesh geometry={eyeOutlineGeo} material={eyeOutlineMat} position={[0, 0, -0.005]} />
-      <mesh geometry={eyeWhiteGeo} material={eyeWhiteMat} />
+      <mesh geometry={eyeWhiteGeo} material={eyeWhiteMat} renderOrder={1} />
       <mesh ref={irisRef} geometry={irisOuterGeo} position={[0, -0.03, 0.01]} material={irisOuterMat} />
       <mesh ref={pupilRef} geometry={pupilGeo} position={[0, -0.02, 0.02]} material={pupilMat} />
       <mesh ref={hl1Ref} position={[hl1[0], hl1[1], 0.03]} material={highlightMat} geometry={highlightLargeGeo} />
       {/* hl2 hidden — single highlight per eye */}
       <mesh ref={hl2Ref} position={[hl1[0], hl1[1], 0.03]} material={highlightSmallMat} geometry={highlightSmallGeo} visible={false} />
-      {/* Eyelid — same ellipse shape as eye white, slides from above */}
-      <mesh ref={eyelidRef} position={[0, 0.60, 0.044]} material={eyelidMat}>
+      {/* Eyelid — inset inside the white eye frame so it never touches the outer ring */}
+      <mesh ref={eyelidRef} position={[0, 0.27, 0.044]} material={eyelidMat} scale={[1, 0, 1]} renderOrder={12}>
         <shapeGeometry args={[(() => {
           const s = new THREE.Shape();
-          s.absellipse(0, 0, 0.33, 0.27, 0, Math.PI * 2, false, 0);
+          // Top anchored at y=0, slightly inset from eye white to preserve a visible white frame
+          s.absellipse(0, -0.27, 0.318, 0.258, 0, Math.PI * 2, false, 0);
           return s;
         })(), 32]} />
       </mesh>
+      {/* Eye outline ring — forced above the eyelid so the lid stays visually inside the eye */}
+      <mesh geometry={eyeOutlineGeo} material={eyeOutlineMat} position={[0, 0, 0.05]} renderOrder={20} />
     </group>
   );
 
