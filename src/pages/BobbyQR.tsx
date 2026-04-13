@@ -120,7 +120,7 @@ export default function BobbyQR() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FDF6EC]">
         <div className="text-center space-y-4">
-          <div className="text-5xl animate-bounce">🤖</div>
+          <div className="text-5xl">🤖</div>
           <p className="text-lg font-black text-foreground uppercase">Chargement…</p>
         </div>
       </div>

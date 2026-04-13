@@ -256,7 +256,7 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
             </p>
             <div className="flex gap-1.5 animate-fadeInUp" style={{ animationDelay: "0.3s" }}>
               {[0, 1, 2].map((i) => (
-                <div key={i} className="w-2.5 h-2.5 rounded-full bg-[hsl(var(--primary))] animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                <div key={i} className="w-2.5 h-2.5 rounded-full bg-[hsl(var(--primary))] animate-pulse" style={{ animationDelay: `${i * 0.15}s` }} />
               ))}
             </div>
           </div>
