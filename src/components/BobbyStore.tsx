@@ -132,7 +132,7 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
 
 // ─── Product Detail Page ────────────────────────────────────────────
 
-function ProductDetail({ item, installed, installing, onInstall, onBack }: {
+function ProductDetail({ item, installed, installing, detailsLoading, onInstall, onBack }: {
   item: StoreItem;
   installed: boolean;
   installing: boolean;
