@@ -144,8 +144,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
   const [rightEyeX, rightEyeY] = useMemo(() => svgToWorld(342, 240), []);
   const [leftBrowX, leftBrowY] = useMemo(() => svgToWorld(155, 147.5), []);
   const [rightBrowX, rightBrowY] = useMemo(() => svgToWorld(357, 147.5), []);
-  const [leftCheekX, leftCheekY] = useMemo(() => svgToWorld(155, 320), []);
-  const [rightCheekX, rightCheekY] = useMemo(() => svgToWorld(357, 320), []);
+  const [leftCheekX, leftCheekY] = useMemo(() => svgToWorld(155, 350), []);
+  const [rightCheekX, rightCheekY] = useMemo(() => svgToWorld(357, 350), []);
 
   // ─── Materials ────────────────────────────────────────────
   const eyeOutlineMat = useMemo(() => new THREE.MeshBasicMaterial({
