@@ -6,7 +6,6 @@ async function getCurrentUserId(): Promise<string | null> {
   const { data: { user } } = await supabase.auth.getUser();
   return user?.id ?? null;
 }
-import type { ParentSettings } from "@/components/parentSettings";
 
 // ─── Types ──────────────────────────────────────────────────────
 export interface CloudProfile {
