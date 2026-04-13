@@ -290,12 +290,12 @@ export function useFaceAnimation(
     }
 
     let blinkMult = 1;
-    const closeDuration = 0.08; // 80ms to close (fast snap)
-    const holdDuration = 0.04;  // 40ms held shut
-    const openDuration = 0.14;  // 140ms to open (slower, natural)
+    const closeDuration = 0.12; // 120ms to close (smooth, visible descent)
+    const holdDuration = 0.06;  // 60ms held shut (slightly longer hold)
+    const openDuration = 0.22;  // 220ms to open (slow, natural rise)
 
     if (blinkPhase.current === 1) {
-      // Closing — ease-in (accelerate)
+      // Closing — smooth ease-in
       const t = Math.min(1, blinkTimer.current / closeDuration);
       blinkMult = 1 - t * t; // quadratic ease-in
       if (t >= 1) {
@@ -310,7 +310,7 @@ export function useFaceAnimation(
         blinkTimer.current = 0;
       }
     } else if (blinkPhase.current === 2) {
-      // Opening — ease-out (decelerate)
+      // Opening — slow ease-out (decelerate gently)
       const t = Math.min(1, blinkTimer.current / openDuration);
       blinkMult = t * (2 - t); // quadratic ease-out
       if (t >= 1) {
@@ -325,7 +325,7 @@ export function useFaceAnimation(
           const exciteMod = faceState === "excited" || faceState === "attentive" || faceState === "curious" ? 0.6 : 1;
           const calmMod = isCalm ? 1.4 : 1;
           const sleepyMod = faceState === "sleepy" ? 0.5 : 1;
-          nextBlink.current = (2.5 + Math.random() * 3) * exciteMod * calmMod * sleepyMod;
+          nextBlink.current = (3.5 + Math.random() * 4) * exciteMod * calmMod * sleepyMod;
         }
       }
     }
