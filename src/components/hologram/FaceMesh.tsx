@@ -89,7 +89,7 @@ function buildMouthShape(curve: number, width: number, openness: number, round: 
   const thickness = 0.040;
   
   // When is mouth "open"? Only for actual speech/surprise
-  const isOpen = openness > 0.08 || round > 0.1;
+  const isOpen = openness > 0.18 || round > 0.12;
   
   if (!isOpen) {
     // ── MOUTH LINE — always uses bezier arcs for pointed/tapered ends ──
@@ -491,7 +491,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       }
 
       // Interior (dark fill) — visible when mouth is open
-      const isOpen = mo > 0.03 || mr > 0.05;
+      const isOpen = mo > 0.18 || mr > 0.12;
       if (mouthInteriorRef.current) {
         if (isOpen) {
           const newShape = buildMouthShape(mc, mw, mo * 0.8, mr * 0.8);
