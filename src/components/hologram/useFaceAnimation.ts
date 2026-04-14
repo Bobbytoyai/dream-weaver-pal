@@ -538,10 +538,11 @@ export function useFaceAnimation(
       speechHeadNod = Math.sin(breathPhase.current * 4.5) * Math.max(rawAmp, 0.05) * 0.035;
       speechCheekBoost = rawAmp > 0.15 ? rawAmp * 0.16 : 0;
     } else {
-      mouthOpenTarget = (targets.mouthOpenness ?? 0) + mouthBreath + mouthQuirkOpenAdd;
+      // Non-speaking: mouth stays CLOSED. Breath affects only curve (smile), NOT openness.
+      mouthOpenTarget = 0;
       mouthWidthTarget = (targets.mouthWidth ?? 0.5) + mouthBreathWidth + mouthQuirkWidthAdd;
-      mouthRoundTarget = targets.mouthRound ?? 0;
-      jawDropTarget = (targets.jawDrop ?? 0) + mouthBreath * 0.3;
+      mouthRoundTarget = 0;
+      jawDropTarget = 0;
     }
 
     // --- LERP ALL VALUES ---
