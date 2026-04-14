@@ -6,7 +6,7 @@
 // FRENCH STOP WORDS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const STOP_WORDS = new Set([
+export const STOP_WORDS = new Set([
   "je", "tu", "il", "elle", "on", "nous", "vous", "ils", "elles",
   "le", "la", "les", "un", "une", "des", "de", "du", "au", "aux",
   "et", "ou", "mais", "donc", "car", "ni", "que", "qui", "quoi",
@@ -22,7 +22,7 @@ const STOP_WORDS = new Set([
 // SEMANTIC FIELD MAP — Associative knowledge network
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const SEMANTIC_FIELDS: Record<string, string[]> = {
+export const SEMANTIC_FIELDS: Record<string, string[]> = {
   // Nature & Météo
   nuage:   ["ciel", "pluie", "meteo", "soleil", "vent", "orage", "eau", "arc-en-ciel"],
   pluie:   ["nuage", "eau", "meteo", "parapluie", "orage", "goutte"],

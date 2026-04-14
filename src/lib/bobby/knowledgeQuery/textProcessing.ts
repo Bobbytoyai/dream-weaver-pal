@@ -8,7 +8,7 @@ import { STOP_WORDS } from "./semanticFields";
 // TEXT PROCESSING
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-function normalize(text: string): string {
+export function normalize(text: string): string {
   return text.toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/['']/g, " ")
@@ -18,7 +18,7 @@ function normalize(text: string): string {
 }
 
 /** Simple French stemmer — strips common suffixes */
-function stem(word: string): string {
+export function stem(word: string): string {
   if (word.length <= 3) return word;
   if (word.endsWith("eaux")) return word.slice(0, -4) + "eau";
   if (word.endsWith("aux")) return word.slice(0, -3) + "al";
@@ -40,7 +40,7 @@ function stem(word: string): string {
   return word;
 }
 
-function tokenize(text: string): string[] {
+export function tokenize(text: string): string[] {
   return normalize(text).split(/\s+/)
     .filter(w => w.length >= 2 && !STOP_WORDS.has(w));
 }
