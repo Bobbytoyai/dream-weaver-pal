@@ -493,20 +493,11 @@ export async function buildBobbyReply({
     }
   }
   if (localReply.confidence >= LAYER1_CONFIDENCE) {
-    const reply = postProcess(localReply, childName, childAge, personalityCtx);
-    // V6: Memory injection when cognition suggests it
-    if (cognition.shouldInjectMemory && Math.random() < 0.4) {
-      reply.text = maybeInjectMemory(reply.text, userText, childName, mem.currentTopic, emotion.type);
-    } else if (shouldAddFollowUp && cognitionFollowUp && Math.random() < 0.5) {
-      reply.text = reply.text.replace(/[.!?…]*$/, ". ") + cognitionFollowUp;
-    } else {
-      const smartFollowUp = getSmartFollowUp(childName);
-      if (smartFollowUp && Math.random() < 0.3) {
-        reply.text = reply.text.replace(/[.!?…]*$/, ". ") + smartFollowUp;
-      }
-    }
+    let reply = postProcess(localReply, childName, childAge, personalityCtx);
+    // V7: Structured response assembly (opening + content + closing)
+    reply = assembleAndMerge(reply, cognitionPlan, understanding, childName);
     const totalMs = performance.now() - pipelineStart;
-    console.log(`[Brain V6] ✅ L1 direct → ${localReply.intent} | goal=${cognition.goal} (${totalMs.toFixed(0)}ms total)`);
+    console.log(`[Brain V7] ✅ L1 direct → ${localReply.intent} | goal=${cognitionPlan.why.primaryGoal} (${totalMs.toFixed(0)}ms total)`);
     cacheReply(userText, reply).catch(() => {});
     return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan);
   }
