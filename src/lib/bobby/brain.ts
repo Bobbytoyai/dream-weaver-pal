@@ -509,18 +509,15 @@ export async function buildBobbyReply({
     const layer2Ms = performance.now() - layer2Start;
 
     if (kbReply && kbReply.confidence >= LAYER2_CONFIDENCE) {
-      const reply = postProcess(kbReply, childName, childAge, personalityCtx);
-      if (shouldAddFollowUp && cognitionFollowUp && Math.random() < 0.4) {
-        reply.text = reply.text.replace(/[.!?…]*$/, ". ") + cognitionFollowUp;
-      }
+      let reply = postProcess(kbReply, childName, childAge, personalityCtx);
+      reply = assembleAndMerge(reply, cognitionPlan, understanding, childName);
       const totalMs = performance.now() - pipelineStart;
-      console.log(`[Brain V6] ✅ L2 KB → conf=${kbReply.confidence.toFixed(2)} | goal=${cognition.goal} (L2: ${layer2Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
+      console.log(`[Brain V7] ✅ L2 KB → conf=${kbReply.confidence.toFixed(2)} | goal=${cognitionPlan.why.primaryGoal} (L2: ${layer2Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
       cacheReply(userText, reply).catch(() => {});
       return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan);
-      console.log(`[Brain V6] L2 KB: conf=${kbReply.confidence.toFixed(2)} → escalate to L3`);
     }
   } catch (e) {
-    console.warn("[Brain V6] L2 KB error:", e);
+    console.warn("[Brain V7] L2 KB error:", e);
   }
 
   // ── LAYER 3: LLM (Gemini via edge function) ──
@@ -530,30 +527,22 @@ export async function buildBobbyReply({
     const layer3Ms = performance.now() - layer3Start;
 
     if (llmReply) {
+      const enrichedReply = assembleAndMerge(llmReply, cognitionPlan, understanding, childName);
       const totalMs = performance.now() - pipelineStart;
-      console.log(`[Brain V6] ✅ L3 LLM → goal=${cognition.goal} (L3: ${layer3Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
-      cacheReply(userText, llmReply).catch(() => {});
-      return applyOrchestration(llmReply, directive, understanding, v7Session, cognitionPlan);
+      console.log(`[Brain V7] ✅ L3 LLM → goal=${cognitionPlan.why.primaryGoal} (L3: ${layer3Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
+      cacheReply(userText, enrichedReply).catch(() => {});
+      return applyOrchestration(enrichedReply, directive, understanding, v7Session, cognitionPlan);
     }
   } catch (e) {
-    console.warn("[Brain V6] L3 LLM failed:", e);
+    console.warn("[Brain V7] L3 LLM failed:", e);
   }
 
   // ── FALLBACK: Use Layer 1 response (always available offline) ──
-  const reply = postProcess(localReply, childName, childAge, personalityCtx);
-  if (cognition.shouldInjectMemory && Math.random() < 0.4) {
-    reply.text = maybeInjectMemory(reply.text, userText, childName, mem.currentTopic, emotion.type);
-  } else if (shouldAddFollowUp && cognitionFollowUp) {
-    reply.text = reply.text.replace(/[.!?…]*$/, ". ") + cognitionFollowUp;
-  } else {
-    const smartFollowUp = getSmartFollowUp(childName);
-    if (smartFollowUp && localReply.confidence >= 0.5 && Math.random() < 0.3) {
-      reply.text = reply.text.replace(/[.!?…]*$/, ". ") + smartFollowUp;
-    }
-  }
+  let reply = postProcess(localReply, childName, childAge, personalityCtx);
+  reply = assembleAndMerge(reply, cognitionPlan, understanding, childName);
 
   const totalMs = performance.now() - pipelineStart;
-  console.log(`[Brain V6] ⚡ Fallback L1 → ${localReply.intent} | goal=${cognition.goal} (${totalMs.toFixed(0)}ms total)`);
+  console.log(`[Brain V7] ⚡ Fallback L1 → ${localReply.intent} | goal=${cognitionPlan.why.primaryGoal} (${totalMs.toFixed(0)}ms total)`);
   cacheReply(userText, reply).catch(() => {});
   return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan);
 }
