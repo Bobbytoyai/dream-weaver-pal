@@ -564,6 +564,10 @@ export async function buildBobbyReply({
     } catch { /* KB failed, use local */ }
   }
 
+  // V9: Enforce word limit from Master Control
+  if (masterControl.maxWords > 0) {
+    reply.text = enforceWordLimit(reply.text, masterControl.maxWords);
+  }
   const totalMs = performance.now() - pipelineStart;
   console.log(`[Brain] ⚡ Local fallback + V8: ${localReply.intent} (${totalMs.toFixed(0)}ms total)`);
   return reply;
