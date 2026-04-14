@@ -493,10 +493,20 @@ function buildCognitionFollowUp(cognition: CognitionOutput, _childName: string):
       "Alors, tu devines ?",
       "C'est ton tour !",
     ],
-    memory_callback: [
-      "Tu m'avais parlé de trucs super la dernière fois !",
-      "Je me souviens qu'on avait discuté de plein de choses cool !",
-    ],
+    memory_callback: (() => {
+      // V6: Use real facts if available
+      const facts = getRelevantFacts({}, 2);
+      if (facts.length > 0) {
+        return facts.map(f => {
+          const val = extractFactValue(f.text);
+          return `Tu m'avais parlé de ${val}, je m'en souviens ! 😊`;
+        });
+      }
+      return [
+        "Tu m'avais parlé de trucs super la dernière fois !",
+        "Je me souviens qu'on avait discuté de plein de choses cool !",
+      ];
+    })(),
   };
 
   const pool = followUps[suggestedFollowUp];
