@@ -373,12 +373,11 @@ export function useFaceAnimation(
       curiousTiltZ = Math.sin(breathPhase.current * 1.5) * 0.06;
     }
 
-    // --- LISTENING: subtle eyebrow micro-movements (attentive, alive) ---
+    // --- LISTENING: exaggerated eyebrow micro-movements ---
     let listeningEyebrowPulse = 0;
     if (faceState === "listening") {
       const listenT = breathPhase.current * 1.8;
-      // Gentle asymmetric raise — one brow slightly higher, alternating
-      listeningEyebrowPulse = Math.sin(listenT) * 0.04 + Math.sin(listenT * 2.5) * 0.02;
+      listeningEyebrowPulse = Math.sin(listenT) * 0.08 + Math.sin(listenT * 2.5) * 0.04;
     }
 
     // --- SLEEPY: eyes nearly closed with drowsy flutter, ready to wake ---
