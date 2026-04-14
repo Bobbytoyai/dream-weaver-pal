@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import VoiceScreen from "@/components/VoiceScreen";
 import ParentMode from "@/components/ParentMode";
 import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/parentSettings";
-import { HologramFace } from "@/components/hologram/HologramFace";
+import { LazyHologramFace as HologramFace } from "@/components/hologram/LazyHologramFace";
 import type { PendingNarration } from "@/hooks/useConversationStateMachine";
 import { eventBus } from "@/lib/eventBus";
 import { usePWAInstall } from "@/hooks/usePWAInstall";

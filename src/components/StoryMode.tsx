@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { ArrowLeft, X } from "lucide-react";
-import { HologramFace } from "@/components/hologram/HologramFace";
+import { LazyHologramFace as HologramFace } from "@/components/hologram/LazyHologramFace";
 import { fetchTTSAudio, detectEmotionForTTS } from "@/lib/voicePipeline";
 import type { Emotion } from "@/lib/voicePipeline";
 import { streamStory, getRandomStory } from "@/lib/storyEngine";

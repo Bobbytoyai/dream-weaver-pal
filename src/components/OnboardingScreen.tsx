@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { HologramFace } from "./hologram/HologramFace";
+import { LazyHologramFace as HologramFace } from "./hologram/LazyHologramFace";
 import VoicePickerStep from "./onboarding/VoicePickerStep";
 import InterestsStep from "./onboarding/InterestsStep";
 import type { VoiceProfile } from "@/lib/voicePipeline";

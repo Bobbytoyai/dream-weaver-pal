@@ -1,4 +1,4 @@
-import { HologramFace } from "../hologram/HologramFace";
+import { LazyHologramFace as HologramFace } from "../hologram/LazyHologramFace";
 
 interface InterestsStepProps {
   selectedInterests: string[];

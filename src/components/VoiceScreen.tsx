@@ -5,7 +5,7 @@ import { eventBus } from "@/lib/eventBus";
 import { getUnreadAlertCount } from "@/lib/offlineEngine";
 import { Settings, Camera, Gamepad2 } from "lucide-react";
 import { ParentSettings } from "@/components/parentSettings";
-import { HologramFace } from "@/components/hologram/HologramFace";
+import { LazyHologramFace as HologramFace } from "@/components/hologram/LazyHologramFace";
 import { setDisabledExpressions } from "@/lib/bobby/expressionEngine";
 
 import {

@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { ChevronLeft, Shuffle, ChevronDown } from "lucide-react";
 import type { ParentSettings } from "@/components/parentSettings";
-import { HologramFace } from "@/components/hologram/HologramFace";
+import { LazyHologramFace as HologramFace } from "@/components/hologram/LazyHologramFace";
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import { Switch } from "@/components/ui/switch";
 import type { BobbyEmotion } from "@/lib/bobby/expressionEngine";
