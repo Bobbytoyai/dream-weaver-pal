@@ -268,29 +268,6 @@ const CloudTab = ({
         })}
       </div>
 
-      {/* COÛT PAR UTILISATEUR */}
-      <div className="retro-card p-4" style={{ backgroundColor: "var(--retro-yellow)" }}>
-        <h3 className="text-[14px] font-black text-gray-800 mb-3 uppercase">💰 Coût infrastructure par user/mois</h3>
-        <div className="space-y-2">
-          {[
-            { label: "🟢 Scénario bas (user léger)", desc: "~10 sessions/mois, 50 messages, 0 analyse IA", cost: "~0,0003 €", detail: "DB: 0,0001€ • Auth: 0,0001€ • Storage: 0,0001€" },
-            { label: "🔴 Scénario haut (user actif)", desc: "~60 sessions/mois, 500 messages, 10 analyses IA, 5 packs Store", cost: "~0,025 €", detail: "DB: 0,005€ • Auth: 0,0001€ • Storage: 0,005€ • Edge Fn: 0,01€ • AI: 0,005€" },
-          ].map(s => (
-            <div key={s.label} className="border-2 border-black bg-white p-3">
-              <p className="text-[12px] font-black text-gray-800">{s.label}</p>
-              <p className="text-[10px] text-gray-600 font-bold mt-0.5">{s.desc}</p>
-              <p className="text-[16px] font-black text-gray-900 mt-1">{s.cost}</p>
-              <p className="text-[9px] text-gray-500 font-bold mt-0.5">{s.detail}</p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-3 border-t-2 border-black/10 pt-2">
-          <p className="text-[10px] text-gray-600 font-bold leading-relaxed">
-            📊 À 100k users : <strong>25€ → 2 500€/mois</strong> d'infra selon activité.
-            Marge nette estimée : <strong>95-99%</strong> sur les abonnements Cloud (4,99-9,99€/user).
-          </p>
-        </div>
-      </div>
 
       {/* INFRASTRUCTURE FOOTER */}
       <div className="mt-4 pt-4 border-t-2 border-black/10">
