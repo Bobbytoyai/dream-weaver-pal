@@ -1106,6 +1106,7 @@ const Admin = () => {
   if (topSection === "store") {
     return (
       <AdminStoreManager
+        adminCode={code}
         storeItems={storeItems.map((s: any) => ({
           ...s, detailed_description: s.detailed_description || "", is_premium: s.is_premium ?? false,
           version_label: s.version_label || "1.0", rating: s.rating ?? 4.5, rating_count: s.rating_count ?? 0,

@@ -95,6 +95,7 @@ export default function MusicTracksEditor({ adminCode, contentId, contentName, o
 
       return {
         ...track,
+        track_id: track.id,
         description: meta?.description || "",
         emoji: meta?.emoji || "🎵",
         image_url: meta?.image_url || "",
