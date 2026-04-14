@@ -258,11 +258,10 @@ export function useBobbyVoiceCore({
     lastAiResponseRef.current = text;
     recentBobbyMessagesRef.current = [text.toLowerCase(), ...recentBobbyMessagesRef.current.slice(0, 4)];
 
-    eventBus.emit({ type: "SPEECH_START" });
-
     try {
       const audioUrl = await fetchTTSAudio(text, controller.signal, resolveVoiceProfile(parentSettings));
       if (!controller.signal.aborted) {
+        eventBus.emit({ type: "SPEECH_START" });
         await playGeneratedAudio(audioUrl, controller.signal);
       }
     } catch (error) {
@@ -294,15 +293,18 @@ export function useBobbyVoiceCore({
     setLastAiResponse(reply.text);
     lastAiResponseRef.current = reply.text;
     recentBobbyMessagesRef.current = [reply.text.toLowerCase(), ...recentBobbyMessagesRef.current.slice(0, 4)];
-    go("SPEAKING");
+
+    // Don't emit SPEAKING/SPEECH_START yet — wait for audio to be ready
     eventBus.emit({ type: "RESPONSE_READY", text: reply.text });
-    eventBus.emit({ type: "SPEECH_START" });
 
     stopSttRef.current();
 
     try {
       const audioUrl = await fetchTTSAudio(reply.text, controller.signal, resolveVoiceProfile(parentSettings));
       if (!controller.signal.aborted) {
+        // Audio is ready — NOW start speaking state & mouth animation
+        go("SPEAKING");
+        eventBus.emit({ type: "SPEECH_START" });
         stopSttRef.current();
         await playGeneratedAudio(audioUrl, controller.signal);
       }
