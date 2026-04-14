@@ -48,7 +48,7 @@ export default function BobbyParent() {
       }
 
       if (!bc?.claimed_at) {
-        setStep("invalid");
+        setStep("not_activated");
         return;
       }
 
