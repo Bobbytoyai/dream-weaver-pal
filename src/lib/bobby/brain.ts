@@ -33,6 +33,7 @@ import { detectLocalIntent } from "./localBrain/intentEngine";
 import { detectEmotion } from "./localBrain/emotionEngine";
 import { getPersistentMemory, getRelevantFacts } from "./persistentMemory";
 import { extractDeepUnderstanding, type UnderstandingFrame, type SessionContext as V7Session } from "./v7/deepUnderstanding";
+import { computePriority, createDefaultMemoryContext, type PriorityDecision } from "./v7/priorityEngine";
 import {
   loadPersistentMemory,
   savePersistentMemory,
@@ -340,6 +341,12 @@ export async function buildBobbyReply({
     `[Brain V7] 🧠 Deep Understanding: explicit=${understanding.explicitIntent} implicit=${understanding.implicitIntent} need=${understanding.emotionalNeed}(${understanding.needIntensity}) goal=${understanding.userGoal} ambiguity=${understanding.ambiguityScore.toFixed(2)}${understanding.requiresConfirmation ? " ⚠️ CONFIRM" : ""}`
   );
 
+  // ── V7: PRIORITY ENGINE — 5-dimension scoring ──
+  const priority = computePriority(understanding, v7Session, createDefaultMemoryContext());
+  console.log(
+    `[Brain V7] 🎯 Priority: ${priority.priorityLevel} (${priority.totalScore}) | S=${priority.scores.safety} E=${priority.scores.emotion} U=${priority.scores.urgency} C=${priority.scores.context} H=${priority.scores.history}${priority.requiresEmpathyFirst ? " 💙EMPATHY" : ""}${priority.interruptCurrent ? " ⚡INTERRUPT" : ""}`
+  );
+
   // ── V7: If ambiguity is very high, ask for clarification ──
   if (understanding.requiresConfirmation && understanding.confirmationPrompt && understanding.ambiguityScore > 0.7) {
     const confirmReply: BobbyBrainReply = {
@@ -353,12 +360,14 @@ export async function buildBobbyReply({
     return postProcess(confirmReply, childName, childAge, personalityCtx);
   }
 
-  // ── CACHE CHECK: L1 RAM → L2 IndexedDB (~0-3ms) ──
-  const cached = await getCachedReply(userText);
-  if (cached) {
-    const totalMs = performance.now() - pipelineStart;
-    console.log(`[Brain V6] ⚡ Cache hit → ${cached.intent} (${totalMs.toFixed(0)}ms total)`);
-    return postProcess(cached, childName, childAge, personalityCtx);
+  // ── CACHE CHECK (V7: bypass for sensitive cases) ──
+  if (!priority.bypassCache) {
+    const cached = await getCachedReply(userText);
+    if (cached) {
+      const totalMs = performance.now() - pipelineStart;
+      console.log(`[Brain V7] ⚡ Cache hit → ${cached.intent} (${totalMs.toFixed(0)}ms total)`);
+      return postProcess(cached, childName, childAge, personalityCtx);
+    }
   }
 
   // ── LAYER 1: LocalBrain (Regex + SmartClassifier + Templates) ──
