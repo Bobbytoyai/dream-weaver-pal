@@ -4,10 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import RetroLoader from "@/components/RetroLoader";
 import LazyImportBoundary from "@/components/LazyImportBoundary";
 import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/parentSettings";
+import ParentOnboarding from "@/components/parent/ParentOnboarding";
 
 const ParentMode = lazy(() => import("@/components/ParentMode"));
 
-type Step = "loading" | "invalid" | "claimed" | "pin" | "welcome" | "active";
+type Step = "loading" | "invalid" | "claimed" | "pin" | "onboarding" | "active";
 
 export default function BobbyParent() {
   const { code } = useParams<{ code: string }>();
