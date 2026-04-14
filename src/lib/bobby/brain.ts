@@ -264,6 +264,7 @@ export function resetBobbyBrainSession() {
   resetVariationEngine();
   resetRelationshipEngine();
   initSilenceEngine();
+  resetUncertaintyEngine();
   clearResponseCache().catch(() => {});
 }
 
@@ -464,6 +465,31 @@ export async function buildBobbyReply({
 
   // ── V8: SILENCE & ATTENTION — track child response patterns ──
   recordChildResponse(userText, childAge);
+
+  // ── V8: UNCERTAINTY — assess confidence before proceeding ──
+  const uncertainty = assessUncertainty({
+    intentConfidence: understanding.confidence,
+    nluLayer: "local",
+    detectedIntent: understanding.intent,
+    childAge,
+    childName,
+    userText,
+    consecutiveUncertainties: 0,
+  });
+  if (uncertainty.isUncertain && uncertainty.clarificationText) {
+    console.log(`[Brain V8] ❓ Uncertainty intercepted → ${uncertainty.strategy}`);
+    // Only intercept if V7 ambiguity check didn't already catch it
+    if (!(understanding.requiresConfirmation && understanding.ambiguityScore > 0.7)) {
+      const uncReply: BobbyBrainReply = {
+        text: simplifyForAge(uncertainty.clarificationText, childAge),
+        emotion: "attentive" as FaceState,
+        followUp: null,
+        expressionCombo: null,
+        expressionIntensity: undefined,
+      };
+      return uncReply;
+    }
+  }
 
   // ── V7: PRIORITY ENGINE — 5-dimension scoring ──
   const priority = computePriority(understanding, v7Session, createDefaultMemoryContext());
