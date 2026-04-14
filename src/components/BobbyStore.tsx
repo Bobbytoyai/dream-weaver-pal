@@ -352,8 +352,11 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
   const [installing, setInstalling] = useState<string | null>(null);
   const [detailLoadingId, setDetailLoadingId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<StoreCategory>("all");
-  const [search, setSearch] = useState("");
+   const [search, setSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState<StoreItem | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [ageFilter, setAgeFilter] = useState<AgeFilter>("all");
+  const [ratingFilter, setRatingFilter] = useState<RatingFilter>("all");
 
   const [loadError, setLoadError] = useState(false);
 
