@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { Search, Download, Check, Star, Sparkles, Users, Zap, Loader2, Trash2, ArrowLeft, Clock, Award, BookOpen, ChevronRight, Globe, Shield, Heart, X, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { installContentPack, uninstallContentPack, getLocalCacheSize, type InstallResult } from "@/lib/bobby/contentInstaller";
+import { invalidateMusicCache } from "@/lib/bobby/musicEngine";
 import { getCloudUsage, formatStorage, type CloudUsage } from "@/lib/bobby/cloudQuota";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -394,19 +395,45 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
     }
   }, []);
 
+  // Pre-installed content IDs (music pack is free & pre-installed)
+  const PRE_INSTALLED_IDS = useMemo(() => new Set(["4c800d17-cecf-4fff-9028-fc203461ee6a"]), []);
+
   // Fetch installed content separately — non-blocking
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      // Even without auth, show pre-installed packs
+      setInstalledIds(new Set(PRE_INSTALLED_IDS));
+      return;
+    }
     const fetchInstalled = async () => {
       try {
         const { data } = await supabase.from("installed_content").select("content_id").eq("child_name", childName);
-        if (data) setInstalledIds(new Set(data.map((r: any) => r.content_id)));
+        const ids = new Set(data ? data.map((r: any) => r.content_id) : []);
+        // Add pre-installed packs (unless user explicitly uninstalled — check via a flag)
+        const { data: uninstalled } = await supabase
+          .from("installed_content")
+          .select("content_id, is_enabled")
+          .eq("child_name", childName)
+          .in("content_id", Array.from(PRE_INSTALLED_IDS));
+        
+        for (const preId of PRE_INSTALLED_IDS) {
+          const record = uninstalled?.find((r: any) => r.content_id === preId);
+          if (!record) {
+            // Never touched — show as installed
+            ids.add(preId);
+          } else if ((record as any).is_enabled !== false) {
+            ids.add(preId);
+          }
+          // If is_enabled === false, user explicitly removed it — don't add
+        }
+        setInstalledIds(ids);
       } catch (e) {
         console.warn("[BobbyStore] Installed content fetch failed (non-critical):", e);
+        setInstalledIds(new Set(PRE_INSTALLED_IDS));
       }
     };
     fetchInstalled();
-  }, [user, childName]);
+  }, [user, childName, PRE_INSTALLED_IDS]);
 
   const loadItemDetails = useCallback(async (itemId: string) => {
     const existingItem = items.find((item) => item.id === itemId);
@@ -457,7 +484,6 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
   const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   const toggleInstall = async (contentId: string) => {
-    // Auth required for install/uninstall
     if (!user) {
       setShowAuthDialog(true);
       return;
@@ -465,27 +491,52 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
 
     setInstalling(contentId);
     const isInstalled = installedIds.has(contentId);
+    const isPreInstalled = PRE_INSTALLED_IDS.has(contentId);
 
     try {
       if (isInstalled) {
-        const result = await uninstallContentPack(contentId, childName);
-        if (result.success) {
+        if (isPreInstalled) {
+          // For pre-installed packs: mark as disabled instead of full uninstall
+          await supabase.from("installed_content").upsert(
+            { child_name: childName, content_id: contentId, user_id: user.id, is_enabled: false },
+            { onConflict: "child_name,content_id" }
+          );
           setInstalledIds(prev => { const next = new Set(prev); next.delete(contentId); return next; });
-          toast.success("Contenu désinstallé", { description: "Les données ont été retirées du cerveau de Bobby" });
+          invalidateMusicCache();
+          toast.success("Contenu désactivé", { description: "Bobby ne jouera plus cette musique" });
+        } else {
+          const result = await uninstallContentPack(contentId, childName);
+          if (result.success) {
+            setInstalledIds(prev => { const next = new Set(prev); next.delete(contentId); return next; });
+            invalidateMusicCache();
+            toast.success("Contenu désinstallé", { description: "Les données ont été retirées du cerveau de Bobby" });
+          }
         }
       } else {
-        const result = await installContentPack(contentId, childName);
-        if (result.success) {
+        if (isPreInstalled) {
+          // Re-enable pre-installed pack
+          await supabase.from("installed_content").upsert(
+            { child_name: childName, content_id: contentId, user_id: user.id, is_enabled: true },
+            { onConflict: "child_name,content_id" }
+          );
           setInstalledIds(prev => new Set(prev).add(contentId));
-          if (result.itemsInstalled > 0) {
-            toast.success(`${result.itemsInstalled} contenus installés !`, { 
-              description: `Bobby a appris ${result.itemsInstalled} nouvelles choses 🧠${result.cachedLocally ? " • Disponible hors-ligne" : ""}` 
-            });
-          } else {
-            toast.success("Pack activé", { description: result.error || "Aucun contenu trouvé dans ce pack" });
-          }
+          invalidateMusicCache();
+          toast.success("Musique réactivée !", { description: "Bobby jouera à nouveau cette musique 🎵" });
         } else {
-          toast.error("Erreur d'installation", { description: result.error });
+          const result = await installContentPack(contentId, childName);
+          if (result.success) {
+            setInstalledIds(prev => new Set(prev).add(contentId));
+            invalidateMusicCache();
+            if (result.itemsInstalled > 0) {
+              toast.success(`${result.itemsInstalled} contenus installés !`, { 
+                description: `Bobby a appris ${result.itemsInstalled} nouvelles choses 🧠${result.cachedLocally ? " • Disponible hors-ligne" : ""}` 
+              });
+            } else {
+              toast.success("Pack activé", { description: result.error || "Aucun contenu trouvé dans ce pack" });
+            }
+          } else {
+            toast.error("Erreur d'installation", { description: result.error });
+          }
         }
       }
     } catch (e: any) {
