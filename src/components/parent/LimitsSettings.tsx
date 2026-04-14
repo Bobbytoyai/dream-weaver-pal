@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SaveButton from "./SaveButton";
 import { ChevronLeft, Sun, X } from "lucide-react";
 import type { ParentSettings } from "@/components/parentSettings";
 
