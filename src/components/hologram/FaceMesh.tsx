@@ -234,9 +234,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     eyelidMat.color.set(col);
   }, [bgHex, eyelidMat]);
 
-  // Cheeks — #FF69B4
+  // Cheeks — #FF69B4 — more visible pink
   const blushMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#FF85B0"), transparent: true, opacity: 0.35,
+    color: new THREE.Color("#FF85B0"), transparent: true, opacity: 0.55,
   }), []);
 
   // ─── Apply per-element colors ───────────────
