@@ -292,14 +292,14 @@ export function useParentData({ childName, bobbyCodeId, parentSettings, onSettin
   const updateSetting = <K extends keyof ParentSettings>(key: K, value: ParentSettings[K]) => {
     const next = { ...settings, [key]: value };
     setSettings(next);
-    onSettingsChange?.(next);
+    // Don't auto-save to cloud on every keystroke — wait for explicit save
   };
 
   const updateNested = <K extends keyof ParentSettings>(key: K, subKey: string, value: any) => {
     const current = settings[key] as any;
     const next = { ...settings, [key]: { ...current, [subKey]: value } };
     setSettings(next);
-    onSettingsChange?.(next);
+    // Don't auto-save to cloud on every keystroke — wait for explicit save
   };
 
   const handleSave = () => {
