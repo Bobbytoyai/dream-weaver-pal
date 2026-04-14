@@ -150,6 +150,7 @@ export function useBobbyVoiceCore({
   const [currentEmotion, setCurrentEmotion] = useState<FaceState>("happy");
   const [currentExpressionCombo, setCurrentExpressionCombo] = useState<ExpressionCombo | undefined>();
   const [currentExpressionIntensity, setCurrentExpressionIntensity] = useState<number>(3);
+  const [musicPlaying, setMusicPlaying] = useState(false);
 
   const machineRef = useRef<ConversationState>("IDLE");
   const processingRef = useRef(false);
@@ -523,12 +524,19 @@ export function useBobbyVoiceCore({
 
       // If this reply includes a music track, play it after TTS
       const musicUrl = (reply as any).musicUrl;
+      const musicTitle = (reply as any).musicTitle;
       if (musicUrl) {
         try {
           // Stop STT during music playback so Bobby doesn't hear the song
           stopSttRef.current();
           setMicArmed(false);
-          go("SPEAKING");
+          
+          // Stay in SPEAKING state but emit MUSIC_START so the face shows
+          // music particles instead of mouth animation
+          setCurrentEmotion("happy");
+          setMusicPlaying(true);
+          eventBus.emit({ type: "SPEECH_STOP" });
+          eventBus.emit({ type: "MUSIC_START", title: musicTitle || "" });
 
           const musicAudio = new Audio(musicUrl);
           musicAudio.volume = 0.7;
@@ -551,6 +559,8 @@ export function useBobbyVoiceCore({
           });
 
           musicAudioRef.current = null;
+          setMusicPlaying(false);
+          eventBus.emit({ type: "MUSIC_STOP" });
 
           // Resume listening after music ends
           lastSpeechEndRef.current = Date.now();
@@ -558,6 +568,8 @@ export function useBobbyVoiceCore({
           void startListeningRef.current();
         } catch (e) {
           console.warn("[Music] Failed to play track:", e);
+          setMusicPlaying(false);
+          eventBus.emit({ type: "MUSIC_STOP" });
           // Ensure we go back to listening even on error
           void startListeningRef.current();
         }
@@ -824,7 +836,8 @@ export function useBobbyVoiceCore({
   return {
     state: machineState,
     machineState,
-    displayState: toVoiceState(machineState),
+    displayState: musicPlaying ? ("idle" as const) : toVoiceState(machineState),
+    musicPlaying,
     transcript: lastRecognized,
     partialText,
     lastRecognized,
@@ -832,8 +845,8 @@ export function useBobbyVoiceCore({
     lastAiResponse,
     emotion: toVoiceState(machineState),
     currentEmotion: toVoiceState(machineState),
-    bobbyFaceEmotion,
-    bobbyEmotionIntensity,
+    bobbyFaceEmotion: musicPlaying ? ("happy" as FaceState) : bobbyFaceEmotion,
+    bobbyEmotionIntensity: musicPlaying ? 0.8 : bobbyEmotionIntensity,
     expressionCombo: currentExpressionCombo,
     expressionIntensityLevel: currentExpressionIntensity,
     micArmed,

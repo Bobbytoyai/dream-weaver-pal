@@ -55,6 +55,45 @@ const MicListeningAnimation = ({ hasVoice }: { hasVoice: boolean }) => {
   );
 };
 
+const FloatingMusicNotes = () => {
+  const notes = ["♪", "♫", "♬", "🎵", "🎶", "♩"];
+  const particles = Array.from({ length: 16 }, (_, i) => ({
+    id: i,
+    note: notes[i % notes.length],
+    left: 10 + Math.random() * 80,
+    delay: Math.random() * 4,
+    duration: 3 + Math.random() * 4,
+    size: 14 + Math.random() * 18,
+    swayAmount: 20 + Math.random() * 40,
+  }));
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-20">
+      {particles.map(p => (
+        <div key={p.id} className="absolute animate-bounce"
+          style={{
+            left: `${p.left}%`,
+            bottom: "-30px",
+            fontSize: `${p.size}px`,
+            opacity: 0.7,
+            animation: `music-float-${p.id} ${p.duration}s ease-in-out infinite`,
+            animationDelay: `${p.delay}s`,
+          }} >
+          {p.note}
+        </div>
+      ))}
+      <style>{particles.map(p => `
+        @keyframes music-float-${p.id} {
+          0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+          10% { opacity: 0.8; }
+          50% { transform: translateY(-45vh) translateX(${p.swayAmount}px) rotate(${15 + p.id * 5}deg); opacity: 0.6; }
+          90% { opacity: 0.2; }
+          100% { transform: translateY(-90vh) translateX(-${p.swayAmount / 2}px) rotate(-${10 + p.id * 3}deg); opacity: 0; }
+        }
+      `).join("")}</style>
+    </div>
+  );
+};
+
 const FloatingParticles = () => {
   const particles = Array.from({ length: 12 }, (_, i) => ({
     id: i, size: 4 + Math.random() * 8, left: Math.random() * 100,
@@ -225,6 +264,9 @@ const VoiceScreen = ({
           />
         </div>
 
+        {/* Music note particles during music playback */}
+        {sm.musicPlaying && <FloatingMusicNotes />}
+
 
         {/* Bobby text removed from here — now in bottom section */}
       </div>
@@ -234,7 +276,7 @@ const VoiceScreen = ({
 
         {/* Bobby's response text only — no child transcript */}
         <div className="w-full px-5 flex flex-col gap-2 max-h-24 overflow-y-auto">
-          {sm.machineState === "SPEAKING" && sm.bobbyText && (
+          {(sm.machineState === "SPEAKING" || sm.musicPlaying) && sm.bobbyText && (
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
               <p className="text-xs font-bold text-black/60 text-center leading-snug">
                 {sm.bobbyText}

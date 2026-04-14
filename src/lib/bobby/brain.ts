@@ -444,6 +444,7 @@ export async function buildBobbyReply({
       if (musicAnswer.playTrack) {
         (reply as any).musicTrack = musicAnswer.playTrack;
         (reply as any).musicUrl = getTrackUrl(musicAnswer.playTrack);
+        (reply as any).musicTitle = musicAnswer.playTrack.title;
       }
       return reply;
     }
@@ -460,6 +461,7 @@ export async function buildBobbyReply({
     if (musicResult.track && musicResult.shouldPlay) {
       (reply as any).musicTrack = musicResult.track;
       (reply as any).musicUrl = getTrackUrl(musicResult.track);
+      (reply as any).musicTitle = musicResult.track.title;
     }
     return reply;
   }
