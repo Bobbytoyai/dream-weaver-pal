@@ -8,7 +8,7 @@ import ParentOnboarding from "@/components/parent/ParentOnboarding";
 
 const ParentMode = lazy(() => import("@/components/ParentMode"));
 
-type Step = "loading" | "invalid" | "claimed" | "pin" | "onboarding" | "active";
+type Step = "loading" | "invalid" | "not_activated" | "claimed" | "pin" | "onboarding" | "active";
 
 export default function BobbyParent() {
   const { code } = useParams<{ code: string }>();
