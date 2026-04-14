@@ -461,6 +461,9 @@ export async function buildBobbyReply({
   // ── V8: RELATIONSHIP — record per-turn interaction ──
   recordInteraction(userText, understanding.emotion.type);
 
+  // ── V8: SILENCE & ATTENTION — track child response patterns ──
+  recordChildResponse(userText, childAge);
+
   // ── V7: PRIORITY ENGINE — 5-dimension scoring ──
   const priority = computePriority(understanding, v7Session, createDefaultMemoryContext());
   console.log(
