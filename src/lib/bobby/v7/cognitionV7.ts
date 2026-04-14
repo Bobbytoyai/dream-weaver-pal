@@ -217,7 +217,7 @@ function decideContent(
     }
   }
   // Active flow → continue
-  else if (session.lastExplicitIntent === "FLOW") {
+  else if (session.lastExplicitIntent === ("FLOW" as any)) {
     contentStrategy = "flow_advance";
   }
   // Learning goals → KB first
