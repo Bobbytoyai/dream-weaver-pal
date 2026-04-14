@@ -9,7 +9,7 @@ import { normalize, stem, tokenize } from "./textProcessing";
 // CONVERSATIONAL CONTEXT — Remember recent topics
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const recentTopics: string[] = [];
+export const recentTopics: string[] = [];
 const MAX_CONTEXT = 15;
 
 export function pushConversationContext(userText: string) {
@@ -31,7 +31,7 @@ export function clearConversationContext() {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /** Expand input tokens with semantic associations */
-function expandWithSemantics(tokens: string[]): Set<string> {
+export function expandWithSemantics(tokens: string[]): Set<string> {
   const expanded = new Set(tokens);
   for (const t of tokens) {
     const stemmed = stem(t);
@@ -46,7 +46,7 @@ function expandWithSemantics(tokens: string[]): Set<string> {
 }
 
 /** Check if two words are fuzzy-equal (stem match, substring, or edit-close) */
-function fuzzyMatch(a: string, b: string): number {
+export function fuzzyMatch(a: string, b: string): number {
   if (a === b) return 1.0;
   const sa = stem(a), sb = stem(b);
   if (sa === sb) return 0.9;
@@ -68,7 +68,7 @@ function fuzzyMatch(a: string, b: string): number {
 }
 
 /** Score input against a KB entry's keywords with semantic + fuzzy tolerance */
-function scoreKeywords(inputTokens: string[], expandedInput: Set<string>, keywords: string[]): number {
+export function scoreKeywords(inputTokens: string[], expandedInput: Set<string>, keywords: string[]): number {
   const normalizedKw = keywords.map(k => normalize(k)).filter(k => k.length >= 2);
   if (normalizedKw.length === 0) return 0;
   
@@ -105,7 +105,7 @@ function scoreKeywords(inputTokens: string[], expandedInput: Set<string>, keywor
 }
 
 /** Score input against the KB entry's question text (shared words with fuzzy) */
-function scoreQuestion(inputTokens: string[], question: string): number {
+export function scoreQuestion(inputTokens: string[], question: string): number {
   const qTokens = tokenize(question);
   if (inputTokens.length === 0 || qTokens.length === 0) return 0;
 
@@ -137,14 +137,14 @@ function scoreQuestion(inputTokens: string[], question: string): number {
 }
 
 /** Full-text containment: does the raw input contain the full question or vice versa? */
-function scoreFullContainment(inputNorm: string, questionNorm: string): number {
+export function scoreFullContainment(inputNorm: string, questionNorm: string): number {
   if (inputNorm.includes(questionNorm) && questionNorm.length >= 8) return 0.95;
   if (questionNorm.includes(inputNorm) && inputNorm.length >= 8) return 0.85;
   return 0;
 }
 
 /** Contextual bonus: if recent conversation topics overlap with KB keywords */
-function contextBonus(keywords: string[]): number {
+export function contextBonus(keywords: string[]): number {
   if (recentTopics.length === 0) return 0;
   const normalizedKw = keywords.map(k => normalize(k));
   let hits = 0;
