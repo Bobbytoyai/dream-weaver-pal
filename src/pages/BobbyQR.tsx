@@ -20,7 +20,8 @@ export default function BobbyQR() {
   const [bobbyCode, setBobbyCode] = useState<any>(null);
   const [pendingNarration, setPendingNarration] = useState<PendingNarration | null>(null);
   const [parentSettings, setParentSettings] = useState<ParentSettings>(DEFAULT_PARENT_SETTINGS);
-
+  const { canInstall, isInstalled, promptInstall } = usePWAInstall();
+  const [showInstallBanner, setShowInstallBanner] = useState(true);
   // Load code from DB + anti-piracy check via localStorage session token
   useEffect(() => {
     if (!code) { setStep("invalid"); return; }
