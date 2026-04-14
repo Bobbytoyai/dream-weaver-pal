@@ -12,13 +12,22 @@ export function useSessionTracker(childName: string, childAge: number) {
    * Get a user_id for session tracking.
    * Priority: 1) Supabase auth user  2) bobby_codes.id from localStorage
    */
+  /**
+   * Get a user_id for session tracking.
+   * Priority: 1) bobby_codes.id from localStorage (device identity)
+   *           2) Supabase auth user (fallback for authenticated parents)
+   * This ensures the parent dashboard can filter sessions by bobby_code_id.
+   */
   const getUserId = async (): Promise<string | null> => {
+    // Prefer bobby_code_id — this is the device identity the parent dashboard filters on
+    const bobbyCodeId = localStorage.getItem(BOBBY_CODE_KEY);
+    if (bobbyCodeId) return bobbyCodeId;
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.id) return user.id;
     } catch { /* no auth */ }
-    // Fallback: use bobby_codes.id stored by LCD page
-    return localStorage.getItem(BOBBY_CODE_KEY);
+    return null;
   };
 
   const startSession = useCallback(async () => {
