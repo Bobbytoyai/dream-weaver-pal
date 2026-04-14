@@ -20,8 +20,17 @@ export interface MusicTrack {
 // The ID of the priority track "Bobby tu es là"
 const BOBBY_PRIORITY_TRACK_ID = "389c5718-a5fc-4052-8138-35181de5b88e";
 
-// Store content ID for the music pack in the store
-const MUSIC_STORE_CONTENT_ID = "4c800d17-cecf-4fff-9028-fc203461ee6a";
+// Map music_tracks IDs → store_content IDs for install/uninstall checking
+const TRACK_TO_STORE: Record<string, string> = {
+  "389c5718-a5fc-4052-8138-35181de5b88e": "4fafa517-6290-4ab1-b20b-5c8137995c0a", // Bobby tu es là
+  "cde642b2-dc55-469e-9956-49bb90402001": "bd7d5210-1b8c-46e6-b04d-1a6750ab4d7a", // La Marseillaise
+  "711e1121-a905-4c2d-a45e-5206d7debc7d": "6bd89dd3-fede-4af3-b2c8-f04c29e4e7c0", // Frère Bobby
+  "3144fb03-d9da-4012-af3e-2cfaf85da4fb": "7aa4412f-fe84-41d6-9f40-e29e387f37cc", // Au Clair de la Lune
+  "8672b79c-8e78-43b5-88af-fe8b5268c287": "717a114f-e799-41b5-b4dc-1deb2a95e7e7", // Alouette
+  "fabdd6fa-2a51-401b-9f4d-faa6f4a9e851": "c6b9db82-f409-49f9-a8f3-eccd1eafe3a4", // Petit navire
+  "8e2a88f7-c594-49f3-aec2-4adb0cf8004a": "8fe7c6ae-4ada-4c72-ac86-93fc9d9aceed", // École amusant
+  "eba9d58d-9116-4b30-8fe4-8c1c0bbefa77": "931cb344-ee77-4e53-af99-78d49db2edf0", // Dort doucement
+};
 
 interface MusicState {
   isPlaying: boolean;
