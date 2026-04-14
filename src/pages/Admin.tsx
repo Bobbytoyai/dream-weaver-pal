@@ -1126,7 +1126,7 @@ const Admin = () => {
 
   // ── Appareils Bobby ──
   if (topSection === "devices") {
-    const { devices, devicesLoading, fetchDevices } = admin;
+    const { devices, devicesLoading, fetchDevices, createDevice } = admin;
     return (
       <>{detailPortal}
       <div className={`min-h-screen transition-colors duration-300 ${adminDark ? '' : 'admin-light'}`} style={{ background: "var(--admin-bg)" }}>
@@ -1140,6 +1140,9 @@ const Admin = () => {
               <h1 className="text-xl font-bold" style={{ color: "var(--admin-text)" }}>Appareils Bobby</h1>
               <p className="text-xs" style={{ color: "var(--admin-text-dim)" }}>{devices.length} appareils • {devices.filter(d => d.bobby_claimed_at).length} activés</p>
             </div>
+            <button onClick={() => createDevice()} className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "var(--admin-accent)", border: "none" }}>
+              <Plus className="w-4 h-4 text-white" />
+            </button>
             <button onClick={fetchDevices} className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
               <RefreshCw className="w-4 h-4" style={{ color: "var(--admin-text-muted)" }} />
             </button>
