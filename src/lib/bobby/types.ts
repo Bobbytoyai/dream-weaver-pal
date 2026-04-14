@@ -9,7 +9,7 @@ export interface PendingNarration {
   text: string;
 }
 
-export type BobbyReplySource = "offline_brain" | "library" | "narration" | "safety_filter" | "llm_gemini" | "local_brain";
+export type BobbyReplySource = "offline_brain" | "library" | "narration" | "safety_filter" | "llm_gemini" | "local_brain" | "offline_games";
 
 export interface BobbyBrainReply {
   text: string;
