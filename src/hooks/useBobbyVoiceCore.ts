@@ -634,6 +634,7 @@ export function useBobbyVoiceCore({
   const interrupt = useCallback(() => {
     processingRef.current = false;
     clearSilenceTimer();
+    clearAckTimer();
     stopSttRef.current();
     setMicArmed(false);
     setPartialText("");
@@ -643,7 +644,7 @@ export function useBobbyVoiceCore({
     convRelanceCountRef.current = 0;
     go("IDLE");
     scheduleSleep();
-  }, [clearSilenceTimer, go, scheduleSleep, stopPlayback]);
+  }, [clearSilenceTimer, clearAckTimer, go, scheduleSleep, stopPlayback]);
 
   // ─── Tap Bobby handler ────────────────────────────
   const handleTapBobby = useCallback(async () => {
