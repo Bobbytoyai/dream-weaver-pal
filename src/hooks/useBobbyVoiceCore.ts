@@ -732,15 +732,15 @@ export function useBobbyVoiceCore({
     return () => {
       clearSleepTimer();
       clearSilenceTimer();
+      clearAckTimer();
       stopSttRef.current();
       stopPlayback();
-      // Save persistent memory before cleanup
       endBobbySession(childName).catch(console.warn);
       resetBobbyBrainSession();
       resetEmotionPipeline();
       void closeSession();
     };
-  }, [clearSleepTimer, clearSilenceTimer, closeSession, stopPlayback]);
+  }, [clearSleepTimer, clearSilenceTimer, clearAckTimer, closeSession, stopPlayback]);
 
   // ─── Computed face state ──────────────────────────
   const bobbyFaceEmotion: FaceState =
