@@ -377,6 +377,7 @@ export function useBobbyVoiceCore({
     setMicArmed(false);
     setPartialText("");
     utteranceBufferRef.current = [];
+    clearAckTimer();
     if (utteranceTimerRef.current) { clearTimeout(utteranceTimerRef.current); utteranceTimerRef.current = null; }
     setCurrentEmotion("happy");
     voiceDetectedRef.current = false;
