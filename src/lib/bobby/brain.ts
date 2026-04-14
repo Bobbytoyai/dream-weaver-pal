@@ -502,7 +502,7 @@ export async function buildBobbyReply({
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain V6] ✅ L3 LLM → goal=${cognition.goal} (L3: ${layer3Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
       cacheReply(userText, llmReply).catch(() => {});
-      return llmReply;
+      return applyOrchestration(llmReply, directive);
     }
   } catch (e) {
     console.warn("[Brain V6] L3 LLM failed:", e);
