@@ -844,6 +844,34 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_session_message: {
+        Args: {
+          p_content: string
+          p_detected_emotion?: string
+          p_role: string
+          p_session_id: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      create_child_session: {
+        Args: { p_child_age: number; p_child_name: string; p_user_id: string }
+        Returns: string
+      }
+      delete_empty_session: {
+        Args: { p_session_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      end_child_session: {
+        Args: {
+          p_detected_emotions?: string[]
+          p_duration_seconds: number
+          p_session_id: string
+          p_topics?: string[]
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       increment_kb_usage: { Args: { entry_id: string }; Returns: undefined }
       update_bobby_child_name: {
         Args: { p_bobby_code: string; p_child_name: string }
