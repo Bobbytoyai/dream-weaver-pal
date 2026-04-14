@@ -230,7 +230,8 @@ export function getOfflineResponse(
     confidenceScore: 0.7,
     isOffline: true,
   };
-  const interactionMatch = adaptiveEngine.findBestMatch(normalized, adaptCtx, BOBBY_INTERACTIONS);
+  const interactions = _interactionsCache;
+  const interactionMatch = interactions ? adaptiveEngine.findBestMatch(normalized, adaptCtx, interactions) : null;
   if (interactionMatch) {
     const finalText = personalize(interactionMatch.ai_response, childName);
     const followUp = getFollowUp(interactionMatch.intent as any);
