@@ -170,11 +170,15 @@ const HIGH_PATTERNS: RegExp[] = [
 // Couvre: gros mots, contenu adulte léger, mort en contexte fictif acceptable
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const MEDIUM_PATTERNS: RegExp[] = [
-  // Gros mots & insultes
+  // Gros mots & insultes (élargi pour couvrir le vocabulaire courant des enfants)
   /\b(merde|putain|connard|con|salope|enculé|nique|niquer|fdp|pd)\b/i,
   /\b(ta gueule|va te faire|fils de pute|bâtard|espèce de|sale con|gros con)\b/i,
   /\b(ntm|jtm pas|f[*u]ck|sh[*i]t|damn|crap|ass)\b/i,
   /\b(insulte[rz]?|gros mot[s]?|dire des gros mots)\b/i,
+  // Insultes et mots vulgaires courants chez les enfants
+  /\b(cul|fesse[s]?|pipi|caca|prout|pet|péter|pète)\b/i,
+  /\btrou du cul\b/i,
+  /\b(idiot|imbécile|débile|crétin|stupide|nul|bête|abruti)\b/i,
   // Mort en contexte non grave (jeux vidéo OK, mais monitorer)
   /\b(mourir|mort|tu[eé]r?|sang)\b/i,
   // Nu / corps en contexte légèrement inapproprié

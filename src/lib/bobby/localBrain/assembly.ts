@@ -63,7 +63,7 @@ export function assembleResponse(
     }
   }
 
-  let text = parts.join(" ");
+  let text = parts.join(" ").replace(/\{child_name\}/g, childName);
 
   // Topic continuity — if same topic, add depth
   if (mem.currentTopic && mem.topicDepth >= 2 && Math.random() < 0.3) {
@@ -167,6 +167,7 @@ export const INTENT_FACE_MAP: Partial<Record<LocalIntent, FaceState>> = {
   SALUT: "happy",
   AU_REVOIR: "calm",
   IDENTITE_BOBBY: "proud",
+  IDENTITE_ENFANT: "happy",
   COMPLIMENT: "proud",
   CONTENU_BLOQUE: "reassuring",
   CRISE_SECURITE: "reassuring",

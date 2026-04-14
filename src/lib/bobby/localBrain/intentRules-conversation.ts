@@ -13,6 +13,10 @@ export const INTENT_RULES_CONVERSATION: IntentRule[] = [
   { intent: "NON", priority: 60, patterns: [
     /^(non|nan|nope|pas envie|je veux pas|non merci)\s*!*$/i,
   ]},
+  { intent: "IDENTITE_ENFANT", priority: 92, patterns: [
+    /comment je m'appelle|c'est quoi mon (pré)?nom|mon nom c'est quoi|tu connais mon (pré)?nom|tu sais comment je m'appelle|dis-moi mon nom/i,
+    /quel est mon (pré)?nom|rappelle.?toi de mon nom/i,
+  ]},
   { intent: "IDENTITE_BOBBY", priority: 85, patterns: [
     /qui es-tu|tu es qui|c'est quoi ton nom|comment tu t'appelles|t'es quoi|t'es un robot/i,
     /tu es [ée]ternel|tu vas mourir|tu meurs|t'es immortel|tu vis pour toujours|tu es vivant|t'es vivant|tu es r[ée]el|t'es r[ée]el/i,

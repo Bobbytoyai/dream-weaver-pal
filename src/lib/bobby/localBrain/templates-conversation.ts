@@ -65,6 +65,22 @@ export const TEMPLATES_CONVERSATION: TemplateMap = {
     },
   },
 
+  IDENTITE_ENFANT: {
+    default: {
+      empathy: [],
+      response: [
+        "Bien sûr que je sais ! Tu t'appelles {child_name} ! 😄",
+        "Tu es {child_name}, mon ami ! 💛",
+        "Ton prénom c'est {child_name} ! Comment je pourrais oublier ? 🌟",
+        "C'est facile ! Tu es {child_name} ! Je m'en souviens toujours 😊",
+      ],
+      opening: [
+        "Et toi, tu te souviens de mon nom ?",
+        "Tu veux qu'on fasse quelque chose ensemble ?",
+      ],
+    },
+  },
+
   IDENTITE_BOBBY: {
     default: {
       empathy: [],

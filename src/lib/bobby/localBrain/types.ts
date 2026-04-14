@@ -32,8 +32,8 @@ export type LocalIntent =
   | "ECOLE" | "DEVOIRS" | "NOURRITURE" | "DODO" | "REVEILS" | "ANIMAUX_COMPAGNIE" | "VACANCES" | "ACTIVITE"
   // Requests (8)
   | "HISTOIRE" | "JEU" | "BLAGUE" | "CHANSON" | "DEVINETTE" | "AVENTURE" | "IMAGINATION" | "APPRENDRE"
-  // Conversation (8)
-  | "SALUT" | "AU_REVOIR" | "OUI" | "NON" | "QUESTION_SIMPLE" | "QUESTION_COMPLEXE" | "IDENTITE_BOBBY" | "COMPLIMENT"
+  // Conversation (9)
+  | "SALUT" | "AU_REVOIR" | "OUI" | "NON" | "QUESTION_SIMPLE" | "QUESTION_COMPLEXE" | "IDENTITE_BOBBY" | "IDENTITE_ENFANT" | "COMPLIMENT"
   // Safety
   | "CONTENU_BLOQUE" | "CRISE_SECURITE"
   // Comprehension
