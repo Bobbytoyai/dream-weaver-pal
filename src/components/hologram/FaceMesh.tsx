@@ -494,14 +494,14 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       }
 
       // Interior (dark fill) — visible when mouth is open
-      const isOpen = mo > 0.18 || mr > 0.12;
+      const isOpen = mo > 0.10 || mr > 0.08;
       if (mouthInteriorRef.current) {
         if (isOpen) {
           const newShape = buildMouthShape(mc, mw, mo * 0.8, mr * 0.8);
           const newGeo = new THREE.ShapeGeometry(newShape, 32);
           mouthInteriorRef.current.geometry.dispose();
           mouthInteriorRef.current.geometry = newGeo;
-          mouthInteriorMat.opacity = Math.min(0.85, mo * 3 + mr * 2);
+          mouthInteriorMat.opacity = Math.min(0.9, mo * 4 + mr * 2.5);
         } else {
           mouthInteriorMat.opacity = 0;
         }
