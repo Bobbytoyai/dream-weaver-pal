@@ -123,7 +123,7 @@ export default function BobbyQR() {
       <div className="min-h-screen flex items-center justify-center bg-[#FDF6EC]">
         <div className="text-center space-y-4">
           <div className="text-5xl">🤖</div>
-          <p className="text-lg font-black text-foreground uppercase">Chargement…</p>
+          <p className="text-lg font-black text-black uppercase">Chargement…</p>
         </div>
       </div>
     );
@@ -215,8 +215,8 @@ export default function BobbyQR() {
       <div className="min-h-screen flex items-center justify-center bg-[#FDF6EC] p-6">
         <div className="retro-card p-8 max-w-sm w-full space-y-6 text-center" style={{ backgroundColor: "var(--retro-blue)" }}>
           <span className="text-6xl block">🤖</span>
-          <h2 className="text-2xl font-black text-foreground uppercase">Salut ! Je suis Bobby</h2>
-          <p className="text-sm font-bold text-foreground/70">Comment tu t'appelles ?</p>
+          <h2 className="text-2xl font-black text-black uppercase">Salut ! Je suis Bobby</h2>
+          <p className="text-sm font-bold text-black/70">Comment tu t'appelles ?</p>
           <input
             type="text"
             value={childName}
@@ -245,8 +245,8 @@ export default function BobbyQR() {
       <div className="min-h-screen flex items-center justify-center bg-[#FDF6EC] p-6">
         <div className="retro-card p-8 max-w-sm w-full space-y-6 text-center" style={{ backgroundColor: "var(--retro-green)" }}>
           <span className="text-5xl block">🎂</span>
-          <h2 className="text-xl font-black text-foreground uppercase">Super {childName} !</h2>
-          <p className="text-sm font-bold text-foreground/70">Tu as quel âge ?</p>
+          <h2 className="text-xl font-black text-black uppercase">Super {childName} !</h2>
+          <p className="text-sm font-bold text-black/70">Tu as quel âge ?</p>
           <div className="grid grid-cols-5 gap-2">
             {ages.map(a => (
               <button
@@ -255,7 +255,7 @@ export default function BobbyQR() {
                 className={`aspect-square flex items-center justify-center text-lg font-black border-4 border-black transition-all ${
                   childAge === a
                     ? "bg-foreground text-background scale-110"
-                    : "bg-white text-foreground hover:bg-[var(--retro-yellow)]"
+                    : "bg-white text-black hover:bg-[var(--retro-yellow)]"
                 }`}
                 style={{ boxShadow: childAge === a ? "3px 3px 0px rgba(0,0,0,0.25)" : "1px 1px 0px rgba(0,0,0,0.1)" }}
               >
