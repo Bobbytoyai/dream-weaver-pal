@@ -126,10 +126,10 @@ export default function BobbyParent() {
       await handleSettingsChange(updatedSettings);
 
       if (bobbyCode && newChildName !== bobbyCode.child_name) {
-        await supabase
-          .from("bobby_codes")
-          .update({ child_name: newChildName })
-          .eq("id", bobbyCode.id);
+        await supabase.rpc("update_bobby_child_name" as any, {
+          p_bobby_code: bobbyCode.code,
+          p_child_name: newChildName,
+        });
       }
 
       setStep("active");
