@@ -1160,6 +1160,10 @@ const Admin = () => {
           ) : (
             <div className="space-y-2">
               {devices.map((dev, idx) => {
+                const [showQR, setShowQR] = useState(false);
+                const bobbyUrl = `https://bobby-toy.shop/b/${dev.bobby_code}`;
+                const parentUrl = `https://bobby-toy.shop/parent/${dev.parent_code}`;
+
                 const handleToggleActive = async () => {
                   try {
                     if (dev.is_active) {
@@ -1199,6 +1203,14 @@ const Admin = () => {
                     <div className="flex items-center gap-1.5">
                       {dev.child_age && <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400">{dev.child_age} ans</span>}
                       <button
+                        onClick={() => setShowQR(v => !v)}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+                        style={{ background: showQR ? "rgba(99,102,241,0.2)" : "transparent", color: showQR ? "#818cf8" : "var(--admin-text-muted)" }}
+                        title="Afficher les QR codes"
+                      >
+                        <QrCode className="w-3.5 h-3.5" />
+                      </button>
+                      <button
                         onClick={handleToggleActive}
                         className="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all"
                         style={{
@@ -1237,6 +1249,30 @@ const Admin = () => {
                       {dev.is_active ? <span className="text-green-400">Actif</span> : <span className="text-red-400">Inactif</span>}
                     </div>
                   </div>
+
+                  {/* QR Codes Section */}
+                  {showQR && (
+                    <div className="pt-3 border-t mt-2" style={{ borderColor: "var(--admin-border)" }}>
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Bobby QR */}
+                        <div className="flex flex-col items-center gap-2">
+                          <p className="text-[10px] font-bold" style={{ color: "var(--admin-text)" }}>🧸 QR Bobby (activation)</p>
+                          <div className="bg-white rounded-xl p-2.5">
+                            <QRCodeSVG value={bobbyUrl} size={120} level="M" />
+                          </div>
+                          <p className="text-[8px] font-mono break-all text-center" style={{ color: "var(--admin-text-dim)" }}>{bobbyUrl}</p>
+                        </div>
+                        {/* Parent QR */}
+                        <div className="flex flex-col items-center gap-2">
+                          <p className="text-[10px] font-bold" style={{ color: "var(--admin-text)" }}>👨‍👩‍👧 QR Parent (notice)</p>
+                          <div className="bg-white rounded-xl p-2.5">
+                            <QRCodeSVG value={parentUrl} size={120} level="M" />
+                          </div>
+                          <p className="text-[8px] font-mono break-all text-center" style={{ color: "var(--admin-text-dim)" }}>{parentUrl}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 );
               })}
