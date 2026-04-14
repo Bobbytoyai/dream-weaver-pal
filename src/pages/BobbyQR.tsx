@@ -123,7 +123,7 @@ export default function BobbyQR() {
       <div className="min-h-screen flex items-center justify-center bg-[#FDF6EC]">
         <div className="text-center space-y-4">
           <div className="text-5xl">🤖</div>
-          <p className="text-lg font-black text-foreground uppercase">Chargement…</p>
+          <p className="text-lg font-black text-black uppercase">Chargement…</p>
         </div>
       </div>
     );
@@ -168,29 +168,29 @@ export default function BobbyQR() {
             <span className="text-5xl">🔒</span>
           </div>
 
-          <h2 className="text-2xl font-black text-foreground uppercase tracking-tight leading-tight">
+          <h2 className="text-2xl font-black text-black uppercase tracking-tight leading-tight">
             Ce Bobby est<br />déjà activé !
           </h2>
 
           <div className="border-t-4 border-black pt-4 space-y-2">
-            <p className="text-[13px] font-bold text-foreground/70 leading-relaxed">
+            <p className="text-[13px] font-bold text-black/70 leading-relaxed">
               Ce Bobby a été activé <strong>définitivement</strong> sur un autre appareil. L'activation est permanente et irréversible.
             </p>
-            <p className="text-[11px] font-bold text-foreground/50">
+            <p className="text-[11px] font-bold text-black/50">
               Même après une réinitialisation de l'appareil, ce code ne peut plus être réutilisé.
             </p>
           </div>
 
           <div className="retro-card p-3 text-left space-y-2" style={{ backgroundColor: "var(--retro-yellow)" }}>
-            <p className="text-[11px] font-black text-foreground uppercase">⚠️ Liaison permanente</p>
-            <p className="text-[10px] font-bold text-foreground/60 leading-relaxed">
+            <p className="text-[11px] font-black text-black uppercase">⚠️ Liaison permanente</p>
+            <p className="text-[10px] font-bold text-black/60 leading-relaxed">
               Chaque Bobby est lié <strong>à vie</strong> à l'appareil qui l'a activé en premier. Il est impossible de le transférer, le supprimer ou le réactiver — même après une réinitialisation usine de l'appareil.
             </p>
           </div>
 
           <div className="retro-card p-3 text-left space-y-1.5" style={{ backgroundColor: "var(--retro-blue)" }}>
-            <p className="text-[11px] font-black text-foreground uppercase">💡 Tu as perdu ton Bobby ?</p>
-            <p className="text-[10px] font-bold text-foreground/60 leading-relaxed">
+            <p className="text-[11px] font-black text-black uppercase">💡 Tu as perdu ton Bobby ?</p>
+            <p className="text-[10px] font-bold text-black/60 leading-relaxed">
               Contacte le support Bobby avec ta preuve d'achat pour obtenir un nouveau code d'activation.
             </p>
           </div>
@@ -204,7 +204,7 @@ export default function BobbyQR() {
         </div>
 
         <div className="mt-6 text-center">
-          <span className="text-[10px] font-black text-foreground/30 uppercase tracking-widest">Bobby™ — Activation unique & permanente</span>
+          <span className="text-[10px] font-black text-black/30 uppercase tracking-widest">Bobby™ — Activation unique & permanente</span>
         </div>
       </div>
     );
@@ -215,8 +215,8 @@ export default function BobbyQR() {
       <div className="min-h-screen flex items-center justify-center bg-[#FDF6EC] p-6">
         <div className="retro-card p-8 max-w-sm w-full space-y-6 text-center" style={{ backgroundColor: "var(--retro-blue)" }}>
           <span className="text-6xl block">🤖</span>
-          <h2 className="text-2xl font-black text-foreground uppercase">Salut ! Je suis Bobby</h2>
-          <p className="text-sm font-bold text-foreground/70">Comment tu t'appelles ?</p>
+          <h2 className="text-2xl font-black text-black uppercase">Salut ! Je suis Bobby</h2>
+          <p className="text-sm font-bold text-black/70">Comment tu t'appelles ?</p>
           <input
             type="text"
             value={childName}
@@ -245,8 +245,8 @@ export default function BobbyQR() {
       <div className="min-h-screen flex items-center justify-center bg-[#FDF6EC] p-6">
         <div className="retro-card p-8 max-w-sm w-full space-y-6 text-center" style={{ backgroundColor: "var(--retro-green)" }}>
           <span className="text-5xl block">🎂</span>
-          <h2 className="text-xl font-black text-foreground uppercase">Super {childName} !</h2>
-          <p className="text-sm font-bold text-foreground/70">Tu as quel âge ?</p>
+          <h2 className="text-xl font-black text-black uppercase">Super {childName} !</h2>
+          <p className="text-sm font-bold text-black/70">Tu as quel âge ?</p>
           <div className="grid grid-cols-5 gap-2">
             {ages.map(a => (
               <button
@@ -255,7 +255,7 @@ export default function BobbyQR() {
                 className={`aspect-square flex items-center justify-center text-lg font-black border-4 border-black transition-all ${
                   childAge === a
                     ? "bg-foreground text-background scale-110"
-                    : "bg-white text-foreground hover:bg-[var(--retro-yellow)]"
+                    : "bg-white text-black hover:bg-[var(--retro-yellow)]"
                 }`}
                 style={{ boxShadow: childAge === a ? "3px 3px 0px rgba(0,0,0,0.25)" : "1px 1px 0px rgba(0,0,0,0.1)" }}
               >
