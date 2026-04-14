@@ -136,6 +136,13 @@ export function buildContextSummary(messages: ConversationMessage[]): string {
     parts.push(`CONSIGNE D'INTÉRÊT : L'enfant adore "${favTopic}". Si le moment s'y prête, fais un lien avec ce sujet.`);
   }
 
+  // Persistent memory from previous sessions
+  const persistentBlock = buildPersistentMemoryBlock();
+  if (persistentBlock) {
+    parts.push("");
+    parts.push(persistentBlock);
+  }
+
   return parts.join("\n");
 }
 
