@@ -105,11 +105,13 @@ export function useAdminState() {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
     const activeThreshold = new Date(now.getTime() - 10 * 60 * 1000).toISOString();
 
-    const [activeRes, todayRes, msgsRes, lastRes] = await Promise.all([
+    const [activeRes, todayRes, msgsRes, lastRes, totalSessionsRes, totalMsgsRes] = await Promise.all([
       supabase.from("child_sessions").select("id", { count: "exact", head: true }).is("ended_at", null).gte("started_at", activeThreshold),
       supabase.from("child_sessions").select("id, duration_seconds, detected_emotions", { count: "exact" }).gte("started_at", todayStart),
       supabase.from("session_messages").select("id", { count: "exact", head: true }).gte("created_at", todayStart),
       supabase.from("session_messages").select("created_at").order("created_at", { ascending: false }).limit(1),
+      supabase.from("child_sessions").select("id", { count: "exact", head: true }),
+      supabase.from("session_messages").select("id", { count: "exact", head: true }),
     ]);
 
     const todaySessions = todayRes.data || [];
@@ -124,6 +126,8 @@ export function useAdminState() {
       activeSessions: activeRes.count || 0,
       todaySessions: todayRes.count || 0,
       todayMessages: msgsRes.count || 0,
+      totalSessions: totalSessionsRes.count || 0,
+      totalMessages: totalMsgsRes.count || 0,
       lastActivity: lastRes.data?.[0]?.created_at || null,
       avgDuration, topEmotion,
     });
