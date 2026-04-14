@@ -169,6 +169,7 @@ export function resetBobbyBrainSession() {
   clearConversationContext();
   resetPersistentMemoryCache();
   resetGames();
+  resetFlows();
   resetCognition();
   clearResponseCache().catch(() => {});
 }
