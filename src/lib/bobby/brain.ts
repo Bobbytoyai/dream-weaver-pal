@@ -201,6 +201,9 @@ export async function buildBobbyReply({ childName, childAge, userText = "", pend
   // ─── Track child interests for smart follow-ups ───
   if (userText) {
     trackInterests(userText);
+    // Extract and persist key facts from child's message
+    const newFacts = extractFactsFromMessage(userText);
+    if (newFacts.length > 0) mergeNewFacts(newFacts);
   }
 
   // ─── 1. Library (stories, jokes) — always high confidence ───

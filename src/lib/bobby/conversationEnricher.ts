@@ -7,6 +7,7 @@
  */
 
 import { getTopInterests, getInterestSnapshot } from "./interestTracker";
+import { buildPersistentMemoryBlock } from "./persistentMemory";
 
 interface ConversationMessage {
   role: "user" | "assistant";
