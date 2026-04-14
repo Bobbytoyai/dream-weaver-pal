@@ -2,7 +2,7 @@
  * Text Processing — normalize, stem, tokenize for French
  */
 
-import { STOP_WORDS } from "./semanticFields";
+import { STOP_WORDS } from "./stopWords";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TEXT PROCESSING
