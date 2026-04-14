@@ -1,73 +1,23 @@
 /**
- * Bobby Offline Conversational Brain v3.0
- * 
- * Refactored into modules:
- * - qa-database.ts: QA trigger/response pairs
- * - offline-intents.ts: Intent detection, normalization, safety, fuzzy matching
- * - offline-stories.ts: Stories, games, response pools
- * - offline-context.ts: Conversation context, memory, multi-turn
- * 
- * Pipeline: STT → Normalize → Intent → Context → Response → Follow-up → TTS
+ * Bobby Offline Response Engine
+ * Main pipeline: STT → Normalize → Intent → Context → Response → Follow-up → TTS
  */
 
-// ─── Re-exports for backward compatibility ─────────────────
-export { normalizeInput, detectOfflineIntent, isBlockedContent, matchQA, SAFE_REDIRECTS,
-  getSafetyLevel, detectSafetyCategory, extractSafetyKeyword, getSafeRedirect,
-  storeSafetyAlertRecord, getSafetyAlertRecords, clearSafetyAlertRecords, getUnreadAlertCount,
-} from "./offline-intents";
-export type { OfflineIntent, SafetyLevel, SafetyAlertRecord } from "./offline-intents";
-export { detectStoryTheme, LOCAL_STORIES, RESPONSES, RIDDLES, TRUE_FALSE, ANIMAL_QUIZ, TONGUE_TWISTERS, WOULD_YOU_RATHER } from "./offline-stories";
-export type { StoryTheme, MiniGameType } from "./offline-stories";
-export { resetConversationContext, context, updateContext, pickRandom, personalize, detectMoodFromText, buildContextualPrefix, getFollowUp, handleConversationalContext, handleFollowUpAnswer, handleContextualContinuation } from "./offline-context";
-export type { Mood } from "./offline-context";
-
-// ─── Network State ──────────────────────────────────────────
-export type NetworkMode = "ONLINE" | "OFFLINE" | "HYBRID";
-
-let currentMode: NetworkMode = navigator.onLine ? "ONLINE" : "OFFLINE";
-const listeners = new Set<(mode: NetworkMode) => void>();
-
-function updateMode() {
-  const newMode: NetworkMode = navigator.onLine ? "ONLINE" : "OFFLINE";
-  if (newMode !== currentMode) {
-    currentMode = newMode;
-    console.log(`[Offline] 🌐 Network mode: ${newMode}`);
-    listeners.forEach(cb => cb(newMode));
-  }
-}
-
-if (typeof window !== "undefined") {
-  window.addEventListener("online", updateMode);
-  window.addEventListener("offline", updateMode);
-}
-
-export function getNetworkMode(): NetworkMode { return currentMode; }
-export function isOffline(): boolean { return currentMode === "OFFLINE"; }
-export function onNetworkChange(cb: (mode: NetworkMode) => void): () => void {
-  listeners.add(cb);
-  return () => listeners.delete(cb);
-}
-
-// ─── Imports from modules ───────────────────────────────────
 import { normalizeInput, detectOfflineIntent, isBlockedContent, matchQA, SAFE_REDIRECTS,
   getSafetyLevel, detectSafetyCategory, extractSafetyKeyword, getSafeRedirect, storeSafetyAlertRecord,
-} from "./offline-intents";
-import { eventBus } from "./eventBus";
+} from "../offline-intents";
+import { eventBus } from "../eventBus";
 import { detectStoryTheme, LOCAL_STORIES, RESPONSES, pickMiniGame, TONGUE_TWISTERS, FOLLOW_UPS,
   isAnimalGameActive, isAnimalGameTrigger, startAnimalGame, handleAnimalGameInput,
   isMemoryGameActive, isMemoryGameTrigger, startMemoryGame, handleMemoryGameInput,
   isLearningActive, isLearningTrigger, startLearning, handleLearningInput,
-} from "./offline-stories";
-import type { MiniGameType } from "./offline-stories";
-import { context, updateContext, detectMoodFromText, pickRandom, personalize, handleFollowUpAnswer, handleContextualContinuation, handleConversationalContext, buildContextualPrefix, getFollowUp } from "./offline-context";
-import { BOBBY_INTERACTIONS } from "./bobby_interactions_10k";
-import { adaptiveEngine, type AdaptiveContext } from "./adaptiveEngine";
-import { findMultiResponse, selectBestResponse, recordInput, recordResponse, updateEngagement, setEmotionalState, selectNonRepetitiveResponse, recordIntent, recordInteraction, boostResponseScore, penalizeResponseScore, getConversationalRebond, getDominantEmotion } from "./responseSelector";
-import { isScenarioActive, tryStartScenario, handleScenarioStep, resetScenario } from "./scenarioEngine";
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// MAIN RESPONSE ENGINE
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+} from "../offline-stories";
+import type { MiniGameType } from "../offline-stories";
+import { context, updateContext, detectMoodFromText, pickRandom, personalize, handleFollowUpAnswer, handleContextualContinuation, handleConversationalContext, buildContextualPrefix, getFollowUp } from "../offline-context";
+import { BOBBY_INTERACTIONS } from "../bobby_interactions_10k";
+import { adaptiveEngine, type AdaptiveContext } from "../adaptiveEngine";
+import { findMultiResponse, selectBestResponse, recordInput, recordResponse, updateEngagement, setEmotionalState, selectNonRepetitiveResponse, recordIntent, recordInteraction, boostResponseScore, penalizeResponseScore, getConversationalRebond, getDominantEmotion } from "../responseSelector";
+import { isScenarioActive, tryStartScenario, handleScenarioStep, resetScenario } from "../scenarioEngine";
 
 export interface OfflineResponse {
   text: string;
@@ -90,9 +40,9 @@ export function getOfflineResponse(
   // Learning loop: if child responds quickly after Bobby's last message, boost it
   if (context.lastBobbyResponse && context.interactionCount > 1) {
     const timeSinceLast = Date.now() - (context.lastResponseTime || 0);
-    if (timeSinceLast < 10000) { // replied within 10s → good engagement
+    if (timeSinceLast < 10000) {
       boostResponseScore(context.lastBobbyResponse, 2);
-    } else if (timeSinceLast > 60000) { // took > 60s → low engagement
+    } else if (timeSinceLast > 60000) {
       penalizeResponseScore(context.lastBobbyResponse, 1);
     }
   }
@@ -104,14 +54,13 @@ export function getOfflineResponse(
     setEmotionalState(detectedMood);
   }
 
-  // 1. Safety filter — with severity-aware response + parent alert
+  // 1. Safety filter
   if (isBlockedContent(text)) {
     const level = getSafetyLevel(text) ?? "MEDIUM";
     const category = detectSafetyCategory(text);
     const keyword = extractSafetyKeyword(text);
     const resp = getSafeRedirect(text);
 
-    // Store alert for parent review
     storeSafetyAlertRecord({
       severity: level, category, keyword,
       fullText: text.slice(0, 200),
@@ -119,18 +68,15 @@ export function getOfflineResponse(
       childName: childName ?? "enfant",
     });
 
-    // Emit real-time parent alert via event bus
     try {
       eventBus.emit({
         type: "SAFETY_ALERT",
-        severity: level,
-        category,
-        keyword,
+        severity: level, category, keyword,
         fullText: text.slice(0, 200),
         timestamp: Date.now(),
         childName: childName ?? "enfant",
       });
-    } catch { /* eventBus unavailable in some test environments */ }
+    } catch { /* eventBus unavailable */ }
 
     updateContext("BLOCKED", "", resp);
     return { text: resp, intent: "BLOCKED", isOffline: true };
@@ -180,7 +126,7 @@ export function getOfflineResponse(
     return continuation;
   }
 
-  // 3b. 🎭 Scenario flows (multi-turn emotional conversations)
+  // 3b. Scenario flows
   if (isScenarioActive()) {
     const scenarioResp = handleScenarioStep(text);
     if (scenarioResp) {
@@ -194,7 +140,7 @@ export function getOfflineResponse(
   const contextual = handleConversationalContext(text, childName);
   if (contextual) return contextual;
 
-  // 3d. 🧠 Multi-response smart selection (anti-repetition + behavioral adaptation)
+  // 3d. Multi-response smart selection
   const multiMatch = findMultiResponse(text);
   if (multiMatch) {
     const selected = selectBestResponse(multiMatch.responses);
@@ -208,7 +154,6 @@ export function getOfflineResponse(
       updateContext(intent, text, finalText);
       tryStartScenario(text, childAge);
 
-      // 🚨 Auto-alert for securite categories with danger/detresse emotions
       if (multiMatch.category.startsWith("securite") || multiMatch.category === "protection_active") {
         const severity = multiMatch.emotion === "danger" ? "CRITICAL" as const
           : multiMatch.emotion === "detresse" ? "HIGH" as const
@@ -223,10 +168,7 @@ export function getOfflineResponse(
         };
         storeSafetyAlertRecord(alertRecord);
         try {
-          eventBus.emit({
-            type: "SAFETY_ALERT",
-            ...alertRecord,
-          });
+          eventBus.emit({ type: "SAFETY_ALERT", ...alertRecord });
         } catch { /* eventBus unavailable */ }
       }
 
@@ -264,7 +206,7 @@ export function getOfflineResponse(
     return { text: fullResponse, intent, isOffline: true };
   }
 
-  // 4b. 🧠 Secondary fallback: Bobby 10K interaction database (adaptive match with real confidence)
+  // 4b. Bobby 10K interaction database
   const adaptCtx: AdaptiveContext = {
     childAge,
     detectedEmotion: context.mood === "happy" ? "joy" : context.mood === "sad" ? "sadness" : "neutral",
