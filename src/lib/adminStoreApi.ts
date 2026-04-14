@@ -22,7 +22,8 @@ type AdminStoreAction =
   | "save_content_data_item"
   | "delete_content_data_item"
   | "move_content_data_item"
-  | "save_music_pack_items";
+  | "save_music_pack_items"
+  | "update_music_track";
 
 async function callAdminStore<T>(
   adminCode: string,
@@ -96,5 +97,16 @@ export async function saveMusicPackItems(
   return callAdminStore<{ ok: boolean; count: number }>(adminCode, "save_music_pack_items", {
     contentId,
     items,
+  });
+}
+
+export async function updateMusicTrack(
+  adminCode: string,
+  trackId: string,
+  updates: Record<string, unknown>,
+) {
+  return callAdminStore<{ ok: boolean }>(adminCode, "update_music_track", {
+    trackId,
+    ...updates,
   });
 }
