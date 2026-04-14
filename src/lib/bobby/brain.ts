@@ -37,6 +37,7 @@ import { computePriority, createDefaultMemoryContext, type PriorityDecision } fr
 import { orchestrate, recordBobbyResponse, resetOrchestrator, type OrchestrationDirective } from "./v7/orchestrator";
 import { checkUnderstanding, applyUnderstandingCheck, detectCorrectionSignal, resetFeedbackLoop } from "./v7/understandingLoop";
 import { buildCognitionPlan, resetCognitionV7, type CognitionPlan } from "./v7/cognitionV7";
+import { assembleAndMerge } from "./v7/responseAssembly";
 import {
   loadPersistentMemory,
   savePersistentMemory,
@@ -164,17 +165,7 @@ function applyOrchestration(
     reply.text = reply.text.replace(/[.!?…]*\s*$/, ". ") + directive.resumePrompt;
   }
 
-  // V7: Apply CognitionPlan-driven adjustments
-  if (plan) {
-    // If plan says includeValidation → prepend empathy opener
-    if (plan.what.includeValidation && plan.why.primaryGoal !== "jouer") {
-      const validations = ["C'est une super question ! ", "Bravo de demander ! ", "J'adore ta curiosité ! "];
-      const prefix = validations[Math.floor(Math.random() * validations.length)];
-      if (!reply.text.startsWith(prefix.trim())) {
-        reply.text = prefix + reply.text;
-      }
-    }
-  }
+  // V7: Validation is now handled by responseAssembly.ts
 
   // V7: Understanding Feedback Loop — verify comprehension
   if (understanding && session) {
@@ -473,9 +464,7 @@ export async function buildBobbyReply({
     },
   });
 
-  // ── Apply cognition to follow-up strategy ──
-  const shouldAddFollowUp = cognition.suggestedFollowUp !== "none";
-  const cognitionFollowUp = buildCognitionFollowUp(cognition, childName);
+  // V7: Follow-ups are now handled by responseAssembly.ts via CognitionPlan
 
   // ── ★ FLOW ENGINE: check if we should start a multi-turn scenario ──
   if (!isFlowActive() && localReply.confidence >= 0.5) {
@@ -492,20 +481,11 @@ export async function buildBobbyReply({
     }
   }
   if (localReply.confidence >= LAYER1_CONFIDENCE) {
-    const reply = postProcess(localReply, childName, childAge, personalityCtx);
-    // V6: Memory injection when cognition suggests it
-    if (cognition.shouldInjectMemory && Math.random() < 0.4) {
-      reply.text = maybeInjectMemory(reply.text, userText, childName, mem.currentTopic, emotion.type);
-    } else if (shouldAddFollowUp && cognitionFollowUp && Math.random() < 0.5) {
-      reply.text = reply.text.replace(/[.!?…]*$/, ". ") + cognitionFollowUp;
-    } else {
-      const smartFollowUp = getSmartFollowUp(childName);
-      if (smartFollowUp && Math.random() < 0.3) {
-        reply.text = reply.text.replace(/[.!?…]*$/, ". ") + smartFollowUp;
-      }
-    }
+    let reply = postProcess(localReply, childName, childAge, personalityCtx);
+    // V7: Structured response assembly (opening + content + closing)
+    reply = assembleAndMerge(reply, cognitionPlan, understanding, childName);
     const totalMs = performance.now() - pipelineStart;
-    console.log(`[Brain V6] ✅ L1 direct → ${localReply.intent} | goal=${cognition.goal} (${totalMs.toFixed(0)}ms total)`);
+    console.log(`[Brain V7] ✅ L1 direct → ${localReply.intent} | goal=${cognitionPlan.why.primaryGoal} (${totalMs.toFixed(0)}ms total)`);
     cacheReply(userText, reply).catch(() => {});
     return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan);
   }
@@ -517,18 +497,15 @@ export async function buildBobbyReply({
     const layer2Ms = performance.now() - layer2Start;
 
     if (kbReply && kbReply.confidence >= LAYER2_CONFIDENCE) {
-      const reply = postProcess(kbReply, childName, childAge, personalityCtx);
-      if (shouldAddFollowUp && cognitionFollowUp && Math.random() < 0.4) {
-        reply.text = reply.text.replace(/[.!?…]*$/, ". ") + cognitionFollowUp;
-      }
+      let reply = postProcess(kbReply, childName, childAge, personalityCtx);
+      reply = assembleAndMerge(reply, cognitionPlan, understanding, childName);
       const totalMs = performance.now() - pipelineStart;
-      console.log(`[Brain V6] ✅ L2 KB → conf=${kbReply.confidence.toFixed(2)} | goal=${cognition.goal} (L2: ${layer2Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
+      console.log(`[Brain V7] ✅ L2 KB → conf=${kbReply.confidence.toFixed(2)} | goal=${cognitionPlan.why.primaryGoal} (L2: ${layer2Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
       cacheReply(userText, reply).catch(() => {});
       return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan);
-      console.log(`[Brain V6] L2 KB: conf=${kbReply.confidence.toFixed(2)} → escalate to L3`);
     }
   } catch (e) {
-    console.warn("[Brain V6] L2 KB error:", e);
+    console.warn("[Brain V7] L2 KB error:", e);
   }
 
   // ── LAYER 3: LLM (Gemini via edge function) ──
@@ -538,30 +515,22 @@ export async function buildBobbyReply({
     const layer3Ms = performance.now() - layer3Start;
 
     if (llmReply) {
+      const enrichedReply = assembleAndMerge(llmReply, cognitionPlan, understanding, childName);
       const totalMs = performance.now() - pipelineStart;
-      console.log(`[Brain V6] ✅ L3 LLM → goal=${cognition.goal} (L3: ${layer3Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
-      cacheReply(userText, llmReply).catch(() => {});
-      return applyOrchestration(llmReply, directive, understanding, v7Session, cognitionPlan);
+      console.log(`[Brain V7] ✅ L3 LLM → goal=${cognitionPlan.why.primaryGoal} (L3: ${layer3Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
+      cacheReply(userText, enrichedReply).catch(() => {});
+      return applyOrchestration(enrichedReply, directive, understanding, v7Session, cognitionPlan);
     }
   } catch (e) {
-    console.warn("[Brain V6] L3 LLM failed:", e);
+    console.warn("[Brain V7] L3 LLM failed:", e);
   }
 
   // ── FALLBACK: Use Layer 1 response (always available offline) ──
-  const reply = postProcess(localReply, childName, childAge, personalityCtx);
-  if (cognition.shouldInjectMemory && Math.random() < 0.4) {
-    reply.text = maybeInjectMemory(reply.text, userText, childName, mem.currentTopic, emotion.type);
-  } else if (shouldAddFollowUp && cognitionFollowUp) {
-    reply.text = reply.text.replace(/[.!?…]*$/, ". ") + cognitionFollowUp;
-  } else {
-    const smartFollowUp = getSmartFollowUp(childName);
-    if (smartFollowUp && localReply.confidence >= 0.5 && Math.random() < 0.3) {
-      reply.text = reply.text.replace(/[.!?…]*$/, ". ") + smartFollowUp;
-    }
-  }
+  let reply = postProcess(localReply, childName, childAge, personalityCtx);
+  reply = assembleAndMerge(reply, cognitionPlan, understanding, childName);
 
   const totalMs = performance.now() - pipelineStart;
-  console.log(`[Brain V6] ⚡ Fallback L1 → ${localReply.intent} | goal=${cognition.goal} (${totalMs.toFixed(0)}ms total)`);
+  console.log(`[Brain V7] ⚡ Fallback L1 → ${localReply.intent} | goal=${cognitionPlan.why.primaryGoal} (${totalMs.toFixed(0)}ms total)`);
   cacheReply(userText, reply).catch(() => {});
   return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan);
 }
