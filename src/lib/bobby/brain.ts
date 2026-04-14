@@ -272,7 +272,7 @@ export async function buildBobbyReply({
   // ── Library (stories, jokes) — curated content ──
   const libraryReply = getLibraryReply(userText, childName, childAge);
   if (libraryReply) {
-    return postProcess(libraryReply, childName, childAge, personality);
+    return postProcess(libraryReply, childName, childAge, personalityCtx);
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -291,7 +291,7 @@ export async function buildBobbyReply({
   if (cached) {
     const totalMs = performance.now() - pipelineStart;
     console.log(`[Brain V6] ⚡ Cache hit → ${cached.intent} (${totalMs.toFixed(0)}ms total)`);
-    return postProcess(cached, childName, childAge, personality);
+    return postProcess(cached, childName, childAge, personalityCtx);
   }
 
   // ── LAYER 1: LocalBrain (Regex + SmartClassifier + Templates) ──
@@ -329,7 +329,7 @@ export async function buildBobbyReply({
 
   // High-confidence Layer 1 → respond directly (skip KB + LLM)
   if (localReply.confidence >= LAYER1_CONFIDENCE) {
-    const reply = postProcess(localReply, childName, childAge, personality);
+    const reply = postProcess(localReply, childName, childAge, personalityCtx);
     if (shouldAddFollowUp && cognitionFollowUp && Math.random() < 0.5) {
       reply.text = reply.text.replace(/[.!?…]*$/, ". ") + cognitionFollowUp;
     } else {
@@ -351,7 +351,7 @@ export async function buildBobbyReply({
     const layer2Ms = performance.now() - layer2Start;
 
     if (kbReply && kbReply.confidence >= LAYER2_CONFIDENCE) {
-      const reply = postProcess(kbReply, childName, childAge, personality);
+      const reply = postProcess(kbReply, childName, childAge, personalityCtx);
       if (shouldAddFollowUp && cognitionFollowUp && Math.random() < 0.4) {
         reply.text = reply.text.replace(/[.!?…]*$/, ". ") + cognitionFollowUp;
       }
@@ -385,7 +385,7 @@ export async function buildBobbyReply({
   }
 
   // ── FALLBACK: Use Layer 1 response (always available offline) ──
-  const reply = postProcess(localReply, childName, childAge, personality);
+  const reply = postProcess(localReply, childName, childAge, personalityCtx);
   if (shouldAddFollowUp && cognitionFollowUp) {
     reply.text = reply.text.replace(/[.!?…]*$/, ". ") + cognitionFollowUp;
   } else {
