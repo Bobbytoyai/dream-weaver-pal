@@ -496,7 +496,7 @@ export async function buildBobbyReply({
     }
   }
   if (localReply.confidence >= LAYER1_CONFIDENCE) {
-    let reply = postProcess(localReply, childName, childAge, personalityCtx);
+    let reply = postProcess(localReply, childName, childAge, personalityCtx, tomSnapshot);
     // V7: Structured response assembly (opening + content + closing)
     reply = assembleAndMerge(reply, cognitionPlan, understanding, childName);
     const totalMs = performance.now() - pipelineStart;
@@ -512,7 +512,7 @@ export async function buildBobbyReply({
     const layer2Ms = performance.now() - layer2Start;
 
     if (kbReply && kbReply.confidence >= LAYER2_CONFIDENCE) {
-      let reply = postProcess(kbReply, childName, childAge, personalityCtx);
+      let reply = postProcess(kbReply, childName, childAge, personalityCtx, tomSnapshot);
       reply = assembleAndMerge(reply, cognitionPlan, understanding, childName);
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain V7] ✅ L2 KB → conf=${kbReply.confidence.toFixed(2)} | goal=${cognitionPlan.why.primaryGoal} (L2: ${layer2Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
@@ -541,7 +541,7 @@ export async function buildBobbyReply({
   }
 
   // ── FALLBACK: Use Layer 1 response (always available offline) ──
-  let reply = postProcess(localReply, childName, childAge, personalityCtx);
+  let reply = postProcess(localReply, childName, childAge, personalityCtx, tomSnapshot);
   reply = assembleAndMerge(reply, cognitionPlan, understanding, childName);
 
   const totalMs = performance.now() - pipelineStart;
