@@ -14,7 +14,7 @@ type Step = "loading" | "invalid" | "claimed" | "sleeping" | "active" | "parent"
 export default function BobbyQR() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
-  const [step, setStep] = useState<Step>("loading");
+  const [step, setStep] = useState<Step>("sleeping");
   const [childName, setChildName] = useState("");
   const [childAge, setChildAge] = useState<number | null>(null);
   const [bobbyCode, setBobbyCode] = useState<any>(null);
@@ -114,20 +114,8 @@ export default function BobbyQR() {
 
   // ─── Render ────────────────────────────────────────
 
-  if (step === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#E8F0FE]">
-        <div className="w-full max-w-md aspect-square">
-          <HologramFace
-            voiceState="idle"
-            enableCamera={false}
-            bobbyColor="blue"
-            emotionOverride="sleepy"
-          />
-        </div>
-      </div>
-    );
-  }
+
+
 
   if (step === "invalid") {
     return (
