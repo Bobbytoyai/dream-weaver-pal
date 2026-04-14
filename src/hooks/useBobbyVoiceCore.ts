@@ -550,15 +550,11 @@ export function useBobbyVoiceCore({
           // Resume listening after music ends
           lastSpeechEndRef.current = Date.now();
           await new Promise(r => setTimeout(r, ANTI_ECHO_COOLDOWN_MS));
-          if (machineRef.current === "SPEAKING") {
-            void startListeningRef.current();
-          }
+          void startListeningRef.current();
         } catch (e) {
           console.warn("[Music] Failed to play track:", e);
           // Ensure we go back to listening even on error
-          if (machineRef.current === "SPEAKING") {
-            void startListeningRef.current();
-          }
+          void startListeningRef.current();
         }
       }
     } finally {
