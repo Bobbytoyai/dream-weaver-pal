@@ -424,6 +424,13 @@ export async function buildBobbyReply({
     `[Brain V8] 🧠 ToM: cognitive=${mentalModel.understanding.cognitiveLevel} vocab=${mentalModel.understanding.vocabularyLevel} surface=${mentalModel.emotionalState.surfaceEmotion} inferred=${mentalModel.emotionalState.inferredEmotion} delta=${mentalModel.emotionalState.emotionDelta.toFixed(2)} trajectory=${mentalModel.emotionalState.emotionalTrajectory} | ${tomSnapshot.tomInfluence}`
   );
 
+  // ── V8: CHILD WORLD MODEL — update & check confusion zones ──
+  buildWorldModel(childAge, tomSnapshot);
+  const { activeZones, warnings: confusionWarnings } = checkConfusionZones(userText, childAge);
+  if (activeZones.length > 0) {
+    console.log(`[Brain V8] 🌍 Confusion zones: ${activeZones.map(z => z.topic).join(", ")} | ${confusionWarnings[0]}`);
+  }
+
   // ── V7: PRIORITY ENGINE — 5-dimension scoring ──
   const priority = computePriority(understanding, v7Session, createDefaultMemoryContext());
   console.log(
