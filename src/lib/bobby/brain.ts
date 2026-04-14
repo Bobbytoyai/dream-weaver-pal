@@ -464,9 +464,7 @@ export async function buildBobbyReply({
     },
   });
 
-  // ── Apply cognition to follow-up strategy ──
-  const shouldAddFollowUp = cognition.suggestedFollowUp !== "none";
-  const cognitionFollowUp = buildCognitionFollowUp(cognition, childName);
+  // V7: Follow-ups are now handled by responseAssembly.ts via CognitionPlan
 
   // ── ★ FLOW ENGINE: check if we should start a multi-turn scenario ──
   if (!isFlowActive() && localReply.confidence >= 0.5) {
