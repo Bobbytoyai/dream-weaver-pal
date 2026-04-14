@@ -367,10 +367,10 @@ export function useFaceAnimation(
       thinkingPupilY = Math.cos(t * 0.9) * 0.03;
     }
 
-    // --- CURIOUS: slight head tilt oscillation ---
+    // --- CURIOUS: exaggerated head tilt oscillation ---
     let curiousTiltZ = 0;
     if (faceState === "curious") {
-      curiousTiltZ = Math.sin(breathPhase.current * 1.5) * 0.03;
+      curiousTiltZ = Math.sin(breathPhase.current * 1.5) * 0.06;
     }
 
     // --- LISTENING: subtle eyebrow micro-movements (attentive, alive) ---
