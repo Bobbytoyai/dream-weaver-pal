@@ -265,6 +265,7 @@ export default function BobbyParent() {
       <Suspense fallback={<RetroLoader message="Mode parent…" />}>
         <ParentMode
           childName={bobbyCode?.child_name || "Mon ami"}
+          bobbyCodeId={bobbyCode?.id}
           onClose={() => navigate("/")}
           parentSettings={parentSettings}
           onSettingsChange={handleSettingsChange}
