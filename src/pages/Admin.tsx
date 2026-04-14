@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
   ArrowLeft, Plus, Search, Brain, Lock,
-  ChevronRight, Pencil, Trash2, Eye, RefreshCw,
+  ChevronRight, Pencil, Trash2, Eye, RefreshCw, QrCode,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
