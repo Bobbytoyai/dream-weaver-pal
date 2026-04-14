@@ -59,8 +59,8 @@ interface AdminStoreManagerProps {
   onBack: () => void;
 }
 
-const STORE_CATEGORIES = ["jeux", "educatif", "histoires", "blagues", "langues"];
-const DATA_TYPES = ["qa", "story", "joke", "game", "song", "exercise"];
+const STORE_CATEGORIES = ["jeux", "educatif", "histoires", "blagues", "langues", "musique"];
+const DATA_TYPES = ["qa", "story", "joke", "game", "song", "exercise", "music"];
 const EMOTIONS = ["happy", "curious", "excited", "calm", "surprised", "proud", "playful", "sad", "scared"];
 
 const CAT_COLORS: Record<string, string> = {
