@@ -37,6 +37,18 @@ export interface CloudUser {
   last_synced_at: string; created_at: string; updated_at: string;
 }
 
+export interface BobbyDevice {
+  bobby_code: string;
+  bobby_id: string;
+  child_name: string | null;
+  child_age: number | null;
+  bobby_claimed_at: string | null;
+  parent_code: string;
+  parent_claimed_at: string | null;
+  parent_device_token: string | null;
+  is_active: boolean;
+}
+
 export interface RealConversation {
   session_id: string;
   child_name: string;
