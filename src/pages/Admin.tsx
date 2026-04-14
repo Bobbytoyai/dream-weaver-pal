@@ -1124,6 +1124,77 @@ const Admin = () => {
     );
   }
 
+  // ── Appareils Bobby ──
+  if (topSection === "devices") {
+    const { devices, devicesLoading, fetchDevices } = admin;
+    return (
+      <>{detailPortal}
+      <div className={`min-h-screen transition-colors duration-300 ${adminDark ? '' : 'admin-light'}`} style={{ background: "var(--admin-bg)" }}>
+        <div className="max-w-4xl mx-auto px-4 py-5 space-y-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={goBack} className="p-2" style={{ color: "var(--admin-text-muted)" }}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <span className="text-2xl">📱</span>
+            <div className="flex-1">
+              <h1 className="text-xl font-bold" style={{ color: "var(--admin-text)" }}>Appareils Bobby</h1>
+              <p className="text-xs" style={{ color: "var(--admin-text-dim)" }}>{devices.length} appareils • {devices.filter(d => d.bobby_claimed_at).length} activés</p>
+            </div>
+            <button onClick={fetchDevices} className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
+              <RefreshCw className="w-4 h-4" style={{ color: "var(--admin-text-muted)" }} />
+            </button>
+          </div>
+
+          {devicesLoading ? (
+            <div className="text-center py-12 animate-pulse" style={{ color: "var(--admin-text-muted)" }}>Chargement…</div>
+          ) : devices.length === 0 ? (
+            <div className="text-center py-12">
+              <span className="text-4xl block mb-2">📭</span>
+              <p className="text-sm" style={{ color: "var(--admin-text-dim)" }}>Aucun appareil enregistré</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {devices.map((dev, idx) => (
+                <div key={idx} className="rounded-2xl p-4 space-y-2" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{dev.bobby_claimed_at ? "🟢" : "⚪"}</span>
+                      <div>
+                        <p className="font-bold text-sm" style={{ color: "var(--admin-text)" }}>{dev.child_name || "Non configuré"}</p>
+                        <p className="text-[10px] font-mono" style={{ color: "var(--admin-text-dim)" }}>Code: {dev.bobby_code}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      {dev.child_age && <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400">{dev.child_age} ans</span>}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-[10px]" style={{ color: "var(--admin-text-muted)" }}>
+                    <div>
+                      <span className="opacity-60">Activé: </span>
+                      {dev.bobby_claimed_at ? new Date(dev.bobby_claimed_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                    </div>
+                    <div>
+                      <span className="opacity-60">Code parent: </span>
+                      <span className="font-mono">{dev.parent_code}</span>
+                    </div>
+                    <div>
+                      <span className="opacity-60">Parent lié: </span>
+                      {dev.parent_claimed_at ? "✅ " + new Date(dev.parent_claimed_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : "❌ Non"}
+                    </div>
+                    <div>
+                      <span className="opacity-60">Statut: </span>
+                      {dev.is_active ? <span className="text-green-400">Actif</span> : <span className="text-red-400">Inactif</span>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div></>
+    );
+  }
+
   // ── Main Dashboard ──
   return (
     <>
