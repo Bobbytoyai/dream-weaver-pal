@@ -87,6 +87,8 @@ export async function streamLLMReply(
         personality,
         contextSummary,
         stream: true,
+        userId: userId || null,
+        sessionId: sessionId || null,
       }),
       signal: controller.signal,
     });
