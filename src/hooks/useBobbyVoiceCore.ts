@@ -559,6 +559,7 @@ export function useBobbyVoiceCore({
           });
 
           musicAudioRef.current = null;
+          setMusicPlaying(false);
           eventBus.emit({ type: "MUSIC_STOP" });
 
           // Resume listening after music ends
@@ -567,6 +568,7 @@ export function useBobbyVoiceCore({
           void startListeningRef.current();
         } catch (e) {
           console.warn("[Music] Failed to play track:", e);
+          setMusicPlaying(false);
           eventBus.emit({ type: "MUSIC_STOP" });
           // Ensure we go back to listening even on error
           void startListeningRef.current();
