@@ -42,6 +42,7 @@ import { initToM, updateMentalModel, getToMSnapshot, applyToMToResponse, resetTo
 import { buildWorldModel, adaptToChildWorld, checkConfusionZones, resetWorldModel } from "./v8/childWorldModel";
 import { maybeInitiate, resetProactiveEngine, type ProactiveContext } from "./v8/proactiveEngine";
 import { applyVariation, resetVariationEngine } from "./v8/variationEngine";
+import { loadRelationship, recordInteraction, getInsideJokeReference, getPhaseBehavior, resetRelationshipEngine } from "./v8/relationshipEngine";
 import {
   loadPersistentMemory,
   savePersistentMemory,
@@ -204,6 +205,13 @@ function applyOrchestration(
   const { text: variedText } = applyVariation(reply.text, plan?.how?.openingType);
   reply.text = variedText;
 
+  // V8: Inject inside joke reference based on relationship phase
+  const jokeRef = getInsideJokeReference();
+  if (jokeRef) {
+    reply.text = reply.text.replace(/[.!?…]*\s*$/, ". ") + jokeRef;
+    console.log(`[Brain V8] 🤫 Inside joke injected`);
+  }
+
   // Record Bobby's response in the scene
   recordBobbyResponse(reply.text);
 
@@ -252,11 +260,13 @@ export function resetBobbyBrainSession() {
   resetWorldModel();
   resetProactiveEngine();
   resetVariationEngine();
+  resetRelationshipEngine();
   clearResponseCache().catch(() => {});
 }
 
 export async function initBobbySession(childName: string, childAge?: number): Promise<void> {
   await loadPersistentMemory(childName);
+  loadRelationship();
   if (childAge) {
     initToM(childAge);
     buildWorldModel(childAge);
@@ -444,6 +454,9 @@ export async function buildBobbyReply({
   if (activeZones.length > 0) {
     console.log(`[Brain V8] 🌍 Confusion zones: ${activeZones.map(z => z.topic).join(", ")} | ${confusionWarnings[0]}`);
   }
+
+  // ── V8: RELATIONSHIP — record per-turn interaction ──
+  recordInteraction(userText, understanding.emotion.type);
 
   // ── V7: PRIORITY ENGINE — 5-dimension scoring ──
   const priority = computePriority(understanding, v7Session, createDefaultMemoryContext());
