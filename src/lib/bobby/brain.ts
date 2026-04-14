@@ -43,6 +43,7 @@ import { buildWorldModel, adaptToChildWorld, checkConfusionZones, resetWorldMode
 import { maybeInitiate, resetProactiveEngine, type ProactiveContext } from "./v8/proactiveEngine";
 import { applyVariation, resetVariationEngine } from "./v8/variationEngine";
 import { initSilenceEngine, recordChildResponse, analyzeSilence, getAttentionState, getAttentionSummary } from "./v8/silenceEngine";
+import { assessUncertainty, resetUncertaintyEngine, isLikelyGarbled, type UncertaintyAssessment } from "./v8/uncertaintyEngine";
 import { loadRelationship, recordInteraction, getInsideJokeReference, getPhaseBehavior, resetRelationshipEngine } from "./v8/relationshipEngine";
 import {
   loadPersistentMemory,
@@ -263,6 +264,7 @@ export function resetBobbyBrainSession() {
   resetVariationEngine();
   resetRelationshipEngine();
   initSilenceEngine();
+  resetUncertaintyEngine();
   clearResponseCache().catch(() => {});
 }
 
@@ -463,6 +465,32 @@ export async function buildBobbyReply({
 
   // ── V8: SILENCE & ATTENTION — track child response patterns ──
   recordChildResponse(userText, childAge);
+
+  // ── V8: UNCERTAINTY — assess confidence before proceeding ──
+  const uncertainty = assessUncertainty({
+    intentConfidence: understanding.intentConfidence,
+    nluLayer: "local",
+    detectedIntent: understanding.explicitIntent,
+    alternativeIntents: understanding.alternativeIntents,
+    childAge,
+    childName,
+    userText,
+    consecutiveUncertainties: 0,
+  });
+  if (uncertainty.isUncertain && uncertainty.clarificationText) {
+    console.log(`[Brain V8] ❓ Uncertainty intercepted → ${uncertainty.strategy}`);
+    if (!(understanding.requiresConfirmation && understanding.ambiguityScore > 0.7)) {
+      const uncReply: BobbyBrainReply = {
+        text: simplifyForAge(uncertainty.clarificationText, childAge),
+        intent: understanding.explicitIntent,
+        source: "local_brain",
+        emotion: "attentive" as FaceState,
+        confidence: uncertainty.confidenceScore,
+        isOffline: true,
+      };
+      return uncReply;
+    }
+  }
 
   // ── V7: PRIORITY ENGINE — 5-dimension scoring ──
   const priority = computePriority(understanding, v7Session, createDefaultMemoryContext());
