@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { Search, Download, Check, Star, Sparkles, Users, Zap, Loader2, Trash2, ArrowLeft, Clock, Award, BookOpen, ChevronRight, Globe, Shield, Heart, X, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { installContentPack, uninstallContentPack, getLocalCacheSize, type InstallResult } from "@/lib/bobby/contentInstaller";
+import { getCloudUsage, formatStorage, type CloudUsage } from "@/lib/bobby/cloudQuota";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -359,6 +360,12 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>("all");
 
   const [loadError, setLoadError] = useState(false);
+  const [quota, setQuota] = useState<CloudUsage | null>(null);
+
+  // Fetch quota
+  useEffect(() => {
+    if (user) getCloudUsage().then(setQuota).catch(() => {});
+  }, [user]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -667,6 +674,44 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
                   {label}
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quota Warning Banner */}
+      {quota && quota.usedPercent >= 80 && (
+        <div
+          className="retro-card p-3 flex items-center gap-3"
+          style={{
+            backgroundColor: quota.usedPercent >= 95 ? "var(--retro-red)" : "var(--retro-yellow)",
+          }}
+        >
+          <span className="text-2xl shrink-0">{quota.usedPercent >= 95 ? "🚨" : "⚠️"}</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-black text-black uppercase">
+              {quota.usedPercent >= 95 ? "Stockage presque plein" : "Stockage bientôt plein"}
+            </p>
+            <p className="text-[10px] text-black/70 font-bold leading-snug">
+              {formatStorage(quota.usedMB)} utilisés sur {formatStorage(quota.quotaMB)}
+              {quota.usedPercent >= 95
+                ? " — Libérez de l'espace ou passez à un plan supérieur."
+                : ` (${Math.round(quota.usedPercent)}%)`}
+            </p>
+          </div>
+          <div className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center shrink-0">
+            <div className="relative w-6 h-6">
+              <svg viewBox="0 0 36 36" className="w-6 h-6 -rotate-90">
+                <circle cx="18" cy="18" r="15" fill="none" stroke="black" strokeOpacity="0.1" strokeWidth="4" />
+                <circle cx="18" cy="18" r="15" fill="none"
+                  stroke={quota.usedPercent >= 95 ? "#DC2626" : "#F59E0B"}
+                  strokeWidth="4"
+                  strokeDasharray={`${quota.usedPercent * 0.94} 100`}
+                  strokeLinecap="round" />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-[7px] font-black text-black">
+                {Math.round(quota.usedPercent)}%
+              </span>
             </div>
           </div>
         </div>
