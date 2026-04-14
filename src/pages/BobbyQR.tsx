@@ -221,69 +221,9 @@ export default function BobbyQR() {
     );
   }
 
-  if (step === "onboarding-name") {
+  if (step === "onboarding") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FDF6EC] p-6">
-        <div className="retro-card p-8 max-w-sm w-full space-y-6 text-center" style={{ backgroundColor: "var(--retro-blue)" }}>
-          <span className="text-6xl block">🤖</span>
-          <h2 className="text-2xl font-black text-black uppercase">Salut ! Je suis Bobby</h2>
-          <p className="text-sm font-bold text-black/70">Comment tu t'appelles ?</p>
-          <input
-            type="text"
-            value={childName}
-            onChange={e => setChildName(e.target.value)}
-            placeholder="Ton prénom…"
-            autoFocus
-            className="w-full px-4 py-3 text-lg font-black text-center border-4 border-black bg-white outline-none focus:ring-2 focus:ring-foreground/20"
-            onKeyDown={e => { if (e.key === "Enter" && childName.trim()) setStep("onboarding-age"); }}
-          />
-          <button
-            onClick={() => childName.trim() && setStep("onboarding-age")}
-            disabled={!childName.trim()}
-            className="w-full py-3 text-sm font-black uppercase border-4 border-black bg-foreground text-background hover:opacity-90 transition-all disabled:opacity-40"
-            style={{ boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}
-          >
-            Suivant →
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (step === "onboarding-age") {
-    const ages = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FDF6EC] p-6">
-        <div className="retro-card p-8 max-w-sm w-full space-y-6 text-center" style={{ backgroundColor: "var(--retro-green)" }}>
-          <span className="text-5xl block">🎂</span>
-          <h2 className="text-xl font-black text-black uppercase">Super {childName} !</h2>
-          <p className="text-sm font-bold text-black/70">Tu as quel âge ?</p>
-          <div className="grid grid-cols-5 gap-2">
-            {ages.map(a => (
-              <button
-                key={a}
-                onClick={() => setChildAge(a)}
-                className={`aspect-square flex items-center justify-center text-lg font-black border-4 border-black transition-all ${
-                  childAge === a
-                    ? "bg-foreground text-background scale-110"
-                    : "bg-white text-black hover:bg-[var(--retro-yellow)]"
-                }`}
-                style={{ boxShadow: childAge === a ? "3px 3px 0px rgba(0,0,0,0.25)" : "1px 1px 0px rgba(0,0,0,0.1)" }}
-              >
-                {a}
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={claimCode}
-            disabled={!childAge}
-            className="w-full py-3 text-sm font-black uppercase border-4 border-black bg-foreground text-background hover:opacity-90 transition-all disabled:opacity-40"
-            style={{ boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}
-          >
-            C'est parti ! 🚀
-          </button>
-        </div>
-      </div>
+      <OnboardingScreen onComplete={handleOnboardingComplete} />
     );
   }
 
