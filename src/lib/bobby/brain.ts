@@ -215,6 +215,7 @@ export function resetBobbyBrainSession() {
   resetCognition();
   resetOrchestrator();
   resetFeedbackLoop();
+  resetCognitionV7();
   clearResponseCache().catch(() => {});
 }
 
