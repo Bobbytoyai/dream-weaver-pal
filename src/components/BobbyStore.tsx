@@ -608,13 +608,69 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
   // ── Store List View ──
   return (
     <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
-      {/* Search */}
-      <div className="relative">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40" />
-        <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Rechercher un contenu…"
-          className="w-full pl-9 pr-4 py-2.5 bg-white text-[13px] text-foreground placeholder:text-foreground/40 border-4 border-black outline-none font-bold focus:ring-2 focus:ring-foreground/20 transition-all" />
+      {/* Search + Filter toggle */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-black/40" />
+          <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="Rechercher un contenu…"
+            className="w-full pl-9 pr-4 py-2.5 bg-white text-[13px] text-black placeholder:text-black/40 border-4 border-black outline-none font-bold focus:ring-2 focus:ring-black/20 transition-all" />
+        </div>
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={`shrink-0 w-[44px] h-[44px] border-4 border-black flex items-center justify-center transition-all ${
+            hasActiveFilters ? "bg-[var(--retro-yellow)]" : "bg-white"
+          }`}
+          style={{ boxShadow: "2px 2px 0px rgba(0,0,0,0.2)" }}
+        >
+          <SlidersHorizontal className="w-4 h-4 text-black" />
+        </button>
       </div>
+
+      {/* Filter Panel */}
+      {showFilters && (
+        <div className="retro-card p-4 space-y-3" style={{ backgroundColor: "var(--retro-yellow)" }}>
+          <div className="flex items-center justify-between">
+            <h4 className="text-[12px] font-black text-black uppercase">🔍 Filtres</h4>
+            {hasActiveFilters && (
+              <button onClick={() => { setAgeFilter("all"); setRatingFilter("all"); }}
+                className="text-[10px] font-black text-black/60 underline uppercase">
+                Réinitialiser
+              </button>
+            )}
+          </div>
+
+          {/* Age filter */}
+          <div>
+            <p className="text-[10px] font-black text-black/70 uppercase mb-1.5">👶 Tranche d'âge</p>
+            <div className="flex gap-1.5 flex-wrap">
+              {([["all", "Tous"], ["3-5", "3-5 ans"], ["5-7", "5-7 ans"], ["7-9", "7-9 ans"], ["9-12", "9-12 ans"]] as [AgeFilter, string][]).map(([val, label]) => (
+                <button key={val} onClick={() => setAgeFilter(val)}
+                  className={`px-2.5 py-1.5 border-2 border-black text-[10px] font-black uppercase transition-all ${
+                    ageFilter === val ? "bg-black text-white" : "bg-white text-black hover:bg-black/5"
+                  }`}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Rating filter */}
+          <div>
+            <p className="text-[10px] font-black text-black/70 uppercase mb-1.5">⭐ Note minimum</p>
+            <div className="flex gap-1.5">
+              {([["all", "Toutes"], ["4+", "4+ ⭐"], ["4.5+", "4.5+ ⭐"]] as [RatingFilter, string][]).map(([val, label]) => (
+                <button key={val} onClick={() => setRatingFilter(val)}
+                  className={`px-2.5 py-1.5 border-2 border-black text-[10px] font-black uppercase transition-all ${
+                    ratingFilter === val ? "bg-black text-white" : "bg-white text-black hover:bg-black/5"
+                  }`}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Featured Banner */}
       {activeCategory === "all" && !search && featuredItems.length > 0 && (
