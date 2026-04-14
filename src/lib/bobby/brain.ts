@@ -468,8 +468,8 @@ export async function buildBobbyReply({
     currentTopic: mem.currentTopic,
     silenceDurationMs: 0,
     isChildSpeaking: false,
-    isEmotionalSceneActive: directive.scene.type === "empathy",
-    isSafetySceneActive: directive.scene.type === "safety",
+    isEmotionalSceneActive: directive.scene.type === "emotional",
+    isSafetySceneActive: false, // safety handled pre-pipeline
     childName,
     childAge,
     totalInteractions: mem.turnCount,
