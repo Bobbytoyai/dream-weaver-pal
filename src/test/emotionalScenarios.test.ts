@@ -102,25 +102,26 @@ describe("getScenarioResponse", () => {
   it("advances through all 4 stages with fallbackAdvance", () => {
     tryStartScenario("TRISTESSE", "je suis très triste");
     
-    // Step 0 → acknowledge
+    // Step 0 → acknowledge (fallbackAdvance)
     const r0 = getScenarioResponse("oui");
     expect(r0!.isComplete).toBe(false);
     expect(getActiveScenarioInfo()?.stage).toBe("explore");
 
-    // Step 1 → explore
+    // Step 1 → explore (fallbackAdvance)
     const r1 = getScenarioResponse("je suis tout seul");
     expect(r1!.isComplete).toBe(false);
     expect(getActiveScenarioInfo()?.stage).toBe("support");
 
-    // Step 2 → support
+    // Step 2 → support (fallbackAdvance)
     const r2 = getScenarioResponse("d'accord");
     expect(r2!.isComplete).toBe(false);
     expect(getActiveScenarioInfo()?.stage).toBe("resolve");
 
-    // Step 3 → resolve (final)
+    // Step 3 → resolve (no fallbackAdvance — stays until topic change)
     const r3 = getScenarioResponse("merci");
-    expect(r3!.isComplete).toBe(true);
-    expect(isScenarioActive()).toBe(false);
+    expect(r3!.isComplete).toBe(false);
+    expect(isScenarioActive()).toBe(true);
+    expect(getActiveScenarioInfo()?.stage).toBe("resolve");
   });
 
   it("does not include child name in responses", () => {
