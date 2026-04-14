@@ -17,6 +17,7 @@ const BobbyQR = lazy(() => import("./pages/BobbyQR.tsx"));
 const BobbyParent = lazy(() => import("./pages/BobbyParent.tsx"));
 const BobbyCloudAuth = lazy(() => import("./pages/BobbyCloudAuth.tsx"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
+const ParentTest = lazy(() => import("./pages/ParentTest.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 const queryClient = new QueryClient();
