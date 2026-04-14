@@ -442,7 +442,7 @@ export async function buildBobbyReply({
     lastExplicitIntent: null,
     lastImplicitIntent: null,
   };
-  const understanding = extractDeepUnderstanding(userText, { age: childAge, name: childName, relationshipScore: 0 }, v7Session);
+  const understanding = extractDeepUnderstanding(userText, v7Session, { age: childAge, name: childName, relationshipScore: 0 });
 
   // V8: Update mental model (Theory of Mind)
   updateMentalModel(understanding, userText, childAge);
@@ -480,9 +480,9 @@ export async function buildBobbyReply({
     }
   }
 
-  // V7: Build cognition plan & orchestration directive
-  const cognitionPlan = buildCognitionPlan(understanding, v7Session, createDefaultMemoryContext());
-  const orchestrationDirective = orchestrate(understanding, v7Session);
+  const priorityDecision = computePriority(understanding, v7Session, createDefaultMemoryContext());
+  const cognitionPlan = buildCognitionPlan(understanding, v7Session, priorityDecision);
+  const orchestrationDirective = orchestrate(understanding, priorityDecision, userText);
 
   // V8: Check proactive initiative
   const proactiveCtx: ProactiveContext = {
