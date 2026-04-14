@@ -260,7 +260,7 @@ function getThresholds(age: number) {
 
 function classifySilence(
   durationMs: number,
-  thresholds: typeof SILENCE_THRESHOLDS.young,
+  thresholds: { thinking: number; hesitation: number; boredom: number; lost: number },
   lastBobbyText: string,
 ): SilenceReason {
   const askedQuestion = /\?/.test(lastBobbyText);
