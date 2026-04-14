@@ -65,8 +65,8 @@ const RULES: ExtractionRule[] = [
     category: "famille", confidence: 0.95,
     extract: m => `A un(e) ${m[1].toLowerCase()} : ${cap(m[2])}` },
 
-  // "mon frère/ma sœur" (sans nom)
-  { pattern: /(?:mon|ma)\s+((?:petit[e]?\s+)?(?:fr[eè]re|s[oœ]eur|demi-fr[eè]re|demi-s[oœ]eur))/i,
+  // "mon frère/ma sœur" (sans nom) — only if no name pattern matched
+  { pattern: /(?:mon|ma)\s+((?:petit[e]?\s+)?(?:fr[eè]re|s[oœ]eur|demi-fr[eè]re|demi-s[oœ]eur))(?!\s+(?:s'appelle|c'est|il s'appelle|elle s'appelle))/i,
     category: "famille", confidence: 0.6,
     extract: m => `A un(e) ${m[1].toLowerCase()}` },
 
@@ -108,7 +108,7 @@ const RULES: ExtractionRule[] = [
     extract: m => `A un(e) ${m[1].toLowerCase()}` },
 
   // "mon animal préféré c'est X"
-  { pattern: /(?:mon animal pr[ée]f[ée]r[ée]|l'animal que je pr[ée]f[eè]re|j'adore les|j'aime trop les)\s+(?:c'est\s+)?(?:les?\s+)?([a-zà-ÿ]+(?:\s+[a-zà-ÿ]+)?)/i,
+  { pattern: /(?:mon animal pr[ée]f[ée]r[ée]|l'animal que je pr[ée]f[eè]re)\s+(?:c'est\s+)?(?:les?\s+)?([a-zà-ÿ]+(?:\s+[a-zà-ÿ]+)?)/i,
     category: "animaux", confidence: 0.8,
     extract: m => `Animal préféré : ${clean(m[1])}` },
 
@@ -136,8 +136,8 @@ const RULES: ExtractionRule[] = [
 
   // ━━━ PRÉFÉRENCES ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  // "j'adore / j'aime X"
-  { pattern: /(?:j'adore|j'aime (?:trop|beaucoup|bien)?)\s+(?:le|la|les|l')?\s*(.{3,35}?)(?:\s*[.!?,;]|$)/i,
+  // "j'adore / j'aime X" (strip leading articles)
+  { pattern: /(?:j'adore|j'aime (?:trop |beaucoup |bien )?)(?:le |la |les |l')?(.{3,35}?)(?:\s*[.!?,;]|$)/i,
     category: "préférence", confidence: 0.8,
     extract: m => `Adore : ${clean(m[1])}` },
 
