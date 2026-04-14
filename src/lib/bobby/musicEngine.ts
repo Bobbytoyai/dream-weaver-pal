@@ -206,13 +206,12 @@ export async function handleMusicAnswer(text: string): Promise<{ handled: boolea
   if (!state.waitingForReplayAnswer) return { handled: false, text: "" };
   
   const norm = normalize(text);
-  const isYes = /oui|encore|rejoue|re(joue|mets)|la même|pareil|s'il te pla[iî]t|ouais|ouai|ok|d'accord/i.test(norm);
-  const isNo = /non|autre|change|suivant|prochaine?|stop|arrête|pas|rien|c'est bon/i.test(norm);
+  const isYes = /^(?:oui|encore|rejoue|re(?:joue|mets)|la m[eê]me|pareil|ouais|ouai|ok|d'accord)\s*[.!?]*$/i.test(norm.trim());
+  const isNo = /^(?:non|stop|arr[eê]te|c'est bon|rien)\s*[.!?]*$/i.test(norm.trim());
   const isNewRequest = detectMusicRequest(text);
   
-  state.waitingForReplayAnswer = false;
-  
   if (isNewRequest) {
+    state.waitingForReplayAnswer = false;
     const track = await matchTrack(text);
     if (track && track.file_path) {
       return {
@@ -224,6 +223,7 @@ export async function handleMusicAnswer(text: string): Promise<{ handled: boolea
   }
   
   if (isYes && state.currentTrack?.file_path) {
+    state.waitingForReplayAnswer = false;
     return {
       handled: true,
       text: `C'est reparti ! 🎵 On réécoute "${state.currentTrack.title}" !`,
@@ -232,6 +232,7 @@ export async function handleMusicAnswer(text: string): Promise<{ handled: boolea
   }
   
   if (isNo) {
+    state.waitingForReplayAnswer = false;
     state.currentTrack = null;
     return {
       handled: true,
@@ -239,11 +240,10 @@ export async function handleMusicAnswer(text: string): Promise<{ handled: boolea
     };
   }
   
+  // Not a clear music-related answer — let it fall through to normal conversation
+  state.waitingForReplayAnswer = false;
   state.currentTrack = null;
-  return {
-    handled: true,
-    text: "OK ! Dis-moi ce que tu veux faire maintenant 😊",
-  };
+  return { handled: false, text: "" };
 }
 
 // ── Play a track (returns the public URL) ──
