@@ -2,6 +2,10 @@ import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import type { LocalIntent, EmotionType, DetectedEmotion } from "./types";
 import { isResponseUsed, getLastChildTurn, mem } from "./memory";
 import { TEMPLATES } from "./templates";
+import { pickRebond, detectRebondTopic } from "../conversationEnricher";
+
+// Track used rebonds to avoid repetition
+const usedRebonds: string[] = [];
 
 export function pick(arr: string[]): string {
   if (!arr || arr.length === 0) return "";
