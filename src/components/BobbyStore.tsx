@@ -734,6 +734,62 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
           })}
         </div>
       )}
+
+      {/* Auth Required Dialog */}
+      {showAuthDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div
+            className="relative w-full max-w-sm border-[3px] border-black bg-[#FDF6EC] p-6 shadow-[6px_6px_0px_0px_#000]"
+            style={{ fontFamily: "inherit" }}
+          >
+            {/* Close */}
+            <button
+              onClick={() => setShowAuthDialog(false)}
+              className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center border-2 border-black bg-white hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Icon */}
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 border-[3px] border-black bg-[var(--retro-yellow,#fbbf24)] flex items-center justify-center text-3xl shadow-[3px_3px_0px_0px_#000]">
+                🔒
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2 className="text-center text-[18px] font-black text-gray-900 uppercase tracking-wide mb-2">
+              Compte Bobby Cloud requis
+            </h2>
+
+            {/* Description */}
+            <p className="text-center text-[13px] text-gray-600 font-bold leading-relaxed mb-1">
+              Pour installer des packs et enrichir le cerveau de Bobby, crée un compte gratuit Bobby Cloud.
+            </p>
+            <p className="text-center text-[11px] text-gray-400 font-bold mb-5">
+              🔒 Données chiffrées • 🇪🇺 Serveurs EU • ✨ 100% gratuit
+            </p>
+
+            {/* CTA */}
+            <button
+              onClick={() => {
+                window.location.href = `/bobby-cloud?returnTo=${encodeURIComponent(window.location.pathname)}`;
+              }}
+              className="w-full py-3 border-[3px] border-black bg-black text-white text-[14px] font-black uppercase tracking-wider hover:bg-gray-900 transition-colors shadow-[3px_3px_0px_0px_rgba(0,0,0,0.3)]"
+            >
+              ✨ Créer un compte gratuit
+            </button>
+
+            {/* Secondary */}
+            <button
+              onClick={() => setShowAuthDialog(false)}
+              className="w-full mt-2 py-2 text-[12px] font-bold text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              Plus tard
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
