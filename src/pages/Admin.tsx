@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { createPortal } from "react-dom";
 import ExpressionPreview from "@/components/ExpressionPreview";
 import AutoLearnPanel from "@/components/AutoLearnPanel";
