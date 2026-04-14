@@ -53,6 +53,9 @@ export async function getLLMReply(
       signal.addEventListener("abort", () => controller.abort(), { once: true });
     }
 
+    // Build context summary for chaining
+    const contextSummary = buildContextSummary(conversationHistory);
+
     const response = await fetch(FUNCTION_URL, {
       method: "POST",
       headers: {
@@ -67,6 +70,7 @@ export async function getLLMReply(
         childName,
         childAge,
         personality,
+        contextSummary,
       }),
       signal: controller.signal,
     });
