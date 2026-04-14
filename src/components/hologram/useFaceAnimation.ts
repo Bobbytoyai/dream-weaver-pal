@@ -358,13 +358,13 @@ export function useFaceAnimation(
       };
     }
 
-    // --- THINKING: wandering pupils ---
+    // --- THINKING: dramatic wandering pupils ---
     let thinkingPupilX = 0;
     let thinkingPupilY = 0;
     if (faceState === "thinking") {
       const t = breathPhase.current * 2;
-      thinkingPupilX = Math.sin(t * 1.3) * 0.045;
-      thinkingPupilY = Math.cos(t * 0.9) * 0.03;
+      thinkingPupilX = Math.sin(t * 1.3) * 0.08;
+      thinkingPupilY = Math.cos(t * 0.9) * 0.06;
     }
 
     // --- CURIOUS: exaggerated head tilt oscillation ---
