@@ -280,8 +280,8 @@
   z-index: 2;
 }
 .retro-card:active {
-  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.25);
-  transform: rotate(0deg) scale(0.97);
+  box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.3);
+  transform: rotate(0deg) scale(1.045);
 }
 
 /* Click bounce burst — more playful */
