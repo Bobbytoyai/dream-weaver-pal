@@ -7,7 +7,8 @@ import { detectBobbyExpression } from "@/lib/emotionMapper";
 import { resetEmotionPipeline } from "@/lib/bobby/emotionPipeline";
 import { eventBus } from "@/lib/eventBus";
 import { getNetworkMode, onNetworkChange } from "@/lib/offlineEngine";
-import { fetchTTSAudio } from "@/lib/voicePipeline";
+import { fetchTTSAudio, setTTSChildAge } from "@/lib/voicePipeline";
+import { setCacheChildAge } from "@/lib/ttsCache";
 import {
   buildBobbyReply,
   getBobbyMicRecoveryMessage,
@@ -132,6 +133,10 @@ export function useBobbyVoiceCore({
   onNarrationConsumed,
   onParentMode,
 }: UseBobbyVoiceCoreOptions) {
+  // Set child age for adaptive TTS speed
+  setTTSChildAge(childAge);
+  setCacheChildAge(childAge);
+
   const welcomeMessage = getBobbyWelcomeMessage(childName);
 
   const [machineState, setMachineState] = useState<ConversationState>("IDLE");
