@@ -1158,7 +1158,34 @@ const Admin = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              {devices.map((dev, idx) => (
+              {devices.map((dev, idx) => {
+                const handleToggleActive = async () => {
+                  try {
+                    if (dev.is_active) {
+                      await (await import("@/lib/adminStoreApi")).deactivateDevice(code, dev.bobby_id);
+                      toast.success(`Appareil ${dev.bobby_code} désactivé`);
+                    } else {
+                      await (await import("@/lib/adminStoreApi")).activateDevice(code, dev.bobby_id);
+                      toast.success(`Appareil ${dev.bobby_code} activé`);
+                    }
+                    fetchDevices();
+                  } catch (e: any) {
+                    toast.error(e.message || "Erreur");
+                  }
+                };
+
+                const handleDelete = async () => {
+                  if (!confirm(`Supprimer définitivement l'appareil ${dev.bobby_code} et son code parent ? Cette action est irréversible.`)) return;
+                  try {
+                    await (await import("@/lib/adminStoreApi")).deleteDevice(code, dev.bobby_id);
+                    toast.success(`Appareil ${dev.bobby_code} supprimé`);
+                    fetchDevices();
+                  } catch (e: any) {
+                    toast.error(e.message || "Erreur");
+                  }
+                };
+
+                return (
                 <div key={idx} className="rounded-2xl p-4 space-y-2" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -1168,8 +1195,27 @@ const Admin = () => {
                         <p className="text-[10px] font-mono" style={{ color: "var(--admin-text-dim)" }}>Code: {dev.bobby_code}</p>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="flex items-center gap-1.5">
                       {dev.child_age && <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400">{dev.child_age} ans</span>}
+                      <button
+                        onClick={handleToggleActive}
+                        className="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all"
+                        style={{
+                          background: dev.is_active ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.15)",
+                          color: dev.is_active ? "#f87171" : "#4ade80",
+                          border: `1px solid ${dev.is_active ? "rgba(239,68,68,0.3)" : "rgba(34,197,94,0.3)"}`,
+                        }}
+                      >
+                        {dev.is_active ? "Désactiver" : "Activer"}
+                      </button>
+                      <button
+                        onClick={handleDelete}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:bg-red-500/20"
+                        style={{ color: "var(--admin-text-muted)" }}
+                        title="Supprimer l'appareil"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-[10px]" style={{ color: "var(--admin-text-muted)" }}>
@@ -1191,7 +1237,8 @@ const Admin = () => {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
