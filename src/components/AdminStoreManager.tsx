@@ -12,6 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import MusicTracksEditor from "@/components/admin/MusicTracksEditor";
+import {
+  deleteContentDataItem,
+  deleteStoreItem,
+  moveContentDataItem,
+  saveContentDataItem,
+  saveStoreItem,
+} from "@/lib/adminStoreApi";
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -31,7 +39,7 @@ interface StoreItem {
   languages: string[];
   cover_image_url: string; screenshots: string[];
   created_at: string; last_updated_at: string;
-  content_items: { title: string; description: string; emoji: string }[];
+  content_items: { title: string; description: string; emoji: string; track_id?: string; image_url?: string; has_audio?: boolean }[];
 }
 
 interface ContentDataItem {
@@ -53,6 +61,7 @@ interface ContentDataItem {
 }
 
 interface AdminStoreManagerProps {
+  adminCode: string;
   storeItems: StoreItem[];
   installCounts: Record<string, number>;
   onRefresh: () => void;
