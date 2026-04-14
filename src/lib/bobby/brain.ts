@@ -398,6 +398,13 @@ export async function buildBobbyReply({
     `[Brain V7] 🧠 Deep Understanding: explicit=${understanding.explicitIntent} implicit=${understanding.implicitIntent} need=${understanding.emotionalNeed}(${understanding.needIntensity}) goal=${understanding.userGoal} ambiguity=${understanding.ambiguityScore.toFixed(2)}${understanding.requiresConfirmation ? " ⚠️ CONFIRM" : ""}`
   );
 
+  // ── V8: THEORY OF MIND — update mental model ──
+  const mentalModel = updateMentalModel(understanding, userText, childAge);
+  const tomSnapshot = getToMSnapshot();
+  console.log(
+    `[Brain V8] 🧠 ToM: cognitive=${mentalModel.understanding.cognitiveLevel} vocab=${mentalModel.understanding.vocabularyLevel} surface=${mentalModel.emotionalState.surfaceEmotion} inferred=${mentalModel.emotionalState.inferredEmotion} delta=${mentalModel.emotionalState.emotionDelta.toFixed(2)} trajectory=${mentalModel.emotionalState.emotionalTrajectory} | ${tomSnapshot.tomInfluence}`
+  );
+
   // ── V7: PRIORITY ENGINE — 5-dimension scoring ──
   const priority = computePriority(understanding, v7Session, createDefaultMemoryContext());
   console.log(
