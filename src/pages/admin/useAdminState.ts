@@ -14,7 +14,7 @@ import {
   BLAGUES as GAME_BLAGUES,
 } from "@/lib/gameEngine";
 import {
-  type KBEntry, type StoreContentItem, type CloudUser, type RealConversation,
+  type KBEntry, type StoreContentItem, type CloudUser, type BobbyDevice, type RealConversation,
   type LiveStats, type DayData, type EmotionData, type TopSection,
   BRAIN_SECTIONS, ALL_DB_CATEGORIES, AGE_GROUPS, EMOTION_COLORS,
 } from "./adminConfig";
