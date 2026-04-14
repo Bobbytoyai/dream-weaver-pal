@@ -254,6 +254,23 @@ serve(async (req) => {
         return json({ ok: true, count: contentItems.length });
       }
 
+      case "update_music_track": {
+        const trackId = asString(body.trackId);
+        if (!trackId) return json({ error: "trackId requis" }, 400);
+
+        const updates: Record<string, unknown> = {};
+        if (body.file_path !== undefined) updates.file_path = asString(body.file_path);
+        if (body.title !== undefined) updates.title = asString(body.title);
+        if (body.artist !== undefined) updates.artist = asString(body.artist);
+        if (body.trigger_phrases !== undefined) updates.trigger_phrases = asStringArray(body.trigger_phrases);
+        if (body.is_active !== undefined) updates.is_active = asBoolean(body.is_active);
+        updates.updated_at = new Date().toISOString();
+
+        const { error } = await sb.from("music_tracks").update(updates).eq("id", trackId);
+        if (error) throw error;
+        return json({ ok: true });
+      }
+
       default:
         return json({ error: `Action non supportée: ${action}` }, 400);
     }

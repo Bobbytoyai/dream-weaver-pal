@@ -22,7 +22,8 @@ type AdminStoreAction =
   | "save_content_data_item"
   | "delete_content_data_item"
   | "move_content_data_item"
-  | "save_music_pack_items";
+  | "save_music_pack_items"
+  | "update_music_track";
 
 async function callAdminStore<T>(
   adminCode: string,
