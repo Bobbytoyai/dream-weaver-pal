@@ -845,6 +845,10 @@ export type Database = {
     }
     Functions: {
       increment_kb_usage: { Args: { entry_id: string }; Returns: undefined }
+      update_bobby_child_name: {
+        Args: { p_bobby_code: string; p_child_name: string }
+        Returns: boolean
+      }
       update_bobby_session_data: {
         Args: { p_bobby_code: string; p_session_data: Json }
         Returns: boolean
