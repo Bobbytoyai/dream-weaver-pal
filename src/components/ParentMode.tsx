@@ -97,9 +97,8 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
       audio.cleanup();
     } else if (activeTab !== "home") {
       setActiveTab("home");
-    } else {
-      onClose();
     }
+    // No fallback to onClose — parent must stay in dashboard
   };
 
   // ═══════════════════════════════════════════════════════════════
