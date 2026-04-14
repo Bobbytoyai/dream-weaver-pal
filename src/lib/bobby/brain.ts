@@ -413,14 +413,8 @@ export async function buildBobbyReply({
     // Flow was interrupted — fall through to normal pipeline
   }
 
-  // ── Library (stories, jokes) — curated content ──
-  const libraryReply = getLibraryReply(userText, childName, childAge);
-  if (libraryReply) {
-    return postProcess(libraryReply, childName, childAge, personalityCtx);
-  }
-
   // ═══════════════════════════════════════════════════════════
-  // ONLINE-FIRST AI AGENT PIPELINE
+  // GEMINI-FIRST PIPELINE — Online priority, minimal local overhead
   // ═══════════════════════════════════════════════════════════
 
   if (!userText) {
@@ -430,40 +424,13 @@ export async function buildBobbyReply({
     };
   }
 
-  // ── V7: DEEP UNDERSTANDING (lightweight, for emotion/orchestration) ──
-  const v7Session: V7Session = {
-    turnCount: mem.turnCount,
-    sessionMood: mem.sessionMood,
-    currentTopic: mem.currentTopic,
-    topicDepth: mem.topicDepth,
-    lastExplicitIntent: null,
-    lastImplicitIntent: null,
-  };
-  const understanding = extractDeepUnderstanding(userText, v7Session, {
-    age: childAge,
-    name: childName,
-    relationshipScore: 50,
-  });
-
-  // ── V8: THEORY OF MIND ──
-  const mentalModel = updateMentalModel(understanding, userText, childAge);
-  const tomSnapshot = getToMSnapshot();
-
-  // ── V8: CHILD WORLD MODEL ──
-  buildWorldModel(childAge, tomSnapshot);
-
-  // ── V8: RELATIONSHIP tracking ──
-  recordInteraction(userText, understanding.emotion.type);
-
-  // ── V8: SILENCE & ATTENTION ──
-  recordChildResponse(userText, childAge);
-
-  // ── Update personality context ──
-  personalityCtx.emotionType = understanding.emotion.type;
-  personalityCtx.emotionIntensity = understanding.emotion.intensity;
+  // ── Lightweight emotion detection (fast, no heavy V7/V8 processing) ──
+  const localEmotion = detectEmotion(userText);
+  personalityCtx.emotionType = localEmotion.type;
+  personalityCtx.emotionIntensity = localEmotion.intensity;
 
   // ═══════════════════════════════════════════════════════════
-  // LAYER 1 (PRIMARY): LLM AI AGENT — Online-First
+  // LAYER 1 (PRIMARY): GEMINI AI — Always try online first
   // ═══════════════════════════════════════════════════════════
   try {
     const llmStart = performance.now();
@@ -471,36 +438,36 @@ export async function buildBobbyReply({
     const llmMs = performance.now() - llmStart;
 
     if (llmReply) {
-      // Apply post-processing (age simplification, world model)
-      const processed = postProcess(llmReply, childName, childAge, personalityCtx, tomSnapshot);
+      // Light post-processing only (age simplification)
+      let text = simplifyForAge(llmReply.text, childAge);
       const totalMs = performance.now() - pipelineStart;
-      console.log(`[Brain Agent] ✅ AI Agent reply (${llmMs.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
-      return processed;
+      console.log(`[Brain] ✅ Gemini reply (${llmMs.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
+      return { ...llmReply, text };
     }
   } catch (e) {
-    console.warn("[Brain Agent] LLM Agent failed:", e);
+    console.warn("[Brain] Gemini failed:", e);
   }
 
   // ═══════════════════════════════════════════════════════════
-  // LAYER 2 (FALLBACK): Local Brain — Offline safety net
+  // LAYER 2 (FALLBACK): Local Brain — Only when Gemini is unavailable
   // ═══════════════════════════════════════════════════════════
-  console.log("[Brain Agent] ⚠️ Falling back to local brain");
+  console.log("[Brain] ⚠️ Gemini unavailable — falling back to local brain");
 
   const localReply = getLocalBrainReply(userText, childName, childAge);
-  let reply = postProcess(localReply, childName, childAge, personalityCtx, tomSnapshot);
+  let reply = postProcess(localReply, childName, childAge, personalityCtx);
 
   // Try KB if local confidence is low
   if (localReply.confidence < LAYER1_CONFIDENCE) {
     try {
       const kbReply = await queryKnowledgeBase(userText, childAge);
       if (kbReply && kbReply.confidence >= LAYER2_CONFIDENCE) {
-        reply = postProcess(kbReply, childName, childAge, personalityCtx, tomSnapshot);
+        reply = postProcess(kbReply, childName, childAge, personalityCtx);
       }
     } catch { /* KB failed, use local */ }
   }
 
   const totalMs = performance.now() - pipelineStart;
-  console.log(`[Brain Agent] ⚡ Fallback: ${localReply.intent} (${totalMs.toFixed(0)}ms total)`);
+  console.log(`[Brain] ⚡ Local fallback: ${localReply.intent} (${totalMs.toFixed(0)}ms total)`);
   return reply;
 }
 
