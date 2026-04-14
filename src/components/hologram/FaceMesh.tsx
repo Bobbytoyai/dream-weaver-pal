@@ -88,7 +88,7 @@ function buildMouthShape(curve: number, width: number, openness: number, round: 
   const halfW = (0.14 + width * 0.08) * (1 - round * 0.2);
   const thickness = 0.040;
   
-  const isOpen = openness > 0.10 || round > 0.08;
+  const isOpen = openness > 0.15 || round > 0.10;
   
   if (!isOpen) {
     // ── CLOSED MOUTH — bezier smile/neutral/sad arc ──
@@ -494,7 +494,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       }
 
       // Interior (dark fill) — visible when mouth is open
-      const isOpen = mo > 0.10 || mr > 0.08;
+      const isOpen = mo > 0.15 || mr > 0.10;
       if (mouthInteriorRef.current) {
         if (isOpen) {
           const newShape = buildMouthShape(mc, mw, mo * 0.8, mr * 0.8);
@@ -510,8 +510,8 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
 
     // Tongue — visible as soon as mouth starts opening
     if (tongueRef.current) {
-      const showTongue = mo > 0.03;
-      const targetOpacity = showTongue ? Math.min(0.9, (mo - 0.03) * 4) : 0;
+      const showTongue = mo > 0.15;
+      const targetOpacity = showTongue ? Math.min(0.9, (mo - 0.15) * 5) : 0;
       tongueMat.opacity += (targetOpacity - tongueMat.opacity) * delta * 10;
       // Position tongue inside mouth cavity
       const mouthBottomY = -0.44 - (mo * 0.16 + mr * 0.08) * 0.45;
