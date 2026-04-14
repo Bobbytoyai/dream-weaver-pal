@@ -485,6 +485,7 @@ export function useBobbyVoiceCore({
       // Voice detected! Mark session as active conversation
       voiceDetectedRef.current = true;
       clearSilenceTimer();
+      clearAckTimer();
 
       stopSttRef.current();
       setMicArmed(false);
