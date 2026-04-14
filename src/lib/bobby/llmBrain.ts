@@ -1,6 +1,9 @@
 /**
- * Bobby LLM Brain — calls the bobby-brain edge function
- * Falls back to offline brain on error or timeout.
+ * Bobby LLM Brain — Online-First AI Agent
+ * 
+ * Calls bobby-brain edge function with full conversation history.
+ * Supports both streaming and non-streaming modes.
+ * Falls back to offline brain on error/timeout.
  */
 
 import type { BobbyBrainReply } from "./types";
@@ -15,13 +18,21 @@ interface ConversationMessage {
   content: string;
 }
 
-// Keep conversation history in memory for context
+// Conversation history — extended for long conversations
 const conversationHistory: ConversationMessage[] = [];
-const MAX_HISTORY = 20;
+const MAX_HISTORY = 50;
 
 export function addToHistory(role: "user" | "assistant", content: string) {
   conversationHistory.push({ role, content });
   if (conversationHistory.length > MAX_HISTORY) conversationHistory.shift();
+}
+
+export function getHistory(): ConversationMessage[] {
+  return [...conversationHistory];
+}
+
+export function getHistoryLength(): number {
+  return conversationHistory.length;
 }
 
 export function clearHistory() {
@@ -33,31 +44,32 @@ function inferEmotion(text: string): FaceState {
   if (/bravo|génial|super|cool|youpi|😄|😊|🎉/.test(t)) return "happy";
   if (/peur|triste|désolé|😔|💛/.test(t)) return "reassuring";
   if (/devine|question|sais-tu|pourquoi/.test(t)) return "curious";
-  if (/jeu|défi|challenge|😄/.test(t)) return "playful";
+  if (/jeu|défi|challenge/.test(t)) return "playful";
   if (/calme|doucement|respire/.test(t)) return "calm";
   return "attentive";
 }
 
-export async function getLLMReply(
+/**
+ * Stream reply from AI agent — token by token.
+ * Returns the full reply text at the end.
+ */
+export async function streamLLMReply(
   childName: string,
   childAge: number,
   userText: string,
   personality: string = "balanced",
+  onDelta: (chunk: string) => void,
   signal?: AbortSignal,
 ): Promise<BobbyBrainReply | null> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12000); // 12s timeout
+    const timeout = setTimeout(() => controller.abort(), 20000); // 20s for streaming
 
-    // Combine external signal with timeout
     if (signal) {
       signal.addEventListener("abort", () => controller.abort(), { once: true });
     }
 
-    // Track interests from user text before sending to LLM
     trackInterests(userText);
-
-    // Build context summary with interests and key facts
     const contextSummary = buildContextSummary(conversationHistory);
 
     const response = await fetch(FUNCTION_URL, {
@@ -67,10 +79,137 @@ export async function getLLMReply(
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
       body: JSON.stringify({
-        messages: [
-          ...conversationHistory,
-          { role: "user", content: userText },
-        ],
+        messages: [...conversationHistory, { role: "user", content: userText }],
+        childName,
+        childAge,
+        personality,
+        contextSummary,
+        stream: true,
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      console.warn("[LLM Agent] HTTP", response.status);
+      return null;
+    }
+
+    if (!response.body) return null;
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = "";
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      let newlineIndex: number;
+      while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+        let line = buffer.slice(0, newlineIndex);
+        buffer = buffer.slice(newlineIndex + 1);
+
+        if (line.endsWith("\r")) line = line.slice(0, -1);
+        if (line.startsWith(":") || line.trim() === "") continue;
+        if (!line.startsWith("data: ")) continue;
+
+        const jsonStr = line.slice(6).trim();
+        if (jsonStr === "[DONE]") break;
+
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+          if (content) {
+            fullText += content;
+            onDelta(content);
+          }
+        } catch {
+          buffer = line + "\n" + buffer;
+          break;
+        }
+      }
+    }
+
+    // Flush remaining buffer
+    if (buffer.trim()) {
+      for (let raw of buffer.split("\n")) {
+        if (!raw) continue;
+        if (raw.endsWith("\r")) raw = raw.slice(0, -1);
+        if (raw.startsWith(":") || raw.trim() === "") continue;
+        if (!raw.startsWith("data: ")) continue;
+        const jsonStr = raw.slice(6).trim();
+        if (jsonStr === "[DONE]") continue;
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+          if (content) {
+            fullText += content;
+            onDelta(content);
+          }
+        } catch { /* ignore */ }
+      }
+    }
+
+    if (!fullText.trim()) return null;
+
+    // Clean up placeholder leaks
+    fullText = cleanPlaceholders(fullText, childName);
+
+    // Add to history
+    addToHistory("user", userText);
+    addToHistory("assistant", fullText);
+
+    return {
+      text: fullText,
+      intent: "LLM_RESPONSE",
+      source: "llm_agent",
+      emotion: inferEmotion(fullText),
+      confidence: 0.95,
+      isOffline: false,
+    };
+  } catch (err) {
+    if ((err as Error).name === "AbortError") {
+      console.warn("[LLM Agent] Timeout — falling back to offline");
+    } else {
+      console.warn("[LLM Agent] Stream error:", err);
+    }
+    return null;
+  }
+}
+
+/**
+ * Non-streaming reply (legacy/fallback).
+ */
+export async function getLLMReply(
+  childName: string,
+  childAge: number,
+  userText: string,
+  personality: string = "balanced",
+  signal?: AbortSignal,
+): Promise<BobbyBrainReply | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
+    if (signal) {
+      signal.addEventListener("abort", () => controller.abort(), { once: true });
+    }
+
+    trackInterests(userText);
+    const contextSummary = buildContextSummary(conversationHistory);
+
+    const response = await fetch(FUNCTION_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      },
+      body: JSON.stringify({
+        messages: [...conversationHistory, { role: "user", content: userText }],
         childName,
         childAge,
         personality,
@@ -82,44 +221,47 @@ export async function getLLMReply(
     clearTimeout(timeout);
 
     if (!response.ok) {
-      console.warn("[LLM Brain] HTTP", response.status);
-      return null; // fallback to offline
+      console.warn("[LLM Agent] HTTP", response.status);
+      return null;
     }
 
     const data = await response.json();
     let replyText = (data.reply?.trim() || "");
 
-    // Safety: replace any leaked placeholder with actual child name
-    replyText = replyText.replace(/\{?\bchild[_\s]?name\b\}?/gi, childName);
-    replyText = replyText.replace(/\bchildName\b/g, childName);
-    replyText = replyText.replace(/\[prénom\]/gi, childName);
-    replyText = replyText.replace(/\[enfant\]/gi, childName);
-    replyText = replyText.replace(/\[nom\]/gi, childName);
-    replyText = replyText.replace(/\{prénom\}/gi, childName);
-    replyText = replyText.replace(/\{name\}/gi, childName);
-    replyText = replyText.replace(/\{enfant\}/gi, childName);
-    replyText = replyText.replace(/\bchild name\b/gi, childName);
+    replyText = cleanPlaceholders(replyText, childName);
 
     if (!replyText) return null;
 
-    // Add both messages to history
     addToHistory("user", userText);
     addToHistory("assistant", replyText);
 
     return {
       text: replyText,
       intent: "LLM_RESPONSE",
-      source: "llm_gemini",
+      source: "llm_agent",
       emotion: inferEmotion(replyText),
       confidence: 0.95,
       isOffline: false,
     };
   } catch (err) {
     if ((err as Error).name === "AbortError") {
-      console.warn("[LLM Brain] Timeout — falling back to offline");
+      console.warn("[LLM Agent] Timeout — falling back to offline");
     } else {
-      console.warn("[LLM Brain] Error:", err);
+      console.warn("[LLM Agent] Error:", err);
     }
     return null;
   }
+}
+
+function cleanPlaceholders(text: string, childName: string): string {
+  return text
+    .replace(/\{?\bchild[_\s]?name\b\}?/gi, childName)
+    .replace(/\bchildName\b/g, childName)
+    .replace(/\[prénom\]/gi, childName)
+    .replace(/\[enfant\]/gi, childName)
+    .replace(/\[nom\]/gi, childName)
+    .replace(/\{prénom\}/gi, childName)
+    .replace(/\{name\}/gi, childName)
+    .replace(/\{enfant\}/gi, childName)
+    .replace(/\bchild name\b/gi, childName);
 }

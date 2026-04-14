@@ -22,7 +22,7 @@ import { normalizeChildSpeech } from "./normalizer";
 import { resetMemory } from "@/lib/responseSelector";
 import { resetScenario } from "@/lib/scenarioEngine";
 import { trackInterests, getSmartFollowUp, resetInterestTracker, getInterestSnapshot } from "./interestTracker";
-import { getLLMReply, clearHistory } from "./llmBrain";
+import { getLLMReply, streamLLMReply, clearHistory, addToHistory } from "./llmBrain";
 import { getLocalBrainReply, resetLocalBrain } from "./localBrain";
 import { queryKnowledgeBase, clearConversationContext } from "./knowledgeQuery";
 import { getCachedReply, cacheReply, clearResponseCache } from "./responseCache";
@@ -418,7 +418,7 @@ export async function buildBobbyReply({
   }
 
   // ═══════════════════════════════════════════════════════════
-  // V7 DEEP UNDERSTANDING + V6 3-LAYER PIPELINE + COGNITION
+  // ONLINE-FIRST AI AGENT PIPELINE
   // ═══════════════════════════════════════════════════════════
 
   if (!userText) {
@@ -428,7 +428,7 @@ export async function buildBobbyReply({
     };
   }
 
-  // ── V7: DEEP UNDERSTANDING — 4-level intent analysis ──
+  // ── V7: DEEP UNDERSTANDING (lightweight, for emotion/orchestration) ──
   const v7Session: V7Session = {
     turnCount: mem.turnCount,
     sessionMood: mem.sessionMood,
@@ -442,212 +442,64 @@ export async function buildBobbyReply({
     name: childName,
     relationshipScore: 50,
   });
-  console.log(
-    `[Brain V7] 🧠 Deep Understanding: explicit=${understanding.explicitIntent} implicit=${understanding.implicitIntent} need=${understanding.emotionalNeed}(${understanding.needIntensity}) goal=${understanding.userGoal} ambiguity=${understanding.ambiguityScore.toFixed(2)}${understanding.requiresConfirmation ? " ⚠️ CONFIRM" : ""}`
-  );
 
-  // ── V8: THEORY OF MIND — update mental model ──
+  // ── V8: THEORY OF MIND ──
   const mentalModel = updateMentalModel(understanding, userText, childAge);
   const tomSnapshot = getToMSnapshot();
-  console.log(
-    `[Brain V8] 🧠 ToM: cognitive=${mentalModel.understanding.cognitiveLevel} vocab=${mentalModel.understanding.vocabularyLevel} surface=${mentalModel.emotionalState.surfaceEmotion} inferred=${mentalModel.emotionalState.inferredEmotion} delta=${mentalModel.emotionalState.emotionDelta.toFixed(2)} trajectory=${mentalModel.emotionalState.emotionalTrajectory} | ${tomSnapshot.tomInfluence}`
-  );
 
-  // ── V8: CHILD WORLD MODEL — update & check confusion zones ──
+  // ── V8: CHILD WORLD MODEL ──
   buildWorldModel(childAge, tomSnapshot);
-  const { activeZones, warnings: confusionWarnings } = checkConfusionZones(userText, childAge);
-  if (activeZones.length > 0) {
-    console.log(`[Brain V8] 🌍 Confusion zones: ${activeZones.map(z => z.topic).join(", ")} | ${confusionWarnings[0]}`);
-  }
 
-  // ── V8: RELATIONSHIP — record per-turn interaction ──
+  // ── V8: RELATIONSHIP tracking ──
   recordInteraction(userText, understanding.emotion.type);
 
-  // ── V8: SILENCE & ATTENTION — track child response patterns ──
+  // ── V8: SILENCE & ATTENTION ──
   recordChildResponse(userText, childAge);
 
-  // ── V8: UNCERTAINTY — assess confidence before proceeding ──
-  const uncertainty = assessUncertainty({
-    intentConfidence: understanding.intentConfidence,
-    nluLayer: "local",
-    detectedIntent: understanding.explicitIntent,
-    alternativeIntents: understanding.alternativeIntents,
-    childAge,
-    childName,
-    userText,
-    consecutiveUncertainties: 0,
-  });
-  if (uncertainty.isUncertain && uncertainty.clarificationText) {
-    console.log(`[Brain V8] ❓ Uncertainty intercepted → ${uncertainty.strategy}`);
-    if (!(understanding.requiresConfirmation && understanding.ambiguityScore > 0.7)) {
-      const uncReply: BobbyBrainReply = {
-        text: simplifyForAge(uncertainty.clarificationText, childAge),
-        intent: understanding.explicitIntent,
-        source: "local_brain",
-        emotion: "attentive" as FaceState,
-        confidence: uncertainty.confidenceScore,
-        isOffline: true,
-      };
-      return uncReply;
-    }
-  }
+  // ── Update personality context ──
+  personalityCtx.emotionType = understanding.emotion.type;
+  personalityCtx.emotionIntensity = understanding.emotion.intensity;
 
-  // ── V7: PRIORITY ENGINE — 5-dimension scoring ──
-  const priority = computePriority(understanding, v7Session, createDefaultMemoryContext());
-  console.log(
-    `[Brain V7] 🎯 Priority: ${priority.priorityLevel} (${priority.totalScore}) | S=${priority.scores.safety} E=${priority.scores.emotion} U=${priority.scores.urgency} C=${priority.scores.context} H=${priority.scores.history}${priority.requiresEmpathyFirst ? " 💙EMPATHY" : ""}${priority.interruptCurrent ? " ⚡INTERRUPT" : ""}`
-  );
-
-  // ── V7: COGNITION ENGINE — WHY/WHAT/HOW triple decision ──
-  const cognitionPlan = buildCognitionPlan(understanding, priority, v7Session);
-
-  // ── V7: If ambiguity is very high, ask for clarification ──
-  if (understanding.requiresConfirmation && understanding.confirmationPrompt && understanding.ambiguityScore > 0.7) {
-    const confirmReply: BobbyBrainReply = {
-      text: simplifyForAge(understanding.confirmationPrompt, childAge),
-      intent: understanding.explicitIntent,
-      source: "local_brain",
-      emotion: "attentive",
-      confidence: 0.5,
-      isOffline: true,
-    };
-    return postProcess(confirmReply, childName, childAge, personalityCtx);
-  }
-
-  // ── V7: ORCHESTRATOR — scene management ──
-  const directive = orchestrate(understanding, priority, userText);
-  console.log(
-    `[Brain V7] 🎬 Orchestrator: scene=${directive.scene.type} action=${directive.action} turn=${directive.scene.turnCount}/${directive.scene.maxTurns}${directive.bridgePhrase ? ` bridge="${directive.bridgePhrase.slice(0, 40)}"` : ""}`
-  );
-
-  // ── V8: PROACTIVE ENGINE — check if Bobby should take initiative ──
-  const proactiveCtx: ProactiveContext = {
-    turnCount: mem.turnCount,
-    sessionMood: mem.sessionMood,
-    currentTopic: mem.currentTopic,
-    silenceDurationMs: 0,
-    isChildSpeaking: false,
-    isEmotionalSceneActive: directive.scene.type === "emotional",
-    isSafetySceneActive: false, // safety handled pre-pipeline
-    childName,
-    childAge,
-    totalInteractions: mem.turnCount,
-  };
-  const initiative = maybeInitiate(proactiveCtx);
-  if (initiative) {
-    console.log(`[Brain V8] 🚀 Proactive: ${initiative.type} "${initiative.content.slice(0, 50)}"`);
-  }
-
-  if (!priority.bypassCache) {
-    const cached = await getCachedReply(userText);
-    if (cached) {
-      const totalMs = performance.now() - pipelineStart;
-      console.log(`[Brain V7] ⚡ Cache hit → ${cached.intent} (${totalMs.toFixed(0)}ms total)`);
-      return postProcess(cached, childName, childAge, personalityCtx);
-    }
-  }
-
-  // ── LAYER 1: LocalBrain (Regex + SmartClassifier + Templates) ──
-  const layer1Start = performance.now();
-  const localReply = getLocalBrainReply(userText, childName, childAge);
-  const layer1Ms = performance.now() - layer1Start;
-
-  console.log(`[Brain V7] L1 LocalBrain: intent=${localReply.intent} confidence=${localReply.confidence.toFixed(2)} | goal=${understanding.userGoal} (${layer1Ms.toFixed(1)}ms)`);
-
-  // ── ★ COGNITION LAYER: decide HOW to respond ──
-  const emotion = understanding.emotion;
-  // Update personality context with detected emotion
-  personalityCtx.emotionType = emotion.type;
-  personalityCtx.emotionIntensity = emotion.intensity;
-  const persistentMem = getPersistentMemory();
-  const cognition = cogitate({
-    intent: localReply.intent as any,
-    intentConfidence: localReply.confidence,
-    emotion,
-    childAge,
-    session: {
-      turnCount: mem.turnCount,
-      sessionMood: mem.sessionMood,
-      topicDepth: mem.topicDepth,
-      currentTopic: mem.currentTopic,
-      lastBobbyGoal: null,
-    },
-    memory: {
-      facts: persistentMem.facts,
-      interests: persistentMem.interestScores,
-      relationshipScore: 50, // TODO: compute from interaction count
-    },
-  });
-
-  // V7: Follow-ups are now handled by responseAssembly.ts via CognitionPlan
-
-  // ── ★ FLOW ENGINE: check if we should start a multi-turn scenario ──
-  if (!isFlowActive() && localReply.confidence >= 0.5) {
-    const flowMatch = detectFlowTrigger(localReply.intent as any, userText, childAge);
-    if (flowMatch) {
-      const flowResult = startFlow(flowMatch, childName, childAge);
-      if (flowResult.handled) {
-        return {
-          text: simplifyForAge(flowResult.text, childAge),
-          intent: "FLOW", source: "flow_engine", emotion: flowResult.emotion as any,
-          confidence: 1, isOffline: true,
-        };
-      }
-    }
-  }
-  if (localReply.confidence >= LAYER1_CONFIDENCE) {
-    let reply = postProcess(localReply, childName, childAge, personalityCtx, tomSnapshot);
-    // V7: Structured response assembly (opening + content + closing)
-    reply = assembleAndMerge(reply, cognitionPlan, understanding, childName);
-    const totalMs = performance.now() - pipelineStart;
-    console.log(`[Brain V7] ✅ L1 direct → ${localReply.intent} | goal=${cognitionPlan.why.primaryGoal} (${totalMs.toFixed(0)}ms total)`);
-    cacheReply(userText, reply).catch(() => {});
-    return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan, initiative);
-  }
-
-  // ── LAYER 2: Knowledge Base (semantic TF-IDF scoring) ──
+  // ═══════════════════════════════════════════════════════════
+  // LAYER 1 (PRIMARY): LLM AI AGENT — Online-First
+  // ═══════════════════════════════════════════════════════════
   try {
-    const layer2Start = performance.now();
-    const kbReply = await queryKnowledgeBase(userText, childAge);
-    const layer2Ms = performance.now() - layer2Start;
-
-    if (kbReply && kbReply.confidence >= LAYER2_CONFIDENCE) {
-      let reply = postProcess(kbReply, childName, childAge, personalityCtx, tomSnapshot);
-      reply = assembleAndMerge(reply, cognitionPlan, understanding, childName);
-      const totalMs = performance.now() - pipelineStart;
-      console.log(`[Brain V7] ✅ L2 KB → conf=${kbReply.confidence.toFixed(2)} | goal=${cognitionPlan.why.primaryGoal} (L2: ${layer2Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
-      cacheReply(userText, reply).catch(() => {});
-      return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan, initiative);
-    }
-  } catch (e) {
-    console.warn("[Brain V7] L2 KB error:", e);
-  }
-
-  // ── LAYER 3: LLM (Gemini via edge function) ──
-  try {
-    const layer3Start = performance.now();
+    const llmStart = performance.now();
     const llmReply = await getLLMReply(childName, childAge, userText, personality);
-    const layer3Ms = performance.now() - layer3Start;
+    const llmMs = performance.now() - llmStart;
 
     if (llmReply) {
-      const enrichedReply = assembleAndMerge(llmReply, cognitionPlan, understanding, childName);
+      // Apply post-processing (age simplification, world model)
+      const processed = postProcess(llmReply, childName, childAge, personalityCtx, tomSnapshot);
       const totalMs = performance.now() - pipelineStart;
-      console.log(`[Brain V7] ✅ L3 LLM → goal=${cognitionPlan.why.primaryGoal} (L3: ${layer3Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
-      cacheReply(userText, enrichedReply).catch(() => {});
-      return applyOrchestration(enrichedReply, directive, understanding, v7Session, cognitionPlan, initiative);
+      console.log(`[Brain Agent] ✅ AI Agent reply (${llmMs.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
+      return processed;
     }
   } catch (e) {
-    console.warn("[Brain V7] L3 LLM failed:", e);
+    console.warn("[Brain Agent] LLM Agent failed:", e);
   }
 
-  // ── FALLBACK: Use Layer 1 response (always available offline) ──
+  // ═══════════════════════════════════════════════════════════
+  // LAYER 2 (FALLBACK): Local Brain — Offline safety net
+  // ═══════════════════════════════════════════════════════════
+  console.log("[Brain Agent] ⚠️ Falling back to local brain");
+
+  const localReply = getLocalBrainReply(userText, childName, childAge);
   let reply = postProcess(localReply, childName, childAge, personalityCtx, tomSnapshot);
-  reply = assembleAndMerge(reply, cognitionPlan, understanding, childName);
+
+  // Try KB if local confidence is low
+  if (localReply.confidence < LAYER1_CONFIDENCE) {
+    try {
+      const kbReply = await queryKnowledgeBase(userText, childAge);
+      if (kbReply && kbReply.confidence >= LAYER2_CONFIDENCE) {
+        reply = postProcess(kbReply, childName, childAge, personalityCtx, tomSnapshot);
+      }
+    } catch { /* KB failed, use local */ }
+  }
 
   const totalMs = performance.now() - pipelineStart;
-  console.log(`[Brain V7] ⚡ Fallback L1 → ${localReply.intent} | goal=${cognitionPlan.why.primaryGoal} (${totalMs.toFixed(0)}ms total)`);
-  cacheReply(userText, reply).catch(() => {});
-  return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan, initiative);
+  console.log(`[Brain Agent] ⚡ Fallback: ${localReply.intent} (${totalMs.toFixed(0)}ms total)`);
+  return reply;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
