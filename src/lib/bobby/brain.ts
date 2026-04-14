@@ -22,7 +22,7 @@ import { normalizeChildSpeech } from "./normalizer";
 import { resetMemory } from "@/lib/responseSelector";
 import { resetScenario } from "@/lib/scenarioEngine";
 import { trackInterests, getSmartFollowUp, resetInterestTracker, getInterestSnapshot } from "./interestTracker";
-import { getLLMReply, clearHistory } from "./llmBrain";
+import { getLLMReply, streamLLMReply, clearHistory, addToHistory } from "./llmBrain";
 import { getLocalBrainReply, resetLocalBrain } from "./localBrain";
 import { queryKnowledgeBase, clearConversationContext } from "./knowledgeQuery";
 import { getCachedReply, cacheReply, clearResponseCache } from "./responseCache";
