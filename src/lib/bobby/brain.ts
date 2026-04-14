@@ -150,6 +150,7 @@ function applyOrchestration(
   directive: OrchestrationDirective | null,
   understanding?: UnderstandingFrame,
   session?: V7Session,
+  plan?: CognitionPlan | null,
 ): BobbyBrainReply {
   if (!directive) return reply;
 
@@ -161,6 +162,18 @@ function applyOrchestration(
   // Append resume prompt if available
   if (directive.resumePrompt && Math.random() < 0.4) {
     reply.text = reply.text.replace(/[.!?…]*\s*$/, ". ") + directive.resumePrompt;
+  }
+
+  // V7: Apply CognitionPlan-driven adjustments
+  if (plan) {
+    // If plan says includeValidation → prepend empathy opener
+    if (plan.what.includeValidation && plan.why.primaryGoal !== "jouer") {
+      const validations = ["C'est une super question ! ", "Bravo de demander ! ", "J'adore ta curiosité ! "];
+      const prefix = validations[Math.floor(Math.random() * validations.length)];
+      if (!reply.text.startsWith(prefix.trim())) {
+        reply.text = prefix + reply.text;
+      }
+    }
   }
 
   // V7: Understanding Feedback Loop — verify comprehension
