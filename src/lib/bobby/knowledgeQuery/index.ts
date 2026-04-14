@@ -44,11 +44,13 @@ export interface KBScoreBreakdown {
   qScore: number;
   containment: number;
   ctxBonus: number;
+  focusPen: number;
   rawScore: number;
   priorityFactor: number;
   finalScore: number;
   expandedTokens: string[];
   inputTokens: string[];
+  focusWords: string[];
 }
 
 export async function debugScoreQuery(
