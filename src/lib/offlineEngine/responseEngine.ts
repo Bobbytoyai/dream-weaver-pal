@@ -14,8 +14,23 @@ import { detectStoryTheme, LOCAL_STORIES, RESPONSES, pickMiniGame, TONGUE_TWISTE
 } from "../offline-stories";
 import type { MiniGameType } from "../offline-stories";
 import { context, updateContext, detectMoodFromText, pickRandom, personalize, handleFollowUpAnswer, handleContextualContinuation, handleConversationalContext, buildContextualPrefix, getFollowUp } from "../offline-context";
-import { BOBBY_INTERACTIONS } from "../bobby_interactions_10k";
+import type { BobbyInteraction } from "../bobby_interactions_10k";
 import { adaptiveEngine, type AdaptiveContext } from "../adaptiveEngine";
+
+// Lazy-load the 47KB interactions dataset to keep initial bundle small
+let _interactionsCache: BobbyInteraction[] | null = null;
+async function getInteractions(): Promise<BobbyInteraction[]> {
+  if (!_interactionsCache) {
+    const { BOBBY_INTERACTIONS } = await import("../bobby_interactions_10k");
+    _interactionsCache = BOBBY_INTERACTIONS;
+  }
+  return _interactionsCache;
+}
+
+/** Pre-warm the interactions cache (call early, non-blocking) */
+export function preloadInteractions(): void {
+  void getInteractions();
+}
 import { findMultiResponse, selectBestResponse, recordInput, recordResponse, updateEngagement, setEmotionalState, selectNonRepetitiveResponse, recordIntent, recordInteraction, boostResponseScore, penalizeResponseScore, getConversationalRebond, getDominantEmotion } from "../responseSelector";
 import { isScenarioActive, tryStartScenario, handleScenarioStep, resetScenario } from "../scenarioEngine";
 
@@ -215,7 +230,8 @@ export function getOfflineResponse(
     confidenceScore: 0.7,
     isOffline: true,
   };
-  const interactionMatch = adaptiveEngine.findBestMatch(normalized, adaptCtx, BOBBY_INTERACTIONS);
+  const interactions = _interactionsCache;
+  const interactionMatch = interactions ? adaptiveEngine.findBestMatch(normalized, adaptCtx, interactions) : null;
   if (interactionMatch) {
     const finalText = personalize(interactionMatch.ai_response, childName);
     const followUp = getFollowUp(interactionMatch.intent as any);

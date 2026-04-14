@@ -248,6 +248,8 @@ export function getBobbySleepMessage(): string {
 
 export function resetBobbyBrainSession() {
   preloadSemanticFields(); // Pre-warm heavy 72KB semantic data
+  // Pre-warm 47KB interactions dataset
+  import("@/lib/offlineEngine/responseEngine").then(m => m.preloadInteractions?.()).catch(() => {});
   resetConversationContext();
   resetMemory();
   resetScenario();
