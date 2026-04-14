@@ -303,6 +303,9 @@ export async function buildBobbyReply({
 
   // ── ★ COGNITION LAYER: decide HOW to respond ──
   const emotion = detectEmotion(userText);
+  // Update personality context with detected emotion
+  personalityCtx.emotionType = emotion.type;
+  personalityCtx.emotionIntensity = emotion.intensity;
   const persistentMem = getPersistentMemory();
   const cognition = cogitate({
     intent: localReply.intent as any,
