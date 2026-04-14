@@ -106,14 +106,17 @@ export async function installContentPack(contentId: string, childName: string): 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, itemsInstalled: 0, cachedLocally: false, error: "Non connecté" };
 
-    // 1. Mark as installed in installed_content
+    // 1. Mark as installed in installed_content (uses unique constraint)
     const { error: installError } = await supabase
       .from("installed_content")
-      .upsert({ child_name: childName, content_id: contentId, user_id: user.id }, { onConflict: "child_name,content_id" } as any);
+      .upsert(
+        { child_name: childName, content_id: contentId, user_id: user.id },
+        { onConflict: "child_name,content_id" }
+      );
     
     if (installError) {
-      // Try insert if upsert fails
-      await supabase.from("installed_content").insert({ child_name: childName, content_id: contentId, user_id: user.id });
+      console.warn("[ContentInstaller] Upsert failed:", installError.message);
+      return { success: false, itemsInstalled: 0, cachedLocally: false, error: installError.message };
     }
 
     // 2. Fetch content data from cloud
