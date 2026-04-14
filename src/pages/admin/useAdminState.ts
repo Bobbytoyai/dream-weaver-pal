@@ -81,7 +81,6 @@ export function useAdminState() {
   // Devices
   const [devices, setDevices] = useState<BobbyDevice[]>([]);
   const [devicesLoading, setDevicesLoading] = useState(false);
-  const [learningSessionId, setLearningSessionId] = useState<string | null>(null);
 
   // ─── Fetchers ───────────────────────────────────────────────────
   const fetchLiveStats = useCallback(async () => {
