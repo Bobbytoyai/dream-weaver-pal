@@ -231,9 +231,9 @@ const CloudTab = ({
       {/* TARIFS */}
       <div className="space-y-3">
         <h3 className="text-[16px] font-black text-black px-1 uppercase">💾 TARIFS BOBBY CLOUD</h3>
-        <p className="text-[11px] text-black/60 px-1 -mt-1 font-bold">Utilisation actuelle : <span className="font-black text-black">{storageLabel}</span> / 500 Mo</p>
+        <p className="text-[11px] text-black/60 px-1 -mt-1 font-bold">Utilisation actuelle : <span className="font-black text-black">{storageLabel}</span> / {quotaLabel}</p>
         <div className="mx-1 h-3 bg-white border-2 border-black overflow-hidden">
-          <div className="h-full bg-foreground transition-all" style={{ width: `${Math.min(100, (estimatedStorageMB / 500) * 100)}%` }} />
+          <div className={`h-full transition-all ${usedPercent > 90 ? 'bg-red-500' : usedPercent > 70 ? 'bg-amber-500' : 'bg-foreground'}`} style={{ width: `${usedPercent}%` }} />
         </div>
         {plans.map((plan, pi) => {
           const planBgs = ["white", "var(--retro-blue)", "var(--retro-yellow)"];
