@@ -32,6 +32,7 @@ import { mem } from "./localBrain/memory";
 import { detectLocalIntent } from "./localBrain/intentEngine";
 import { detectEmotion } from "./localBrain/emotionEngine";
 import { getPersistentMemory, getRelevantFacts } from "./persistentMemory";
+import { extractDeepUnderstanding, type UnderstandingFrame, type SessionContext as V7Session } from "./v7/deepUnderstanding";
 import {
   loadPersistentMemory,
   savePersistentMemory,
