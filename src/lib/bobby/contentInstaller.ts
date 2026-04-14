@@ -107,6 +107,17 @@ export async function installContentPack(contentId: string, childName: string): 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, itemsInstalled: 0, cachedLocally: false, error: "Non connecté" };
 
+    // 0. Check cloud storage quota
+    const usage = await getCloudUsage();
+    if (usage && usage.isOverQuota) {
+      return {
+        success: false,
+        itemsInstalled: 0,
+        cachedLocally: false,
+        error: `Quota de stockage dépassé (${formatStorage(usage.usedMB)} / ${formatStorage(usage.quotaMB)}). Libérez de l'espace ou passez à un plan supérieur.`,
+      };
+    }
+
     // 1. Mark as installed in installed_content (uses unique constraint)
     const { error: installError } = await supabase
       .from("installed_content")
