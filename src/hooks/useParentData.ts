@@ -454,7 +454,7 @@ export function useParentData({ childName, bobbyCodeId, parentSettings, onSettin
     user, sessions, analyses, loading, displayName,
     selectedSession, setSelectedSession, selectedAnalysis, setSelectedAnalysis,
     analyzing, sessionMessages, setSessionMessages,
-    settings, settingsSaved, reglagesSection, setReglagesSection,
+    settings, settingsSaved, settingsSaving, reglagesSection, setReglagesSection,
     updateSetting, updateNested, handleSave,
     pendingNameChange, setPendingNameChange,
     safetyAlerts, showSafetyAlerts, setShowSafetyAlerts, clearSafetyAlerts,
