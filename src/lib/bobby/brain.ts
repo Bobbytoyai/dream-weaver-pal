@@ -69,6 +69,14 @@ import {
   resetFlows,
   tryResumeFlow,
 } from "./flows";
+import {
+  detectMusicRequest,
+  isWaitingForMusicAnswer,
+  handleMusicAnswer,
+  processMusicRequest,
+  resetMusicEngine,
+  getTrackUrl,
+} from "./musicEngine";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CONFIDENCE THRESHOLDS (V5 Architecture)
