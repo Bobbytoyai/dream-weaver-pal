@@ -62,10 +62,11 @@ export async function streamLLMReply(
   signal?: AbortSignal,
   userId?: string | null,
   sessionId?: string | null,
+  blockedTopics?: string[],
 ): Promise<BobbyBrainReply | null> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20000); // 20s for streaming
+    const timeout = setTimeout(() => controller.abort(), 20000);
 
     if (signal) {
       signal.addEventListener("abort", () => controller.abort(), { once: true });
@@ -89,6 +90,7 @@ export async function streamLLMReply(
         stream: true,
         userId: userId || null,
         sessionId: sessionId || null,
+        blockedTopics: blockedTopics || [],
       }),
       signal: controller.signal,
     });
@@ -196,10 +198,11 @@ export async function getLLMReply(
   signal?: AbortSignal,
   userId?: string | null,
   sessionId?: string | null,
+  blockedTopics?: string[],
 ): Promise<BobbyBrainReply | null> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    const timeout = setTimeout(() => controller.abort(), 10000);
 
     if (signal) {
       signal.addEventListener("abort", () => controller.abort(), { once: true });
@@ -222,6 +225,7 @@ export async function getLLMReply(
         contextSummary,
         userId: userId || null,
         sessionId: sessionId || null,
+        blockedTopics: blockedTopics || [],
       }),
       signal: controller.signal,
     });

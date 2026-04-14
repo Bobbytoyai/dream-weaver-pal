@@ -565,7 +565,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, childName, childAge, personality, contextSummary, stream, userId, sessionId } = await req.json();
+    const { messages, childName, childAge, personality, contextSummary, stream, userId, sessionId, blockedTopics } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -600,7 +600,12 @@ serve(async (req) => {
     if (pastSessionsBlock) console.log(`[MEMORY] Past sessions injected`);
     if (factsBlock) console.log(`[MEMORY] Persistent facts injected`);
 
-    const systemContent = `${SYSTEM_PROMPT}\n\nADAPTATION ÂGE :\n${agePrompt}${personalityHint}${contextBlock}${kbBlock}${pastSessionsBlock}${factsBlock}\n\nIMPORTANT : Ne mentionne JAMAIS le prénom de l'enfant. Utilise "tu/toi" uniquement.`;
+    // ── Blocked topics from parent settings ──
+    const blockedTopicsBlock = Array.isArray(blockedTopics) && blockedTopics.length > 0
+      ? `\n\n═══ SUJETS INTERDITS PAR LES PARENTS ═══\nLes parents ont BLOQUÉ ces sujets. Tu ne dois JAMAIS en parler, même si l'enfant insiste.\nSi l'enfant aborde un de ces sujets, redirige doucement vers autre chose.\nSujets bloqués : ${blockedTopics.join(", ")}\nRéponse type : "Parlons d'autre chose ! Tu veux qu'on joue ou que je te raconte une histoire ?"` 
+      : "";
+
+    const systemContent = `${SYSTEM_PROMPT}\n\nADAPTATION ÂGE :\n${agePrompt}${personalityHint}${contextBlock}${kbBlock}${pastSessionsBlock}${factsBlock}${blockedTopicsBlock}\n\nIMPORTANT : Ne mentionne JAMAIS le prénom de l'enfant. Utilise "tu/toi" uniquement.`;
 
     // Keep up to 50 messages for long conversations
     const sanitizedMessages = (messages || []).slice(-50).map((m: { role: string; content: string }) => ({
