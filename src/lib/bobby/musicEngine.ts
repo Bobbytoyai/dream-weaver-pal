@@ -292,8 +292,15 @@ export async function processMusicRequest(text: string): Promise<{
   // Increment play count (fire and forget)
   Promise.resolve(supabase.rpc("increment_music_play" as any, { track_id: track.id })).catch(() => {});
   
+  const intros = [
+    `Avec plaisir ! 🎵 Je te lance "${track.title}" ! Écoute bien…`,
+    `Oh oui ! 🎵 C'est parti pour "${track.title}" ! Bonne écoute !`,
+    `Super choix ! 🎵 Voilà "${track.title}" de ${track.artist} ! Profite bien !`,
+  ];
+  const intro = intros[Math.floor(Math.random() * intros.length)];
+  
   return {
-    text: `🎵 C'est parti ! Je lance "${track.title}" de ${track.artist} ! Écoute bien… Après, dis-moi si tu veux la réécouter ou entendre une autre chanson !`,
+    text: `${intro} Après, dis-moi si tu veux la réécouter ou entendre une autre chanson !`,
     track,
     shouldPlay: true,
   };
