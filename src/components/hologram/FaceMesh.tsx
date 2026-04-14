@@ -85,31 +85,23 @@ function buildEyebrowShape(_archHeight: number = 0.06): THREE.Shape {
 function buildMouthShape(curve: number, width: number, openness: number, round: number): THREE.Shape {
   const shape = new THREE.Shape();
   
-  const halfW = (0.14 + width * 0.08) * (1 - round * 0.35);
+  const halfW = (0.14 + width * 0.08) * (1 - round * 0.2);
   const thickness = 0.040;
   
-  // When is mouth "open"? Only for actual speech/surprise
-  const isOpen = openness > 0.18 || round > 0.12;
+  const isOpen = openness > 0.10 || round > 0.08;
   
   if (!isOpen) {
-    // ── MOUTH LINE — always uses bezier arcs for pointed/tapered ends ──
-    // curve=0 → straight line with pointed ends, positive = smile, negative = sad
-    // The bezier naturally tapers to points at the edges (like Apple emoji mouths)
+    // ── CLOSED MOUTH — bezier smile/neutral/sad arc ──
     const depth = curve * 0.35;
-    const sign = curve >= 0 ? 1 : -1;
-    
-    // Use a tiny minimum depth so the bezier still creates a visible shape even when flat
     const renderDepth = Math.abs(depth) < 0.001 ? 0.001 : depth;
     const renderSign = renderDepth >= 0 ? 1 : -1;
     
-    // Upper arc
     shape.moveTo(-halfW, 0);
     shape.bezierCurveTo(
       -halfW * 0.5, -renderDepth,
       halfW * 0.5, -renderDepth,
       halfW, 0
     );
-    // Lower arc (offset by thickness) — creates tapered pointed ends
     shape.bezierCurveTo(
       halfW * 0.5, -renderDepth - thickness * renderSign,
       -halfW * 0.5, -renderDepth - thickness * renderSign,
@@ -117,19 +109,30 @@ function buildMouthShape(curve: number, width: number, openness: number, round: 
     );
     shape.closePath();
   } else {
-    // ── OPEN MOUTH — ellipse for speech animations ──
-    const ellipseW = halfW * (0.7 + (1 - Math.min(1, round * 2)) * 0.3);
-    const ellipseH = 0.025 + openness * 0.14 + round * 0.10;
-    const yOff = -(curve * 0.08);
+    // ── OPEN MOUTH — organic shape, NOT a perfect ellipse ──
+    // Wider horizontally, more natural with upper/lower lip arcs
+    const mouthW = halfW * (0.75 + (1 - Math.min(1, round * 1.5)) * 0.35);
+    const mouthH = 0.03 + openness * 0.16 + round * 0.08;
+    const yOff = -(curve * 0.06);
     
-    const segments = 32;
-    for (let i = 0; i <= segments; i++) {
-      const angle = (i / segments) * Math.PI * 2;
-      const x = Math.cos(angle) * ellipseW;
-      const y = Math.sin(angle) * ellipseH + yOff;
-      if (i === 0) shape.moveTo(x, y);
-      else shape.lineTo(x, y);
-    }
+    // Upper lip: flatter arc
+    const upperFlatten = 0.6 + round * 0.2; // upper lip less curved
+    // Lower lip: rounder, deeper
+    const lowerDeepen = 1.0 + openness * 0.3;
+    
+    // Draw upper lip arc (left to right)
+    shape.moveTo(-mouthW, yOff);
+    shape.bezierCurveTo(
+      -mouthW * 0.4, yOff + mouthH * upperFlatten,
+      mouthW * 0.4, yOff + mouthH * upperFlatten,
+      mouthW, yOff
+    );
+    // Draw lower lip arc (right to left, goes down)
+    shape.bezierCurveTo(
+      mouthW * 0.5, yOff - mouthH * lowerDeepen,
+      -mouthW * 0.5, yOff - mouthH * lowerDeepen,
+      -mouthW, yOff
+    );
     shape.closePath();
   }
   
