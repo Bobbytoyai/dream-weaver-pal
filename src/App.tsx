@@ -55,6 +55,7 @@ const App = () => (
                     <Route path="parent/:code" element={<BobbyParent />} />
                     <Route path="bobby-cloud" element={<BobbyCloudAuth />} />
                     <Route path="reset-password" element={<ResetPassword />} />
+                    <Route path="parent-test" element={<ParentTest />} />
                     <Route path="admin" element={<Admin />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
