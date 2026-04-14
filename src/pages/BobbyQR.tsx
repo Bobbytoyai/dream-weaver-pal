@@ -58,7 +58,27 @@ export default function BobbyQR() {
         }
         setStep("sleeping");
       } else {
-        setStep("onboarding");
+        // Not yet claimed — auto-claim with defaults and go to sleeping
+        const sessionToken = crypto.randomUUID();
+        const defaultName = "Mon ami";
+        const defaultAge = 7;
+        const { error: claimErr } = await supabase
+          .from("bobby_codes")
+          .update({
+            claimed_at: new Date().toISOString(),
+            child_name: defaultName,
+            child_age: defaultAge,
+            session_data: { sessionToken } as any,
+          })
+          .eq("id", data.id);
+        if (!claimErr) {
+          localStorage.setItem(tokenKey, sessionToken);
+          setChildName(defaultName);
+          setChildAge(defaultAge);
+          setStep("sleeping");
+        } else {
+          setStep("invalid");
+        }
       }
     })();
   }, [code]);
