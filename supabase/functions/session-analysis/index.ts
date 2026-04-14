@@ -166,6 +166,7 @@ Sinon laisse le tableau vide.`;
     if (alerts.length > 0) {
       const alertRows = alerts.map((a: { type?: string; message?: string }) => ({
         session_id: sessionId,
+        user_id: userId,
         child_name: childName,
         alert_type: a.type ?? "warning",
         severity: a.type === "critical" ? "critical" : a.type === "warning" ? "high" : "medium",
