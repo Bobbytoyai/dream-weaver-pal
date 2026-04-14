@@ -38,6 +38,7 @@ import { orchestrate, recordBobbyResponse, resetOrchestrator, type Orchestration
 import { checkUnderstanding, applyUnderstandingCheck, detectCorrectionSignal, resetFeedbackLoop } from "./v7/understandingLoop";
 import { buildCognitionPlan, resetCognitionV7, type CognitionPlan } from "./v7/cognitionV7";
 import { assembleAndMerge } from "./v7/responseAssembly";
+import { initToM, updateMentalModel, getToMSnapshot, applyToMToResponse, resetToM } from "./v8/theoryOfMind";
 import {
   loadPersistentMemory,
   savePersistentMemory,
@@ -220,11 +221,13 @@ export function resetBobbyBrainSession() {
   resetOrchestrator();
   resetFeedbackLoop();
   resetCognitionV7();
+  resetToM();
   clearResponseCache().catch(() => {});
 }
 
-export async function initBobbySession(childName: string): Promise<void> {
+export async function initBobbySession(childName: string, childAge?: number): Promise<void> {
   await loadPersistentMemory(childName);
+  if (childAge) initToM(childAge);
   console.log("[Brain] 🧠 Persistent memory loaded for", childName);
 }
 
