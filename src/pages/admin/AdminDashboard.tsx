@@ -84,6 +84,18 @@ export default function AdminDashboard({ admin }: { admin: AdminState }) {
               </div>
             ))}
           </div>
+
+          {/* Total tracking indicator */}
+          <div className="grid grid-cols-2 gap-2 mt-2.5">
+            <div className="rounded-xl p-2.5 text-center bg-gradient-to-r from-purple-500/10 to-indigo-500/10" style={{ border: "1px solid var(--admin-border)" }}>
+              <p className="text-[22px] font-extrabold leading-none text-purple-400">{liveStats.totalSessions}</p>
+              <p className="text-[9px] mt-1" style={{ color: "var(--admin-text-muted)" }}>📦 sessions total enregistrées</p>
+            </div>
+            <div className="rounded-xl p-2.5 text-center bg-gradient-to-r from-amber-500/10 to-orange-500/10" style={{ border: "1px solid var(--admin-border)" }}>
+              <p className="text-[22px] font-extrabold leading-none text-amber-400">{liveStats.totalMessages}</p>
+              <p className="text-[9px] mt-1" style={{ color: "var(--admin-text-muted)" }}>💬 messages total enregistrés</p>
+            </div>
+          </div>
           <div className="flex items-center justify-between mt-2.5 px-1">
             {[
               { icon: "⏱", label: "Durée moy:", value: liveStats.avgDuration > 0 ? `${Math.floor(liveStats.avgDuration / 60)}m${(liveStats.avgDuration % 60).toString().padStart(2, "0")}s` : "—" },
