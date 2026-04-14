@@ -42,9 +42,9 @@ const ChatScreen = ({ childName, childAge, onSwitchToVoice }: ChatScreenProps) =
     setMode(newMode);
     if (newMode !== "chat" && newMode !== mode) {
       const modeMessages: Record<string, string> = {
-        story: `📖 C'est l'heure des histoires, ${childName} ! Tu veux une histoire d'aventure, drôle ou magique ?`,
-        game: `🎮 On joue ! Tu veux une devinette, un quiz ou un jeu d'imagination, ${childName} ?`,
-        learn: `🧠 On apprend un truc cool, ${childName} ! Qu'est-ce qui te rend curieux ?`,
+        story: `📖 C'est l'heure des histoires ! Tu veux une histoire d'aventure, drôle ou magique ?`,
+        game: `🎮 On joue ! Tu veux une devinette, un quiz ou un jeu d'imagination ?`,
+        learn: `🧠 On apprend un truc cool ! Qu'est-ce qui te rend curieux ?`,
       };
       const msg = modeMessages[newMode] || "";
       if (msg) {
