@@ -39,6 +39,7 @@ import { checkUnderstanding, applyUnderstandingCheck, detectCorrectionSignal, re
 import { buildCognitionPlan, resetCognitionV7, type CognitionPlan } from "./v7/cognitionV7";
 import { assembleAndMerge } from "./v7/responseAssembly";
 import { initToM, updateMentalModel, getToMSnapshot, applyToMToResponse, resetToM } from "./v8/theoryOfMind";
+import { buildWorldModel, adaptToChildWorld, checkConfusionZones, resetWorldModel } from "./v8/childWorldModel";
 import {
   loadPersistentMemory,
   savePersistentMemory,
