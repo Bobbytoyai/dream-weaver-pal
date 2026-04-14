@@ -440,5 +440,3 @@ function buildCognitionFollowUp(cognition: CognitionOutput, _childName: string):
 
   return pool[Math.floor(Math.random() * pool.length)];
 }
-  return reply;
-}
