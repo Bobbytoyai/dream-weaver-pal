@@ -7,6 +7,7 @@ import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/parentSett
 import { HologramFace } from "@/components/hologram/HologramFace";
 import type { PendingNarration } from "@/hooks/useConversationStateMachine";
 import { eventBus } from "@/lib/eventBus";
+import { usePWAInstall } from "@/hooks/usePWAInstall";
 
 type Step = "loading" | "invalid" | "claimed" | "onboarding-name" | "onboarding-age" | "sleeping" | "active" | "parent";
 
