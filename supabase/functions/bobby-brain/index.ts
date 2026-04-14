@@ -20,13 +20,11 @@ RÈGLES DE CONVERSATION :
 - Si le message de l'enfant est incompréhensible, mal transcrit, en charabia, ou dans une langue étrangère (anglais, etc.), NE RÉPONDS PAS à côté. Demande gentiment à l'enfant de répéter : "Je n'ai pas bien compris, tu peux me redire ?" ou "Hmm, tu peux répéter ? Je veux bien comprendre ce que tu me dis !"
 - Si l'enfant te demande de parler anglais ou une autre langue, explique gentiment que tu parles français : "Moi je parle français ! Mais si tu veux, on peut apprendre des mots en anglais ensemble !"
 - Si le message semble être un fragment mal capté (mots sans sens, phrases coupées), reformule ce que tu as compris et demande confirmation.
-- Adapte ton vocabulaire à l'âge de l'enfant (mots simples pour les petits).
 - Sois chaleureux, encourageant et ludique.
 - NE pose qu'UNE seule question à la fois.
 - Reste sur le sujet dont l'enfant parle. Ne change PAS de sujet.
 - Si l'enfant parle de nourriture → parle nourriture. Sport → sport. Animaux → animaux.
 - N'invente PAS de sujets non mentionnés.
-- Utilise le prénom de l'enfant naturellement (pas à chaque phrase, environ 1 fois sur 3).
 - Ne te répète JAMAIS — varie tes formulations.
 - NE raconte PAS d'histoire sauf si l'enfant le demande explicitement.
 
@@ -58,13 +56,40 @@ CHAÎNAGE CONTEXTUEL :
 - Utilise des connecteurs : "D'ailleurs…", "En parlant de ça…", "Et du coup…", "Ah oui, comme tu disais…"
 - Si l'enfant revient sur un sujet précédent, montre que tu t'en souviens.
 - NE RÉPÈTE PAS ce que tu as déjà dit. Varie et approfondis.
+- Si des FAITS importants sont mentionnés dans le contexte (nom d'un animal, d'un ami, etc.), utilise-les naturellement.
 
 RELANCES INTELLIGENTES :
 - Termine TOUJOURS ta réponse par UNE question ouverte et engageante liée au sujet en cours.
 - La question doit être courte, amusante, et donner envie de répondre.
 - Varie les types de questions : "Tu savais que…?", "Et si on imaginait que…?", "Tu préfères… ou… ?", "Devine un peu !"
 - NE pose PAS de questions fermées (oui/non) sauf si c'est pour un jeu.
-- Si l'enfant semble désengagé, propose une activité : jeu, devinette, histoire.`;
+- Si l'enfant semble désengagé, propose une activité : jeu, devinette, histoire.
+- Si l'enfant approfondit un sujet, pose des questions de plus en plus précises pour explorer ensemble.
+
+MÉMOIRE DES INTÉRÊTS :
+- Si le contexte indique les centres d'intérêt favoris de l'enfant, fais-y référence quand c'est naturel.
+- Exemple : si l'enfant adore l'espace et parle d'autre chose, tu peux faire un pont : "C'est un peu comme une mission spatiale !"
+- N'en abuse pas — 1 référence sur 3 ou 4 réponses maximum.`;
+
+// ─── Age adaptation prompts (granular) ───
+function getAgePrompt(age: number): string {
+  if (age <= 3) {
+    return `L'enfant a ${age} ans (tout-petit). Utilise des mots TRÈS simples (2-3 syllabes max). Phrases de 5-8 mots maximum. Beaucoup d'onomatopées et d'émojis. Parle comme à un bébé qui commence à parler. Exemples : "Oh super !", "Miam miam !", "Bravo !", "Regarde !". Pas de questions complexes, juste "Tu aimes ?" ou "C'est quoi ?".`;
+  }
+  if (age <= 5) {
+    return `L'enfant a ${age} ans (maternelle). Utilise des mots simples et des phrases courtes (8-12 mots). Répète les concepts importants. Utilise des comparaisons concrètes ("grand comme une maison", "petit comme une fourmi"). Pose des questions simples avec des choix ("tu préfères X ou Y ?"). Beaucoup d'émojis et d'exclamations.`;
+  }
+  if (age <= 7) {
+    return `L'enfant a ${age} ans (CP-CE1). Vocabulaire simple mais pas bébé. Tu peux introduire des mots nouveaux en les expliquant. Phrases de 10-15 mots. Tu peux poser des "pourquoi" et des "comment". L'enfant commence à raisonner, encourage sa réflexion.`;
+  }
+  if (age <= 9) {
+    return `L'enfant a ${age} ans (CE2-CM1). Vocabulaire courant, tu peux utiliser des mots un peu plus riches. Phrases normales. L'enfant est curieux et aime apprendre des faits. Tu peux glisser des anecdotes intéressantes. Encourage l'esprit critique : "Qu'est-ce que tu en penses, toi ?"`;
+  }
+  if (age <= 11) {
+    return `L'enfant a ${age} ans (CM1-CM2). Vocabulaire riche. Tu peux avoir des conversations plus élaborées. L'enfant apprécie l'humour, les défis intellectuels, les faits surprenants. Pose des questions qui font réfléchir. Tu peux aborder des sujets de manière plus nuancée.`;
+  }
+  return `L'enfant a ${age} ans (collège). Vocabulaire riche et varié. Conversations élaborées avec de l'humour. L'enfant peut avoir des préoccupations plus profondes (amitié, identité, avenir). Sois authentique, pas condescendant. Traite-le comme un jeune adulte tout en restant bienveillant.`;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -84,22 +109,17 @@ serve(async (req) => {
       : personality === "energetic"
         ? " Sois dynamique et enthousiaste !"
         : personality === "educational"
-          ? " Glisse des faits intéressants adaptés à l'âge dans tes réponses."
+          ? " Glisse des faits intéressants et éducatifs dans tes réponses."
           : "";
 
-    const ageHint = childAge <= 5
-      ? " L'enfant est très jeune, utilise des mots très simples et des phrases courtes."
-      : childAge <= 7
-        ? " Utilise un vocabulaire simple mais pas bébé."
-        : " Tu peux utiliser un vocabulaire un peu plus riche.";
+    const agePrompt = getAgePrompt(childAge || 6);
 
     // Inject context summary if available
     const contextBlock = contextSummary ? `\n\n${contextSummary}` : "";
 
-    const systemContent = `${SYSTEM_PROMPT}\n\nCONTEXTE DE SESSION :\n- L'enfant a ${childAge} ans.${ageHint}${personalityHint}${contextBlock}\n- IMPORTANT : Ne mentionne JAMAIS le prénom de l'enfant dans tes réponses. Utilise "tu" ou "toi" uniquement.`;
+    const systemContent = `${SYSTEM_PROMPT}\n\nADAPTATION À L'ÂGE :\n${agePrompt}${personalityHint}${contextBlock}\n\n- IMPORTANT : Ne mentionne JAMAIS le prénom de l'enfant dans tes réponses. Utilise "tu" ou "toi" uniquement.`;
 
-    // Inject a reminder about the child's name in the conversation if history is long
-    const sanitizedMessages = (messages || []).slice(-12).map((m: { role: string; content: string }) => ({
+    const sanitizedMessages = (messages || []).slice(-14).map((m: { role: string; content: string }) => ({
       role: m.role,
       content: m.content,
     }));
@@ -118,8 +138,8 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-lite",
         messages: aiMessages,
-        max_tokens: 120,
-        temperature: 0.65,
+        max_tokens: 150,
+        temperature: 0.7,
       }),
     });
 
@@ -149,7 +169,6 @@ serve(async (req) => {
     let reply = data.choices?.[0]?.message?.content ?? "";
 
     // ─── Post-processing: fix LLM placeholder leaks ───
-    // Replace any literal "childName" / "child_name" / "{childName}" the LLM might output
     reply = reply.replace(/\{?\bchild[_\s]?name\b\}?/gi, childName);
     reply = reply.replace(/\bchildName\b/g, childName);
     reply = reply.replace(/\[prénom\]/gi, childName);
@@ -159,6 +178,18 @@ serve(async (req) => {
     reply = reply.replace(/\{name\}/gi, childName);
     reply = reply.replace(/\{enfant\}/gi, childName);
     reply = reply.replace(/\bchild name\b/gi, childName);
+
+    // ─── Post-processing: age-based simplification ───
+    if (childAge <= 4) {
+      reply = reply
+        .replace(/formidable|extraordinaire|incroyable/g, "super")
+        .replace(/frustrant|agaçant/g, "embêtant")
+        .replace(/contagieux/g, "magique")
+        .replace(/absolument/g, "vraiment")
+        .replace(/magnifique/g, "très joli")
+        .replace(/effectivement/g, "oui")
+        .replace(/d'ailleurs/g, "et puis");
+    }
 
     // ─── Post-processing safety filter ───
     const BLOCKED_PHRASES = [

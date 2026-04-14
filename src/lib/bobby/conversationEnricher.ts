@@ -1,9 +1,12 @@
 /**
- * Conversation Enricher — Contextual chaining & smart rebounds
+ * Conversation Enricher — Contextual chaining, smart rebounds & interest injection
  * 
- * 1. Builds a context summary from conversation history for the LLM
+ * 1. Builds a rich context summary from conversation history for the LLM
  * 2. Provides smart rebond (follow-up) questions for local brain
+ * 3. Injects detected interests into the LLM prompt
  */
+
+import { getTopInterests, getInterestSnapshot } from "./interestTracker";
 
 interface ConversationMessage {
   role: "user" | "assistant";
@@ -50,29 +53,86 @@ function detectMood(messages: ConversationMessage[]): string {
   return "neutre";
 }
 
-/** Build a concise context block for the LLM system prompt */
+/** Extract key facts mentioned by the child (names of pets, siblings, etc.) */
+function extractKeyFacts(messages: ConversationMessage[]): string[] {
+  const userMsgs = messages.filter(m => m.role === "user").map(m => m.content);
+  const facts: string[] = [];
+
+  for (const msg of userMsgs) {
+    // "mon chat s'appelle X" / "j'ai un chien qui s'appelle X"
+    const nameMatch = msg.match(/(?:s'appelle|appelle|c'est)\s+([A-ZÀ-Ü][a-zà-ü]+)/);
+    if (nameMatch) facts.push(`Nom mentionné : ${nameMatch[1]}`);
+
+    // "j'ai X ans"
+    const ageMatch = msg.match(/j'ai\s+(\d+)\s+ans/i);
+    if (ageMatch) facts.push(`L'enfant dit avoir ${ageMatch[1]} ans`);
+
+    // "mon frère/ma sœur"
+    if (/mon frère|ma sœur|mes frères|mes sœurs/i.test(msg)) {
+      facts.push("A mentionné un frère/une sœur");
+    }
+
+    // "j'aime / j'adore X"
+    const likeMatch = msg.match(/(?:j'aime|j'adore|je préfère)\s+(.{3,30}?)(?:\.|!|\?|$)/i);
+    if (likeMatch) facts.push(`Aime : ${likeMatch[1].trim()}`);
+  }
+
+  // Deduplicate
+  return [...new Set(facts)].slice(0, 5);
+}
+
+/** Build a rich context block for the LLM system prompt */
 export function buildContextSummary(messages: ConversationMessage[]): string {
   if (messages.length < 2) return "";
 
   const topics = extractTopics(messages);
   const mood = detectMood(messages);
   const turnCount = messages.filter(m => m.role === "user").length;
+  const keyFacts = extractKeyFacts(messages);
 
-  // Last user message topic for continuity
+  // Last user message for continuity
   const lastUser = messages.filter(m => m.role === "user").pop();
   const lastBobby = messages.filter(m => m.role === "assistant").pop();
+
+  // Interest data from tracker
+  const interestSnapshot = getInterestSnapshot();
+  const topInterests = getTopInterests(3);
 
   const parts: string[] = [];
   parts.push(`[CONTEXTE DE CONVERSATION]`);
   parts.push(`- Tour n°${turnCount}`);
   if (topics.length > 0) parts.push(`- Sujets abordés : ${topics.join(", ")}`);
   parts.push(`- Humeur détectée : ${mood}`);
-  if (lastUser) parts.push(`- Dernier message enfant : "${lastUser.content.slice(0, 80)}"`);
-  if (lastBobby) parts.push(`- Dernière réponse Bobby : "${lastBobby.content.slice(0, 80)}"`);
+  
+  // Key facts for memory
+  if (keyFacts.length > 0) {
+    parts.push(`- Faits importants : ${keyFacts.join(" | ")}`);
+  }
 
-  // Continuity instruction
+  // Interest profile
+  if (topInterests.length > 0) {
+    const interestStr = topInterests.map(i => `${i.emoji} ${i.topic} (score:${i.score})`).join(", ");
+    parts.push(`- Centres d'intérêt favoris : ${interestStr}`);
+  }
+
+  // Current deep topic
+  if (interestSnapshot.currentTopic && interestSnapshot.conversationDepth >= 2) {
+    parts.push(`- Sujet approfondi en ce moment : ${interestSnapshot.currentTopic} (profondeur: ${interestSnapshot.conversationDepth})`);
+  }
+
+  if (lastUser) parts.push(`- Dernier message enfant : "${lastUser.content.slice(0, 100)}"`);
+  if (lastBobby) parts.push(`- Dernière réponse Bobby : "${lastBobby.content.slice(0, 100)}"`);
+
+  // Continuity instructions
   if (topics.length > 0) {
-    parts.push(`\nIMPORTANT : L'enfant parle de ${topics[topics.length - 1]}. Reste sur CE sujet et fais référence à ce qui a été dit avant.`);
+    const currentTopic = topics[topics.length - 1];
+    parts.push(`\nCONSIGNE DE CONTINUITÉ : L'enfant parle de ${currentTopic}. Reste sur CE sujet, fais référence à ce qui a été dit avant, et approfondis.`);
+  }
+
+  // Interest-aware instruction
+  if (topInterests.length > 0 && turnCount >= 3) {
+    const favTopic = topInterests[0].topic;
+    parts.push(`CONSIGNE D'INTÉRÊT : L'enfant adore "${favTopic}". Si le moment s'y prête, fais un lien avec ce sujet.`);
   }
 
   return parts.join("\n");
