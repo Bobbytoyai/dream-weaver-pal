@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { createPortal } from "react-dom";
 import ExpressionPreview from "@/components/ExpressionPreview";
 import AutoLearnPanel from "@/components/AutoLearnPanel";
@@ -13,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
   ArrowLeft, Plus, Search, Brain, Lock,
-  ChevronRight, Pencil, Trash2, Eye, RefreshCw,
+  ChevronRight, Pencil, Trash2, Eye, RefreshCw, QrCode,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +39,122 @@ import {
 import { InteractionCard, EntryRow } from "./admin/AdminCards";
 import { useAdminState } from "./admin/useAdminState";
 import AdminDashboard from "./admin/AdminDashboard";
+
+/* ── Device Card (extracted to allow hooks) ── */
+function DeviceCard({ dev, code, fetchDevices }: { dev: any; code: string; fetchDevices: () => void }) {
+  const [showQR, setShowQR] = useState(false);
+  const bobbyUrl = `https://bobby-toy.shop/b/${dev.bobby_code}`;
+  const parentUrl = `https://bobby-toy.shop/parent/${dev.parent_code}`;
+
+  const handleToggleActive = async () => {
+    try {
+      if (dev.is_active) {
+        await (await import("@/lib/adminStoreApi")).deactivateDevice(code, dev.bobby_id);
+        toast.success(`Appareil ${dev.bobby_code} désactivé`);
+      } else {
+        await (await import("@/lib/adminStoreApi")).activateDevice(code, dev.bobby_id);
+        toast.success(`Appareil ${dev.bobby_code} activé`);
+      }
+      fetchDevices();
+    } catch (e: any) {
+      toast.error(e.message || "Erreur");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm(`Supprimer définitivement l'appareil ${dev.bobby_code} et son code parent ? Cette action est irréversible.`)) return;
+    try {
+      await (await import("@/lib/adminStoreApi")).deleteDevice(code, dev.bobby_id);
+      toast.success(`Appareil ${dev.bobby_code} supprimé`);
+      fetchDevices();
+    } catch (e: any) {
+      toast.error(e.message || "Erreur");
+    }
+  };
+
+  return (
+    <div className="rounded-2xl p-4 space-y-2" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{dev.bobby_claimed_at ? "🟢" : "⚪"}</span>
+          <div>
+            <p className="font-bold text-sm" style={{ color: "var(--admin-text)" }}>{dev.child_name || "Non configuré"}</p>
+            <p className="text-[10px] font-mono" style={{ color: "var(--admin-text-dim)" }}>Code: {dev.bobby_code}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {dev.child_age && <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400">{dev.child_age} ans</span>}
+          <button
+            onClick={() => setShowQR(v => !v)}
+            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+            style={{ background: showQR ? "rgba(99,102,241,0.2)" : "transparent", color: showQR ? "#818cf8" : "var(--admin-text-muted)" }}
+            title="Afficher les QR codes"
+          >
+            <QrCode className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={handleToggleActive}
+            className="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all"
+            style={{
+              background: dev.is_active ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.15)",
+              color: dev.is_active ? "#f87171" : "#4ade80",
+              border: `1px solid ${dev.is_active ? "rgba(239,68,68,0.3)" : "rgba(34,197,94,0.3)"}`,
+            }}
+          >
+            {dev.is_active ? "Désactiver" : "Activer"}
+          </button>
+          <button
+            onClick={handleDelete}
+            className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:bg-red-500/20"
+            style={{ color: "var(--admin-text-muted)" }}
+            title="Supprimer l'appareil"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-[10px]" style={{ color: "var(--admin-text-muted)" }}>
+        <div>
+          <span className="opacity-60">Activé: </span>
+          {dev.bobby_claimed_at ? new Date(dev.bobby_claimed_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+        </div>
+        <div>
+          <span className="opacity-60">Code parent: </span>
+          <span className="font-mono">{dev.parent_code}</span>
+        </div>
+        <div>
+          <span className="opacity-60">Parent lié: </span>
+          {dev.parent_claimed_at ? "✅ " + new Date(dev.parent_claimed_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : "❌ Non"}
+        </div>
+        <div>
+          <span className="opacity-60">Statut: </span>
+          {dev.is_active ? <span className="text-green-400">Actif</span> : <span className="text-red-400">Inactif</span>}
+        </div>
+      </div>
+
+      {showQR && (
+        <div className="pt-3 border-t mt-2" style={{ borderColor: "var(--admin-border)" }}>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-[10px] font-bold" style={{ color: "var(--admin-text)" }}>🧸 QR Bobby (activation)</p>
+              <div className="bg-white rounded-xl p-2.5">
+                <QRCodeSVG value={bobbyUrl} size={120} level="M" />
+              </div>
+              <p className="text-[8px] font-mono break-all text-center" style={{ color: "var(--admin-text-dim)" }}>{bobbyUrl}</p>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-[10px] font-bold" style={{ color: "var(--admin-text)" }}>👨‍👩‍👧 QR Parent (notice)</p>
+              <div className="bg-white rounded-xl p-2.5">
+                <QRCodeSVG value={parentUrl} size={120} level="M" />
+              </div>
+              <p className="text-[8px] font-mono break-all text-center" style={{ color: "var(--admin-text-dim)" }}>{parentUrl}</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const Admin = () => {
   const [authenticated, setAuthenticated] = useState(false);
@@ -1158,87 +1275,9 @@ const Admin = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              {devices.map((dev, idx) => {
-                const handleToggleActive = async () => {
-                  try {
-                    if (dev.is_active) {
-                      await (await import("@/lib/adminStoreApi")).deactivateDevice(code, dev.bobby_id);
-                      toast.success(`Appareil ${dev.bobby_code} désactivé`);
-                    } else {
-                      await (await import("@/lib/adminStoreApi")).activateDevice(code, dev.bobby_id);
-                      toast.success(`Appareil ${dev.bobby_code} activé`);
-                    }
-                    fetchDevices();
-                  } catch (e: any) {
-                    toast.error(e.message || "Erreur");
-                  }
-                };
-
-                const handleDelete = async () => {
-                  if (!confirm(`Supprimer définitivement l'appareil ${dev.bobby_code} et son code parent ? Cette action est irréversible.`)) return;
-                  try {
-                    await (await import("@/lib/adminStoreApi")).deleteDevice(code, dev.bobby_id);
-                    toast.success(`Appareil ${dev.bobby_code} supprimé`);
-                    fetchDevices();
-                  } catch (e: any) {
-                    toast.error(e.message || "Erreur");
-                  }
-                };
-
-                return (
-                <div key={idx} className="rounded-2xl p-4 space-y-2" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{dev.bobby_claimed_at ? "🟢" : "⚪"}</span>
-                      <div>
-                        <p className="font-bold text-sm" style={{ color: "var(--admin-text)" }}>{dev.child_name || "Non configuré"}</p>
-                        <p className="text-[10px] font-mono" style={{ color: "var(--admin-text-dim)" }}>Code: {dev.bobby_code}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      {dev.child_age && <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400">{dev.child_age} ans</span>}
-                      <button
-                        onClick={handleToggleActive}
-                        className="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all"
-                        style={{
-                          background: dev.is_active ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.15)",
-                          color: dev.is_active ? "#f87171" : "#4ade80",
-                          border: `1px solid ${dev.is_active ? "rgba(239,68,68,0.3)" : "rgba(34,197,94,0.3)"}`,
-                        }}
-                      >
-                        {dev.is_active ? "Désactiver" : "Activer"}
-                      </button>
-                      <button
-                        onClick={handleDelete}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:bg-red-500/20"
-                        style={{ color: "var(--admin-text-muted)" }}
-                        title="Supprimer l'appareil"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-[10px]" style={{ color: "var(--admin-text-muted)" }}>
-                    <div>
-                      <span className="opacity-60">Activé: </span>
-                      {dev.bobby_claimed_at ? new Date(dev.bobby_claimed_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "—"}
-                    </div>
-                    <div>
-                      <span className="opacity-60">Code parent: </span>
-                      <span className="font-mono">{dev.parent_code}</span>
-                    </div>
-                    <div>
-                      <span className="opacity-60">Parent lié: </span>
-                      {dev.parent_claimed_at ? "✅ " + new Date(dev.parent_claimed_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : "❌ Non"}
-                    </div>
-                    <div>
-                      <span className="opacity-60">Statut: </span>
-                      {dev.is_active ? <span className="text-green-400">Actif</span> : <span className="text-red-400">Inactif</span>}
-                    </div>
-                  </div>
-                </div>
-                );
-              })}
+              {devices.map((dev, idx) => (
+                <DeviceCard key={idx} dev={dev} code={code} fetchDevices={fetchDevices} />
+              ))}
             </div>
           )}
         </div>
