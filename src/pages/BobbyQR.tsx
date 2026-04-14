@@ -3,15 +3,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import VoiceScreen from "@/components/VoiceScreen";
 import ParentMode from "@/components/ParentMode";
-import OnboardingScreen from "@/components/OnboardingScreen";
 import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/parentSettings";
 import { HologramFace } from "@/components/hologram/HologramFace";
 import type { PendingNarration } from "@/hooks/useConversationStateMachine";
-import type { VoiceProfile } from "@/lib/voicePipeline";
 import { eventBus } from "@/lib/eventBus";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 
-type Step = "loading" | "invalid" | "claimed" | "onboarding" | "sleeping" | "active" | "parent";
+type Step = "loading" | "invalid" | "claimed" | "sleeping" | "active" | "parent";
 
 export default function BobbyQR() {
   const { code } = useParams<{ code: string }>();
