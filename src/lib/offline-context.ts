@@ -6,7 +6,7 @@ import type { OfflineIntent } from "./offline-intents";
 import { normalizeInput } from "./offline-intents";
 import type { StoryTheme } from "./offline-stories";
 import { detectStoryTheme, LOCAL_STORIES, RIDDLES, TRUE_FALSE, ANIMAL_QUIZ } from "./offline-stories";
-import type { OfflineResponse } from "./offlineEngine";
+import type { OfflineResponse } from "./offlineEngine/responseEngine";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TYPES
