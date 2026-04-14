@@ -63,6 +63,8 @@ export interface LiveStats {
   activeSessions: number;
   todaySessions: number;
   todayMessages: number;
+  totalSessions: number;
+  totalMessages: number;
   lastActivity: string | null;
   avgDuration: number;
   topEmotion: string;

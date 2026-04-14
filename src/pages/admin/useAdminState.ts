@@ -63,7 +63,7 @@ export function useAdminState() {
   const [selectedCloudUser, setSelectedCloudUser] = useState<CloudUser | null>(null);
 
   // Real-time stats
-  const [liveStats, setLiveStats] = useState<LiveStats>({ activeSessions: 0, todaySessions: 0, todayMessages: 0, lastActivity: null, avgDuration: 0, topEmotion: "—" });
+  const [liveStats, setLiveStats] = useState<LiveStats>({ activeSessions: 0, todaySessions: 0, todayMessages: 0, totalSessions: 0, totalMessages: 0, lastActivity: null, avgDuration: 0, topEmotion: "—" });
 
   // Charts
   const [chartSessions, setChartSessions] = useState<DayData[]>([]);
