@@ -77,7 +77,7 @@ export default function BobbyParent() {
         setStep("pin");
       } else if (isFirstTime && !alreadyWelcomed) {
         localStorage.setItem(welcomeKey, "1");
-        setStep("welcome");
+        setStep("onboarding");
       } else {
         setStep("active");
       }
