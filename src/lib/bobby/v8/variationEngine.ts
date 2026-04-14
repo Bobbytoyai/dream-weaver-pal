@@ -27,11 +27,13 @@ export interface VariationContext {
   recentClosings: string[];
   recentEmojis: string[];
   recentStructures: ResponseStructure[];
+  recentLengths: ("short" | "medium" | "long")[];
 }
 
 export interface VariationResult {
   text: string;
   changesApplied: string[];
+  suggestedLength?: "short" | "medium" | "long";
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -53,6 +55,7 @@ function createEmptyContext(): VariationContext {
     recentClosings: [],
     recentEmojis: [],
     recentStructures: [],
+    recentLengths: [],
   };
 }
 
@@ -325,14 +328,24 @@ export function applyVariation(response: string, openingType?: string): Variatio
     changes.push("emoji_varied");
   }
 
-  // 5. Record in context
+  // 5. Suggest length variation if last 3 responses were same length
+  let suggestedLength: "short" | "medium" | "long" | undefined;
+  const lastLengths = ctx.recentLengths.slice(-3);
+  if (lastLengths.length === 3 && lastLengths.every(l => l === lastLengths[0])) {
+    const current = lastLengths[0];
+    const alternatives = (["short", "medium", "long"] as const).filter(l => l !== current);
+    suggestedLength = alternatives[Math.floor(Math.random() * alternatives.length)];
+    changes.push(`length_force_${current}→${suggestedLength}`);
+  }
+
+  // 6. Record in context
   recordResponse(varied);
 
   if (changes.length > 0) {
     console.log(`[Variation V8] 🎲 Applied: ${changes.join(", ")}`);
   }
 
-  return { text: varied, changesApplied: changes };
+  return { text: varied, changesApplied: changes, suggestedLength };
 }
 
 /**
