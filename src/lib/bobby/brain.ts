@@ -524,11 +524,7 @@ export async function buildBobbyReply({
   const totalMs = performance.now() - pipelineStart;
   console.log(`[Brain V6] ⚡ Fallback L1 → ${localReply.intent} | goal=${cognition.goal} (${totalMs.toFixed(0)}ms total)`);
   cacheReply(userText, reply).catch(() => {});
-  return reply;
-}
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// COGNITION-DRIVEN FOLLOW-UPS
+  return applyOrchestration(reply, directive);
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function buildCognitionFollowUp(cognition: CognitionOutput, _childName: string): string | null {
