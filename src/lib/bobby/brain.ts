@@ -202,6 +202,17 @@ export async function buildBobbyReply({
   const blockedTopics = parentSettings?.blockedTopics ?? [];
   const pipelineStart = performance.now();
 
+  // ═══════════════════════════════════════════════════════════
+  // STEP 0: NORMALIZE child speech (phonetic, SMS, contractions)
+  // ═══════════════════════════════════════════════════════════
+  if (userText) {
+    const normalized = normalizeChildSpeech(userText);
+    if (normalized !== userText) {
+      console.log(`[Brain V6] 📝 Normalized: "${userText}" → "${normalized}"`);
+      userText = normalized;
+    }
+  }
+
   // Build personality context once for the whole pipeline
   const personalityCtx: PersonalityContext = {
     childAge,
