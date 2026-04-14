@@ -81,20 +81,8 @@ const INTENT_EMOTION_MAP: Record<string, FaceState> = {
 // PERSONALITY MODIFIERS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const PERSONALITY_PREFIXES: Record<string, string[]> = {
-  calm: ["Doucement… ", "Tranquillement, ", "Tout en douceur, "],
-  energetic: ["Génial ! ", "Trop cool ! ", "Trop bien ! "],
-  educational: ["Bonne question ! ", "Intéressant ! ", "Tu sais quoi ? "],
-  balanced: [],
-};
-
-function applyPersonality(text: string, personality: string): string {
-  const prefixes = PERSONALITY_PREFIXES[personality];
-  if (!prefixes?.length) return text;
-  if (Math.random() > 0.4) return text;
-  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-  return prefix + text.charAt(0).toLowerCase() + text.slice(1);
-}
+// Personality is now handled by src/lib/bobby/personality/
+// See getPersonalityProfile() + applyPersonalityToText()
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // SAFETY & CONTENT FILTERING
