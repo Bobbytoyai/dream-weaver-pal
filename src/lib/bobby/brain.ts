@@ -481,7 +481,7 @@ export async function buildBobbyReply({
   }
 
   const priorityDecision = computePriority(understanding, v7Session, createDefaultMemoryContext());
-  const cognitionPlan = buildCognitionPlan(understanding, v7Session, priorityDecision);
+  const cognitionPlan = buildCognitionPlan(understanding, priorityDecision, v7Session);
   const orchestrationDirective = orchestrate(understanding, priorityDecision, userText);
 
   // V8: Check proactive initiative
