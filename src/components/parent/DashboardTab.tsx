@@ -272,7 +272,7 @@ const DashboardTab = ({
               <span className="text-2xl">🎯</span>
               <h3 className="text-[17px] font-black text-black uppercase">Intérêts de {displayName}</h3>
             </div>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={240}>
               <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="65%">
                 <PolarGrid stroke="rgba(0,0,0,0.15)" />
                 <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "hsl(var(--foreground))", fontWeight: 900 }} />
@@ -417,7 +417,7 @@ const DashboardTab = ({
             <span className="text-2xl">📈</span>
             <h3 className="text-[17px] font-black text-black uppercase">Évolution (7j)</h3>
           </div>
-          <div className="w-full h-44">
+          <div className="w-full h-44 md:h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={emotionChartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }} barCategoryGap="20%">
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" vertical={false} />
@@ -470,7 +470,7 @@ const DashboardTab = ({
             <span className="text-lg">⏱️</span>
             <h3 className="text-[14px] font-black text-black uppercase">Temps (7j)</h3>
           </div>
-          <div className="w-full h-36">
+          <div className="w-full h-36 md:h-52">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={sessionDurationChartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" vertical={false} />

@@ -209,7 +209,7 @@ const HomeTab: React.FC<HomeTabProps> = ({
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {navCards.map((card, i) => (
           <button key={card.id} onClick={() => onNavigate(card.id)}
-            className={`card-stagger-${i + 1} retro-card relative p-3 flex flex-col items-center justify-center aspect-square`}
+            className={`card-stagger-${i + 1} retro-card relative p-3 flex flex-col items-center justify-center aspect-square md:aspect-auto md:py-5`}
             style={{ backgroundColor: card.bg }}>
             <span className="text-[32px] mb-1 drop-shadow-sm">{card.emoji}</span>
             <span className="text-[11px] font-black text-gray-800 leading-tight text-center whitespace-pre-line">{card.label}</span>
