@@ -40,6 +40,7 @@ import { buildCognitionPlan, resetCognitionV7, type CognitionPlan } from "./v7/c
 import { assembleAndMerge } from "./v7/responseAssembly";
 import { initToM, updateMentalModel, getToMSnapshot, applyToMToResponse, resetToM } from "./v8/theoryOfMind";
 import { buildWorldModel, adaptToChildWorld, checkConfusionZones, resetWorldModel } from "./v8/childWorldModel";
+import { maybeInitiate, resetProactiveEngine, type ProactiveContext } from "./v8/proactiveEngine";
 import {
   loadPersistentMemory,
   savePersistentMemory,
@@ -168,6 +169,7 @@ function applyOrchestration(
   understanding?: UnderstandingFrame,
   session?: V7Session,
   plan?: CognitionPlan | null,
+  proactiveInitiative?: import("./v8/proactiveEngine").ProactiveInitiative | null,
 ): BobbyBrainReply {
   if (!directive) return reply;
 
@@ -190,6 +192,11 @@ function applyOrchestration(
       console.log(`[Brain V7] 🔁 Feedback Loop: ${check.type} — ${check.triggerReason}`);
       reply.text = applyUnderstandingCheck(reply.text, check);
     }
+  }
+
+  // V8: Inject proactive initiative as follow-up
+  if (proactiveInitiative && proactiveInitiative.nonIntrusiveLevel >= 0.5) {
+    reply.text = reply.text.replace(/[.!?…]*\s*$/, ". ") + proactiveInitiative.content;
   }
 
   // Record Bobby's response in the scene
@@ -238,6 +245,7 @@ export function resetBobbyBrainSession() {
   resetCognitionV7();
   resetToM();
   resetWorldModel();
+  resetProactiveEngine();
   clearResponseCache().catch(() => {});
 }
 
@@ -459,6 +467,24 @@ export async function buildBobbyReply({
     `[Brain V7] 🎬 Orchestrator: scene=${directive.scene.type} action=${directive.action} turn=${directive.scene.turnCount}/${directive.scene.maxTurns}${directive.bridgePhrase ? ` bridge="${directive.bridgePhrase.slice(0, 40)}"` : ""}`
   );
 
+  // ── V8: PROACTIVE ENGINE — check if Bobby should take initiative ──
+  const proactiveCtx: ProactiveContext = {
+    turnCount: mem.turnCount,
+    sessionMood: mem.sessionMood,
+    currentTopic: mem.currentTopic,
+    silenceDurationMs: 0,
+    isChildSpeaking: false,
+    isEmotionalSceneActive: directive.scene.type === "emotional",
+    isSafetySceneActive: false, // safety handled pre-pipeline
+    childName,
+    childAge,
+    totalInteractions: mem.turnCount,
+  };
+  const initiative = maybeInitiate(proactiveCtx);
+  if (initiative) {
+    console.log(`[Brain V8] 🚀 Proactive: ${initiative.type} "${initiative.content.slice(0, 50)}"`);
+  }
+
   if (!priority.bypassCache) {
     const cached = await getCachedReply(userText);
     if (cached) {
@@ -523,7 +549,7 @@ export async function buildBobbyReply({
     const totalMs = performance.now() - pipelineStart;
     console.log(`[Brain V7] ✅ L1 direct → ${localReply.intent} | goal=${cognitionPlan.why.primaryGoal} (${totalMs.toFixed(0)}ms total)`);
     cacheReply(userText, reply).catch(() => {});
-    return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan);
+    return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan, initiative);
   }
 
   // ── LAYER 2: Knowledge Base (semantic TF-IDF scoring) ──
@@ -538,7 +564,7 @@ export async function buildBobbyReply({
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain V7] ✅ L2 KB → conf=${kbReply.confidence.toFixed(2)} | goal=${cognitionPlan.why.primaryGoal} (L2: ${layer2Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
       cacheReply(userText, reply).catch(() => {});
-      return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan);
+      return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan, initiative);
     }
   } catch (e) {
     console.warn("[Brain V7] L2 KB error:", e);
@@ -555,7 +581,7 @@ export async function buildBobbyReply({
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain V7] ✅ L3 LLM → goal=${cognitionPlan.why.primaryGoal} (L3: ${layer3Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
       cacheReply(userText, enrichedReply).catch(() => {});
-      return applyOrchestration(enrichedReply, directive, understanding, v7Session, cognitionPlan);
+      return applyOrchestration(enrichedReply, directive, understanding, v7Session, cognitionPlan, initiative);
     }
   } catch (e) {
     console.warn("[Brain V7] L3 LLM failed:", e);
@@ -568,7 +594,7 @@ export async function buildBobbyReply({
   const totalMs = performance.now() - pipelineStart;
   console.log(`[Brain V7] ⚡ Fallback L1 → ${localReply.intent} | goal=${cognitionPlan.why.primaryGoal} (${totalMs.toFixed(0)}ms total)`);
   cacheReply(userText, reply).catch(() => {});
-  return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan);
+  return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan, initiative);
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
