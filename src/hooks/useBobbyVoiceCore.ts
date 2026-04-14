@@ -150,6 +150,7 @@ export function useBobbyVoiceCore({
   const [currentEmotion, setCurrentEmotion] = useState<FaceState>("happy");
   const [currentExpressionCombo, setCurrentExpressionCombo] = useState<ExpressionCombo | undefined>();
   const [currentExpressionIntensity, setCurrentExpressionIntensity] = useState<number>(3);
+  const [musicPlaying, setMusicPlaying] = useState(false);
 
   const machineRef = useRef<ConversationState>("IDLE");
   const processingRef = useRef(false);
