@@ -23,6 +23,7 @@ import { trackInterests, getSmartFollowUp, resetInterestTracker, getInterestSnap
 import { getLLMReply, clearHistory } from "./llmBrain";
 import { getLocalBrainReply, resetLocalBrain } from "./localBrain";
 import { queryKnowledgeBase, clearConversationContext } from "./knowledgeQuery";
+import { getCachedReply, cacheReply, clearResponseCache } from "./responseCache";
 import {
   loadPersistentMemory,
   savePersistentMemory,
