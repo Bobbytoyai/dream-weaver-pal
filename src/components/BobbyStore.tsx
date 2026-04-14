@@ -395,8 +395,17 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
     }
   }, []);
 
-  // Pre-installed content IDs (music pack is free & pre-installed)
-  const PRE_INSTALLED_IDS = useMemo(() => new Set(["4c800d17-cecf-4fff-9028-fc203461ee6a"]), []);
+  // Pre-installed content IDs (all music tracks are free & pre-installed)
+  const PRE_INSTALLED_IDS = useMemo(() => new Set([
+    "4fafa517-6290-4ab1-b20b-5c8137995c0a", // Bobby tu es là
+    "bd7d5210-1b8c-46e6-b04d-1a6750ab4d7a", // La Marseillaise
+    "6bd89dd3-fede-4af3-b2c8-f04c29e4e7c0", // Frère Bobby
+    "7aa4412f-fe84-41d6-9f40-e29e387f37cc", // Au Clair de la Lune
+    "717a114f-e799-41b5-b4dc-1deb2a95e7e7", // Alouette
+    "c6b9db82-f409-49f9-a8f3-eccd1eafe3a4", // Petit navire
+    "8fe7c6ae-4ada-4c72-ac86-93fc9d9aceed", // École amusant
+    "931cb344-ee77-4e53-af99-78d49db2edf0", // Dort Doucement
+  ]), []);
 
   // Fetch installed content separately — non-blocking
   useEffect(() => {
