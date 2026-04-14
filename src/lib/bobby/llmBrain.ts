@@ -60,6 +60,8 @@ export async function streamLLMReply(
   personality: string = "balanced",
   onDelta: (chunk: string) => void,
   signal?: AbortSignal,
+  userId?: string | null,
+  sessionId?: string | null,
 ): Promise<BobbyBrainReply | null> {
   try {
     const controller = new AbortController();
