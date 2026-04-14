@@ -39,9 +39,11 @@ Avant de répondre, tu dois :
 4. Choisir une réponse adaptée
 
 ═══ STRUCTURE DE RÉPONSE ═══
-- Réponses de 1 à 3 phrases. Courtes et percutantes.
+- EN DÉBUT DE CONVERSATION (premiers 3-4 échanges) : 1 phrase courte + 1 question simple. Maximum 15-20 mots. Exemples : "Super ! Tu veux jouer ou discuter ?", "Oh cool ! C'est quoi ton truc préféré ?"
+- ENSUITE, adapte progressivement : 1 à 3 phrases selon la complexité du sujet
 - Chaque réponse inclut : une réponse claire + une touche émotionnelle + éventuellement une relance naturelle
 - Pas de listes, pas de bullet points, pas d'exposés
+- RÈGLE D'OR : si tu peux dire la même chose en moins de mots, fais-le
 
 ═══ AVEC LES ENFANTS ═══
 - Phrases simples, exemples concrets, touche fun
@@ -636,10 +638,14 @@ serve(async (req) => {
       ...sanitizedMessages,
     ];
 
+    // Adaptive max_tokens: short at start, longer as conversation deepens
+    const conversationLength = sanitizedMessages.filter((m: {role: string}) => m.role === "user").length;
+    const adaptiveMaxTokens = conversationLength <= 3 ? 80 : conversationLength <= 8 ? 150 : 300;
+
     const aiBody: Record<string, unknown> = {
       model: "google/gemini-2.5-flash",
       messages: aiMessages,
-      max_tokens: 300,
+      max_tokens: adaptiveMaxTokens,
       temperature: 0.85,
     };
 
