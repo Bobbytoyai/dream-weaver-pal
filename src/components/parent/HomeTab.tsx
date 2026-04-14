@@ -3,6 +3,8 @@ import { ChevronRight, Activity } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import type { Analysis, Session, Tab } from "./parentTypes";
 import { emotionLabels } from "./parentTypes";
+import type { ParentSettings } from "@/components/parentSettings";
+import type { ParentMode } from "@/lib/bobby/masterControl";
 
 interface HomeTabProps {
   sessions: Session[];
@@ -10,8 +12,10 @@ interface HomeTabProps {
   displayName: string;
   cloudProfile: unknown | null;
   unreadAlertCount: number;
+  settings: ParentSettings;
   onOpenNotifPanel: () => void;
   onNavigate: (tab: Tab) => void;
+  onUpdateMode: (mode: ParentMode) => void;
 }
 
 const HomeTab: React.FC<HomeTabProps> = ({
