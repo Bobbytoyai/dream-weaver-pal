@@ -521,12 +521,12 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       tongueRef.current.scale.set(tongueScale, tongueScale * 0.45, 1);
     }
 
-    // Cheeks — glow with emotion
+    // Cheeks — more visible pink glow
     const smile = Math.max(0, state.mouthCurve * 2);
     [leftCheekRef, rightCheekRef].forEach(ref => {
       if (ref.current) {
         const mat = ref.current.material as THREE.MeshBasicMaterial;
-        mat.opacity = 0.25 + state.cheekGlow * 0.2 + smile * 0.15;
+        mat.opacity = 0.45 + state.cheekGlow * 0.25 + smile * 0.15;
       }
     });
 
