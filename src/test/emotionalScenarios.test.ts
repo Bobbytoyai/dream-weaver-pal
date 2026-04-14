@@ -170,23 +170,23 @@ describe("getScenarioTriggerIntents", () => {
 // ── Full Multi-Turn Journey ──────────────────────────────────
 
 describe("Full emotional journey", () => {
-  it("completes a full 'peur_noir' journey with 4 responses", () => {
+  it("completes a full 'peur_noir' journey through all 4 stages", () => {
     tryStartScenario("PEUR", "j'ai peur du noir");
     const responses: string[] = [];
 
-    // acknowledge
+    // acknowledge → explore → support (all have fallbackAdvance)
     responses.push(getScenarioResponse("oui j'ai peur")!.text);
-    // explore
     responses.push(getScenarioResponse("les monstres sous le lit")!.text);
-    // support
     responses.push(getScenarioResponse("d'accord j'essaye")!.text);
-    // resolve
+
+    // resolve — stays active (no fallbackAdvance)
     const last = getScenarioResponse("merci Bobby")!;
     responses.push(last.text);
 
     expect(responses).toHaveLength(4);
-    expect(last.isComplete).toBe(true);
-    expect(isScenarioActive()).toBe(false);
+    expect(last.isComplete).toBe(false); // resolve stage stays until topic change
+    expect(isScenarioActive()).toBe(true);
+    expect(getActiveScenarioInfo()?.stage).toBe("resolve");
     responses.forEach(r => expect(r.length).toBeGreaterThan(5));
   });
 
