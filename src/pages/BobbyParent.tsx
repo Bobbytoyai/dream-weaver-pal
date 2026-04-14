@@ -85,7 +85,7 @@ export default function BobbyParent() {
     })();
   }, [code]);
 
-  // ── Save settings back to bobby_codes ──
+  // ── Save settings back to bobby_codes via security definer function ──
   const handleSettingsChange = async (settings: ParentSettings) => {
     setParentSettings(settings);
     if (bobbyCode) {
@@ -97,11 +97,12 @@ export default function BobbyParent() {
         .maybeSingle();
       if (fetchErr) throw fetchErr;
       const sd = (fresh?.session_data as Record<string, any>) || {};
-      const { error: updateErr } = await supabase
-        .from("bobby_codes")
-        .update({ session_data: { ...sd, parentSettings: settings } as any })
-        .eq("id", bobbyCode.id);
-      if (updateErr) throw updateErr;
+      const newData = { ...sd, parentSettings: settings };
+      const { error: rpcErr } = await supabase.rpc("update_bobby_session_data" as any, {
+        p_bobby_code: bobbyCode.code,
+        p_session_data: newData,
+      });
+      if (rpcErr) throw rpcErr;
     }
   };
 
