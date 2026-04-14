@@ -141,6 +141,9 @@ export function useBobbyVoiceCore({
   // Utterance accumulation buffer — don't cut the child mid-sentence
   const utteranceBufferRef = useRef<string[]>([]);
   const utteranceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Natural acknowledgment sounds timer
+  const ackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastAckTimeRef = useRef(0);
 
   const { startSession, addMessage, endSession, sessionIdRef } = useSessionTracker(childName, childAge);
   const { startRecording, stopRecording } = useConversationRecorder();
