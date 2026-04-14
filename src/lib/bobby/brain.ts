@@ -468,9 +468,10 @@ export async function buildBobbyReply({
 
   // ── V8: UNCERTAINTY — assess confidence before proceeding ──
   const uncertainty = assessUncertainty({
-    intentConfidence: understanding.confidence,
+    intentConfidence: understanding.intentConfidence,
     nluLayer: "local",
-    detectedIntent: understanding.intent,
+    detectedIntent: understanding.explicitIntent,
+    alternativeIntents: understanding.alternativeIntents,
     childAge,
     childName,
     userText,
@@ -478,14 +479,14 @@ export async function buildBobbyReply({
   });
   if (uncertainty.isUncertain && uncertainty.clarificationText) {
     console.log(`[Brain V8] ❓ Uncertainty intercepted → ${uncertainty.strategy}`);
-    // Only intercept if V7 ambiguity check didn't already catch it
     if (!(understanding.requiresConfirmation && understanding.ambiguityScore > 0.7)) {
       const uncReply: BobbyBrainReply = {
         text: simplifyForAge(uncertainty.clarificationText, childAge),
+        intent: understanding.explicitIntent,
+        source: "local_brain",
         emotion: "attentive" as FaceState,
-        followUp: null,
-        expressionCombo: null,
-        expressionIntensity: undefined,
+        confidence: uncertainty.confidenceScore,
+        isOffline: true,
       };
       return uncReply;
     }
