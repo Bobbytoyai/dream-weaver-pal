@@ -40,6 +40,7 @@ import { buildCognitionPlan, resetCognitionV7, type CognitionPlan } from "./v7/c
 import { assembleAndMerge } from "./v7/responseAssembly";
 import { initToM, updateMentalModel, getToMSnapshot, applyToMToResponse, resetToM } from "./v8/theoryOfMind";
 import { buildWorldModel, adaptToChildWorld, checkConfusionZones, resetWorldModel } from "./v8/childWorldModel";
+import { maybeInitiate, resetProactiveEngine, type ProactiveContext } from "./v8/proactiveEngine";
 import {
   loadPersistentMemory,
   savePersistentMemory,
