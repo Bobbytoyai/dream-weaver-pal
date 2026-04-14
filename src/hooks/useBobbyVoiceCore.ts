@@ -72,15 +72,18 @@ function resolveVoiceProfile(parentSettings?: ParentSettings): "child" | "female
   }
 }
 
-async function playGeneratedAudio(audioUrl: string, signal: AbortSignal): Promise<void> {
+async function playGeneratedAudio(audioUrl: string, signal: AbortSignal, volume = 1.0): Promise<void> {
   if (!audioUrl || audioUrl.startsWith("__")) return;
 
   await new Promise<void>((resolve) => {
     const audio = new Audio(audioUrl);
     audio.crossOrigin = "anonymous";
+    audio.volume = Math.max(0, Math.min(1, volume));
 
-    // Emit so HologramFace can connect its analyser for lip sync
-    eventBus.emit({ type: "AUDIO_ELEMENT_CREATED", element: audio });
+    // Only emit for main speech (full volume), not for ack sounds
+    if (volume >= 0.9) {
+      eventBus.emit({ type: "AUDIO_ELEMENT_CREATED", element: audio });
+    }
 
     const cleanup = () => {
       audio.onended = null;
@@ -105,6 +108,19 @@ async function playGeneratedAudio(audioUrl: string, signal: AbortSignal): Promis
 
     audio.play().catch(finish);
   });
+}
+
+/** Play a quiet acknowledgment sound ("hmm", "oui") without interrupting STT */
+async function playAckSound(text: string, voiceProfile: "child" | "female" | "male" | "sister" | "brother") {
+  try {
+    const controller = new AbortController();
+    const audioUrl = await fetchTTSAudio(text, controller.signal, voiceProfile);
+    if (audioUrl && !audioUrl.startsWith("__")) {
+      await playGeneratedAudio(audioUrl, controller.signal, 0.35);
+    }
+  } catch {
+    // Silently ignore ack failures
+  }
 }
 
 export function useBobbyVoiceCore({
