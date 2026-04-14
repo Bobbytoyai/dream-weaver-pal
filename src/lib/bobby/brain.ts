@@ -26,6 +26,7 @@ import { getLocalBrainReply, resetLocalBrain } from "./localBrain";
 import { queryKnowledgeBase, clearConversationContext } from "./knowledgeQuery";
 import { getCachedReply, cacheReply, clearResponseCache } from "./responseCache";
 import { cogitate, resetCognition, type CognitionOutput } from "./cognition";
+import { getPersonalityProfile, applyPersonalityToText, type PersonalityContext } from "./personality";
 import { mem } from "./localBrain/memory";
 import { detectLocalIntent } from "./localBrain/intentEngine";
 import { detectEmotion } from "./localBrain/emotionEngine";
