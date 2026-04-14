@@ -1004,6 +1004,16 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
                         <AudioPreview slug={item.slug} compact />
                       </div>
                     )}
+                    {/* Audio status badge */}
+                    {item.category === "musique" && (
+                      <div className={`absolute bottom-0 right-0 w-5 h-5 flex items-center justify-center border border-black ${
+                        getAudioUrl(item.slug) ? "bg-[var(--retro-green)]" : "bg-[var(--retro-yellow)]"
+                      }`} title={getAudioUrl(item.slug) ? "Audio disponible" : "Audio bientôt disponible"}>
+                        {getAudioUrl(item.slug) 
+                          ? <Music className="w-3 h-3 text-black" /> 
+                          : <Clock className="w-3 h-3 text-black" />}
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
