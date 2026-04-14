@@ -641,6 +641,7 @@ export function useAdminState() {
       store: storeItems.length,
       cloudusers: cloudUsers.length,
       kbdebug: "🔍",
+      devices: devices.length,
     } as Record<string, string | number>;
   }, [interactions, entries, cloudStories, storeItems, cloudUsers, autoLearnCount]);
 
