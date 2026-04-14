@@ -116,10 +116,14 @@ export default function BobbyQR() {
 
   if (step === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FDF6EC]">
-        <div className="text-center space-y-4">
-          <div className="text-5xl">🤖</div>
-          <p className="text-lg font-black text-black uppercase">Chargement…</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#E8F0FE]">
+        <div className="w-full max-w-md aspect-square">
+          <HologramFace
+            voiceState="idle"
+            enableCamera={false}
+            bobbyColor="blue"
+            emotionOverride="sleepy"
+          />
         </div>
       </div>
     );
