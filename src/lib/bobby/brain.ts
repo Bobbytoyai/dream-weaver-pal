@@ -353,7 +353,20 @@ export async function buildBobbyReply({
   const shouldAddFollowUp = cognition.suggestedFollowUp !== "none";
   const cognitionFollowUp = buildCognitionFollowUp(cognition, childName);
 
-  // High-confidence Layer 1 → respond directly (skip KB + LLM)
+  // ── ★ FLOW ENGINE: check if we should start a multi-turn scenario ──
+  if (!isFlowActive() && localReply.confidence >= 0.5) {
+    const flowMatch = detectFlowTrigger(localReply.intent as any, userText, childAge);
+    if (flowMatch) {
+      const flowResult = startFlow(flowMatch, childName, childAge);
+      if (flowResult.handled) {
+        return {
+          text: simplifyForAge(flowResult.text, childAge),
+          intent: "FLOW", source: "flow_engine", emotion: flowResult.emotion as any,
+          confidence: 1, isOffline: true,
+        };
+      }
+    }
+  }
   if (localReply.confidence >= LAYER1_CONFIDENCE) {
     const reply = postProcess(localReply, childName, childAge, personalityCtx);
     if (shouldAddFollowUp && cognitionFollowUp && Math.random() < 0.5) {
