@@ -140,6 +140,31 @@ function postProcess(
   return { ...reply, text };
 }
 
+/**
+ * V7: Apply orchestrator bridge phrase to a reply and record it.
+ */
+function applyOrchestration(
+  reply: BobbyBrainReply,
+  directive: OrchestrationDirective | null,
+): BobbyBrainReply {
+  if (!directive) return reply;
+
+  // Prepend bridge phrase on scene transitions
+  if (directive.bridgePhrase && directive.action === "spawn" && directive.transition) {
+    reply.text = directive.bridgePhrase + " " + reply.text;
+  }
+
+  // Append resume prompt if available
+  if (directive.resumePrompt && Math.random() < 0.4) {
+    reply.text = reply.text.replace(/[.!?…]*\s*$/, ". ") + directive.resumePrompt;
+  }
+
+  // Record Bobby's response in the scene
+  recordBobbyResponse(reply.text);
+
+  return reply;
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // PUBLIC API
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
