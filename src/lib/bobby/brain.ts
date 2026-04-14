@@ -297,7 +297,7 @@ export async function endBobbySession(childName: string): Promise<void> {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export async function buildBobbyReply({
-  childName, childAge, userText = "", pendingNarration, parentSettings,
+  childName, childAge, userText = "", pendingNarration, parentSettings, userId, sessionId,
 }: BuildBobbyReplyOptions): Promise<BobbyBrainReply> {
   const personality = parentSettings?.personality ?? "balanced";
   const blockedTopics = parentSettings?.blockedTopics ?? [];
