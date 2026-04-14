@@ -42,6 +42,7 @@ import { initToM, updateMentalModel, getToMSnapshot, applyToMToResponse, resetTo
 import { buildWorldModel, adaptToChildWorld, checkConfusionZones, resetWorldModel } from "./v8/childWorldModel";
 import { maybeInitiate, resetProactiveEngine, type ProactiveContext } from "./v8/proactiveEngine";
 import { applyVariation, resetVariationEngine } from "./v8/variationEngine";
+import { loadRelationship, recordInteraction, getInsideJokeReference, getPhaseBehavior, resetRelationshipEngine } from "./v8/relationshipEngine";
 import {
   loadPersistentMemory,
   savePersistentMemory,
