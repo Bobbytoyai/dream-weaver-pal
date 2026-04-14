@@ -302,10 +302,15 @@ export function useParentData({ childName, bobbyCodeId, parentSettings, onSettin
     // Don't auto-save to cloud on every keystroke — wait for explicit save
   };
 
-  const handleSave = () => {
-    onSettingsChange?.(settings);
-    setSettingsSaved(true);
-    setTimeout(() => setSettingsSaved(false), 2000);
+  const handleSave = async () => {
+    try {
+      await onSettingsChange?.(settings);
+      setSettingsSaved(true);
+      setTimeout(() => setSettingsSaved(false), 2000);
+    } catch (e: any) {
+      console.error("[ParentData] Save failed:", e);
+      toast.error("Erreur de sauvegarde", { description: e.message || "Impossible d'enregistrer les réglages" });
+    }
   };
 
   // ═══════════════════════════════════════════════════════════════

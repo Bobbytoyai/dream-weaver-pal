@@ -90,16 +90,18 @@ export default function BobbyParent() {
     setParentSettings(settings);
     if (bobbyCode) {
       // Fetch fresh session_data to avoid overwriting other fields
-      const { data: fresh } = await supabase
+      const { data: fresh, error: fetchErr } = await supabase
         .from("bobby_codes")
         .select("session_data")
         .eq("id", bobbyCode.id)
         .maybeSingle();
+      if (fetchErr) throw fetchErr;
       const sd = (fresh?.session_data as Record<string, any>) || {};
-      await supabase
+      const { error: updateErr } = await supabase
         .from("bobby_codes")
         .update({ session_data: { ...sd, parentSettings: settings } as any })
         .eq("id", bobbyCode.id);
+      if (updateErr) throw updateErr;
     }
   };
 
