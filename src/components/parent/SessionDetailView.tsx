@@ -138,7 +138,7 @@ const SessionDetailView = ({
           <div className="retro-card p-5">
             <div className="flex items-center gap-2.5 mb-3">
               <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">📝</span></div>
-              <h3 className="text-[16px] font-black text-foreground uppercase">Note du parent</h3>
+              <h3 className="text-[16px] font-black text-black uppercase">Note du parent</h3>
             </div>
             {editingNote === session.id ? (
               <div className="space-y-3">
@@ -146,7 +146,7 @@ const SessionDetailView = ({
                   value={noteText}
                   onChange={e => setNoteText(e.target.value)}
                   placeholder="Ajoutez une note sur cette session…"
-                  className="w-full bg-white px-4 py-3 text-[14px] text-foreground outline-none border-4 border-black resize-none h-24 font-bold"
+                  className="w-full bg-white px-4 py-3 text-[14px] text-black outline-none border-4 border-black resize-none h-24 font-bold"
                 />
                 <div className="flex gap-3">
                   <button onClick={() => saveParentNote(session.id, noteText)}
@@ -155,7 +155,7 @@ const SessionDetailView = ({
                     💾 ENREGISTRER
                   </button>
                   <button onClick={() => setEditingNote(null)}
-                    className="px-5 py-3 border-4 border-black bg-white text-foreground text-[14px] font-black uppercase">
+                    className="px-5 py-3 border-4 border-black bg-white text-black text-[14px] font-black uppercase">
                     ANNULER
                   </button>
                 </div>
@@ -165,9 +165,9 @@ const SessionDetailView = ({
                 onClick={() => { setEditingNote(session.id); setNoteText(session.parent_note || ""); }}
                 className="w-full text-left p-3 border-2 border-dashed border-black/30 hover:bg-[var(--retro-yellow)] transition-all">
                 {session.parent_note ? (
-                  <p className="text-[14px] text-foreground leading-relaxed font-bold">{session.parent_note}</p>
+                  <p className="text-[14px] text-black leading-relaxed font-bold">{session.parent_note}</p>
                 ) : (
-                  <p className="text-[14px] text-foreground/50 italic font-bold">Appuyez pour ajouter une note…</p>
+                  <p className="text-[14px] text-black/50 italic font-bold">Appuyez pour ajouter une note…</p>
                 )}
               </button>
             )}

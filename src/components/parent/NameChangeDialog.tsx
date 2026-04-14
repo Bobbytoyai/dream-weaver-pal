@@ -17,8 +17,8 @@ const NameChangeDialog: React.FC<NameChangeDialogProps> = ({
       onClick={e => e.stopPropagation()}>
       <div className="text-center">
         <span className="text-4xl block mb-2">✏️</span>
-        <h3 className="text-[18px] font-black text-foreground uppercase">Changer le prénom ?</h3>
-        <p className="text-[13px] text-foreground/60 mt-1 font-bold">
+        <h3 className="text-[18px] font-black text-black uppercase">Changer le prénom ?</h3>
+        <p className="text-[13px] text-black/60 mt-1 font-bold">
           <span className="font-black">{currentName}</span> → <span className="font-black">{pendingName}</span>
         </p>
       </div>
@@ -40,12 +40,12 @@ const NameChangeDialog: React.FC<NameChangeDialogProps> = ({
               description: "Cette fonctionnalité permettra de gérer plusieurs enfants.",
             });
           }}
-          className="w-full py-3.5 border-4 border-black bg-white text-foreground font-black text-[14px] hover:bg-[var(--retro-yellow)] transition-all uppercase"
+          className="w-full py-3.5 border-4 border-black bg-white text-black font-black text-[14px] hover:bg-[var(--retro-yellow)] transition-all uppercase"
           style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.15)" }}>
-          👦 CHANGER D'ENFANT <span className="text-[11px] font-bold text-foreground/50 ml-1">(bientôt)</span>
+          👦 CHANGER D'ENFANT <span className="text-[11px] font-bold text-black/50 ml-1">(bientôt)</span>
         </button>
         <button onClick={onCancel}
-          className="w-full py-2.5 text-[13px] text-foreground/60 font-black hover:text-foreground transition-colors uppercase">
+          className="w-full py-2.5 text-[13px] text-black/60 font-black hover:text-black transition-colors uppercase">
           ANNULER
         </button>
       </div>

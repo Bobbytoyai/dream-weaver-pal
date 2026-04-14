@@ -237,8 +237,8 @@ const VoiceScreen = ({
           {/* Child's recognized text */}
           {(sm.machineState === "LISTENING" || sm.machineState === "PROCESSING" || sm.machineState === "SPEAKING") && sm.lastRecognized && (
             <div className="animate-in fade-in duration-200">
-              <p className="text-base font-bold text-foreground/75 text-center leading-snug">
-                <span className="text-xs font-semibold text-foreground/40 uppercase tracking-wider">{childName}</span>
+              <p className="text-base font-bold text-black/75 text-center leading-snug">
+                <span className="text-xs font-semibold text-black/40 uppercase tracking-wider">{childName}</span>
                 <br />
                 "{sm.lastRecognized}"
               </p>
@@ -248,8 +248,8 @@ const VoiceScreen = ({
           {/* Live partial transcription while listening */}
           {sm.machineState === "LISTENING" && sm.partialText && !sm.lastRecognized && (
             <div className="animate-in fade-in slide-in-from-bottom-3 duration-300">
-              <p className="text-lg font-extrabold text-foreground/70 text-center leading-tight">
-                <span className="text-xs font-semibold text-foreground/40 uppercase tracking-wider">{childName}</span>
+              <p className="text-lg font-extrabold text-black/70 text-center leading-tight">
+                <span className="text-xs font-semibold text-black/40 uppercase tracking-wider">{childName}</span>
                 <br />
                 "{sm.partialText}"
               </p>
@@ -275,12 +275,12 @@ const VoiceScreen = ({
 
         {/* Idle / Sleep labels */}
         {sm.machineState === "IDLE" && (
-          <p className="text-sm font-semibold text-foreground/50 text-center">
+          <p className="text-sm font-semibold text-black/50 text-center">
             Touche Bobby pour parler !
           </p>
         )}
         {sm.machineState === "SLEEP" && (
-          <p className="text-sm font-semibold text-foreground/50 text-center">
+          <p className="text-sm font-semibold text-black/50 text-center">
             💤 Bobby dort… touche Bobby pour le réveiller !
           </p>
         )}

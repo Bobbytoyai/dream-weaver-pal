@@ -23,7 +23,7 @@ const ProfilTab = ({
   return (
     <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
       {showBackButton && onBack && (
-        <button onClick={onBack} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 transition-all border-2 border-black px-3 py-1.5 bg-white">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-black hover:opacity-70 mb-1 transition-all border-2 border-black px-3 py-1.5 bg-white">
           <ArrowLeft className="w-4 h-4" /> RÉGLAGES
         </button>
       )}
@@ -36,8 +36,8 @@ const ProfilTab = ({
             <input type="text" value={settings.childName}
               onChange={(e) => onUpdate("childName", e.target.value)}
               placeholder="Prénom"
-              className="w-full bg-transparent text-xl font-black text-foreground outline-none placeholder:text-foreground/40 border-b-2 border-black pb-1 focus:border-foreground transition-colors uppercase" />
-            <p className="text-[11px] text-foreground/60 mt-1 font-bold">Profil enfant</p>
+              className="w-full bg-transparent text-xl font-black text-black outline-none placeholder:text-black/40 border-b-2 border-black pb-1 focus:border-foreground transition-colors uppercase" />
+            <p className="text-[11px] text-black/60 mt-1 font-bold">Profil enfant</p>
             {settings.childName.trim() !== "" && settings.childName.trim() !== childName && (
               <button
                 onClick={() => onPendingNameChange(settings.childName.trim())}
@@ -54,10 +54,10 @@ const ProfilTab = ({
               className={`shrink-0 w-10 h-10 border-2 border-black text-[13px] font-black transition-all duration-200 ${
                 settings.childAge === age
                   ? "bg-foreground text-background"
-                  : "bg-white text-foreground/60 hover:bg-[var(--retro-yellow)]"
+                  : "bg-white text-black/60 hover:bg-[var(--retro-yellow)]"
               }`}>{age}</button>
           ))}
-          <span className="self-center text-[10px] text-foreground/60 ml-1 shrink-0 font-black">ans</span>
+          <span className="self-center text-[10px] text-black/60 ml-1 shrink-0 font-black">ans</span>
         </div>
       </div>
 
@@ -75,8 +75,8 @@ const ProfilTab = ({
             }`}
             style={{ backgroundColor: bg }}>
             <span className="text-2xl block mb-1">{emoji}</span>
-            <span className="text-[12px] font-black block text-foreground uppercase">{label}</span>
-            <span className="text-[9px] text-foreground/60 leading-tight font-bold">{desc}</span>
+            <span className="text-[12px] font-black block text-black uppercase">{label}</span>
+            <span className="text-[9px] text-black/60 leading-tight font-bold">{desc}</span>
           </button>
         ))}
       </div>
@@ -85,14 +85,14 @@ const ProfilTab = ({
       <div className="retro-card retro-card-tilt-2 p-3" style={{ backgroundColor: 'var(--retro-green)' }}>
         <div className="flex items-center gap-2 mb-2">
           <span className="text-base">💡</span>
-          <h4 className="text-[12px] font-black text-foreground uppercase">Centres d'intérêt détectés</h4>
+          <h4 className="text-[12px] font-black text-black uppercase">Centres d'intérêt détectés</h4>
         </div>
         {allInterests.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
             {allInterests.map(([interest], i) => {
               const retroBgs = ["var(--retro-blue)", "var(--retro-red)", "var(--retro-yellow)", "var(--retro-orange)", "var(--retro-purple)", "#e5e5e5"];
               return (
-                <span key={interest} className="px-2.5 py-1 border-2 border-black text-[10px] font-black text-foreground"
+                <span key={interest} className="px-2.5 py-1 border-2 border-black text-[10px] font-black text-black"
                   style={{ backgroundColor: retroBgs[i % retroBgs.length] }}>
                   {interest}
                 </span>
@@ -100,7 +100,7 @@ const ProfilTab = ({
             })}
           </div>
         ) : (
-          <p className="text-[10px] text-foreground/50 italic font-bold">Détection auto pendant les sessions 🔍</p>
+          <p className="text-[10px] text-black/50 italic font-bold">Détection auto pendant les sessions 🔍</p>
         )}
       </div>
 
@@ -108,17 +108,17 @@ const ProfilTab = ({
       <div className="retro-card retro-card-tilt-3 p-3" style={{ backgroundColor: 'var(--retro-red)' }}>
         <div className="flex items-center gap-2 mb-2">
           <span className="text-base">🚫</span>
-          <h4 className="text-[12px] font-black text-foreground uppercase">Sujets bloqués</h4>
+          <h4 className="text-[12px] font-black text-black uppercase">Sujets bloqués</h4>
         </div>
         <div className="flex flex-wrap gap-1.5 mb-2">
           {settings.blockedTopics.map(t => (
             <button key={t} onClick={() => onUpdate("blockedTopics", settings.blockedTopics.filter(x => x !== t))}
-              className="flex items-center gap-1 px-2.5 py-1 border-2 border-black bg-white text-foreground text-[10px] font-black hover:bg-foreground hover:text-background transition-all">
+              className="flex items-center gap-1 px-2.5 py-1 border-2 border-black bg-white text-black text-[10px] font-black hover:bg-foreground hover:text-background transition-all">
               {t} <X className="w-2.5 h-2.5" />
             </button>
           ))}
           {settings.blockedTopics.length === 0 && (
-            <span className="text-[10px] text-foreground/50 italic font-bold">Aucun sujet bloqué</span>
+            <span className="text-[10px] text-black/50 italic font-bold">Aucun sujet bloqué</span>
           )}
         </div>
         <input type="text" value={newBlockedTopic}
@@ -132,7 +132,7 @@ const ProfilTab = ({
             }
           }}
           placeholder="Ajouter un sujet…"
-          className="w-full px-3 py-2 bg-white text-[11px] text-foreground placeholder:text-foreground/40 border-4 border-black outline-none font-bold" />
+          className="w-full px-3 py-2 bg-white text-[11px] text-black placeholder:text-black/40 border-4 border-black outline-none font-bold" />
       </div>
 
       {/* Save */}
@@ -141,7 +141,7 @@ const ProfilTab = ({
           onClick={onSave}
           className={`w-full py-3.5 text-[14px] font-black transition-all border-4 border-black uppercase ${
             saved
-              ? "bg-[var(--retro-green)] text-foreground"
+              ? "bg-[var(--retro-green)] text-black"
               : "bg-foreground text-background hover:opacity-90"
           }`}
           style={{ boxShadow: "5px 5px 0px rgba(0,0,0,0.3)" }}>

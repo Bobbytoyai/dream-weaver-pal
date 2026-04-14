@@ -13,11 +13,11 @@ export const SettingRow = ({ icon: Icon, title, desc, children }: {
   <div className="flex items-center justify-between py-3 px-1 border-b-2 border-black/10 last:border-0">
     <div className="flex items-center gap-3 flex-1 min-w-0">
       <div className="w-9 h-9 border-2 border-black bg-white flex items-center justify-center shrink-0">
-        <Icon className="w-4.5 h-4.5 text-foreground" />
+        <Icon className="w-4.5 h-4.5 text-black" />
       </div>
       <div className="min-w-0">
-        <h4 className="text-[14px] font-black text-foreground uppercase">{title}</h4>
-        {desc && <p className="text-[12px] text-foreground/60 leading-tight mt-0.5 font-bold">{desc}</p>}
+        <h4 className="text-[14px] font-black text-black uppercase">{title}</h4>
+        {desc && <p className="text-[12px] text-black/60 leading-tight mt-0.5 font-bold">{desc}</p>}
       </div>
     </div>
     <div className="shrink-0 ml-3">{children}</div>
@@ -29,7 +29,7 @@ export const Card = ({ title, icon: Icon, children, noPad, className: cx }: { ti
     {title && (
       <div className="flex items-center gap-2.5 px-5 pt-4 pb-2">
         {Icon && <div className="w-8 h-8 bg-black flex items-center justify-center"><Icon className="w-4 h-4 text-white" /></div>}
-        <h3 className="text-[15px] font-black text-foreground tracking-tight uppercase">{title}</h3>
+        <h3 className="text-[15px] font-black text-black tracking-tight uppercase">{title}</h3>
       </div>
     )}
     <div className={noPad ? "" : "px-5 pb-4"}>{children}</div>
@@ -57,7 +57,7 @@ export const ScoreGauge = ({ label, score, emoji, color, size = "md" }: { label:
         <span className="absolute inset-0 flex items-center justify-center text-base">{emoji}</span>
       </div>
       <span className={`${labelSize} text-muted-foreground font-medium text-center`}>{label}</span>
-      <span className={`${textSize} font-bold text-foreground`}>{score}</span>
+      <span className={`${textSize} font-bold text-black`}>{score}</span>
       {size === "lg" && <span className={`text-[9px] font-semibold ${levelColor}`}>{scoreLevel}</span>}
     </div>
   );
@@ -66,7 +66,7 @@ export const ScoreGauge = ({ label, score, emoji, color, size = "md" }: { label:
 export const StatPill = ({ emoji, value, label }: { emoji: string; value: string | number; label: string }) => (
   <div className="flex flex-col items-center gap-0.5">
     <span className="text-xl">{emoji}</span>
-    <span className="text-lg font-bold text-foreground">{value}</span>
+    <span className="text-lg font-bold text-black">{value}</span>
     <span className="text-[10px] text-muted-foreground">{label}</span>
   </div>
 );

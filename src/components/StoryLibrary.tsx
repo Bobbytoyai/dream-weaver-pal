@@ -199,8 +199,8 @@ function InlineNarrationPlayer({
                 i === currentIndex
                   ? "text-primary font-bold"
                   : seg.status === "done"
-                  ? "text-foreground/40"
-                  : "text-foreground/70"
+                  ? "text-black/40"
+                  : "text-black/70"
               }`}
             >
               {seg.text}{" "}
@@ -233,7 +233,7 @@ function InlineNarrationPlayer({
             <button
               onClick={() => currentIndex > 0 ? playSegment(currentIndex - 1) : audioRef.current && (audioRef.current.currentTime = 0)}
               disabled={currentIndex <= 0 && !audioRef.current}
-              className="w-9 h-9 rounded-full bg-background flex items-center justify-center text-foreground/60 hover:text-foreground hover:bg-accent disabled:opacity-30 transition-all"
+              className="w-9 h-9 rounded-full bg-background flex items-center justify-center text-black/60 hover:text-black hover:bg-accent disabled:opacity-30 transition-all"
             >
               <SkipBack className="w-4 h-4" />
             </button>
@@ -246,13 +246,13 @@ function InlineNarrationPlayer({
             <button
               onClick={() => currentIndex < segments.length - 1 && playSegment(currentIndex + 1)}
               disabled={currentIndex >= segments.length - 1}
-              className="w-9 h-9 rounded-full bg-background flex items-center justify-center text-foreground/60 hover:text-foreground hover:bg-accent disabled:opacity-30 transition-all"
+              className="w-9 h-9 rounded-full bg-background flex items-center justify-center text-black/60 hover:text-black hover:bg-accent disabled:opacity-30 transition-all"
             >
               <SkipForward className="w-4 h-4" />
             </button>
           </div>
 
-          <button onClick={onClose} className="w-9 h-9 rounded-full bg-background flex items-center justify-center text-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-all">
+          <button onClick={onClose} className="w-9 h-9 rounded-full bg-background flex items-center justify-center text-black/60 hover:text-destructive hover:bg-destructive/10 transition-all">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -361,7 +361,7 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
       <div className="p-4 space-y-4">
         <button
           onClick={() => { setSelectedStory(null); setShowFullText(false); setInlineNarration(false); abortRef.current?.abort(); audioQueue.stopAll(); }}
-          className="flex items-center gap-2 text-sm font-semibold text-foreground/70 hover:text-foreground transition-colors"
+          className="flex items-center gap-2 text-sm font-semibold text-black/70 hover:text-black transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           {selectedCategory || "Bibliothèque"}
@@ -374,12 +374,12 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
               <div className="flex items-start gap-3 flex-1 min-w-0">
                 <span className="text-4xl flex-shrink-0">{meta.emoji}</span>
                 <div className="min-w-0">
-                  <h3 className="text-xl font-extrabold text-foreground leading-tight">{selectedStory.title}</h3>
+                  <h3 className="text-xl font-extrabold text-black leading-tight">{selectedStory.title}</h3>
                   <div className="flex items-center gap-2.5 mt-2">
-                    <span className="text-xs px-2.5 py-0.5 bg-foreground/8 text-foreground/80 rounded-full font-bold">
+                    <span className="text-xs px-2.5 py-0.5 bg-foreground/8 text-black/80 rounded-full font-bold">
                       {selectedStory.category}
                     </span>
-                    <span className="text-xs text-foreground/60 flex items-center gap-1 font-medium">
+                    <span className="text-xs text-black/60 flex items-center gap-1 font-medium">
                       <Clock className="w-3.5 h-3.5" />
                       {DURATION_LABELS[selectedStory.duration] || selectedStory.duration}
                     </span>
@@ -389,7 +389,7 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
               <button
                 onClick={() => toggleFavorite(selectedStory.id)}
                 className={`w-11 h-11 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
-                  selectedStory.is_favorite ? "bg-red-500/15 text-red-500" : "bg-foreground/5 text-foreground/40 hover:text-red-400"
+                  selectedStory.is_favorite ? "bg-red-500/15 text-red-500" : "bg-foreground/5 text-black/40 hover:text-red-400"
                 }`}
               >
                 <Heart className={`w-5 h-5 ${selectedStory.is_favorite ? "fill-current" : ""}`} />
@@ -402,16 +402,16 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
             {selectedStory.mood && (
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-primary" />
-                <span className="text-sm text-foreground/70 font-medium">{selectedStory.mood}</span>
+                <span className="text-sm text-black/70 font-medium">{selectedStory.mood}</span>
               </div>
             )}
             {selectedStory.summary && (
               <div>
-                <h4 className="text-sm font-bold text-foreground mb-1.5">Résumé</h4>
-                <p className="text-sm text-foreground/70 leading-relaxed">{selectedStory.summary}</p>
+                <h4 className="text-sm font-bold text-black mb-1.5">Résumé</h4>
+                <p className="text-sm text-black/70 leading-relaxed">{selectedStory.summary}</p>
               </div>
             )}
-            <div className="flex items-center gap-4 text-xs text-foreground/50 font-medium pt-1">
+            <div className="flex items-center gap-4 text-xs text-black/50 font-medium pt-1">
               <span className="flex items-center gap-1">👤 {selectedStory.age_min}-{selectedStory.age_max} ans</span>
               {selectedStory.interactive && <span className="flex items-center gap-1">🎮 Interactive</span>}
               {downloadedIds.has(selectedStory.id) && (
@@ -486,12 +486,12 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
         {showFullText && (
           <div className="bg-card rounded-2xl p-5 border border-border">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-base font-bold text-foreground">Texte complet</h4>
-              <button onClick={() => setShowFullText(false)} className="text-muted-foreground hover:text-foreground">
+              <h4 className="text-base font-bold text-black">Texte complet</h4>
+              <button onClick={() => setShowFullText(false)} className="text-muted-foreground hover:text-black">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line max-h-[50vh] overflow-y-auto">
+            <div className="text-sm text-black/80 leading-relaxed whitespace-pre-line max-h-[50vh] overflow-y-auto">
               {personalized}
             </div>
           </div>
@@ -509,7 +509,7 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
       <div className="p-4 space-y-4">
         <button
           onClick={() => setSelectedCategory(null)}
-          className="flex items-center gap-2 text-sm font-semibold text-foreground/70 hover:text-foreground transition-colors"
+          className="flex items-center gap-2 text-sm font-semibold text-black/70 hover:text-black transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Bibliothèque
@@ -519,8 +519,8 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
           <div className="flex items-center gap-3">
             <span className="text-4xl">{meta.emoji}</span>
             <div>
-              <h3 className="text-xl font-extrabold text-foreground">{selectedCategory}</h3>
-              <p className="text-sm text-foreground/60 font-medium">
+              <h3 className="text-xl font-extrabold text-black">{selectedCategory}</h3>
+              <p className="text-sm text-black/60 font-medium">
                 {catStories.length > 0 ? `${catStories.length} histoire${catStories.length > 1 ? "s" : ""}` : "Bientôt disponible"}
               </p>
             </div>
@@ -530,8 +530,8 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
         {catStories.length === 0 ? (
           <div className="text-center py-12">
             <span className="text-5xl block mb-4">{meta.emoji}</span>
-            <p className="text-base font-bold text-foreground">Bientôt disponible !</p>
-            <p className="text-sm text-foreground/50 mt-1">De nouvelles histoires arrivent très bientôt ✨</p>
+            <p className="text-base font-bold text-black">Bientôt disponible !</p>
+            <p className="text-sm text-black/50 mt-1">De nouvelles histoires arrivent très bientôt ✨</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
@@ -543,13 +543,13 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
               >
                 <div>
                   <span className="text-2xl block mb-2">{meta.emoji}</span>
-                  <h4 className="text-sm font-bold text-foreground leading-tight line-clamp-2">{story.title}</h4>
+                  <h4 className="text-sm font-bold text-black leading-tight line-clamp-2">{story.title}</h4>
                   {story.mood && (
-                    <p className="text-xs text-foreground/50 mt-1 line-clamp-1">{story.mood}</p>
+                    <p className="text-xs text-black/50 mt-1 line-clamp-1">{story.mood}</p>
                   )}
                 </div>
                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-foreground/50 flex items-center gap-1">
+                  <span className="text-xs text-black/50 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {DURATION_LABELS[story.duration] || story.duration}
                   </span>
@@ -560,7 +560,7 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
                       <button
                         onClick={(e) => downloadStory(story, e)}
                         disabled={downloadingId === story.id}
-                        className="w-7 h-7 rounded-full flex items-center justify-center transition-all text-foreground/30 group-hover:text-primary"
+                        className="w-7 h-7 rounded-full flex items-center justify-center transition-all text-black/30 group-hover:text-primary"
                       >
                         {downloadingId === story.id
                           ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -570,7 +570,7 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleFavorite(story.id); }}
                       className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-                        story.is_favorite ? "text-red-500" : "text-foreground/25 group-hover:text-red-300"
+                        story.is_favorite ? "text-red-500" : "text-black/25 group-hover:text-red-300"
                       }`}
                     >
                       <Heart className={`w-3.5 h-3.5 ${story.is_favorite ? "fill-current" : ""}`} />
@@ -595,8 +595,8 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
       ) : stories.length === 0 ? (
         <div className="text-center py-16">
           <BookOpen className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-base text-foreground/60 font-semibold">Aucune histoire disponible</p>
-          <p className="text-sm text-foreground/40 mt-1">Les histoires seront ajoutées bientôt !</p>
+          <p className="text-base text-black/60 font-semibold">Aucune histoire disponible</p>
+          <p className="text-sm text-black/40 mt-1">Les histoires seront ajoutées bientôt !</p>
         </div>
       ) : (
         <>
@@ -604,7 +604,7 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Heart className="w-4 h-4 text-red-500" />
-                <h3 className="text-sm font-bold text-foreground">Favoris</h3>
+                <h3 className="text-sm font-bold text-black">Favoris</h3>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {favorites.map(story => {
@@ -617,8 +617,8 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
                     >
                       <Heart className="w-3.5 h-3.5 text-red-500 fill-current absolute top-3 right-3" />
                       <span className="text-2xl block mb-2">{meta.emoji}</span>
-                      <h4 className="text-sm font-bold text-foreground leading-tight line-clamp-2">{story.title}</h4>
-                      <span className="text-xs text-foreground/50 flex items-center gap-1 mt-1.5">
+                      <h4 className="text-sm font-bold text-black leading-tight line-clamp-2">{story.title}</h4>
+                      <span className="text-xs text-black/50 flex items-center gap-1 mt-1.5">
                         <Clock className="w-3 h-3" />
                         {DURATION_LABELS[story.duration] || story.duration}
                       </span>
@@ -632,7 +632,7 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
           <div>
             <div className="flex items-center gap-2 mb-3">
               <BookOpen className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-bold text-foreground">Catégories</h3>
+              <h3 className="text-sm font-bold text-black">Catégories</h3>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {ALL_CATEGORIES.map(category => {
@@ -647,8 +647,8 @@ export default function StoryLibrary({ childName, voiceProfile = "female" }: Sto
                   >
                     <span className="text-4xl block">{meta.emoji}</span>
                     <div>
-                      <h3 className="text-base font-bold text-foreground">{category}</h3>
-                      <p className="text-xs text-foreground/50 mt-0.5 font-medium">
+                      <h3 className="text-base font-bold text-black">{category}</h3>
+                      <p className="text-xs text-black/50 mt-0.5 font-medium">
                         {isEmpty ? "Bientôt disponible ✨" : `${catStories.length} histoire${catStories.length > 1 ? "s" : ""}`}
                       </p>
                     </div>

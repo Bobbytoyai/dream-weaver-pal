@@ -244,8 +244,8 @@ export default function StoryNarrationPlayer({
                 i === currentIndex
                   ? "text-[hsl(var(--primary))] font-bold scale-[1.02]"
                   : seg.status === "done"
-                  ? "text-foreground/50"
-                  : "text-foreground/30"
+                  ? "text-black/50"
+                  : "text-black/30"
               }`}
               onClick={() => playSegment(i)}
             >
@@ -293,7 +293,7 @@ export default function StoryNarrationPlayer({
         <button
           onClick={skipBack}
           disabled={currentIndex <= 0}
-          className="w-10 h-10 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center text-foreground/70 hover:bg-white/70 hover:text-foreground disabled:opacity-30 transition-all"
+          className="w-10 h-10 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center text-black/70 hover:bg-white/70 hover:text-black disabled:opacity-30 transition-all"
         >
           <SkipBack className="w-4 h-4" />
         </button>
@@ -312,7 +312,7 @@ export default function StoryNarrationPlayer({
         <button
           onClick={skipForward}
           disabled={currentIndex >= segments.length - 1}
-          className="w-10 h-10 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center text-foreground/70 hover:bg-white/70 hover:text-foreground disabled:opacity-30 transition-all"
+          className="w-10 h-10 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center text-black/70 hover:bg-white/70 hover:text-black disabled:opacity-30 transition-all"
         >
           <SkipForward className="w-4 h-4" />
         </button>

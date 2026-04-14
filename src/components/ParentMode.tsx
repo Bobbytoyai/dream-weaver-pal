@@ -246,7 +246,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
           <ArrowLeft className="w-4.5 h-4.5" />
         </button>
         <div className="flex-1">
-          <h2 className="text-lg font-black text-foreground uppercase tracking-tight">
+          <h2 className="text-lg font-black text-black uppercase tracking-tight">
             {activeTab === "home" ? "BOBBY" : (tabs.find(t => t.id === activeTab)?.label || "BOBBY").toUpperCase()}
           </h2>
           <p className="text-[11px] text-muted-foreground font-bold">

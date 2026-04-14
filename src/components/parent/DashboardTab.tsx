@@ -191,7 +191,7 @@ const DashboardTab = ({
       <div className="animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         <div className="flex items-center gap-2.5 mb-3">
           <span className="text-xl">📊</span>
-          <h3 className="text-[17px] font-black text-foreground uppercase">Statistiques</h3>
+          <h3 className="text-[17px] font-black text-black uppercase">Statistiques</h3>
         </div>
         <div className="grid grid-cols-3 gap-3">
           {[
@@ -224,13 +224,13 @@ const DashboardTab = ({
         <div className="retro-card retro-card-tilt-2 p-5" style={{ backgroundColor: 'var(--retro-yellow)' }}>
           <div className="flex items-center gap-2.5 mb-3">
             <span className="text-2xl">✨</span>
-            <h3 className="text-[17px] font-black text-foreground uppercase">Recommandations</h3>
+            <h3 className="text-[17px] font-black text-black uppercase">Recommandations</h3>
           </div>
           <div className="space-y-2">
             {parentRecommendations.map((rec, i) => (
               <div key={i} className="flex items-start gap-3 p-3 border-2 border-black bg-white">
                 <span className="text-xl mt-0.5">{rec.emoji}</span>
-                <p className="text-[14px] text-foreground/80 leading-relaxed font-bold">{rec.text}</p>
+                <p className="text-[14px] text-black/80 leading-relaxed font-bold">{rec.text}</p>
               </div>
             ))}
           </div>
@@ -270,7 +270,7 @@ const DashboardTab = ({
           <div className="retro-card retro-card-tilt-3 p-4" style={{ backgroundColor: 'var(--retro-blue)' }}>
             <div className="flex items-center gap-2.5 mb-2">
               <span className="text-2xl">🎯</span>
-              <h3 className="text-[17px] font-black text-foreground uppercase">Intérêts de {displayName}</h3>
+              <h3 className="text-[17px] font-black text-black uppercase">Intérêts de {displayName}</h3>
             </div>
             <ResponsiveContainer width="100%" height={200}>
               <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="65%">
@@ -289,29 +289,29 @@ const DashboardTab = ({
         <div className="retro-card p-3 border-4 border-black" style={{ backgroundColor: 'var(--retro-red)' }}>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🛡️</span>
-            <h3 className="text-[14px] font-black text-foreground uppercase">Alertes Sécurité</h3>
-            <span className="ml-auto text-[9px] px-2 py-0.5 border-2 border-black bg-white text-foreground font-black">{safetyAlerts.length}</span>
+            <h3 className="text-[14px] font-black text-black uppercase">Alertes Sécurité</h3>
+            <span className="ml-auto text-[9px] px-2 py-0.5 border-2 border-black bg-white text-black font-black">{safetyAlerts.length}</span>
           </div>
           <div className="space-y-1.5 max-h-40 overflow-y-auto">
             {safetyAlerts.slice(0, 10).map((alert, i) => (
               <div key={i} className="flex items-start gap-2 p-2 border-2 border-black bg-white">
                 <span className="text-sm mt-0.5">{alert.severity === "CRITICAL" ? "🔴" : "🟡"}</span>
                 <div className="flex-1 min-w-0">
-                  <span className="text-[10px] font-black text-foreground">{alert.category.replace(/_/g, " ")}</span>
-                  <p className="text-[10px] text-foreground/70 font-bold">«{alert.keyword}»</p>
+                  <span className="text-[10px] font-black text-black">{alert.category.replace(/_/g, " ")}</span>
+                  <p className="text-[10px] text-black/70 font-bold">«{alert.keyword}»</p>
                 </div>
               </div>
             ))}
           </div>
           <div className="flex gap-2 mt-2">
-            <button onClick={clearSafetyAlerts} className="flex-1 text-[10px] font-black py-1.5 border-2 border-black bg-white text-foreground uppercase">Effacer</button>
+            <button onClick={clearSafetyAlerts} className="flex-1 text-[10px] font-black py-1.5 border-2 border-black bg-white text-black uppercase">Effacer</button>
             <button onClick={() => setShowSafetyAlerts(false)} className="flex-1 text-[10px] font-black py-1.5 border-2 border-black bg-foreground text-background uppercase">Fermer</button>
           </div>
         </div>
       )}
       {safetyAlerts.length > 0 && !showSafetyAlerts && (
         <button onClick={() => setShowSafetyAlerts(true)}
-          className="w-full flex items-center justify-center gap-2 py-2 border-4 border-black bg-[var(--retro-red)] text-foreground text-[12px] font-black uppercase"
+          className="w-full flex items-center justify-center gap-2 py-2 border-4 border-black bg-[var(--retro-red)] text-black text-[12px] font-black uppercase"
           style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
           🛡️ {safetyAlerts.length} alerte{safetyAlerts.length > 1 ? "s" : ""}
         </button>
@@ -322,14 +322,14 @@ const DashboardTab = ({
         <div className="retro-card p-3" style={{ backgroundColor: 'var(--retro-orange)' }}>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🔔</span>
-            <h3 className="text-[14px] font-black text-foreground uppercase">Alertes</h3>
-            <span className="ml-auto text-[9px] px-2 py-0.5 border-2 border-black bg-white text-foreground font-black">{smartAlerts.length}</span>
+            <h3 className="text-[14px] font-black text-black uppercase">Alertes</h3>
+            <span className="ml-auto text-[9px] px-2 py-0.5 border-2 border-black bg-white text-black font-black">{smartAlerts.length}</span>
           </div>
           <div className="space-y-1.5">
             {smartAlerts.map((alert, i) => (
               <div key={i} className="flex items-start gap-2 p-2 border-2 border-black bg-white">
                 <span className="text-sm">{alert.severity === "critical" ? "🔴" : "🟡"}</span>
-                <p className="text-[12px] text-foreground leading-relaxed font-bold">{alert.message}</p>
+                <p className="text-[12px] text-black leading-relaxed font-bold">{alert.message}</p>
               </div>
             ))}
           </div>
@@ -341,7 +341,7 @@ const DashboardTab = ({
         <div className="retro-card retro-card-tilt-4 p-3" style={{ backgroundColor: 'var(--retro-green)' }}>
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🧠</span>
-            <h3 className="text-[15px] font-black text-foreground uppercase">Développement</h3>
+            <h3 className="text-[15px] font-black text-black uppercase">Développement</h3>
           </div>
           <div className="grid grid-cols-3 gap-2 mb-2">
             <ScoreGauge label="Sociabilité" score={avgScores.sociability} emoji="🤝" color="hsl(var(--foreground))" size="lg" />
@@ -350,7 +350,7 @@ const DashboardTab = ({
           </div>
           <div className="grid grid-cols-2 gap-2 pt-2 border-t-2 border-black/15">
             <div>
-              <p className="text-[11px] text-foreground/60 font-black mb-1 uppercase">Engagement</p>
+              <p className="text-[11px] text-black/60 font-black mb-1 uppercase">Engagement</p>
               <div className="flex gap-0.5 h-3 overflow-hidden border border-black">
                 {recentAnalyses.length > 0 ? (
                   <>
@@ -361,13 +361,13 @@ const DashboardTab = ({
                 ) : <div className="bg-white w-full" />}
               </div>
               <div className="flex justify-between mt-0.5">
-                <span className="text-[9px] text-foreground/60 font-black">🔥{engagementDist.high}</span>
-                <span className="text-[9px] text-foreground/60 font-black">👍{engagementDist.medium}</span>
-                <span className="text-[9px] text-foreground/60 font-black">💤{engagementDist.low}</span>
+                <span className="text-[9px] text-black/60 font-black">🔥{engagementDist.high}</span>
+                <span className="text-[9px] text-black/60 font-black">👍{engagementDist.medium}</span>
+                <span className="text-[9px] text-black/60 font-black">💤{engagementDist.low}</span>
               </div>
             </div>
             <div>
-              <p className="text-[11px] text-foreground/60 font-black mb-1 uppercase">Humeur</p>
+              <p className="text-[11px] text-black/60 font-black mb-1 uppercase">Humeur</p>
               <div className="flex gap-0.5 h-3 overflow-hidden border border-black">
                 {recentAnalyses.length > 0 ? (
                   <>
@@ -378,9 +378,9 @@ const DashboardTab = ({
                 ) : <div className="bg-white w-full" />}
               </div>
               <div className="flex justify-between mt-0.5">
-                <span className="text-[9px] text-foreground/60 font-black">🟢{moodDist.positive}</span>
-                <span className="text-[9px] text-foreground/60 font-black">🟡{moodDist.neutral}</span>
-                <span className="text-[9px] text-foreground/60 font-black">🔴{moodDist.low}</span>
+                <span className="text-[9px] text-black/60 font-black">🟢{moodDist.positive}</span>
+                <span className="text-[9px] text-black/60 font-black">🟡{moodDist.neutral}</span>
+                <span className="text-[9px] text-black/60 font-black">🔴{moodDist.low}</span>
               </div>
             </div>
           </div>
@@ -392,7 +392,7 @@ const DashboardTab = ({
         <div className="retro-card retro-card-tilt-5 p-3">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">💖</span>
-            <h3 className="text-[15px] font-black text-foreground uppercase">Émotions</h3>
+            <h3 className="text-[15px] font-black text-black uppercase">Émotions</h3>
           </div>
           <div className="grid grid-cols-3 gap-2">
             {Object.entries(avgEmotions).filter(([, v]) => v > 0).sort(([, a], [, b]) => b - a).slice(0, 6).map(([key, value], ei) => {
@@ -401,8 +401,8 @@ const DashboardTab = ({
               return (
                 <div key={key} className="border-2 border-black p-2 text-center" style={{ backgroundColor: retroBgs[ei % retroBgs.length] }}>
                   <span className="text-[20px] block">{info.emoji}</span>
-                  <p className="text-[16px] font-black text-foreground leading-tight">{value}%</p>
-                  <p className="text-[9px] text-foreground/60 font-black uppercase">{info.label}</p>
+                  <p className="text-[16px] font-black text-black leading-tight">{value}%</p>
+                  <p className="text-[9px] text-black/60 font-black uppercase">{info.label}</p>
                 </div>
               );
             })}
@@ -415,7 +415,7 @@ const DashboardTab = ({
         <div className="retro-card retro-card-tilt-6 p-5">
           <div className="flex items-center gap-2.5 mb-3">
             <span className="text-2xl">📈</span>
-            <h3 className="text-[17px] font-black text-foreground uppercase">Évolution (7j)</h3>
+            <h3 className="text-[17px] font-black text-black uppercase">Évolution (7j)</h3>
           </div>
           <div className="w-full h-44">
             <ResponsiveContainer width="100%" height="100%">
@@ -431,13 +431,13 @@ const DashboardTab = ({
                     if (!dataPoint?.hasData) return null;
                     return (
                       <div className="border-2 border-black bg-white p-2" style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
-                        <p className="text-[10px] font-black text-foreground mb-1">{label}</p>
+                        <p className="text-[10px] font-black text-black mb-1">{label}</p>
                         {payload.filter(p => p.dataKey !== "hasData" && (p.value as number) > 0).sort((a, b) => (b.value as number) - (a.value as number)).map(p => {
                           const cfg = emotionConfig[p.name as string] || { emoji: "❓", color: "#888" };
                           return (
                             <div key={p.name} className="flex items-center gap-1 py-0.5">
                               <span className="text-[9px]">{cfg.emoji}</span>
-                              <span className="text-[9px] text-foreground flex-1 font-bold">{p.name}</span>
+                              <span className="text-[9px] text-black flex-1 font-bold">{p.name}</span>
                               <span className="text-[10px] font-black" style={{ color: cfg.color }}>{p.value}%</span>
                             </div>
                           );
@@ -455,7 +455,7 @@ const DashboardTab = ({
           </div>
           <div className="flex flex-wrap gap-2 mt-1">
             {Object.entries(emotionConfig).slice(0, 4).map(([label, cfg]) => (
-              <span key={label} className="flex items-center gap-1 text-[9px] text-foreground/60 font-black">
+              <span key={label} className="flex items-center gap-1 text-[9px] text-black/60 font-black">
                 <span className="w-2 h-2" style={{ backgroundColor: cfg.color }} /> {cfg.emoji} {label}
               </span>
             ))}
@@ -468,7 +468,7 @@ const DashboardTab = ({
         <div className="retro-card retro-card-tilt-1 p-3">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">⏱️</span>
-            <h3 className="text-[14px] font-black text-foreground uppercase">Temps (7j)</h3>
+            <h3 className="text-[14px] font-black text-black uppercase">Temps (7j)</h3>
           </div>
           <div className="w-full h-36">
             <ResponsiveContainer width="100%" height="100%">
@@ -489,8 +489,8 @@ const DashboardTab = ({
         <div className="retro-card retro-card-tilt-2 p-3">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🕐</span>
-            <h3 className="text-[14px] font-black text-foreground uppercase">Dernière session</h3>
-            <span className="ml-auto text-[9px] text-foreground/60 font-black">{formatDate(lastSession.started_at)}</span>
+            <h3 className="text-[14px] font-black text-black uppercase">Dernière session</h3>
+            <span className="ml-auto text-[9px] text-black/60 font-black">{formatDate(lastSession.started_at)}</span>
           </div>
           <div className="grid grid-cols-3 gap-2 mb-2">
             {[
@@ -499,14 +499,14 @@ const DashboardTab = ({
               { v: lastAnalysis ? (lastAnalysis.engagement_level === "high" ? "🔥" : "👍") : "—", l: "engagement" },
             ].map(s => (
               <div key={s.l} className="text-center p-2 border-2 border-black bg-white">
-                <p className="text-[14px] font-black text-foreground">{s.v}</p>
-                <p className="text-[8px] text-foreground/60 font-black uppercase">{s.l}</p>
+                <p className="text-[14px] font-black text-black">{s.v}</p>
+                <p className="text-[8px] text-black/60 font-black uppercase">{s.l}</p>
               </div>
             ))}
           </div>
           {lastAnalysis?.summary && (
             <div className="border-2 border-black bg-[var(--retro-yellow)] p-2">
-              <p className="text-[11px] text-foreground/70 leading-relaxed font-bold">
+              <p className="text-[11px] text-black/70 leading-relaxed font-bold">
                 {(() => { const s = humanizeSummary(lastAnalysis.summary).match(/[^.!?]+[.!?]+/g); return s ? s.slice(0, 2).join(" ").trim() : humanizeSummary(lastAnalysis.summary); })()}
               </p>
             </div>
@@ -518,8 +518,8 @@ const DashboardTab = ({
       {!hasData && (
         <div className="retro-card p-6 text-center">
           <span className="text-5xl block mb-2">🎙️</span>
-          <h3 className="text-lg font-black text-foreground mb-1 uppercase">Pas encore de sessions</h3>
-          <p className="text-[12px] text-foreground/60 font-bold">Les métriques apparaîtront après la première conversation de {displayName} avec Bobby.</p>
+          <h3 className="text-lg font-black text-black mb-1 uppercase">Pas encore de sessions</h3>
+          <p className="text-[12px] text-black/60 font-bold">Les métriques apparaîtront après la première conversation de {displayName} avec Bobby.</p>
         </div>
       )}
     </div>

@@ -52,7 +52,7 @@ const SessionAnalysisCards = ({ analysis }: SessionAnalysisCardsProps) => (
       <div className="retro-card p-5">
         <div className="flex items-center gap-2.5 mb-4">
           <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">💛</span></div>
-          <h3 className="text-[16px] font-black text-foreground uppercase">Émotions</h3>
+          <h3 className="text-[16px] font-black text-black uppercase">Émotions</h3>
         </div>
         <div className="flex flex-wrap gap-2.5">
           {Object.entries(analysis.emotions).filter(([, v]) => (v as number) > 0).sort(([, a], [, b]) => (b as number) - (a as number)).map(([key, value]) => {
@@ -100,11 +100,11 @@ const SessionAnalysisCards = ({ analysis }: SessionAnalysisCardsProps) => (
       <div className="retro-card p-5">
         <div className="flex items-center gap-2.5 mb-4">
           <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">🔎</span></div>
-          <h3 className="text-[16px] font-black text-foreground uppercase">Observations</h3>
+          <h3 className="text-[16px] font-black text-black uppercase">Observations</h3>
         </div>
         <ul className="space-y-3">
           {analysis.behavior_insights.map((insight, i) => (
-            <li key={i} className="text-[14px] text-foreground flex items-start gap-3 leading-relaxed font-bold">
+            <li key={i} className="text-[14px] text-black flex items-start gap-3 leading-relaxed font-bold">
               <span className="w-2 h-2 bg-black mt-2 shrink-0" />{insight}
             </li>
           ))}

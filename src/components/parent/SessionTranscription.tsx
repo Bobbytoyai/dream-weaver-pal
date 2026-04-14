@@ -79,8 +79,8 @@ const SessionTranscription = ({
         <div className="retro-card p-5">
           <div className="flex items-center gap-2.5 mb-4">
             <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">📖</span></div>
-            <h3 className="text-[16px] font-black text-foreground uppercase">Transcription</h3>
-            <span className="ml-auto text-[12px] text-foreground/60 font-black bg-white px-2.5 py-1 border-2 border-black">{sessionMessages.length} msgs</span>
+            <h3 className="text-[16px] font-black text-black uppercase">Transcription</h3>
+            <span className="ml-auto text-[12px] text-black/60 font-black bg-white px-2.5 py-1 border-2 border-black">{sessionMessages.length} msgs</span>
           </div>
           <div className="max-h-[500px] overflow-y-auto space-y-3 py-1">
             {sessionMessages.map((msg, i) => {
@@ -93,18 +93,18 @@ const SessionTranscription = ({
                   <div className={`max-w-[82%] relative group ${isActive ? "scale-[1.02]" : ""} transition-transform duration-200`}>
                     <div className={`px-4 py-3 border-2 border-black ${isChild ? "bg-white" : "bg-[var(--retro-blue)]"} ${isActive ? "ring-2 ring-foreground/30" : ""}`}
                       style={{ boxShadow: "2px 2px 0px rgba(0,0,0,0.15)" }}>
-                      <p className="text-[14px] text-foreground leading-[1.5] font-bold">{msg.content}</p>
+                      <p className="text-[14px] text-black leading-[1.5] font-bold">{msg.content}</p>
                     </div>
                     <div className={`flex items-center gap-2 mt-1.5 px-1.5 ${isChild ? "" : "justify-end"}`}>
-                      <span className="text-[11px] text-foreground/50 font-black">{isChild ? `👦 ${displayName}` : "🤖 Bobby"}</span>
-                      <span className="text-[10px] text-foreground/40 font-bold">{time}</span>
+                      <span className="text-[11px] text-black/50 font-black">{isChild ? `👦 ${displayName}` : "🤖 Bobby"}</span>
+                      <span className="text-[10px] text-black/40 font-bold">{time}</span>
                       {msg.detected_emotion && (
                         <span className="text-[10px] px-2 py-0.5 border border-black bg-white font-black">
                           {emotionLabels[msg.detected_emotion]?.emoji}
                         </span>
                       )}
                       <button onClick={() => speakMessage(msg.content)}
-                        className="opacity-0 group-hover:opacity-100 w-7 h-7 border border-black flex items-center justify-center text-foreground/60 hover:bg-[var(--retro-yellow)] transition-all">
+                        className="opacity-0 group-hover:opacity-100 w-7 h-7 border border-black flex items-center justify-center text-black/60 hover:bg-[var(--retro-yellow)] transition-all">
                         {isTtsSpeaking ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                       </button>
                     </div>
@@ -121,7 +121,7 @@ const SessionTranscription = ({
         <div className="retro-card p-5">
           <div className="flex items-center gap-2.5 mb-3">
             <div className="w-8 h-8 bg-black flex items-center justify-center"><span className="text-white text-sm">📈</span></div>
-            <h3 className="text-[16px] font-black text-foreground uppercase">Timeline émotionnelle</h3>
+            <h3 className="text-[16px] font-black text-black uppercase">Timeline émotionnelle</h3>
           </div>
           <div className="flex items-center gap-1 overflow-x-auto pb-2">
             {sessionMessages.map((msg, i) => {
@@ -136,7 +136,7 @@ const SessionTranscription = ({
                 <button key={i} onClick={() => onJumpToMoment(i)}
                   className="flex flex-col items-center px-1.5 py-1.5 border border-black hover:bg-[var(--retro-yellow)] transition-all min-w-[36px]">
                   <span className="text-base">{emo.emoji}</span>
-                  <span className="text-[9px] text-foreground/60 font-mono font-black">{timeStr}</span>
+                  <span className="text-[9px] text-black/60 font-mono font-black">{timeStr}</span>
                 </button>
               );
             })}

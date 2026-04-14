@@ -121,7 +121,7 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
               })}
               <HologramFace voiceState="idle" enableCamera={false} />
             </div>
-            <h1 className="text-4xl font-extrabold text-foreground mb-2 tracking-tight animate-fadeInUp">
+            <h1 className="text-4xl font-extrabold text-black mb-2 tracking-tight animate-fadeInUp">
               Salut ! <span className="inline-block animate-wave">👋</span>
             </h1>
             <p className="text-muted-foreground text-lg mb-1 font-semibold animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
@@ -147,7 +147,7 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
             <div className="w-20 h-20 mb-5 relative animate-fadeInUp">
               <HologramFace voiceState="listening" enableCamera={false} emotionOverride={nameEmotion === "idle" ? undefined : nameEmotion} />
             </div>
-            <h2 className="text-3xl font-extrabold text-foreground mb-2 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
+            <h2 className="text-3xl font-extrabold text-black mb-2 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
               Comment tu t'appelles ?
             </h2>
             <p className="text-muted-foreground text-sm mb-6 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
@@ -162,7 +162,7 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
               }}
               placeholder="Ton prénom..."
               autoFocus
-              className="animate-fadeInUp w-full rounded-2xl border-2 border-border bg-[hsl(var(--muted))]/30 backdrop-blur-sm px-6 py-4 text-lg text-center font-bold text-foreground placeholder:text-muted-foreground/40 focus:border-[hsl(var(--primary))] focus:bg-[hsl(var(--muted))]/50 focus:outline-none focus:ring-2 focus:ring-[hsla(200,100%,60%,0.3)] transition-all"
+              className="animate-fadeInUp w-full rounded-2xl border-2 border-border bg-[hsl(var(--muted))]/30 backdrop-blur-sm px-6 py-4 text-lg text-center font-bold text-black placeholder:text-muted-foreground/40 focus:border-[hsl(var(--primary))] focus:bg-[hsl(var(--muted))]/50 focus:outline-none focus:ring-2 focus:ring-[hsla(200,100%,60%,0.3)] transition-all"
               style={{ animationDelay: "0.15s" }}
               onKeyDown={(e) => { if (e.key === "Enter" && name.trim().length >= 2) goStep(2); }}
             />
@@ -183,7 +183,7 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
             <div className="w-20 h-20 mb-5 relative animate-fadeInUp">
               <HologramFace voiceState="idle" enableCamera={false} emotionOverride={ageEmotion === "idle" ? undefined : ageEmotion} />
             </div>
-            <h2 className="text-3xl font-extrabold text-foreground mb-2 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
+            <h2 className="text-3xl font-extrabold text-black mb-2 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
               Tu as quel âge, {name.trim()} ?
             </h2>
             <p className="text-muted-foreground text-sm mb-5 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
@@ -202,7 +202,7 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
                   className={`animate-fadeInUp relative rounded-2xl py-3 text-xl font-extrabold transition-all duration-300 ${
                     age === a
                       ? "bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--secondary))] text-[hsl(var(--primary-foreground))] scale-110 shadow-lg shadow-[hsla(215,85%,58%,0.35)]"
-                      : "bg-[hsl(var(--muted))]/50 text-muted-foreground border border-border hover:border-[hsl(var(--primary))]/50 hover:bg-[hsl(var(--muted))] hover:text-foreground hover:scale-105"
+                      : "bg-[hsl(var(--muted))]/50 text-muted-foreground border border-border hover:border-[hsl(var(--primary))]/50 hover:bg-[hsl(var(--muted))] hover:text-black hover:scale-105"
                   }`}
                   style={{ animationDelay: `${0.12 + idx * 0.04}s` }}
                 >
@@ -248,7 +248,7 @@ const OnboardingScreen = ({ onComplete }: OnboardingScreenProps) => {
               <div className="absolute inset-0 rounded-full bg-[hsla(145,65%,50%,0.15)] blur-3xl scale-[2] animate-pulse" />
               <HologramFace voiceState="speaking" enableCamera={false} />
             </div>
-            <h2 className="text-3xl font-extrabold text-foreground mb-3 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
+            <h2 className="text-3xl font-extrabold text-black mb-3 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
               Super, {name.trim()} ! 🌟
             </h2>
             <p className="text-muted-foreground text-base mb-6 animate-fadeInUp" style={{ animationDelay: "0.2s" }}>

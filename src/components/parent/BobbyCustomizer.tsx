@@ -164,12 +164,12 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
       {/* Header */}
       <div className="flex items-center justify-between">
         <button onClick={onBack}
-          className="flex items-center gap-1 text-[13px] font-black uppercase text-foreground hover:opacity-70 transition-all border-2 border-black px-3 py-1.5 bg-white">
+          className="flex items-center gap-1 text-[13px] font-black uppercase text-black hover:opacity-70 transition-all border-2 border-black px-3 py-1.5 bg-white">
           <ChevronLeft className="w-4 h-4" /> RETOUR
         </button>
         <button
           onClick={randomizeBobby}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--retro-yellow)] text-foreground text-[12px] font-black uppercase hover:opacity-90 transition-all border-4 border-black"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--retro-yellow)] text-black text-[12px] font-black uppercase hover:opacity-90 transition-all border-4 border-black"
           style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.25)" }}
         >
           <Shuffle className="w-3.5 h-3.5" /> ALÉATOIRE
@@ -191,7 +191,7 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
           />
         </div>
         {activeEmotion && (
-          <div className="absolute top-2 right-2 px-2.5 py-1 border-2 border-black bg-white text-foreground text-[10px] font-black uppercase">
+          <div className="absolute top-2 right-2 px-2.5 py-1 border-2 border-black bg-white text-black text-[10px] font-black uppercase">
             {EMOTION_BUTTONS.find(e => e.face === activeEmotion)?.emoji}{" "}
             {EMOTION_BUTTONS.find(e => e.face === activeEmotion)?.label}
           </div>
@@ -205,8 +205,8 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
           className="w-full flex items-center justify-between px-3 py-2 border-4 border-black bg-[var(--retro-purple)] hover:opacity-90 transition-all"
           style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}
         >
-          <span className="text-[12px] font-black text-foreground uppercase">🎭 TESTER LES EXPRESSIONS</span>
-          <ChevronDown className={`w-3.5 h-3.5 text-foreground transition-transform duration-200 ${showEmotions ? "rotate-180" : ""}`} />
+          <span className="text-[12px] font-black text-black uppercase">🎭 TESTER LES EXPRESSIONS</span>
+          <ChevronDown className={`w-3.5 h-3.5 text-black transition-transform duration-200 ${showEmotions ? "rotate-180" : ""}`} />
         </button>
 
         {showEmotions && (
@@ -225,7 +225,7 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
                   style={{ boxShadow: isActive ? "3px 3px 0px rgba(0,0,0,0.2)" : "1px 1px 0px rgba(0,0,0,0.1)" }}
                 >
                   <span className="text-[18px] leading-none">{emo.emoji}</span>
-                  <span className={`text-[9px] font-black leading-tight uppercase ${isActive ? "text-foreground" : "text-foreground/60"}`}>
+                  <span className={`text-[9px] font-black leading-tight uppercase ${isActive ? "text-black" : "text-black/60"}`}>
                     {emo.label}
                   </span>
                 </button>
@@ -242,13 +242,13 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
           className="w-full flex items-center justify-between px-3 py-2 border-4 border-black bg-[var(--retro-red)] hover:opacity-90 transition-all"
           style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}
         >
-          <span className="text-[12px] font-black text-foreground uppercase">🚫 ACTIVER / DÉSACTIVER</span>
-          <ChevronDown className={`w-3.5 h-3.5 text-foreground transition-transform duration-200 ${openSection === "expr-toggles" ? "rotate-180" : ""}`} />
+          <span className="text-[12px] font-black text-black uppercase">🚫 ACTIVER / DÉSACTIVER</span>
+          <ChevronDown className={`w-3.5 h-3.5 text-black transition-transform duration-200 ${openSection === "expr-toggles" ? "rotate-180" : ""}`} />
         </button>
 
         {openSection === "expr-toggles" && (
           <div className="mt-2 space-y-1">
-            <p className="text-[9px] text-foreground/60 px-1 mb-1.5 font-bold">Désactivez les expressions que Bobby ne doit jamais utiliser en conversation.</p>
+            <p className="text-[9px] text-black/60 px-1 mb-1.5 font-bold">Désactivez les expressions que Bobby ne doit jamais utiliser en conversation.</p>
             {TOGGLEABLE_EMOTIONS.map((emo) => {
               const emotionKey = FACE_TO_EMOTION[emo.face];
               if (!emotionKey) return null;
@@ -257,7 +257,7 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
                 <div key={emo.face} className="flex items-center justify-between px-3 py-1.5 bg-white border-2 border-black hover:bg-[var(--retro-blue)]/20 transition-all">
                   <div className="flex items-center gap-2">
                     <span className="text-[16px]">{emo.emoji}</span>
-                    <span className="text-[11px] font-black text-foreground uppercase">{emo.label}</span>
+                    <span className="text-[11px] font-black text-black uppercase">{emo.label}</span>
                   </div>
                   <Switch
                     checked={!isDisabled}
@@ -296,7 +296,7 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
                 }}
               >
                 <span className="text-[16px]">{section.emoji}</span>
-                <span className="text-[12px] font-black text-foreground flex-1 text-left uppercase">{section.label}</span>
+                <span className="text-[12px] font-black text-black flex-1 text-left uppercase">{section.label}</span>
                 <div
                   className="w-6 h-6 border-2 border-black shrink-0"
                   style={{
@@ -304,7 +304,7 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
                     ...(isTransparent ? { background: "repeating-conic-gradient(#ddd 0% 25%, transparent 0% 50%) 50% / 8px 8px" } : {}),
                   }}
                 />
-                <ChevronDown className={`w-3.5 h-3.5 text-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                <ChevronDown className={`w-3.5 h-3.5 text-black transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
               </button>
 
               {isOpen && (
@@ -328,7 +328,7 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
                         }}
                         title={c.label}
                       >
-                        {isTrans && <span className="text-[9px] text-foreground/60 font-black">∅</span>}
+                        {isTrans && <span className="text-[9px] text-black/60 font-black">∅</span>}
                       </button>
                     );
                   })}
@@ -343,7 +343,7 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
       <button onClick={onSave}
         className={`w-full py-3 text-[13px] font-black transition-all border-4 border-black uppercase ${
           saved
-            ? "bg-[var(--retro-green)] text-foreground"
+            ? "bg-[var(--retro-green)] text-black"
             : "bg-foreground text-background hover:opacity-90"
         }`}
         style={{ boxShadow: "5px 5px 0px rgba(0,0,0,0.3)" }}>

@@ -34,7 +34,7 @@ export default function InterestsStep({ selectedInterests, onSelect, onNext, chi
       <div className="w-20 h-20 mb-5 relative animate-fadeInUp">
         <HologramFace voiceState="idle" enableCamera={false} emotionOverride={selectedInterests.length >= 3 ? "excited" : selectedInterests.length > 0 ? "happy" : undefined} />
       </div>
-      <h2 className="text-3xl font-extrabold text-foreground mb-2 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
+      <h2 className="text-3xl font-extrabold text-black mb-2 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         Qu'est-ce que tu adores, {childName} ?
       </h2>
       <p className="text-muted-foreground text-sm mb-5 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
@@ -56,7 +56,7 @@ export default function InterestsStep({ selectedInterests, onSelect, onNext, chi
               style={{ animationDelay: `${0.12 + idx * 0.04}s` }}
             >
               <span className={`text-2xl transition-transform duration-300 ${isSelected ? "scale-125" : ""}`}>{item.emoji}</span>
-              <span className={`font-bold text-sm transition-colors ${isSelected ? "text-foreground" : "text-muted-foreground"}`}>
+              <span className={`font-bold text-sm transition-colors ${isSelected ? "text-black" : "text-muted-foreground"}`}>
                 {item.label}
               </span>
             </button>
