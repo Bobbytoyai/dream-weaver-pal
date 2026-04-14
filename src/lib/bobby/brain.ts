@@ -82,6 +82,8 @@ interface BuildBobbyReplyOptions {
   userText?: string;
   pendingNarration?: PendingNarration | null;
   parentSettings?: ParentSettings;
+  userId?: string | null;
+  sessionId?: string | null;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
