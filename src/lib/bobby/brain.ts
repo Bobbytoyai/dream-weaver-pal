@@ -361,7 +361,12 @@ export async function buildBobbyReply({
     return postProcess(confirmReply, childName, childAge, personalityCtx);
   }
 
-  // ── CACHE CHECK (V7: bypass for sensitive cases) ──
+  // ── V7: ORCHESTRATOR — scene management ──
+  const directive = orchestrate(understanding, priority, userText);
+  console.log(
+    `[Brain V7] 🎬 Orchestrator: scene=${directive.scene.type} action=${directive.action} turn=${directive.scene.turnCount}/${directive.scene.maxTurns}${directive.bridgePhrase ? ` bridge="${directive.bridgePhrase.slice(0, 40)}"` : ""}`
+  );
+
   if (!priority.bypassCache) {
     const cached = await getCachedReply(userText);
     if (cached) {
