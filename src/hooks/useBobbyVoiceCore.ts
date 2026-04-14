@@ -23,14 +23,24 @@ import { useSmartSTT } from "./useSmartSTT";
 import { useConversationRecorder } from "./useConversationRecorder";
 
 // ─── Timing constants ────────────────────────────────
-const WAIT_SILENCE_BEFORE_RELANCE_MS = 60_000;   // 60s no voice in LISTENING → relance
-const RELANCE_SILENCE_BEFORE_OFF_MS = 30_000;     // 30s no voice after relance → off
-const CONV_SILENCE_RELANCE_MS = 30_000;            // 30s silence during conversation → relance
-const CONV_SILENCE_OFF_MS = 60_000;                // 60s silence after conv relance → goodbye
-const MIN_SESSION_MS = 90_000;                      // 90s minimum session guarantee
-const SLEEP_TIMER_MS = 120_000;                     // 2min idle → sleep
+const WAIT_SILENCE_BEFORE_RELANCE_MS = 60_000;
+const RELANCE_SILENCE_BEFORE_OFF_MS = 30_000;
+const CONV_SILENCE_RELANCE_MS = 30_000;
+const CONV_SILENCE_OFF_MS = 60_000;
+const MIN_SESSION_MS = 90_000;
+const SLEEP_TIMER_MS = 120_000;
 const ANTI_ECHO_COOLDOWN_MS = 400;
-const UTTERANCE_BUFFER_MS = 7500;                   // 7.5s buffer — let the child finish speaking without interruption
+const UTTERANCE_BUFFER_MS = 7500;
+const ACK_MIN_INTERVAL_MS = 4000;
+const ACK_MAX_INTERVAL_MS = 8000;
+
+// ─── Natural acknowledgment sounds (breathing/hmm) ──────
+const ACK_SOUNDS = [
+  "hmm", "hmm hmm", "ah", "oui", "ah oui", "mmh", "oh", "d'accord", "mh mh",
+];
+function pickAck(): string {
+  return ACK_SOUNDS[Math.floor(Math.random() * ACK_SOUNDS.length)];
+}
 
 const RELANCE_MESSAGES: string[] = [];
 const GOODBYE_MESSAGES: string[] = [];
@@ -62,15 +72,18 @@ function resolveVoiceProfile(parentSettings?: ParentSettings): "child" | "female
   }
 }
 
-async function playGeneratedAudio(audioUrl: string, signal: AbortSignal): Promise<void> {
+async function playGeneratedAudio(audioUrl: string, signal: AbortSignal, volume = 1.0): Promise<void> {
   if (!audioUrl || audioUrl.startsWith("__")) return;
 
   await new Promise<void>((resolve) => {
     const audio = new Audio(audioUrl);
     audio.crossOrigin = "anonymous";
+    audio.volume = Math.max(0, Math.min(1, volume));
 
-    // Emit so HologramFace can connect its analyser for lip sync
-    eventBus.emit({ type: "AUDIO_ELEMENT_CREATED", element: audio });
+    // Only emit for main speech (full volume), not for ack sounds
+    if (volume >= 0.9) {
+      eventBus.emit({ type: "AUDIO_ELEMENT_CREATED", element: audio });
+    }
 
     const cleanup = () => {
       audio.onended = null;
@@ -95,6 +108,19 @@ async function playGeneratedAudio(audioUrl: string, signal: AbortSignal): Promis
 
     audio.play().catch(finish);
   });
+}
+
+/** Play a quiet acknowledgment sound ("hmm", "oui") without interrupting STT */
+async function playAckSound(text: string, voiceProfile: "child" | "female" | "male" | "sister" | "brother") {
+  try {
+    const controller = new AbortController();
+    const audioUrl = await fetchTTSAudio(text, controller.signal, voiceProfile);
+    if (audioUrl && !audioUrl.startsWith("__")) {
+      await playGeneratedAudio(audioUrl, controller.signal, 0.35);
+    }
+  } catch {
+    // Silently ignore ack failures
+  }
 }
 
 export function useBobbyVoiceCore({
@@ -141,6 +167,9 @@ export function useBobbyVoiceCore({
   // Utterance accumulation buffer — don't cut the child mid-sentence
   const utteranceBufferRef = useRef<string[]>([]);
   const utteranceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Natural acknowledgment sounds timer
+  const ackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastAckTimeRef = useRef(0);
 
   const { startSession, addMessage, endSession, sessionIdRef } = useSessionTracker(childName, childAge);
   const { startRecording, stopRecording } = useConversationRecorder();
@@ -348,6 +377,7 @@ export function useBobbyVoiceCore({
     setMicArmed(false);
     setPartialText("");
     utteranceBufferRef.current = [];
+    clearAckTimer();
     if (utteranceTimerRef.current) { clearTimeout(utteranceTimerRef.current); utteranceTimerRef.current = null; }
     setCurrentEmotion("happy");
     voiceDetectedRef.current = false;
@@ -455,6 +485,7 @@ export function useBobbyVoiceCore({
       // Voice detected! Mark session as active conversation
       voiceDetectedRef.current = true;
       clearSilenceTimer();
+      clearAckTimer();
 
       stopSttRef.current();
       setMicArmed(false);
@@ -486,6 +517,27 @@ export function useBobbyVoiceCore({
     }
   }, [addMessage, childAge, childName, clearSilenceTimer, ensureSession, handleSttError, parentSettings, speakReply]);
 
+  // ─── Schedule natural acknowledgment sound ──────────
+  const scheduleAck = useCallback(() => {
+    if (ackTimerRef.current) clearTimeout(ackTimerRef.current);
+    const delay = ACK_MIN_INTERVAL_MS + Math.random() * (ACK_MAX_INTERVAL_MS - ACK_MIN_INTERVAL_MS);
+    ackTimerRef.current = setTimeout(() => {
+      if (machineRef.current !== "LISTENING" || processingRef.current) return;
+      const now = Date.now();
+      if (now - lastAckTimeRef.current < ACK_MIN_INTERVAL_MS) return;
+      lastAckTimeRef.current = now;
+      const ack = pickAck();
+      console.log("[BobbyVoiceCore] 🗣️ Ack:", ack);
+      void playAckSound(ack, resolveVoiceProfile(parentSettings));
+      // Schedule next ack
+      scheduleAck();
+    }, delay);
+  }, [parentSettings]);
+
+  const clearAckTimer = useCallback(() => {
+    if (ackTimerRef.current) { clearTimeout(ackTimerRef.current); ackTimerRef.current = null; }
+  }, []);
+
   // ─── STT setup ─────────────────────────────────────
   const smartSTT = useSmartSTT({
     onPartial: useCallback((text: string) => {
@@ -494,11 +546,14 @@ export function useBobbyVoiceCore({
       setCurrentEmotion("attentive");
       // Reset silence timer on partial speech detection
       if (voiceDetectedRef.current) {
-        // During conversation, reset the 20s silence timer
         clearSilenceTimer();
         scheduleSilenceWatch("conversation");
       }
-    }, [clearSilenceTimer, scheduleSilenceWatch]),
+      // Schedule an acknowledgment sound if child is talking
+      if (!ackTimerRef.current && voiceDetectedRef.current) {
+        scheduleAck();
+      }
+    }, [clearSilenceTimer, scheduleSilenceWatch, scheduleAck]),
     onFinal: useCallback((text: string) => {
       finalTranscriptRef.current(text);
     }, []),
@@ -580,6 +635,7 @@ export function useBobbyVoiceCore({
   const interrupt = useCallback(() => {
     processingRef.current = false;
     clearSilenceTimer();
+    clearAckTimer();
     stopSttRef.current();
     setMicArmed(false);
     setPartialText("");
@@ -589,11 +645,17 @@ export function useBobbyVoiceCore({
     convRelanceCountRef.current = 0;
     go("IDLE");
     scheduleSleep();
-  }, [clearSilenceTimer, go, scheduleSleep, stopPlayback]);
+  }, [clearSilenceTimer, clearAckTimer, go, scheduleSleep, stopPlayback]);
 
   // ─── Tap Bobby handler ────────────────────────────
   const handleTapBobby = useCallback(async () => {
-    if (machineRef.current === "SPEAKING" || machineRef.current === "PROCESSING" || machineRef.current === "LISTENING") {
+    // Don't interrupt Bobby while speaking — let him finish naturally
+    if (machineRef.current === "SPEAKING" || machineRef.current === "PROCESSING") {
+      console.log("[BobbyVoiceCore] 🔇 Tap ignored — Bobby is", machineRef.current);
+      return;
+    }
+
+    if (machineRef.current === "LISTENING") {
       interrupt();
       return;
     }
@@ -670,15 +732,15 @@ export function useBobbyVoiceCore({
     return () => {
       clearSleepTimer();
       clearSilenceTimer();
+      clearAckTimer();
       stopSttRef.current();
       stopPlayback();
-      // Save persistent memory before cleanup
       endBobbySession(childName).catch(console.warn);
       resetBobbyBrainSession();
       resetEmotionPipeline();
       void closeSession();
     };
-  }, [clearSleepTimer, clearSilenceTimer, closeSession, stopPlayback]);
+  }, [clearSleepTimer, clearSilenceTimer, clearAckTimer, closeSession, stopPlayback]);
 
   // ─── Computed face state ──────────────────────────
   const bobbyFaceEmotion: FaceState =
