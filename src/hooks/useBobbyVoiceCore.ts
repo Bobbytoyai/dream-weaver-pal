@@ -593,7 +593,13 @@ export function useBobbyVoiceCore({
 
   // ─── Tap Bobby handler ────────────────────────────
   const handleTapBobby = useCallback(async () => {
-    if (machineRef.current === "SPEAKING" || machineRef.current === "PROCESSING" || machineRef.current === "LISTENING") {
+    // Don't interrupt Bobby while speaking — let him finish naturally
+    if (machineRef.current === "SPEAKING" || machineRef.current === "PROCESSING") {
+      console.log("[BobbyVoiceCore] 🔇 Tap ignored — Bobby is", machineRef.current);
+      return;
+    }
+
+    if (machineRef.current === "LISTENING") {
       interrupt();
       return;
     }
