@@ -117,7 +117,7 @@ const HomeTab: React.FC<HomeTabProps> = ({
       {/* Quick alerts */}
       {unreadAlertCount > 0 && (
         <button onClick={onOpenNotifPanel}
-          className="w-full retro-card p-3 flex items-center gap-3 hover:translate-y-[-2px] transition-all" style={{ backgroundColor: 'var(--retro-red)' }}>
+          className="w-full retro-card p-3 flex items-center gap-3" style={{ backgroundColor: 'var(--retro-red)' }}>
           <span className="text-xl">🔔</span>
           <div className="flex-1 text-left">
             <p className="text-[13px] font-black text-gray-800">{unreadAlertCount} alerte{unreadAlertCount > 1 ? "s" : ""}</p>
@@ -167,7 +167,7 @@ const HomeTab: React.FC<HomeTabProps> = ({
       <div className="grid grid-cols-2 gap-3">
         {navCards.map((card, i) => (
           <button key={card.id} onClick={() => onNavigate(card.id)}
-            className={`card-stagger-${i + 1} retro-card relative p-3 flex flex-col items-center justify-center aspect-square transition-all`}
+            className={`card-stagger-${i + 1} retro-card relative p-3 flex flex-col items-center justify-center aspect-square`}
             style={{ backgroundColor: card.bg }}>
             <span className="text-[32px] mb-1 drop-shadow-sm">{card.emoji}</span>
             <span className="text-[11px] font-black text-gray-800 leading-tight text-center whitespace-pre-line">{card.label}</span>
