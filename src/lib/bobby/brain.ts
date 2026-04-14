@@ -165,17 +165,7 @@ function applyOrchestration(
     reply.text = reply.text.replace(/[.!?…]*\s*$/, ". ") + directive.resumePrompt;
   }
 
-  // V7: Apply CognitionPlan-driven adjustments
-  if (plan) {
-    // If plan says includeValidation → prepend empathy opener
-    if (plan.what.includeValidation && plan.why.primaryGoal !== "jouer") {
-      const validations = ["C'est une super question ! ", "Bravo de demander ! ", "J'adore ta curiosité ! "];
-      const prefix = validations[Math.floor(Math.random() * validations.length)];
-      if (!reply.text.startsWith(prefix.trim())) {
-        reply.text = prefix + reply.text;
-      }
-    }
-  }
+  // V7: Validation is now handled by responseAssembly.ts
 
   // V7: Understanding Feedback Loop — verify comprehension
   if (understanding && session) {
