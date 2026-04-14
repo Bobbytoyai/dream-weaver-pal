@@ -60,7 +60,7 @@ export default function BobbyQR() {
         }
         setStep("sleeping");
       } else {
-        setStep("onboarding-name");
+        setStep("onboarding");
       }
     })();
   }, [code]);
