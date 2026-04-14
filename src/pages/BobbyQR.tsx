@@ -83,6 +83,28 @@ export default function BobbyQR() {
     })();
   }, [code]);
 
+  // Realtime: sync settings when parent changes them from /parent/:code
+  useEffect(() => {
+    if (!bobbyCode?.id) return;
+    const channel = supabase
+      .channel(`bobby-settings-${bobbyCode.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'bobby_codes', filter: `id=eq.${bobbyCode.id}` },
+        (payload) => {
+          const sd = payload.new.session_data as Record<string, any> | null;
+          if (sd?.parentSettings) {
+            setParentSettings(prev => ({ ...prev, ...sd.parentSettings }));
+          }
+          if (payload.new.child_name && payload.new.child_name !== childName) {
+            setChildName(payload.new.child_name);
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [bobbyCode?.id]);
+
   // Listen for narration events
   useEffect(() => {
     const unsub = eventBus.on("NARRATE_STORY", (event) => {
