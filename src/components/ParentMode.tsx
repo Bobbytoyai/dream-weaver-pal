@@ -241,10 +241,12 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
     <div className="min-h-screen bg-background max-w-lg mx-auto flex flex-col transition-colors duration-300 parent-light">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 bg-card border-b-4 border-black">
-        <button onClick={handleBack}
-          className="w-9 h-9 border-2 border-black bg-white flex items-center justify-center text-black hover:bg-muted transition-colors">
-          <ArrowLeft className="w-4.5 h-4.5" />
-        </button>
+        {(activeTab !== "home" || data.selectedSession) && (
+          <button onClick={handleBack}
+            className="w-9 h-9 border-2 border-black bg-white flex items-center justify-center text-black hover:bg-muted transition-colors">
+            <ArrowLeft className="w-4.5 h-4.5" />
+          </button>
+        )}
         <div className="flex-1">
           <h2 className="text-lg font-black text-black uppercase tracking-tight">
             {activeTab === "home" ? "BOBBY" : (tabs.find(t => t.id === activeTab)?.label || "BOBBY").toUpperCase()}
