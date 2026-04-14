@@ -409,12 +409,12 @@ export function useFaceAnimation(
       surprisedFreeze = 0.15; // dramatically slow lerp for 200ms effect
     }
 
-    // --- PLAYFUL: bounce + tilt ---
+    // --- PLAYFUL: exaggerated bounce + tilt ---
     let playfulBounce = 0;
     let playfulTiltZ = 0;
     if (faceState === "playful") {
-      playfulBounce = Math.abs(Math.sin(breathPhase.current * 3)) * 0.04 * intensity;
-      playfulTiltZ = Math.sin(breathPhase.current * 2) * 0.05;
+      playfulBounce = Math.abs(Math.sin(breathPhase.current * 3)) * 0.08 * intensity;
+      playfulTiltZ = Math.sin(breathPhase.current * 2) * 0.1;
     }
 
     // --- PROUD: subtle head-up ---
