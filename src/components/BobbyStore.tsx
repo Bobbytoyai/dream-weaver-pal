@@ -139,13 +139,14 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
 
 // ─── Product Detail Page ────────────────────────────────────────────
 
-function ProductDetail({ item, installed, installing, detailsLoading, onInstall, onBack }: {
+function ProductDetail({ item, installed, installing, detailsLoading, onInstall, onBack, onRatingUpdate }: {
   item: StoreItem;
   installed: boolean;
   installing: boolean;
   detailsLoading: boolean;
   onInstall: () => void;
   onBack: () => void;
+  onRatingUpdate?: (rating: number, count: number) => void;
 }) {
   const catInfo = CATEGORIES.find(c => c.id === item.category);
   const contentItems = Array.isArray(item.content_items) ? item.content_items : [];
