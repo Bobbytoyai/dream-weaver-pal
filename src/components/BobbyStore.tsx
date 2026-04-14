@@ -320,6 +320,9 @@ function ProductDetail({ item, installed, installing, detailsLoading, onInstall,
         </div>
       )}
 
+      {/* User Reviews */}
+      <PackReviews contentId={item.id} onRatingUpdate={onRatingUpdate} />
+
       {/* Bottom Install */}
       <div className="pb-4">
         {installed ? (
