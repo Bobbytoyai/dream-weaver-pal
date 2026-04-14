@@ -129,11 +129,11 @@ const VoiceScreen = ({
     if (!activeGameCategory || activeGameCategory === lastGameRef.current) return;
     lastGameRef.current = activeGameCategory;
     const GAME_PROMPTS: Record<string, string> = {
-      quiz_animaux: `${childName}, on joue au Quiz Animaux ! Je pense à un animal… devine lequel ! 🐾`,
-      devinettes: `${childName}, j'ai une devinette pour toi ! Écoute bien… 🤔`,
-      vrai_faux: `${childName}, on joue à Vrai ou Faux ! Je te dis quelque chose et tu me dis si c'est vrai ou faux ! ✅`,
-      quiz_educatif: `${childName}, on explore la science ensemble ! Prêt pour un quiz ? 🔬`,
-      blagues: `${childName}, tu veux rire ? J'ai une blague trop drôle pour toi ! 😂`,
+      quiz_animaux: `On joue au Quiz Animaux ! Je pense à un animal… devine lequel ! 🐾`,
+      devinettes: `J'ai une devinette pour toi ! Écoute bien… 🤔`,
+      vrai_faux: `On joue à Vrai ou Faux ! Je te dis quelque chose et tu me dis si c'est vrai ou faux ! ✅`,
+      quiz_educatif: `On explore la science ensemble ! Prêt pour un quiz ? 🔬`,
+      blagues: `Tu veux rire ? J'ai une blague trop drôle pour toi ! 😂`,
     };
     const prompt = GAME_PROMPTS[activeGameCategory];
     if (prompt) {

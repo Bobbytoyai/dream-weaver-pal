@@ -42,9 +42,9 @@ const ChatScreen = ({ childName, childAge, onSwitchToVoice }: ChatScreenProps) =
     setMode(newMode);
     if (newMode !== "chat" && newMode !== mode) {
       const modeMessages: Record<string, string> = {
-        story: `📖 C'est l'heure des histoires, ${childName} ! Tu veux une histoire d'aventure, drôle ou magique ?`,
-        game: `🎮 On joue ! Tu veux une devinette, un quiz ou un jeu d'imagination, ${childName} ?`,
-        learn: `🧠 On apprend un truc cool, ${childName} ! Qu'est-ce qui te rend curieux ?`,
+        story: `📖 C'est l'heure des histoires ! Tu veux une histoire d'aventure, drôle ou magique ?`,
+        game: `🎮 On joue ! Tu veux une devinette, un quiz ou un jeu d'imagination ?`,
+        learn: `🧠 On apprend un truc cool ! Qu'est-ce qui te rend curieux ?`,
       };
       const msg = modeMessages[newMode] || "";
       if (msg) {
@@ -110,7 +110,7 @@ const ChatScreen = ({ childName, childAge, onSwitchToVoice }: ChatScreenProps) =
           <input ref={inputRef} type="text" value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            placeholder={`Dis quelque chose, ${childName}...`}
+            placeholder="Dis quelque chose..."
             disabled={isLoading}
             className="flex-1 rounded-full border-2 border-border bg-background px-5 py-3 text-base font-semibold text-black placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50" />
           <button onClick={handleSend} disabled={!input.trim() || isLoading}
