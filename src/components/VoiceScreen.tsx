@@ -273,7 +273,7 @@ const VoiceScreen = ({
 
         {/* Bobby's response text only — no child transcript */}
         <div className="w-full px-5 flex flex-col gap-2 max-h-24 overflow-y-auto">
-          {sm.machineState === "SPEAKING" && sm.bobbyText && (
+          {(sm.machineState === "SPEAKING" || sm.musicPlaying) && sm.bobbyText && (
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
               <p className="text-xs font-bold text-black/60 text-center leading-snug">
                 {sm.bobbyText}
