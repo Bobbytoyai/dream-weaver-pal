@@ -521,11 +521,13 @@ export function useFaceAnimation(
       mouthOpenTarget += syllableOsc;
 
       if (rawAmp < 0.01) {
-        // No audio — close mouth quickly, don't animate idle mouth movements
-        mouthOpenTarget = 0;
-        mouthWidthTarget = targets.mouthWidth ?? 0.5;
-        mouthRoundTarget = 0;
-        jawDropTarget = 0;
+        // No real audio — simulate talking animation for preview/test mode
+        const t = breathPhase.current;
+        const fakeSyllable = Math.abs(Math.sin(t * 8.5)) * 0.55 + Math.abs(Math.sin(t * 5.3)) * 0.25;
+        mouthOpenTarget = fakeSyllable * 0.65 + 0.08;
+        mouthWidthTarget = (targets.mouthWidth ?? 0.5) + fakeSyllable * 0.12;
+        mouthRoundTarget = Math.sin(t * 3.7) > 0.3 ? 0.15 : 0;
+        jawDropTarget = fakeSyllable * 0.35;
       }
 
       speechEyebrowLift = rawAmp > 0.1 ? (rawAmp - 0.1) * 0.3 : 0;
