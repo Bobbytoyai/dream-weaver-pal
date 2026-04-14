@@ -485,10 +485,7 @@ export async function buildBobbyReply({
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain V6] ✅ L2 KB → conf=${kbReply.confidence.toFixed(2)} | goal=${cognition.goal} (L2: ${layer2Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
       cacheReply(userText, reply).catch(() => {});
-      return reply;
-    }
-
-    if (kbReply) {
+      return applyOrchestration(reply, directive);
       console.log(`[Brain V6] L2 KB: conf=${kbReply.confidence.toFixed(2)} → escalate to L3`);
     }
   } catch (e) {
