@@ -396,6 +396,9 @@ export async function buildBobbyReply({
     `[Brain V7] 🎯 Priority: ${priority.priorityLevel} (${priority.totalScore}) | S=${priority.scores.safety} E=${priority.scores.emotion} U=${priority.scores.urgency} C=${priority.scores.context} H=${priority.scores.history}${priority.requiresEmpathyFirst ? " 💙EMPATHY" : ""}${priority.interruptCurrent ? " ⚡INTERRUPT" : ""}`
   );
 
+  // ── V7: COGNITION ENGINE — WHY/WHAT/HOW triple decision ──
+  const cognitionPlan = buildCognitionPlan(understanding, priority, v7Session);
+
   // ── V7: If ambiguity is very high, ask for clarification ──
   if (understanding.requiresConfirmation && understanding.confirmationPrompt && understanding.ambiguityScore > 0.7) {
     const confirmReply: BobbyBrainReply = {
