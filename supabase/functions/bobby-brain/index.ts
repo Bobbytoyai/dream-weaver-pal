@@ -377,13 +377,8 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const personalityHint = personality === "calm"
-      ? " Adopte un ton doux et calme."
-      : personality === "energetic"
-        ? " Sois dynamique et enthousiaste !"
-        : personality === "educational"
-          ? " Glisse des faits éducatifs dans tes réponses."
-          : "";
+    // Personality hints disabled — Bobby uses his natural style only
+    const personalityHint = "";
 
     const agePrompt = getAgePrompt(childAge || 6);
     const contextBlock = contextSummary ? `\n\nCONTEXTE DE SESSION ACTUELLE :\n${contextSummary}` : "";
