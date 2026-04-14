@@ -222,6 +222,18 @@ export async function buildBobbyReply({ childName, childAge, userText = "", pend
     };
   }
 
+  // ─── Quick identity check: "comment je m'appelle" etc. ───
+  if (userText && /comment je m'appelle|c'est quoi mon (pré)?nom|tu (sais|connais) mon (pré)?nom|quel est mon (pré)?nom/i.test(userText)) {
+    return {
+      text: simplifyForAge(`Bien sûr ! Tu t'appelles ${childName} ! 😄 Comment je pourrais oublier ?`, childAge),
+      intent: "IDENTITE_ENFANT",
+      source: "local_brain" as const,
+      emotion: "happy" as FaceState,
+      confidence: 1,
+      isOffline: true,
+    };
+  }
+
   // ─── Track child interests for smart follow-ups ───
   if (userText) {
     trackInterests(userText);
