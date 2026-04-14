@@ -456,7 +456,7 @@ export async function buildBobbyReply({
   }
 
   // ── V8: RELATIONSHIP — record per-turn interaction ──
-  recordInteraction(userText, understanding.emotion.primary);
+  recordInteraction(userText, understanding.emotion.type);
 
   // ── V7: PRIORITY ENGINE — 5-dimension scoring ──
   const priority = computePriority(understanding, v7Session, createDefaultMemoryContext());
