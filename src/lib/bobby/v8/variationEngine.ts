@@ -376,6 +376,12 @@ function recordResponse(text: string): void {
 
   ctx.recentStructures.push(detectStructure(text));
   if (ctx.recentStructures.length > MAX_STRUCTURES) ctx.recentStructures.shift();
+
+  // Track response length category
+  const len = text.length;
+  const lengthCat: "short" | "medium" | "long" = len < 80 ? "short" : len < 200 ? "medium" : "long";
+  ctx.recentLengths.push(lengthCat);
+  if (ctx.recentLengths.length > 5) ctx.recentLengths.shift();
 }
 
 /** Get the current variation context (for debugging) */
