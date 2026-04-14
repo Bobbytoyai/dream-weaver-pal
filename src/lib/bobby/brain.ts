@@ -108,6 +108,7 @@ const INTENT_EMOTION_MAP: Record<string, FaceState> = {
   LIBRARY_OVERVIEW: "proud", NARRATION: "curious",
   PEUR: "reassuring", TRISTESSE: "reassuring", COLERE: "reassuring",
   JOIE: "happy", CONFIANCE: "reassuring", JALOUSIE: "reassuring", ENNUI: "playful",
+  MUSIC_REQUEST: "happy",
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
