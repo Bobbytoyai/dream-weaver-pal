@@ -46,99 +46,99 @@ export interface FaceAnimationState {
 const STATE_TARGETS: Record<FaceState, Partial<FaceAnimationState>> = {
   idle: {
     eyeOpenness: 1, eyebrowHeight: 0, eyebrowTilt: 0,
-    mouthOpenness: 0, mouthWidth: 0.5, mouthCurve: 0, mouthRound: 0, jawDrop: 0,
-    headTiltX: 0, headTiltZ: 0, glowIntensity: 0.3,
-    pupilSize: 1, cheekGlow: 0.1, irisGlow: 0.4, eyeSparkle: 0.5,
+    mouthOpenness: 0, mouthWidth: 0.52, mouthCurve: 0.08, mouthRound: 0, jawDrop: 0,
+    headTiltX: 0, headTiltZ: 0, glowIntensity: 0.35,
+    pupilSize: 1, cheekGlow: 0.15, irisGlow: 0.45, eyeSparkle: 0.55,
   },
   listening: {
-    eyeOpenness: 1.2, eyebrowHeight: 0.15, eyebrowTilt: 0,
-    mouthOpenness: 0, mouthWidth: 0.45, mouthCurve: 0.15, mouthRound: 0, jawDrop: 0,
-    headTiltX: 0.08, headTiltZ: 0.12, glowIntensity: 0.55,
-    pupilSize: 1.15, cheekGlow: 0.15, irisGlow: 0.6, eyeSparkle: 0.7,
+    eyeOpenness: 1.35, eyebrowHeight: 0.25, eyebrowTilt: 0,
+    mouthOpenness: 0, mouthWidth: 0.48, mouthCurve: 0.22, mouthRound: 0, jawDrop: 0,
+    headTiltX: 0.12, headTiltZ: 0.18, glowIntensity: 0.7,
+    pupilSize: 1.3, cheekGlow: 0.3, irisGlow: 0.75, eyeSparkle: 0.85,
   },
   thinking: {
-    eyeOpenness: 0.9, eyebrowHeight: 0.2, eyebrowTilt: 0.15,
-    mouthOpenness: 0, mouthWidth: 0.38, mouthCurve: 0.05, mouthRound: 0, jawDrop: 0,
-    headTiltX: -0.05, headTiltZ: -0.08, glowIntensity: 0.45,
-    pupilSize: 0.9, cheekGlow: 0.08, irisGlow: 0.5, eyeSparkle: 0.4,
+    eyeOpenness: 0.75, eyebrowHeight: 0.35, eyebrowTilt: 0.25,
+    mouthOpenness: 0, mouthWidth: 0.32, mouthCurve: 0.02, mouthRound: 0, jawDrop: 0,
+    headTiltX: -0.1, headTiltZ: -0.15, glowIntensity: 0.5,
+    pupilSize: 0.8, cheekGlow: 0.08, irisGlow: 0.55, eyeSparkle: 0.35,
   },
   speaking: {
-    eyeOpenness: 1.05, eyebrowHeight: 0.08, eyebrowTilt: 0,
-    mouthWidth: 0.55, mouthCurve: 0.15, mouthRound: 0, jawDrop: 0,
-    headTiltX: 0, headTiltZ: 0, glowIntensity: 0.6,
-    pupilSize: 1.05, cheekGlow: 0.2, irisGlow: 0.55, eyeSparkle: 0.6,
+    eyeOpenness: 1.1, eyebrowHeight: 0.12, eyebrowTilt: 0,
+    mouthWidth: 0.6, mouthCurve: 0.2, mouthRound: 0, jawDrop: 0,
+    headTiltX: 0, headTiltZ: 0, glowIntensity: 0.7,
+    pupilSize: 1.1, cheekGlow: 0.35, irisGlow: 0.65, eyeSparkle: 0.7,
   },
   happy: {
-    eyeOpenness: 0.85, eyebrowHeight: 0.16, eyebrowTilt: 0,
-    mouthOpenness: 0.05, mouthWidth: 0.7, mouthCurve: 0.5, mouthRound: 0, jawDrop: 0,
-    headTiltX: 0.04, headTiltZ: 0, glowIntensity: 0.85,
-    pupilSize: 1.2, cheekGlow: 0.65, irisGlow: 0.8, eyeSparkle: 0.9,
+    eyeOpenness: 0.7, eyebrowHeight: 0.28, eyebrowTilt: 0,
+    mouthOpenness: 0.1, mouthWidth: 0.85, mouthCurve: 0.7, mouthRound: 0, jawDrop: 0.05,
+    headTiltX: 0.06, headTiltZ: 0, glowIntensity: 1.0,
+    pupilSize: 1.4, cheekGlow: 0.85, irisGlow: 0.95, eyeSparkle: 1.0,
   },
   confused: {
-    eyeOpenness: 1.15, eyebrowHeight: 0.1, eyebrowTilt: 0.25,
-    mouthOpenness: 0, mouthWidth: 0.32, mouthCurve: -0.08, mouthRound: 0, jawDrop: 0,
-    headTiltX: 0, headTiltZ: 0.18, glowIntensity: 0.35,
-    pupilSize: 1.1, cheekGlow: 0.05, irisGlow: 0.45, eyeSparkle: 0.4,
+    eyeOpenness: 1.3, eyebrowHeight: 0.15, eyebrowTilt: 0.4,
+    mouthOpenness: 0, mouthWidth: 0.28, mouthCurve: -0.2, mouthRound: 0.1, jawDrop: 0,
+    headTiltX: 0, headTiltZ: 0.28, glowIntensity: 0.35,
+    pupilSize: 1.15, cheekGlow: 0.05, irisGlow: 0.45, eyeSparkle: 0.35,
   },
   excited: {
-    eyeOpenness: 1.35, eyebrowHeight: 0.28, eyebrowTilt: 0,
-    mouthOpenness: 0.2, mouthWidth: 0.7, mouthCurve: 0.45, mouthRound: 0, jawDrop: 0.15,
-    headTiltX: 0, headTiltZ: 0, glowIntensity: 0.95,
-    pupilSize: 1.35, cheekGlow: 0.55, irisGlow: 0.9, eyeSparkle: 1.0,
+    eyeOpenness: 1.5, eyebrowHeight: 0.45, eyebrowTilt: 0,
+    mouthOpenness: 0.35, mouthWidth: 0.85, mouthCurve: 0.6, mouthRound: 0.1, jawDrop: 0.3,
+    headTiltX: 0, headTiltZ: 0, glowIntensity: 1.0,
+    pupilSize: 1.5, cheekGlow: 0.8, irisGlow: 1.0, eyeSparkle: 1.0,
   },
   attentive: {
-    eyeOpenness: 1.25, eyebrowHeight: 0.18, eyebrowTilt: 0,
-    mouthOpenness: 0, mouthWidth: 0.5, mouthCurve: 0.18, mouthRound: 0, jawDrop: 0,
-    headTiltX: 0.03, headTiltZ: 0.05, glowIntensity: 0.65,
-    pupilSize: 1.2, cheekGlow: 0.3, irisGlow: 0.7, eyeSparkle: 0.8,
+    eyeOpenness: 1.4, eyebrowHeight: 0.3, eyebrowTilt: 0,
+    mouthOpenness: 0, mouthWidth: 0.55, mouthCurve: 0.25, mouthRound: 0, jawDrop: 0,
+    headTiltX: 0.05, headTiltZ: 0.08, glowIntensity: 0.8,
+    pupilSize: 1.35, cheekGlow: 0.45, irisGlow: 0.85, eyeSparkle: 0.9,
   },
   surprised: {
-    eyeOpenness: 1.4, eyebrowHeight: 0.32, eyebrowTilt: 0,
-    mouthOpenness: 0.3, mouthWidth: 0.4, mouthCurve: 0, mouthRound: 0.5, jawDrop: 0.3,
-    headTiltX: 0, headTiltZ: 0, glowIntensity: 0.75,
-    pupilSize: 1.4, cheekGlow: 0.2, irisGlow: 0.85, eyeSparkle: 0.95,
+    eyeOpenness: 1.6, eyebrowHeight: 0.5, eyebrowTilt: 0,
+    mouthOpenness: 0.5, mouthWidth: 0.35, mouthCurve: 0, mouthRound: 0.7, jawDrop: 0.5,
+    headTiltX: 0, headTiltZ: 0, glowIntensity: 0.85,
+    pupilSize: 1.6, cheekGlow: 0.25, irisGlow: 0.95, eyeSparkle: 1.0,
   },
   calm: {
-    eyeOpenness: 0.92, eyebrowHeight: 0.02, eyebrowTilt: 0,
-    mouthOpenness: 0, mouthWidth: 0.48, mouthCurve: 0.12, mouthRound: 0, jawDrop: 0,
+    eyeOpenness: 0.85, eyebrowHeight: 0.02, eyebrowTilt: 0,
+    mouthOpenness: 0, mouthWidth: 0.5, mouthCurve: 0.18, mouthRound: 0, jawDrop: 0,
     headTiltX: 0, headTiltZ: 0, glowIntensity: 0.25,
-    pupilSize: 0.95, cheekGlow: 0.12, irisGlow: 0.35, eyeSparkle: 0.3,
+    pupilSize: 0.9, cheekGlow: 0.18, irisGlow: 0.35, eyeSparkle: 0.3,
   },
   reassuring: {
-    eyeOpenness: 0.95, eyebrowHeight: 0.06, eyebrowTilt: 0,
-    mouthOpenness: 0, mouthWidth: 0.55, mouthCurve: 0.3, mouthRound: 0, jawDrop: 0,
-    headTiltX: 0.02, headTiltZ: 0.03, glowIntensity: 0.4,
-    pupilSize: 1.1, cheekGlow: 0.25, irisGlow: 0.5, eyeSparkle: 0.6,
+    eyeOpenness: 0.9, eyebrowHeight: 0.08, eyebrowTilt: 0,
+    mouthOpenness: 0, mouthWidth: 0.65, mouthCurve: 0.45, mouthRound: 0, jawDrop: 0,
+    headTiltX: 0.04, headTiltZ: 0.05, glowIntensity: 0.5,
+    pupilSize: 1.15, cheekGlow: 0.4, irisGlow: 0.6, eyeSparkle: 0.7,
   },
   sad: {
-    eyeOpenness: 0.75, eyebrowHeight: -0.05, eyebrowTilt: -0.2,
-    mouthOpenness: 0, mouthWidth: 0.4, mouthCurve: -0.25, mouthRound: 0, jawDrop: 0,
-    headTiltX: -0.06, headTiltZ: -0.04, glowIntensity: 0.2,
-    pupilSize: 0.85, cheekGlow: 0.05, irisGlow: 0.25, eyeSparkle: 0.2,
+    eyeOpenness: 0.6, eyebrowHeight: -0.12, eyebrowTilt: -0.35,
+    mouthOpenness: 0, mouthWidth: 0.35, mouthCurve: -0.4, mouthRound: 0, jawDrop: 0,
+    headTiltX: -0.1, headTiltZ: -0.08, glowIntensity: 0.15,
+    pupilSize: 0.75, cheekGlow: 0.03, irisGlow: 0.2, eyeSparkle: 0.15,
   },
   sleepy: {
-    eyeOpenness: 0.15, eyebrowHeight: -0.15, eyebrowTilt: 0,
-    mouthOpenness: 0, mouthWidth: 0.38, mouthCurve: 0.08, mouthRound: 0, jawDrop: 0,
-    headTiltX: -0.08, headTiltZ: 0.1, glowIntensity: 0.08,
-    pupilSize: 0.5, cheekGlow: 0.08, irisGlow: 0.1, eyeSparkle: 0.1,
+    eyeOpenness: 0.1, eyebrowHeight: -0.2, eyebrowTilt: 0,
+    mouthOpenness: 0, mouthWidth: 0.35, mouthCurve: 0.08, mouthRound: 0, jawDrop: 0,
+    headTiltX: -0.12, headTiltZ: 0.15, glowIntensity: 0.06,
+    pupilSize: 0.4, cheekGlow: 0.06, irisGlow: 0.08, eyeSparkle: 0.08,
   },
   curious: {
-    eyeOpenness: 1.3, eyebrowHeight: 0.22, eyebrowTilt: 0.08,
-    mouthOpenness: 0, mouthWidth: 0.45, mouthCurve: 0.15, mouthRound: 0, jawDrop: 0,
-    headTiltX: 0.06, headTiltZ: 0.14, glowIntensity: 0.6,
-    pupilSize: 1.25, cheekGlow: 0.18, irisGlow: 0.75, eyeSparkle: 0.85,
+    eyeOpenness: 1.45, eyebrowHeight: 0.35, eyebrowTilt: 0.15,
+    mouthOpenness: 0, mouthWidth: 0.48, mouthCurve: 0.2, mouthRound: 0, jawDrop: 0,
+    headTiltX: 0.1, headTiltZ: 0.22, glowIntensity: 0.75,
+    pupilSize: 1.4, cheekGlow: 0.3, irisGlow: 0.85, eyeSparkle: 0.95,
   },
   playful: {
-    eyeOpenness: 1.1, eyebrowHeight: 0.18, eyebrowTilt: 0.1,
-    mouthOpenness: 0.12, mouthWidth: 0.65, mouthCurve: 0.4, mouthRound: 0, jawDrop: 0.05,
-    headTiltX: 0.05, headTiltZ: 0.12, glowIntensity: 0.8,
-    pupilSize: 1.2, cheekGlow: 0.45, irisGlow: 0.75, eyeSparkle: 0.9,
+    eyeOpenness: 1.2, eyebrowHeight: 0.3, eyebrowTilt: 0.18,
+    mouthOpenness: 0.2, mouthWidth: 0.8, mouthCurve: 0.55, mouthRound: 0, jawDrop: 0.1,
+    headTiltX: 0.08, headTiltZ: 0.18, glowIntensity: 0.9,
+    pupilSize: 1.35, cheekGlow: 0.65, irisGlow: 0.85, eyeSparkle: 1.0,
   },
   proud: {
-    eyeOpenness: 1.0, eyebrowHeight: 0.1, eyebrowTilt: 0,
-    mouthOpenness: 0, mouthWidth: 0.58, mouthCurve: 0.35, mouthRound: 0, jawDrop: 0,
-    headTiltX: -0.06, headTiltZ: 0, glowIntensity: 0.7,
-    pupilSize: 1.1, cheekGlow: 0.35, irisGlow: 0.65, eyeSparkle: 0.75,
+    eyeOpenness: 1.05, eyebrowHeight: 0.18, eyebrowTilt: 0,
+    mouthOpenness: 0, mouthWidth: 0.7, mouthCurve: 0.5, mouthRound: 0, jawDrop: 0,
+    headTiltX: -0.1, headTiltZ: 0, glowIntensity: 0.85,
+    pupilSize: 1.2, cheekGlow: 0.55, irisGlow: 0.8, eyeSparkle: 0.9,
   },
 };
 
@@ -345,40 +345,39 @@ export function useFaceAnimation(
     const eyeDriftX = Math.sin(eyeDriftPhase.current * 1.1) * 0.008 + Math.sin(eyeDriftPhase.current * 2.3) * 0.004;
     const eyeDriftY = Math.cos(eyeDriftPhase.current * 0.9) * 0.005;
 
-    // --- MICRO-EXPRESSIONS (every 2-4s) ---
+    // --- MICRO-EXPRESSIONS (every 1.5-3s, more exaggerated) ---
     microTimer.current += delta;
-    if (microTimer.current > 2 + Math.random() * 2) {
+    if (microTimer.current > 1.5 + Math.random() * 1.5) {
       microTimer.current = 0;
       microOffset.current = {
-        eyebrow: (Math.random() - 0.5) * 0.02,
-        headX: (Math.random() - 0.5) * 0.012,
-        headZ: (Math.random() - 0.5) * 0.018,
-        pupilDrift: (Math.random() - 0.5) * 0.01,
-        mouthQuirk: (Math.random() - 0.5) * 0.01,
+        eyebrow: (Math.random() - 0.5) * 0.06,
+        headX: (Math.random() - 0.5) * 0.025,
+        headZ: (Math.random() - 0.5) * 0.035,
+        pupilDrift: (Math.random() - 0.5) * 0.02,
+        mouthQuirk: (Math.random() - 0.5) * 0.025,
       };
     }
 
-    // --- THINKING: wandering pupils ---
+    // --- THINKING: dramatic wandering pupils ---
     let thinkingPupilX = 0;
     let thinkingPupilY = 0;
     if (faceState === "thinking") {
       const t = breathPhase.current * 2;
-      thinkingPupilX = Math.sin(t * 1.3) * 0.045;
-      thinkingPupilY = Math.cos(t * 0.9) * 0.03;
+      thinkingPupilX = Math.sin(t * 1.3) * 0.08;
+      thinkingPupilY = Math.cos(t * 0.9) * 0.06;
     }
 
-    // --- CURIOUS: slight head tilt oscillation ---
+    // --- CURIOUS: exaggerated head tilt oscillation ---
     let curiousTiltZ = 0;
     if (faceState === "curious") {
-      curiousTiltZ = Math.sin(breathPhase.current * 1.5) * 0.03;
+      curiousTiltZ = Math.sin(breathPhase.current * 1.5) * 0.06;
     }
 
-    // --- LISTENING: subtle eyebrow micro-movements (attentive, alive) ---
+    // --- LISTENING: exaggerated eyebrow micro-movements ---
     let listeningEyebrowPulse = 0;
     if (faceState === "listening") {
       const listenT = breathPhase.current * 1.8;
-      // Gentle asymmetric raise — one brow slightly higher, alternating
-      listeningEyebrowPulse = Math.sin(listenT) * 0.04 + Math.sin(listenT * 2.5) * 0.02;
+      listeningEyebrowPulse = Math.sin(listenT) * 0.08 + Math.sin(listenT * 2.5) * 0.04;
     }
 
     // --- SLEEPY: eyes nearly closed with drowsy flutter, ready to wake ---
@@ -393,13 +392,13 @@ export function useFaceAnimation(
       sleepyHeadBob = Math.sin(sleepT) * 0.03; // slow nod
     }
 
-    // --- CONFUSED: rapid micro head shake ---
+    // --- CONFUSED: dramatic micro head shake ---
     let confusedShakeX = 0;
     let confusedShakeZ = 0;
     if (faceState === "confused") {
       const shakeT = breathPhase.current * 8;
-      confusedShakeX = Math.sin(shakeT) * 0.015 * intensity;
-      confusedShakeZ = Math.sin(shakeT * 1.3) * 0.02 * intensity;
+      confusedShakeX = Math.sin(shakeT) * 0.035 * intensity;
+      confusedShakeZ = Math.sin(shakeT * 1.3) * 0.04 * intensity;
     }
 
     // --- SURPRISED: freeze 200ms then resume ---
@@ -409,18 +408,18 @@ export function useFaceAnimation(
       surprisedFreeze = 0.15; // dramatically slow lerp for 200ms effect
     }
 
-    // --- PLAYFUL: bounce + tilt ---
+    // --- PLAYFUL: exaggerated bounce + tilt ---
     let playfulBounce = 0;
     let playfulTiltZ = 0;
     if (faceState === "playful") {
-      playfulBounce = Math.abs(Math.sin(breathPhase.current * 3)) * 0.04 * intensity;
-      playfulTiltZ = Math.sin(breathPhase.current * 2) * 0.05;
+      playfulBounce = Math.abs(Math.sin(breathPhase.current * 3)) * 0.08 * intensity;
+      playfulTiltZ = Math.sin(breathPhase.current * 2) * 0.1;
     }
 
-    // --- PROUD: subtle head-up ---
+    // --- PROUD: dramatic head-up ---
     let proudHeadUp = 0;
     if (faceState === "proud") {
-      proudHeadUp = -0.04 * intensity;
+      proudHeadUp = -0.08 * intensity;
     }
 
     // --- IDLE MOUTH ANIMATION (natural, like breathing through mouth) ---
