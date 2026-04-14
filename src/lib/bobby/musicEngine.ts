@@ -60,10 +60,18 @@ const MUSIC_TRIGGERS = [
   /(?:une?\s+(?:chanson|musique|comptine|berceuse))/i,
 ];
 
+// Child-speech typos / phonetic variants for music-related words
+const MUSIC_WORD_VARIANTS = [
+  "musique", "chanson", "comptine", "berceuse",
+  // Common child mispronunciations
+  "chane", "chancon", "chançon", "muzik", "muzique", "muszique",
+  "contine", "conptine", "comtine",
+];
+
 export function detectMusicRequest(text: string): boolean {
   const lower = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   return MUSIC_TRIGGERS.some(r => r.test(lower)) || 
-    lower.includes("musique") || lower.includes("chanson") || lower.includes("comptine");
+    MUSIC_WORD_VARIANTS.some(w => lower.includes(w));
 }
 
 // ── Match text to a specific track ──
