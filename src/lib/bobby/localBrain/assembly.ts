@@ -74,6 +74,19 @@ export function assembleResponse(
     }
   }
 
+  // Smart rebond — add a follow-up question (~70% of the time, not on farewells)
+  if (intent !== "AU_REVOIR" && intent !== "DODO" && intent !== "CONTENU_BLOQUE" && Math.random() < 0.7) {
+    const rebondTopic = detectRebondTopic(
+      mem.turns.filter(t => t.role === "child").pop()?.text || ""
+    ) || mem.currentTopic;
+    const rebond = pickRebond(rebondTopic, usedRebonds);
+    if (rebond) {
+      text += " " + rebond;
+      usedRebonds.push(rebond);
+      if (usedRebonds.length > 20) usedRebonds.shift();
+    }
+  }
+
   // Name injection disabled — Bobby ne mentionne plus le prénom
 
   // Age adaptation
