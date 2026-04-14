@@ -232,37 +232,12 @@ const VoiceScreen = ({
       {/* Bottom section — fixed at bottom */}
       <div className="w-full flex flex-col items-center gap-3 pb-6 relative z-10">
 
-        {/* Live conversation transcript — always visible at bottom */}
-        <div className="w-full px-5 flex flex-col gap-2 max-h-32 overflow-y-auto">
-          {/* Child's recognized text */}
-          {(sm.machineState === "LISTENING" || sm.machineState === "PROCESSING" || sm.machineState === "SPEAKING") && sm.lastRecognized && (
-            <div className="animate-in fade-in duration-200">
-              <p className="text-base font-bold text-black/75 text-center leading-snug">
-                <span className="text-xs font-semibold text-black/40 uppercase tracking-wider">{childName}</span>
-                <br />
-                "{sm.lastRecognized}"
-              </p>
-            </div>
-          )}
-
-          {/* Live partial transcription while listening */}
-          {sm.machineState === "LISTENING" && sm.partialText && !sm.lastRecognized && (
-            <div className="animate-in fade-in slide-in-from-bottom-3 duration-300">
-              <p className="text-lg font-extrabold text-black/70 text-center leading-tight">
-                <span className="text-xs font-semibold text-black/40 uppercase tracking-wider">{childName}</span>
-                <br />
-                "{sm.partialText}"
-              </p>
-            </div>
-          )}
-
-          {/* Bobby's response text */}
+        {/* Bobby's response text only — no child transcript */}
+        <div className="w-full px-5 flex flex-col gap-2 max-h-24 overflow-y-auto">
           {sm.machineState === "SPEAKING" && sm.bobbyText && (
-            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 mt-1">
-              <p className="text-base font-bold text-primary text-center leading-snug">
-                <span className="text-xs font-semibold text-primary/50 uppercase tracking-wider">Bobby</span>
-                <br />
-                "{sm.bobbyText}"
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <p className="text-xs font-bold text-black/60 text-center leading-snug">
+                {sm.bobbyText}
               </p>
             </div>
           )}
