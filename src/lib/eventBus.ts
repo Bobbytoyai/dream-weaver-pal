@@ -9,6 +9,8 @@ export type AppEvent =
   | { type: "RESPONSE_READY"; text: string }
   | { type: "SPEECH_START" }
   | { type: "SPEECH_STOP" }
+  | { type: "MUSIC_START"; title: string }
+  | { type: "MUSIC_STOP" }
   | { type: "AUDIO_ELEMENT_CREATED"; element: HTMLAudioElement }
   | { type: "FACE_DETECTED"; position: { x: number; y: number; z: number } }
   | { type: "FACE_LOST" }
