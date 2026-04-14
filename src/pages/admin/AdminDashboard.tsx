@@ -312,7 +312,7 @@ export default function AdminDashboard({ admin }: { admin: AdminState }) {
         )}
 
         <p className="text-[9px] text-center pt-1 pb-4" style={{ color: "var(--admin-text-faint)" }}>Bobby Admin v2 · Cloud KB modifiable</p>
-        {admin.detailItem && admin.detailPortal}
+        
       </div>
     </div>
   );

@@ -1,13 +1,10 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { useState } from "react";
+import { createPortal } from "react-dom";
 import ExpressionPreview from "@/components/ExpressionPreview";
 import AutoLearnPanel from "@/components/AutoLearnPanel";
 import KBDebugPanel from "@/components/KBDebugPanel";
-import AdminDetailDialog, { type DetailItem, type DetailField } from "@/components/AdminDetailDialog";
+import AdminDetailDialog from "@/components/AdminDetailDialog";
 import AdminStoreManager from "@/components/AdminStoreManager";
-import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,983 +12,81 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
-  ArrowLeft, Plus, Pencil, Trash2, Search, Brain, Lock,
-  MessageSquare, BookOpen, Laugh, Gamepad2, Heart, Music,
-  Star, Sparkles, Globe, Microscope, TreePine, Dog,
-  GraduationCap, HelpCircle, LayoutGrid, ChevronRight,
-  Dumbbell, Lightbulb, Home, Utensils, Palette, Cpu,
-  CloudLightning, Eye, Users, Zap, RefreshCw, Sun, Moon,
+  ArrowLeft, Plus, Search, Brain, Lock,
+  ChevronRight, Pencil, Trash2, Eye, RefreshCw,
 } from "lucide-react";
 
-// Lazy import — the 10K file is huge, only load when needed
-import type { BobbyInteraction } from "@/lib/bobby_interactions_10k";
+import { supabase } from "@/integrations/supabase/client";
 import { BLAGUES } from "@/lib/bobby-content/blagues";
-import { HISTOIRES, type Histoire } from "@/lib/bobby-content/histoires";
-import { CHANSONS, CHANSON_CATEGORIES, type Chanson, type ChansonCategorie } from "@/lib/bobby-content/chansons";
+import { HISTOIRES } from "@/lib/bobby-content/histoires";
+import { CHANSONS, CHANSON_CATEGORIES, type ChansonCategorie, type Chanson } from "@/lib/bobby-content/chansons";
 import { QA_DATABASE } from "@/lib/qa-database";
 import { BOBBY_MULTI_RESPONSES } from "@/lib/responseSelector";
 import {
   QUIZ_ANIMAUX, QUIZ_EDUCATIF, VRAI_FAUX, DEVINETTES,
   BLAGUES as GAME_BLAGUES,
-  type QuizQuestion, type TrueFalseQuestion, type Riddle,
 } from "@/lib/gameEngine";
 import {
-  BOBBY_PERSONALITY,
-  BOBBY_NATURAL_REACTIONS,
-  SILENCE_RELAUNCHES,
-  WELCOME_PHRASES,
-  FAREWELL_PHRASES,
+  BOBBY_PERSONALITY, BOBBY_NATURAL_REACTIONS,
+  SILENCE_RELAUNCHES, WELCOME_PHRASES, FAREWELL_PHRASES,
 } from "@/lib/bobby-content/cerveau";
 
-const ACCESS_CODE = "bobby2026";
-
-// ─── 10K Interaction categories (matching actual data) ───────────────
-const INTERACTION_CATEGORIES: {
-  id: string;
-  label: string;
-  icon: typeof Brain;
-  color: string;
-  bgColor: string;
-  emoji: string;
-}[] = [
-  { id: "emotions", label: "Émotions", icon: Heart, color: "text-pink-400", bgColor: "bg-pink-500/20", emoji: "💛" },
-  { id: "social", label: "Social", icon: Users, color: "text-rose-400", bgColor: "bg-rose-500/20", emoji: "👥" },
-  { id: "family", label: "Famille", icon: Home, color: "text-orange-400", bgColor: "bg-orange-500/20", emoji: "👨‍👩‍👧" },
-  { id: "animals", label: "Animaux", icon: Dog, color: "text-amber-400", bgColor: "bg-amber-500/20", emoji: "🐾" },
-  { id: "nature", label: "Nature", icon: TreePine, color: "text-green-400", bgColor: "bg-green-500/20", emoji: "🌿" },
-  { id: "sport", label: "Sport", icon: Dumbbell, color: "text-blue-400", bgColor: "bg-blue-500/20", emoji: "⚽" },
-  { id: "music", label: "Musique", icon: Music, color: "text-indigo-400", bgColor: "bg-indigo-500/20", emoji: "🎵" },
-  { id: "humor", label: "Humour", icon: Laugh, color: "text-yellow-400", bgColor: "bg-yellow-500/20", emoji: "😂" },
-  { id: "education", label: "Éducation", icon: GraduationCap, color: "text-cyan-400", bgColor: "bg-cyan-500/20", emoji: "📚" },
-  { id: "school", label: "École", icon: GraduationCap, color: "text-teal-400", bgColor: "bg-teal-500/20", emoji: "🏫" },
-  { id: "games", label: "Jeux", icon: Gamepad2, color: "text-purple-400", bgColor: "bg-purple-500/20", emoji: "🎮" },
-  { id: "imagination", label: "Imagination", icon: Lightbulb, color: "text-orange-400", bgColor: "bg-orange-500/20", emoji: "💡" },
-  { id: "dreams", label: "Rêves", icon: CloudLightning, color: "text-violet-400", bgColor: "bg-violet-500/20", emoji: "🌙" },
-  { id: "stories", label: "Histoires", icon: BookOpen, color: "text-purple-400", bgColor: "bg-purple-500/20", emoji: "📖" },
-  { id: "support", label: "Soutien", icon: Heart, color: "text-red-400", bgColor: "bg-red-500/20", emoji: "🤗" },
-  { id: "wellbeing", label: "Bien-être", icon: Zap, color: "text-emerald-400", bgColor: "bg-emerald-500/20", emoji: "🌈" },
-  { id: "health", label: "Santé", icon: Heart, color: "text-emerald-400", bgColor: "bg-emerald-500/20", emoji: "🩺" },
-  { id: "friendship", label: "Amitié", icon: Users, color: "text-pink-400", bgColor: "bg-pink-500/20", emoji: "🤝" },
-];
-
-// ─── Age groups ─────────────────────────────────────────────────────
-const AGE_GROUPS = [
-  { label: "Tous", min: 3, max: 12 },
-  { label: "3-5 ans", min: 3, max: 5 },
-  { label: "6-8 ans", min: 6, max: 8 },
-  { label: "9-10 ans", min: 9, max: 10 },
-  { label: "11-12 ans", min: 11, max: 12 },
-];
-
-// ─── Cloud KB categories ────────────────────────────────────────────
-interface CategoryConfig {
-  id: string;
-  label: string;
-  icon: typeof Brain;
-  color: string;
-  bgColor: string;
-  description: string;
-  dbCategories: string[];
-}
-
-const BRAIN_SECTIONS: CategoryConfig[] = [
-  { id: "educatif", label: "Éducatif", icon: GraduationCap, color: "text-cyan-400", bgColor: "bg-cyan-500/20", description: "Sciences, maths, géographie, espace", dbCategories: ["éducatif"] },
-  { id: "emotions", label: "Émotions", icon: Heart, color: "text-pink-400", bgColor: "bg-pink-500/20", description: "Réponses émotionnelles, réconfort", dbCategories: ["émotions"] },
-  { id: "general", label: "Conversations", icon: MessageSquare, color: "text-purple-400", bgColor: "bg-purple-500/20", description: "Salutations, discussions, méta", dbCategories: ["général", "méta"] },
-  { id: "memoire", label: "Mémoire", icon: Brain, color: "text-violet-400", bgColor: "bg-violet-500/20", description: "Mémoire, rappels, souvenirs", dbCategories: ["mémoire"] },
-  { id: "imagination", label: "Imagination", icon: Lightbulb, color: "text-orange-400", bgColor: "bg-orange-500/20", description: "Créativité, histoires inventées", dbCategories: ["imagination"] },
-  { id: "logique", label: "Logique", icon: Cpu, color: "text-teal-400", bgColor: "bg-teal-500/20", description: "Raisonnement, puzzles, décision", dbCategories: ["logique", "décision"] },
-  { id: "animaux", label: "Animaux", icon: Dog, color: "text-amber-400", bgColor: "bg-amber-500/20", description: "Animaux, nature", dbCategories: ["animaux", "nature"] },
-  { id: "famille", label: "Famille", icon: Home, color: "text-rose-400", bgColor: "bg-rose-500/20", description: "Famille, social, amitié", dbCategories: ["famille", "social"] },
-  { id: "nourriture", label: "Nourriture", icon: Utensils, color: "text-green-400", bgColor: "bg-green-500/20", description: "Repas, goûts, alimentation", dbCategories: ["nourriture"] },
-  { id: "opinion", label: "Opinions", icon: Star, color: "text-yellow-400", bgColor: "bg-yellow-500/20", description: "Avis, préférences, goûts", dbCategories: ["opinion", "Tu préfères lequel ?"] },
-  { id: "quotidien", label: "Quotidien", icon: Home, color: "text-blue-400", bgColor: "bg-blue-500/20", description: "Routine, journée, habitudes", dbCategories: ["quotidien", "routine"] },
-  { id: "jeux", label: "Jeux & Activités", icon: Gamepad2, color: "text-blue-400", bgColor: "bg-blue-500/20", description: "Jeux, activités ludiques", dbCategories: ["jeux", "activité", "ludique"] },
-  { id: "motivation", label: "Motivation", icon: Zap, color: "text-emerald-400", bgColor: "bg-emerald-500/20", description: "Encouragement, motivation", dbCategories: ["motivation"] },
-  { id: "ecole", label: "École", icon: GraduationCap, color: "text-teal-400", bgColor: "bg-teal-500/20", description: "École, apprentissage scolaire", dbCategories: ["école"] },
-  { id: "espace", label: "Espace", icon: Globe, color: "text-indigo-400", bgColor: "bg-indigo-500/20", description: "Espace, astronomie, planètes", dbCategories: ["espace"] },
-  { id: "humour", label: "Humour", icon: Laugh, color: "text-yellow-400", bgColor: "bg-yellow-500/20", description: "Blagues, rires", dbCategories: ["humour"] },
-  { id: "securite", label: "Sécurité", icon: Eye, color: "text-red-400", bgColor: "bg-red-500/20", description: "Protection, sécurité enfant", dbCategories: ["sécurité"] },
-];
-
-const ALL_DB_CATEGORIES = [
-  "général", "éducatif", "émotions", "mémoire", "imagination", "logique", "décision",
-  "animaux", "nature", "famille", "social", "nourriture", "opinion", "Tu préfères lequel ?",
-  "quotidien", "routine", "jeux", "activité", "ludique", "motivation", "école", "espace",
-  "humour", "sécurité", "méta",
-];
-
-// ─── Types ─────────────────────────────────────────────────────────
-interface KBEntry {
-  id: string;
-  question: string;
-  keywords: string[];
-  answer: string;
-  category: string;
-  priority: number;
-  is_active: boolean;
-  age_min: number;
-  age_max: number;
-  usage_count: number;
-  emotion: string;
-  created_at: string;
-}
-
-// ─── Top-level brain sections shown as big square cards ─────────────
-type TopSection = "interactions" | "multiresponses" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons" | "store" | "expressions" | "autolearn" | "cloudusers" | "kbdebug";
-
-// Counts are computed dynamically below in the component
-const TOP_SECTIONS_CONFIG: {
-  id: TopSection;
-  label: string;
-  icon: typeof Brain;
-  color: string;
-  bgColor: string;
-  desc: string;
-  emoji: string;
-}[] = [
-  { id: "interactions", label: "Interactions", icon: MessageSquare, color: "text-cyan-500", bgColor: "bg-cyan-500/20", desc: "Base d'interactions enfant par âge & catégorie", emoji: "🧠" },
-  { id: "multiresponses", label: "Multi-Réponses", icon: Zap, color: "text-orange-500", bgColor: "bg-orange-500/20", desc: "Réponses adaptatives multi-tags (offline)", emoji: "⚡" },
-  { id: "jeux", label: "Jeux & Quiz", icon: Gamepad2, color: "text-blue-500", bgColor: "bg-blue-500/20", desc: "Quiz animaux, sciences, vrai/faux, devinettes", emoji: "🎮" },
-  { id: "qa", label: "QA Database", icon: HelpCircle, color: "text-amber-500", bgColor: "bg-amber-500/20", desc: "Questions-réponses offline structurées", emoji: "❓" },
-  { id: "blagues", label: "Blagues", icon: Laugh, color: "text-green-500", bgColor: "bg-green-500/20", desc: "Blagues adaptées par âge & catégorie", emoji: "😂" },
-  { id: "histoires", label: "Histoires", icon: BookOpen, color: "text-purple-500", bgColor: "bg-purple-500/20", desc: "Contes & aventures personnalisées", emoji: "📖" },
-  { id: "chansons", label: "Chansons", icon: Music, color: "text-rose-500", bgColor: "bg-rose-500/20", desc: "Comptines, berceuses, éducatif, activités", emoji: "🎵" },
-  { id: "cerveau", label: "Personnalité", icon: Sparkles, color: "text-pink-500", bgColor: "bg-pink-500/20", desc: "Personnalité, réactions, phrases Bobby", emoji: "✨" },
-  { id: "cloud", label: "Cloud KB", icon: Globe, color: "text-blue-500", bgColor: "bg-blue-500/20", desc: "Base cloud extensible (ajout via admin)", emoji: "☁️" },
-  { id: "store", label: "Bobby Store", icon: Star, color: "text-emerald-500", bgColor: "bg-emerald-500/20", desc: "Gérer le catalogue du store (CRUD)", emoji: "🛒" },
-  { id: "expressions", label: "Expressions", icon: Eye, color: "text-fuchsia-500", bgColor: "bg-fuchsia-500/20", desc: "Preview & test des expressions faciales", emoji: "🎭" },
-  { id: "autolearn", label: "Auto-Learning", icon: Microscope, color: "text-lime-500", bgColor: "bg-lime-500/20", desc: "IA auto-complétion depuis les conversations", emoji: "🧬" },
-  { id: "cloudusers", label: "Bobby Cloud", icon: Users, color: "text-sky-500", bgColor: "bg-sky-500/20", desc: "Utilisateurs Bobby Cloud, profils sync", emoji: "☁️👥" },
-  { id: "kbdebug", label: "KB Debug", icon: Search, color: "text-emerald-500", bgColor: "bg-emerald-500/20", desc: "Debug scoring sémantique KB en temps réel", emoji: "🔍" },
-];
-
-// ═══════════════════════════════════════════════════════════════════
-// SUB-COMPONENTS
-// ═══════════════════════════════════════════════════════════════════
-
-function DashCard({ label, emoji, count, desc, color, bgColor, onClick, badge }: {
-  label: string; emoji: string; count: string | number; desc: string;
-  color: string; bgColor: string; onClick: () => void; badge?: string;
-}) {
-  return (
-    <button onClick={onClick}
-      className="rounded-2xl p-3 transition-all duration-200 text-left flex items-center gap-3 group w-full"
-      style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}
-    >
-      <div className={`w-10 h-10 shrink-0 rounded-xl ${bgColor} flex items-center justify-center`}>
-        <span className="text-xl">{emoji}</span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <h3 className={`text-[13px] font-bold ${color} truncate`}>{label}</h3>
-          {badge && <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold shrink-0">{badge}</span>}
-        </div>
-        <p className="text-[10px] truncate leading-tight" style={{ color: "var(--admin-text-dim)" }}>{desc}</p>
-      </div>
-      <div className="text-right shrink-0">
-        <p className="text-[18px] font-bold tabular-nums" style={{ color: "var(--admin-text)" }}>{count}</p>
-      </div>
-      <ChevronRight className="w-3.5 h-3.5 shrink-0 transition-colors" style={{ color: "var(--admin-text-faint)" }} />
-    </button>
-  );
-}
-
-function InteractionCard({ interaction }: { interaction: BobbyInteraction }) {
-  return (
-    <div className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] hover:bg-white/[0.06] transition-all">
-      <div className="flex items-center gap-2 mb-2.5 flex-wrap">
-        <span className="text-[10px] px-2.5 py-1 rounded-xl bg-cyan-500/15 text-cyan-300 font-semibold">{interaction.category}</span>
-        <span className="text-[10px] px-2.5 py-1 rounded-xl bg-purple-500/15 text-purple-300 font-semibold">{interaction.age} ans</span>
-        <span className="text-[10px] px-2.5 py-1 rounded-xl bg-pink-500/15 text-pink-300 font-semibold">{interaction.emotion}</span>
-        <span className="text-[10px] text-white/20 ml-auto font-mono">Niv.{interaction.difficulty_level}</span>
-      </div>
-      <div className="space-y-2">
-        <div className="flex gap-2.5">
-          <span className="text-[11px] shrink-0 mt-0.5">👦</span>
-          <p className="text-[13px] text-white/80 leading-relaxed">{interaction.child_input}</p>
-        </div>
-        <div className="flex gap-2.5">
-          <span className="text-[11px] shrink-0 mt-0.5">🤖</span>
-          <p className="text-[13px] text-white/50 leading-relaxed">{interaction.ai_response}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function EntryRow({ entry, onToggle, onEdit, onDelete }: {
-  entry: KBEntry; onToggle: () => void; onEdit: () => void; onDelete: () => void;
-}) {
-  return (
-    <div className={`bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border transition-all ${entry.is_active ? "border-white/[0.06]" : "border-red-500/20 opacity-40"}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-            <span className="text-[10px] px-2 py-1 rounded-lg bg-amber-500/15 text-amber-300 font-mono font-bold">P{entry.priority}</span>
-            <span className="text-[10px] text-white/30">{entry.age_min}-{entry.age_max} ans</span>
-            <span className="text-[10px] text-white/20">🔄 {entry.usage_count || 0}</span>
-          </div>
-          <p className="text-white font-medium text-[13px] leading-relaxed">{entry.question}</p>
-          <p className="text-white/30 text-[12px] mt-1 line-clamp-2">{entry.answer}</p>
-          {entry.keywords.length > 0 && (
-            <div className="flex gap-1 mt-2 flex-wrap">
-              {entry.keywords.slice(0, 6).map((k, i) => (
-                <span key={i} className="text-[9px] px-2 py-0.5 rounded-lg bg-white/[0.06] text-white/40">{k}</span>
-              ))}
-              {entry.keywords.length > 6 && <span className="text-[10px] text-white/20">+{entry.keywords.length - 6}</span>}
-            </div>
-          )}
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
-          <Switch checked={entry.is_active} onCheckedChange={onToggle} className="scale-75" />
-          <Button size="icon" variant="ghost" onClick={onEdit} className="text-white/30 hover:text-blue-400 w-8 h-8">
-            <Pencil className="w-3.5 h-3.5" />
-          </Button>
-          <Button size="icon" variant="ghost" onClick={onDelete} className="text-white/30 hover:text-red-400 w-8 h-8">
-            <Trash2 className="w-3.5 h-3.5" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// MAIN ADMIN COMPONENT
-// ═══════════════════════════════════════════════════════════════════
+import {
+  ACCESS_CODE, INTERACTION_CATEGORIES, AGE_GROUPS, BRAIN_SECTIONS,
+  ALL_DB_CATEGORIES, QA_INTENT_EMOJIS,
+} from "./admin/adminConfig";
+import { InteractionCard, EntryRow } from "./admin/AdminCards";
+import { useAdminState } from "./admin/useAdminState";
+import AdminDashboard from "./admin/AdminDashboard";
 
 const Admin = () => {
-  const navigate = useNavigate();
   const [authenticated, setAuthenticated] = useState(false);
   const [code, setCode] = useState("");
-  const [adminDark, setAdminDark] = useState(() => {
-    try { return localStorage.getItem("bobby-admin-theme") !== "light"; } catch { return true; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem("bobby-admin-theme", adminDark ? "dark" : "light"); } catch {}
-  }, [adminDark]);
+  const admin = useAdminState();
 
-  // Cloud KB
-  const [entries, setEntries] = useState<KBEntry[]>([]);
-  const [kbActiveCount, setKbActiveCount] = useState(0);
-  const [kbTotalCount, setKbTotalCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [editingEntry, setEditingEntry] = useState<Partial<KBEntry> | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [autoLearnCount, setAutoLearnCount] = useState<number | null>(null);
+  const {
+    adminDark, topSection, setTopSection, interactionCat, setInteractionCat,
+    interactionAge, setInteractionAge, cloudSection, setCloudSection,
+    search, setSearch, ageFilter, setAgeFilter,
+    expandedStory, setExpandedStory,
+    entries, loading, interactions, loadingInteractions,
+    cloudStories, storeItems, cloudUsers,
+    realConversations, realConvLoading, learningSessionId,
+    liveInstallCounts,
+    editingEntry, setEditingEntry, saving,
+    editingStory, setEditingStory, savingStory, setSavingStory,
+    detailItem, setDetailItem, selectedCloudUser, setSelectedCloudUser,
+    cloudUserSearch, setCloudUserSearch, cloudUsersLoading,
+    categoryCounts, qaByIntent, currentCloudSection, cloudEntries,
+    filteredInteractions, interactionCategoryCounts, multiResponseCategoryCounts,
+    sectionCounts,
+    goBack, handleSave, handleDelete, handleToggleActive,
+    handleDetailSave, handleDetailDelete,
+    openInteractionDetail, openKBDetail, openQADetail, openBlagueDetail,
+    openHistoireDetail, openQuizDetail,
+    fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers,
+    fetchRealConversations, learnFromSession, refreshAll,
+  } = admin;
 
-  // Navigation
-  const [topSection, setTopSection] = useState<TopSection | null>(null);
-  const [interactionCat, setInteractionCat] = useState<string | null>(null);
-  const [interactionAge, setInteractionAge] = useState<{ min: number; max: number }>({ min: 3, max: 12 });
-  const [cloudSection, setCloudSection] = useState<string | null>(null);
-  const [ageFilter, setAgeFilter] = useState<string | null>(null);
-  const [expandedStory, setExpandedStory] = useState<string | null>(null);
-  const [cloudStories, setCloudStories] = useState<any[]>([]);
-  const [editingStory, setEditingStory] = useState<Partial<Histoire & { id: string }> | null>(null);
-  const [savingStory, setSavingStory] = useState(false);
-
-  // Store management
-  interface StoreContentItem {
-    id: string; slug: string; name: string; emoji: string; description: string;
-    category: string; age_min: number; age_max: number; tags: string[];
-    size_label: string; is_new: boolean; is_popular: boolean; is_featured: boolean;
-    is_active: boolean; version: number; install_count: number; created_at: string;
+  // ─── Init on auth ───
+  const [didInit, setDidInit] = useState(false);
+  if (authenticated && !didInit) {
+    setDidInit(true);
+    refreshAll();
   }
-  const [storeItems, setStoreItems] = useState<StoreContentItem[]>([]);
-  const [editingStoreItem, setEditingStoreItem] = useState<Partial<StoreContentItem> | null>(null);
-  const [savingStoreItem, setSavingStoreItem] = useState(false);
-  const [liveInstallCounts, setLiveInstallCounts] = useState<Record<string, number>>({});
-  const [detailItem, setDetailItem] = useState<DetailItem | null>(null);
 
-  // Bobby Cloud Users
-  interface CloudUser {
-    id: string; sync_code: string; child_name: string; parent_settings: any;
-    child_memory_snapshot: any; device_info: string | null;
-    last_synced_at: string; created_at: string; updated_at: string;
-  }
-  const [cloudUsers, setCloudUsers] = useState<CloudUser[]>([]);
-  const [cloudUsersLoading, setCloudUsersLoading] = useState(false);
-  const [cloudUserSearch, setCloudUserSearch] = useState("");
-  const [selectedCloudUser, setSelectedCloudUser] = useState<CloudUser | null>(null);
+  // Detail portal
+  const detailPortal = detailItem ? createPortal(
+    <AdminDetailDialog
+      item={detailItem}
+      onClose={() => setDetailItem(null)}
+      onSave={handleDetailSave}
+      onDelete={handleDetailDelete}
+    />,
+    document.body
+  ) : null;
 
-  // Real-time stats
-  interface LiveStats {
-    activeSessions: number;
-    todaySessions: number;
-    todayMessages: number;
-    lastActivity: string | null;
-    avgDuration: number;
-    topEmotion: string;
-  }
-  const [liveStats, setLiveStats] = useState<LiveStats>({ activeSessions: 0, todaySessions: 0, todayMessages: 0, lastActivity: null, avgDuration: 0, topEmotion: "—" });
-
-  const fetchLiveStats = useCallback(async () => {
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-    const activeThreshold = new Date(now.getTime() - 10 * 60 * 1000).toISOString(); // 10 min
-
-    const [activeRes, todayRes, msgsRes, lastRes] = await Promise.all([
-      supabase.from("child_sessions").select("id", { count: "exact", head: true }).is("ended_at", null).gte("started_at", activeThreshold),
-      supabase.from("child_sessions").select("id, duration_seconds, detected_emotions", { count: "exact" }).gte("started_at", todayStart),
-      supabase.from("session_messages").select("id", { count: "exact", head: true }).gte("created_at", todayStart),
-      supabase.from("session_messages").select("created_at").order("created_at", { ascending: false }).limit(1),
-    ]);
-
-    const todaySessions = todayRes.data || [];
-    const durations = todaySessions.map((s: any) => s.duration_seconds).filter(Boolean) as number[];
-    const avgDuration = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : 0;
-
-    // Top emotion from today's sessions
-    const allEmotions = todaySessions.flatMap((s: any) => s.detected_emotions || []);
-    const emotionCounts: Record<string, number> = {};
-    allEmotions.forEach((e: string) => { emotionCounts[e] = (emotionCounts[e] || 0) + 1; });
-    const topEmotion = Object.entries(emotionCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "—";
-
-    setLiveStats({
-      activeSessions: activeRes.count || 0,
-      todaySessions: todayRes.count || 0,
-      todayMessages: msgsRes.count || 0,
-      lastActivity: lastRes.data?.[0]?.created_at || null,
-      avgDuration,
-      topEmotion,
-    });
-  }, []);
-
-  // Chart data
-  interface DayData { day: string; sessions: number; messages: number; }
-  interface EmotionData { name: string; value: number; color: string; }
-  const [chartSessions, setChartSessions] = useState<DayData[]>([]);
-  const [chartEmotions, setChartEmotions] = useState<EmotionData[]>([]);
-
-  const EMOTION_COLORS: Record<string, string> = {
-    happy: "#22c55e", sad: "#3b82f6", angry: "#ef4444", scared: "#eab308",
-    surprised: "#8b5cf6", neutral: "#64748b", excited: "#ec4899", curious: "#06b6d4",
-    love: "#f43f5e", proud: "#6366f1", shy: "#a855f7", frustrated: "#f97316",
-    joie: "#22c55e", tristesse: "#3b82f6", colère: "#ef4444", peur: "#eab308",
-    anxiété: "#f59e0b", frustration: "#f97316", curiosité: "#06b6d4", amour: "#f43f5e",
-    fierté: "#6366f1", timidité: "#a855f7", surprise: "#8b5cf6", excité: "#ec4899",
-  };
-  const EMOTION_LABELS: Record<string, string> = {
-    happy: "joie", sad: "tristesse", angry: "colère", scared: "peur",
-    surprised: "surprise", neutral: "neutre", excited: "excité", curious: "curiosité",
-    love: "amour", proud: "fierté", shy: "timidité", frustrated: "frustration",
-  };
-
-  const fetchChartData = useCallback(async () => {
-    const now = new Date();
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-
-    const [sessionsRes, msgsRes] = await Promise.all([
-      supabase.from("child_sessions").select("started_at, detected_emotions").gte("started_at", weekAgo),
-      supabase.from("session_messages").select("created_at").gte("created_at", weekAgo),
-    ]);
-
-    // Sessions & messages per day
-    const dayMap: Record<string, { sessions: number; messages: number }> = {};
-    const dayNames = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-      const key = d.toISOString().slice(0, 10);
-      dayMap[key] = { sessions: 0, messages: 0 };
-    }
-
-    (sessionsRes.data || []).forEach((s: any) => {
-      const key = s.started_at?.slice(0, 10);
-      if (key && dayMap[key]) dayMap[key].sessions++;
-    });
-    (msgsRes.data || []).forEach((m: any) => {
-      const key = m.created_at?.slice(0, 10);
-      if (key && dayMap[key]) dayMap[key].messages++;
-    });
-
-    setChartSessions(Object.entries(dayMap).map(([date, v]) => {
-      const d = new Date(date);
-      return { day: dayNames[d.getDay()], sessions: v.sessions, messages: v.messages };
-    }));
-
-    // Emotions aggregation
-    const emotionCounts: Record<string, number> = {};
-    (sessionsRes.data || []).forEach((s: any) => {
-      (s.detected_emotions || []).forEach((e: string) => {
-        emotionCounts[e] = (emotionCounts[e] || 0) + 1;
-      });
-    });
-
-    const sorted = Object.entries(emotionCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
-    setChartEmotions(sorted.map(([name, value]) => ({
-      name, value, color: EMOTION_COLORS[name] || "#94a3b8",
-    })));
-  }, []);
-
-  const fetchCloudUsers = useCallback(async () => {
-    setCloudUsersLoading(true);
-    const { data } = await supabase.from("cloud_profiles").select("*").order("created_at", { ascending: false });
-    setCloudUsers((data as unknown as CloudUser[]) || []);
-    setCloudUsersLoading(false);
-  }, []);
-
-  // ─── Detail dialog helpers ─────────────────────────────────────
-  const openInteractionDetail = (interaction: BobbyInteraction) => {
-    setDetailItem({
-      type: "interaction",
-      title: interaction.child_input.slice(0, 60),
-      emoji: "🧠",
-      fields: [
-        { key: "child_input", label: "Question de l'enfant", value: interaction.child_input, type: "textarea" },
-        { key: "ai_response", label: "Réponse de Bobby", value: interaction.ai_response, type: "textarea" },
-        { key: "category", label: "Catégorie", value: interaction.category, type: "select", options: ALL_DB_CATEGORIES },
-        { key: "emotion", label: "Émotion", value: interaction.emotion, type: "text" },
-        { key: "age", label: "Âge cible", value: interaction.age, type: "number" },
-        { key: "difficulty_level", label: "Niveau difficulté", value: interaction.difficulty_level, type: "number" },
-        { key: "keywords", label: "Mots-clés", value: [interaction.category, interaction.emotion], type: "tags" },
-      ],
-      meta: [
-        { label: "Âge", value: `${interaction.age} ans`, color: "bg-purple-500/20 text-purple-300" },
-        { label: "Émotion", value: interaction.emotion, color: "bg-pink-500/20 text-pink-300" },
-        { label: "Cat.", value: interaction.category, color: "bg-cyan-500/20 text-cyan-300" },
-      ],
-    });
-  };
-
-  const openStoreDetail = (item: StoreContentItem) => {
-    setDetailItem({
-      type: "store",
-      title: item.name,
-      emoji: item.emoji,
-      id: item.id,
-      fields: [
-        { key: "name", label: "Nom", value: item.name, type: "text" },
-        { key: "slug", label: "Slug", value: item.slug, type: "text" },
-        { key: "emoji", label: "Emoji", value: item.emoji, type: "text" },
-        { key: "description", label: "Description", value: item.description, type: "textarea" },
-        { key: "category", label: "Catégorie", value: item.category, type: "select", options: ["jeux", "educatif", "histoires", "blagues"] },
-        { key: "age_min", label: "Âge min", value: item.age_min, type: "number" },
-        { key: "age_max", label: "Âge max", value: item.age_max, type: "number" },
-        { key: "tags", label: "Tags", value: item.tags, type: "tags" },
-        { key: "size_label", label: "Taille", value: item.size_label, type: "text" },
-        { key: "is_new", label: "Nouveau", value: item.is_new, type: "boolean" },
-        { key: "is_popular", label: "Populaire", value: item.is_popular, type: "boolean" },
-        { key: "is_featured", label: "Featured", value: item.is_featured, type: "boolean" },
-        { key: "is_active", label: "Actif", value: item.is_active, type: "boolean" },
-      ],
-      meta: [
-        { label: "Catégorie", value: item.category, color: "bg-emerald-500/20 text-emerald-300" },
-        { label: "Âge", value: `${item.age_min}-${item.age_max}`, color: "bg-blue-500/20 text-blue-300" },
-        { label: "Installs", value: `${liveInstallCounts[item.id] || 0}`, color: "bg-amber-500/20 text-amber-300" },
-      ],
-    });
-  };
-
-  const openKBDetail = (entry: KBEntry) => {
-    setDetailItem({
-      type: "kb",
-      title: entry.question.slice(0, 60),
-      emoji: "☁️",
-      id: entry.id,
-      fields: [
-        { key: "question", label: "Question / Déclencheur", value: entry.question, type: "textarea" },
-        { key: "answer", label: "Réponse de Bobby", value: entry.answer, type: "textarea" },
-        { key: "keywords", label: "Mots-clés", value: entry.keywords, type: "tags" },
-        { key: "category", label: "Catégorie", value: entry.category, type: "select", options: ALL_DB_CATEGORIES },
-        { key: "emotion", label: "Émotion", value: entry.emotion, type: "text" },
-        { key: "priority", label: "Priorité (1-10)", value: entry.priority, type: "number" },
-        { key: "age_min", label: "Âge min", value: entry.age_min, type: "number" },
-        { key: "age_max", label: "Âge max", value: entry.age_max, type: "number" },
-        { key: "is_active", label: "Actif", value: entry.is_active, type: "boolean" },
-      ],
-      meta: [
-        { label: "Priorité", value: `P${entry.priority}`, color: "bg-amber-500/20 text-amber-300" },
-        { label: "Utilisé", value: `${entry.usage_count}×`, color: "bg-green-500/20 text-green-300" },
-      ],
-    });
-  };
-
-  const openQADetail = (entry: typeof QA_DATABASE[0]) => {
-    setDetailItem({
-      type: "qa",
-      title: entry.triggers[0]?.slice(0, 60) || "QA",
-      emoji: "❓",
-      fields: [
-        { key: "triggers", label: "Déclencheurs", value: entry.triggers, type: "tags" },
-        { key: "responses", label: "Réponses (une par ligne)", value: entry.responses.join("\n"), type: "textarea" },
-        { key: "intent", label: "Intent", value: entry.intent || "OTHER", type: "text" },
-        { key: "keywords", label: "Mots-clés", value: entry.triggers.flatMap(t => t.split(" ")).filter(w => w.length > 3), type: "tags" },
-      ],
-      meta: [
-        { label: "Intent", value: entry.intent || "OTHER", color: "bg-amber-500/20 text-amber-300" },
-        { label: "Réponses", value: `${entry.responses.length}`, color: "bg-green-500/20 text-green-300" },
-      ],
-    });
-  };
-
-  const openBlagueDetail = (blague: typeof BLAGUES[0], index: number) => {
-    setDetailItem({
-      type: "blague",
-      title: blague.question.slice(0, 60),
-      emoji: "😂",
-      fields: [
-        { key: "question", label: "Question", value: blague.question, type: "textarea" },
-        { key: "reponse", label: "Réponse", value: blague.reponse, type: "textarea" },
-        { key: "categorie", label: "Catégorie", value: blague.categorie, type: "select", options: ["animaux", "ecole", "nourriture", "absurde", "famille", "science"] },
-        { key: "ageMin", label: "Âge min", value: blague.ageMin, type: "number" },
-        { key: "ageMax", label: "Âge max", value: blague.ageMax, type: "number" },
-        { key: "difficulte", label: "Difficulté (1-3)", value: blague.difficulte, type: "number" },
-      ],
-      meta: [
-        { label: "Catégorie", value: blague.categorie, color: "bg-green-500/20 text-green-300" },
-        { label: "Âge", value: `${blague.ageMin}-${blague.ageMax}`, color: "bg-blue-500/20 text-blue-300" },
-        { label: "Niv.", value: `${blague.difficulte}`, color: "bg-purple-500/20 text-purple-300" },
-      ],
-    });
-  };
-
-  const openHistoireDetail = (histoire: any) => {
-    const isCloud = histoire.source === "cloud";
-    setDetailItem({
-      type: "histoire",
-      title: histoire.titre?.slice(0, 60) || "Histoire",
-      emoji: "📖",
-      id: isCloud ? histoire.id : undefined,
-      fields: [
-        { key: "titre", label: "Titre", value: histoire.titre, type: "text" },
-        { key: "theme", label: "Thème", value: histoire.theme, type: "select", options: ["espace", "pirate", "magie", "animaux", "dodo", "nature", "amitié", "courage"] },
-        { key: "texte", label: "Texte complet", value: histoire.texte, type: "textarea" },
-        { key: "moralite", label: "Moralité", value: histoire.moralité || "", type: "text" },
-        { key: "ageMin", label: "Âge min", value: histoire.ageMin, type: "number" },
-        { key: "ageMax", label: "Âge max", value: histoire.ageMax, type: "number" },
-        { key: "duree", label: "Durée", value: histoire.duree, type: "select", options: ["courte", "moyenne", "longue"] },
-        { key: "tags", label: "Tags", value: histoire.tags || [], type: "tags" },
-        { key: "source", label: "Source", value: histoire.source, type: "readonly" },
-      ],
-      meta: [
-        { label: "Thème", value: histoire.theme, color: "bg-purple-500/20 text-purple-300" },
-        { label: "Durée", value: histoire.duree, color: "bg-amber-500/20 text-amber-300" },
-        { label: "Source", value: isCloud ? "☁️ Cloud" : "📦 Local", color: isCloud ? "bg-sky-500/20 text-sky-300" : "bg-white/10 text-white/50" },
-      ],
-    });
-  };
-
-  const openQuizDetail = (q: any, type: string) => {
-    if (type === "quiz") {
-      setDetailItem({
-        type: "generic", title: q.question.slice(0, 60), emoji: "🧠",
-        fields: [
-          { key: "question", label: "Question", value: q.question, type: "textarea" },
-          { key: "choices", label: "Choix (virgules)", value: q.choices, type: "tags" },
-          { key: "correctIndex", label: "Index correct (0-based)", value: q.correctIndex, type: "number" },
-          { key: "explanation", label: "Explication", value: q.explanation, type: "textarea" },
-          { key: "category", label: "Catégorie", value: q.category, type: "text" },
-        ],
-        meta: [
-          { label: "Catégorie", value: q.category, color: "bg-cyan-500/20 text-cyan-300" },
-          { label: "Bonne rép.", value: q.choices[q.correctIndex], color: "bg-green-500/20 text-green-300" },
-        ],
-      });
-    } else if (type === "vf") {
-      setDetailItem({
-        type: "generic", title: q.statement.slice(0, 60), emoji: "✅",
-        fields: [
-          { key: "statement", label: "Affirmation", value: q.statement, type: "textarea" },
-          { key: "answer", label: "Vrai ?", value: q.answer, type: "boolean" },
-          { key: "explanation", label: "Explication", value: q.explanation, type: "textarea" },
-          { key: "category", label: "Catégorie", value: q.category, type: "text" },
-        ],
-        meta: [
-          { label: "Réponse", value: q.answer ? "VRAI" : "FAUX", color: q.answer ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300" },
-        ],
-      });
-    } else if (type === "riddle") {
-      setDetailItem({
-        type: "generic", title: q.question.slice(0, 60), emoji: "🤔",
-        fields: [
-          { key: "question", label: "Devinette", value: q.question, type: "textarea" },
-          { key: "choices", label: "Choix", value: q.choices, type: "tags" },
-          { key: "correctIndex", label: "Index correct", value: q.correctIndex, type: "number" },
-          { key: "hint", label: "Indice", value: q.hint, type: "text" },
-        ],
-        meta: [
-          { label: "Bonne rép.", value: q.choices[q.correctIndex], color: "bg-green-500/20 text-green-300" },
-        ],
-      });
-    } else {
-      setDetailItem({
-        type: "generic", title: (q as string).slice(0, 60), emoji: "😂",
-        fields: [
-          { key: "text", label: "Blague", value: q, type: "textarea" },
-        ],
-        meta: [],
-      });
-    }
-  };
-
-  const handleDetailSave = async (type: string, id: string | undefined, values: Record<string, any>) => {
-    if (type === "interaction") {
-      // Save interaction as new KB entry so Bobby remembers
-      const { error } = await supabase.from("knowledge_base").insert({
-        question: values.child_input,
-        answer: values.ai_response,
-        category: values.category || "général",
-        keywords: values.keywords || [],
-        priority: values.difficulty_level || 5,
-        age_min: values.age || 3,
-        age_max: Math.min((values.age || 7) + 3, 12),
-        emotion: values.emotion || "happy",
-        is_active: true,
-      });
-      if (error) toast.error(error.message);
-      else { toast.success("Sauvegardé dans la base Bobby !"); fetchEntries(); }
-    } else if (type === "store" && id) {
-      const { error } = await supabase.from("store_content").update({
-        name: values.name, slug: values.slug, emoji: values.emoji,
-        description: values.description, category: values.category,
-        age_min: values.age_min, age_max: values.age_max,
-        tags: values.tags, size_label: values.size_label,
-        is_new: values.is_new, is_popular: values.is_popular,
-        is_featured: values.is_featured, is_active: values.is_active,
-      }).eq("id", id);
-      if (error) toast.error(error.message);
-      else { toast.success("Store mis à jour !"); fetchStoreItems(); }
-    } else if (type === "kb" && id) {
-      const { error } = await supabase.from("knowledge_base").update({
-        question: values.question, answer: values.answer,
-        keywords: values.keywords, category: values.category,
-        emotion: values.emotion, priority: values.priority,
-        age_min: values.age_min, age_max: values.age_max,
-        is_active: values.is_active,
-      } as any).eq("id", id);
-      if (error) toast.error(error.message);
-      else { toast.success("Mis à jour !"); fetchEntries(); }
-    } else if (type === "qa" || type === "blague" || type === "generic") {
-      // Save local content as new KB entry
-      const question = values.question || values.triggers?.join(", ") || values.statement || values.text || "";
-      const answer = values.reponse || values.responses || values.explanation || values.answer || "";
-      const { error } = await supabase.from("knowledge_base").insert({
-        question: typeof question === "string" ? question : String(question),
-        answer: typeof answer === "string" ? answer : String(answer),
-        category: values.categorie || values.category || values.intent || "général",
-        keywords: values.keywords || values.triggers || [],
-        priority: 5,
-        age_min: values.ageMin || 3,
-        age_max: values.ageMax || 12,
-        emotion: "happy",
-        is_active: true,
-      });
-      if (error) toast.error(error.message);
-      else { toast.success("Sauvegardé dans la base Bobby !"); fetchEntries(); }
-    } else if (type === "histoire" && id) {
-      // Update cloud story
-      const { error } = await supabase.from("story_templates").update({
-        title: values.titre,
-        theme: values.theme,
-        full_text: values.texte,
-        template_text: (values.texte || "").slice(0, 100),
-        summary: values.moralite || null,
-        age_min: values.ageMin || 5,
-        age_max: values.ageMax || 12,
-        duration: values.duree || "courte",
-        category: values.theme,
-      } as any).eq("id", id);
-      if (error) toast.error(error.message);
-      else { toast.success("Histoire mise à jour !"); fetchCloudStories(); }
-    } else if (type === "histoire") {
-      // Save local histoire as new cloud story
-      const { error } = await supabase.from("story_templates").insert({
-        title: values.titre,
-        theme: values.theme,
-        full_text: values.texte,
-        template_text: (values.texte || "").slice(0, 100),
-        summary: values.moralite || null,
-        age_min: values.ageMin || 5,
-        age_max: values.ageMax || 12,
-        duration: values.duree || "courte",
-        category: values.theme,
-        language: "fr",
-      } as any);
-      if (error) toast.error(error.message);
-      else { toast.success("Histoire ajoutée au cloud !"); fetchCloudStories(); }
-    }
-    setDetailItem(null);
-  };
-
-  const handleDetailDelete = async (type: string, id: string) => {
-    if (!confirm("Supprimer ?")) return;
-    if (type === "store") {
-      await supabase.from("store_content").delete().eq("id", id);
-      toast.success("Supprimé"); fetchStoreItems();
-    } else if (type === "kb") {
-      await supabase.from("knowledge_base").delete().eq("id", id);
-      toast.success("Supprimé"); fetchEntries();
-    }
-    setDetailItem(null);
-  };
-
-  // 10K interactions (lazy loaded)
-  const [interactions, setInteractions] = useState<BobbyInteraction[] | null>(null);
-  const [loadingInteractions, setLoadingInteractions] = useState(false);
-
-  const loadInteractions = useCallback(async () => {
-    if (interactions) return;
-    setLoadingInteractions(true);
-    const { BOBBY_INTERACTIONS } = await import("@/lib/bobby_interactions_10k");
-    setInteractions(BOBBY_INTERACTIONS);
-    setLoadingInteractions(false);
-  }, [interactions]);
-
-  // Real user conversations from DB
-  interface RealConversation {
-    session_id: string;
-    child_name: string;
-    child_age: number;
-    started_at: string;
-    messages: { role: string; content: string; detected_emotion: string | null; created_at: string }[];
-    topics: string[] | null;
-    detected_emotions: string[] | null;
-  }
-  const [realConversations, setRealConversations] = useState<RealConversation[]>([]);
-  const [realConvLoading, setRealConvLoading] = useState(false);
-  const [learningSessionId, setLearningSessionId] = useState<string | null>(null);
-
-  const learnFromSession = useCallback(async (conv: RealConversation) => {
-    setLearningSessionId(conv.session_id);
-    try {
-      const { data, error } = await supabase.functions.invoke("learn-from-conversations", {
-        body: { mode: "session", sessionId: conv.session_id },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      const qa = data?.total_qa_learned ?? 0;
-      const gaps = data?.total_gaps_filled ?? 0;
-      toast.success(`🧠 +${qa} Q&A, +${gaps} lacunes comblées depuis cette conversation !`);
-      // Refresh KB entries
-      supabase.from("knowledge_base").select("*").order("priority", { ascending: false })
-        .then(r => { if (r.data) setEntries(r.data as unknown as KBEntry[]); });
-    } catch (e: any) {
-      toast.error("Erreur : " + (e.message || "inconnue"));
-    } finally {
-      setLearningSessionId(null);
-    }
-  }, []);
-
-  const fetchRealConversations = useCallback(async () => {
-    setRealConvLoading(true);
-    const { data: sessions } = await supabase
-      .from("child_sessions")
-      .select("id, child_name, child_age, started_at, topics, detected_emotions")
-      .order("started_at", { ascending: false })
-      .limit(50);
-    if (!sessions?.length) { setRealConvLoading(false); return; }
-
-    const { data: messages } = await supabase
-      .from("session_messages")
-      .select("session_id, role, content, detected_emotion, created_at")
-      .in("session_id", sessions.map(s => s.id))
-      .order("created_at", { ascending: true });
-
-    const convs: RealConversation[] = sessions.map(s => ({
-      session_id: s.id,
-      child_name: s.child_name,
-      child_age: s.child_age,
-      started_at: s.started_at,
-      topics: s.topics,
-      detected_emotions: s.detected_emotions,
-      messages: (messages || []).filter(m => m.session_id === s.id),
-    })).filter(c => c.messages.length > 0);
-
-    setRealConversations(convs);
-    setRealConvLoading(false);
-  }, []);
-
-  const fetchEntries = useCallback(async () => {
-    setLoading(true);
-    const [kbRes, autoLearnRes, activeCountRes, totalCountRes] = await Promise.all([
-      supabase.from("knowledge_base").select("*").order("priority", { ascending: false }).limit(1000),
-      supabase.from("knowledge_base").select("id", { count: "exact", head: true }).not("category", "eq", "général"),
-      supabase.from("knowledge_base").select("id", { count: "exact", head: true }).eq("is_active", true),
-      supabase.from("knowledge_base").select("id", { count: "exact", head: true }),
-    ]);
-    if (kbRes.error) toast.error("Erreur: " + kbRes.error.message);
-    else setEntries((kbRes.data as unknown as KBEntry[]) || []);
-    setAutoLearnCount(autoLearnRes.count ?? 0);
-    setKbActiveCount(activeCountRes.count ?? 0);
-    setKbTotalCount(totalCountRes.count ?? 0);
-    setLoading(false);
-  }, []);
-
-  const fetchCloudStories = useCallback(async () => {
-    const { data } = await supabase.from("story_templates").select("*").order("created_at", { ascending: false });
-    setCloudStories(data || []);
-  }, []);
-
-  const fetchStoreItems = useCallback(async () => {
-    const [catalogRes, installsRes] = await Promise.all([
-      supabase.from("store_content").select("*").order("created_at", { ascending: false }),
-      supabase.from("installed_content").select("content_id"),
-    ]);
-    setStoreItems((catalogRes.data as unknown as StoreContentItem[]) || []);
-    // Count installs per content_id
-    const counts: Record<string, number> = {};
-    (installsRes.data || []).forEach((r: any) => { counts[r.content_id] = (counts[r.content_id] || 0) + 1; });
-    setLiveInstallCounts(counts);
-  }, []);
-
-  useEffect(() => {
-    if (authenticated) { fetchEntries(); fetchCloudStories(); fetchStoreItems(); fetchCloudUsers(); loadInteractions(); fetchRealConversations(); fetchLiveStats(); fetchChartData(); }
-  }, [authenticated, fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers, fetchLiveStats, fetchChartData]);
-
-  // Auto-refresh live stats every 30s
-  useEffect(() => {
-    if (!authenticated) return;
-    const interval = setInterval(fetchLiveStats, 30_000);
-    return () => clearInterval(interval);
-  }, [authenticated, fetchLiveStats]);
-
-  // ─── Derived ───
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, { total: number; active: number }> = {};
-    for (const s of BRAIN_SECTIONS) {
-      const m = entries.filter(e => s.dbCategories.includes(e.category));
-      counts[s.id] = { total: m.length, active: m.filter(e => e.is_active).length };
-    }
-    return counts;
-  }, [entries]);
-
-  // QA grouped by intent
-  const qaByIntent = useMemo(() => {
-    const groups: Record<string, typeof QA_DATABASE> = {};
-    for (const entry of QA_DATABASE) {
-      const intent = entry.intent || "OTHER";
-      if (!groups[intent]) groups[intent] = [];
-      groups[intent].push(entry);
-    }
-    return Object.entries(groups).sort((a, b) => b[1].length - a[1].length);
-  }, []);
-
-  // Blagues grouped by category
-  const blaguesByCategorie = useMemo(() => {
-    const groups: Record<string, typeof BLAGUES> = {};
-    for (const b of BLAGUES) {
-      if (!groups[b.categorie]) groups[b.categorie] = [];
-      groups[b.categorie].push(b);
-    }
-    return Object.entries(groups);
-  }, []);
-
-  const currentCloudSection = BRAIN_SECTIONS.find(s => s.id === cloudSection);
-
-  const cloudEntries = useMemo(() => {
-    if (!currentCloudSection) return [];
-    let list = entries.filter(e => currentCloudSection.dbCategories.includes(e.category));
-    if (ageFilter) {
-      const ag = AGE_GROUPS.find(a => a.label === ageFilter);
-      if (ag) list = list.filter(e => e.age_min <= ag.max && e.age_max >= ag.min);
-    }
-    if (search.trim()) {
-      const s = search.toLowerCase();
-      list = list.filter(e => e.question.toLowerCase().includes(s) || e.answer.toLowerCase().includes(s));
-    }
-    return list;
-  }, [entries, currentCloudSection, search, ageFilter]);
-
-  // Filtered interactions
-  const filteredInteractions = useMemo(() => {
-    if (!interactions || !interactionCat) return [];
-    return interactions
-      .filter(i => i.category === interactionCat && i.age >= interactionAge.min && i.age <= interactionAge.max)
-      .slice(0, 100); // paginate to 100
-  }, [interactions, interactionCat, interactionAge]);
-
-  // Interaction category counts
-  const interactionCategoryCounts = useMemo(() => {
-    if (!interactions) return {};
-    const counts: Record<string, number> = {};
-    for (const i of interactions) {
-      counts[i.category] = (counts[i.category] || 0) + 1;
-    }
-    return counts;
-  }, [interactions]);
-
-  // Multi-response category counts
-  const multiResponseCategoryCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const entry of BOBBY_MULTI_RESPONSES) {
-      counts[entry.category] = (counts[entry.category] || 0) + 1;
-    }
-    return counts;
-  }, []);
-
-  // Dynamic section counts
-  const sectionCounts = useMemo(() => {
-    const totalGameItems = QUIZ_ANIMAUX.length + QUIZ_EDUCATIF.length + VRAI_FAUX.length + DEVINETTES.length + GAME_BLAGUES.length;
-    return {
-      interactions: interactions?.length ?? "…",
-      multiresponses: BOBBY_MULTI_RESPONSES.length,
-      jeux: totalGameItems,
-      qa: QA_DATABASE.length,
-      blagues: BLAGUES.length,
-      histoires: HISTOIRES.length + cloudStories.length,
-      chansons: CHANSONS.length,
-      cerveau: "16",
-      cloud: entries.length,
-      autolearn: autoLearnCount ?? "…",
-      store: storeItems.length,
-      cloudusers: cloudUsers.length,
-      kbdebug: "🔍",
-    } as Record<string, string | number>;
-  }, [interactions, entries, cloudStories, storeItems, cloudUsers, autoLearnCount]);
-
-  // ─── Handlers ───
-  const handleSave = async () => {
-    if (!editingEntry?.question?.trim() || !editingEntry?.answer?.trim()) {
-      toast.error("Question et réponse requis");
-      return;
-    }
-    setSaving(true);
-    const payload = {
-      question: editingEntry.question!.trim(),
-      keywords: editingEntry.keywords || [],
-      answer: editingEntry.answer!.trim(),
-      category: editingEntry.category || "général",
-      priority: editingEntry.priority || 5,
-      is_active: editingEntry.is_active !== false,
-      age_min: editingEntry.age_min || 3,
-      age_max: editingEntry.age_max || 12,
-    };
-    if (editingEntry.id) {
-      const { error } = await supabase.from("knowledge_base").update(payload as any).eq("id", editingEntry.id);
-      if (error) toast.error(error.message); else toast.success("Mis à jour !");
-    } else {
-      const { error } = await supabase.from("knowledge_base").insert(payload as any);
-      if (error) toast.error(error.message); else toast.success("Ajouté !");
-    }
-    setEditingEntry(null);
-    setSaving(false);
-    fetchEntries();
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Supprimer ?")) return;
-    const { error } = await supabase.from("knowledge_base").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else { toast.success("Supprimé"); fetchEntries(); }
-  };
-
-  const handleToggleActive = async (entry: KBEntry) => {
-    await supabase.from("knowledge_base").update({ is_active: !entry.is_active } as any).eq("id", entry.id);
-    setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, is_active: !e.is_active } : e));
-  };
-
-  const goBack = () => {
-    if (editingEntry) { setEditingEntry(null); return; }
-    if (interactionCat) { setInteractionCat(null); setSearch(""); return; }
-    if (cloudSection) { setCloudSection(null); setSearch(""); return; }
-    if (topSection) { setTopSection(null); setSearch(""); return; }
-    navigate("/");
-  };
-
-  // ─── Login ─────────────────────────────────────────────────────────
+  // ─── Login ─────────────────────────────────────────────────────
   if (!authenticated) {
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4">
@@ -1016,18 +111,7 @@ const Admin = () => {
     );
   }
 
-  // Use portal so dialog renders regardless of early returns
-  const detailPortal = detailItem ? createPortal(
-    <AdminDetailDialog
-      item={detailItem}
-      onClose={() => setDetailItem(null)}
-      onSave={handleDetailSave}
-      onDelete={handleDetailDelete}
-    />,
-    document.body
-  ) : null;
-
-  // ─── Edit form ─────────────────────────────────────────────────────
+  // ─── Edit form ─────────────────────────────────────────────────
   if (editingEntry) {
     const kwString = (editingEntry.keywords || []).join(", ");
     return (
@@ -1093,16 +177,16 @@ const Admin = () => {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // INTERACTIONS 10K — Category detail (age filter + list)
-  // ═══════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
+  // SECTION ROUTING — Each topSection renders its view
+  // ═══════════════════════════════════════════════════════════════
+
+  // ── Interactions 10K ──
   if (topSection === "interactions" && interactionCat && interactionCat !== "real_conversations") {
     const catConfig = INTERACTION_CATEGORIES.find(c => c.id === interactionCat);
     const totalForCat = interactions?.filter(i => i.category === interactionCat).length || 0;
-
     return (
-      <>
-      {detailPortal}
+      <>{detailPortal}
       <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
@@ -1120,8 +204,7 @@ const Admin = () => {
                   interactionAge.min === g.min && interactionAge.max === g.max
                     ? "bg-cyan-500/30 text-cyan-300 border border-cyan-500/40"
                     : "bg-white/5 text-white/50 border border-white/10 hover:bg-white/10"
-                }`}
-              >{g.label}</button>
+                }`}>{g.label}</button>
             ))}
           </div>
           <div className="relative">
@@ -1138,24 +221,18 @@ const Admin = () => {
                 <InteractionCard interaction={interaction} />
               </div>
             ))}
-            {filteredInteractions.length === 0 && (
-              <p className="text-center text-white/40 py-12 text-sm">Aucune interaction pour ce filtre</p>
-            )}
-            {filteredInteractions.length >= 100 && (
-              <p className="text-center text-white/30 text-xs py-2">Affichage limité à 100 résultats</p>
-            )}
+            {filteredInteractions.length === 0 && <p className="text-center text-white/40 py-12 text-sm">Aucune interaction pour ce filtre</p>}
+            {filteredInteractions.length >= 100 && <p className="text-center text-white/30 text-xs py-2">Affichage limité à 100 résultats</p>}
           </div>
         </div>
-      </div>
-      </>
+      </div></>
     );
   }
 
-  // ── Real user conversations detail view ──
+  // ── Real conversations ──
   if (topSection === "interactions" && interactionCat === "real_conversations") {
     return (
-      <>
-      {detailPortal}
+      <>{detailPortal}
       <div className="min-h-screen bg-[#0a0a0f] p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="flex items-center gap-3">
@@ -1163,40 +240,38 @@ const Admin = () => {
             <span className="text-2xl">💬</span>
             <div>
               <h1 className="text-xl font-bold text-white">Conversations réelles</h1>
-              <p className="text-white/40 text-xs">{realConversations.length} sessions enregistrées — données pour améliorer Bobby</p>
+              <p className="text-white/40 text-xs">{realConversations.length} sessions enregistrées</p>
             </div>
           </div>
 
-          {/* Stats globales */}
-          {realConversations.length > 0 && (() => {
-            const totalMsgs = realConversations.reduce((s, c) => s + c.messages.length, 0);
-            const avgMsgs = Math.round(totalMsgs / realConversations.length);
-            const emotionMap: Record<string, number> = {};
-            const topicMap: Record<string, number> = {};
-            realConversations.forEach(c => {
-              c.detected_emotions?.forEach(e => { emotionMap[e] = (emotionMap[e] || 0) + 1; });
-              c.topics?.forEach(t => { topicMap[t] = (topicMap[t] || 0) + 1; });
-              c.messages.forEach(m => { if (m.detected_emotion) emotionMap[m.detected_emotion] = (emotionMap[m.detected_emotion] || 0) + 1; });
-            });
-            const topEmotions = Object.entries(emotionMap).sort((a, b) => b[1] - a[1]).slice(0, 6);
-            const topTopics = Object.entries(topicMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
+          {/* Aggregate stats */}
+          {(() => {
+            const totalMessages = realConversations.reduce((a, c) => a + c.messages.length, 0);
+            const allEmotions = realConversations.flatMap(c => c.detected_emotions || []);
+            const emotionCounts: Record<string, number> = {};
+            allEmotions.forEach(e => { emotionCounts[e] = (emotionCounts[e] || 0) + 1; });
+            const topEmotions = Object.entries(emotionCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            const allTopics = realConversations.flatMap(c => c.topics || []);
+            const topicCounts: Record<string, number> = {};
+            allTopics.forEach(t => { topicCounts[t] = (topicCounts[t] || 0) + 1; });
+            const topTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
             return (
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-white/[0.04] rounded-2xl p-3 border border-white/[0.06] text-center">
-                  <p className="text-2xl font-bold text-white">{avgMsgs}</p>
-                  <p className="text-[10px] text-white/40">msgs / session</p>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-white/5 rounded-2xl p-3 text-center border border-white/10">
+                  <p className="text-xl font-bold text-emerald-400">{realConversations.length}</p>
+                  <p className="text-[9px] text-white/40">sessions</p>
                 </div>
-                <div className="bg-white/[0.04] rounded-2xl p-3 border border-white/[0.06] text-center">
-                  <p className="text-2xl font-bold text-white">{totalMsgs}</p>
-                  <p className="text-[10px] text-white/40">messages total</p>
+                <div className="bg-white/5 rounded-2xl p-3 text-center border border-white/10">
+                  <p className="text-xl font-bold text-cyan-400">{totalMessages}</p>
+                  <p className="text-[9px] text-white/40">messages</p>
                 </div>
-                <div className="bg-white/[0.04] rounded-2xl p-3 border border-white/[0.06] text-center">
-                  <p className="text-2xl font-bold text-white">{realConversations.length}</p>
-                  <p className="text-[10px] text-white/40">sessions</p>
+                <div className="bg-white/5 rounded-2xl p-3 text-center border border-white/10">
+                  <p className="text-xl font-bold text-pink-400">{topEmotions[0]?.[0] || "—"}</p>
+                  <p className="text-[9px] text-white/40">émotion top</p>
                 </div>
                 {topEmotions.length > 0 && (
                   <div className="col-span-3 bg-white/[0.04] rounded-2xl p-3 border border-white/[0.06]">
-                    <p className="text-[10px] text-white/40 uppercase tracking-wider mb-2">Émotions fréquentes</p>
+                    <p className="text-[10px] text-white/40 uppercase tracking-wider mb-2">Émotions détectées</p>
                     <div className="flex flex-wrap gap-1.5">
                       {topEmotions.map(([em, count]) => (
                         <span key={em} className="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/15 text-pink-300">{em} <span className="text-white/30">×{count}</span></span>
@@ -1223,8 +298,7 @@ const Admin = () => {
           ) : realConversations.length === 0 ? (
             <div className="text-center py-12">
               <span className="text-4xl block mb-2">📭</span>
-              <p className="text-white/30 text-sm">Aucune conversation enregistrée pour le moment</p>
-              <p className="text-white/20 text-xs mt-1">Les conversations des utilisateurs apparaîtront ici</p>
+              <p className="text-white/30 text-sm">Aucune conversation enregistrée</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -1240,13 +314,6 @@ const Admin = () => {
                     </div>
                     <span className="text-[10px] text-white/20">{new Date(conv.started_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
                   </div>
-                  {conv.topics?.length ? (
-                    <div className="flex gap-1 flex-wrap">
-                      {conv.topics.map((t, i) => (
-                        <span key={i} className="text-[8px] px-1.5 py-0.5 rounded bg-white/10 text-white/40">#{t}</span>
-                      ))}
-                    </div>
-                  ) : null}
                   <div className="space-y-1.5 max-h-60 overflow-y-auto">
                     {conv.messages.map((msg, i) => (
                       <div key={i} className="flex gap-2">
@@ -1255,27 +322,16 @@ const Admin = () => {
                         </span>
                         <div className="flex-1 min-w-0">
                           <p className={`text-[11px] ${msg.role === "user" ? "text-white/80" : "text-white/50"}`}>{msg.content}</p>
-                          {msg.detected_emotion && (
-                            <span className="text-[8px] text-pink-400/50">{msg.detected_emotion}</span>
-                          )}
+                          {msg.detected_emotion && <span className="text-[8px] text-pink-400/50">{msg.detected_emotion}</span>}
                         </div>
                       </div>
                     ))}
                   </div>
                   <div className="flex items-center gap-1.5 pt-1 border-t border-white/5">
                     <span className="text-[9px] text-white/20">{conv.messages.length} messages</span>
-                    <span className="text-[9px] text-white/10">•</span>
-                    <span className="text-[9px] text-white/20">Session: {conv.session_id.slice(0, 8)}…</span>
-                    <button
-                      onClick={() => learnFromSession(conv)}
-                      disabled={learningSessionId === conv.session_id}
-                      className="ml-auto flex items-center gap-1 text-[10px] px-2.5 py-1 rounded-lg bg-lime-500/15 text-lime-300 hover:bg-lime-500/25 disabled:opacity-50 transition-all font-semibold"
-                    >
-                      {learningSessionId === conv.session_id ? (
-                        <><RefreshCw className="w-3 h-3 animate-spin" /> Analyse…</>
-                      ) : (
-                        <><Brain className="w-3 h-3" /> Apprendre</>
-                      )}
+                    <button onClick={() => learnFromSession(conv)} disabled={learningSessionId === conv.session_id}
+                      className="ml-auto flex items-center gap-1 text-[10px] px-2.5 py-1 rounded-lg bg-lime-500/15 text-lime-300 hover:bg-lime-500/25 disabled:opacity-50 transition-all font-semibold">
+                      {learningSessionId === conv.session_id ? <><RefreshCw className="w-3 h-3 animate-spin" /> Analyse…</> : <><Brain className="w-3 h-3" /> Apprendre</>}
                     </button>
                   </div>
                 </div>
@@ -1283,14 +339,11 @@ const Admin = () => {
             </div>
           )}
         </div>
-      </div>
-      </>
+      </div></>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // INTERACTIONS — Category grid
-  // ═══════════════════════════════════════════════════════════════════
+  // ── Interactions grid ──
   if (topSection === "interactions") {
     return (
       <div className="min-h-screen bg-[#0a0a0f] p-4">
@@ -1300,33 +353,27 @@ const Admin = () => {
             <span className="text-2xl">🧠</span>
             <div>
               <h1 className="text-xl font-bold text-white">Interactions</h1>
-              <p className="text-white/40 text-xs">{interactions?.length ?? "…"} interactions par catégorie & âge</p>
+              <p className="text-white/40 text-xs">{interactions?.length ?? "…"} interactions</p>
             </div>
           </div>
-
           {loadingInteractions ? (
-            <div className="text-center text-white/50 py-12">Chargement des interactions…</div>
+            <div className="text-center text-white/50 py-12">Chargement…</div>
           ) : (
             <div className="grid grid-cols-3 gap-3">
-              {/* Real conversations card — always first */}
               <button onClick={() => { setInteractionCat("real_conversations"); setSearch(""); }}
-                className="aspect-square bg-gradient-to-br from-emerald-500/10 to-teal-500/10 hover:from-emerald-500/20 hover:to-teal-500/20 backdrop-blur rounded-2xl p-3 border border-emerald-500/20 hover:border-emerald-500/40 transition-all text-left flex flex-col justify-between group"
-              >
+                className="aspect-square bg-gradient-to-br from-emerald-500/10 to-teal-500/10 hover:from-emerald-500/20 hover:to-teal-500/20 backdrop-blur rounded-2xl p-3 border border-emerald-500/20 hover:border-emerald-500/40 transition-all text-left flex flex-col justify-between">
                 <span className="text-2xl">💬</span>
                 <div>
                   <p className="text-lg font-bold text-white">{realConversations.length}</p>
                   <h3 className="text-[11px] font-semibold text-emerald-400">Conversations réelles</h3>
-                  <p className="text-[8px] text-white/30 mt-0.5">Sessions utilisateurs enregistrées</p>
                 </div>
               </button>
-
               {INTERACTION_CATEGORIES.map(cat => {
                 const count = interactionCategoryCounts[cat.id] || 0;
                 if (count === 0) return null;
                 return (
                   <button key={cat.id} onClick={() => { setInteractionCat(cat.id); setSearch(""); }}
-                    className="aspect-square bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-3 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between group"
-                  >
+                    className="aspect-square bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-3 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between">
                     <span className="text-2xl">{cat.emoji}</span>
                     <div>
                       <p className="text-lg font-bold text-white">{count}</p>
@@ -1342,18 +389,14 @@ const Admin = () => {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // MULTI-RÉPONSES — Category grid + detail with emotion/tag filters
-  // ═══════════════════════════════════════════════════════════════════
+  // ── Multi-réponses ──
   if (topSection === "multiresponses") {
     const uniqueEmotions = [...new Set(BOBBY_MULTI_RESPONSES.map(e => e.emotion).filter(Boolean))];
-    const uniqueTags = [...new Set(BOBBY_MULTI_RESPONSES.flatMap(e => e.tags || []))].sort();
-
     if (interactionCat) {
       const catEntries = BOBBY_MULTI_RESPONSES.filter(e => e.category === interactionCat);
       const searchLower = search.toLowerCase();
       let filtered = catEntries;
-      if (ageFilter) filtered = filtered.filter(e => e.emotion === ageFilter); // reusing ageFilter for emotion
+      if (ageFilter) filtered = filtered.filter(e => e.emotion === ageFilter);
       if (searchLower) filtered = filtered.filter(e => e.input.toLowerCase().includes(searchLower) || e.responses.some(r => r.text.toLowerCase().includes(searchLower)));
 
       return (
@@ -1367,36 +410,23 @@ const Admin = () => {
                 <p className="text-white/40 text-xs">{filtered.length}/{catEntries.length} entrées</p>
               </div>
             </div>
-
-            {/* Emotion filter */}
             <div className="flex gap-2 flex-wrap">
-              <button onClick={() => setAgeFilter(null)}
-                className={`text-xs px-3 py-1.5 rounded-full border transition-all ${!ageFilter ? "bg-orange-500/30 border-orange-400/50 text-orange-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
-                Tous
-              </button>
+              <button onClick={() => setAgeFilter(null)} className={`text-xs px-3 py-1.5 rounded-full border transition-all ${!ageFilter ? "bg-orange-500/30 border-orange-400/50 text-orange-300" : "bg-white/5 border-white/10 text-white/50"}`}>Tous</button>
               {[...new Set(catEntries.map(e => e.emotion).filter(Boolean))].map(em => (
-                <button key={em} onClick={() => setAgeFilter(ageFilter === em ? null : em!)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === em ? "bg-pink-500/30 border-pink-400/50 text-pink-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
-                  {em}
-                </button>
+                <button key={em} onClick={() => setAgeFilter(ageFilter === em ? null : em!)} className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === em ? "bg-pink-500/30 border-pink-400/50 text-pink-300" : "bg-white/5 border-white/10 text-white/50"}`}>{em}</button>
               ))}
             </div>
-
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
-                className="bg-white/10 border-white/20 text-white pl-9" />
+              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…" className="bg-white/10 border-white/20 text-white pl-9" />
             </div>
-
             <div className="space-y-3">
               {filtered.map((entry, idx) => (
                 <div key={idx} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/10">
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300">{entry.category}</span>
                     {entry.emotion && <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300">{entry.emotion}</span>}
-                    {entry.tags?.map((t, i) => (
-                      <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/40">{t}</span>
-                    ))}
+                    {entry.tags?.map((t, i) => <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/40">{t}</span>)}
                   </div>
                   <p className="text-sm text-white/80 font-medium mb-2">👦 {entry.input}</p>
                   <div className="space-y-1">
@@ -1417,19 +447,11 @@ const Admin = () => {
       );
     }
 
-    // Category grid with search + emotion filter
     const uniqueCats = [...new Set(BOBBY_MULTI_RESPONSES.map(e => e.category))];
     const searchLower = search.toLowerCase();
-    const emotionFilter = ageFilter;
     let filteredCats = uniqueCats;
-    if (emotionFilter) {
-      const catsWithEmotion = new Set(BOBBY_MULTI_RESPONSES.filter(e => e.emotion === emotionFilter).map(e => e.category));
-      filteredCats = uniqueCats.filter(c => catsWithEmotion.has(c));
-    }
-    if (searchLower) {
-      const catsWithSearch = new Set(BOBBY_MULTI_RESPONSES.filter(e => e.input.toLowerCase().includes(searchLower) || e.responses.some(r => r.text.toLowerCase().includes(searchLower))).map(e => e.category));
-      filteredCats = filteredCats.filter(c => catsWithSearch.has(c));
-    }
+    if (ageFilter) { const catsWithEmotion = new Set(BOBBY_MULTI_RESPONSES.filter(e => e.emotion === ageFilter).map(e => e.category)); filteredCats = filteredCats.filter(c => catsWithEmotion.has(c)); }
+    if (searchLower) { const catsWithSearch = new Set(BOBBY_MULTI_RESPONSES.filter(e => e.input.toLowerCase().includes(searchLower) || e.responses.some(r => r.text.toLowerCase().includes(searchLower))).map(e => e.category)); filteredCats = filteredCats.filter(c => catsWithSearch.has(c)); }
 
     return (
       <div className="min-h-screen bg-[#0a0a0f] p-4">
@@ -1439,35 +461,23 @@ const Admin = () => {
             <span className="text-2xl">⚡</span>
             <div>
               <h1 className="text-xl font-bold text-white">Multi-Réponses</h1>
-              <p className="text-white/40 text-xs">{BOBBY_MULTI_RESPONSES.length} entrées • {uniqueCats.length} catégories • {uniqueEmotions.length} émotions</p>
+              <p className="text-white/40 text-xs">{BOBBY_MULTI_RESPONSES.length} entrées • {uniqueCats.length} catégories</p>
             </div>
           </div>
-
-          {/* Emotion filter */}
           <div className="flex gap-2 flex-wrap">
-            <button onClick={() => setAgeFilter(null)}
-              className={`text-xs px-3 py-1.5 rounded-full border transition-all ${!ageFilter ? "bg-orange-500/30 border-orange-400/50 text-orange-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
-              Toutes émotions
-            </button>
+            <button onClick={() => setAgeFilter(null)} className={`text-xs px-3 py-1.5 rounded-full border transition-all ${!ageFilter ? "bg-orange-500/30 border-orange-400/50 text-orange-300" : "bg-white/5 border-white/10 text-white/50"}`}>Toutes émotions</button>
             {uniqueEmotions.map(em => (
-              <button key={em} onClick={() => setAgeFilter(ageFilter === em ? null : em!)}
-                className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === em ? "bg-pink-500/30 border-pink-400/50 text-pink-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
-                {em}
-              </button>
+              <button key={em} onClick={() => setAgeFilter(ageFilter === em ? null : em!)} className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === em ? "bg-pink-500/30 border-pink-400/50 text-pink-300" : "bg-white/5 border-white/10 text-white/50"}`}>{em}</button>
             ))}
           </div>
-
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher dans toutes les entrées…"
-              className="bg-white/10 border-white/20 text-white pl-9" />
+            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…" className="bg-white/10 border-white/20 text-white pl-9" />
           </div>
-
           <div className="grid grid-cols-3 gap-3">
             {filteredCats.map(cat => (
               <button key={cat} onClick={() => { setInteractionCat(cat); setSearch(""); setAgeFilter(null); }}
-                className="bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-3 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between group aspect-square"
-              >
+                className="bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-3 border border-white/[0.06] transition-all text-left flex flex-col justify-between aspect-square">
                 <span className="text-lg capitalize text-white/70">{cat.replace(/_/g, " ")}</span>
                 <div>
                   <p className="text-lg font-bold text-white">{multiResponseCategoryCounts[cat] || 0}</p>
@@ -1476,15 +486,12 @@ const Admin = () => {
               </button>
             ))}
           </div>
-          {filteredCats.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucune catégorie pour ce filtre</p>}
         </div>
       </div>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // JEUX & QUIZ — Sub-categories with age filter + search
-  // ═══════════════════════════════════════════════════════════════════
+  // ── Jeux & Quiz ──
   if (topSection === "jeux") {
     const GAME_SECTIONS = [
       { id: "quiz_animaux", label: "Quiz Animaux", emoji: "🐾", data: QUIZ_ANIMAUX, type: "quiz" as const },
@@ -1493,570 +500,275 @@ const Admin = () => {
       { id: "devinettes", label: "Devinettes", emoji: "🤔", data: DEVINETTES, type: "riddle" as const },
       { id: "blagues_jeu", label: "Blagues Jeu", emoji: "😂", data: GAME_BLAGUES, type: "blague" as const },
     ];
-
-    // If a sub-category is selected via interactionCat (reusing state)
     const activeGameSection = interactionCat ? GAME_SECTIONS.find(s => s.id === interactionCat) : null;
 
     if (activeGameSection) {
       const searchLower = search.toLowerCase();
-
       const renderItems = () => {
         if (activeGameSection.type === "quiz") {
-          const items = activeGameSection.data as QuizQuestion[];
-          const filtered = searchLower
-            ? items.filter(q => q.question.toLowerCase().includes(searchLower) || q.explanation.toLowerCase().includes(searchLower) || q.category.toLowerCase().includes(searchLower))
-            : items;
-          // Group by category
-          const grouped: Record<string, QuizQuestion[]> = {};
-          for (const q of filtered) {
-            if (!grouped[q.category]) grouped[q.category] = [];
-            grouped[q.category].push(q);
-          }
-          return (
-            <div className="space-y-4">
-              {Object.entries(grouped).map(([cat, questions]) => (
-                <div key={cat}>
-                  <h3 className="text-white/60 text-xs font-semibold mb-2 uppercase tracking-wider">{cat} ({questions.length})</h3>
-                  <div className="space-y-2">
-                    {questions.map((q, i) => (
-                      <div key={i} onClick={() => openQuizDetail(q, "quiz")} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
-                        <p className="text-sm text-white/80 font-medium mb-2">{q.question}</p>
-                        <div className="grid grid-cols-2 gap-1.5 mb-2">
-                          {q.choices.map((c, ci) => (
-                            <span key={ci} className={`text-xs px-2 py-1 rounded-lg ${ci === q.correctIndex ? "bg-green-500/20 text-green-300 font-semibold" : "bg-white/5 text-white/50"}`}>
-                              {c}
-                            </span>
-                          ))}
-                        </div>
-                        <p className="text-[11px] text-white/40 italic">{q.explanation}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-              {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
+          const items = activeGameSection.data as any[];
+          const filtered = searchLower ? items.filter(q => q.question.toLowerCase().includes(searchLower)) : items;
+          return <div className="space-y-2">{filtered.map((q, i) => (
+            <div key={i} onClick={() => openQuizDetail(q, "quiz")} className="bg-white/[0.04] rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06]">
+              <p className="text-sm text-white/80 font-medium">{q.question}</p>
+              <p className="text-xs text-green-400/60 mt-1">✓ {q.choices[q.correctIndex]}</p>
             </div>
-          );
+          ))}{filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}</div>;
         }
         if (activeGameSection.type === "vf") {
-          const items = activeGameSection.data as TrueFalseQuestion[];
-          const filtered = searchLower
-            ? items.filter(q => q.statement.toLowerCase().includes(searchLower) || q.explanation.toLowerCase().includes(searchLower))
-            : items;
-          const grouped: Record<string, TrueFalseQuestion[]> = {};
-          for (const q of filtered) {
-            if (!grouped[q.category]) grouped[q.category] = [];
-            grouped[q.category].push(q);
-          }
-          return (
-            <div className="space-y-4">
-              {Object.entries(grouped).map(([cat, questions]) => (
-                <div key={cat}>
-                  <h3 className="text-white/60 text-xs font-semibold mb-2 uppercase tracking-wider">{cat} ({questions.length})</h3>
-                  <div className="space-y-2">
-                    {questions.map((q, i) => (
-                      <div key={i} onClick={() => openQuizDetail(q, "vf")} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
-                        <div className="flex items-start gap-2">
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${q.answer ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"}`}>
-                            {q.answer ? "VRAI" : "FAUX"}
-                          </span>
-                          <p className="text-sm text-white/80">{q.statement}</p>
-                        </div>
-                        <p className="text-[11px] text-white/40 italic mt-2 ml-14">{q.explanation}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-              {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
+          const items = activeGameSection.data as any[];
+          const filtered = searchLower ? items.filter(q => q.statement.toLowerCase().includes(searchLower)) : items;
+          return <div className="space-y-2">{filtered.map((q, i) => (
+            <div key={i} onClick={() => openQuizDetail(q, "vf")} className="bg-white/[0.04] rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06]">
+              <div className="flex items-center gap-2 mb-1"><span className={`text-[10px] px-2 py-0.5 rounded-full ${q.answer ? "bg-green-500/20 text-green-300" : "bg-red-500/20 text-red-300"}`}>{q.answer ? "VRAI" : "FAUX"}</span></div>
+              <p className="text-sm text-white/80">{q.statement}</p>
             </div>
-          );
+          ))}{filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}</div>;
         }
         if (activeGameSection.type === "riddle") {
-          const items = activeGameSection.data as Riddle[];
-          const filtered = searchLower
-            ? items.filter(q => q.question.toLowerCase().includes(searchLower) || q.hint.toLowerCase().includes(searchLower))
-            : items;
-          return (
-            <div className="space-y-2">
-              {filtered.map((q, i) => (
-                <div key={i} onClick={() => openQuizDetail(q, "riddle")} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
-                  <p className="text-sm text-white/80 font-medium mb-2">{q.question}</p>
-                  <div className="flex gap-1.5 mb-2 flex-wrap">
-                    {q.choices.map((c, ci) => (
-                      <span key={ci} className={`text-xs px-2 py-1 rounded-lg ${ci === q.correctIndex ? "bg-green-500/20 text-green-300 font-semibold" : "bg-white/5 text-white/50"}`}>
-                        {c}
-                      </span>
-                    ))}
-                  </div>
-                  <p className="text-[10px] text-white/30">💡 {q.hint}</p>
-                </div>
-              ))}
-              {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
+          const items = activeGameSection.data as any[];
+          const filtered = searchLower ? items.filter(q => q.question.toLowerCase().includes(searchLower)) : items;
+          return <div className="space-y-2">{filtered.map((q, i) => (
+            <div key={i} onClick={() => openQuizDetail(q, "riddle")} className="bg-white/[0.04] rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06]">
+              <p className="text-sm text-white/80 font-medium">{q.question}</p>
+              <p className="text-xs text-white/30 mt-1">💡 {q.hint}</p>
             </div>
-          );
+          ))}{filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}</div>;
         }
-        // blagues
         const items = activeGameSection.data as string[];
         const filtered = searchLower ? items.filter(b => b.toLowerCase().includes(searchLower)) : items;
-        return (
-          <div className="space-y-2">
-            {filtered.map((b, i) => (
-              <div key={i} onClick={() => openQuizDetail(b, "blague")} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
-                <p className="text-sm text-white/70">{b}</p>
-              </div>
-            ))}
-            {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
+        return <div className="space-y-2">{filtered.map((b, i) => (
+          <div key={i} onClick={() => openQuizDetail(b, "blague")} className="bg-white/[0.04] rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06]">
+            <p className="text-sm text-white/70">{b}</p>
           </div>
-        );
+        ))}{filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}</div>;
       };
 
-      return (
-        <>
-        {detailPortal}
-        <div className="min-h-screen bg-[#0a0a0f] p-4">
-          <div className="max-w-4xl mx-auto space-y-4">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
-              <span className="text-2xl">{activeGameSection.emoji}</span>
-              <div>
-                <h1 className="text-xl font-bold text-white">{activeGameSection.label}</h1>
-                <p className="text-white/40 text-xs">{activeGameSection.data.length} entrées</p>
-              </div>
-            </div>
-
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
-                className="bg-white/10 border-white/20 text-white pl-9" />
-            </div>
-
-            {renderItems()}
-          </div>
+      return (<>{detailPortal}<div className="min-h-screen bg-[#0a0a0f] p-4"><div className="max-w-4xl mx-auto space-y-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+          <span className="text-2xl">{activeGameSection.emoji}</span>
+          <div><h1 className="text-xl font-bold text-white">{activeGameSection.label}</h1><p className="text-white/40 text-xs">{activeGameSection.data.length} entrées</p></div>
         </div>
-        </>
-      );
+        <div className="relative"><Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…" className="bg-white/10 border-white/20 text-white pl-9" /></div>
+        {renderItems()}
+      </div></div></>);
     }
 
-    // Jeux grid
     return (
-      <div className="min-h-screen bg-[#0a0a0f] p-4">
-        <div className="max-w-4xl mx-auto space-y-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
-            <span className="text-2xl">🎮</span>
-            <div>
-              <h1 className="text-xl font-bold text-white">Jeux & Quiz</h1>
-              <p className="text-white/40 text-xs">Quiz, Vrai/Faux, Devinettes — contenu embarqué</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            {GAME_SECTIONS.map(section => (
-              <button key={section.id} onClick={() => { setInteractionCat(section.id); setSearch(""); }}
-                className="aspect-square bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between group"
-              >
-                <span className="text-3xl">{section.emoji}</span>
-                <div>
-                  <p className="text-xl font-bold text-white">{section.data.length}</p>
-                  <h3 className="text-xs font-semibold text-white/70">{section.label}</h3>
-                </div>
-              </button>
-            ))}
-          </div>
+      <div className="min-h-screen bg-[#0a0a0f] p-4"><div className="max-w-4xl mx-auto space-y-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+          <span className="text-2xl">🎮</span>
+          <div><h1 className="text-xl font-bold text-white">Jeux & Quiz</h1></div>
         </div>
-      </div>
+        <div className="grid grid-cols-2 gap-3">
+          {GAME_SECTIONS.map(section => (
+            <button key={section.id} onClick={() => { setInteractionCat(section.id); setSearch(""); }}
+              className="aspect-square bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-4 border border-white/[0.06] transition-all text-left flex flex-col justify-between">
+              <span className="text-3xl">{section.emoji}</span>
+              <div><p className="text-xl font-bold text-white">{section.data.length}</p><h3 className="text-xs font-semibold text-white/70">{section.label}</h3></div>
+            </button>
+          ))}
+        </div>
+      </div></div>
     );
   }
 
+  // ── QA Database ──
   if (topSection === "qa") {
-    const QA_INTENT_EMOJIS: Record<string, string> = {
-      GREETING: "👋", FAREWELL: "👋", GRATITUDE: "🙏", POSITIVE: "😊", IDENTITY: "🤖",
-      PLAY_REQUEST: "🎮", RIDDLE: "🧩", JOKE: "😂", QUIZ: "🧠", QUESTION: "❓",
-      ANIMALS: "🐾", DINOSAUR: "🦖", SPACE: "🚀", NATURE: "🌿", ECOLOGY: "♻️",
-      SCIENCE: "🔬", MATH: "🔢", GEOGRAPHY: "🌍", HISTORY: "📜", HEALTH: "🩺",
-      EMOTIONS: "💛", FRIENDSHIP: "🤝", SCHOOL: "🏫", FOOD: "🍽️", SPORT: "⚽",
-      MUSIC: "🎵", ART: "🎨", TECHNOLOGY: "💻", TRANSPORT: "🚗", JOBS: "👷",
-      FAMILY: "👨‍👩‍👧", FANTASY: "✨", STORY: "📖", TIME: "⏰", PHILOSOPHY: "🤔",
-      NEUTRAL: "😐", HELP: "🆘", REPEAT: "🔁", VOLUME: "🔊", ENCOURAGEMENT: "💪",
-      CULTURE: "🏛️", TRANSITION: "➡️", OTHER: "📋",
-    };
-
-    // Detail: show all entries of a selected intent
     if (interactionCat) {
       const intentEntries = QA_DATABASE.filter(e => (e.intent || "OTHER") === interactionCat);
       const searchLower = search.toLowerCase();
-      const filtered = searchLower
-        ? intentEntries.filter(e => e.triggers.some(t => t.toLowerCase().includes(searchLower)) || e.responses.some(r => r.toLowerCase().includes(searchLower)))
-        : intentEntries;
-
-      return (
-        <>
-        {detailPortal}
-        <div className="min-h-screen bg-[#0a0a0f] p-4">
-          <div className="max-w-4xl mx-auto space-y-4">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
-              <span className="text-2xl">{QA_INTENT_EMOJIS[interactionCat] || "❓"}</span>
-              <div>
-                <h1 className="text-xl font-bold text-white">{interactionCat}</h1>
-                <p className="text-white/40 text-xs">{filtered.length}/{intentEntries.length} entrées</p>
-              </div>
-            </div>
-
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
-                className="bg-white/10 border-white/20 text-white pl-9" />
-            </div>
-
-            <div className="space-y-2">
-              {filtered.map((entry, idx) => (
-                <div key={idx} onClick={() => openQADetail(entry)} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
-                  <p className="text-xs text-white/50 mb-1.5">🎯 {entry.triggers.join(" • ")}</p>
-                  <div className="space-y-1">
-                    {entry.responses.map((r, i) => (
-                      <p key={i} className="text-sm text-white/70">🤖 {r}</p>
-                    ))}
-                  </div>
-                </div>
-              ))}
-              {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
-            </div>
-          </div>
+      const filtered = searchLower ? intentEntries.filter(e => e.triggers.some(t => t.toLowerCase().includes(searchLower)) || e.responses.some(r => r.toLowerCase().includes(searchLower))) : intentEntries;
+      return (<>{detailPortal}<div className="min-h-screen bg-[#0a0a0f] p-4"><div className="max-w-4xl mx-auto space-y-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+          <span className="text-2xl">{QA_INTENT_EMOJIS[interactionCat] || "❓"}</span>
+          <div><h1 className="text-xl font-bold text-white">{interactionCat}</h1><p className="text-white/40 text-xs">{filtered.length}/{intentEntries.length} entrées</p></div>
         </div>
-        </>
-      );
+        <div className="relative"><Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…" className="bg-white/10 border-white/20 text-white pl-9" /></div>
+        <div className="space-y-2">
+          {filtered.map((entry, idx) => (
+            <div key={idx} onClick={() => openQADetail(entry)} className="bg-white/[0.04] rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06]">
+              <p className="text-xs text-white/50 mb-1.5">🎯 {entry.triggers.join(" • ")}</p>
+              {entry.responses.map((r, i) => <p key={i} className="text-sm text-white/70">🤖 {r}</p>)}
+            </div>
+          ))}
+        </div>
+      </div></div></>);
     }
 
-    // Intent category grid with search
     const searchLower = search.toLowerCase();
-    const filteredIntents = searchLower
-      ? qaByIntent.filter(([, entries]) => entries.some(e => e.triggers.some(t => t.toLowerCase().includes(searchLower)) || e.responses.some(r => r.toLowerCase().includes(searchLower))))
-      : qaByIntent;
-
+    const filteredIntents = searchLower ? qaByIntent.filter(([, entries]) => entries.some(e => e.triggers.some(t => t.toLowerCase().includes(searchLower)) || e.responses.some(r => r.toLowerCase().includes(searchLower)))) : qaByIntent;
     return (
-      <div className="min-h-screen bg-[#0a0a0f] p-4">
-        <div className="max-w-4xl mx-auto space-y-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
-            <span className="text-2xl">❓</span>
-            <div>
-              <h1 className="text-xl font-bold text-white">QA Database</h1>
-              <p className="text-white/40 text-xs">{QA_DATABASE.length} entrées • {qaByIntent.length} sujets</p>
-            </div>
-          </div>
-
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher dans toutes les QA…"
-              className="bg-white/10 border-white/20 text-white pl-9" />
-          </div>
-
-          <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-            {filteredIntents.map(([intent, entries]) => (
-              <button key={intent} onClick={() => { setInteractionCat(intent); setSearch(""); }}
-                className="bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-3 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between aspect-square"
-              >
-                <span className="text-2xl">{QA_INTENT_EMOJIS[intent] || "❓"}</span>
-                <div>
-                  <p className="text-lg font-bold text-white">{entries.length}</p>
-                  <h3 className="text-[10px] font-semibold text-amber-400">{intent}</h3>
-                </div>
-              </button>
-            ))}
-          </div>
-          {filteredIntents.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
+      <div className="min-h-screen bg-[#0a0a0f] p-4"><div className="max-w-4xl mx-auto space-y-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+          <span className="text-2xl">❓</span>
+          <div><h1 className="text-xl font-bold text-white">QA Database</h1><p className="text-white/40 text-xs">{QA_DATABASE.length} entrées</p></div>
         </div>
-      </div>
+        <div className="relative"><Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…" className="bg-white/10 border-white/20 text-white pl-9" /></div>
+        <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+          {filteredIntents.map(([intent, entries]) => (
+            <button key={intent} onClick={() => { setInteractionCat(intent); setSearch(""); }}
+              className="bg-white/[0.04] hover:bg-white/[0.08] rounded-[20px] p-3 border border-white/[0.06] text-left flex flex-col justify-between aspect-square">
+              <span className="text-2xl">{QA_INTENT_EMOJIS[intent] || "❓"}</span>
+              <div><p className="text-lg font-bold text-white">{entries.length}</p><h3 className="text-[10px] font-semibold text-amber-400">{intent}</h3></div>
+            </button>
+          ))}
+        </div>
+      </div></div>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // BLAGUES
-  // ═══════════════════════════════════════════════════════════════════
+  // ── Blagues ──
   if (topSection === "blagues") {
     const categories = [...new Set(BLAGUES.map(b => b.categorie))];
-    const AGE_GROUPS_BLG = [
-      { label: "Tous", min: 0, max: 99 },
-      { label: "5-6 ans", min: 5, max: 6 },
-      { label: "7-8 ans", min: 7, max: 8 },
-      { label: "9-10 ans", min: 9, max: 10 },
-      { label: "11-12 ans", min: 11, max: 12 },
-    ];
-    const selectedBlagueCat = interactionCat;
+    const AGE_GROUPS_BLG = [{ label: "Tous", min: 0, max: 99 }, { label: "5-6 ans", min: 5, max: 6 }, { label: "7-8 ans", min: 7, max: 8 }, { label: "9-10 ans", min: 9, max: 10 }, { label: "11-12 ans", min: 11, max: 12 }];
     const searchLower = search.toLowerCase();
 
-    // If a category is selected, show its blagues
-    if (selectedBlagueCat) {
-      const catBlagues = BLAGUES.filter(b => b.categorie === selectedBlagueCat);
-      const ageFiltered = ageFilter
-        ? catBlagues.filter(b => {
-            const ag = AGE_GROUPS_BLG.find(a => a.label === ageFilter);
-            return ag ? b.ageMin <= ag.max && b.ageMax >= ag.min : true;
-          })
-        : catBlagues;
-      const filtered = searchLower
-        ? ageFiltered.filter(b => b.question.toLowerCase().includes(searchLower) || b.reponse.toLowerCase().includes(searchLower))
-        : ageFiltered;
-
-      return (
-        <>
-        {detailPortal}
-        <div className="min-h-screen bg-[#0a0a0f] p-4">
-          <div className="max-w-4xl mx-auto space-y-4">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
-              <span className="text-2xl">😂</span>
-              <div>
-                <h1 className="text-xl font-bold text-white capitalize">{selectedBlagueCat}</h1>
-                <p className="text-white/40 text-xs">{filtered.length} blagues</p>
-              </div>
-            </div>
-
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
-                className="bg-white/10 border-white/20 text-white pl-9" />
-            </div>
-
-            <div className="flex gap-2 flex-wrap">
-              {AGE_GROUPS_BLG.map(ag => (
-                <button key={ag.label} onClick={() => setAgeFilter(ageFilter === ag.label ? null : ag.label)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === ag.label ? "bg-green-500/30 border-green-400/50 text-green-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
-                  {ag.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="space-y-2">
-              {filtered.map((b, i) => (
-                <div key={i} onClick={() => openBlagueDetail(b, i)} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">{b.ageMin}-{b.ageMax} ans</span>
-                    <span className="text-[10px] text-white/30">Niv.{b.difficulte}</span>
-                  </div>
-                  <p className="text-sm text-white/80 font-medium">{b.question}</p>
-                  <p className="text-sm text-white/50 mt-1">→ {b.reponse}</p>
-                </div>
-              ))}
-              {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
-            </div>
-          </div>
+    if (interactionCat) {
+      const catBlagues = BLAGUES.filter(b => b.categorie === interactionCat);
+      const ageFiltered = ageFilter ? catBlagues.filter(b => { const ag = AGE_GROUPS_BLG.find(a => a.label === ageFilter); return ag ? b.ageMin <= ag.max && b.ageMax >= ag.min : true; }) : catBlagues;
+      const filtered = searchLower ? ageFiltered.filter(b => b.question.toLowerCase().includes(searchLower) || b.reponse.toLowerCase().includes(searchLower)) : ageFiltered;
+      return (<>{detailPortal}<div className="min-h-screen bg-[#0a0a0f] p-4"><div className="max-w-4xl mx-auto space-y-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+          <span className="text-2xl">😂</span>
+          <div><h1 className="text-xl font-bold text-white capitalize">{interactionCat}</h1><p className="text-white/40 text-xs">{filtered.length} blagues</p></div>
         </div>
-        </>
-      );
+        <div className="relative"><Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…" className="bg-white/10 border-white/20 text-white pl-9" /></div>
+        <div className="flex gap-2 flex-wrap">
+          {AGE_GROUPS_BLG.map(ag => (
+            <button key={ag.label} onClick={() => setAgeFilter(ageFilter === ag.label ? null : ag.label)} className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === ag.label ? "bg-green-500/30 border-green-400/50 text-green-300" : "bg-white/5 border-white/10 text-white/50"}`}>{ag.label}</button>
+          ))}
+        </div>
+        <div className="space-y-2">
+          {filtered.map((b, i) => (
+            <div key={i} onClick={() => openBlagueDetail(b, i)} className="bg-white/[0.04] rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06]">
+              <div className="flex items-center gap-2 mb-2"><span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">{b.ageMin}-{b.ageMax} ans</span></div>
+              <p className="text-sm text-white/80 font-medium">{b.question}</p>
+              <p className="text-sm text-white/50 mt-1">→ {b.reponse}</p>
+            </div>
+          ))}
+        </div>
+      </div></div></>);
     }
 
-    // Category grid
-    return (
-      <>
-      {detailPortal}
-      <div className="min-h-screen bg-[#0a0a0f] p-4">
-        <div className="max-w-4xl mx-auto space-y-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
-            <span className="text-2xl">😂</span>
-            <div>
-              <h1 className="text-xl font-bold text-white">Blagues</h1>
-              <p className="text-white/40 text-xs">{BLAGUES.length} blagues • {categories.length} catégories</p>
-            </div>
-          </div>
-
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher dans toutes les blagues…"
-              className="bg-white/10 border-white/20 text-white pl-9" />
-          </div>
-
-          {searchLower ? (
-            <div className="space-y-2">
-              {BLAGUES.filter(b => b.question.toLowerCase().includes(searchLower) || b.reponse.toLowerCase().includes(searchLower)).map((b, i) => (
-                <div key={i} onClick={() => openBlagueDetail(b, i)} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-colors">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300 capitalize">{b.categorie}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">{b.ageMin}-{b.ageMax} ans</span>
-                  </div>
-                  <p className="text-sm text-white/80 font-medium">{b.question}</p>
-                  <p className="text-sm text-white/50 mt-1">→ {b.reponse}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {categories.map(cat => {
-                const catBlagues = BLAGUES.filter(b => b.categorie === cat);
-                const EMOJIS: Record<string, string> = { animaux: "🐾", ecole: "📚", nourriture: "🍕", absurde: "🤪", famille: "👨‍👩‍👧", science: "🔬" };
-                return (
-                  <button key={cat} onClick={() => { setInteractionCat(cat); setSearch(""); }}
-                    className="aspect-square bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between">
-                    <span className="text-3xl">{EMOJIS[cat] || "😂"}</span>
-                    <div>
-                      <p className="text-xl font-bold text-white">{catBlagues.length}</p>
-                      <h3 className="text-xs font-semibold text-white/70 capitalize">{cat}</h3>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
+    const EMOJIS: Record<string, string> = { animaux: "🐾", ecole: "📚", nourriture: "🍕", absurde: "🤪", famille: "👨‍👩‍👧", science: "🔬" };
+    return (<>{detailPortal}<div className="min-h-screen bg-[#0a0a0f] p-4"><div className="max-w-4xl mx-auto space-y-4">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+        <span className="text-2xl">😂</span>
+        <div><h1 className="text-xl font-bold text-white">Blagues</h1><p className="text-white/40 text-xs">{BLAGUES.length} blagues</p></div>
       </div>
-      </>
-    );
+      <div className="relative"><Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…" className="bg-white/10 border-white/20 text-white pl-9" /></div>
+      {searchLower ? (
+        <div className="space-y-2">
+          {BLAGUES.filter(b => b.question.toLowerCase().includes(searchLower) || b.reponse.toLowerCase().includes(searchLower)).map((b, i) => (
+            <div key={i} onClick={() => openBlagueDetail(b, i)} className="bg-white/[0.04] rounded-[16px] p-4 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06]">
+              <p className="text-sm text-white/80 font-medium">{b.question}</p>
+              <p className="text-sm text-white/50 mt-1">→ {b.reponse}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3">
+          {categories.map(cat => (
+            <button key={cat} onClick={() => { setInteractionCat(cat); setSearch(""); }}
+              className="aspect-square bg-white/[0.04] hover:bg-white/[0.08] rounded-[20px] p-4 border border-white/[0.06] text-left flex flex-col justify-between">
+              <span className="text-3xl">{EMOJIS[cat] || "😂"}</span>
+              <div><p className="text-xl font-bold text-white">{BLAGUES.filter(b => b.categorie === cat).length}</p><h3 className="text-xs font-semibold text-white/70 capitalize">{cat}</h3></div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div></div></>);
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // CHANSONS — By category, age, search
-  // ═══════════════════════════════════════════════════════════════════
+  // ── Chansons ──
   if (topSection === "chansons") {
     const selectedChansonCat = interactionCat as ChansonCategorie | null;
     const searchLower = search.toLowerCase();
-    const AGE_GROUPS_CH = [
-      { label: "Tous", min: 0, max: 99 },
-      { label: "3-5 ans", min: 3, max: 5 },
-      { label: "6-8 ans", min: 6, max: 8 },
-      { label: "9-12 ans", min: 9, max: 12 },
-    ];
+    const AGE_GROUPS_CH = [{ label: "Tous", min: 0, max: 99 }, { label: "3-5 ans", min: 3, max: 5 }, { label: "6-8 ans", min: 6, max: 8 }, { label: "9-12 ans", min: 9, max: 12 }];
 
     if (selectedChansonCat) {
       const catChansons = CHANSONS.filter(c => c.categorie === selectedChansonCat);
-      const ageFiltered = ageFilter
-        ? catChansons.filter(c => {
-            const ag = AGE_GROUPS_CH.find(a => a.label === ageFilter);
-            return ag ? c.ageMin <= ag.max && c.ageMax >= ag.min : true;
-          })
-        : catChansons;
-      const filtered = searchLower
-        ? ageFiltered.filter(c => c.titre.toLowerCase().includes(searchLower) || c.description.toLowerCase().includes(searchLower) || c.tags.some(t => t.includes(searchLower)))
-        : ageFiltered;
-
-      // Group by sous-catégorie if exists
+      const ageFiltered = ageFilter ? catChansons.filter(c => { const ag = AGE_GROUPS_CH.find(a => a.label === ageFilter); return ag ? c.ageMin <= ag.max && c.ageMax >= ag.min : true; }) : catChansons;
+      const filtered = searchLower ? ageFiltered.filter(c => c.titre.toLowerCase().includes(searchLower) || c.description.toLowerCase().includes(searchLower)) : ageFiltered;
       const grouped: Record<string, Chanson[]> = {};
-      for (const c of filtered) {
-        const key = c.sousCategorie || "général";
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key].push(c);
-      }
-
+      for (const c of filtered) { const key = c.sousCategorie || "général"; if (!grouped[key]) grouped[key] = []; grouped[key].push(c); }
       const catInfo = CHANSON_CATEGORIES.find(cc => cc.id === selectedChansonCat);
 
       return (
-        <div className="min-h-screen bg-[#0a0a0f] p-4">
-          <div className="max-w-4xl mx-auto space-y-4">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
-              <span className="text-2xl">{catInfo?.emoji || "🎵"}</span>
-              <div>
-                <h1 className="text-xl font-bold text-white">{catInfo?.label || selectedChansonCat}</h1>
-                <p className="text-white/40 text-xs">{filtered.length} chansons</p>
-              </div>
-            </div>
-
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
-                className="bg-white/10 border-white/20 text-white pl-9" />
-            </div>
-
-            <div className="flex gap-2 flex-wrap">
-              {AGE_GROUPS_CH.map(ag => (
-                <button key={ag.label} onClick={() => setAgeFilter(ageFilter === ag.label ? null : ag.label)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === ag.label ? "bg-rose-500/30 border-rose-400/50 text-rose-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
-                  {ag.label}
-                </button>
-              ))}
-            </div>
-
-            {Object.entries(grouped).map(([sub, chansons]) => (
-              <div key={sub}>
-                {Object.keys(grouped).length > 1 && (
-                  <h3 className="text-white/60 text-xs font-semibold mb-2 uppercase tracking-wider">{sub} ({chansons.length})</h3>
-                )}
-                <div className="space-y-2">
-                  {chansons.map(c => (
-                    <div key={c.id} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/10">
-                      <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300">{c.ageMin}-{c.ageMax} ans</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/40">⏱ {c.duree}</span>
-                        {c.audioUrl && <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-300">🔊 Audio</span>}
-                        {!c.audioUrl && <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">⏳ À uploader</span>}
-                      </div>
-                      <p className="text-sm text-white/80 font-medium">{c.titre}</p>
-                      <p className="text-xs text-white/40 mt-1">{c.description}</p>
-                      <div className="flex gap-1 mt-2 flex-wrap">
-                        {c.tags.map((t, i) => (
-                          <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-white/30">#{t}</span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-            {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucun résultat</p>}
+        <div className="min-h-screen bg-[#0a0a0f] p-4"><div className="max-w-4xl mx-auto space-y-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+            <span className="text-2xl">{catInfo?.emoji || "🎵"}</span>
+            <div><h1 className="text-xl font-bold text-white">{catInfo?.label}</h1><p className="text-white/40 text-xs">{filtered.length} chansons</p></div>
           </div>
-        </div>
+          <div className="flex gap-2 flex-wrap">
+            {AGE_GROUPS_CH.map(ag => (
+              <button key={ag.label} onClick={() => setAgeFilter(ageFilter === ag.label ? null : ag.label)} className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === ag.label ? "bg-rose-500/30 border-rose-400/50 text-rose-300" : "bg-white/5 border-white/10 text-white/50"}`}>{ag.label}</button>
+            ))}
+          </div>
+          <div className="relative"><Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…" className="bg-white/10 border-white/20 text-white pl-9" /></div>
+          {Object.entries(grouped).map(([group, chansons]) => (
+            <div key={group}>
+              {Object.keys(grouped).length > 1 && <h3 className="text-[10px] text-white/30 uppercase tracking-wider font-bold mt-2 mb-1">{group}</h3>}
+              <div className="space-y-2">
+                {chansons.map(c => (
+                  <div key={c.id} className="bg-white/[0.04] rounded-[16px] p-4 border border-white/10">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300">{c.ageMin}-{c.ageMax} ans</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/40">⏱ {c.duree}</span>
+                    </div>
+                    <h4 className="text-sm text-white/80 font-medium">{c.titre}</h4>
+                    <p className="text-xs text-white/40 mt-1">{c.description}</p>
+                    <p className="text-xs text-white/60 mt-2 leading-relaxed whitespace-pre-wrap">{c.paroles}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div></div>
       );
     }
 
-    // Category grid
     return (
-      <div className="min-h-screen bg-[#0a0a0f] p-4">
-        <div className="max-w-4xl mx-auto space-y-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
-            <span className="text-2xl">🎵</span>
-            <div>
-              <h1 className="text-xl font-bold text-white">Chansons</h1>
-              <p className="text-white/40 text-xs">{CHANSONS.length} chansons • {CHANSON_CATEGORIES.length} catégories</p>
-            </div>
-          </div>
-
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher dans toutes les chansons…"
-              className="bg-white/10 border-white/20 text-white pl-9" />
-          </div>
-
-          {searchLower ? (
-            <div className="space-y-2">
-              {CHANSONS.filter(c => c.titre.toLowerCase().includes(searchLower) || c.description.toLowerCase().includes(searchLower) || c.tags.some(t => t.includes(searchLower))).map(c => (
-                <div key={c.id} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/10">
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 capitalize">{c.categorie}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">{c.ageMin}-{c.ageMax} ans</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/40">⏱ {c.duree}</span>
-                  </div>
-                  <p className="text-sm text-white/80 font-medium">{c.titre}</p>
-                  <p className="text-xs text-white/40 mt-1">{c.description}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {CHANSON_CATEGORIES.map(cat => {
-                const count = CHANSONS.filter(c => c.categorie === cat.id).length;
-                return (
-                  <button key={cat.id} onClick={() => { setInteractionCat(cat.id); setSearch(""); }}
-                    className={`aspect-square ${cat.color} hover:opacity-90 backdrop-blur rounded-2xl p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between`}>
-                    <span className="text-3xl">{cat.emoji}</span>
-                    <div>
-                      <p className="text-xl font-bold text-white">{count}</p>
-                      <h3 className="text-xs font-semibold text-white/70">{cat.label}</h3>
-                      <p className="text-[10px] text-white/40 mt-0.5">{cat.desc}</p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+      <div className="min-h-screen bg-[#0a0a0f] p-4"><div className="max-w-4xl mx-auto space-y-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+          <span className="text-2xl">🎵</span>
+          <div><h1 className="text-xl font-bold text-white">Chansons</h1><p className="text-white/40 text-xs">{CHANSONS.length} chansons</p></div>
         </div>
-      </div>
+        <div className="relative"><Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…" className="bg-white/10 border-white/20 text-white pl-9" /></div>
+        {searchLower ? (
+          <div className="space-y-2">
+            {CHANSONS.filter(c => c.titre.toLowerCase().includes(searchLower) || c.description.toLowerCase().includes(searchLower)).map(c => (
+              <div key={c.id} className="bg-white/[0.04] rounded-[16px] p-4 border border-white/10">
+                <p className="text-sm text-white/80 font-medium">{c.titre}</p>
+                <p className="text-xs text-white/40 mt-1">{c.description}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {CHANSON_CATEGORIES.map(cat => (
+              <button key={cat.id} onClick={() => { setInteractionCat(cat.id); setSearch(""); }}
+                className={`aspect-square ${cat.color} hover:opacity-90 rounded-2xl p-4 border border-white/[0.06] text-left flex flex-col justify-between`}>
+                <span className="text-3xl">{cat.emoji}</span>
+                <div><p className="text-xl font-bold text-white">{CHANSONS.filter(c => c.categorie === cat.id).length}</p><h3 className="text-xs font-semibold text-white/70">{cat.label}</h3></div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div></div>
     );
   }
 
-
+  // ── Histoires ──
   if (topSection === "histoires") {
     const STORY_THEMES = [
       { id: "espace", label: "Espace", emoji: "🚀", color: "bg-indigo-500/20" },
@@ -2068,798 +780,331 @@ const Admin = () => {
       { id: "amitié", label: "Amitié", emoji: "🤝", color: "bg-pink-500/20" },
       { id: "courage", label: "Courage", emoji: "💪", color: "bg-red-500/20" },
     ];
-
-    // Merge local + cloud stories
     const allStories = [
       ...HISTOIRES.map(h => ({ ...h, source: "local" as const })),
       ...cloudStories.map(s => ({
-        id: s.id,
-        titre: s.title,
-        theme: s.theme,
-        ageMin: s.age_min,
-        ageMax: s.age_max,
+        id: s.id, titre: s.title, theme: s.theme, ageMin: s.age_min, ageMax: s.age_max,
         duree: s.duration as "courte" | "moyenne" | "longue",
         texte: s.full_text || s.template_text,
         moralité: s.summary || undefined,
-        tags: [s.category, s.theme, s.mood].filter(Boolean),
-        source: "cloud" as const,
+        tags: [s.category, s.theme, s.mood].filter(Boolean), source: "cloud" as const,
       })),
     ];
-
-    // Get unique themes from actual data
     const activeThemes = [...new Set(allStories.map(s => s.theme))];
     const allThemeConfigs = activeThemes.map(t => STORY_THEMES.find(st => st.id === t) || { id: t, label: t.charAt(0).toUpperCase() + t.slice(1), emoji: "📖", color: "bg-white/10" });
+    const AGE_GROUPS_STORY = [{ label: "Tous", min: 0, max: 99 }, { label: "3-5 ans", min: 3, max: 5 }, { label: "6-8 ans", min: 6, max: 8 }, { label: "9-12 ans", min: 9, max: 12 }];
 
-    const AGE_GROUPS_STORY = [
-      { label: "Tous", min: 0, max: 99 },
-      { label: "3-5 ans", min: 3, max: 5 },
-      { label: "6-8 ans", min: 6, max: 8 },
-      { label: "9-12 ans", min: 9, max: 12 },
-    ];
-
-    // ── Story editor form ──
     if (editingStory) {
       return (
-        <div className="min-h-screen bg-[#0a0a0f] p-4">
-          <div className="max-w-2xl mx-auto space-y-4">
-            <Button variant="ghost" onClick={() => setEditingStory(null)} className="text-white/70">
-              <ArrowLeft className="w-4 h-4 mr-2" /> Retour
-            </Button>
-            <h2 className="text-xl font-bold text-white">{editingStory.id ? "Modifier" : "Nouvelle"} histoire</h2>
-            <div className="space-y-4 bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-5 border border-white/10">
-              <div>
-                <label className="text-white/60 text-xs font-medium mb-1 block">Titre</label>
-                <Input value={editingStory.titre || ""} onChange={e => setEditingStory({ ...editingStory, titre: e.target.value })}
-                  placeholder="L'aventure de..." className="bg-white/10 border-white/20 text-white" />
+        <div className="min-h-screen bg-[#0a0a0f] p-4"><div className="max-w-2xl mx-auto space-y-4">
+          <Button variant="ghost" onClick={() => setEditingStory(null)} className="text-white/70"><ArrowLeft className="w-4 h-4 mr-2" /> Retour</Button>
+          <h2 className="text-xl font-bold text-white">{editingStory.id ? "Modifier" : "Nouvelle"} histoire</h2>
+          <div className="space-y-4 bg-white/[0.04] rounded-[16px] p-5 border border-white/10">
+            <div><label className="text-white/60 text-xs font-medium mb-1 block">Titre</label><Input value={editingStory.titre || ""} onChange={e => setEditingStory({ ...editingStory, titre: e.target.value })} className="bg-white/10 border-white/20 text-white" /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className="text-white/60 text-xs font-medium mb-1 block">Thème</label>
+                <Select value={editingStory.theme || "magie"} onValueChange={v => setEditingStory({ ...editingStory, theme: v })}>
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white"><SelectValue /></SelectTrigger>
+                  <SelectContent>{STORY_THEMES.map(t => <SelectItem key={t.id} value={t.id}>{t.emoji} {t.label}</SelectItem>)}<SelectItem value="autre">📖 Autre</SelectItem></SelectContent>
+                </Select>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-white/60 text-xs font-medium mb-1 block">Thème</label>
-                  <Select value={editingStory.theme || "magie"} onValueChange={v => setEditingStory({ ...editingStory, theme: v })}>
-                    <SelectTrigger className="bg-white/10 border-white/20 text-white"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {STORY_THEMES.map(t => <SelectItem key={t.id} value={t.id}>{t.emoji} {t.label}</SelectItem>)}
-                      <SelectItem value="autre">📖 Autre</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-white/60 text-xs font-medium mb-1 block">Durée</label>
-                  <Select value={editingStory.duree || "courte"} onValueChange={v => setEditingStory({ ...editingStory, duree: v as any })}>
-                    <SelectTrigger className="bg-white/10 border-white/20 text-white"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="courte">Courte (~1 min)</SelectItem>
-                      <SelectItem value="moyenne">Moyenne (~3 min)</SelectItem>
-                      <SelectItem value="longue">Longue (~5 min)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-white/60 text-xs font-medium mb-1 block">Âge min</label>
-                  <Input type="number" min={3} max={12} value={editingStory.ageMin || 5}
-                    onChange={e => setEditingStory({ ...editingStory, ageMin: Number(e.target.value) })} className="bg-white/10 border-white/20 text-white" />
-                </div>
-                <div>
-                  <label className="text-white/60 text-xs font-medium mb-1 block">Âge max</label>
-                  <Input type="number" min={3} max={12} value={editingStory.ageMax || 12}
-                    onChange={e => setEditingStory({ ...editingStory, ageMax: Number(e.target.value) })} className="bg-white/10 border-white/20 text-white" />
-                </div>
-              </div>
-              <div>
-                <label className="text-white/60 text-xs font-medium mb-1 block">Moralité / résumé (optionnel)</label>
-                <Input value={editingStory.moralité || ""} onChange={e => setEditingStory({ ...editingStory, moralité: e.target.value })}
-                  placeholder="La leçon de l'histoire…" className="bg-white/10 border-white/20 text-white" />
-              </div>
-              <div>
-                <label className="text-white/60 text-xs font-medium mb-1 block">Texte complet (utilise {"{child_name}"} pour le prénom)</label>
-                <Textarea value={editingStory.texte || ""} onChange={e => setEditingStory({ ...editingStory, texte: e.target.value })}
-                  placeholder="Il était une fois…" className="bg-white/10 border-white/20 text-white min-h-[200px]" />
-              </div>
-              <div>
-                <label className="text-white/60 text-xs font-medium mb-1 block">Tags (virgules)</label>
-                <Input value={(editingStory.tags || []).join(", ")}
-                  onChange={e => setEditingStory({ ...editingStory, tags: e.target.value.split(",").map(t => t.trim()).filter(Boolean) })}
-                  placeholder="aventure, amitié, courage" className="bg-white/10 border-white/20 text-white" />
+              <div><label className="text-white/60 text-xs font-medium mb-1 block">Durée</label>
+                <Select value={editingStory.duree || "courte"} onValueChange={v => setEditingStory({ ...editingStory, duree: v as any })}>
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white"><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="courte">Courte</SelectItem><SelectItem value="moyenne">Moyenne</SelectItem><SelectItem value="longue">Longue</SelectItem></SelectContent>
+                </Select>
               </div>
             </div>
-            <Button onClick={async () => {
-              if (!editingStory.titre?.trim() || !editingStory.texte?.trim()) { toast.error("Titre et texte requis"); return; }
-              setSavingStory(true);
-              const payload = {
-                title: editingStory.titre!.trim(),
-                theme: editingStory.theme || "magie",
-                template_text: editingStory.texte!.trim().slice(0, 100),
-                full_text: editingStory.texte!.trim(),
-                summary: editingStory.moralité || null,
-                age_min: editingStory.ageMin || 5,
-                age_max: editingStory.ageMax || 12,
-                duration: editingStory.duree || "courte",
-                category: editingStory.theme || "magie",
-                language: "fr",
-              };
-              if (editingStory.id && editingStory.id.includes("-")) {
-                const { error } = await supabase.from("story_templates").update(payload as any).eq("id", editingStory.id);
-                if (error) toast.error("Erreur: " + error.message);
-                else toast.success("Histoire modifiée !");
-              } else {
-                const { error } = await supabase.from("story_templates").insert(payload as any);
-                if (error) toast.error("Erreur: " + error.message);
-                else toast.success("Histoire ajoutée !");
-              }
-              setSavingStory(false);
-              setEditingStory(null);
-              fetchCloudStories();
-            }} disabled={savingStory} className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-              {savingStory ? "Enregistrement..." : "Enregistrer dans le Cloud"}
-            </Button>
+            <div><label className="text-white/60 text-xs font-medium mb-1 block">Texte complet</label><Textarea value={editingStory.texte || ""} onChange={e => setEditingStory({ ...editingStory, texte: e.target.value })} className="bg-white/10 border-white/20 text-white min-h-[200px]" /></div>
           </div>
-        </div>
+          <Button onClick={async () => {
+            if (!editingStory.titre?.trim() || !editingStory.texte?.trim()) { toast.error("Titre et texte requis"); return; }
+            setSavingStory(true);
+            const payload = { title: editingStory.titre!.trim(), theme: editingStory.theme || "magie", template_text: editingStory.texte!.trim().slice(0, 100), full_text: editingStory.texte!.trim(), summary: editingStory.moralité || null, age_min: editingStory.ageMin || 5, age_max: editingStory.ageMax || 12, duration: editingStory.duree || "courte", category: editingStory.theme || "magie", language: "fr" };
+            if (editingStory.id && editingStory.id.includes("-")) {
+              const { error } = await supabase.from("story_templates").update(payload as any).eq("id", editingStory.id);
+              if (error) toast.error(error.message); else toast.success("Histoire modifiée !");
+            } else {
+              const { error } = await supabase.from("story_templates").insert(payload as any);
+              if (error) toast.error(error.message); else toast.success("Histoire ajoutée !");
+            }
+            setSavingStory(false); setEditingStory(null); fetchCloudStories();
+          }} disabled={savingStory} className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+            {savingStory ? "Enregistrement..." : "Enregistrer"}
+          </Button>
+        </div></div>
       );
     }
 
-    // ── Detail: stories in a theme ──
     if (interactionCat) {
       const themeConfig = allThemeConfigs.find(t => t.id === interactionCat);
       const themeStories = allStories.filter(s => s.theme === interactionCat);
-      const ageFiltered = ageFilter
-        ? themeStories.filter(s => {
-            const ag = AGE_GROUPS_STORY.find(a => a.label === ageFilter);
-            return ag ? s.ageMin <= ag.max && s.ageMax >= ag.min : true;
-          })
-        : themeStories;
+      const ageFiltered = ageFilter ? themeStories.filter(s => { const ag = AGE_GROUPS_STORY.find(a => a.label === ageFilter); return ag ? s.ageMin <= ag.max && s.ageMax >= ag.min : true; }) : themeStories;
       const searchLower = search.toLowerCase();
-      const filtered = searchLower
-        ? ageFiltered.filter(s => s.titre.toLowerCase().includes(searchLower) || s.texte.toLowerCase().includes(searchLower))
-        : ageFiltered;
+      const filtered = searchLower ? ageFiltered.filter(s => s.titre.toLowerCase().includes(searchLower) || s.texte.toLowerCase().includes(searchLower)) : ageFiltered;
 
-      return (
-        <>
-        {detailPortal}
-        <div className="min-h-screen bg-[#0a0a0f] p-4">
-          <div className="max-w-4xl mx-auto space-y-4">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
-              <span className="text-2xl">{themeConfig?.emoji || "📖"}</span>
-              <div>
-                <h1 className="text-xl font-bold text-white">{themeConfig?.label}</h1>
-                <p className="text-white/40 text-xs">{filtered.length} histoires</p>
-              </div>
-            </div>
-
-            <div className="flex gap-2 flex-wrap">
-              {AGE_GROUPS_STORY.map(ag => (
-                <button key={ag.label} onClick={() => setAgeFilter(ageFilter === ag.label ? null : ag.label)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === ag.label ? "bg-purple-500/30 border-purple-400/50 text-purple-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
-                  {ag.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-              <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…"
-                className="bg-white/10 border-white/20 text-white pl-9" />
-            </div>
-
-            <div className="space-y-3">
-              {filtered.map(h => {
-                const isExpanded = expandedStory === h.id;
-                return (
-                  <div key={h.id} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] border border-white/10 overflow-hidden">
-                    <button onClick={() => setExpandedStory(isExpanded ? null : h.id)}
-                      className="w-full p-4 text-left">
-                      <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">{h.theme}</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">{h.ageMin}-{h.ageMax} ans</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">{h.duree}</span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${h.source === "cloud" ? "bg-sky-500/20 text-sky-300" : "bg-white/10 text-white/40"}`}>
-                          {h.source === "cloud" ? "☁️ Cloud" : "📦 Local"}
-                        </span>
-                        <ChevronRight className={`w-4 h-4 text-white/30 ml-auto transition-transform ${isExpanded ? "rotate-90" : ""}`} />
-                      </div>
-                      <h3 className="text-white font-semibold text-sm">{h.titre}</h3>
-                      {!isExpanded && <p className="text-white/40 text-xs mt-1 line-clamp-2">{h.texte.replace(/\{child_name\}/g, "[Enfant]")}</p>}
-                    </button>
-                    {isExpanded && (
-                      <div className="px-4 pb-4 space-y-3">
-                        <div className="bg-white/5 rounded-lg p-4 border border-white/5">
-                          <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap">{h.texte.replace(/\{child_name\}/g, "[Enfant]")}</p>
-                        </div>
-                        {h.moralité && <p className="text-white/50 text-xs italic">💡 {h.moralité}</p>}
-                        <div className="flex gap-1 flex-wrap">
-                          {h.tags.map((t, i) => <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-white/40">{t}</span>)}
-                        </div>
-                        <div className="flex gap-2 pt-2">
-                          <Button size="sm" variant="ghost" className="text-purple-400 text-xs" onClick={() => openHistoireDetail(h)}>
-                            <Eye className="w-3 h-3 mr-1" /> Détail
-                          </Button>
-                          {h.source === "cloud" && (
-                            <>
-                            <Button size="sm" variant="ghost" className="text-blue-400 text-xs" onClick={() => setEditingStory({
-                              id: h.id, titre: h.titre, theme: h.theme, ageMin: h.ageMin, ageMax: h.ageMax,
-                              duree: h.duree, texte: h.texte, moralité: h.moralité, tags: h.tags,
-                            })}>
-                              <Pencil className="w-3 h-3 mr-1" /> Modifier
-                            </Button>
-                            <Button size="sm" variant="ghost" className="text-red-400 text-xs" onClick={async () => {
-                              if (!confirm("Supprimer cette histoire ?")) return;
-                              await supabase.from("story_templates").delete().eq("id", h.id);
-                              toast.success("Supprimée");
-                              fetchCloudStories();
-                            }}>
-                              <Trash2 className="w-3 h-3 mr-1" /> Supprimer
-                            </Button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-              {filtered.length === 0 && <p className="text-center text-white/40 py-8 text-sm">Aucune histoire pour ce filtre</p>}
-            </div>
-          </div>
+      return (<>{detailPortal}<div className="min-h-screen bg-[#0a0a0f] p-4"><div className="max-w-4xl mx-auto space-y-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" onClick={() => { setInteractionCat(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+          <span className="text-2xl">{themeConfig?.emoji || "📖"}</span>
+          <div><h1 className="text-xl font-bold text-white">{themeConfig?.label}</h1><p className="text-white/40 text-xs">{filtered.length} histoires</p></div>
         </div>
-        </>
-      );
-    }
-
-    // ── Main grid by theme ──
-    return (
-      <div className="min-h-screen bg-[#0a0a0f] p-4">
-        <div className="max-w-4xl mx-auto space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
-              <span className="text-2xl">📖</span>
-              <div>
-                <h1 className="text-xl font-bold text-white">Histoires</h1>
-                <p className="text-white/40 text-xs">{allStories.length} histoires • {activeThemes.length} thèmes ({HISTOIRES.length} local + {cloudStories.length} cloud)</p>
-              </div>
-            </div>
-            <Button onClick={() => setEditingStory({ theme: "magie", duree: "courte", ageMin: 5, ageMax: 10, tags: [] })}
-              className="bg-purple-600 hover:bg-purple-700"><Plus className="w-4 h-4 mr-1" /> Ajouter</Button>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {allThemeConfigs.map(theme => {
-              const count = allStories.filter(s => s.theme === theme.id).length;
-              const localCount = HISTOIRES.filter(s => s.theme === theme.id).length;
-              const cloudCount = cloudStories.filter(s => s.theme === theme.id).length;
-              return (
-                <button key={theme.id} onClick={() => { setInteractionCat(theme.id); setSearch(""); setAgeFilter(null); }}
-                  className={`aspect-square ${theme.color} hover:opacity-90 backdrop-blur rounded-2xl p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between`}>
-                  <span className="text-3xl">{theme.emoji}</span>
-                  <div>
-                    <p className="text-xl font-bold text-white">{count}</p>
-                    <h3 className="text-xs font-semibold text-white/70">{theme.label}</h3>
-                    <p className="text-[9px] text-white/40 mt-0.5">{localCount} local • {cloudCount} cloud</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════
-  // CERVEAU / PERSONNALITÉ
-  // ═══════════════════════════════════════════════════════════════════
-  if (topSection === "cerveau") {
-    const sections = [
-      { title: "Identité", items: [
-        `Nom: ${BOBBY_PERSONALITY.name}`, `Espèce: ${BOBBY_PERSONALITY.species}`,
-        `Meilleur ami: ${BOBBY_PERSONALITY.bestFriend}`,
-        `Peurs: ${BOBBY_PERSONALITY.fears.join(", ")}`, `Passions: ${BOBBY_PERSONALITY.loves.join(", ")}`,
-        `Traits: ${BOBBY_PERSONALITY.quirks.join(", ")}`,
-      ]},
-      { title: "Phrases cultes", items: BOBBY_PERSONALITY.catchphrases },
-      { title: "Réactions positives", items: BOBBY_NATURAL_REACTIONS.goodNews },
-      { title: "Réactions négatives", items: BOBBY_NATURAL_REACTIONS.badNews },
-      { title: "Confusion", items: BOBBY_NATURAL_REACTIONS.confusion },
-      { title: "Encouragements", items: BOBBY_NATURAL_REACTIONS.encouragement },
-      { title: "Curiosité", items: BOBBY_NATURAL_REACTIONS.curiosity },
-      { title: "Transitions", items: BOBBY_NATURAL_REACTIONS.transitions },
-      { title: "Relances silence", items: SILENCE_RELAUNCHES },
-      { title: "Phrases d'accueil", items: WELCOME_PHRASES },
-      { title: "Phrases d'au revoir", items: FAREWELL_PHRASES },
-    ];
-
-    const BOBBY_EMOTIONS: { state: string; emoji: string; desc: string; triggers: string; response: string }[] = [
-      { state: "happy", emoji: "😊", desc: "Joyeux — état par défaut", triggers: "aime, content, heureux, sourire, rire, adore", response: "Bobby sourit, yeux grands ouverts, bouche en U" },
-      { state: "sad", emoji: "😢", desc: "Triste — empathie", triggers: "triste, pleure, cafard, blessé, seul, désolé", response: "Bobby est empathique, bouche inversée, yeux bas" },
-      { state: "excited", emoji: "🤩", desc: "Excité — haute énergie", triggers: "wow, incroyable, génial, super, magique, bravo, 🎉", response: "Bobby s'illumine, yeux écarquillés, grand sourire" },
-      { state: "surprised", emoji: "😲", desc: "Surpris — étonnement", triggers: "vraiment?, sérieux, c'est fou, bizarre, impossible", response: "Bobby ouvre grand les yeux, bouche en O" },
-      { state: "curious", emoji: "🤔", desc: "Curieux — questionnement", triggers: "pourquoi, comment, c'est quoi, explique, ?", response: "Bobby penche la tête, sourcil levé, réfléchit" },
-      { state: "thinking", emoji: "💭", desc: "Pensif — réflexion", triggers: "hmm, réfléchis, imagine, et si, suppose, difficile", response: "Bobby regarde en haut, yeux mi-clos, pense" },
-      { state: "calm", emoji: "😌", desc: "Calme — apaisement", triggers: "calme, tranquille, dors, nuit, bonsoir, respire", response: "Bobby parle doucement, expression sereine" },
-      { state: "playful", emoji: "😜", desc: "Joueur — taquin", triggers: "blague, taquin, coquin, farce, haha, drôle", response: "Bobby fait un clin d'œil, sourire malicieux" },
-      { state: "proud", emoji: "💪", desc: "Fier — encouragement", triggers: "bravo, fier, champion, réussi, gagné, bien joué, 🏆", response: "Bobby rayonne, expression fière et chaleureuse" },
-      { state: "reassuring", emoji: "🤗", desc: "Rassurant — soutien", triggers: "j'ai peur, monstres, noir, confiance, je suis là", response: "Bobby est doux, chaleureux, protecteur" },
-      { state: "confused", emoji: "😕", desc: "Confus — incompréhension", triggers: "Bobby ne comprend pas la demande", response: "Bobby fronce les sourcils, tête penchée" },
-      { state: "sleepy", emoji: "😴", desc: "Endormi — mode nuit", triggers: "Mode nuit, inactivité prolongée, bonsoir", response: "Bobby ferme les yeux, animation ZzZ" },
-      { state: "listening", emoji: "👂", desc: "Écoute — attentif", triggers: "L'enfant parle, micro actif", response: "Bobby est attentif, yeux fixes, légère inclinaison" },
-      { state: "speaking", emoji: "🗣️", desc: "Parle — réponse vocale", triggers: "Bobby génère une réponse TTS", response: "Bobby anime la bouche en sync avec l'audio" },
-      { state: "attentive", emoji: "👀", desc: "Attentif — concentration", triggers: "Sujet important, question complexe", response: "Bobby se concentre, regard fixe et intense" },
-      { state: "idle", emoji: "🫥", desc: "Inactif — attente", triggers: "Aucune interaction en cours", response: "Bobby attend, clignements naturels, respiration" },
-    ];
-
-    const EMOTION_TRIGGERS_QA = [
-      { emotion: "Peur", triggers: ["j'ai peur", "j'ai peur du noir", "j'ai peur des monstres"], response: "Pas de panique ! Tu es en sécurité 😊" },
-      { emotion: "Tristesse", triggers: ["je suis triste", "j'ai du chagrin", "je pleure"], response: "Je suis là pour toi 🤗" },
-      { emotion: "Colère", triggers: ["je suis énervé", "je suis en colère", "je suis fâché"], response: "Respire doucement ! 😤" },
-      { emotion: "Joie", triggers: ["je suis heureux", "je suis content", "je suis joyeux"], response: "Super ! 😊 Le bonheur ça se partage !" },
-      { emotion: "Amour", triggers: ["je t'aime bobby", "tu es mon ami", "t'es mon meilleur ami"], response: "Moi aussi je t'aime ! 💙" },
-      { emotion: "Jalousie", triggers: ["je suis jaloux", "la jalousie"], response: "Ça arrive à tout le monde ! Parle-moi 😔" },
-      { emotion: "Honte", triggers: ["j'ai honte", "la honte"], response: "Ne t'inquiète pas ! Tout le monde fait des erreurs 💚" },
-      { emotion: "Courage", triggers: ["le courage", "c'est quoi le courage"], response: "Faire quelque chose même quand on a peur ! 💪" },
-      { emotion: "Gentillesse", triggers: ["la gentillesse", "être gentil"], response: "Penser aux autres ! 😊💙" },
-      { emotion: "Respect", triggers: ["le respect", "c'est quoi le respect"], response: "Traiter les autres comme on veut être traité ! 🤝" },
-      { emotion: "Patience", triggers: ["la patience", "être patient"], response: "Attendre sans s'énerver ! 😌" },
-      { emotion: "Pardon", triggers: ["pardonner", "c'est quoi pardonner"], response: "Ne plus être en colère contre quelqu'un ! 💚" },
-      { emotion: "Partage", triggers: ["partager", "c'est quoi partager"], response: "Donner une partie de ce qu'on a ! 🤝" },
-    ];
-
-    return (
-      <div className="min-h-screen bg-[#0a0a0f] p-4">
-        <div className="max-w-4xl mx-auto space-y-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
-            <span className="text-2xl">✨</span>
-            <div>
-              <h1 className="text-xl font-bold text-white">Personnalité Bobby</h1>
-              <p className="text-white/40 text-xs">Tout ce qui fait Bobby unique</p>
-            </div>
-          </div>
-
-          {/* Emotions grid */}
-          <div className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/10">
-            <h3 className="text-white/70 text-xs font-semibold mb-3 uppercase tracking-wider">🎭 États émotionnels ({BOBBY_EMOTIONS.length})</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {BOBBY_EMOTIONS.map(e => (
-                <div key={e.state} className="bg-white/5 rounded-xl p-3 border border-white/10">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-xl">{e.emoji}</span>
-                    <span className="text-xs font-bold text-white/80 uppercase">{e.state}</span>
-                  </div>
-                  <p className="text-[11px] text-white/50 mb-1">{e.desc}</p>
-                  <p className="text-[10px] text-white/30">🎯 {e.triggers}</p>
-                  <p className="text-[10px] text-white/25 mt-0.5">👁 {e.response}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Emotion triggers QA */}
-          <div className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/10">
-            <h3 className="text-white/70 text-xs font-semibold mb-3 uppercase tracking-wider">💬 Réponses émotionnelles ({EMOTION_TRIGGERS_QA.length})</h3>
-            <div className="space-y-2">
-              {EMOTION_TRIGGERS_QA.map((eq, i) => (
-                <div key={i} className="bg-white/5 rounded-xl p-3 border border-white/10">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 font-semibold">{eq.emotion}</span>
-                  </div>
-                  <p className="text-[10px] text-white/40">Déclencheurs: {eq.triggers.join(", ")}</p>
-                  <p className="text-[11px] text-white/60 mt-1">→ {eq.response}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Personality sections */}
-          {sections.map((section, idx) => (
-            <div key={idx} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-4 border border-white/10">
-              <h3 className="text-white/70 text-xs font-semibold mb-3 uppercase tracking-wider">{section.title}</h3>
-              <div className="space-y-1.5">
-                {section.items.map((item, i) => (
-                  <p key={i} className="text-sm text-white/60">• {item}</p>
-                ))}
-              </div>
-            </div>
+        <div className="flex gap-2 flex-wrap">
+          {AGE_GROUPS_STORY.map(ag => (
+            <button key={ag.label} onClick={() => setAgeFilter(ageFilter === ag.label ? null : ag.label)} className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === ag.label ? "bg-purple-500/30 border-purple-400/50 text-purple-300" : "bg-white/5 border-white/10 text-white/50"}`}>{ag.label}</button>
           ))}
         </div>
-      </div>
+        <div className="relative"><Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…" className="bg-white/10 border-white/20 text-white pl-9" /></div>
+        <div className="space-y-3">
+          {filtered.map(h => {
+            const isExpanded = expandedStory === h.id;
+            return (
+              <div key={h.id} className="bg-white/[0.04] rounded-[16px] border border-white/10 overflow-hidden">
+                <button onClick={() => setExpandedStory(isExpanded ? null : h.id)} className="w-full p-4 text-left">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300">{h.theme}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">{h.ageMin}-{h.ageMax} ans</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">{h.duree}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${h.source === "cloud" ? "bg-sky-500/20 text-sky-300" : "bg-white/10 text-white/40"}`}>{h.source === "cloud" ? "☁️ Cloud" : "📦 Local"}</span>
+                    <ChevronRight className={`w-4 h-4 text-white/30 ml-auto transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+                  </div>
+                  <h3 className="text-white font-semibold text-sm">{h.titre}</h3>
+                  {!isExpanded && <p className="text-white/40 text-xs mt-1 line-clamp-2">{h.texte.replace(/\{child_name\}/g, "[Enfant]")}</p>}
+                </button>
+                {isExpanded && (
+                  <div className="px-4 pb-4 space-y-3">
+                    <div className="bg-white/5 rounded-lg p-4 border border-white/5">
+                      <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap">{h.texte.replace(/\{child_name\}/g, "[Enfant]")}</p>
+                    </div>
+                    {h.moralité && <p className="text-white/50 text-xs italic">💡 {h.moralité}</p>}
+                    <div className="flex gap-2 pt-2">
+                      <Button size="sm" variant="ghost" className="text-purple-400 text-xs" onClick={() => openHistoireDetail(h)}><Eye className="w-3 h-3 mr-1" /> Détail</Button>
+                      {h.source === "cloud" && (
+                        <>
+                        <Button size="sm" variant="ghost" className="text-blue-400 text-xs" onClick={() => setEditingStory({ id: h.id, titre: h.titre, theme: h.theme, ageMin: h.ageMin, ageMax: h.ageMax, duree: h.duree, texte: h.texte, moralité: h.moralité, tags: h.tags })}>
+                          <Pencil className="w-3 h-3 mr-1" /> Modifier
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-red-400 text-xs" onClick={async () => {
+                          if (!confirm("Supprimer cette histoire ?")) return;
+                          await supabase.from("story_templates").delete().eq("id", h.id);
+                          toast.success("Supprimée"); fetchCloudStories();
+                        }}><Trash2 className="w-3 h-3 mr-1" /> Supprimer</Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div></div></>);
+    }
+
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] p-4"><div className="max-w-4xl mx-auto space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+            <span className="text-2xl">📖</span>
+            <div><h1 className="text-xl font-bold text-white">Histoires</h1><p className="text-white/40 text-xs">{allStories.length} histoires</p></div>
+          </div>
+          <Button onClick={() => setEditingStory({ theme: "magie", duree: "courte", ageMin: 5, ageMax: 12, tags: [] })} className="bg-purple-600 hover:bg-purple-700"><Plus className="w-4 h-4 mr-1" /> Nouvelle</Button>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {allThemeConfigs.map(theme => {
+            const count = allStories.filter(s => s.theme === theme.id).length;
+            return (
+              <button key={theme.id} onClick={() => { setInteractionCat(theme.id); setSearch(""); }}
+                className={`aspect-square ${theme.color} hover:opacity-90 rounded-2xl p-4 border border-white/[0.06] text-left flex flex-col justify-between`}>
+                <span className="text-3xl">{theme.emoji}</span>
+                <div><p className="text-xl font-bold text-white">{count}</p><h3 className="text-xs font-semibold text-white/70">{theme.label}</h3></div>
+              </button>
+            );
+          })}
+        </div>
+      </div></div>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // CLOUD KB — Category detail
-  // ═══════════════════════════════════════════════════════════════════
+  // ── Cerveau ──
+  if (topSection === "cerveau") {
+    const sections = [
+      { title: "🎭 Personnalité", items: BOBBY_PERSONALITY },
+      { title: "🤖 Réactions naturelles", items: BOBBY_NATURAL_REACTIONS },
+      { title: "🔇 Relances silence", items: SILENCE_RELAUNCHES },
+      { title: "👋 Accueil", items: WELCOME_PHRASES },
+      { title: "🌙 Au revoir", items: FAREWELL_PHRASES },
+    ];
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] p-4"><div className="max-w-4xl mx-auto space-y-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+          <span className="text-2xl">✨</span>
+          <div><h1 className="text-xl font-bold text-white">Personnalité Bobby</h1></div>
+        </div>
+        {sections.map((section, idx) => (
+          <div key={idx} className="bg-white/[0.04] rounded-[16px] p-4 border border-white/10">
+            <h3 className="text-white/70 text-xs font-semibold mb-3 uppercase tracking-wider">{section.title}</h3>
+            <div className="space-y-1.5">{section.items.map((item, i) => <p key={i} className="text-sm text-white/60">• {item}</p>)}</div>
+          </div>
+        ))}
+      </div></div>
+    );
+  }
+
+  // ── Cloud KB detail ──
   if (topSection === "cloud" && cloudSection && currentCloudSection) {
     const Icon = currentCloudSection.icon;
     return (
-      <div className="min-h-screen bg-[#0a0a0f] p-4">
-      <div className="max-w-4xl mx-auto space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={() => { setCloudSection(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
-              <div className={`w-10 h-10 rounded-xl ${currentCloudSection.bgColor} flex items-center justify-center`}>
-                <Icon className={`w-5 h-5 ${currentCloudSection.color}`} />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-white">{currentCloudSection.label}</h1>
-                <p className="text-white/40 text-xs">{cloudEntries.length} entrées</p>
-              </div>
-            </div>
-            <Button onClick={() => setEditingEntry({ keywords: [], category: currentCloudSection.dbCategories[0], priority: 5, is_active: true, age_min: 3, age_max: 12 })}
-              className="bg-purple-600 hover:bg-purple-700"><Plus className="w-4 h-4 mr-1" /> Ajouter</Button>
+      <div className="min-h-screen bg-[#0a0a0f] p-4"><div className="max-w-4xl mx-auto space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={() => { setCloudSection(null); setSearch(""); setAgeFilter(null); }} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+            <div className={`w-10 h-10 rounded-xl ${currentCloudSection.bgColor} flex items-center justify-center`}><Icon className={`w-5 h-5 ${currentCloudSection.color}`} /></div>
+            <div><h1 className="text-xl font-bold text-white">{currentCloudSection.label}</h1><p className="text-white/40 text-xs">{cloudEntries.length} entrées</p></div>
           </div>
-
-          {/* Age filter */}
-          <div className="flex gap-2 flex-wrap">
-            {AGE_GROUPS.map(g => (
-              <button key={g.label} onClick={() => setAgeFilter(ageFilter === g.label ? null : g.label)}
-                className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === g.label ? "bg-blue-500/30 border-blue-400/50 text-blue-300" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"}`}>
-                {g.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Rechercher…`}
-              className="bg-white/10 border-white/20 text-white pl-9" />
-          </div>
-
-          {loading ? (
-            <div className="text-center text-white/50 py-12">Chargement…</div>
-          ) : cloudEntries.length === 0 ? (
-            <div className="text-center text-white/40 py-16">
-              <Icon className={`w-12 h-12 mx-auto mb-3 ${currentCloudSection.color} opacity-30`} />
-              <p className="text-sm">Aucune entrée</p>
-              <Button variant="ghost" className="mt-3 text-purple-400"
-                onClick={() => setEditingEntry({ keywords: [], category: currentCloudSection.dbCategories[0], priority: 5, is_active: true, age_min: 3, age_max: 12 })}>
-                <Plus className="w-4 h-4 mr-1" /> Créer la première
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {cloudEntries.map(entry => (
-                <div key={entry.id} onClick={() => openKBDetail(entry)} className="cursor-pointer">
-                  <EntryRow entry={entry} onToggle={() => handleToggleActive(entry)}
-                    onEdit={() => setEditingEntry(entry)} onDelete={() => handleDelete(entry.id)} />
-                </div>
-              ))}
-            </div>
-          )}
+          <Button onClick={() => setEditingEntry({ keywords: [], category: currentCloudSection.dbCategories[0], priority: 5, is_active: true, age_min: 3, age_max: 12 })} className="bg-purple-600 hover:bg-purple-700"><Plus className="w-4 h-4 mr-1" /> Ajouter</Button>
         </div>
-      </div>
+        <div className="flex gap-2 flex-wrap">
+          {AGE_GROUPS.map(g => (
+            <button key={g.label} onClick={() => setAgeFilter(ageFilter === g.label ? null : g.label)} className={`text-xs px-3 py-1.5 rounded-full border transition-all ${ageFilter === g.label ? "bg-blue-500/30 border-blue-400/50 text-blue-300" : "bg-white/5 border-white/10 text-white/50"}`}>{g.label}</button>
+          ))}
+        </div>
+        <div className="relative"><Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" /><Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher…" className="bg-white/10 border-white/20 text-white pl-9" /></div>
+        {loading ? <div className="text-center text-white/50 py-12">Chargement…</div> :
+          cloudEntries.length === 0 ? <div className="text-center text-white/40 py-16"><p className="text-sm">Aucune entrée</p></div> :
+          <div className="space-y-2">{cloudEntries.map(entry => (
+            <div key={entry.id} onClick={() => openKBDetail(entry)} className="cursor-pointer">
+              <EntryRow entry={entry} onToggle={() => handleToggleActive(entry)} onEdit={() => setEditingEntry(entry)} onDelete={() => handleDelete(entry.id)} />
+            </div>
+          ))}</div>
+        }
+      </div></div>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // CLOUD KB — Category grid
-  // ═══════════════════════════════════════════════════════════════════
+  // ── Cloud KB grid ──
   if (topSection === "cloud") {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] p-4">
-        <div className="max-w-4xl mx-auto space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
-              <span className="text-2xl">☁️</span>
-              <div>
-                <h1 className="text-xl font-bold text-white">Cloud Knowledge Base</h1>
-                <p className="text-white/40 text-xs">{entries.length} entrées cloud modifiables</p>
-              </div>
-            </div>
-            <Button onClick={() => setEditingEntry({ keywords: [], category: "général", priority: 5, is_active: true, age_min: 3, age_max: 12 })}
-              className="bg-purple-600 hover:bg-purple-700"><Plus className="w-4 h-4 mr-1" /> Ajouter</Button>
+      <div className="min-h-screen bg-[#0a0a0f] p-4"><div className="max-w-4xl mx-auto space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+            <span className="text-2xl">☁️</span>
+            <div><h1 className="text-xl font-bold text-white">Cloud Knowledge Base</h1><p className="text-white/40 text-xs">{entries.length} entrées</p></div>
           </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {BRAIN_SECTIONS.map(section => {
-              const Icon = section.icon;
-              const count = categoryCounts[section.id]?.total ?? 0;
-              return (
-                <button key={section.id} onClick={() => { setCloudSection(section.id); setSearch(""); }}
-                  className="aspect-square bg-white/[0.04] hover:bg-white/[0.08] backdrop-blur-xl rounded-[20px] p-4 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex flex-col justify-between group"
-                >
-                  <div className={`w-10 h-10 rounded-xl ${section.bgColor} flex items-center justify-center`}>
-                    <Icon className={`w-5 h-5 ${section.color}`} />
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold text-white">{count}</p>
-                    <h3 className="text-xs font-semibold text-white/70">{section.label}</h3>
-                    <p className="text-[9px] text-white/40 mt-0.5">{section.description}</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+          <Button onClick={() => setEditingEntry({ keywords: [], category: "général", priority: 5, is_active: true, age_min: 3, age_max: 12 })} className="bg-purple-600 hover:bg-purple-700"><Plus className="w-4 h-4 mr-1" /> Ajouter</Button>
         </div>
-      </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {BRAIN_SECTIONS.map(section => {
+            const SIcon = section.icon;
+            return (
+              <button key={section.id} onClick={() => { setCloudSection(section.id); setSearch(""); }}
+                className="aspect-square bg-white/[0.04] hover:bg-white/[0.08] rounded-[20px] p-4 border border-white/[0.06] text-left flex flex-col justify-between">
+                <div className={`w-10 h-10 rounded-xl ${section.bgColor} flex items-center justify-center`}><SIcon className={`w-5 h-5 ${section.color}`} /></div>
+                <div><p className="text-lg font-bold text-white">{categoryCounts[section.id]?.total ?? 0}</p><h3 className="text-xs font-semibold text-white/70">{section.label}</h3></div>
+              </button>
+            );
+          })}
+        </div>
+      </div></div>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // BOBBY CLOUD USERS — admin panel
-  // ═══════════════════════════════════════════════════════════════════
+  // ── Cloud Users ──
   if (topSection === "cloudusers") {
-    const filteredCloudUsers = cloudUsers.filter(u => {
-      if (!cloudUserSearch) return true;
-      const q = cloudUserSearch.toLowerCase();
-      return u.child_name.toLowerCase().includes(q) || u.sync_code.toLowerCase().includes(q) || u.device_info?.toLowerCase().includes(q);
-    });
-
-    const formatDate = (iso: string) => {
-      const d = new Date(iso);
-      return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-    };
-
-    const timeSince = (iso: string) => {
-      const diff = Date.now() - new Date(iso).getTime();
-      const mins = Math.floor(diff / 60000);
-      if (mins < 60) return `${mins}m`;
-      const hours = Math.floor(mins / 60);
-      if (hours < 24) return `${hours}h`;
-      return `${Math.floor(hours / 24)}j`;
-    };
+    const filteredCloudUsers = cloudUsers.filter(u => { if (!cloudUserSearch) return true; const q = cloudUserSearch.toLowerCase(); return u.child_name.toLowerCase().includes(q) || u.sync_code.toLowerCase().includes(q); });
+    const formatDate = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    const timeSince = (iso: string) => { const diff = Date.now() - new Date(iso).getTime(); const mins = Math.floor(diff / 60000); if (mins < 60) return `${mins}m`; const hours = Math.floor(mins / 60); if (hours < 24) return `${hours}h`; return `${Math.floor(hours / 24)}j`; };
 
     if (selectedCloudUser) {
       const u = selectedCloudUser;
       const ps = u.parent_settings || {};
       return (
         <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white p-4 max-w-4xl mx-auto">
-          <button onClick={() => setSelectedCloudUser(null)} className="flex items-center gap-2 text-white/60 hover:text-white mb-4">
-            <ArrowLeft className="w-4 h-4" /> Retour
-          </button>
-
-          {/* User hero */}
+          <button onClick={() => setSelectedCloudUser(null)} className="flex items-center gap-2 text-white/60 hover:text-white mb-4"><ArrowLeft className="w-4 h-4" /> Retour</button>
           <div className="bg-gradient-to-br from-sky-500/20 to-blue-600/10 rounded-2xl p-6 border border-sky-500/20 mb-4">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-16 h-16 rounded-2xl bg-sky-500/20 flex items-center justify-center text-3xl">👤</div>
-              <div>
-                <h2 className="text-2xl font-bold">{u.child_name}</h2>
-                <p className="text-white/50 text-sm font-mono">{u.sync_code}</p>
-              </div>
+              <div><h2 className="text-2xl font-bold">{u.child_name}</h2><p className="text-white/50 text-sm font-mono">{u.sync_code}</p></div>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-white/5 rounded-xl p-3 text-center">
-                <p className="text-lg font-bold">{formatDate(u.created_at)}</p>
-                <p className="text-[10px] text-white/40">Créé le</p>
-              </div>
-              <div className="bg-white/5 rounded-xl p-3 text-center">
-                <p className="text-lg font-bold">{timeSince(u.last_synced_at)}</p>
-                <p className="text-[10px] text-white/40">Dernière sync</p>
-              </div>
-              <div className="bg-white/5 rounded-xl p-3 text-center">
-                <p className="text-lg font-bold">{u.device_info ? "✅" : "❌"}</p>
-                <p className="text-[10px] text-white/40">Appareil</p>
-              </div>
+              <div className="bg-white/5 rounded-xl p-3 text-center"><p className="text-lg font-bold">{formatDate(u.created_at)}</p><p className="text-[10px] text-white/40">Créé le</p></div>
+              <div className="bg-white/5 rounded-xl p-3 text-center"><p className="text-lg font-bold">{timeSince(u.last_synced_at)}</p><p className="text-[10px] text-white/40">Dernière sync</p></div>
+              <div className="bg-white/5 rounded-xl p-3 text-center"><p className="text-lg font-bold">{u.device_info ? "✅" : "❌"}</p><p className="text-[10px] text-white/40">Appareil</p></div>
             </div>
           </div>
-
-          {/* Parent Settings */}
           <div className="bg-white/5 rounded-2xl p-5 border border-white/10 mb-4">
-            <h3 className="text-lg font-bold mb-3 flex items-center gap-2">⚙️ Réglages parents</h3>
+            <h3 className="text-lg font-bold mb-3">⚙️ Réglages</h3>
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: "Nom enfant", value: ps.childName || "—", emoji: "👦" },
                 { label: "Âge", value: ps.childAge ? `${ps.childAge} ans` : "—", emoji: "🎂" },
                 { label: "Voix", value: ps.voiceType || "—", emoji: "🎙️" },
-                { label: "Personnalité", value: ps.personality || "—", emoji: "🧠" },
-                { label: "Vitesse voix", value: ps.voiceSpeed || "—", emoji: "⚡" },
-                { label: "Filtre contenu", value: ps.contentFilter || "—", emoji: "🛡️" },
-                { label: "Ultra sécurisé", value: ps.ultraSafe ? "✅ Oui" : "❌ Non", emoji: "🔒" },
-                { label: "Durée max", value: ps.timeLimitMinutes ? `${ps.timeLimitMinutes}min` : "Illimité", emoji: "⏱️" },
-                { label: "Mode nuit", value: ps.nightMode?.active ? `${ps.nightMode.startHour}-${ps.nightMode.endHour}` : "Désactivé", emoji: "🌙" },
-                { label: "Enregistrement", value: ps.recordConversations ? "✅" : "❌", emoji: "🎤" },
-                { label: "Couleur Bobby", value: ps.bobbyColor || "blue", emoji: "🎨" },
-                { label: "Niveau langue", value: ps.languageLevel || "—", emoji: "📖" },
+                { label: "Ultra sécurisé", value: ps.ultraSafe ? "✅" : "❌", emoji: "🔒" },
               ].map(item => (
                 <div key={item.label} className="bg-white/5 rounded-xl p-3 flex items-center gap-3">
                   <span className="text-lg">{item.emoji}</span>
-                  <div>
-                    <p className="text-[10px] text-white/40">{item.label}</p>
-                    <p className="text-sm font-semibold">{item.value}</p>
-                  </div>
+                  <div><p className="text-[10px] text-white/40">{item.label}</p><p className="text-sm font-semibold">{item.value}</p></div>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Thèmes activés */}
-          {ps.enabledThemes?.length > 0 && (
-            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 mb-4">
-              <h3 className="text-lg font-bold mb-3">🎨 Thèmes activés</h3>
-              <div className="flex flex-wrap gap-2">
-                {ps.enabledThemes.map((t: string) => (
-                  <span key={t} className="px-3 py-1.5 rounded-lg bg-sky-500/15 text-sky-300 text-sm font-medium">{t}</span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Sujets bloqués */}
-          {ps.blockedTopics?.length > 0 && (
-            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 mb-4">
-              <h3 className="text-lg font-bold mb-3">🚫 Sujets bloqués</h3>
-              <div className="flex flex-wrap gap-2">
-                {ps.blockedTopics.map((t: string) => (
-                  <span key={t} className="px-3 py-1.5 rounded-lg bg-red-500/15 text-red-300 text-sm font-medium">{t}</span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Device info */}
-          {u.device_info && (
-            <div className="bg-white/5 rounded-2xl p-5 border border-white/10 mb-4">
-              <h3 className="text-lg font-bold mb-2">📱 Appareil</h3>
-              <p className="text-sm text-white/50 font-mono break-all">{u.device_info}</p>
-            </div>
-          )}
-
-          {/* Danger zone */}
           <div className="bg-red-500/5 rounded-2xl p-5 border border-red-500/20">
             <h3 className="text-lg font-bold text-red-400 mb-2">⚠️ Zone danger</h3>
-            <p className="text-sm text-white/40 mb-3">Supprimer ce profil Bobby Cloud. L'utilisateur devra recréer un compte.</p>
-            <Button
-              variant="destructive"
-              onClick={async () => {
-                await supabase.from("cloud_profiles").delete().eq("id", u.id);
-                setSelectedCloudUser(null);
-                fetchCloudUsers();
-                toast.success("Profil Bobby Cloud supprimé");
-              }}
-              className="bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30"
-            >
-              <Trash2 className="w-4 h-4 mr-2" /> Supprimer le profil
+            <Button variant="destructive" onClick={async () => {
+              await supabase.from("cloud_profiles").delete().eq("id", u.id);
+              setSelectedCloudUser(null); fetchCloudUsers(); toast.success("Profil supprimé");
+            }} className="bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30">
+              <Trash2 className="w-4 h-4 mr-2" /> Supprimer
             </Button>
           </div>
         </div>
       );
     }
 
-    // Cloud Users List
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-white p-4 max-w-4xl mx-auto">
-        <button onClick={() => setTopSection(null)} className="flex items-center gap-2 text-white/60 hover:text-white mb-4">
-          <ArrowLeft className="w-4 h-4" /> Retour
-        </button>
-
-        {/* Header */}
-        <div className="bg-gradient-to-br from-sky-500/15 to-blue-600/10 rounded-2xl p-6 border border-sky-500/20 mb-4">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="text-4xl">☁️👥</span>
-            <div>
-              <h2 className="text-2xl font-bold">Bobby Cloud</h2>
-              <p className="text-white/50 text-sm">{cloudUsers.length} profil{cloudUsers.length > 1 ? "s" : ""} enregistré{cloudUsers.length > 1 ? "s" : ""}</p>
-            </div>
-          </div>
-
-          {/* Stats row */}
-          <div className="grid grid-cols-4 gap-2 mt-4">
-            <div className="bg-white/5 rounded-xl p-3 text-center">
-              <p className="text-xl font-bold text-sky-400">{cloudUsers.length}</p>
-              <p className="text-[9px] text-white/40">Total</p>
-            </div>
-            <div className="bg-white/5 rounded-xl p-3 text-center">
-              <p className="text-xl font-bold text-green-400">
-                {cloudUsers.filter(u => Date.now() - new Date(u.last_synced_at).getTime() < 86400000).length}
-              </p>
-              <p className="text-[9px] text-white/40">Actifs 24h</p>
-            </div>
-            <div className="bg-white/5 rounded-xl p-3 text-center">
-              <p className="text-xl font-bold text-amber-400">
-                {cloudUsers.filter(u => Date.now() - new Date(u.last_synced_at).getTime() < 604800000).length}
-              </p>
-              <p className="text-[9px] text-white/40">Actifs 7j</p>
-            </div>
-            <div className="bg-white/5 rounded-xl p-3 text-center">
-              <p className="text-xl font-bold text-purple-400">
-                {new Set(cloudUsers.map(u => u.child_name.toLowerCase())).size}
-              </p>
-              <p className="text-[9px] text-white/40">Enfants</p>
-            </div>
-          </div>
+      <div className="min-h-screen p-4" style={{ background: "var(--admin-bg)" }}><div className="max-w-4xl mx-auto space-y-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" onClick={goBack} className="text-white/70 p-2"><ArrowLeft className="w-5 h-5" /></Button>
+          <span className="text-2xl">☁️👥</span>
+          <div><h1 className="text-xl font-bold text-white">Bobby Cloud Users</h1><p className="text-white/40 text-xs">{cloudUsers.length} profils</p></div>
         </div>
-
-        {/* Search */}
-        <div className="relative mb-4">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
-          <input
-            type="text"
-            value={cloudUserSearch}
-            onChange={e => setCloudUserSearch(e.target.value)}
-            placeholder="Rechercher par nom, code sync ou appareil…"
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-white/30 outline-none focus:border-sky-500/40"
-          />
-        </div>
-
-        {/* Refresh */}
-        <div className="flex justify-end mb-3">
-          <Button size="sm" variant="outline" onClick={fetchCloudUsers} disabled={cloudUsersLoading}
-            className="text-white/60 border-white/10 hover:border-white/20 hover:text-white text-xs">
-            {cloudUsersLoading ? "…" : "🔄 Rafraîchir"}
-          </Button>
-        </div>
-
-        {/* Users list */}
-        {filteredCloudUsers.length === 0 ? (
-          <div className="bg-white/5 rounded-2xl p-8 text-center border border-white/10">
-            <span className="text-5xl block mb-3">☁️</span>
-            <p className="text-white/50">Aucun profil Bobby Cloud trouvé</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {filteredCloudUsers.map(user => (
-              <button key={user.id} onClick={() => setSelectedCloudUser(user)}
-                className="w-full bg-white/5 hover:bg-white/8 rounded-xl p-4 border border-white/10 hover:border-sky-500/20 transition-all text-left flex items-center gap-4 group">
-                <div className="w-12 h-12 rounded-xl bg-sky-500/15 flex items-center justify-center text-xl shrink-0">
-                  👤
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <p className="font-bold text-white">{user.child_name}</p>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 font-mono">{user.sync_code}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-[11px] text-white/40">
-                    <span>📅 {formatDate(user.created_at)}</span>
-                    <span>🔄 {timeSince(user.last_synced_at)}</span>
-                    {(user.parent_settings as any)?.voiceType && (
-                      <span>🎙️ {(user.parent_settings as any).voiceType}</span>
-                    )}
-                    {(user.parent_settings as any)?.childAge && (
-                      <span>🎂 {(user.parent_settings as any).childAge} ans</span>
-                    )}
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors shrink-0" />
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+        <div className="relative"><Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" /><Input value={cloudUserSearch} onChange={e => setCloudUserSearch(e.target.value)} placeholder="Rechercher un utilisateur…" className="bg-white/10 border-white/20 text-white pl-9" /></div>
+        {cloudUsersLoading ? <div className="text-center text-white/50 py-12">Chargement…</div> :
+          filteredCloudUsers.length === 0 ? <div className="text-center py-12"><span className="text-4xl block mb-2">📭</span><p className="text-white/30 text-sm">Aucun utilisateur</p></div> :
+          <div className="space-y-2">{filteredCloudUsers.map(user => (
+            <button key={user.id} onClick={() => setSelectedCloudUser(user)}
+              className="w-full bg-white/5 hover:bg-white/10 rounded-2xl p-4 border border-white/10 text-left flex items-center gap-4 group transition-all">
+              <div className="w-12 h-12 rounded-xl bg-sky-500/15 flex items-center justify-center text-xl shrink-0">👤</div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1"><p className="font-bold text-white">{user.child_name}</p><span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 font-mono">{user.sync_code}</span></div>
+                <div className="flex items-center gap-3 text-[11px] text-white/40"><span>📅 {formatDate(user.created_at)}</span><span>🔄 {timeSince(user.last_synced_at)}</span></div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-white/20 shrink-0" />
+            </button>
+          ))}</div>
+        }
+      </div></div>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // BOBBY STORE — CRUD catalog management
-  // ═══════════════════════════════════════════════════════════════════
-  if (topSection === "expressions") {
-    return <ExpressionPreview onBack={() => { setTopSection(null); }} />;
-  }
-
-  if (topSection === "autolearn") {
-    return <AutoLearnPanel onBack={() => { setTopSection(null); }} />;
-  }
-
-  if (topSection === "kbdebug") {
-    return (
-      <div className="min-h-screen p-4" style={{ background: "var(--admin-bg)" }}>
-        <KBDebugPanel onBack={() => { setTopSection(null); }} />
-      </div>
-    );
-  }
-
+  // ── Delegate sections ──
+  if (topSection === "expressions") return <ExpressionPreview onBack={() => setTopSection(null)} />;
+  if (topSection === "autolearn") return <AutoLearnPanel onBack={() => setTopSection(null)} />;
+  if (topSection === "kbdebug") return <div className="min-h-screen p-4" style={{ background: "var(--admin-bg)" }}><KBDebugPanel onBack={() => setTopSection(null)} /></div>;
   if (topSection === "store") {
     return (
       <AdminStoreManager
         storeItems={storeItems.map((s: any) => ({
-          ...s,
-          detailed_description: s.detailed_description || "",
-          is_premium: s.is_premium ?? false,
-          version_label: s.version_label || "1.0",
-          rating: s.rating ?? 4.5,
-          rating_count: s.rating_count ?? 0,
-          content_count: s.content_count ?? 0,
-          changelog: s.changelog || "",
-          creator_name: s.creator_name || "Équipe Bobby",
-          creator_role: s.creator_role || "Éducation & Divertissement",
-          learning_objectives: s.learning_objectives ?? [],
-          skills_developed: s.skills_developed ?? [],
-          duration_estimate: s.duration_estimate || "10-15 min",
-          difficulty_level: s.difficulty_level || "adaptatif",
-          languages: s.languages ?? ["fr"],
-          cover_image_url: s.cover_image_url || "",
-          screenshots: s.screenshots ?? [],
+          ...s, detailed_description: s.detailed_description || "", is_premium: s.is_premium ?? false,
+          version_label: s.version_label || "1.0", rating: s.rating ?? 4.5, rating_count: s.rating_count ?? 0,
+          content_count: s.content_count ?? 0, changelog: s.changelog || "", creator_name: s.creator_name || "Équipe Bobby",
+          creator_role: s.creator_role || "Éducation & Divertissement", learning_objectives: s.learning_objectives ?? [],
+          skills_developed: s.skills_developed ?? [], duration_estimate: s.duration_estimate || "10-15 min",
+          difficulty_level: s.difficulty_level || "adaptatif", languages: s.languages ?? ["fr"],
+          cover_image_url: s.cover_image_url || "", screenshots: s.screenshots ?? [],
           last_updated_at: s.last_updated_at || s.updated_at || s.created_at,
           content_items: Array.isArray(s.content_items) ? s.content_items : [],
         }))}
@@ -2870,311 +1115,12 @@ const Admin = () => {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════
+  // ── Main Dashboard ──
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${adminDark ? '' : 'admin-light'}`} style={{ background: "var(--admin-bg)" }}>
-      <div className="max-w-4xl mx-auto px-4 py-5 space-y-4">
-        {/* ── Header — compact ── */}
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate("/")} className="w-9 h-9 rounded-xl flex items-center justify-center hover:opacity-80 transition-all" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
-            <ArrowLeft className="w-4 h-4" style={{ color: "var(--admin-text-muted)" }} />
-          </button>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold tracking-tight" style={{ color: "var(--admin-text)" }}>Bobby Admin</h1>
-            <p className="text-[11px]" style={{ color: "var(--admin-text-dim)" }}>Tableau de bord central</p>
-          </div>
-          <button onClick={() => setAdminDark(d => !d)}
-            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
-            {adminDark ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
-          </button>
-          <button onClick={() => { fetchEntries(); fetchStoreItems(); fetchCloudUsers(); fetchCloudStories(); fetchRealConversations(); fetchLiveStats(); fetchChartData(); toast.success("Données rafraîchies"); }}
-            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
-            <RefreshCw className="w-4 h-4" style={{ color: "var(--admin-text-muted)" }} />
-          </button>
-        </div>
-
-        {/* ── Hero stats row ── */}
-        {(() => {
-          const intCount = typeof sectionCounts.interactions === "number" ? sectionCounts.interactions : 0;
-          const total = intCount + BOBBY_MULTI_RESPONSES.length + QA_DATABASE.length + BLAGUES.length + HISTOIRES.length + CHANSONS.length + (sectionCounts.jeux as number) + kbTotalCount;
-          return (
-            <div className="grid grid-cols-4 gap-2">
-              <div className="col-span-2 bg-gradient-to-r from-purple-500/10 to-blue-500/8 rounded-2xl p-3" style={{ border: "1px solid var(--admin-border)" }}>
-                <p className="text-[28px] font-extrabold tracking-tight leading-none" style={{ color: "var(--admin-text)" }}>{total.toLocaleString("fr-FR")}</p>
-                <p className="text-[10px] mt-0.5" style={{ color: "var(--admin-text-muted)" }}>contenus total</p>
-              </div>
-              <div className="rounded-2xl p-3 text-center" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
-                <p className="text-lg font-bold text-emerald-500">{kbActiveCount.toLocaleString("fr-FR")}</p>
-                <p className="text-[9px]" style={{ color: "var(--admin-text-dim)" }}>KB actif</p>
-              </div>
-              <div className="rounded-2xl p-3 text-center" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
-                <p className="text-lg font-bold text-sky-500">{cloudUsers.length}</p>
-                <p className="text-[9px]" style={{ color: "var(--admin-text-dim)" }}>users</p>
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* ── Live Activity Widget ── */}
-        <div className="bg-gradient-to-r from-emerald-500/[0.08] to-cyan-500/[0.08] rounded-2xl p-3" style={{ border: "1px solid var(--admin-border)" }}>
-          <div className="flex items-center gap-2 mb-2.5">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <p className="text-[11px] font-bold text-emerald-500 tracking-wide">ACTIVITÉ EN DIRECT</p>
-            <p className="text-[9px] ml-auto" style={{ color: "var(--admin-text-faint)" }}>⟳ 30s</p>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { val: liveStats.activeSessions, label: "actives maintenant", color: "text-emerald-500" },
-              { val: liveStats.todaySessions, label: "sessions aujourd'hui", color: "text-cyan-500" },
-              { val: liveStats.todayMessages, label: "messages aujourd'hui", color: "text-blue-500" },
-            ].map(s => (
-              <div key={s.label} className="rounded-xl p-2.5 text-center" style={{ background: "var(--admin-card)" }}>
-                <p className={`text-[22px] font-extrabold leading-none ${s.color}`}>{s.val}</p>
-                <p className="text-[9px] mt-1" style={{ color: "var(--admin-text-muted)" }}>{s.label}</p>
-              </div>
-            ))}
-          </div>
-          <div className="flex items-center justify-between mt-2.5 px-1">
-            {[
-              { icon: "⏱", label: "Durée moy:", value: liveStats.avgDuration > 0 ? `${Math.floor(liveStats.avgDuration / 60)}m${(liveStats.avgDuration % 60).toString().padStart(2, "0")}s` : "—" },
-              { icon: "😊", label: "Top émotion:", value: liveStats.topEmotion },
-              { icon: "🕐", label: "Dernière:", value: liveStats.lastActivity ? (() => { const diff = Math.round((Date.now() - new Date(liveStats.lastActivity).getTime()) / 60000); return diff < 1 ? "à l'instant" : diff < 60 ? `il y a ${diff}m` : `il y a ${Math.floor(diff / 60)}h`; })() : "—" },
-            ].map(s => (
-              <div key={s.label} className="flex items-center gap-1.5">
-                <span className="text-[9px]" style={{ color: "var(--admin-text-faint)" }}>{s.icon} {s.label}</span>
-                <span className="text-[10px] font-bold" style={{ color: "var(--admin-text-secondary)" }}>{s.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Charts ── */}
-        <div className="grid grid-cols-1 gap-3">
-          {/* Sessions per day */}
-          <div className="rounded-2xl p-3" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
-            <p className="text-[11px] font-bold mb-2" style={{ color: "var(--admin-text-secondary)" }}>📊 Sessions & Messages (7 jours)</p>
-            {chartSessions.length > 0 ? (
-              <div className="h-[140px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartSessions} barGap={2}>
-                    <XAxis dataKey="day" tick={{ fill: adminDark ? "rgba(255,255,255,0.3)" : "#86868b", fontSize: 10 }} axisLine={false} tickLine={false} />
-                    <YAxis hide />
-                    <Tooltip
-                      contentStyle={{ background: adminDark ? "#1a1a2e" : "#fff", border: `1px solid ${adminDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, borderRadius: 12, fontSize: 11, color: adminDark ? "#fff" : "#1d1d1f" }}
-                      labelStyle={{ color: adminDark ? "rgba(255,255,255,0.5)" : "#86868b" }}
-                    />
-                    <Bar dataKey="sessions" name="Sessions" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="messages" name="Messages" fill="#06b6d4" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <p className="text-[10px] text-center py-6" style={{ color: "var(--admin-text-faint)" }}>Aucune donnée cette semaine</p>
-            )}
-            <div className="flex items-center justify-center gap-4 mt-1">
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-purple-500" /><span className="text-[9px]" style={{ color: "var(--admin-text-muted)" }}>Sessions</span></div>
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-cyan-500" /><span className="text-[9px]" style={{ color: "var(--admin-text-muted)" }}>Messages</span></div>
-            </div>
-          </div>
-
-          {/* Emotions pie */}
-          <div className="rounded-2xl p-3" style={{ background: "var(--admin-card)", border: "1px solid var(--admin-border)" }}>
-            <p className="text-[11px] font-bold mb-2" style={{ color: "var(--admin-text-secondary)" }}>😊 Émotions détectées (7 jours)</p>
-            {chartEmotions.length > 0 ? (
-              <div className="flex items-center gap-3">
-                <div className="h-[120px] w-[120px] shrink-0">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={chartEmotions} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={50} innerRadius={25} strokeWidth={0}>
-                        {chartEmotions.map((e, i) => <Cell key={i} fill={e.color} />)}
-                      </Pie>
-                      <Tooltip contentStyle={{ background: adminDark ? "#1a1a2e" : "#fff", border: `1px solid ${adminDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`, borderRadius: 12, fontSize: 11, color: adminDark ? "#fff" : "#1d1d1f" }} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="flex-1 space-y-2">
-                  {chartEmotions.map((e, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: e.color }} />
-                      <span className="text-[12px] font-bold flex-1" style={{ color: "var(--admin-text)" }}>{EMOTION_LABELS[e.name] || e.name}</span>
-                      <span className="text-[13px] font-black tabular-nums" style={{ color: e.color }}>{e.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <p className="text-[10px] text-center py-6" style={{ color: "var(--admin-text-faint)" }}>Aucune émotion détectée</p>
-            )}
-          </div>
-        </div>
-
-        {/* ── Quick actions ── */}
-        <div className="flex gap-2">
-          <button onClick={() => { setTopSection("cloud"); setCloudSection(null); setSearch(""); }}
-            className="flex-1 flex items-center justify-center gap-1.5 bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 rounded-xl py-2.5 text-[11px] font-bold transition-all">
-            <Plus className="w-3.5 h-3.5" /> Ajouter KB
-          </button>
-          <button onClick={() => { setTopSection("autolearn"); setSearch(""); }}
-            className="flex-1 flex items-center justify-center gap-1.5 bg-lime-500/15 hover:bg-lime-500/25 text-lime-300 rounded-xl py-2.5 text-[11px] font-bold transition-all">
-            <Microscope className="w-3.5 h-3.5" /> Auto-Learn
-          </button>
-          <button onClick={() => { setTopSection("store"); setSearch(""); }}
-            className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 rounded-xl py-2.5 text-[11px] font-bold transition-all">
-            <Star className="w-3.5 h-3.5" /> Store
-          </button>
-        </div>
-
-        {/* ── Search ── */}
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-white/25" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher dans tout le cerveau…"
-            className="bg-white/[0.04] border-white/[0.06] text-white pl-10 h-10 rounded-xl placeholder:text-white/20 focus:border-purple-500/30 focus:ring-purple-500/10 text-[13px]" />
-          {search.trim() && (
-            <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 text-xs">✕</button>
-          )}
-        </div>
-
-        {/* ── Global search results ── */}
-        {search.trim() ? (() => {
-          const q = search.toLowerCase();
-          const kbResults = entries.filter(e => e.question.toLowerCase().includes(q) || e.answer.toLowerCase().includes(q) || e.keywords.some(k => k.toLowerCase().includes(q))).slice(0, 8);
-          const qaResults = QA_DATABASE.filter(e => e.triggers.some(t => t.toLowerCase().includes(q)) || e.responses.some(r => r.toLowerCase().includes(q))).slice(0, 8);
-          const blagueResults = BLAGUES.filter(b => b.question.toLowerCase().includes(q) || b.reponse.toLowerCase().includes(q)).slice(0, 8);
-          const interactionResults = (interactions || []).filter(i => i.child_input.toLowerCase().includes(q) || i.ai_response.toLowerCase().includes(q)).slice(0, 8);
-          const total = kbResults.length + qaResults.length + blagueResults.length + interactionResults.length;
-
-          if (total === 0) return (
-            <div className="text-center py-8">
-              <span className="text-2xl block mb-1">🔍</span>
-              <p className="text-white/25 text-xs">Aucun résultat pour « {search} »</p>
-            </div>
-          );
-
-          return (
-            <div className="space-y-3">
-              <p className="text-[10px] text-white/25">{total}+ résultats</p>
-              {kbResults.length > 0 && (
-                <div>
-                  <h3 className="text-[10px] font-bold text-sky-400 mb-1.5 uppercase tracking-wider">☁️ Cloud KB ({kbResults.length})</h3>
-                  <div className="space-y-1">
-                    {kbResults.map(e => (
-                      <div key={e.id} onClick={() => openKBDetail(e)} className="bg-white/[0.04] rounded-xl p-2.5 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all">
-                        <p className="text-[11px] text-white/80 font-medium truncate">{e.question}</p>
-                        <p className="text-[10px] text-white/25 mt-0.5 truncate">{e.answer}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {interactionResults.length > 0 && (
-                <div>
-                  <h3 className="text-[10px] font-bold text-cyan-400 mb-1.5 uppercase tracking-wider">🧠 Interactions ({interactionResults.length})</h3>
-                  <div className="space-y-1">
-                    {interactionResults.map((i, idx) => (
-                      <div key={idx} onClick={() => openInteractionDetail(i)} className="bg-white/[0.04] rounded-xl p-2.5 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all">
-                        <p className="text-[11px] text-white/80 truncate">👦 {i.child_input}</p>
-                        <p className="text-[10px] text-white/25 mt-0.5 truncate">🤖 {i.ai_response}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {qaResults.length > 0 && (
-                <div>
-                  <h3 className="text-[10px] font-bold text-amber-400 mb-1.5 uppercase tracking-wider">❓ QA ({qaResults.length})</h3>
-                  <div className="space-y-1">
-                    {qaResults.map((e, idx) => (
-                      <div key={idx} onClick={() => openQADetail(e)} className="bg-white/[0.04] rounded-xl p-2.5 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all">
-                        <p className="text-[11px] text-white/80 truncate">🎯 {e.triggers.slice(0, 2).join(" • ")}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {blagueResults.length > 0 && (
-                <div>
-                  <h3 className="text-[10px] font-bold text-green-400 mb-1.5 uppercase tracking-wider">😂 Blagues ({blagueResults.length})</h3>
-                  <div className="space-y-1">
-                    {blagueResults.map((b, idx) => (
-                      <div key={idx} onClick={() => openBlagueDetail(b, idx)} className="bg-white/[0.04] rounded-xl p-2.5 border border-white/[0.06] cursor-pointer hover:bg-white/[0.06] transition-all">
-                        <p className="text-[11px] text-white/80 truncate">{b.question}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })() : (
-        <>
-        {/* ── Section: Intelligence ── */}
-        <div className="space-y-1.5">
-          <p className="text-[10px] text-white/20 uppercase tracking-widest font-bold px-1">Intelligence</p>
-          <div className="space-y-1.5">
-            {[
-              TOP_SECTIONS_CONFIG.find(s => s.id === "cloud")!,
-              TOP_SECTIONS_CONFIG.find(s => s.id === "interactions")!,
-              TOP_SECTIONS_CONFIG.find(s => s.id === "autolearn")!,
-              TOP_SECTIONS_CONFIG.find(s => s.id === "kbdebug")!,
-            ].map(section => (
-              <DashCard key={section.id} label={section.label} emoji={section.emoji}
-                count={sectionCounts[section.id] ?? "…"} desc={section.desc}
-                color={section.color} bgColor={section.bgColor}
-                badge={section.id === "cloud" ? `${entries.filter(e => e.is_active).length} actifs` : section.id === "autolearn" && autoLearnCount !== null ? "live" : undefined}
-                onClick={() => { setTopSection(section.id); setSearch(""); }} />
-            ))}
-          </div>
-        </div>
-
-        {/* ── Section: Contenu ── */}
-        <div className="space-y-1.5">
-          <p className="text-[10px] text-white/20 uppercase tracking-widest font-bold px-1">Contenu</p>
-          <div className="grid grid-cols-2 gap-1.5">
-            {[
-              TOP_SECTIONS_CONFIG.find(s => s.id === "multiresponses")!,
-              TOP_SECTIONS_CONFIG.find(s => s.id === "qa")!,
-              TOP_SECTIONS_CONFIG.find(s => s.id === "jeux")!,
-              TOP_SECTIONS_CONFIG.find(s => s.id === "blagues")!,
-              TOP_SECTIONS_CONFIG.find(s => s.id === "histoires")!,
-              TOP_SECTIONS_CONFIG.find(s => s.id === "chansons")!,
-            ].map(section => (
-              <button key={section.id} onClick={() => { setTopSection(section.id); setSearch(""); }}
-                className="bg-white/[0.04] hover:bg-white/[0.08] rounded-xl p-2.5 border border-white/[0.06] hover:border-white/[0.12] transition-all text-left flex items-center gap-2.5">
-                <span className="text-lg">{section.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-[11px] font-bold ${section.color} truncate`}>{section.label}</p>
-                  <p className="text-[9px] text-white/20">{sectionCounts[section.id] ?? "…"} items</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Section: Gestion ── */}
-        <div className="space-y-1.5">
-          <p className="text-[10px] text-white/20 uppercase tracking-widest font-bold px-1">Gestion</p>
-          <div className="space-y-1.5">
-            {[
-              TOP_SECTIONS_CONFIG.find(s => s.id === "store")!,
-              TOP_SECTIONS_CONFIG.find(s => s.id === "cerveau")!,
-              TOP_SECTIONS_CONFIG.find(s => s.id === "expressions")!,
-              TOP_SECTIONS_CONFIG.find(s => s.id === "cloudusers")!,
-            ].map(section => (
-              <DashCard key={section.id} label={section.label} emoji={section.emoji}
-                count={sectionCounts[section.id] ?? "…"} desc={section.desc}
-                color={section.color} bgColor={section.bgColor}
-                badge={section.id === "store" ? `${storeItems.filter(s => s.is_active).length} actifs` : section.id === "cloudusers" ? "live" : undefined}
-                onClick={() => { setTopSection(section.id); setSearch(""); }} />
-            ))}
-          </div>
-        </div>
-        </>
-        )}
-
-        <p className="text-[9px] text-center pt-1 pb-4" style={{ color: "var(--admin-text-faint)" }}>Bobby Admin v2 · Cloud KB modifiable</p>
-        {detailPortal}
-      </div>
-    </div>
+    <>
+      {detailPortal}
+      <AdminDashboard admin={admin} />
+    </>
   );
 };
 
