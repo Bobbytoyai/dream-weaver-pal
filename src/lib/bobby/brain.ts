@@ -239,6 +239,7 @@ export function resetBobbyBrainSession() {
   resetCognitionV7();
   resetToM();
   resetWorldModel();
+  resetProactiveEngine();
   clearResponseCache().catch(() => {});
 }
 
