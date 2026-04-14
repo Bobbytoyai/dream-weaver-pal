@@ -23,6 +23,7 @@ import { trackInterests, getSmartFollowUp, resetInterestTracker, getInterestSnap
 import { getLLMReply, clearHistory } from "./llmBrain";
 import { getLocalBrainReply, resetLocalBrain } from "./localBrain";
 import { queryKnowledgeBase, clearConversationContext } from "./knowledgeQuery";
+import { getCachedReply, cacheReply, clearResponseCache } from "./responseCache";
 import {
   loadPersistentMemory,
   savePersistentMemory,
@@ -157,6 +158,7 @@ export function resetBobbyBrainSession() {
   clearConversationContext();
   resetPersistentMemoryCache();
   resetGames();
+  clearResponseCache().catch(() => {});
 }
 
 export async function initBobbySession(childName: string): Promise<void> {
@@ -259,7 +261,7 @@ export async function buildBobbyReply({
   }
 
   // ═══════════════════════════════════════════════════════════
-  // V5 3-LAYER PIPELINE
+  // V5 3-LAYER PIPELINE (with multi-level cache)
   // ═══════════════════════════════════════════════════════════
 
   if (!userText) {
@@ -269,8 +271,15 @@ export async function buildBobbyReply({
     };
   }
 
+  // ── CACHE CHECK: L1 RAM → L2 IndexedDB (~0-3ms) ──
+  const cached = await getCachedReply(userText);
+  if (cached) {
+    const totalMs = performance.now() - pipelineStart;
+    console.log(`[Brain V5] ⚡ Cache hit → ${cached.intent} (${totalMs.toFixed(0)}ms total)`);
+    return postProcess(cached, childName, childAge, personality);
+  }
+
   // ── LAYER 1: LocalBrain (Regex + SmartClassifier + Templates) ──
-  // Always runs first — ~2ms, fully offline
   const layer1Start = performance.now();
   const localReply = getLocalBrainReply(userText, childName, childAge);
   const layer1Ms = performance.now() - layer1Start;
@@ -278,21 +287,19 @@ export async function buildBobbyReply({
   console.log(`[Brain V5] L1 LocalBrain: intent=${localReply.intent} confidence=${localReply.confidence.toFixed(2)} (${layer1Ms.toFixed(1)}ms)`);
 
   // High-confidence Layer 1 → respond directly (skip KB + LLM)
-  // This handles: greetings, farewells, emotions, safety, yes/no, identity, games, stories, jokes…
   if (localReply.confidence >= LAYER1_CONFIDENCE) {
     const reply = postProcess(localReply, childName, childAge, personality);
-    // Smart follow-up injection
     const smartFollowUp = getSmartFollowUp(childName);
     if (smartFollowUp && Math.random() < 0.3) {
       reply.text = reply.text.replace(/[.!?…]*$/, ". ") + smartFollowUp;
     }
     const totalMs = performance.now() - pipelineStart;
     console.log(`[Brain V5] ✅ L1 direct → ${localReply.intent} (${totalMs.toFixed(0)}ms total)`);
+    cacheReply(userText, reply).catch(() => {});
     return reply;
   }
 
   // ── LAYER 2: Knowledge Base (semantic TF-IDF scoring) ──
-  // Runs when L1 is not confident enough (GENERAL or low-confidence intent)
   try {
     const layer2Start = performance.now();
     const kbReply = await queryKnowledgeBase(userText, childAge);
@@ -302,6 +309,7 @@ export async function buildBobbyReply({
       const reply = postProcess(kbReply, childName, childAge, personality);
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain V5] ✅ L2 KB → confidence=${kbReply.confidence.toFixed(2)} (L2: ${layer2Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
+      cacheReply(userText, reply).catch(() => {});
       return reply;
     }
 
@@ -313,7 +321,6 @@ export async function buildBobbyReply({
   }
 
   // ── LAYER 3: LLM (Gemini via edge function) ──
-  // Runs when both L1 and L2 lack confidence — requires network
   try {
     const layer3Start = performance.now();
     const llmReply = await getLLMReply(childName, childAge, userText, personality);
@@ -322,6 +329,7 @@ export async function buildBobbyReply({
     if (llmReply) {
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain V5] ✅ L3 LLM → (L3: ${layer3Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
+      cacheReply(userText, llmReply).catch(() => {});
       return llmReply;
     }
   } catch (e) {
@@ -337,5 +345,6 @@ export async function buildBobbyReply({
 
   const totalMs = performance.now() - pipelineStart;
   console.log(`[Brain V5] ⚡ Fallback L1 → ${localReply.intent} (${totalMs.toFixed(0)}ms total)`);
+  cacheReply(userText, reply).catch(() => {});
   return reply;
 }
