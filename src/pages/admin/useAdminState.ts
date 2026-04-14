@@ -654,7 +654,7 @@ export function useAdminState() {
       histoires: HISTOIRES.length + cloudStories.length,
       chansons: CHANSONS.length,
       cerveau: "16",
-      cloud: entries.length,
+      cloud: kbTotalCount || entries.length,
       autolearn: autoLearnCount ?? "…",
       store: storeItems.length,
       cloudusers: cloudUsers.length,
