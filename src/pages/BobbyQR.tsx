@@ -134,13 +134,13 @@ export default function BobbyQR() {
           <div className="mx-auto w-16 h-16 border-4 border-black bg-red-100 flex items-center justify-center">
             <span className="text-4xl">❌</span>
           </div>
-          <h2 className="text-xl font-black text-foreground uppercase">Code invalide</h2>
-          <p className="text-sm font-bold text-foreground/80 leading-relaxed">
+          <h2 className="text-xl font-black text-black uppercase">Code invalide</h2>
+          <p className="text-sm font-bold text-black leading-relaxed">
             Ce QR code Bobby n'existe pas ou n'est plus valide.
           </p>
           <div className="border-4 border-black bg-amber-50 p-3 text-left space-y-1">
-            <p className="text-[11px] font-black text-foreground uppercase">💡 Besoin d'aide ?</p>
-            <p className="text-[10px] font-bold text-foreground/70">
+            <p className="text-[11px] font-black text-black uppercase">💡 Besoin d'aide ?</p>
+            <p className="text-[10px] font-bold text-black">
               Vérifie que tu scannes bien le QR code fourni avec ton Bobby.
             </p>
           </div>
