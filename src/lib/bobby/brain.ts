@@ -461,6 +461,24 @@ export async function buildBobbyReply({
     `[Brain V7] 🎬 Orchestrator: scene=${directive.scene.type} action=${directive.action} turn=${directive.scene.turnCount}/${directive.scene.maxTurns}${directive.bridgePhrase ? ` bridge="${directive.bridgePhrase.slice(0, 40)}"` : ""}`
   );
 
+  // ── V8: PROACTIVE ENGINE — check if Bobby should take initiative ──
+  const proactiveCtx: ProactiveContext = {
+    turnCount: mem.turnCount,
+    sessionMood: mem.sessionMood,
+    currentTopic: mem.currentTopic,
+    silenceDurationMs: 0,
+    isChildSpeaking: false,
+    isEmotionalSceneActive: directive.scene.type === "empathy",
+    isSafetySceneActive: directive.scene.type === "safety",
+    childName,
+    childAge,
+    totalInteractions: mem.turnCount,
+  };
+  const initiative = maybeInitiate(proactiveCtx);
+  if (initiative) {
+    console.log(`[Brain V8] 🚀 Proactive: ${initiative.type} "${initiative.content.slice(0, 50)}"`);
+  }
+
   if (!priority.bypassCache) {
     const cached = await getCachedReply(userText);
     if (cached) {
