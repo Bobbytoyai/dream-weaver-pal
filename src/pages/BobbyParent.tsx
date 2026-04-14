@@ -5,6 +5,10 @@ import RetroLoader from "@/components/RetroLoader";
 import LazyImportBoundary from "@/components/LazyImportBoundary";
 import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/parentSettings";
 import ParentOnboarding from "@/components/parent/ParentOnboarding";
+import InvalidScreen from "@/components/parent/screens/InvalidScreen";
+import NotActivatedScreen from "@/components/parent/screens/NotActivatedScreen";
+import ClaimedScreen from "@/components/parent/screens/ClaimedScreen";
+import PinScreen from "@/components/parent/screens/PinScreen";
 
 const ParentMode = lazy(() => import("@/components/ParentMode"));
 
@@ -17,8 +21,6 @@ export default function BobbyParent() {
   const [parentCode, setParentCode] = useState<any>(null);
   const [bobbyCode, setBobbyCode] = useState<any>(null);
   const [parentSettings, setParentSettings] = useState<ParentSettings>(DEFAULT_PARENT_SETTINGS);
-  const [pinInput, setPinInput] = useState("");
-  const [pinError, setPinError] = useState(false);
 
   // ── Load & verify QR code ──
   useEffect(() => {
@@ -69,7 +71,6 @@ export default function BobbyParent() {
         localStorage.setItem(tokenKey, deviceToken);
       }
 
-      // Check if we need to show welcome (first time only)
       const alreadyWelcomed = localStorage.getItem(welcomeKey);
       const hasPin = bc?.session_data?.parentSettings?.parentPin;
 
@@ -84,18 +85,6 @@ export default function BobbyParent() {
     })();
   }, [code]);
 
-  // ── PIN verification ──
-  const handlePinSubmit = () => {
-    const savedPin = parentSettings.parentPin;
-    if (!savedPin || savedPin === "" || pinInput === savedPin) {
-      setStep("active");
-    } else {
-      setPinError(true);
-      setPinInput("");
-      setTimeout(() => setPinError(false), 2000);
-    }
-  };
-
   // ── Save settings back to bobby_codes ──
   const handleSettingsChange = async (settings: ParentSettings) => {
     setParentSettings(settings);
@@ -108,87 +97,13 @@ export default function BobbyParent() {
     }
   };
 
-  // ═══ RENDERS ═══
+  if (step === "loading") return <RetroLoader message="Vérification…" />;
+  if (step === "invalid") return <InvalidScreen />;
+  if (step === "not_activated") return <NotActivatedScreen />;
+  if (step === "claimed") return <ClaimedScreen />;
 
-  if (step === "loading") {
-    return <RetroLoader message="Vérification…" />;
-  }
-
-  if (step === "invalid") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-6">
-        <div className="w-full max-w-sm border-4 border-foreground bg-white p-8 text-center space-y-4"
-          style={{ boxShadow: "6px 6px 0 hsl(var(--foreground)/0.2)" }}>
-          <span className="text-5xl block">❌</span>
-          <h2 className="text-xl font-black text-black uppercase">Code parent invalide</h2>
-          <p className="text-sm font-bold text-muted-foreground">
-            Ce QR code parent n'existe pas, n'est plus actif, ou le Bobby associé n'a pas encore été activé.
-          </p>
-          <button onClick={() => navigate("/")}
-            className="w-full py-3 text-sm font-black uppercase border-4 border-foreground bg-primary text-primary-foreground hover:opacity-90 transition-all"
-            style={{ boxShadow: "4px 4px 0 rgba(0,0,0,0.25)" }}>
-            ← Retour
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (step === "not_activated") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-orange-50 p-6">
-        <div className="w-full max-w-sm border-4 border-foreground bg-white p-8 text-center space-y-5"
-          style={{ boxShadow: "6px 6px 0 hsl(var(--foreground)/0.2)" }}>
-          <span className="text-5xl block">🤖💤</span>
-          <h2 className="text-xl font-black text-foreground uppercase leading-tight">Bobby pas encore activé</h2>
-          <p className="text-sm font-bold text-muted-foreground leading-relaxed">
-            Le Bobby associé à ce code parent <strong>n'a pas encore été scanné</strong> par un enfant.
-          </p>
-          <div className="border-4 border-foreground bg-amber-50 p-3 text-left space-y-1 rounded-lg">
-            <p className="text-[11px] font-black text-foreground uppercase">📱 Comment faire ?</p>
-            <p className="text-[10px] font-bold text-muted-foreground">
-              Scanne d'abord le QR code Bobby (celui de l'enfant) pour activer le jouet, puis reviens scanner ce QR code parent.
-            </p>
-          </div>
-          <button onClick={() => navigate("/")}
-            className="w-full py-3 text-sm font-black uppercase border-4 border-foreground bg-primary text-primary-foreground hover:opacity-90 transition-all"
-            style={{ boxShadow: "4px 4px 0 rgba(0,0,0,0.25)" }}>
-            ← Retour
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (step === "claimed") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-red-50 p-6">
-        <div className="w-full max-w-sm border-4 border-foreground bg-white p-8 text-center space-y-5"
-          style={{ boxShadow: "6px 6px 0 hsl(var(--foreground)/0.2)" }}>
-          <div className="mx-auto w-20 h-20 border-4 border-foreground bg-orange-100 flex items-center justify-center rounded-xl">
-            <span className="text-5xl">🔒</span>
-          </div>
-          <h2 className="text-xl font-black text-black uppercase leading-tight">
-            Accès parent déjà lié
-          </h2>
-          <p className="text-[13px] font-bold text-muted-foreground leading-relaxed">
-            Ce code parent est <strong>définitivement lié</strong> à un autre appareil.
-            Pour des raisons de sécurité, le Mode Parent est accessible uniquement depuis l'appareil qui l'a activé en premier.
-          </p>
-          <div className="border-4 border-foreground bg-amber-50 p-3 text-left space-y-1 rounded-lg">
-            <p className="text-[11px] font-black text-black uppercase">💡 Besoin d'aide ?</p>
-            <p className="text-[10px] font-bold text-muted-foreground">
-              Contacte le support Bobby avec ta preuve d'achat pour obtenir un nouveau code parent.
-            </p>
-          </div>
-          <button onClick={() => navigate("/")}
-            className="w-full py-3 text-sm font-black uppercase border-4 border-foreground bg-primary text-primary-foreground hover:opacity-90 transition-all"
-            style={{ boxShadow: "4px 4px 0 rgba(0,0,0,0.25)" }}>
-            ← Retour
-          </button>
-        </div>
-      </div>
-    );
+  if (step === "pin") {
+    return <PinScreen savedPin={parentSettings.parentPin || ""} onSuccess={() => setStep("active")} />;
   }
 
   if (step === "onboarding") {
@@ -201,7 +116,6 @@ export default function BobbyParent() {
       };
       await handleSettingsChange(updatedSettings);
 
-      // Also update child_name on bobby_codes
       if (bobbyCode && newChildName !== bobbyCode.child_name) {
         await supabase
           .from("bobby_codes")
@@ -220,46 +134,6 @@ export default function BobbyParent() {
     );
   }
 
-  if (step === "pin") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 p-6">
-        <div className="w-full max-w-sm border-4 border-foreground bg-white p-8 text-center space-y-5"
-          style={{ boxShadow: "6px 6px 0 hsl(var(--foreground)/0.2)" }}>
-          <span className="text-5xl block">🔐</span>
-          <h2 className="text-xl font-black text-black uppercase">Code PIN Parent</h2>
-          <p className="text-sm font-bold text-muted-foreground">
-            Entrez votre code PIN pour accéder au Mode Parent.
-          </p>
-          <input
-            type="password"
-            inputMode="numeric"
-            maxLength={6}
-            value={pinInput}
-            onChange={e => setPinInput(e.target.value.replace(/\D/g, ""))}
-            placeholder="••••"
-            autoFocus
-            className={`w-full px-4 py-3 text-2xl font-black text-center tracking-[0.5em] border-4 bg-white outline-none ${
-              pinError ? "border-destructive" : "border-foreground"
-            }`}
-            onKeyDown={e => { if (e.key === "Enter") handlePinSubmit(); }}
-          />
-          {pinError && (
-            <p className="text-destructive text-sm font-black">
-              ❌ Code PIN incorrect
-            </p>
-          )}
-          <button onClick={handlePinSubmit}
-            disabled={pinInput.length === 0}
-            className="w-full py-3 text-sm font-black uppercase border-4 border-foreground bg-primary text-primary-foreground hover:opacity-90 transition-all disabled:opacity-40"
-            style={{ boxShadow: "4px 4px 0 rgba(0,0,0,0.25)" }}>
-            Valider →
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // step === "active"
   return (
     <LazyImportBoundary label="Mode Parent">
       <Suspense fallback={<RetroLoader message="Mode parent…" />}>
