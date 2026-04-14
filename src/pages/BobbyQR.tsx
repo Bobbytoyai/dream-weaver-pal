@@ -14,7 +14,7 @@ type Step = "loading" | "invalid" | "claimed" | "sleeping" | "active" | "parent"
 export default function BobbyQR() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
-  const [step, setStep] = useState<Step>("loading");
+  const [step, setStep] = useState<Step>("sleeping");
   const [childName, setChildName] = useState("");
   const [childAge, setChildAge] = useState<number | null>(null);
   const [bobbyCode, setBobbyCode] = useState<any>(null);
