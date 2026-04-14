@@ -41,6 +41,7 @@ import { assembleAndMerge } from "./v7/responseAssembly";
 import { initToM, updateMentalModel, getToMSnapshot, applyToMToResponse, resetToM } from "./v8/theoryOfMind";
 import { buildWorldModel, adaptToChildWorld, checkConfusionZones, resetWorldModel } from "./v8/childWorldModel";
 import { maybeInitiate, resetProactiveEngine, type ProactiveContext } from "./v8/proactiveEngine";
+import { applyVariation, resetVariationEngine } from "./v8/variationEngine";
 import {
   loadPersistentMemory,
   savePersistentMemory,
@@ -199,6 +200,10 @@ function applyOrchestration(
     reply.text = reply.text.replace(/[.!?…]*\s*$/, ". ") + proactiveInitiative.content;
   }
 
+  // V8: Apply variation engine to prevent repetition
+  const { text: variedText } = applyVariation(reply.text, plan?.how?.openingType);
+  reply.text = variedText;
+
   // Record Bobby's response in the scene
   recordBobbyResponse(reply.text);
 
@@ -246,6 +251,7 @@ export function resetBobbyBrainSession() {
   resetToM();
   resetWorldModel();
   resetProactiveEngine();
+  resetVariationEngine();
   clearResponseCache().catch(() => {});
 }
 
