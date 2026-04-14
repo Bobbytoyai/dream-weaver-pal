@@ -278,6 +278,20 @@ export async function buildBobbyReply({
     }
   }
 
+  // ── Active flow — advance scenario ──
+  if (isFlowActive() && userText) {
+    const intentForFlow = detectLocalIntent(userText);
+    const flowResult = advanceFlow(userText, intentForFlow.intent, childName, childAge);
+    if (flowResult.handled) {
+      return {
+        text: simplifyForAge(flowResult.text, childAge),
+        intent: "FLOW", source: "flow_engine", emotion: flowResult.emotion as any,
+        confidence: 1, isOffline: true,
+      };
+    }
+    // Flow was interrupted — fall through to normal pipeline
+  }
+
   // ── Library (stories, jokes) — curated content ──
   const libraryReply = getLibraryReply(userText, childName, childAge);
   if (libraryReply) {
