@@ -31,12 +31,13 @@ const MIN_SESSION_MS = 90_000;
 const SLEEP_TIMER_MS = 120_000;
 const ANTI_ECHO_COOLDOWN_MS = 400;
 const UTTERANCE_BUFFER_MS = 7500;
-const ACK_MIN_INTERVAL_MS = 4000;
-const ACK_MAX_INTERVAL_MS = 8000;
+const ACK_MIN_INTERVAL_MS = 6000;
+const ACK_MAX_INTERVAL_MS = 12000;
 
 // ─── Natural acknowledgment sounds (breathing/hmm) ──────
+// Short, subtle sounds only — no real words to avoid confusing the child
 const ACK_SOUNDS = [
-  "hmm", "hmm hmm", "ah", "oui", "ah oui", "mmh", "oh", "d'accord", "mh mh",
+  "hmm", "mh mh", "mmh", "ah",
 ];
 function pickAck(): string {
   return ACK_SOUNDS[Math.floor(Math.random() * ACK_SOUNDS.length)];
@@ -116,7 +117,7 @@ async function playAckSound(text: string, voiceProfile: "child" | "female" | "ma
     const controller = new AbortController();
     const audioUrl = await fetchTTSAudio(text, controller.signal, voiceProfile);
     if (audioUrl && !audioUrl.startsWith("__")) {
-      await playGeneratedAudio(audioUrl, controller.signal, 0.35);
+      await playGeneratedAudio(audioUrl, controller.signal, 0.18);
     }
   } catch {
     // Silently ignore ack failures
