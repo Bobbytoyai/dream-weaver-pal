@@ -171,6 +171,7 @@ export function useBobbyVoiceCore({
   // Natural acknowledgment sounds timer
   const ackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastAckTimeRef = useRef(0);
+  const musicAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const { startSession, addMessage, endSession, sessionIdRef } = useSessionTracker(childName, childAge);
   const { startRecording, stopRecording } = useConversationRecorder();
