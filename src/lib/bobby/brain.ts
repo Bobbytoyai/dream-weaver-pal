@@ -468,7 +468,7 @@ export async function buildBobbyReply({
     const totalMs = performance.now() - pipelineStart;
     console.log(`[Brain V6] ✅ L1 direct → ${localReply.intent} | goal=${cognition.goal} (${totalMs.toFixed(0)}ms total)`);
     cacheReply(userText, reply).catch(() => {});
-    return reply;
+    return applyOrchestration(reply, directive);
   }
 
   // ── LAYER 2: Knowledge Base (semantic TF-IDF scoring) ──
