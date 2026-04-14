@@ -46,6 +46,14 @@ import {
   processGameTurn,
   resetGames,
 } from "./offlineGames";
+import {
+  isFlowActive,
+  advanceFlow,
+  detectFlowTrigger,
+  startFlow,
+  resetFlows,
+  tryResumeFlow,
+} from "./flows";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CONFIDENCE THRESHOLDS (V5 Architecture)
