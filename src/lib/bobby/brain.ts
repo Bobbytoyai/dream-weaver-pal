@@ -1,13 +1,14 @@
 /**
- * Bobby Brain V5 — 3-Layer Intent Pipeline
+ * Bobby Brain V6 — 3-Layer Intent Pipeline + Cognition Layer
  * 
  * Architecture:
- *   Layer 1: LocalBrain (Regex + SmartClassifier) → confidence ≥ 0.75 → respond directly
- *   Layer 2: Knowledge Base (semantic TF-IDF scoring) → confidence ≥ 0.50 → respond
- *   Layer 3: LLM (Gemini via edge function) → cloud fallback
- *   Fallback: LocalBrain template response (always available offline)
- * 
- * Pre-pipeline: Safety filters, narration, games (bypass layers)
+ *   Pre-pipeline: Safety, narration, games (bypass)
+ *   Cache check: L1 RAM → L2 IndexedDB
+ *   Layer 1: LocalBrain (Regex + SmartClassifier) → confidence ≥ 0.75
+ *   ★ COGNITION LAYER: goal + strategy + tone decision
+ *   Layer 2: Knowledge Base (semantic TF-IDF) → confidence ≥ 0.50
+ *   Layer 3: LLM (Gemini) → cloud fallback
+ *   Fallback: LocalBrain template (always offline)
  */
 
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
@@ -24,6 +25,11 @@ import { getLLMReply, clearHistory } from "./llmBrain";
 import { getLocalBrainReply, resetLocalBrain } from "./localBrain";
 import { queryKnowledgeBase, clearConversationContext } from "./knowledgeQuery";
 import { getCachedReply, cacheReply, clearResponseCache } from "./responseCache";
+import { cogitate, resetCognition, type CognitionOutput } from "./cognition";
+import { mem } from "./localBrain/memory";
+import { detectLocalIntent } from "./localBrain/intentEngine";
+import { detectEmotion } from "./localBrain/emotionEngine";
+import { getPersistentMemory } from "./persistentMemory";
 import {
   loadPersistentMemory,
   savePersistentMemory,
@@ -158,6 +164,7 @@ export function resetBobbyBrainSession() {
   clearConversationContext();
   resetPersistentMemoryCache();
   resetGames();
+  resetCognition();
   clearResponseCache().catch(() => {});
 }
 
