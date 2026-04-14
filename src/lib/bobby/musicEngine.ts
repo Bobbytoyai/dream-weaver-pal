@@ -147,12 +147,13 @@ function flatNorm(s: string): string {
 
 // Detect if this is a generic music request (no specific song named)
 const GENERIC_MUSIC_PATTERNS = [
-  /^(?:joue|mets|lance|passe)\s+(?:moi\s+)?(?:une?\s+)?(?:chanson|musique|comptine|berceuse)$/i,
-  /^(?:je\s+veux\s+)?(?:écouter?|entendre)\s+(?:une?\s+)?(?:chanson|musique|comptine|berceuse)$/i,
+  /^(?:joue|mets|lance|passe)\s+(?:moi\s+)?(?:une?\s+)?(?:chanson|musique|comptine|berceuse)(?:\s+.+)?$/i,
+  /^(?:je\s+veux\s+)?(?:écouter?|entendre)\s+(?:une?\s+)?(?:chanson|musique|comptine|berceuse)(?:\s+.+)?$/i,
   /^(?:une?\s+)?(?:chanson|musique|comptine|berceuse)\s*(?:s'?il\s+(?:te|vous)\s+pla[iî]t)?$/i,
-  /^(?:chante|bobby\s+chante|tu\s+peux\s+chanter)(?:\s+(?:pour\s+moi|s'?il\s+te\s+pla[iî]t))?$/i,
+  /^(?:chante|bobby\s+chante|tu\s+peux\s+chanter)(?:\s+(?:pour\s+moi|s'?il\s+te\s+pla[iî]t|une?\s+\w+))?$/i,
   /^(?:je\s+veux\s+)?(?:dormir|faire\s+dodo|dodo)$/i,
-  /^(?:joue|mets|lance)\s+(?:moi\s+)?(?:de\s+la\s+)?musique$/i,
+  /^(?:joue|mets|lance)\s+(?:moi\s+)?(?:de\s+la\s+)?musique(?:\s+.+)?$/i,
+  /(?:comptine|berceuse|chanson|musique)\s+(?:pour\s+)?(?:enfants?|dormir|bébé|dodo)/i,
 ];
 
 function isGenericMusicRequest(text: string): boolean {
