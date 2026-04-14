@@ -36,6 +36,7 @@ import { extractDeepUnderstanding, type UnderstandingFrame, type SessionContext 
 import { computePriority, createDefaultMemoryContext, type PriorityDecision } from "./v7/priorityEngine";
 import { orchestrate, recordBobbyResponse, resetOrchestrator, type OrchestrationDirective } from "./v7/orchestrator";
 import { checkUnderstanding, applyUnderstandingCheck, detectCorrectionSignal, resetFeedbackLoop } from "./v7/understandingLoop";
+import { buildCognitionPlan, resetCognitionV7, type CognitionPlan } from "./v7/cognitionV7";
 import {
   loadPersistentMemory,
   savePersistentMemory,
