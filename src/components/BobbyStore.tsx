@@ -395,19 +395,45 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
     }
   }, []);
 
+  // Pre-installed content IDs (music pack is free & pre-installed)
+  const PRE_INSTALLED_IDS = useMemo(() => new Set(["4c800d17-cecf-4fff-9028-fc203461ee6a"]), []);
+
   // Fetch installed content separately — non-blocking
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      // Even without auth, show pre-installed packs
+      setInstalledIds(new Set(PRE_INSTALLED_IDS));
+      return;
+    }
     const fetchInstalled = async () => {
       try {
         const { data } = await supabase.from("installed_content").select("content_id").eq("child_name", childName);
-        if (data) setInstalledIds(new Set(data.map((r: any) => r.content_id)));
+        const ids = new Set(data ? data.map((r: any) => r.content_id) : []);
+        // Add pre-installed packs (unless user explicitly uninstalled — check via a flag)
+        const { data: uninstalled } = await supabase
+          .from("installed_content")
+          .select("content_id, is_enabled")
+          .eq("child_name", childName)
+          .in("content_id", Array.from(PRE_INSTALLED_IDS));
+        
+        for (const preId of PRE_INSTALLED_IDS) {
+          const record = uninstalled?.find((r: any) => r.content_id === preId);
+          if (!record) {
+            // Never touched — show as installed
+            ids.add(preId);
+          } else if ((record as any).is_enabled !== false) {
+            ids.add(preId);
+          }
+          // If is_enabled === false, user explicitly removed it — don't add
+        }
+        setInstalledIds(ids);
       } catch (e) {
         console.warn("[BobbyStore] Installed content fetch failed (non-critical):", e);
+        setInstalledIds(new Set(PRE_INSTALLED_IDS));
       }
     };
     fetchInstalled();
-  }, [user, childName]);
+  }, [user, childName, PRE_INSTALLED_IDS]);
 
   const loadItemDetails = useCallback(async (itemId: string) => {
     const existingItem = items.find((item) => item.id === itemId);
