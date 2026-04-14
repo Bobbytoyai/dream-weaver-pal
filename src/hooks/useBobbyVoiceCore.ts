@@ -474,7 +474,8 @@ export function useBobbyVoiceCore({
       await ensureSession();
       await addMessage("user", trimmedText);
 
-      const reply = await buildBobbyReply({ childName, childAge, userText: trimmedText, parentSettings });
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const reply = await buildBobbyReply({ childName, childAge, userText: trimmedText, parentSettings, userId: currentUser?.id, sessionId: sessionIdRef.current });
       await addMessage("assistant", reply.text, reply.emotion);
       await speakReply(reply);
     } finally {
