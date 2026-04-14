@@ -1,0 +1,25 @@
+{
+  "name": "Bobby - Compagnon IA",
+  "short_name": "Bobby",
+  "description": "Bobby, le compagnon IA vocal pour enfants",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#E8F0FE",
+  "theme_color": "#E8F0FE",
+  "categories": ["kids", "education", "entertainment"],
+  "icons": [
+    {
+      "src": "/bobby-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/bobby-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
