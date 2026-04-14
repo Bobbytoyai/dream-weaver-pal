@@ -19,7 +19,7 @@ const EMOTION_DETECT: { type: EmotionType; patterns: RegExp[]; base: number }[] 
   { type: "determination", base: 4, patterns: [/y arriver|je peux|capable|lâche pas/i] },
 ];
 
-function detectEmotion(text: string): DetectedEmotion {
+export function detectEmotion(text: string): DetectedEmotion {
   const lower = text.toLowerCase();
   
   for (const entry of EMOTION_DETECT) {
@@ -40,7 +40,7 @@ function detectEmotion(text: string): DetectedEmotion {
 // 4. TOPIC DETECTION
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-function detectTopic(text: string): string | null {
+export function detectTopic(text: string): string | null {
   const lower = text.toLowerCase();
   const topics: [string, RegExp][] = [
     ["animaux", /animal|chat|chien|lapin|dinosaure|dragon|ours|loup|poisson|oiseau|requin|dauphin/i],

@@ -3,7 +3,7 @@ import type { LocalIntent, EmotionType, DetectedEmotion } from "./types";
 import { isResponseUsed, getLastChildTurn, mem } from "./memory";
 import { TEMPLATES } from "./templates";
 
-function pick(arr: string[]): string {
+export function pick(arr: string[]): string {
   if (!arr || arr.length === 0) return "";
   // Try to pick a non-recently-used response
   const fresh = arr.filter(s => !isResponseUsed(s));
@@ -11,7 +11,7 @@ function pick(arr: string[]): string {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-function assembleResponse(
+export function assembleResponse(
   intent: LocalIntent,
   emotion: DetectedEmotion,
   childName: string,
@@ -106,7 +106,7 @@ function assembleResponse(
 }
 
 // Topic depth responses — when child stays on same topic
-const TOPIC_DEPTH_RESPONSES: Record<string, string[]> = {
+export const TOPIC_DEPTH_RESPONSES: Record<string, string[]> = {
   animaux: [
     "Tu sais vraiment plein de trucs sur les animaux ! 🐾",
     "On dirait un vrai expert des animaux !",
@@ -139,7 +139,7 @@ const TOPIC_DEPTH_RESPONSES: Record<string, string[]> = {
 // 7. INTENT → FACE STATE MAPPING
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const INTENT_FACE_MAP: Partial<Record<LocalIntent, FaceState>> = {
+export const INTENT_FACE_MAP: Partial<Record<LocalIntent, FaceState>> = {
   PEUR: "reassuring",
   TRISTESSE: "reassuring",
   COLERE: "calm",

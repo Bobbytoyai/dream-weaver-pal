@@ -1,6 +1,6 @@
 import type { LocalIntent, EmotionType, ResponseTemplate } from "./types";
 
-const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, ResponseTemplate>> & { default: ResponseTemplate }>> = {
+export const TEMPLATES: Partial<Record<LocalIntent, Partial<Record<EmotionType, ResponseTemplate>> & { default: ResponseTemplate }>> = {
   PEUR: {
     default: {
       empathy: [

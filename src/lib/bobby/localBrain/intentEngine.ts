@@ -255,7 +255,7 @@ const INTENT_RULES: IntentRule[] = [
   ]},
 ];
 
-function isGarbledText(text: string): boolean {
+export function isGarbledText(text: string): boolean {
   const lower = text.toLowerCase().trim();
   const words = lower.split(/\s+/).filter(w => w.length > 1);
   if (words.length === 0) return true;
@@ -281,7 +281,7 @@ function isGarbledText(text: string): boolean {
   return false;
 }
 
-function detectLocalIntent(text: string): LocalIntent {
+export function detectLocalIntent(text: string): LocalIntent {
   const lower = text.toLowerCase().trim();
   
   // Check for garbled/incomprehensible text first
