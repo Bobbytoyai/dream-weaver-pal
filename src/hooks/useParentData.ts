@@ -119,11 +119,96 @@ export function useParentData({ childName, parentSettings, onSettingsChange, onN
   // Stagger loads to reduce auth contention
   useEffect(() => {
     loadData();
-    // Defer secondary requests to avoid parallel auth lock contention
     const t1 = setTimeout(() => loadAlerts(), 300);
     const t2 = setTimeout(() => loadCloudProfile(), 600);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
+
+  // ═══════════════════════════════════════════════════════════════
+  // REALTIME: Listen for new parent_alerts (push notifications)
+  // ═══════════════════════════════════════════════════════════════
+  useEffect(() => {
+    if (!user?.id) return;
+
+    // Request browser notification permission on mount
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
+    const channel = supabase
+      .channel("parent-alerts-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "parent_alerts",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const newAlert = payload.new as ParentAlert;
+          // Add to local state
+          setParentAlerts(prev => [newAlert, ...prev]);
+
+          // Show in-app toast
+          const severityEmoji = newAlert.severity === "critical" ? "🚨" : newAlert.severity === "high" ? "⚠️" : "🔔";
+          toast.error(`${severityEmoji} ${newAlert.message}`, {
+            duration: 10000,
+            action: {
+              label: "Voir",
+              onClick: () => {
+                onNavigateTab?.("sessions");
+              },
+            },
+          });
+
+          // Browser push notification (works even in background tab)
+          if ("Notification" in window && Notification.permission === "granted") {
+            try {
+              const notif = new Notification(`Bobby — Alerte ${newAlert.severity === "critical" ? "CRITIQUE" : "importante"}`, {
+                body: newAlert.message,
+                icon: "/placeholder.svg",
+                tag: `bobby-alert-${newAlert.id}`,
+                requireInteraction: newAlert.severity === "critical",
+              });
+              notif.onclick = () => {
+                window.focus();
+                onNavigateTab?.("sessions");
+              };
+            } catch (e) {
+              console.warn("Browser notification failed:", e);
+            }
+          }
+
+          // Play alert sound for critical
+          if (newAlert.severity === "critical") {
+            try {
+              const ctx = new AudioContext();
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+              osc.frequency.value = 880;
+              gain.gain.value = 0.3;
+              osc.start();
+              osc.stop(ctx.currentTime + 0.3);
+              setTimeout(() => {
+                const osc2 = ctx.createOscillator();
+                osc2.connect(gain);
+                osc2.frequency.value = 1100;
+                osc2.start();
+                osc2.stop(ctx.currentTime + 0.3);
+              }, 350);
+            } catch { /* audio not available */ }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, onNavigateTab]);
 
   // ═══════════════════════════════════════════════════════════════
   // SAFETY ALERTS (eventBus)
