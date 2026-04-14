@@ -103,11 +103,13 @@ export function useParentData({ childName, bobbyCodeId, parentSettings, onSettin
 
   const loadAlerts = async () => {
     try {
-      const { data } = await supabase
+      let query = supabase
         .from("parent_alerts")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(50);
+      if (bobbyCodeId) query = query.eq("user_id", bobbyCodeId);
+      const { data } = await query;
       if (data) setParentAlerts(data as ParentAlert[]);
     } catch (e) { console.warn("Failed to load alerts:", e); }
   };
