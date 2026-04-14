@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Image as ImageIcon, Music2, Pencil, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, Music2, Pencil, Save, Trash2, Upload, Volume2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { saveMusicPackItems, type EditableMusicPackItem } from "@/lib/adminStoreApi";
+import { saveMusicPackItems, updateMusicTrack, type EditableMusicPackItem } from "@/lib/adminStoreApi";
 
 interface MusicTracksEditorProps {
   adminCode: string;
@@ -56,11 +56,86 @@ function buildPackItems(tracks: MusicTrackRow[]): EditableMusicPackItem[] {
   }));
 }
 
+/* ── Drag-and-drop MP3 zone ── */
+function Mp3DropZone({ trackId, filePath, uploading, onUpload, onRemove }: {
+  trackId: string;
+  filePath: string | null;
+  uploading: boolean;
+  onUpload: (file: File) => void;
+  onRemove: () => void;
+}) {
+  const [dragOver, setDragOver] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file && (file.type === "audio/mpeg" || file.name.endsWith(".mp3"))) {
+      onUpload(file);
+    } else {
+      toast.error("Seuls les fichiers MP3 sont acceptés");
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) onUpload(file);
+    e.target.value = "";
+  };
+
+  if (uploading) {
+    return (
+      <div className="rounded-xl border-2 border-dashed border-blue-500/30 bg-blue-500/5 p-3 flex items-center justify-center gap-2">
+        <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+        <span className="text-[11px] text-blue-400 font-bold">Upload en cours…</span>
+      </div>
+    );
+  }
+
+  if (filePath) {
+    return (
+      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 flex items-center gap-3">
+        <Volume2 className="w-5 h-5 text-emerald-400 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] font-bold text-emerald-300">MP3 lié</p>
+          <p className="text-[9px] text-white/40 truncate">{filePath}</p>
+        </div>
+        <Button variant="ghost" size="sm" onClick={onRemove} className="text-red-400/60 hover:text-red-400 h-7 w-7 p-0 shrink-0">
+          <X className="w-3.5 h-3.5" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={handleDrop}
+      onClick={() => inputRef.current?.click()}
+      className={`rounded-xl border-2 border-dashed p-4 flex flex-col items-center justify-center cursor-pointer transition-all ${
+        dragOver
+          ? "border-blue-400 bg-blue-500/10 scale-[1.01]"
+          : "border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]"
+      }`}
+    >
+      <Upload className={`w-6 h-6 mb-1.5 ${dragOver ? "text-blue-400" : "text-white/20"}`} />
+      <p className={`text-[11px] font-bold ${dragOver ? "text-blue-300" : "text-white/30"}`}>
+        Glisser un MP3 ici
+      </p>
+      <p className="text-[9px] text-white/20 mt-0.5">ou cliquer pour parcourir</p>
+      <input ref={inputRef} type="file" accept="audio/mpeg,.mp3" className="hidden" onChange={handleFileChange} />
+    </div>
+  );
+}
+
 export default function MusicTracksEditor({ adminCode, contentId, contentName, onBack }: MusicTracksEditorProps) {
   const [tracks, setTracks] = useState<MusicTrackRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingTrackId, setUploadingTrackId] = useState<string | null>(null);
   const [editingTrack, setEditingTrack] = useState<MusicTrackRow | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -112,6 +187,69 @@ export default function MusicTracksEditor({ adminCode, contentId, contentName, o
 
   const totalWithAudio = useMemo(() => tracks.filter((track) => track.file_path).length, [tracks]);
 
+  /* ── MP3 Upload handler ── */
+  const handleMp3Upload = async (trackId: string, file: File) => {
+    setUploadingTrackId(trackId);
+    try {
+      const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, "_");
+      const path = `${trackId}-${Date.now()}-${safeName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("bobby-music")
+        .upload(path, file, { upsert: true, contentType: "audio/mpeg" });
+
+      if (uploadError) throw uploadError;
+
+      // Update music_tracks.file_path via edge function (service role)
+      await updateMusicTrack(adminCode, trackId, { file_path: path });
+
+      // Update local state
+      setTracks((prev) =>
+        prev.map((t) => (t.id === trackId ? { ...t, file_path: path } : t)),
+      );
+
+      // Sync content_items in store_content
+      const updatedTracks = tracks.map((t) =>
+        t.id === trackId ? { ...t, file_path: path } : t,
+      );
+      await saveMusicPackItems(adminCode, contentId, buildPackItems(updatedTracks));
+
+      toast.success(`MP3 uploadé pour "${tracks.find((t) => t.id === trackId)?.title}" !`);
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de l'upload MP3");
+    } finally {
+      setUploadingTrackId(null);
+    }
+  };
+
+  const handleRemoveMp3 = async (trackId: string) => {
+    const track = tracks.find((t) => t.id === trackId);
+    if (!track?.file_path) return;
+    if (!confirm(`Supprimer le MP3 de "${track.title}" ?`)) return;
+
+    try {
+      // Remove from storage
+      await supabase.storage.from("bobby-music").remove([track.file_path]);
+
+      // Clear file_path in DB
+      await updateMusicTrack(adminCode, trackId, { file_path: "" });
+
+      setTracks((prev) =>
+        prev.map((t) => (t.id === trackId ? { ...t, file_path: null } : t)),
+      );
+
+      const updatedTracks = tracks.map((t) =>
+        t.id === trackId ? { ...t, file_path: null } : t,
+      );
+      await saveMusicPackItems(adminCode, contentId, buildPackItems(updatedTracks));
+
+      toast.success("MP3 supprimé");
+    } catch (err: any) {
+      toast.error(err.message || "Erreur lors de la suppression");
+    }
+  };
+
+  /* ── Save track metadata ── */
   const handleSaveTrack = async () => {
     if (!editingTrack) return;
     setSaving(true);
@@ -133,7 +271,7 @@ export default function MusicTracksEditor({ adminCode, contentId, contentName, o
       setEditingTrack(null);
       toast.success("Fiche musique mise à jour !");
     } catch (error: any) {
-      toast.error(error.message || "Impossible d’enregistrer la fiche musique");
+      toast.error(error.message || "Impossible d'enregistrer la fiche musique");
     } finally {
       setSaving(false);
     }
@@ -164,6 +302,7 @@ export default function MusicTracksEditor({ adminCode, contentId, contentName, o
     setUploading(false);
   };
 
+  /* ── Edit form ── */
   if (editingTrack) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
@@ -179,6 +318,7 @@ export default function MusicTracksEditor({ adminCode, contentId, contentName, o
           </div>
 
           <div className="bg-white/[0.04] backdrop-blur-xl rounded-[20px] p-5 border border-white/10 space-y-4">
+            {/* Image upload */}
             <div>
               <label className="text-xs text-white/50 mb-2 block font-bold">🖼️ Image de la musique</label>
               <div className="flex gap-3 items-start">
@@ -206,6 +346,18 @@ export default function MusicTracksEditor({ adminCode, contentId, contentName, o
                   {uploading && <p className="text-[10px] text-blue-400 animate-pulse">Upload…</p>}
                 </div>
               </div>
+            </div>
+
+            {/* MP3 drop zone */}
+            <div>
+              <label className="text-xs text-white/50 mb-2 block font-bold">🎧 Fichier MP3</label>
+              <Mp3DropZone
+                trackId={editingTrack.id}
+                filePath={editingTrack.file_path}
+                uploading={uploadingTrackId === editingTrack.id}
+                onUpload={(file) => handleMp3Upload(editingTrack.id, file)}
+                onRemove={() => handleRemoveMp3(editingTrack.id)}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -241,14 +393,16 @@ export default function MusicTracksEditor({ adminCode, contentId, contentName, o
             </div>
 
             <div className="bg-white/5 rounded-xl p-3 border border-white/5 space-y-2">
-              <p className="text-[11px] font-bold text-white">Infos audio</p>
-              <p className="text-[10px] text-white/40">Fichier : {editingTrack.file_path || "Aucun MP3 lié"}</p>
+              <p className="text-[11px] font-bold text-white">Trigger phrases</p>
               <div className="flex flex-wrap gap-1.5">
                 {(editingTrack.trigger_phrases || []).map((phrase) => (
                   <span key={phrase} className="px-2 py-0.5 rounded-full bg-white/5 text-white/40 text-[9px] font-bold">
                     {phrase}
                   </span>
                 ))}
+                {(editingTrack.trigger_phrases || []).length === 0 && (
+                  <span className="text-[9px] text-white/20">Aucune phrase déclencheur</span>
+                )}
               </div>
             </div>
 
@@ -264,6 +418,7 @@ export default function MusicTracksEditor({ adminCode, contentId, contentName, o
     );
   }
 
+  /* ── List view with inline drop zones ── */
   return (
     <div className="min-h-screen bg-gradient-to-b from-[hsl(240,60%,8%)] to-[hsl(250,40%,15%)] p-4">
       <div className="max-w-3xl mx-auto space-y-4">
@@ -287,10 +442,11 @@ export default function MusicTracksEditor({ adminCode, contentId, contentName, o
             <p className="text-white/30 text-sm">Aucune musique liée à ce pack</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {tracks.map((track) => (
               <div key={track.id} className="bg-white/[0.04] backdrop-blur-xl rounded-[16px] p-3 border border-white/[0.06] hover:bg-white/[0.06] transition-all group">
                 <div className="flex items-start gap-3">
+                  {/* Thumbnail */}
                   <div className="w-14 h-14 rounded-xl bg-white/10 border border-white/10 overflow-hidden flex items-center justify-center shrink-0 text-2xl">
                     {track.image_url ? (
                       <img src={track.image_url} alt={track.title} className="w-full h-full object-cover" />
@@ -299,30 +455,33 @@ export default function MusicTracksEditor({ adminCode, contentId, contentName, o
                     )}
                   </div>
 
+                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-[12px] font-bold text-white truncate">{track.title}</p>
-                      <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-bold ${track.file_path ? "bg-emerald-500/15 text-emerald-300" : "bg-white/5 text-white/30"}`}>
-                        {track.file_path ? "MP3 OK" : "Sans MP3"}
-                      </span>
                       {!track.is_active && <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-300 font-bold">OFF</span>}
                     </div>
                     <p className="text-[10px] text-white/40 mt-0.5">{track.artist} • {track.category}</p>
                     <p className="text-[10px] text-white/60 mt-1 line-clamp-2">
-                      {track.description || "Aucune description store pour cette musique."}
+                      {track.description || "Aucune description store."}
                     </p>
-                    <div className="flex flex-wrap gap-1 mt-1.5">
-                      {(track.trigger_phrases || []).slice(0, 4).map((phrase) => (
-                        <span key={phrase} className="px-1.5 py-0.5 rounded bg-white/5 text-white/30 text-[8px] font-bold">
-                          {phrase}
-                        </span>
-                      ))}
-                    </div>
                   </div>
 
+                  {/* Edit button */}
                   <Button variant="ghost" size="sm" onClick={() => setEditingTrack(track)} className="text-white/40 hover:text-white h-8 w-8 p-0 shrink-0">
                     <Pencil className="w-3.5 h-3.5" />
                   </Button>
+                </div>
+
+                {/* Inline MP3 drop zone */}
+                <div className="mt-2.5">
+                  <Mp3DropZone
+                    trackId={track.id}
+                    filePath={track.file_path}
+                    uploading={uploadingTrackId === track.id}
+                    onUpload={(file) => handleMp3Upload(track.id, file)}
+                    onRemove={() => handleRemoveMp3(track.id)}
+                  />
                 </div>
               </div>
             ))}
