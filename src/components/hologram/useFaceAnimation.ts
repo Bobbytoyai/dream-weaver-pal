@@ -393,13 +393,13 @@ export function useFaceAnimation(
       sleepyHeadBob = Math.sin(sleepT) * 0.03; // slow nod
     }
 
-    // --- CONFUSED: rapid micro head shake ---
+    // --- CONFUSED: dramatic micro head shake ---
     let confusedShakeX = 0;
     let confusedShakeZ = 0;
     if (faceState === "confused") {
       const shakeT = breathPhase.current * 8;
-      confusedShakeX = Math.sin(shakeT) * 0.015 * intensity;
-      confusedShakeZ = Math.sin(shakeT * 1.3) * 0.02 * intensity;
+      confusedShakeX = Math.sin(shakeT) * 0.035 * intensity;
+      confusedShakeZ = Math.sin(shakeT * 1.3) * 0.04 * intensity;
     }
 
     // --- SURPRISED: freeze 200ms then resume ---
