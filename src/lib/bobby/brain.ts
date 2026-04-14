@@ -158,6 +158,7 @@ export function resetBobbyBrainSession() {
   clearConversationContext();
   resetPersistentMemoryCache();
   resetGames();
+  clearResponseCache().catch(() => {});
 }
 
 export async function initBobbySession(childName: string): Promise<void> {
