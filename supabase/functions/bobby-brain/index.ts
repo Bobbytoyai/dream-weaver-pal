@@ -173,6 +173,9 @@ serve(async (req) => {
       content: m.content,
     }));
 
+    // 🔴 Safety detection — create parent alert if needed (non-blocking)
+    checkAndAlertSafety(sanitizedMessages, userId, sessionId, childName || "Enfant").catch(() => {});
+
     const aiMessages = [
       { role: "system", content: systemContent },
       ...sanitizedMessages,
