@@ -198,7 +198,7 @@ const CloudTab = ({
 
       {/* CONTENU SYNCHRONISÉ */}
       <div className="retro-card p-5">
-        <h3 className="text-[16px] font-black text-foreground mb-3 uppercase">📦 Contenu inclus dans Bobby Cloud</h3>
+        <h3 className="text-[16px] font-black text-black mb-3 uppercase">📦 Contenu inclus dans Bobby Cloud</h3>
         <div className="grid grid-cols-2 gap-2">
           {[
             { emoji: "🧠", title: "Cerveau complet", desc: "Knowledge base, QA, mémoire enfant", bg: "var(--retro-purple)" },
@@ -219,8 +219,8 @@ const CloudTab = ({
 
       {/* TARIFS */}
       <div className="space-y-3">
-        <h3 className="text-[16px] font-black text-foreground px-1 uppercase">💾 TARIFS BOBBY CLOUD</h3>
-        <p className="text-[11px] text-foreground/60 px-1 -mt-1 font-bold">Utilisation actuelle : <span className="font-black text-foreground">{storageLabel}</span> / 500 Mo</p>
+        <h3 className="text-[16px] font-black text-black px-1 uppercase">💾 TARIFS BOBBY CLOUD</h3>
+        <p className="text-[11px] text-black/60 px-1 -mt-1 font-bold">Utilisation actuelle : <span className="font-black text-black">{storageLabel}</span> / 500 Mo</p>
         <div className="mx-1 h-3 bg-white border-2 border-black overflow-hidden">
           <div className="h-full bg-foreground transition-all" style={{ width: `${Math.min(100, (estimatedStorageMB / 500) * 100)}%` }} />
         </div>
@@ -231,33 +231,33 @@ const CloudTab = ({
             <div key={plan.name} className={`retro-card ${tiltClass} p-4 relative ${plan.popular ? "ring-2 ring-foreground/20" : ""}`}
               style={{ backgroundColor: planBgs[pi] || "white" }}>
               {plan.popular && (
-                <span className="absolute -top-2.5 right-4 px-3 py-0.5 border-2 border-black bg-[var(--retro-yellow)] text-foreground text-[10px] font-black">
+                <span className="absolute -top-2.5 right-4 px-3 py-0.5 border-2 border-black bg-[var(--retro-yellow)] text-black text-[10px] font-black">
                   ⭐ Recommandé
                 </span>
               )}
               <div className="flex items-center gap-3 mb-2">
                 <span className="text-3xl">{plan.emoji}</span>
                 <div className="flex-1">
-                  <h4 className="text-[17px] font-black text-foreground uppercase">{plan.name}</h4>
-                  <span className="text-[12px] font-black text-foreground/70">💾 {plan.storage}</span>
+                  <h4 className="text-[17px] font-black text-black uppercase">{plan.name}</h4>
+                  <span className="text-[12px] font-black text-black/70">💾 {plan.storage}</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-[22px] font-black text-foreground">{plan.price}</span>
-                  {plan.period && <span className="text-[11px] text-foreground/60 font-bold">{plan.period}</span>}
+                  <span className="text-[22px] font-black text-black">{plan.price}</span>
+                  {plan.period && <span className="text-[11px] text-black/60 font-bold">{plan.period}</span>}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-3">
                 {plan.features.map(f => (
                   <div key={f} className="flex items-center gap-1.5">
-                    <span className="text-foreground text-[12px] font-black">✓</span>
-                    <span className="text-[11px] text-foreground font-bold">{f}</span>
+                    <span className="text-black text-[12px] font-black">✓</span>
+                    <span className="text-[11px] text-black font-bold">{f}</span>
                   </div>
                 ))}
               </div>
               <button disabled={plan.disabled}
                 className={`w-full py-2.5 font-black text-[13px] transition-all border-4 border-black uppercase ${
                   plan.disabled
-                    ? "bg-white/50 text-foreground/40 cursor-not-allowed"
+                    ? "bg-white/50 text-black/40 cursor-not-allowed"
                     : "bg-foreground text-background hover:opacity-90"
                 }`}
                 style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
@@ -279,12 +279,12 @@ const CloudTab = ({
             { emoji: "🔄", label: "Sync auto" },
             { emoji: "📈", label: "Scalable" },
           ].map(f => (
-            <span key={f.label} className="inline-flex items-center gap-1 px-2.5 py-1 border border-black bg-white text-[9px] font-black text-foreground">
+            <span key={f.label} className="inline-flex items-center gap-1 px-2.5 py-1 border border-black bg-white text-[9px] font-black text-black">
               {f.emoji} {f.label}
             </span>
           ))}
         </div>
-        <p className="text-center text-[9px] text-foreground/40 mt-2 font-bold">
+        <p className="text-center text-[9px] text-black/40 mt-2 font-bold">
           ☁️ Infrastructure sécurisée • Chiffrement bout en bout • Serveurs EU
         </p>
       </div>

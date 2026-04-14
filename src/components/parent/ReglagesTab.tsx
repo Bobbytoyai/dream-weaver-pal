@@ -30,7 +30,7 @@ const SuspenseFallback = () => (
 
 // ── Back button component ──
 const BackButton = ({ label, onClick }: { label: string; onClick: () => void }) => (
-  <button onClick={onClick} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
+  <button onClick={onClick} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-black hover:opacity-70 mb-1 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
     <ChevronLeft className="w-4 h-4" /> {label}
   </button>
 );
@@ -50,22 +50,22 @@ const RGPDPage = ({ settings, onUpdate, onBack, onSave, saved }: {
     <div className="p-4 space-y-3 animate-fadeInUp">
       <BackButton label="RGPD" onClick={() => setRgpdSection(null)} />
       <Card title="Responsable du traitement" icon={UserCheck}>
-        <div className="space-y-2.5 text-[11px] text-foreground/80 font-bold leading-relaxed">
-          <p>Bobby est édité par l'équipe Bobby AI. Les données de votre enfant sont traitées conformément au <strong className="text-foreground">Règlement Général sur la Protection des Données (RGPD)</strong> — Règlement UE 2016/679.</p>
+        <div className="space-y-2.5 text-[11px] text-black/80 font-bold leading-relaxed">
+          <p>Bobby est édité par l'équipe Bobby AI. Les données de votre enfant sont traitées conformément au <strong className="text-black">Règlement Général sur la Protection des Données (RGPD)</strong> — Règlement UE 2016/679.</p>
           <div className="p-3 border-2 border-black bg-[var(--retro-yellow)]/30">
-            <p className="text-[10px] font-black uppercase text-foreground mb-1">📧 Contact DPO</p>
+            <p className="text-[10px] font-black uppercase text-black mb-1">📧 Contact DPO</p>
             <p className="text-[10px]">privacy@bobby-ai.fr</p>
           </div>
         </div>
       </Card>
       <Card title="Base légale du traitement" icon={Scale}>
-        <div className="space-y-2 text-[11px] text-foreground/80 font-bold leading-relaxed">
+        <div className="space-y-2 text-[11px] text-black/80 font-bold leading-relaxed">
           <div className="p-2.5 border-2 border-black bg-white">
-            <p className="text-[10px] font-black text-foreground uppercase mb-1">Consentement parental</p>
+            <p className="text-[10px] font-black text-black uppercase mb-1">Consentement parental</p>
             <p className="text-[10px]">Le traitement des données repose sur le consentement du parent/tuteur légal, conformément à l'article 8 du RGPD (enfants de moins de 16 ans).</p>
           </div>
           <div className="p-2.5 border-2 border-black bg-white">
-            <p className="text-[10px] font-black text-foreground uppercase mb-1">Intérêt légitime</p>
+            <p className="text-[10px] font-black text-black uppercase mb-1">Intérêt légitime</p>
             <p className="text-[10px]">L'amélioration de l'expérience éducative et la sécurité de l'enfant constituent un intérêt légitime au sens de l'article 6(1)(f).</p>
           </div>
         </div>
@@ -82,15 +82,15 @@ const RGPDPage = ({ settings, onUpdate, onBack, onSave, saved }: {
             <div key={item.label} className="flex items-start gap-2.5 p-2 border-2 border-black bg-white">
               <span className="text-lg mt-0.5">{item.emoji}</span>
               <div>
-                <h4 className="text-[11px] font-black text-foreground uppercase">{item.label}</h4>
-                <p className="text-[9px] text-foreground/60 font-bold">{item.desc}</p>
+                <h4 className="text-[11px] font-black text-black uppercase">{item.label}</h4>
+                <p className="text-[9px] text-black/60 font-bold">{item.desc}</p>
               </div>
             </div>
           ))}
         </div>
       </Card>
       <Card title="Sécurité des données" icon={Shield}>
-        <div className="space-y-2 text-[11px] text-foreground/80 font-bold leading-relaxed">
+        <div className="space-y-2 text-[11px] text-black/80 font-bold leading-relaxed">
           <p>🔒 Chiffrement en transit (TLS 1.3) et au repos (AES-256)</p>
           <p>🌍 Hébergement en Union Européenne</p>
           <p>🚫 Aucune vente de données à des tiers</p>
@@ -118,17 +118,17 @@ const RGPDPage = ({ settings, onUpdate, onBack, onSave, saved }: {
             <div key={right.label} className="p-3 border-2 border-black bg-white">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-lg">{right.emoji}</span>
-                <h4 className="text-[12px] font-black text-foreground uppercase flex-1">{right.label}</h4>
-                <span className="text-[9px] font-mono font-black text-foreground/50 border border-black px-1.5 py-0.5">{right.article}</span>
+                <h4 className="text-[12px] font-black text-black uppercase flex-1">{right.label}</h4>
+                <span className="text-[9px] font-mono font-black text-black/50 border border-black px-1.5 py-0.5">{right.article}</span>
               </div>
-              <p className="text-[10px] text-foreground/70 font-bold pl-7">{right.desc}</p>
+              <p className="text-[10px] text-black/70 font-bold pl-7">{right.desc}</p>
             </div>
           ))}
         </div>
       </Card>
       <div className="p-3 border-2 border-black bg-[var(--retro-blue)]/30">
-        <p className="text-[10px] font-black text-foreground uppercase mb-1">📮 Exercer vos droits</p>
-        <p className="text-[10px] text-foreground/80 font-bold">Contactez notre DPO à privacy@bobby-ai.fr ou utilisez les options de suppression dans la section « Données » de l'onglet Confidentialité.</p>
+        <p className="text-[10px] font-black text-black uppercase mb-1">📮 Exercer vos droits</p>
+        <p className="text-[10px] text-black/80 font-bold">Contactez notre DPO à privacy@bobby-ai.fr ou utilisez les options de suppression dans la section « Données » de l'onglet Confidentialité.</p>
       </div>
     </div>
   );
@@ -151,7 +151,7 @@ const RGPDPage = ({ settings, onUpdate, onBack, onSave, saved }: {
         </div>
       </Card>
       <Card title="Conservation des données" icon={Calendar}>
-        <p className="text-[10px] text-foreground/60 mb-3 font-bold leading-tight">Durée de rétention automatique des données collectées</p>
+        <p className="text-[10px] text-black/60 mb-3 font-bold leading-tight">Durée de rétention automatique des données collectées</p>
         <div className="grid grid-cols-2 gap-2">
           {([
             ["7j", "🗓️", "7 jours"],
@@ -162,14 +162,14 @@ const RGPDPage = ({ settings, onUpdate, onBack, onSave, saved }: {
             <button key={val} onClick={() => onUpdate("dataRetention", val)}
               className={`p-3 text-center transition-all border-2 border-black ${settings.dataRetention === val ? "bg-[var(--retro-green)] ring-2 ring-foreground/20" : "bg-white hover:bg-[var(--retro-yellow)]"}`}>
               <span className="text-xl block mb-1">{emoji}</span>
-              <span className={`text-[11px] font-black ${settings.dataRetention === val ? "text-foreground" : "text-foreground/70"} uppercase`}>{label}</span>
+              <span className={`text-[11px] font-black ${settings.dataRetention === val ? "text-black" : "text-black/70"} uppercase`}>{label}</span>
             </button>
           ))}
         </div>
       </Card>
       {saved ? (
         <div className="text-center py-2">
-          <span className="text-[11px] font-black text-foreground uppercase">✅ Sauvegardé</span>
+          <span className="text-[11px] font-black text-black uppercase">✅ Sauvegardé</span>
         </div>
       ) : (
         <button onClick={onSave}
@@ -185,8 +185,8 @@ const RGPDPage = ({ settings, onUpdate, onBack, onSave, saved }: {
   return (
     <div className="p-4 space-y-3 animate-fadeInUp">
       <BackButton label="RÉGLAGES" onClick={onBack} />
-      <h2 className="text-[16px] font-black text-foreground uppercase">🔒 Confidentialité & RGPD</h2>
-      <p className="text-[10px] text-foreground/60 font-bold leading-tight -mt-1">
+      <h2 className="text-[16px] font-black text-black uppercase">🔒 Confidentialité & RGPD</h2>
+      <p className="text-[10px] text-black/60 font-bold leading-tight -mt-1">
         Gérez la protection des données de votre enfant conformément au RGPD
       </p>
       <div className="grid grid-cols-2 gap-3">
@@ -199,14 +199,14 @@ const RGPDPage = ({ settings, onUpdate, onBack, onSave, saved }: {
             className={`retro-card retro-card-tilt-${(i % 6) + 1} p-4 text-left hover:translate-y-[-2px] transition-all`}
             style={{ backgroundColor: card.bg, boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}>
             <span className="text-3xl block mb-2">{card.emoji}</span>
-            <h3 className="text-[13px] font-black text-foreground leading-tight uppercase">{card.label}</h3>
-            <p className="text-[9px] text-foreground/60 mt-1 leading-snug font-bold">{card.desc}</p>
+            <h3 className="text-[13px] font-black text-black leading-tight uppercase">{card.label}</h3>
+            <p className="text-[9px] text-black/60 mt-1 leading-snug font-bold">{card.desc}</p>
           </button>
         ))}
       </div>
       <div className="p-3 border-2 border-black bg-[var(--retro-purple)]/20 mt-2">
-        <p className="text-[10px] font-bold text-foreground/70 leading-relaxed">
-          🇪🇺 Bobby respecte le <strong className="text-foreground">RGPD</strong> et la <strong className="text-foreground">COPPA</strong>. Aucune donnée n'est vendue. Le traitement repose sur votre consentement parental. Vous pouvez retirer ce consentement à tout moment.
+        <p className="text-[10px] font-bold text-black/70 leading-relaxed">
+          🇪🇺 Bobby respecte le <strong className="text-black">RGPD</strong> et la <strong className="text-black">COPPA</strong>. Aucune donnée n'est vendue. Le traitement repose sur votre consentement parental. Vous pouvez retirer ce consentement à tout moment.
         </p>
       </div>
     </div>
@@ -307,7 +307,7 @@ const ReglagesTab = ({
 
   return (
     <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
-      <h2 className="text-[18px] font-black text-foreground animate-fadeInUp uppercase">⚙️ Réglages</h2>
+      <h2 className="text-[18px] font-black text-black animate-fadeInUp uppercase">⚙️ Réglages</h2>
       <div className="grid grid-cols-2 gap-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         {([
           ["voix", "🎤", "Voix & Sons", "Profils vocaux, vitesse, ton", "var(--retro-blue)"],
@@ -318,16 +318,16 @@ const ReglagesTab = ({
             className={`retro-card retro-card-tilt-${(i % 6) + 1} p-5 text-center transition-all duration-200 hover:translate-y-[-2px]`}
             style={{ backgroundColor: bg, boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}>
             <span className="text-4xl block mb-2">{emoji}</span>
-            <span className="text-[14px] font-black text-foreground block uppercase">{label}</span>
-            <span className="text-[10px] text-foreground/60 leading-tight block mt-1 font-bold">{desc}</span>
+            <span className="text-[14px] font-black text-black block uppercase">{label}</span>
+            <span className="text-[10px] text-black/60 leading-tight block mt-1 font-bold">{desc}</span>
           </button>
         ))}
         <button onClick={() => setShowRGPD(true)}
           className="retro-card retro-card-tilt-4 p-5 text-center transition-all duration-200 hover:translate-y-[-2px]"
           style={{ backgroundColor: "var(--retro-green)", boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}>
           <span className="text-4xl block mb-2">🔒</span>
-          <span className="text-[14px] font-black text-foreground block uppercase">RGPD & Vie privée</span>
-          <span className="text-[10px] text-foreground/60 leading-tight block mt-1 font-bold">Données, droits, conformité</span>
+          <span className="text-[14px] font-black text-black block uppercase">RGPD & Vie privée</span>
+          <span className="text-[10px] text-black/60 leading-tight block mt-1 font-bold">Données, droits, conformité</span>
         </button>
       </div>
     </div>

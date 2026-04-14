@@ -103,10 +103,10 @@ const ContentCategories = ({ childName, onSelectCategory, onBack, voiceProfile =
       <div className="flex flex-col h-screen max-w-lg mx-auto bg-background">
         <div className="flex items-center gap-3 px-4 py-3 bg-card border-b border-border">
           <button onClick={() => setShowStoryLibrary(false)} className="w-9 h-9 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
-            <ArrowLeft className="w-4.5 h-4.5 text-foreground" />
+            <ArrowLeft className="w-4.5 h-4.5 text-black" />
           </button>
           <div className="flex-1">
-            <h2 className="text-base font-bold text-foreground">Bibliothèque</h2>
+            <h2 className="text-base font-bold text-black">Bibliothèque</h2>
             <p className="text-[11px] text-muted-foreground">Histoires, contes & aventures</p>
           </div>
           <span className="text-2xl">📚</span>
@@ -127,7 +127,7 @@ const ContentCategories = ({ childName, onSelectCategory, onBack, voiceProfile =
         {/* Back */}
         <button
           onClick={() => animateTransition(() => setSelectedCat(null))}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-black transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Activités
@@ -138,7 +138,7 @@ const ContentCategories = ({ childName, onSelectCategory, onBack, voiceProfile =
           <div className="flex items-center gap-3">
             <span className="text-4xl">{activeCat.emoji}</span>
             <div>
-              <h3 className="text-lg font-bold text-foreground">{activeCat.label}</h3>
+              <h3 className="text-lg font-bold text-black">{activeCat.label}</h3>
               <p className="text-[12px] text-muted-foreground">{activeCat.desc}</p>
             </div>
           </div>
@@ -156,7 +156,7 @@ const ContentCategories = ({ childName, onSelectCategory, onBack, voiceProfile =
                 style={{ animationDelay: animatingIn ? `${idx * 80}ms` : undefined }}
               >
                 <span className="text-3xl block mb-2">{sub.emoji}</span>
-                <h4 className="text-[13px] font-bold text-foreground leading-tight">{sub.label}</h4>
+                <h4 className="text-[13px] font-bold text-black leading-tight">{sub.label}</h4>
                 <p className="text-[10px] text-muted-foreground mt-1 leading-tight">{sub.desc}</p>
                 {subScore && subScore.played > 0 && (
                   <div className="mt-2 flex items-center gap-1">
@@ -184,7 +184,7 @@ const ContentCategories = ({ childName, onSelectCategory, onBack, voiceProfile =
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <Trophy className="w-5 h-5 text-primary" />
-              <span className="text-[13px] font-bold text-foreground">{getScoreSummary(score)}</span>
+              <span className="text-[13px] font-bold text-black">{getScoreSummary(score)}</span>
             </div>
             <button onClick={handleReset} className="p-2 rounded-full hover:bg-primary/15 transition-colors" title="Réinitialiser">
               <RotateCcw className="w-3.5 h-3.5 text-muted-foreground" />
@@ -213,7 +213,7 @@ const ContentCategories = ({ childName, onSelectCategory, onBack, voiceProfile =
             className={`bg-gradient-to-br ${cat.gradient} rounded-2xl p-5 text-left hover:shadow-lg hover:scale-[1.02] transition-all duration-200 border border-border/30 relative overflow-hidden group`}
           >
             <span className="text-4xl block mb-3">{cat.emoji}</span>
-            <h3 className="text-[14px] font-bold text-foreground leading-tight">{cat.label}</h3>
+            <h3 className="text-[14px] font-bold text-black leading-tight">{cat.label}</h3>
             <p className="text-[10px] text-muted-foreground mt-1 leading-tight">{cat.desc}</p>
             {cat.subs.length > 1 && (
               <div className="mt-2">

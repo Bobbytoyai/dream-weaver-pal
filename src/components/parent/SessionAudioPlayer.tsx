@@ -111,10 +111,10 @@ const SessionAudioPlayer = ({
           <span className="text-xl">🎧</span>
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-[15px] font-black text-foreground uppercase">
+          <h3 className="text-[15px] font-black text-black uppercase">
             {playingAudio || fullPlaybackActive ? "🔴 Lecture en cours" : "Réécouter"}
           </h3>
-          <p className="text-[11px] text-foreground/60 font-bold truncate">
+          <p className="text-[11px] text-black/60 font-bold truncate">
             {playingAudio && activeMessageIdx >= 0
               ? `Message ${activeMessageIdx + 1}/${sessionMessages.length}`
               : `${sessionMessages.length} messages`
@@ -197,7 +197,7 @@ const SessionAudioPlayer = ({
         {hasAudioFile ? (
           <>
             <button onClick={() => skipAudio(-10)}
-              className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all">
+              className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-black hover:bg-[var(--retro-yellow)] transition-all">
               <SkipBack className="w-4 h-4" />
             </button>
             <button onClick={() => playAudio(analysis!.audio_path!)}
@@ -206,7 +206,7 @@ const SessionAudioPlayer = ({
               {playingAudio === analysis!.audio_path ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-0.5" />}
             </button>
             <button onClick={() => skipAudio(10)}
-              className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all">
+              className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-black hover:bg-[var(--retro-yellow)] transition-all">
               <SkipForward className="w-4 h-4" />
             </button>
           </>
@@ -221,7 +221,7 @@ const SessionAudioPlayer = ({
             ) : (
               <>
                 <button onClick={() => { if (fullPlaybackIdx > 0) setFullPlaybackIdx(i => Math.max(0, i - 1)); }}
-                  className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all">
+                  className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-black hover:bg-[var(--retro-yellow)] transition-all">
                   <SkipBack className="w-4 h-4" />
                 </button>
                 <button onClick={toggleFullPlaybackPause}
@@ -230,11 +230,11 @@ const SessionAudioPlayer = ({
                   {fullPlaybackLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : fullPlaybackPaused ? <Play className="w-6 h-6 ml-0.5" /> : <Pause className="w-6 h-6" />}
                 </button>
                 <button onClick={() => { if (fullPlaybackIdx < sessionMessages.length - 1) setFullPlaybackIdx(i => i + 1); }}
-                  className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)] transition-all">
+                  className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-black hover:bg-[var(--retro-yellow)] transition-all">
                   <SkipForward className="w-4 h-4" />
                 </button>
                 <button onClick={stopFullPlayback}
-                  className="w-10 h-10 border-2 border-black bg-[var(--retro-red)] flex items-center justify-center text-foreground hover:opacity-80 transition-all">
+                  className="w-10 h-10 border-2 border-black bg-[var(--retro-red)] flex items-center justify-center text-black hover:opacity-80 transition-all">
                   <X className="w-4 h-4" />
                 </button>
               </>
@@ -250,7 +250,7 @@ const SessionAudioPlayer = ({
             className={`px-3 py-1.5 text-[11px] font-black transition-all border-2 border-black ${
               (hasAudioFile ? audioSpeed : fullPlaybackSpeed) === speed
                 ? "bg-foreground text-background"
-                : "bg-white text-foreground/60 hover:bg-[var(--retro-yellow)]"
+                : "bg-white text-black/60 hover:bg-[var(--retro-yellow)]"
             }`}>
             {speed}×
           </button>
@@ -279,11 +279,11 @@ const SessionAudioPlayer = ({
                     ? "bg-[var(--retro-yellow)] border-l-4 border-l-black"
                     : isPast ? "opacity-40" : "opacity-70"
                 }`}>
-                <span className="text-[9px] font-black text-foreground/60">
+                <span className="text-[9px] font-black text-black/60">
                   {msg.role === "user" ? `👦 ${displayName}` : "🤖 Bobby"}
                 </span>
                 <p className={`text-[11px] leading-snug mt-0.5 font-bold ${
-                  isActive ? "text-foreground font-black" : "text-foreground/70"
+                  isActive ? "text-black font-black" : "text-black/70"
                 }`}>{msg.content?.slice(0, 120)}{(msg.content?.length || 0) > 120 ? "…" : ""}</p>
               </div>
             );

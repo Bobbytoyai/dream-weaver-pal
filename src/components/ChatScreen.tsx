@@ -82,7 +82,7 @@ const ChatScreen = ({ childName, childAge, onSwitchToVoice }: ChatScreenProps) =
       <div className="flex items-center gap-3 px-4 py-3 bg-card border-b border-border">
         <img src={companionAvatar} alt="Bobby" width={44} height={44} className="rounded-full" />
         <div className="flex-1">
-          <h2 className="text-lg font-extrabold text-foreground">Bobby</h2>
+          <h2 className="text-lg font-extrabold text-black">Bobby</h2>
           <p className="text-xs text-muted-foreground font-semibold">🧠 Offline Brain</p>
         </div>
         {onSwitchToVoice ? (
@@ -112,7 +112,7 @@ const ChatScreen = ({ childName, childAge, onSwitchToVoice }: ChatScreenProps) =
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             placeholder={`Dis quelque chose, ${childName}...`}
             disabled={isLoading}
-            className="flex-1 rounded-full border-2 border-border bg-background px-5 py-3 text-base font-semibold text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50" />
+            className="flex-1 rounded-full border-2 border-border bg-background px-5 py-3 text-base font-semibold text-black placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all disabled:opacity-50" />
           <button onClick={handleSend} disabled={!input.trim() || isLoading}
             className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:scale-110 transition-transform disabled:opacity-40">
             <Send className="w-5 h-5" />

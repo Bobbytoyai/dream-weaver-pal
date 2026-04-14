@@ -19,11 +19,11 @@ const NouveautesTab = () => {
       {/* Version banner */}
       <div className="retro-card retro-card-tilt-1 p-4" style={{ backgroundColor: 'var(--retro-blue)' }}>
         <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="w-4 h-4 text-foreground" />
-          <h3 className="text-[13px] font-black text-foreground uppercase">Bobby v2.0</h3>
+          <Sparkles className="w-4 h-4 text-black" />
+          <h3 className="text-[13px] font-black text-black uppercase">Bobby v2.0</h3>
           <span className="text-[9px] px-2 py-0.5 border-2 border-black bg-white font-black">Dernière mise à jour</span>
         </div>
-        <p className="text-[11px] text-foreground/60 font-bold">10 avril 2026</p>
+        <p className="text-[11px] text-black/60 font-bold">10 avril 2026</p>
       </div>
 
       {/* 🎤 Voix */}
@@ -38,16 +38,16 @@ const NouveautesTab = () => {
             <div key={v.name} className="flex items-start gap-3 p-2.5 border-2 border-black bg-white">
               <span className="text-xl">{v.emoji}</span>
               <div>
-                <h4 className="text-[12px] font-black text-foreground uppercase">{v.name}</h4>
-                <p className="text-[10px] text-foreground/60 leading-tight mt-0.5 font-bold">{v.desc}</p>
+                <h4 className="text-[12px] font-black text-black uppercase">{v.name}</h4>
+                <p className="text-[10px] text-black/60 leading-tight mt-0.5 font-bold">{v.desc}</p>
               </div>
             </div>
           ))}
           <div className="flex items-start gap-3 p-2.5 border-2 border-black bg-[var(--retro-yellow)]">
             <span className="text-xl">🎭</span>
             <div>
-              <h4 className="text-[12px] font-black text-foreground uppercase">8 émotions dynamiques</h4>
-              <p className="text-[10px] text-foreground/60 leading-tight mt-0.5 font-bold">
+              <h4 className="text-[12px] font-black text-black uppercase">8 émotions dynamiques</h4>
+              <p className="text-[10px] text-black/60 leading-tight mt-0.5 font-bold">
                 Joyeux, triste, effrayé, excité, calme, curieux, en colère, ennuyé — la voix s'adapte automatiquement
               </p>
             </div>
@@ -70,17 +70,17 @@ const NouveautesTab = () => {
           ].map((t) => (
             <div key={t.label} className="flex items-center gap-3 py-1.5">
               <span className="text-lg">{t.emoji}</span>
-              <span className="text-[12px] font-black text-foreground flex-1">{t.label}</span>
-              <span className="text-[9px] px-2 py-0.5 border border-black bg-white text-foreground font-black">{t.tag}</span>
+              <span className="text-[12px] font-black text-black flex-1">{t.label}</span>
+              <span className="text-[9px] px-2 py-0.5 border border-black bg-white text-black font-black">{t.tag}</span>
             </div>
           ))}
         </div>
         <div className="mt-3 p-2.5 border-2 border-black bg-white">
-          <p className="text-[10px] text-foreground/60 font-bold">
-            🧒 <strong className="text-foreground font-black">Bobby</strong> — personnage principal, ami imaginaire vivant dans un jouet
+          <p className="text-[10px] text-black/60 font-bold">
+            🧒 <strong className="text-black font-black">Bobby</strong> — personnage principal, ami imaginaire vivant dans un jouet
           </p>
-          <p className="text-[10px] text-foreground/60 mt-1 font-bold">
-            🎵 <strong className="text-foreground font-black">Zik</strong> — ami imaginaire de Bobby, un peu coquin
+          <p className="text-[10px] text-black/60 mt-1 font-bold">
+            🎵 <strong className="text-black font-black">Zik</strong> — ami imaginaire de Bobby, un peu coquin
           </p>
         </div>
       </Card>
@@ -101,8 +101,8 @@ const NouveautesTab = () => {
             <div key={f.title} className="flex items-start gap-3">
               <span className="text-lg mt-0.5">{f.emoji}</span>
               <div>
-                <h4 className="text-[12px] font-black text-foreground uppercase">{f.title}</h4>
-                <p className="text-[10px] text-foreground/60 leading-tight mt-0.5 font-bold">{f.desc}</p>
+                <h4 className="text-[12px] font-black text-black uppercase">{f.title}</h4>
+                <p className="text-[10px] text-black/60 leading-tight mt-0.5 font-bold">{f.desc}</p>
               </div>
             </div>
           ))}
@@ -113,7 +113,7 @@ const NouveautesTab = () => {
       {/* 💡 Suggérer une idée */}
       <div className="animate-fadeInUp" style={{ animationDelay: "0.25s" }}>
       <Card title="💡 Suggérer une idée" icon={Heart}>
-        <p className="text-[10px] text-foreground/60 mb-3 leading-tight font-bold">
+        <p className="text-[10px] text-black/60 mb-3 leading-tight font-bold">
           Vous avez une idée pour améliorer Bobby ? Partagez-la avec nous !
         </p>
         <textarea
@@ -121,17 +121,17 @@ const NouveautesTab = () => {
           onChange={(e) => setSuggestionText(e.target.value)}
           placeholder="Ex: Ajouter une voix en anglais, un mode comptine..."
           rows={3}
-          className="w-full px-4 py-2.5 bg-white text-sm text-foreground placeholder:text-foreground/40 border-4 border-black outline-none font-bold resize-none"
+          className="w-full px-4 py-2.5 bg-white text-sm text-black placeholder:text-black/40 border-4 border-black outline-none font-bold resize-none"
         />
         <button
           onClick={handleSuggestionSubmit}
           disabled={!suggestionText.trim() || suggestionSent}
           className={`mt-2 w-full py-2.5 text-[12px] font-black transition-all border-4 border-black uppercase ${
             suggestionSent
-              ? "bg-[var(--retro-green)] text-foreground"
+              ? "bg-[var(--retro-green)] text-black"
               : suggestionText.trim()
                 ? "bg-foreground text-background hover:opacity-90"
-                : "bg-white/50 text-foreground/40 cursor-not-allowed border-dashed"
+                : "bg-white/50 text-black/40 cursor-not-allowed border-dashed"
           }`}
           style={{ boxShadow: suggestionText.trim() && !suggestionSent ? "3px 3px 0px rgba(0,0,0,0.2)" : "none" }}>
           {suggestionSent ? "✅ MERCI POUR VOTRE IDÉE !" : "ENVOYER MA SUGGESTION"}

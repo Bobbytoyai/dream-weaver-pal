@@ -90,10 +90,10 @@ const SessionsListTab = ({
     <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
       {/* Search bar */}
       <div className="relative">
-        <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-foreground/40" />
+        <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-black/40" />
         <input type="text" value={sessionSearch} onChange={e => setSessionSearch(e.target.value)}
           placeholder="Rechercher…"
-          className="w-full pl-11 pr-4 py-3 bg-white text-[15px] font-black text-foreground placeholder:text-foreground/40 border-4 border-black outline-none focus:ring-2 focus:ring-foreground/20 transition-all" />
+          className="w-full pl-11 pr-4 py-3 bg-white text-[15px] font-black text-black placeholder:text-black/40 border-4 border-black outline-none focus:ring-2 focus:ring-foreground/20 transition-all" />
       </div>
 
       {/* Category cards — retro grid */}
@@ -111,7 +111,7 @@ const SessionsListTab = ({
                 fontFamily: "'Nunito', sans-serif",
               }}>
               <span className="text-xl">{card.emoji}</span>
-              <span className={`text-[9px] font-black leading-tight text-center uppercase ${card.active ? "text-foreground" : "text-foreground/60"}`}>{card.label}</span>
+              <span className={`text-[9px] font-black leading-tight text-center uppercase ${card.active ? "text-black" : "text-black/60"}`}>{card.label}</span>
             </button>
           );
         })}
@@ -120,12 +120,12 @@ const SessionsListTab = ({
       {/* Mini calendar — retro */}
       <div className="retro-card px-4 py-3">
         <div className="flex items-center justify-between mb-2">
-          <h4 className="text-[14px] font-black text-foreground capitalize uppercase">{monthName}</h4>
+          <h4 className="text-[14px] font-black text-black capitalize uppercase">{monthName}</h4>
           <span className="text-base">📅</span>
         </div>
         <div className="grid grid-cols-7 gap-px">
           {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
-            <span key={i} className="text-[10px] font-black text-foreground/40 text-center py-1 uppercase">{d}</span>
+            <span key={i} className="text-[10px] font-black text-black/40 text-center py-1 uppercase">{d}</span>
           ))}
           {Array.from({ length: startDow }, (_, i) => (
             <div key={`e-${i}`} />
@@ -156,10 +156,10 @@ const SessionsListTab = ({
                 }}
                 className={`w-full aspect-square flex items-center justify-center text-[11px] font-black transition-all border ${
                   dayData
-                    ? "bg-[var(--retro-blue)] text-foreground border-black hover:bg-[var(--retro-yellow)] cursor-pointer"
+                    ? "bg-[var(--retro-blue)] text-black border-black hover:bg-[var(--retro-yellow)] cursor-pointer"
                     : isToday
-                      ? "bg-white border-black text-foreground ring-1 ring-foreground/30"
-                      : "text-foreground/30 border-transparent cursor-default"
+                      ? "bg-white border-black text-black ring-1 ring-foreground/30"
+                      : "text-black/30 border-transparent cursor-default"
                 }`}>
                 {dayNum}
               </button>
@@ -170,9 +170,9 @@ const SessionsListTab = ({
 
       {/* Daily summaries list */}
       {loading ? (
-        <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-foreground" /></div>
+        <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-black" /></div>
       ) : dailySummaries.length === 0 ? (
-        <div className="text-center py-8 text-foreground/50"><p className="text-sm font-black">Aucune session{tagFilter || sessionSearch || sessionFavFilter ? " trouvée" : " enregistrée"}.</p></div>
+        <div className="text-center py-8 text-black/50"><p className="text-sm font-black">Aucune session{tagFilter || sessionSearch || sessionFavFilter ? " trouvée" : " enregistrée"}.</p></div>
       ) : (
         <div className="space-y-3">
           {dailySummaries.map((day, dayIdx) => {
@@ -182,8 +182,8 @@ const SessionsListTab = ({
                 {/* Day header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <Calendar className="w-5 h-5 text-foreground" />
-                    <h4 className="text-[17px] font-black text-foreground uppercase">{formatDayHeader(day.daySessions[0].started_at)}</h4>
+                    <Calendar className="w-5 h-5 text-black" />
+                    <h4 className="text-[17px] font-black text-black uppercase">{formatDayHeader(day.daySessions[0].started_at)}</h4>
                     {day.hasFavorite && <span className="text-base">⭐</span>}
                   </div>
                   <span className="text-3xl">{day.mood.emoji}</span>
@@ -197,8 +197,8 @@ const SessionsListTab = ({
                     { value: formatDuration(day.totalDuration), label: "durée", bg: "var(--retro-purple)" },
                   ].map(kpi => (
                     <div key={kpi.label} className="border-2 border-black p-3 text-center" style={{ backgroundColor: kpi.bg }}>
-                      <p className="text-xl font-black text-foreground">{kpi.value}</p>
-                      <p className="text-[11px] text-foreground/60 font-black uppercase">{kpi.label}</p>
+                      <p className="text-xl font-black text-black">{kpi.value}</p>
+                      <p className="text-[11px] text-black/60 font-black uppercase">{kpi.label}</p>
                     </div>
                   ))}
                 </div>
@@ -206,7 +206,7 @@ const SessionsListTab = ({
                 {/* Summary */}
                 {day.daySummary && (
                   <div className="border-2 border-black bg-[var(--retro-yellow)] px-4 py-3">
-                    <p className="text-[14px] text-foreground/70 leading-relaxed font-bold">💡 {day.daySummary}</p>
+                    <p className="text-[14px] text-black/70 leading-relaxed font-bold">💡 {day.daySummary}</p>
                   </div>
                 )}
 
@@ -223,7 +223,7 @@ const SessionsListTab = ({
                         <div className="w-full h-2 bg-white border border-black overflow-hidden">
                           <div className="h-full bg-foreground transition-all" style={{ width: `${s.score}%` }} />
                         </div>
-                        <span className="text-[13px] font-black text-foreground">{s.score}</span>
+                        <span className="text-[13px] font-black text-black">{s.score}</span>
                       </div>
                     ))}
                   </div>
@@ -233,10 +233,10 @@ const SessionsListTab = ({
                 {(day.topTopics.length > 0 || day.topEmotions.length > 0) && (
                   <div className="flex flex-wrap gap-2">
                     {day.topTopics.map(t => (
-                      <span key={t} className="px-3 py-1 border-2 border-black bg-[var(--retro-blue)] text-foreground text-[12px] font-black">#{t}</span>
+                      <span key={t} className="px-3 py-1 border-2 border-black bg-[var(--retro-blue)] text-black text-[12px] font-black">#{t}</span>
                     ))}
                     {day.topEmotions.map(e => (
-                      <span key={e} className="px-3 py-1 border-2 border-black bg-[var(--retro-purple)] text-foreground text-[12px] font-black">{e}</span>
+                      <span key={e} className="px-3 py-1 border-2 border-black bg-[var(--retro-purple)] text-black text-[12px] font-black">{e}</span>
                     ))}
                   </div>
                 )}
@@ -244,7 +244,7 @@ const SessionsListTab = ({
                 {/* Expand sessions */}
                 <div className="border-t-2 border-black/20 pt-3">
                   <details className="group">
-                    <summary className="text-[14px] text-foreground font-black cursor-pointer flex items-center gap-1.5 hover:opacity-70 uppercase">
+                    <summary className="text-[14px] text-black font-black cursor-pointer flex items-center gap-1.5 hover:opacity-70 uppercase">
                       <ChevronRight className="w-4 h-4 transition-transform group-open:rotate-90" />
                       Voir les {day.daySessions.length} session{day.daySessions.length > 1 ? "s" : ""}
                     </summary>
@@ -259,14 +259,14 @@ const SessionsListTab = ({
                             <span className="text-lg">{sMood.emoji}</span>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className="text-[14px] font-black text-foreground">
+                                <span className="text-[14px] font-black text-black">
                                   {new Date(session.started_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
                                 </span>
-                                <span className="text-[12px] text-foreground/60 font-bold">{formatDuration(session.duration_seconds)} • {session.message_count} msg</span>
+                                <span className="text-[12px] text-black/60 font-bold">{formatDuration(session.duration_seconds)} • {session.message_count} msg</span>
                               </div>
-                              {analysis?.summary && <p className="text-[12px] text-foreground/50 mt-1 truncate font-bold">{humanizeSummary(analysis.summary)}</p>}
+                              {analysis?.summary && <p className="text-[12px] text-black/50 mt-1 truncate font-bold">{humanizeSummary(analysis.summary)}</p>}
                             </div>
-                            <ChevronRight className="w-4 h-4 text-foreground/40 shrink-0" />
+                            <ChevronRight className="w-4 h-4 text-black/40 shrink-0" />
                           </button>
                         );
                       })}

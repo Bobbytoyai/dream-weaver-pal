@@ -42,23 +42,23 @@ const ConfidentialiteTab = ({
   // ── Sub-section: Sécurité ──
   if (confSection === "securite") return (
     <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-      <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
+      <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-black hover:opacity-70 mb-1 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
         <ChevronLeft className="w-4 h-4" /> CONFIDENTIALITÉ
       </button>
       <Card title="Code PIN parental" icon={Lock}>
-        <p className="text-[10px] text-foreground/60 mb-3 leading-tight font-bold">Protège l'accès au Mode Parent avec un code à 4 chiffres</p>
+        <p className="text-[10px] text-black/60 mb-3 leading-tight font-bold">Protège l'accès au Mode Parent avec un code à 4 chiffres</p>
         <div className="flex gap-2 items-center">
           <input type="password" maxLength={4} inputMode="numeric" pattern="[0-9]*"
             value={settings.parentPin}
             onChange={(e) => { const val = e.target.value.replace(/\D/g, "").slice(0, 4); onUpdate("parentPin", val); }}
             placeholder="● ● ● ●"
-            className="flex-1 px-4 py-2.5 bg-white text-sm text-foreground text-center tracking-[0.5em] placeholder:text-foreground/40 border-4 border-black outline-none font-mono font-black" />
+            className="flex-1 px-4 py-2.5 bg-white text-sm text-black text-center tracking-[0.5em] placeholder:text-black/40 border-4 border-black outline-none font-mono font-black" />
           {settings.parentPin.length === 4 && (
-            <span className="text-[11px] text-foreground font-black flex items-center gap-1"><Shield className="w-3.5 h-3.5" /> Actif</span>
+            <span className="text-[11px] text-black font-black flex items-center gap-1"><Shield className="w-3.5 h-3.5" /> Actif</span>
           )}
         </div>
         {settings.parentPin.length === 4 && (
-          <button onClick={() => onUpdate("parentPin", "")} className="mt-2 text-[11px] text-foreground font-black hover:underline uppercase">Supprimer le code PIN</button>
+          <button onClick={() => onUpdate("parentPin", "")} className="mt-2 text-[11px] text-black font-black hover:underline uppercase">Supprimer le code PIN</button>
         )}
       </Card>
       <Card title="Niveau de filtrage" icon={Shield}>
@@ -72,8 +72,8 @@ const ConfidentialiteTab = ({
               <div className="flex items-center gap-3">
                 <span className="text-xl">{emoji}</span>
                 <div>
-                  <h4 className="text-[12px] font-black text-foreground uppercase">{label}</h4>
-                  <p className="text-[10px] text-foreground/60 mt-0.5 font-bold">{desc}</p>
+                  <h4 className="text-[12px] font-black text-black uppercase">{label}</h4>
+                  <p className="text-[10px] text-black/60 mt-0.5 font-bold">{desc}</p>
                 </div>
               </div>
             </button>
@@ -94,11 +94,11 @@ const ConfidentialiteTab = ({
         </div>
       </Card>
       <Card title="Mot de sécurité" icon={AlertTriangle}>
-        <p className="text-[10px] text-foreground/60 mb-3 leading-tight font-bold">Si l'enfant dit ce mot, Bobby réagit immédiatement</p>
+        <p className="text-[10px] text-black/60 mb-3 leading-tight font-bold">Si l'enfant dit ce mot, Bobby réagit immédiatement</p>
         <input type="text" value={settings.safeWord}
           onChange={(e) => onUpdate("safeWord", e.target.value.slice(0, 30))}
           placeholder="Ex: 'au secours', 'aide-moi'…"
-          className="w-full px-4 py-2.5 bg-white text-sm text-foreground placeholder:text-foreground/40 border-4 border-black outline-none font-bold mb-3" />
+          className="w-full px-4 py-2.5 bg-white text-sm text-black placeholder:text-black/40 border-4 border-black outline-none font-bold mb-3" />
         {settings.safeWord.trim() && (
           <div className="grid grid-cols-3 gap-2">
             {([
@@ -109,7 +109,7 @@ const ConfidentialiteTab = ({
               <button key={val} onClick={() => onUpdate("safeWordAction", val)}
                 className={`p-3 text-center transition-all border-2 border-black ${settings.safeWordAction === val ? "bg-[var(--retro-green)] ring-2 ring-foreground/20" : "bg-white hover:bg-[var(--retro-yellow)]"}`}>
                 <span className="text-lg block">{emoji}</span>
-                <span className={`text-[10px] font-black ${settings.safeWordAction === val ? "text-foreground" : "text-foreground/70"} uppercase`}>{label}</span>
+                <span className={`text-[10px] font-black ${settings.safeWordAction === val ? "text-black" : "text-black/70"} uppercase`}>{label}</span>
               </button>
             ))}
           </div>
@@ -121,7 +121,7 @@ const ConfidentialiteTab = ({
   // ── Sub-section: Données ──
   if (confSection === "donnees") return (
     <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-      <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
+      <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-black hover:opacity-70 mb-1 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
         <ChevronLeft className="w-4 h-4" /> CONFIDENTIALITÉ
       </button>
       <Card title="Collecte de données" icon={Eye}>
@@ -140,10 +140,10 @@ const ConfidentialiteTab = ({
             <div key={cat.id} className="p-3 border-2 border-black bg-white">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-lg">{cat.emoji}</span>
-                <span className="text-[11px] font-mono font-black text-foreground border-2 border-black px-2 py-0.5 bg-[var(--retro-yellow)]">{cat.count}</span>
+                <span className="text-[11px] font-mono font-black text-black border-2 border-black px-2 py-0.5 bg-[var(--retro-yellow)]">{cat.count}</span>
               </div>
-              <h4 className="text-[12px] font-black text-foreground uppercase">{cat.label}</h4>
-              <p className="text-[9px] text-foreground/60 font-bold">{cat.desc}</p>
+              <h4 className="text-[12px] font-black text-black uppercase">{cat.label}</h4>
+              <p className="text-[9px] text-black/60 font-bold">{cat.desc}</p>
             </div>
           ))}
         </div>
@@ -159,7 +159,7 @@ const ConfidentialiteTab = ({
             <button key={val} onClick={() => onUpdate("dataRetention", val)}
               className={`p-3 text-center transition-all border-2 border-black ${settings.dataRetention === val ? "bg-[var(--retro-green)] ring-2 ring-foreground/20" : "bg-white hover:bg-[var(--retro-yellow)]"}`}>
               <span className="text-xl block mb-1">{emoji}</span>
-              <span className={`text-[11px] font-black ${settings.dataRetention === val ? "text-foreground" : "text-foreground/70"} uppercase`}>{label}</span>
+              <span className={`text-[11px] font-black ${settings.dataRetention === val ? "text-black" : "text-black/70"} uppercase`}>{label}</span>
             </button>
           ))}
         </div>
@@ -190,10 +190,10 @@ const ConfidentialiteTab = ({
               className="w-full flex items-center gap-3 p-3 border-2 border-black bg-white hover:bg-[var(--retro-red)] transition-all text-left">
               <span className="text-lg">{item.emoji}</span>
               <div className="flex-1">
-                <h4 className="text-[12px] font-black text-foreground uppercase">{item.label}</h4>
-                <p className="text-[9px] text-foreground/60 font-bold">{item.desc}</p>
+                <h4 className="text-[12px] font-black text-black uppercase">{item.label}</h4>
+                <p className="text-[9px] text-black/60 font-bold">{item.desc}</p>
               </div>
-              <Trash2 className="w-4 h-4 text-foreground" />
+              <Trash2 className="w-4 h-4 text-black" />
             </button>
           ))}
         </div>
@@ -204,7 +204,7 @@ const ConfidentialiteTab = ({
   // ── Sub-section: RGPD ──
   if (confSection === "rgpd") return (
     <div className="p-4 space-y-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
-      <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-foreground hover:opacity-70 mb-1 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
+      <button onClick={() => setConfSection(null)} className="flex items-center gap-1.5 text-[13px] font-black uppercase text-black hover:opacity-70 mb-1 transition-all border-2 border-black px-3 py-1.5 bg-white" style={{ fontFamily: "'Nunito', sans-serif" }}>
         <ChevronLeft className="w-4 h-4" /> CONFIDENTIALITÉ
       </button>
       <Card title="Vos droits (RGPD)" icon={FileText}>
@@ -257,8 +257,8 @@ const ConfidentialiteTab = ({
               }}
               className="p-3 text-left transition-all border-2 border-black bg-white hover:bg-[var(--retro-yellow)]">
               <span className="text-xl block mb-1">{emoji}</span>
-              <h4 className="text-[12px] font-black text-foreground uppercase">{label}</h4>
-              <p className="text-[9px] text-foreground/60 font-bold">{desc}</p>
+              <h4 className="text-[12px] font-black text-black uppercase">{label}</h4>
+              <p className="text-[9px] text-black/60 font-bold">{desc}</p>
             </button>
           ))}
         </div>
@@ -275,7 +275,7 @@ const ConfidentialiteTab = ({
 
   return (
     <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
-      <h2 className="text-[16px] font-black text-foreground animate-fadeInUp uppercase" style={{ animationDelay: "0.05s" }}>🔒 Confidentialité</h2>
+      <h2 className="text-[16px] font-black text-black animate-fadeInUp uppercase" style={{ animationDelay: "0.05s" }}>🔒 Confidentialité</h2>
       <div className="grid grid-cols-2 gap-3">
         {confCards.map((card, i) => (
           <button key={card.id} onClick={() => setConfSection(card.id)}

@@ -40,19 +40,19 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({
     {/* Header */}
     <div className="flex items-center justify-between px-4 py-3 border-b-2 border-black">
       <div className="flex items-center gap-2">
-        <Bell className="w-4 h-4 text-foreground" />
-        <h3 className="text-[13px] font-black text-foreground uppercase">Notifications</h3>
+        <Bell className="w-4 h-4 text-black" />
+        <h3 className="text-[13px] font-black text-black uppercase">Notifications</h3>
         {unreadCount > 0 && (
-          <span className="text-[10px] px-2 py-0.5 border-2 border-black bg-[var(--retro-red)] text-foreground font-black">{unreadCount}</span>
+          <span className="text-[10px] px-2 py-0.5 border-2 border-black bg-[var(--retro-red)] text-black font-black">{unreadCount}</span>
         )}
       </div>
       <div className="flex items-center gap-1">
         {unreadCount > 0 && (
-          <button onClick={onMarkAllRead} className="text-[10px] text-foreground font-black hover:underline uppercase">
+          <button onClick={onMarkAllRead} className="text-[10px] text-black font-black hover:underline uppercase">
             Tout lu
           </button>
         )}
-        <button onClick={onClose} className="w-7 h-7 border border-black flex items-center justify-center text-foreground hover:bg-[var(--retro-yellow)]">
+        <button onClick={onClose} className="w-7 h-7 border border-black flex items-center justify-center text-black hover:bg-[var(--retro-yellow)]">
           <X className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -63,7 +63,7 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({
       {alerts.length === 0 ? (
         <div className="p-6 text-center">
           <span className="text-2xl">✅</span>
-          <p className="text-[12px] text-foreground/60 mt-2 font-bold">Aucune alerte</p>
+          <p className="text-[12px] text-black/60 mt-2 font-bold">Aucune alerte</p>
         </div>
       ) : (
         alerts.slice(0, 20).map(alert => {
@@ -79,10 +79,10 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({
               <div className="flex items-start gap-2">
                 <span className="text-sm mt-0.5">{cfg.icon}</span>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-[12px] ${!alert.is_read ? "font-black text-foreground" : "font-bold text-foreground/60"} line-clamp-2`}>
+                  <p className={`text-[12px] ${!alert.is_read ? "font-black text-black" : "font-bold text-black/60"} line-clamp-2`}>
                     {alert.message}
                   </p>
-                  <p className="text-[10px] text-foreground/50 mt-0.5 font-bold">{alert.child_name} • {timeAgo(alert.created_at)}</p>
+                  <p className="text-[10px] text-black/50 mt-0.5 font-bold">{alert.child_name} • {timeAgo(alert.created_at)}</p>
                 </div>
                 {!alert.is_read && <span className="w-2 h-2 bg-foreground mt-1.5 shrink-0" />}
               </div>

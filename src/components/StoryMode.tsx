@@ -187,7 +187,7 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
         </div>
 
         {/* Story title / status */}
-        <p className="mt-2 text-sm font-bold text-foreground/70 tracking-wide uppercase">
+        <p className="mt-2 text-sm font-bold text-black/70 tracking-wide uppercase">
           {phase === "pick" && "Choisis un thème !"}
           {phase === "loading" && "Préparation de l'histoire…"}
           {phase === "telling" && (storyTitle || "Il était une fois…")}
@@ -217,12 +217,12 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
                 <button key={t.id} onClick={() => startStory(t.id)}
                   className="flex flex-col items-center gap-1.5 py-4 px-2 rounded-3xl bg-white/70 backdrop-blur-sm border border-border/40 shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300">
                   <span className="text-3xl">{t.emoji}</span>
-                  <span className="text-xs font-bold text-foreground">{t.label}</span>
+                  <span className="text-xs font-bold text-black">{t.label}</span>
                 </button>
               ))}
             </div>
             <button onClick={onBack}
-              className="flex items-center justify-center gap-2 w-full py-3 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors duration-300">
+              className="flex items-center justify-center gap-2 w-full py-3 text-sm font-semibold text-muted-foreground hover:text-black transition-colors duration-300">
               <ArrowLeft className="w-4 h-4" />
               Retour
             </button>
@@ -244,11 +244,11 @@ export default function StoryMode({ childName, childAge, onBack, parentSettings,
               🔄 Encore une !
             </button>
             <button onClick={() => { setPhase("pick"); setSentences([]); setIsStoryComplete(false); }}
-              className="w-full py-3.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/40 text-foreground font-bold text-sm shadow-sm hover:shadow-md transition-all duration-300">
+              className="w-full py-3.5 rounded-full bg-white/70 backdrop-blur-sm border border-border/40 text-black font-bold text-sm shadow-sm hover:shadow-md transition-all duration-300">
               📚 Autre thème
             </button>
             <button onClick={onBack}
-              className="flex items-center justify-center gap-2 w-full py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors duration-300">
+              className="flex items-center justify-center gap-2 w-full py-2.5 text-sm text-muted-foreground hover:text-black transition-colors duration-300">
               <ArrowLeft className="w-4 h-4" />
               Retour
             </button>

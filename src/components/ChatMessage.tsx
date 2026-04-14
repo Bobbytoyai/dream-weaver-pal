@@ -32,7 +32,7 @@ const ChatMessage = ({ content, isUser, isTyping }: ChatMessageProps) => {
             <span className="w-2 h-2 rounded-full bg-muted-foreground typing-dot" style={{ animationDelay: "0.4s" }} />
           </div>
         ) : (
-          <span className={isUser ? "text-primary-foreground" : "text-foreground"}>{content}</span>
+          <span className={isUser ? "text-primary-foreground" : "text-black"}>{content}</span>
         )}
       </div>
     </div>

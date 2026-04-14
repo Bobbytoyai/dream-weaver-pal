@@ -58,7 +58,7 @@ export default function VoicePickerStep({ childName, selectedVoice, onSelect, on
         <div className="absolute inset-0 rounded-full bg-[hsla(var(--primary),0.15)] blur-2xl scale-150 glow-pulse" />
         <HologramFace voiceState={playing ? "speaking" : "idle"} enableCamera={false} emotionOverride={playing ? "happy" : undefined} />
       </div>
-      <h2 className="text-3xl font-extrabold text-foreground mb-2 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
+      <h2 className="text-3xl font-extrabold text-black mb-2 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         Quelle voix pour Bobby ?
       </h2>
       <p className="text-muted-foreground text-sm mb-5 animate-fadeInUp" style={{ animationDelay: "0.1s" }}>
@@ -82,7 +82,7 @@ export default function VoicePickerStep({ childName, selectedVoice, onSelect, on
             >
               <span className={`text-2xl transition-transform duration-300 ${isSelected ? "scale-110" : ""}`}>{v.emoji}</span>
               <div className="flex-1 text-left">
-                <div className="font-bold text-foreground text-base leading-tight">{v.label}</div>
+                <div className="font-bold text-black text-base leading-tight">{v.label}</div>
                 <div className="text-muted-foreground text-[11px]">{v.voiceName}</div>
                 <div className="text-muted-foreground/70 text-xs">{v.desc}</div>
               </div>
@@ -94,7 +94,7 @@ export default function VoicePickerStep({ childName, selectedVoice, onSelect, on
                 className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
                   isPlaying
                     ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-md shadow-[hsla(200,100%,60%,0.3)] scale-110"
-                    : "bg-[hsl(var(--muted))] text-muted-foreground hover:bg-[hsl(var(--primary))]/30 hover:text-foreground hover:scale-105"
+                    : "bg-[hsl(var(--muted))] text-muted-foreground hover:bg-[hsl(var(--primary))]/30 hover:text-black hover:scale-105"
                 }`}
               >
                 {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
