@@ -258,11 +258,10 @@ export function useBobbyVoiceCore({
     lastAiResponseRef.current = text;
     recentBobbyMessagesRef.current = [text.toLowerCase(), ...recentBobbyMessagesRef.current.slice(0, 4)];
 
-    eventBus.emit({ type: "SPEECH_START" });
-
     try {
       const audioUrl = await fetchTTSAudio(text, controller.signal, resolveVoiceProfile(parentSettings));
       if (!controller.signal.aborted) {
+        eventBus.emit({ type: "SPEECH_START" });
         await playGeneratedAudio(audioUrl, controller.signal);
       }
     } catch (error) {
