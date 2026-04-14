@@ -93,12 +93,12 @@ describe("buildContextSummary", () => {
 
   it("adds continuity instruction for detected topic", () => {
     const msgs = [
-      { role: "user" as const, content: "j'aime l'école" },
+      { role: "user" as const, content: "mon chat est mignon" },
       { role: "assistant" as const, content: "super !" },
     ];
     const summary = buildContextSummary(msgs);
     expect(summary).toContain("CONSIGNE DE CONTINUITÉ");
-    expect(summary).toContain("école");
+    expect(summary).toContain("animaux");
   });
 });
 
