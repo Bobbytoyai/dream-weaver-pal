@@ -86,6 +86,112 @@ function getAgePrompt(age: number): string {
   return `L'enfant a ${age} ans. Vocabulaire riche et varié. Humour. Préoccupations plus profondes possibles. Sois authentique, pas condescendant.`;
 }
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// KB SEMANTIC SEARCH — server-side scoring
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function normalizeText(text: string): string {
+  return text.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9àâäéèêëïîôùûüÿçœæ\s'-]/g, " ")
+    .replace(/\s+/g, " ").trim();
+}
+
+function tokenize(text: string): string[] {
+  const stopwords = new Set([
+    "le","la","les","un","une","des","du","de","et","en","est","que","qui",
+    "quoi","dans","pour","pas","sur","avec","ce","se","son","sa","ses","au",
+    "aux","tu","je","il","elle","on","nous","vous","ils","elles","mon","ma",
+    "mes","ton","ta","tes","a","ai","as","es","suis","sont","ne","ni","ou",
+    "mais","donc","car","si","ca","ça","très","plus","bien","aussi","tout",
+    "faire","fait","dit","dire","peut","faut","quel","quelle","quels","quelles",
+    "comment","pourquoi","quand","où","moi","toi","lui","y","c","d","l","n","s","j",
+  ]);
+  return normalizeText(text).split(/\s+/).filter(w => w.length > 1 && !stopwords.has(w));
+}
+
+interface KBMatch {
+  question: string;
+  answer: string;
+  category: string;
+  score: number;
+}
+
+async function queryKBForContext(
+  userText: string,
+  childAge: number,
+  sb: ReturnType<typeof createClient>,
+): Promise<KBMatch[]> {
+  const tokens = tokenize(userText);
+  if (tokens.length === 0) return [];
+
+  try {
+    const { data: entries, error } = await sb
+      .from("knowledge_base")
+      .select("question, answer, category, keywords, priority, trust_score, age_min, age_max")
+      .eq("is_active", true)
+      .lte("age_min", childAge)
+      .gte("age_max", childAge)
+      .limit(500);
+
+    if (error || !entries?.length) return [];
+
+    const scored: KBMatch[] = [];
+    const inputNorm = normalizeText(userText);
+
+    for (const entry of entries) {
+      const entryTokens = tokenize(entry.question);
+      const keywords: string[] = entry.keywords || [];
+      const allEntryTokens = [...new Set([...entryTokens, ...keywords.map(k => normalizeText(k))])];
+
+      // Keyword overlap score
+      let kwMatches = 0;
+      for (const t of tokens) {
+        if (allEntryTokens.some(et => et.includes(t) || t.includes(et))) kwMatches++;
+      }
+      const kwScore = tokens.length > 0 ? kwMatches / tokens.length : 0;
+
+      // Question containment
+      const qNorm = normalizeText(entry.question);
+      const containment = inputNorm.includes(qNorm) || qNorm.includes(inputNorm) ? 1.0 :
+        entryTokens.length > 0 ? entryTokens.filter(t => inputNorm.includes(t)).length / entryTokens.length : 0;
+
+      const rawScore = Math.max(kwScore, containment);
+      const priorityFactor = 0.5 + ((entry.priority || 5) / 10) * 0.5;
+      const trustFactor = entry.trust_score ?? 0.5;
+      const finalScore = rawScore * priorityFactor * (0.5 + trustFactor * 0.5);
+
+      if (finalScore >= 0.3) {
+        scored.push({
+          question: entry.question,
+          answer: entry.answer,
+          category: entry.category || "general",
+          score: finalScore,
+        });
+      }
+    }
+
+    scored.sort((a, b) => b.score - a.score);
+    return scored.slice(0, 3); // Top 3 matches
+  } catch (e) {
+    console.error("[KB Query] Error:", e);
+    return [];
+  }
+}
+
+function buildKBContextBlock(matches: KBMatch[]): string {
+  if (matches.length === 0) return "";
+
+  const lines = matches.map((m, i) =>
+    `${i + 1}. Q: "${m.question}" → R: "${m.answer}" [${m.category}, score: ${m.score.toFixed(2)}]`
+  );
+
+  return `\n\n═══ RÉPONSES DE RÉFÉRENCE (Base de connaissances Bobby) ═══
+Les réponses ci-dessous proviennent de ta base de connaissances validée. Si une question correspond bien, UTILISE cette réponse comme base (tu peux la reformuler avec ton style naturel, mais garde le contenu et le message principal). Si aucune ne correspond vraiment, ignore-les et réponds librement.
+
+${lines.join("\n")}`;
+}
+
 // ━━━ Safety alert keywords ━━━
 const SAFETY_PATTERNS: { pattern: RegExp; type: string; severity: string; label: string }[] = [
   { pattern: /bousculer|bouscul[ée]|pousse|pouss[ée]/i, type: "violence", severity: "high", label: "Bousculade signalée" },
@@ -120,7 +226,6 @@ async function checkAndAlertSafety(
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Pick highest severity
     const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
     triggered.sort((a, b) => (severityOrder[a.severity as keyof typeof severityOrder] ?? 3) - (severityOrder[b.severity as keyof typeof severityOrder] ?? 3));
     const top = triggered[0];
@@ -165,7 +270,26 @@ serve(async (req) => {
     const agePrompt = getAgePrompt(childAge || 6);
     const contextBlock = contextSummary ? `\n\nCONTEXTE DE SESSION :\n${contextSummary}` : "";
 
-    const systemContent = `${SYSTEM_PROMPT}\n\nADAPTATION ÂGE :\n${agePrompt}${personalityHint}${contextBlock}\n\nIMPORTANT : Ne mentionne JAMAIS le prénom de l'enfant. Utilise "tu/toi" uniquement.`;
+    // ── KB Context injection ──
+    const lastUserMsg = (messages || []).filter((m: { role: string }) => m.role === "user").pop();
+    let kbBlock = "";
+    if (lastUserMsg?.content) {
+      try {
+        const sb = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+        );
+        const kbMatches = await queryKBForContext(lastUserMsg.content, childAge || 6, sb);
+        kbBlock = buildKBContextBlock(kbMatches);
+        if (kbMatches.length > 0) {
+          console.log(`[KB] Injected ${kbMatches.length} matches (top: ${kbMatches[0].score.toFixed(2)} "${kbMatches[0].question.slice(0, 50)}")`);
+        }
+      } catch (e) {
+        console.warn("[KB] Query failed, continuing without KB context:", e);
+      }
+    }
+
+    const systemContent = `${SYSTEM_PROMPT}\n\nADAPTATION ÂGE :\n${agePrompt}${personalityHint}${contextBlock}${kbBlock}\n\nIMPORTANT : Ne mentionne JAMAIS le prénom de l'enfant. Utilise "tu/toi" uniquement.`;
 
     // Keep up to 50 messages for long conversations
     const sanitizedMessages = (messages || []).slice(-50).map((m: { role: string; content: string }) => ({
