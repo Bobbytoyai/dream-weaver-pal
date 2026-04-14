@@ -508,17 +508,17 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       }
     }
 
-    // Tongue — cute pink shape inside open mouth, never exceeds mouth bounds
+    // Tongue — visible as soon as mouth starts opening
     if (tongueRef.current) {
-      const showTongue = mo > 0.06;
-      const targetOpacity = showTongue ? Math.min(0.7, (mo - 0.06) * 2.5) : 0;
-      tongueMat.opacity += (targetOpacity - tongueMat.opacity) * delta * 8;
-      // Keep tongue well inside the mouth — position relative to mouth opening
-      const mouthBottomY = -0.44 - (mo * 0.14 + mr * 0.10) * 0.5;
-      tongueRef.current.position.y = Math.max(mouthBottomY + 0.03, -0.44 - mo * 0.04);
-      const tongueMaxW = (0.14 + mw * 0.08) * 0.55; // never wider than ~55% of mouth
-      const tongueScale = Math.min(tongueMaxW / 0.06, 0.5 + mo * 0.8);
-      tongueRef.current.scale.set(tongueScale, tongueScale * 0.5, 1);
+      const showTongue = mo > 0.03;
+      const targetOpacity = showTongue ? Math.min(0.9, (mo - 0.03) * 4) : 0;
+      tongueMat.opacity += (targetOpacity - tongueMat.opacity) * delta * 10;
+      // Position tongue inside mouth cavity
+      const mouthBottomY = -0.44 - (mo * 0.16 + mr * 0.08) * 0.45;
+      tongueRef.current.position.y = Math.max(mouthBottomY + 0.02, -0.44 - mo * 0.06);
+      const tongueMaxW = (0.14 + mw * 0.08) * 0.6;
+      const tongueScale = Math.min(tongueMaxW / 0.06, 0.6 + mo * 1.0);
+      tongueRef.current.scale.set(tongueScale, tongueScale * 0.45, 1);
     }
 
     // Cheeks — glow with emotion
