@@ -16,11 +16,11 @@ const VOICE_MAP: Record<string, string> = {
 
 // Speed multiplier per profile
 const SPEED_MAP: Record<string, number> = {
-  female: 1.15,
-  child:  1.15,
-  male:   1.1,
-  sister: 1.15,
-  brother: 1.1,
+  female: 1.05,
+  child:  1.05,
+  male:   1.0,
+  sister: 1.05,
+  brother: 1.0,
 };
 
 serve(async (req) => {
