@@ -345,16 +345,16 @@ export function useFaceAnimation(
     const eyeDriftX = Math.sin(eyeDriftPhase.current * 1.1) * 0.008 + Math.sin(eyeDriftPhase.current * 2.3) * 0.004;
     const eyeDriftY = Math.cos(eyeDriftPhase.current * 0.9) * 0.005;
 
-    // --- MICRO-EXPRESSIONS (every 2-4s) ---
+    // --- MICRO-EXPRESSIONS (every 1.5-3s, more exaggerated) ---
     microTimer.current += delta;
-    if (microTimer.current > 2 + Math.random() * 2) {
+    if (microTimer.current > 1.5 + Math.random() * 1.5) {
       microTimer.current = 0;
       microOffset.current = {
-        eyebrow: (Math.random() - 0.5) * 0.02,
-        headX: (Math.random() - 0.5) * 0.012,
-        headZ: (Math.random() - 0.5) * 0.018,
-        pupilDrift: (Math.random() - 0.5) * 0.01,
-        mouthQuirk: (Math.random() - 0.5) * 0.01,
+        eyebrow: (Math.random() - 0.5) * 0.06,
+        headX: (Math.random() - 0.5) * 0.025,
+        headZ: (Math.random() - 0.5) * 0.035,
+        pupilDrift: (Math.random() - 0.5) * 0.02,
+        mouthQuirk: (Math.random() - 0.5) * 0.025,
       };
     }
 
