@@ -114,9 +114,17 @@ function getBlockedTopicReply(): BobbyBrainReply {
 // POST-PROCESSING
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-function postProcess(reply: BobbyBrainReply, childName: string, childAge: number, personality: string): BobbyBrainReply {
+function postProcess(
+  reply: BobbyBrainReply,
+  childName: string,
+  childAge: number,
+  personalityCtx: PersonalityContext | null,
+): BobbyBrainReply {
   let text = simplifyForAge(reply.text, childAge);
-  text = applyPersonality(text, personality);
+  if (personalityCtx) {
+    const profile = getPersonalityProfile(personalityCtx);
+    text = applyPersonalityToText(text, profile);
+  }
   return { ...reply, text };
 }
 
