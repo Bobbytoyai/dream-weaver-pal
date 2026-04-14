@@ -62,7 +62,7 @@ export function expandWithSemantics(tokens: string[]): Set<string> {
   for (const t of tokens) {
     const stemmed = stem(t);
     // Check semantic fields for the token and its stem
-    for (const [key, related] of Object.entries(SEMANTIC_FIELDS)) {
+    for (const [key, related] of Object.entries(getSemanticFields())) {
       if (key === t || key === stemmed || t.includes(key) || key.includes(t.length >= 4 ? t : "__")) {
         for (const r of related) expanded.add(r);
       }
