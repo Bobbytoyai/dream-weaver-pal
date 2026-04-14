@@ -514,6 +514,19 @@ export function useBobbyVoiceCore({
       const reply = await buildBobbyReply({ childName, childAge, userText: trimmedText, parentSettings, userId: currentUser?.id, sessionId: sessionIdRef.current });
       await addMessage("assistant", reply.text, reply.emotion);
       await speakReply(reply);
+
+      // If this reply includes a music track, play it after TTS
+      const musicUrl = (reply as any).musicUrl;
+      if (musicUrl) {
+        try {
+          const musicAudio = new Audio(musicUrl);
+          musicAudio.volume = 0.7;
+          musicAudio.play().catch(e => console.warn("[Music] Playback failed:", e));
+          musicAudioRef.current = musicAudio;
+        } catch (e) {
+          console.warn("[Music] Failed to play track:", e);
+        }
+      }
     } finally {
       processingRef.current = false;
     }
