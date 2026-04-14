@@ -85,31 +85,23 @@ function buildEyebrowShape(_archHeight: number = 0.06): THREE.Shape {
 function buildMouthShape(curve: number, width: number, openness: number, round: number): THREE.Shape {
   const shape = new THREE.Shape();
   
-  const halfW = (0.14 + width * 0.08) * (1 - round * 0.35);
+  const halfW = (0.14 + width * 0.08) * (1 - round * 0.2);
   const thickness = 0.040;
   
-  // When is mouth "open"? Only for actual speech/surprise
-  const isOpen = openness > 0.18 || round > 0.12;
+  const isOpen = openness > 0.10 || round > 0.08;
   
   if (!isOpen) {
-    // ── MOUTH LINE — always uses bezier arcs for pointed/tapered ends ──
-    // curve=0 → straight line with pointed ends, positive = smile, negative = sad
-    // The bezier naturally tapers to points at the edges (like Apple emoji mouths)
+    // ── CLOSED MOUTH — bezier smile/neutral/sad arc ──
     const depth = curve * 0.35;
-    const sign = curve >= 0 ? 1 : -1;
-    
-    // Use a tiny minimum depth so the bezier still creates a visible shape even when flat
     const renderDepth = Math.abs(depth) < 0.001 ? 0.001 : depth;
     const renderSign = renderDepth >= 0 ? 1 : -1;
     
-    // Upper arc
     shape.moveTo(-halfW, 0);
     shape.bezierCurveTo(
       -halfW * 0.5, -renderDepth,
       halfW * 0.5, -renderDepth,
       halfW, 0
     );
-    // Lower arc (offset by thickness) — creates tapered pointed ends
     shape.bezierCurveTo(
       halfW * 0.5, -renderDepth - thickness * renderSign,
       -halfW * 0.5, -renderDepth - thickness * renderSign,
@@ -117,19 +109,30 @@ function buildMouthShape(curve: number, width: number, openness: number, round: 
     );
     shape.closePath();
   } else {
-    // ── OPEN MOUTH — ellipse for speech animations ──
-    const ellipseW = halfW * (0.7 + (1 - Math.min(1, round * 2)) * 0.3);
-    const ellipseH = 0.025 + openness * 0.14 + round * 0.10;
-    const yOff = -(curve * 0.08);
+    // ── OPEN MOUTH — organic shape, NOT a perfect ellipse ──
+    // Wider horizontally, more natural with upper/lower lip arcs
+    const mouthW = halfW * (0.75 + (1 - Math.min(1, round * 1.5)) * 0.35);
+    const mouthH = 0.03 + openness * 0.16 + round * 0.08;
+    const yOff = -(curve * 0.06);
     
-    const segments = 32;
-    for (let i = 0; i <= segments; i++) {
-      const angle = (i / segments) * Math.PI * 2;
-      const x = Math.cos(angle) * ellipseW;
-      const y = Math.sin(angle) * ellipseH + yOff;
-      if (i === 0) shape.moveTo(x, y);
-      else shape.lineTo(x, y);
-    }
+    // Upper lip: flatter arc
+    const upperFlatten = 0.6 + round * 0.2; // upper lip less curved
+    // Lower lip: rounder, deeper
+    const lowerDeepen = 1.0 + openness * 0.3;
+    
+    // Draw upper lip arc (left to right)
+    shape.moveTo(-mouthW, yOff);
+    shape.bezierCurveTo(
+      -mouthW * 0.4, yOff + mouthH * upperFlatten,
+      mouthW * 0.4, yOff + mouthH * upperFlatten,
+      mouthW, yOff
+    );
+    // Draw lower lip arc (right to left, goes down)
+    shape.bezierCurveTo(
+      mouthW * 0.5, yOff - mouthH * lowerDeepen,
+      -mouthW * 0.5, yOff - mouthH * lowerDeepen,
+      -mouthW, yOff
+    );
     shape.closePath();
   }
   
@@ -231,9 +234,9 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
     eyelidMat.color.set(col);
   }, [bgHex, eyelidMat]);
 
-  // Cheeks — #FF69B4
+  // Cheeks — #FF69B4 — more visible pink
   const blushMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color: new THREE.Color("#FF85B0"), transparent: true, opacity: 0.35,
+    color: new THREE.Color("#FF85B0"), transparent: true, opacity: 0.55,
   }), []);
 
   // ─── Apply per-element colors ───────────────
@@ -246,7 +249,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       const cheekHex = CHEEK_HEX[bobbyColors.cheek];
       if (cheekHex) {
         blushMat.color.set(cheekHex);
-        blushMat.opacity = 0.35;
+        blushMat.opacity = 0.55;
       } else {
         blushMat.opacity = 0;
       }
@@ -491,39 +494,39 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       }
 
       // Interior (dark fill) — visible when mouth is open
-      const isOpen = mo > 0.18 || mr > 0.12;
+      const isOpen = mo > 0.10 || mr > 0.08;
       if (mouthInteriorRef.current) {
         if (isOpen) {
           const newShape = buildMouthShape(mc, mw, mo * 0.8, mr * 0.8);
           const newGeo = new THREE.ShapeGeometry(newShape, 32);
           mouthInteriorRef.current.geometry.dispose();
           mouthInteriorRef.current.geometry = newGeo;
-          mouthInteriorMat.opacity = Math.min(0.85, mo * 3 + mr * 2);
+          mouthInteriorMat.opacity = Math.min(0.9, mo * 4 + mr * 2.5);
         } else {
           mouthInteriorMat.opacity = 0;
         }
       }
     }
 
-    // Tongue — cute pink shape inside open mouth, never exceeds mouth bounds
+    // Tongue — visible as soon as mouth starts opening
     if (tongueRef.current) {
-      const showTongue = mo > 0.06;
-      const targetOpacity = showTongue ? Math.min(0.7, (mo - 0.06) * 2.5) : 0;
-      tongueMat.opacity += (targetOpacity - tongueMat.opacity) * delta * 8;
-      // Keep tongue well inside the mouth — position relative to mouth opening
-      const mouthBottomY = -0.44 - (mo * 0.14 + mr * 0.10) * 0.5;
-      tongueRef.current.position.y = Math.max(mouthBottomY + 0.03, -0.44 - mo * 0.04);
-      const tongueMaxW = (0.14 + mw * 0.08) * 0.55; // never wider than ~55% of mouth
-      const tongueScale = Math.min(tongueMaxW / 0.06, 0.5 + mo * 0.8);
-      tongueRef.current.scale.set(tongueScale, tongueScale * 0.5, 1);
+      const showTongue = mo > 0.03;
+      const targetOpacity = showTongue ? Math.min(0.9, (mo - 0.03) * 4) : 0;
+      tongueMat.opacity += (targetOpacity - tongueMat.opacity) * delta * 10;
+      // Position tongue inside mouth cavity
+      const mouthBottomY = -0.44 - (mo * 0.16 + mr * 0.08) * 0.45;
+      tongueRef.current.position.y = Math.max(mouthBottomY + 0.02, -0.44 - mo * 0.06);
+      const tongueMaxW = (0.14 + mw * 0.08) * 0.6;
+      const tongueScale = Math.min(tongueMaxW / 0.06, 0.6 + mo * 1.0);
+      tongueRef.current.scale.set(tongueScale, tongueScale * 0.45, 1);
     }
 
-    // Cheeks — glow with emotion
+    // Cheeks — more visible pink glow
     const smile = Math.max(0, state.mouthCurve * 2);
     [leftCheekRef, rightCheekRef].forEach(ref => {
       if (ref.current) {
         const mat = ref.current.material as THREE.MeshBasicMaterial;
-        mat.opacity = 0.25 + state.cheekGlow * 0.2 + smile * 0.15;
+        mat.opacity = 0.45 + state.cheekGlow * 0.25 + smile * 0.15;
       }
     });
 
