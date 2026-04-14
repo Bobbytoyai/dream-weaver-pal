@@ -38,6 +38,7 @@ import { orchestrate, recordBobbyResponse, resetOrchestrator, type Orchestration
 import { checkUnderstanding, applyUnderstandingCheck, detectCorrectionSignal, resetFeedbackLoop } from "./v7/understandingLoop";
 import { buildCognitionPlan, resetCognitionV7, type CognitionPlan } from "./v7/cognitionV7";
 import { assembleAndMerge } from "./v7/responseAssembly";
+import { initToM, updateMentalModel, getToMSnapshot, applyToMToResponse, resetToM } from "./v8/theoryOfMind";
 import {
   loadPersistentMemory,
   savePersistentMemory,
@@ -134,11 +135,16 @@ function postProcess(
   childName: string,
   childAge: number,
   personalityCtx: PersonalityContext | null,
+  tomSnap?: ReturnType<typeof getToMSnapshot> | null,
 ): BobbyBrainReply {
   let text = simplifyForAge(reply.text, childAge);
   if (personalityCtx) {
     const profile = getPersonalityProfile(personalityCtx);
     text = applyPersonalityToText(text, profile);
+  }
+  // V8: Apply Theory of Mind adjustments (vocabulary, fantasy protection)
+  if (tomSnap) {
+    text = applyToMToResponse(text, tomSnap);
   }
   return { ...reply, text };
 }
@@ -220,11 +226,13 @@ export function resetBobbyBrainSession() {
   resetOrchestrator();
   resetFeedbackLoop();
   resetCognitionV7();
+  resetToM();
   clearResponseCache().catch(() => {});
 }
 
-export async function initBobbySession(childName: string): Promise<void> {
+export async function initBobbySession(childName: string, childAge?: number): Promise<void> {
   await loadPersistentMemory(childName);
+  if (childAge) initToM(childAge);
   console.log("[Brain] 🧠 Persistent memory loaded for", childName);
 }
 
@@ -395,6 +403,13 @@ export async function buildBobbyReply({
     `[Brain V7] 🧠 Deep Understanding: explicit=${understanding.explicitIntent} implicit=${understanding.implicitIntent} need=${understanding.emotionalNeed}(${understanding.needIntensity}) goal=${understanding.userGoal} ambiguity=${understanding.ambiguityScore.toFixed(2)}${understanding.requiresConfirmation ? " ⚠️ CONFIRM" : ""}`
   );
 
+  // ── V8: THEORY OF MIND — update mental model ──
+  const mentalModel = updateMentalModel(understanding, userText, childAge);
+  const tomSnapshot = getToMSnapshot();
+  console.log(
+    `[Brain V8] 🧠 ToM: cognitive=${mentalModel.understanding.cognitiveLevel} vocab=${mentalModel.understanding.vocabularyLevel} surface=${mentalModel.emotionalState.surfaceEmotion} inferred=${mentalModel.emotionalState.inferredEmotion} delta=${mentalModel.emotionalState.emotionDelta.toFixed(2)} trajectory=${mentalModel.emotionalState.emotionalTrajectory} | ${tomSnapshot.tomInfluence}`
+  );
+
   // ── V7: PRIORITY ENGINE — 5-dimension scoring ──
   const priority = computePriority(understanding, v7Session, createDefaultMemoryContext());
   console.log(
@@ -481,7 +496,7 @@ export async function buildBobbyReply({
     }
   }
   if (localReply.confidence >= LAYER1_CONFIDENCE) {
-    let reply = postProcess(localReply, childName, childAge, personalityCtx);
+    let reply = postProcess(localReply, childName, childAge, personalityCtx, tomSnapshot);
     // V7: Structured response assembly (opening + content + closing)
     reply = assembleAndMerge(reply, cognitionPlan, understanding, childName);
     const totalMs = performance.now() - pipelineStart;
@@ -497,7 +512,7 @@ export async function buildBobbyReply({
     const layer2Ms = performance.now() - layer2Start;
 
     if (kbReply && kbReply.confidence >= LAYER2_CONFIDENCE) {
-      let reply = postProcess(kbReply, childName, childAge, personalityCtx);
+      let reply = postProcess(kbReply, childName, childAge, personalityCtx, tomSnapshot);
       reply = assembleAndMerge(reply, cognitionPlan, understanding, childName);
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain V7] ✅ L2 KB → conf=${kbReply.confidence.toFixed(2)} | goal=${cognitionPlan.why.primaryGoal} (L2: ${layer2Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
@@ -526,7 +541,7 @@ export async function buildBobbyReply({
   }
 
   // ── FALLBACK: Use Layer 1 response (always available offline) ──
-  let reply = postProcess(localReply, childName, childAge, personalityCtx);
+  let reply = postProcess(localReply, childName, childAge, personalityCtx, tomSnapshot);
   reply = assembleAndMerge(reply, cognitionPlan, understanding, childName);
 
   const totalMs = performance.now() - pipelineStart;
