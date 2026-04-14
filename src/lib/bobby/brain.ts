@@ -18,6 +18,13 @@ import {
   mergeInterestScores,
   resetPersistentMemoryCache,
 } from "./persistentMemory";
+import {
+  isGameActive,
+  detectGameRequest,
+  startGame,
+  processGameTurn,
+  resetGames,
+} from "./offlineGames";
 
 interface BuildBobbyReplyOptions {
   childName: string;
