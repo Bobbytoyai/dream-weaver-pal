@@ -194,6 +194,11 @@ function applyOrchestration(
     }
   }
 
+  // V8: Inject proactive initiative as follow-up
+  if (proactiveInitiative && proactiveInitiative.nonIntrusiveLevel >= 0.5) {
+    reply.text = reply.text.replace(/[.!?…]*\s*$/, ". ") + proactiveInitiative.content;
+  }
+
   // Record Bobby's response in the scene
   recordBobbyResponse(reply.text);
 
