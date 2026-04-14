@@ -147,6 +147,15 @@ function postProcess(
   if (tomSnap) {
     text = applyToMToResponse(text, tomSnap);
   }
+  // V8: Apply Child World Model adaptation (working memory, abstract→concrete, time)
+  const worldCheck = adaptToChildWorld(text, childAge, tomSnap);
+  if (worldCheck.appliedRules.length > 0) {
+    console.log(`[Brain V8] 🌍 World Model: ${worldCheck.appliedRules.join(", ")}`);
+  }
+  if (worldCheck.warnings.length > 0) {
+    console.log(`[Brain V8] 🌍 World warnings: ${worldCheck.warnings.join("; ")}`);
+  }
+  text = worldCheck.adjusted;
   return { ...reply, text };
 }
 
