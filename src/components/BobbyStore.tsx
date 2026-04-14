@@ -612,6 +612,10 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
           detailsLoading={detailLoadingId === selectedItem.id}
           onInstall={() => toggleInstall(selectedItem.id)}
           onBack={() => setSelectedItem(null)}
+          onRatingUpdate={(newRating, newCount) => {
+            setItems(prev => prev.map(i => i.id === selectedItem.id ? { ...i, rating: newRating, rating_count: newCount } : i));
+            setSelectedItem(prev => prev ? { ...prev, rating: newRating, rating_count: newCount } : prev);
+          }}
         />
       </div>
     );
