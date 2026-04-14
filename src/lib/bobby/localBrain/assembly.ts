@@ -63,7 +63,7 @@ export function assembleResponse(
     }
   }
 
-  let text = parts.join(" ");
+  let text = parts.join(" ").replace(/\{child_name\}/g, childName);
 
   // Topic continuity — if same topic, add depth
   if (mem.currentTopic && mem.topicDepth >= 2 && Math.random() < 0.3) {
