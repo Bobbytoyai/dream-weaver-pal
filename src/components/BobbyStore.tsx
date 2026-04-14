@@ -360,6 +360,12 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>("all");
 
   const [loadError, setLoadError] = useState(false);
+  const [quota, setQuota] = useState<CloudUsage | null>(null);
+
+  // Fetch quota
+  useEffect(() => {
+    if (user) getCloudUsage().then(setQuota).catch(() => {});
+  }, [user]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
