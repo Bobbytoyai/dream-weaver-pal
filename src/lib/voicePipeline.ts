@@ -56,6 +56,14 @@ function cacheAudio(key: string, blobUrl: string) {
   audioCache.set(key, blobUrl);
 }
 
+// ─── Age-adaptive speed context ─────────────────────────────
+let _currentChildAge: number | null = null;
+
+/** Set current child age for TTS speed adaptation */
+export function setTTSChildAge(age: number) {
+  _currentChildAge = age;
+}
+
 // ─── ElevenLabs TTS (cloud, low latency) ────────────────────
 async function speakWithElevenLabs(
   text: string,
@@ -70,7 +78,7 @@ async function speakWithElevenLabs(
     throw new Error("Missing Supabase config");
   }
 
-  console.log(`[TTS] 🔄 Calling ElevenLabs for profile="${profile}", text="${text.slice(0, 40)}..."`);
+  console.log(`[TTS] 🔄 Calling ElevenLabs for profile="${profile}", age=${_currentChildAge}, text="${text.slice(0, 40)}..."`);
 
   const response = await fetch(
     `${supabaseUrl}/functions/v1/elevenlabs-tts`,
@@ -81,7 +89,7 @@ async function speakWithElevenLabs(
         apikey: supabaseKey,
         Authorization: `Bearer ${supabaseKey}`,
       },
-      body: JSON.stringify({ text, voiceProfile: profile }),
+      body: JSON.stringify({ text, voiceProfile: profile, childAge: _currentChildAge }),
       signal,
     }
   );

@@ -137,6 +137,13 @@ function getPriorityPhrases(childName: string): string[] {
 }
 
 // ─── Fetch TTS audio (raw, for caching) — uses ElevenLabs ───
+let _cacheChildAge: number | null = null;
+
+/** Set child age for cache TTS speed adaptation */
+export function setCacheChildAge(age: number) {
+  _cacheChildAge = age;
+}
+
 async function fetchRawTTS(text: string, voiceProfile: VoiceProfile): Promise<ArrayBuffer> {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -149,7 +156,7 @@ async function fetchRawTTS(text: string, voiceProfile: VoiceProfile): Promise<Ar
       apikey: supabaseKey,
       Authorization: `Bearer ${supabaseKey}`,
     },
-    body: JSON.stringify({ text, voiceProfile }),
+    body: JSON.stringify({ text, voiceProfile, childAge: _cacheChildAge }),
   });
 
   if (!response.ok) throw new Error(`ElevenLabs TTS failed: ${response.status}`);
