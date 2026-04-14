@@ -916,6 +916,14 @@ export type Database = {
         }
         Returns: string
       }
+      create_bobby_device: {
+        Args: never
+        Returns: {
+          bobby_code: string
+          bobby_id: string
+          parent_code: string
+        }[]
+      }
       create_child_session: {
         Args: { p_child_age: number; p_child_name: string; p_user_id: string }
         Returns: string
