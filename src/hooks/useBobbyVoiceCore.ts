@@ -30,7 +30,7 @@ const CONV_SILENCE_OFF_MS = 60_000;
 const MIN_SESSION_MS = 90_000;
 const SLEEP_TIMER_MS = 120_000;
 const ANTI_ECHO_COOLDOWN_MS = 400;
-const UTTERANCE_BUFFER_MS = 7500;
+const UTTERANCE_BUFFER_MS = 1800;
 const ACK_MIN_INTERVAL_MS = 6000;
 const ACK_MAX_INTERVAL_MS = 12000;
 
@@ -496,20 +496,21 @@ export function useBobbyVoiceCore({
       if (utteranceTimerRef.current) { clearTimeout(utteranceTimerRef.current); utteranceTimerRef.current = null; }
       setLastRecognized(trimmedText);
 
-      // Empathetic pre-reaction
-      const { detectChildExpression } = await import("@/lib/emotionMapper");
-      const childExpr = detectChildExpression(trimmedText, parentSettings?.childAge ?? 7);
+      // Empathetic pre-reaction (sync import — no dynamic import delay)
+      const childExpr = detectBobbyExpression(trimmedText, parentSettings?.childAge ?? 7);
       setCurrentEmotion(childExpr.faceState);
       setCurrentExpressionCombo(childExpr.expression.combo);
       setCurrentExpressionIntensity(childExpr.expression.intensity);
 
       eventBus.emit({ type: "VOICE_INPUT", transcript: trimmedText });
 
-      await ensureSession();
-      await addMessage("user", trimmedText);
-
-      const { supabase: sb } = await import("@/integrations/supabase/client");
-      const { data: { user: currentUser } } = await sb.auth.getUser();
+      // Parallelize session + auth
+      const [, , authResult] = await Promise.all([
+        ensureSession(),
+        addMessage("user", trimmedText),
+        import("@/integrations/supabase/client").then(m => m.supabase.auth.getUser()),
+      ]);
+      const currentUser = authResult.data?.user;
       const reply = await buildBobbyReply({ childName, childAge, userText: trimmedText, parentSettings, userId: currentUser?.id, sessionId: sessionIdRef.current });
       await addMessage("assistant", reply.text, reply.emotion);
       await speakReply(reply);
