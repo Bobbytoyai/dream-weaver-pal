@@ -515,6 +515,27 @@ export function useBobbyVoiceCore({
     }
   }, [addMessage, childAge, childName, clearSilenceTimer, ensureSession, handleSttError, parentSettings, speakReply]);
 
+  // ─── Schedule natural acknowledgment sound ──────────
+  const scheduleAck = useCallback(() => {
+    if (ackTimerRef.current) clearTimeout(ackTimerRef.current);
+    const delay = ACK_MIN_INTERVAL_MS + Math.random() * (ACK_MAX_INTERVAL_MS - ACK_MIN_INTERVAL_MS);
+    ackTimerRef.current = setTimeout(() => {
+      if (machineRef.current !== "LISTENING" || processingRef.current) return;
+      const now = Date.now();
+      if (now - lastAckTimeRef.current < ACK_MIN_INTERVAL_MS) return;
+      lastAckTimeRef.current = now;
+      const ack = pickAck();
+      console.log("[BobbyVoiceCore] 🗣️ Ack:", ack);
+      void playAckSound(ack, resolveVoiceProfile(parentSettings));
+      // Schedule next ack
+      scheduleAck();
+    }, delay);
+  }, [parentSettings]);
+
+  const clearAckTimer = useCallback(() => {
+    if (ackTimerRef.current) { clearTimeout(ackTimerRef.current); ackTimerRef.current = null; }
+  }, []);
+
   // ─── STT setup ─────────────────────────────────────
   const smartSTT = useSmartSTT({
     onPartial: useCallback((text: string) => {
@@ -523,11 +544,14 @@ export function useBobbyVoiceCore({
       setCurrentEmotion("attentive");
       // Reset silence timer on partial speech detection
       if (voiceDetectedRef.current) {
-        // During conversation, reset the 20s silence timer
         clearSilenceTimer();
         scheduleSilenceWatch("conversation");
       }
-    }, [clearSilenceTimer, scheduleSilenceWatch]),
+      // Schedule an acknowledgment sound if child is talking
+      if (!ackTimerRef.current && voiceDetectedRef.current) {
+        scheduleAck();
+      }
+    }, [clearSilenceTimer, scheduleSilenceWatch, scheduleAck]),
     onFinal: useCallback((text: string) => {
       finalTranscriptRef.current(text);
     }, []),
