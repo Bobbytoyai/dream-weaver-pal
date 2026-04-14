@@ -5,6 +5,7 @@ import { installContentPack, uninstallContentPack, getLocalCacheSize, type Insta
 import { getCloudUsage, formatStorage, type CloudUsage } from "@/lib/bobby/cloudQuota";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import PackReviews from "@/components/PackReviews";
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -138,13 +139,14 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
 
 // ─── Product Detail Page ────────────────────────────────────────────
 
-function ProductDetail({ item, installed, installing, detailsLoading, onInstall, onBack }: {
+function ProductDetail({ item, installed, installing, detailsLoading, onInstall, onBack, onRatingUpdate }: {
   item: StoreItem;
   installed: boolean;
   installing: boolean;
   detailsLoading: boolean;
   onInstall: () => void;
   onBack: () => void;
+  onRatingUpdate?: (rating: number, count: number) => void;
 }) {
   const catInfo = CATEGORIES.find(c => c.id === item.category);
   const contentItems = Array.isArray(item.content_items) ? item.content_items : [];
@@ -317,6 +319,9 @@ function ProductDetail({ item, installed, installing, detailsLoading, onInstall,
           <p className="text-[12px] text-black/70 leading-relaxed font-bold">{item.changelog}</p>
         </div>
       )}
+
+      {/* User Reviews */}
+      <PackReviews contentId={item.id} onRatingUpdate={onRatingUpdate} />
 
       {/* Bottom Install */}
       <div className="pb-4">
@@ -607,6 +612,10 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
           detailsLoading={detailLoadingId === selectedItem.id}
           onInstall={() => toggleInstall(selectedItem.id)}
           onBack={() => setSelectedItem(null)}
+          onRatingUpdate={(newRating, newCount) => {
+            setItems(prev => prev.map(i => i.id === selectedItem.id ? { ...i, rating: newRating, rating_count: newCount } : i));
+            setSelectedItem(prev => prev ? { ...prev, rating: newRating, rating_count: newCount } : prev);
+          }}
         />
       </div>
     );

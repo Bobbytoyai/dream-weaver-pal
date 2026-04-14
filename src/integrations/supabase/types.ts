@@ -503,6 +503,47 @@ export type Database = {
           },
         ]
       }
+      pack_reviews: {
+        Row: {
+          child_name: string
+          comment: string | null
+          content_id: string
+          created_at: string
+          id: string
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          child_name?: string
+          comment?: string | null
+          content_id: string
+          created_at?: string
+          id?: string
+          rating: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          child_name?: string
+          comment?: string | null
+          content_id?: string
+          created_at?: string
+          id?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pack_reviews_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "store_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parent_alerts: {
         Row: {
           alert_type: string
