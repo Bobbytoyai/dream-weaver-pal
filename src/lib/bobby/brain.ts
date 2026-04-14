@@ -268,6 +268,7 @@ export function resetBobbyBrainSession() {
   clearConversationContext();
   resetPersistentMemoryCache();
   resetGames();
+  resetMusicEngine();
   resetFlows();
   resetCognition();
   resetOrchestrator();
