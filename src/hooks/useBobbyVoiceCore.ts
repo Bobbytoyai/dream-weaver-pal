@@ -523,12 +523,18 @@ export function useBobbyVoiceCore({
 
       // If this reply includes a music track, play it after TTS
       const musicUrl = (reply as any).musicUrl;
+      const musicTitle = (reply as any).musicTitle;
       if (musicUrl) {
         try {
           // Stop STT during music playback so Bobby doesn't hear the song
           stopSttRef.current();
           setMicArmed(false);
-          go("SPEAKING");
+          
+          // Stay in SPEAKING state but emit MUSIC_START so the face shows
+          // music particles instead of mouth animation
+          setCurrentEmotion("happy");
+          eventBus.emit({ type: "SPEECH_STOP" });
+          eventBus.emit({ type: "MUSIC_START", title: musicTitle || "" });
 
           const musicAudio = new Audio(musicUrl);
           musicAudio.volume = 0.7;
@@ -551,6 +557,7 @@ export function useBobbyVoiceCore({
           });
 
           musicAudioRef.current = null;
+          eventBus.emit({ type: "MUSIC_STOP" });
 
           // Resume listening after music ends
           lastSpeechEndRef.current = Date.now();
@@ -558,6 +565,7 @@ export function useBobbyVoiceCore({
           void startListeningRef.current();
         } catch (e) {
           console.warn("[Music] Failed to play track:", e);
+          eventBus.emit({ type: "MUSIC_STOP" });
           // Ensure we go back to listening even on error
           void startListeningRef.current();
         }
