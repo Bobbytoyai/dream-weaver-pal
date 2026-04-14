@@ -137,7 +137,7 @@ const RULES: ExtractionRule[] = [
   // ━━━ PRÉFÉRENCES ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   // "j'adore / j'aime X" (exclude "j'aime pas")
-  { pattern: /(?:j'adore|j'aime (?:trop |beaucoup |bien )?)(?!pas\b)(?:le |la |les |l')?(.{3,35}?)(?:\s*[.!?,;]|$)/i,
+  { pattern: /(?:j'adore|j'aime (?:trop |beaucoup |bien )?)(?!pas\b)\s*(?:le |la |les |l')?(.{3,35}?)(?:\s*[.!?,;]|$)/i,
     category: "préférence", confidence: 0.8,
     extract: m => `Adore : ${clean(m[1])}` },
 
