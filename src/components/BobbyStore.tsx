@@ -5,6 +5,7 @@ import { installContentPack, uninstallContentPack, getLocalCacheSize, type Insta
 import { getCloudUsage, formatStorage, type CloudUsage } from "@/lib/bobby/cloudQuota";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import PackReviews from "@/components/PackReviews";
 
 // ─── Types ──────────────────────────────────────────────────────────
 
