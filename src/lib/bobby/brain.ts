@@ -244,7 +244,15 @@ export async function buildBobbyReply({
     }
   }
 
-  // Build personality context once for the whole pipeline
+  // ── V7: CORRECTION DETECTION — did the child correct Bobby? ──
+  if (userText) {
+    const correction = detectCorrectionSignal(userText);
+    if (correction.corrected && correction.extractedClarification) {
+      console.log(`[Brain V7] 🔄 Correction detected → using clarification: "${correction.extractedClarification}"`);
+      userText = correction.extractedClarification;
+    }
+  }
+
   const personalityCtx: PersonalityContext = {
     childAge,
     sessionMood: mem.sessionMood,
