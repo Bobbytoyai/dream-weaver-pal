@@ -443,17 +443,13 @@ export function useFaceAnimation(
         // Random quirk type
         const quirkType = Math.random();
         if (quirkType < 0.45) {
-          // Soft smile stretch
-          mouthQuirkTarget.current = { curve: 0.12 + Math.random() * 0.05, width: 0.04, open: 0.01 };
+          mouthQuirkTarget.current = { curve: 0.12 + Math.random() * 0.05, width: 0.04, open: 0 };
         } else if (quirkType < 0.75) {
-          // Tiny classic stretch
-          mouthQuirkTarget.current = { curve: 0.04, width: 0.03, open: 0.01 };
+          mouthQuirkTarget.current = { curve: 0.04, width: 0.03, open: 0 };
         } else if (quirkType < 0.92) {
-          // Gentle smirk
-          mouthQuirkTarget.current = { curve: 0.08, width: 0.02, open: 0.01 };
+          mouthQuirkTarget.current = { curve: 0.08, width: 0.02, open: 0 };
         } else {
-          // Neutral living mouth — never round "oh"
-          mouthQuirkTarget.current = { curve: 0.03, width: 0.015, open: 0.005 };
+          mouthQuirkTarget.current = { curve: 0.03, width: 0.015, open: 0 };
         }
       }
 
@@ -538,10 +534,11 @@ export function useFaceAnimation(
       speechHeadNod = Math.sin(breathPhase.current * 4.5) * Math.max(rawAmp, 0.05) * 0.035;
       speechCheekBoost = rawAmp > 0.15 ? rawAmp * 0.16 : 0;
     } else {
-      mouthOpenTarget = (targets.mouthOpenness ?? 0) + mouthBreath + mouthQuirkOpenAdd;
+      // Non-speaking: mouth stays CLOSED. Breath affects only curve (smile), NOT openness.
+      mouthOpenTarget = 0;
       mouthWidthTarget = (targets.mouthWidth ?? 0.5) + mouthBreathWidth + mouthQuirkWidthAdd;
-      mouthRoundTarget = targets.mouthRound ?? 0;
-      jawDropTarget = (targets.jawDrop ?? 0) + mouthBreath * 0.3;
+      mouthRoundTarget = 0;
+      jawDropTarget = 0;
     }
 
     // --- LERP ALL VALUES ---
