@@ -14,6 +14,8 @@ import {
   getBobbySleepMessage,
   getBobbyWelcomeMessage,
   resetBobbyBrainSession,
+  initBobbySession,
+  endBobbySession,
 } from "@/lib/bobby/brain";
 import { toVoiceState, type BobbyBrainReply, type ConversationState, type PendingNarration } from "@/lib/bobby/types";
 import { useSessionTracker } from "./useSessionTracker";
@@ -605,6 +607,8 @@ export function useBobbyVoiceCore({
     const welcome = getBobbyWelcomeMessage(childName);
     handledNarrationIdRef.current = null;
     resetBobbyBrainSession();
+    // Load persistent memory for this child (async, non-blocking)
+    initBobbySession(childName).catch(console.warn);
     setPartialText("");
     setLastRecognized("");
     setBobbyText(welcome);
@@ -664,6 +668,8 @@ export function useBobbyVoiceCore({
       clearSilenceTimer();
       stopSttRef.current();
       stopPlayback();
+      // Save persistent memory before cleanup
+      endBobbySession(childName).catch(console.warn);
       resetBobbyBrainSession();
       resetEmotionPipeline();
       void closeSession();

@@ -7,6 +7,7 @@
  */
 
 import { getTopInterests, getInterestSnapshot } from "./interestTracker";
+import { buildPersistentMemoryBlock } from "./persistentMemory";
 
 interface ConversationMessage {
   role: "user" | "assistant";
@@ -133,6 +134,13 @@ export function buildContextSummary(messages: ConversationMessage[]): string {
   if (topInterests.length > 0 && turnCount >= 3) {
     const favTopic = topInterests[0].topic;
     parts.push(`CONSIGNE D'INTÉRÊT : L'enfant adore "${favTopic}". Si le moment s'y prête, fais un lien avec ce sujet.`);
+  }
+
+  // Persistent memory from previous sessions
+  const persistentBlock = buildPersistentMemoryBlock();
+  if (persistentBlock) {
+    parts.push("");
+    parts.push(persistentBlock);
   }
 
   return parts.join("\n");
