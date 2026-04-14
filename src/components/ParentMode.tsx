@@ -49,6 +49,7 @@ const SuspenseTab = ({ children, label = "tab" }: { children: React.ReactNode; l
 // ─── Props ──────────────────────────────────────────────────────
 interface ParentModeProps {
   childName: string;
+  bobbyCodeId?: string;
   onClose: () => void;
   parentSettings?: ParentSettings;
   onSettingsChange?: (settings: ParentSettings) => void;
@@ -58,7 +59,7 @@ interface ParentModeProps {
 // COMPONENT
 // ═══════════════════════════════════════════════════════════════
 
-const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: ParentModeProps) => {
+const ParentMode = ({ childName, bobbyCodeId, onClose, parentSettings, onSettingsChange }: ParentModeProps) => {
   // ── Local UI state ──
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [displayedTab, setDisplayedTab] = useState<Tab>("home");
@@ -69,6 +70,7 @@ const ParentMode = ({ childName, onClose, parentSettings, onSettingsChange }: Pa
   // ── Business hooks ──
   const data = useParentData({
     childName,
+    bobbyCodeId,
     parentSettings,
     onSettingsChange,
     onNavigateTab: useCallback((tab: string) => setActiveTab(tab as Tab), []),
