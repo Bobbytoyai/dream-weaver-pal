@@ -46,6 +46,14 @@ import {
   processGameTurn,
   resetGames,
 } from "./offlineGames";
+import {
+  isFlowActive,
+  advanceFlow,
+  detectFlowTrigger,
+  startFlow,
+  resetFlows,
+  tryResumeFlow,
+} from "./flows";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CONFIDENCE THRESHOLDS (V5 Architecture)
@@ -161,6 +169,7 @@ export function resetBobbyBrainSession() {
   clearConversationContext();
   resetPersistentMemoryCache();
   resetGames();
+  resetFlows();
   resetCognition();
   clearResponseCache().catch(() => {});
 }
@@ -269,6 +278,20 @@ export async function buildBobbyReply({
     }
   }
 
+  // ── Active flow — advance scenario ──
+  if (isFlowActive() && userText) {
+    const flowIntent = detectLocalIntent(userText);
+    const flowResult = advanceFlow(userText, flowIntent, childName, childAge);
+    if (flowResult.handled) {
+      return {
+        text: simplifyForAge(flowResult.text, childAge),
+        intent: "FLOW", source: "flow_engine", emotion: flowResult.emotion as any,
+        confidence: 1, isOffline: true,
+      };
+    }
+    // Flow was interrupted — fall through to normal pipeline
+  }
+
   // ── Library (stories, jokes) — curated content ──
   const libraryReply = getLibraryReply(userText, childName, childAge);
   if (libraryReply) {
@@ -330,7 +353,20 @@ export async function buildBobbyReply({
   const shouldAddFollowUp = cognition.suggestedFollowUp !== "none";
   const cognitionFollowUp = buildCognitionFollowUp(cognition, childName);
 
-  // High-confidence Layer 1 → respond directly (skip KB + LLM)
+  // ── ★ FLOW ENGINE: check if we should start a multi-turn scenario ──
+  if (!isFlowActive() && localReply.confidence >= 0.5) {
+    const flowMatch = detectFlowTrigger(localReply.intent as any, userText, childAge);
+    if (flowMatch) {
+      const flowResult = startFlow(flowMatch, childName, childAge);
+      if (flowResult.handled) {
+        return {
+          text: simplifyForAge(flowResult.text, childAge),
+          intent: "FLOW", source: "flow_engine", emotion: flowResult.emotion as any,
+          confidence: 1, isOffline: true,
+        };
+      }
+    }
+  }
   if (localReply.confidence >= LAYER1_CONFIDENCE) {
     const reply = postProcess(localReply, childName, childAge, personalityCtx);
     if (shouldAddFollowUp && cognitionFollowUp && Math.random() < 0.5) {
