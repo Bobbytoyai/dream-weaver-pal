@@ -2,6 +2,10 @@ import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import type { LocalIntent, EmotionType, DetectedEmotion } from "./types";
 import { isResponseUsed, getLastChildTurn, mem } from "./memory";
 import { TEMPLATES } from "./templates";
+import { pickRebond, detectRebondTopic } from "../conversationEnricher";
+
+// Track used rebonds to avoid repetition
+const usedRebonds: string[] = [];
 
 export function pick(arr: string[]): string {
   if (!arr || arr.length === 0) return "";
@@ -67,6 +71,19 @@ export function assembleResponse(
     if (topicRef) {
       const topicLine = pick(topicRef);
       if (topicLine) text += " " + topicLine;
+    }
+  }
+
+  // Smart rebond — add a follow-up question (~70% of the time, not on farewells)
+  if (intent !== "AU_REVOIR" && intent !== "DODO" && intent !== "CONTENU_BLOQUE" && Math.random() < 0.7) {
+    const rebondTopic = detectRebondTopic(
+      mem.turns.filter(t => t.role === "child").pop()?.text || ""
+    ) || mem.currentTopic;
+    const rebond = pickRebond(rebondTopic, usedRebonds);
+    if (rebond) {
+      text += " " + rebond;
+      usedRebonds.push(rebond);
+      if (usedRebonds.length > 20) usedRebonds.shift();
     }
   }
 

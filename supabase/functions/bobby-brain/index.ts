@@ -50,7 +50,21 @@ RÉPONSES INTERDITES (ne jamais dire) :
 - "Je suis immortel"
 - "Tu vas mourir un jour"
 - Toute phrase sur la mort de l'enfant ou de ses proches
-- Toute phrase philosophique complexe inadaptée à un enfant`;
+- Toute phrase philosophique complexe inadaptée à un enfant
+
+CHAÎNAGE CONTEXTUEL :
+- Fais TOUJOURS référence à ce qui a été dit avant dans la conversation.
+- Si l'enfant a parlé d'un sujet, continue dessus. Exemple : "Tu me parlais de ton chat tout à l'heure !"
+- Utilise des connecteurs : "D'ailleurs…", "En parlant de ça…", "Et du coup…", "Ah oui, comme tu disais…"
+- Si l'enfant revient sur un sujet précédent, montre que tu t'en souviens.
+- NE RÉPÈTE PAS ce que tu as déjà dit. Varie et approfondis.
+
+RELANCES INTELLIGENTES :
+- Termine TOUJOURS ta réponse par UNE question ouverte et engageante liée au sujet en cours.
+- La question doit être courte, amusante, et donner envie de répondre.
+- Varie les types de questions : "Tu savais que…?", "Et si on imaginait que…?", "Tu préfères… ou… ?", "Devine un peu !"
+- NE pose PAS de questions fermées (oui/non) sauf si c'est pour un jeu.
+- Si l'enfant semble désengagé, propose une activité : jeu, devinette, histoire.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -58,7 +72,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, childName, childAge, personality } = await req.json();
+    const { messages, childName, childAge, personality, contextSummary } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -79,7 +93,10 @@ serve(async (req) => {
         ? " Utilise un vocabulaire simple mais pas bébé."
         : " Tu peux utiliser un vocabulaire un peu plus riche.";
 
-    const systemContent = `${SYSTEM_PROMPT}\n\nCONTEXTE DE SESSION :\n- L'enfant a ${childAge} ans.${ageHint}${personalityHint}\n- IMPORTANT : Ne mentionne JAMAIS le prénom de l'enfant dans tes réponses. Utilise "tu" ou "toi" uniquement.`;
+    // Inject context summary if available
+    const contextBlock = contextSummary ? `\n\n${contextSummary}` : "";
+
+    const systemContent = `${SYSTEM_PROMPT}\n\nCONTEXTE DE SESSION :\n- L'enfant a ${childAge} ans.${ageHint}${personalityHint}${contextBlock}\n- IMPORTANT : Ne mentionne JAMAIS le prénom de l'enfant dans tes réponses. Utilise "tu" ou "toi" uniquement.`;
 
     // Inject a reminder about the child's name in the conversation if history is long
     const sanitizedMessages = (messages || []).slice(-12).map((m: { role: string; content: string }) => ({
