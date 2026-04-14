@@ -44,6 +44,7 @@ import { maybeInitiate, resetProactiveEngine, type ProactiveContext } from "./v8
 import { applyVariation, resetVariationEngine } from "./v8/variationEngine";
 import { initSilenceEngine, recordChildResponse, analyzeSilence, getAttentionState, getAttentionSummary } from "./v8/silenceEngine";
 import { assessUncertainty, resetUncertaintyEngine, isLikelyGarbled, type UncertaintyAssessment } from "./v8/uncertaintyEngine";
+import { evaluateMasterControl, enforceWordLimit, resolveActiveMode } from "./masterControl";
 import { loadRelationship, recordInteraction, getInsideJokeReference, getPhaseBehavior, resetRelationshipEngine } from "./v8/relationshipEngine";
 import {
   loadPersistentMemory,
@@ -370,6 +371,25 @@ export async function buildBobbyReply({
     };
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // MASTER CONTROL LAYER — parental mode overrides (V9)
+  // ═══════════════════════════════════════════════════════════
+  const quickIntent = userText ? detectLocalIntent(userText) : "GENERAL";
+  const masterControl = evaluateMasterControl(userText, quickIntent, parentSettings);
+
+  if (masterControl.activeMode !== "normal") {
+    console.log(`[Brain V9] 🎛️ Master Control: mode=${masterControl.activeMode}`);
+    // Apply personality overrides from mode
+    if (masterControl.personalityOverrides) {
+      Object.assign(personalityCtx, masterControl.personalityOverrides);
+    }
+  }
+
+  // If mode intercepts entirely, return immediately
+  if (masterControl.intercepted && masterControl.reply) {
+    return masterControl.reply;
+  }
+
   // ── Track interests & extract facts ──
   if (userText) {
     trackInterests(userText);
@@ -497,7 +517,7 @@ export async function buildBobbyReply({
     childAge,
     totalInteractions: 0,
   };
-  const proactiveInitiative = maybeInitiate(proactiveCtx);
+  const proactiveInitiative = masterControl.suppressProactive ? null : maybeInitiate(proactiveCtx);
 
   // ═══════════════════════════════════════════════════════════
   // LAYER 1 (PRIMARY): GEMINI AI — Always try online first
@@ -512,6 +532,10 @@ export async function buildBobbyReply({
       let reply = postProcess(llmReply, childName, childAge, personalityCtx, tomSnap);
       reply = applyOrchestration(reply, orchestrationDirective, understanding, v7Session, cognitionPlan, proactiveInitiative);
 
+      // V9: Enforce word limit from Master Control
+      if (masterControl.maxWords > 0) {
+        reply.text = enforceWordLimit(reply.text, masterControl.maxWords);
+      }
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain] ✅ Gemini + V8 reply (${llmMs.toFixed(0)}ms LLM, ${totalMs.toFixed(0)}ms total)`);
       return reply;
@@ -540,6 +564,10 @@ export async function buildBobbyReply({
     } catch { /* KB failed, use local */ }
   }
 
+  // V9: Enforce word limit from Master Control
+  if (masterControl.maxWords > 0) {
+    reply.text = enforceWordLimit(reply.text, masterControl.maxWords);
+  }
   const totalMs = performance.now() - pipelineStart;
   console.log(`[Brain] ⚡ Local fallback + V8: ${localReply.intent} (${totalMs.toFixed(0)}ms total)`);
   return reply;

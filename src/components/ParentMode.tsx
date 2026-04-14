@@ -147,8 +147,10 @@ const ParentMode = ({ childName, bobbyCodeId, onClose, parentSettings, onSetting
           displayName={data.displayName}
           cloudProfile={data.cloudProfile}
           unreadAlertCount={data.unreadAlertCount}
+          settings={data.settings}
           onOpenNotifPanel={() => setShowNotifPanel(true)}
           onNavigate={setActiveTab}
+          onUpdateMode={(mode) => { data.updateSetting("parentMode", mode); }}
         />
       </SuspenseTab>
     );

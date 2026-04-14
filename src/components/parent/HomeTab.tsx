@@ -3,6 +3,8 @@ import { ChevronRight, Activity } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import type { Analysis, Session, Tab } from "./parentTypes";
 import { emotionLabels } from "./parentTypes";
+import type { ParentSettings } from "@/components/parentSettings";
+import type { ParentMode } from "@/lib/bobby/masterControl";
 
 interface HomeTabProps {
   sessions: Session[];
@@ -10,13 +12,15 @@ interface HomeTabProps {
   displayName: string;
   cloudProfile: unknown | null;
   unreadAlertCount: number;
+  settings: ParentSettings;
   onOpenNotifPanel: () => void;
   onNavigate: (tab: Tab) => void;
+  onUpdateMode: (mode: ParentMode) => void;
 }
 
 const HomeTab: React.FC<HomeTabProps> = ({
   sessions, analyses, displayName, cloudProfile,
-  unreadAlertCount, onOpenNotifPanel, onNavigate,
+  unreadAlertCount, settings, onOpenNotifPanel, onNavigate, onUpdateMode,
 }) => {
   // ─── Daily summary ───
   const todayStr = new Date().toLocaleDateString("fr-FR");
@@ -157,6 +161,44 @@ const HomeTab: React.FC<HomeTabProps> = ({
               </div>
             ))}
           </div>
+        )}
+      </div>
+
+      {/* Master Control — Mode selector */}
+      <div className="hero-fade-in retro-card p-4" style={{ backgroundColor: 'var(--retro-yellow)' }}>
+        <h3 className="text-[14px] font-black text-gray-800 mb-3 uppercase">🎛️ Mode Bobby</h3>
+        <div className="grid grid-cols-5 gap-1.5">
+          {([
+            { id: "normal" as ParentMode, emoji: "✨", label: "Normal" },
+            { id: "nuit" as ParentMode, emoji: "🌙", label: "Nuit" },
+            { id: "ecole" as ParentMode, emoji: "📚", label: "École" },
+            { id: "calme" as ParentMode, emoji: "🧘", label: "Calme" },
+            { id: "educatif" as ParentMode, emoji: "🧠", label: "Éducatif" },
+          ]).map(mode => {
+            const isActive = (settings.parentMode || "normal") === mode.id;
+            return (
+              <button
+                key={mode.id}
+                onClick={() => onUpdateMode(mode.id)}
+                className="border-2 border-black py-2 px-1 text-center transition-all duration-200 hover:translate-y-[-2px]"
+                style={{
+                  backgroundColor: isActive ? "#000" : "#fff",
+                  color: isActive ? "#fff" : "#000",
+                }}
+              >
+                <span className="text-[16px] block">{mode.emoji}</span>
+                <span className="text-[8px] font-black block mt-0.5 uppercase">{mode.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        {settings.parentMode && settings.parentMode !== "normal" && (
+          <p className="text-[9px] font-bold text-gray-700 mt-2">
+            {settings.parentMode === "nuit" && "🌙 Bobby parle doucement et propose des histoires calmes."}
+            {settings.parentMode === "ecole" && "📚 Bobby se concentre sur l'apprentissage et les exercices."}
+            {settings.parentMode === "calme" && "🧘 Bobby réduit son énergie et reste doux."}
+            {settings.parentMode === "educatif" && "🧠 Bobby priorise les faits, la science et les découvertes."}
+          </p>
         )}
       </div>
 
