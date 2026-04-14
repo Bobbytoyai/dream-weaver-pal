@@ -37,6 +37,7 @@ import { computePriority, createDefaultMemoryContext, type PriorityDecision } fr
 import { orchestrate, recordBobbyResponse, resetOrchestrator, type OrchestrationDirective } from "./v7/orchestrator";
 import { checkUnderstanding, applyUnderstandingCheck, detectCorrectionSignal, resetFeedbackLoop } from "./v7/understandingLoop";
 import { buildCognitionPlan, resetCognitionV7, type CognitionPlan } from "./v7/cognitionV7";
+import { assembleAndMerge } from "./v7/responseAssembly";
 import {
   loadPersistentMemory,
   savePersistentMemory,
