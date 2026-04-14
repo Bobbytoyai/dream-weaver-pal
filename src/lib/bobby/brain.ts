@@ -1,6 +1,7 @@
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import type { ParentSettings } from "@/components/parentSettings";
 import { resetConversationContext } from "@/lib/offlineEngine";
+import { isBlockedContent, getSafetyLevel, getSafeRedirect } from "@/lib/offline-intents";
 import { getLibraryReply, getNarrationText } from "./library";
 import type { BobbyBrainReply, PendingNarration } from "./types";
 import { simplifyForAge } from "@/lib/adaptiveEngine";
@@ -201,9 +202,24 @@ export async function buildBobbyReply({ childName, childAge, userText = "", pend
     };
   }
 
-  // ─── Safety: blocked topics ───
+  // ─── Safety: blocked topics (parent config) ───
   if (userText && isTopicBlocked(userText, blockedTopics)) {
     return getBlockedTopicReply(childName);
+  }
+
+  // ─── CRITICAL SAFETY: detect dangerous content BEFORE anything else ───
+  if (userText && isBlockedContent(userText)) {
+    const safetyLevel = getSafetyLevel(userText);
+    const safeReply = getSafeRedirect(userText);
+    console.warn(`[BobbyBrain] 🛡️ Safety filter triggered (${safetyLevel}):`, userText.slice(0, 50));
+    return {
+      text: simplifyForAge(safeReply, childAge),
+      intent: safetyLevel === "CRITICAL" ? "BLOCKED" : "EMOTION_NEGATIVE",
+      source: "safety_filter" as const,
+      emotion: "reassuring" as FaceState,
+      confidence: 1,
+      isOffline: true,
+    };
   }
 
   // ─── Track child interests for smart follow-ups ───
