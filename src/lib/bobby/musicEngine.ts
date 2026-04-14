@@ -75,28 +75,35 @@ export function detectMusicRequest(text: string): boolean {
 }
 
 // ── Match text to a specific track ──
+// Strip accents, apostrophes, and collapse spaces for robust child-speech matching
 function normalize(s: string): string {
   return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/['']/g, "'");
+}
+
+/** Even more aggressive: remove all punctuation & apostrophes for fuzzy compare */
+function flatNorm(s: string): string {
+  return normalize(s).replace(/['\s-]/g, "");
 }
 
 export async function matchTrack(text: string): Promise<MusicTrack | null> {
   await ensureLoaded();
   const norm = normalize(text);
+  const flat = flatNorm(text);
   
-  // Direct trigger phrase match
+  // Direct trigger phrase match (normal + flat)
   for (const track of state.tracks) {
     for (const phrase of track.trigger_phrases) {
-      if (norm.includes(normalize(phrase))) return track;
+      if (norm.includes(normalize(phrase)) || flat.includes(flatNorm(phrase))) return track;
     }
   }
   
   // Fuzzy title match
   for (const track of state.tracks) {
     const titleNorm = normalize(track.title);
-    if (norm.includes(titleNorm)) return track;
+    if (norm.includes(titleNorm) || flat.includes(flatNorm(track.title))) return track;
     // Check individual significant words (>3 chars)
     const words = titleNorm.split(/\s+/).filter(w => w.length > 3);
-    if (words.length > 0 && words.every(w => norm.includes(w))) return track;
+    if (words.length > 0 && words.every(w => norm.includes(w) || flat.includes(flatNorm(w)))) return track;
   }
   
   return null;
