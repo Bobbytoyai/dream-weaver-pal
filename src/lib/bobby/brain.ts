@@ -42,6 +42,7 @@ import { initToM, updateMentalModel, getToMSnapshot, applyToMToResponse, resetTo
 import { buildWorldModel, adaptToChildWorld, checkConfusionZones, resetWorldModel } from "./v8/childWorldModel";
 import { maybeInitiate, resetProactiveEngine, type ProactiveContext } from "./v8/proactiveEngine";
 import { applyVariation, resetVariationEngine } from "./v8/variationEngine";
+import { initSilenceEngine, recordChildResponse, analyzeSilence, getAttentionState, getAttentionSummary } from "./v8/silenceEngine";
 import { loadRelationship, recordInteraction, getInsideJokeReference, getPhaseBehavior, resetRelationshipEngine } from "./v8/relationshipEngine";
 import {
   loadPersistentMemory,
@@ -261,6 +262,7 @@ export function resetBobbyBrainSession() {
   resetProactiveEngine();
   resetVariationEngine();
   resetRelationshipEngine();
+  initSilenceEngine();
   clearResponseCache().catch(() => {});
 }
 
@@ -270,6 +272,7 @@ export async function initBobbySession(childName: string, childAge?: number): Pr
   if (childAge) {
     initToM(childAge);
     buildWorldModel(childAge);
+    initSilenceEngine();
   }
   console.log("[Brain] 🧠 Persistent memory loaded for", childName);
 }
@@ -457,6 +460,9 @@ export async function buildBobbyReply({
 
   // ── V8: RELATIONSHIP — record per-turn interaction ──
   recordInteraction(userText, understanding.emotion.type);
+
+  // ── V8: SILENCE & ATTENTION — track child response patterns ──
+  recordChildResponse(userText, childAge);
 
   // ── V7: PRIORITY ENGINE — 5-dimension scoring ──
   const priority = computePriority(understanding, v7Session, createDefaultMemoryContext());
