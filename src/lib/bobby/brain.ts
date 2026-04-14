@@ -36,6 +36,7 @@ import { extractDeepUnderstanding, type UnderstandingFrame, type SessionContext 
 import { computePriority, createDefaultMemoryContext, type PriorityDecision } from "./v7/priorityEngine";
 import { orchestrate, recordBobbyResponse, resetOrchestrator, type OrchestrationDirective } from "./v7/orchestrator";
 import { checkUnderstanding, applyUnderstandingCheck, detectCorrectionSignal, resetFeedbackLoop } from "./v7/understandingLoop";
+import { buildCognitionPlan, resetCognitionV7, type CognitionPlan } from "./v7/cognitionV7";
 import {
   loadPersistentMemory,
   savePersistentMemory,
@@ -149,6 +150,7 @@ function applyOrchestration(
   directive: OrchestrationDirective | null,
   understanding?: UnderstandingFrame,
   session?: V7Session,
+  plan?: CognitionPlan | null,
 ): BobbyBrainReply {
   if (!directive) return reply;
 
@@ -160,6 +162,18 @@ function applyOrchestration(
   // Append resume prompt if available
   if (directive.resumePrompt && Math.random() < 0.4) {
     reply.text = reply.text.replace(/[.!?…]*\s*$/, ". ") + directive.resumePrompt;
+  }
+
+  // V7: Apply CognitionPlan-driven adjustments
+  if (plan) {
+    // If plan says includeValidation → prepend empathy opener
+    if (plan.what.includeValidation && plan.why.primaryGoal !== "jouer") {
+      const validations = ["C'est une super question ! ", "Bravo de demander ! ", "J'adore ta curiosité ! "];
+      const prefix = validations[Math.floor(Math.random() * validations.length)];
+      if (!reply.text.startsWith(prefix.trim())) {
+        reply.text = prefix + reply.text;
+      }
+    }
   }
 
   // V7: Understanding Feedback Loop — verify comprehension
@@ -214,6 +228,7 @@ export function resetBobbyBrainSession() {
   resetCognition();
   resetOrchestrator();
   resetFeedbackLoop();
+  resetCognitionV7();
   clearResponseCache().catch(() => {});
 }
 
@@ -395,6 +410,9 @@ export async function buildBobbyReply({
     `[Brain V7] 🎯 Priority: ${priority.priorityLevel} (${priority.totalScore}) | S=${priority.scores.safety} E=${priority.scores.emotion} U=${priority.scores.urgency} C=${priority.scores.context} H=${priority.scores.history}${priority.requiresEmpathyFirst ? " 💙EMPATHY" : ""}${priority.interruptCurrent ? " ⚡INTERRUPT" : ""}`
   );
 
+  // ── V7: COGNITION ENGINE — WHY/WHAT/HOW triple decision ──
+  const cognitionPlan = buildCognitionPlan(understanding, priority, v7Session);
+
   // ── V7: If ambiguity is very high, ask for clarification ──
   if (understanding.requiresConfirmation && understanding.confirmationPrompt && understanding.ambiguityScore > 0.7) {
     const confirmReply: BobbyBrainReply = {
@@ -489,7 +507,7 @@ export async function buildBobbyReply({
     const totalMs = performance.now() - pipelineStart;
     console.log(`[Brain V6] ✅ L1 direct → ${localReply.intent} | goal=${cognition.goal} (${totalMs.toFixed(0)}ms total)`);
     cacheReply(userText, reply).catch(() => {});
-    return applyOrchestration(reply, directive, understanding, v7Session);
+    return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan);
   }
 
   // ── LAYER 2: Knowledge Base (semantic TF-IDF scoring) ──
@@ -506,7 +524,7 @@ export async function buildBobbyReply({
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain V6] ✅ L2 KB → conf=${kbReply.confidence.toFixed(2)} | goal=${cognition.goal} (L2: ${layer2Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
       cacheReply(userText, reply).catch(() => {});
-      return applyOrchestration(reply, directive, understanding, v7Session);
+      return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan);
       console.log(`[Brain V6] L2 KB: conf=${kbReply.confidence.toFixed(2)} → escalate to L3`);
     }
   } catch (e) {
@@ -523,7 +541,7 @@ export async function buildBobbyReply({
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain V6] ✅ L3 LLM → goal=${cognition.goal} (L3: ${layer3Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
       cacheReply(userText, llmReply).catch(() => {});
-      return applyOrchestration(llmReply, directive, understanding, v7Session);
+      return applyOrchestration(llmReply, directive, understanding, v7Session, cognitionPlan);
     }
   } catch (e) {
     console.warn("[Brain V6] L3 LLM failed:", e);
@@ -545,7 +563,7 @@ export async function buildBobbyReply({
   const totalMs = performance.now() - pipelineStart;
   console.log(`[Brain V6] ⚡ Fallback L1 → ${localReply.intent} | goal=${cognition.goal} (${totalMs.toFixed(0)}ms total)`);
   cacheReply(userText, reply).catch(() => {});
-  return applyOrchestration(reply, directive, understanding, v7Session);
+  return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan);
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
