@@ -30,7 +30,7 @@ const CONV_SILENCE_OFF_MS = 60_000;                // 60s silence after conv rel
 const MIN_SESSION_MS = 90_000;                      // 90s minimum session guarantee
 const SLEEP_TIMER_MS = 120_000;                     // 2min idle → sleep
 const ANTI_ECHO_COOLDOWN_MS = 400;
-const UTTERANCE_BUFFER_MS = 2500;                   // 2.5s buffer — wait for child to finish speaking
+const UTTERANCE_BUFFER_MS = 7500;                   // 7.5s buffer — let the child finish speaking without interruption
 
 const RELANCE_MESSAGES: string[] = [];
 const GOODBYE_MESSAGES: string[] = [];
