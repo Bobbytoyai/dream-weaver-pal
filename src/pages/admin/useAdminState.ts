@@ -78,6 +78,11 @@ export function useAdminState() {
   const [realConvLoading, setRealConvLoading] = useState(false);
   const [learningSessionId, setLearningSessionId] = useState<string | null>(null);
 
+  // Devices
+  const [devices, setDevices] = useState<BobbyDevice[]>([]);
+  const [devicesLoading, setDevicesLoading] = useState(false);
+  const [learningSessionId, setLearningSessionId] = useState<string | null>(null);
+
   // ─── Fetchers ───────────────────────────────────────────────────
   const fetchLiveStats = useCallback(async () => {
     const now = new Date();
