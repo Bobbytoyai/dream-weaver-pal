@@ -34,6 +34,7 @@ import { detectEmotion } from "./localBrain/emotionEngine";
 import { getPersistentMemory, getRelevantFacts } from "./persistentMemory";
 import { extractDeepUnderstanding, type UnderstandingFrame, type SessionContext as V7Session } from "./v7/deepUnderstanding";
 import { computePriority, createDefaultMemoryContext, type PriorityDecision } from "./v7/priorityEngine";
+import { orchestrate, recordBobbyResponse, resetOrchestrator, type OrchestrationDirective } from "./v7/orchestrator";
 import {
   loadPersistentMemory,
   savePersistentMemory,
@@ -139,6 +140,31 @@ function postProcess(
   return { ...reply, text };
 }
 
+/**
+ * V7: Apply orchestrator bridge phrase to a reply and record it.
+ */
+function applyOrchestration(
+  reply: BobbyBrainReply,
+  directive: OrchestrationDirective | null,
+): BobbyBrainReply {
+  if (!directive) return reply;
+
+  // Prepend bridge phrase on scene transitions
+  if (directive.bridgePhrase && directive.action === "spawn" && directive.transition) {
+    reply.text = directive.bridgePhrase + " " + reply.text;
+  }
+
+  // Append resume prompt if available
+  if (directive.resumePrompt && Math.random() < 0.4) {
+    reply.text = reply.text.replace(/[.!?…]*\s*$/, ". ") + directive.resumePrompt;
+  }
+
+  // Record Bobby's response in the scene
+  recordBobbyResponse(reply.text);
+
+  return reply;
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // PUBLIC API
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -174,6 +200,7 @@ export function resetBobbyBrainSession() {
   resetGames();
   resetFlows();
   resetCognition();
+  resetOrchestrator();
   clearResponseCache().catch(() => {});
 }
 
@@ -360,7 +387,12 @@ export async function buildBobbyReply({
     return postProcess(confirmReply, childName, childAge, personalityCtx);
   }
 
-  // ── CACHE CHECK (V7: bypass for sensitive cases) ──
+  // ── V7: ORCHESTRATOR — scene management ──
+  const directive = orchestrate(understanding, priority, userText);
+  console.log(
+    `[Brain V7] 🎬 Orchestrator: scene=${directive.scene.type} action=${directive.action} turn=${directive.scene.turnCount}/${directive.scene.maxTurns}${directive.bridgePhrase ? ` bridge="${directive.bridgePhrase.slice(0, 40)}"` : ""}`
+  );
+
   if (!priority.bypassCache) {
     const cached = await getCachedReply(userText);
     if (cached) {
@@ -436,7 +468,7 @@ export async function buildBobbyReply({
     const totalMs = performance.now() - pipelineStart;
     console.log(`[Brain V6] ✅ L1 direct → ${localReply.intent} | goal=${cognition.goal} (${totalMs.toFixed(0)}ms total)`);
     cacheReply(userText, reply).catch(() => {});
-    return reply;
+    return applyOrchestration(reply, directive);
   }
 
   // ── LAYER 2: Knowledge Base (semantic TF-IDF scoring) ──
@@ -453,10 +485,7 @@ export async function buildBobbyReply({
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain V6] ✅ L2 KB → conf=${kbReply.confidence.toFixed(2)} | goal=${cognition.goal} (L2: ${layer2Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
       cacheReply(userText, reply).catch(() => {});
-      return reply;
-    }
-
-    if (kbReply) {
+      return applyOrchestration(reply, directive);
       console.log(`[Brain V6] L2 KB: conf=${kbReply.confidence.toFixed(2)} → escalate to L3`);
     }
   } catch (e) {
@@ -473,7 +502,7 @@ export async function buildBobbyReply({
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain V6] ✅ L3 LLM → goal=${cognition.goal} (L3: ${layer3Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
       cacheReply(userText, llmReply).catch(() => {});
-      return llmReply;
+      return applyOrchestration(llmReply, directive);
     }
   } catch (e) {
     console.warn("[Brain V6] L3 LLM failed:", e);
@@ -495,7 +524,7 @@ export async function buildBobbyReply({
   const totalMs = performance.now() - pipelineStart;
   console.log(`[Brain V6] ⚡ Fallback L1 → ${localReply.intent} | goal=${cognition.goal} (${totalMs.toFixed(0)}ms total)`);
   cacheReply(userText, reply).catch(() => {});
-  return reply;
+  return applyOrchestration(reply, directive);
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
