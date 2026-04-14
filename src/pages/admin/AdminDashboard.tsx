@@ -296,13 +296,13 @@ export default function AdminDashboard({ admin }: { admin: AdminState }) {
           <div className="space-y-1.5">
             <p className="text-[10px] text-white/20 uppercase tracking-widest font-bold px-1">Gestion</p>
             <div className="space-y-1.5">
-              {(["store", "cerveau", "expressions", "cloudusers"] as const).map(id => {
+              {(["store", "cerveau", "expressions", "cloudusers", "devices"] as const).map(id => {
                 const section = TOP_SECTIONS_CONFIG.find(s => s.id === id)!;
                 return (
                   <DashCard key={section.id} label={section.label} emoji={section.emoji}
                     count={sectionCounts[section.id] ?? "…"} desc={section.desc}
                     color={section.color} bgColor={section.bgColor}
-                    badge={section.id === "store" ? `${storeItems.filter(s => s.is_active).length} actifs` : section.id === "cloudusers" ? "live" : undefined}
+                    badge={section.id === "store" ? `${storeItems.filter(s => s.is_active).length} actifs` : section.id === "cloudusers" ? "live" : section.id === "devices" ? "live" : undefined}
                     onClick={() => { setTopSection(section.id); setSearch(""); }} />
                 );
               })}
