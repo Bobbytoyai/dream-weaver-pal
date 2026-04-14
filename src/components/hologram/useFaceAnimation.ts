@@ -443,17 +443,13 @@ export function useFaceAnimation(
         // Random quirk type
         const quirkType = Math.random();
         if (quirkType < 0.45) {
-          // Soft smile stretch
-          mouthQuirkTarget.current = { curve: 0.12 + Math.random() * 0.05, width: 0.04, open: 0.01 };
+          mouthQuirkTarget.current = { curve: 0.12 + Math.random() * 0.05, width: 0.04, open: 0 };
         } else if (quirkType < 0.75) {
-          // Tiny classic stretch
-          mouthQuirkTarget.current = { curve: 0.04, width: 0.03, open: 0.01 };
+          mouthQuirkTarget.current = { curve: 0.04, width: 0.03, open: 0 };
         } else if (quirkType < 0.92) {
-          // Gentle smirk
-          mouthQuirkTarget.current = { curve: 0.08, width: 0.02, open: 0.01 };
+          mouthQuirkTarget.current = { curve: 0.08, width: 0.02, open: 0 };
         } else {
-          // Neutral living mouth — never round "oh"
-          mouthQuirkTarget.current = { curve: 0.03, width: 0.015, open: 0.005 };
+          mouthQuirkTarget.current = { curve: 0.03, width: 0.015, open: 0 };
         }
       }
 
