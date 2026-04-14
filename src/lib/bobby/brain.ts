@@ -507,7 +507,7 @@ export async function buildBobbyReply({
     const totalMs = performance.now() - pipelineStart;
     console.log(`[Brain V6] ✅ L1 direct → ${localReply.intent} | goal=${cognition.goal} (${totalMs.toFixed(0)}ms total)`);
     cacheReply(userText, reply).catch(() => {});
-    return applyOrchestration(reply, directive, understanding, v7Session);
+    return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan);
   }
 
   // ── LAYER 2: Knowledge Base (semantic TF-IDF scoring) ──
@@ -524,7 +524,7 @@ export async function buildBobbyReply({
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain V6] ✅ L2 KB → conf=${kbReply.confidence.toFixed(2)} | goal=${cognition.goal} (L2: ${layer2Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
       cacheReply(userText, reply).catch(() => {});
-      return applyOrchestration(reply, directive, understanding, v7Session);
+      return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan);
       console.log(`[Brain V6] L2 KB: conf=${kbReply.confidence.toFixed(2)} → escalate to L3`);
     }
   } catch (e) {
@@ -541,7 +541,7 @@ export async function buildBobbyReply({
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain V6] ✅ L3 LLM → goal=${cognition.goal} (L3: ${layer3Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
       cacheReply(userText, llmReply).catch(() => {});
-      return applyOrchestration(llmReply, directive, understanding, v7Session);
+      return applyOrchestration(llmReply, directive, understanding, v7Session, cognitionPlan);
     }
   } catch (e) {
     console.warn("[Brain V6] L3 LLM failed:", e);
@@ -563,7 +563,7 @@ export async function buildBobbyReply({
   const totalMs = performance.now() - pipelineStart;
   console.log(`[Brain V6] ⚡ Fallback L1 → ${localReply.intent} | goal=${cognition.goal} (${totalMs.toFixed(0)}ms total)`);
   cacheReply(userText, reply).catch(() => {});
-  return applyOrchestration(reply, directive, understanding, v7Session);
+  return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan);
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
