@@ -371,6 +371,25 @@ export async function buildBobbyReply({
     };
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // MASTER CONTROL LAYER — parental mode overrides (V9)
+  // ═══════════════════════════════════════════════════════════
+  const quickIntent = userText ? detectLocalIntent(userText) : "GENERAL";
+  const masterControl = evaluateMasterControl(userText, quickIntent, parentSettings);
+
+  if (masterControl.activeMode !== "normal") {
+    console.log(`[Brain V9] 🎛️ Master Control: mode=${masterControl.activeMode}`);
+    // Apply personality overrides from mode
+    if (masterControl.personalityOverrides) {
+      Object.assign(personalityCtx, masterControl.personalityOverrides);
+    }
+  }
+
+  // If mode intercepts entirely, return immediately
+  if (masterControl.intercepted && masterControl.reply) {
+    return masterControl.reply;
+  }
+
   // ── Track interests & extract facts ──
   if (userText) {
     trackInterests(userText);
