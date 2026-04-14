@@ -89,7 +89,13 @@ export default function BobbyParent() {
   const handleSettingsChange = async (settings: ParentSettings) => {
     setParentSettings(settings);
     if (bobbyCode) {
-      const sd = (bobbyCode.session_data as Record<string, any>) || {};
+      // Fetch fresh session_data to avoid overwriting other fields
+      const { data: fresh } = await supabase
+        .from("bobby_codes")
+        .select("session_data")
+        .eq("id", bobbyCode.id)
+        .maybeSingle();
+      const sd = (fresh?.session_data as Record<string, any>) || {};
       await supabase
         .from("bobby_codes")
         .update({ session_data: { ...sd, parentSettings: settings } as any })
