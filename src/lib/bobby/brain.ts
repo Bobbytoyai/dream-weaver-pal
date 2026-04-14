@@ -18,6 +18,7 @@ import { isBlockedContent, getSafetyLevel, getSafeRedirect } from "@/lib/offline
 import { getLibraryReply, getNarrationText } from "./library";
 import type { BobbyBrainReply, PendingNarration } from "./types";
 import { simplifyForAge } from "@/lib/adaptiveEngine";
+import { normalizeChildSpeech } from "./normalizer";
 import { resetMemory } from "@/lib/responseSelector";
 import { resetScenario } from "@/lib/scenarioEngine";
 import { trackInterests, getSmartFollowUp, resetInterestTracker, getInterestSnapshot } from "./interestTracker";
@@ -200,6 +201,17 @@ export async function buildBobbyReply({
   const personality = parentSettings?.personality ?? "balanced";
   const blockedTopics = parentSettings?.blockedTopics ?? [];
   const pipelineStart = performance.now();
+
+  // ═══════════════════════════════════════════════════════════
+  // STEP 0: NORMALIZE child speech (phonetic, SMS, contractions)
+  // ═══════════════════════════════════════════════════════════
+  if (userText) {
+    const normalized = normalizeChildSpeech(userText);
+    if (normalized !== userText) {
+      console.log(`[Brain V6] 📝 Normalized: "${userText}" → "${normalized}"`);
+      userText = normalized;
+    }
+  }
 
   // Build personality context once for the whole pipeline
   const personalityCtx: PersonalityContext = {
