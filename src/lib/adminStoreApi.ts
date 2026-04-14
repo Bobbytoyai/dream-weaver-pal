@@ -23,7 +23,10 @@ type AdminStoreAction =
   | "delete_content_data_item"
   | "move_content_data_item"
   | "save_music_pack_items"
-  | "update_music_track";
+  | "update_music_track"
+  | "deactivate_device"
+  | "activate_device"
+  | "delete_device";
 
 async function callAdminStore<T>(
   adminCode: string,
@@ -109,4 +112,16 @@ export async function updateMusicTrack(
     trackId,
     ...updates,
   });
+}
+
+export async function deactivateDevice(adminCode: string, bobbyId: string) {
+  return callAdminStore<{ ok: boolean }>(adminCode, "deactivate_device", { bobbyId });
+}
+
+export async function activateDevice(adminCode: string, bobbyId: string) {
+  return callAdminStore<{ ok: boolean }>(adminCode, "activate_device", { bobbyId });
+}
+
+export async function deleteDevice(adminCode: string, bobbyId: string) {
+  return callAdminStore<{ ok: boolean }>(adminCode, "delete_device", { bobbyId });
 }

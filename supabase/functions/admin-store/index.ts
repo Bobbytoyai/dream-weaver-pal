@@ -271,6 +271,35 @@ serve(async (req) => {
         return json({ ok: true });
       }
 
+      case "deactivate_device": {
+        const bobbyId = asString(body.bobbyId);
+        if (!bobbyId) return json({ error: "bobbyId requis" }, 400);
+
+        const { error } = await sb.from("bobby_parent_codes").update({ is_active: false }).eq("bobby_code_id", bobbyId);
+        if (error) throw error;
+        return json({ ok: true });
+      }
+
+      case "activate_device": {
+        const bobbyId = asString(body.bobbyId);
+        if (!bobbyId) return json({ error: "bobbyId requis" }, 400);
+
+        const { error } = await sb.from("bobby_parent_codes").update({ is_active: true }).eq("bobby_code_id", bobbyId);
+        if (error) throw error;
+        return json({ ok: true });
+      }
+
+      case "delete_device": {
+        const bobbyId = asString(body.bobbyId);
+        if (!bobbyId) return json({ error: "bobbyId requis" }, 400);
+
+        // Delete parent codes first (FK), then bobby code
+        await sb.from("bobby_parent_codes").delete().eq("bobby_code_id", bobbyId);
+        const { error } = await sb.from("bobby_codes").delete().eq("id", bobbyId);
+        if (error) throw error;
+        return json({ ok: true });
+      }
+
       default:
         return json({ error: `Action non supportée: ${action}` }, 400);
     }
