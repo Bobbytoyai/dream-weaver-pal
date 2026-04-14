@@ -93,9 +93,11 @@ export type Database = {
           id: string
           interaction_count: number
           interaction_style: string
+          interest_scores: Json
           last_emotions: string[]
           last_story_id: string | null
           learning_speed: string
+          persistent_facts: Json
           preferences: Json
           preferred_topics: Json
           privacy_mode: boolean | null
@@ -116,9 +118,11 @@ export type Database = {
           id?: string
           interaction_count?: number
           interaction_style?: string
+          interest_scores?: Json
           last_emotions?: string[]
           last_story_id?: string | null
           learning_speed?: string
+          persistent_facts?: Json
           preferences?: Json
           preferred_topics?: Json
           privacy_mode?: boolean | null
@@ -139,9 +143,11 @@ export type Database = {
           id?: string
           interaction_count?: number
           interaction_style?: string
+          interest_scores?: Json
           last_emotions?: string[]
           last_story_id?: string | null
           learning_speed?: string
+          persistent_facts?: Json
           preferences?: Json
           preferred_topics?: Json
           privacy_mode?: boolean | null
