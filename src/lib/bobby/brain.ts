@@ -192,6 +192,17 @@ export async function buildBobbyReply({
   const blockedTopics = parentSettings?.blockedTopics ?? [];
   const pipelineStart = performance.now();
 
+  // Build personality context once for the whole pipeline
+  const personalityCtx: PersonalityContext = {
+    childAge,
+    sessionMood: mem.sessionMood,
+    emotionType: "neutral",
+    emotionIntensity: 0,
+    turnCount: mem.turnCount,
+    hour: new Date().getHours(),
+    parentPersonality: personality,
+  };
+
   // ═══════════════════════════════════════════════════════════
   // PRE-PIPELINE: Bypasses (narration, safety, games)
   // ═══════════════════════════════════════════════════════════
