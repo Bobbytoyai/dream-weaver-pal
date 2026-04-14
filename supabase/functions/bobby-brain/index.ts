@@ -596,7 +596,7 @@ serve(async (req) => {
     const aiBody: Record<string, unknown> = {
       model: "google/gemini-2.5-flash-lite",
       messages: aiMessages,
-      max_tokens: 200,
+      max_tokens: 120,
       temperature: 0.85,
     };
 
