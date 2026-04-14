@@ -711,6 +711,19 @@ export function useBobbyVoiceCore({
 
   // ─── Tap Bobby handler ────────────────────────────
   const handleTapBobby = useCallback(async () => {
+    // If music is playing, stop it and resume listening
+    if (musicAudioRef.current) {
+      console.log("[BobbyVoiceCore] 🎵 Tap — stopping music");
+      musicAudioRef.current.pause();
+      musicAudioRef.current.currentTime = 0;
+      musicAudioRef.current = null;
+      setMusicPlaying(false);
+      eventBus.emit({ type: "MUSIC_STOP" });
+      lastSpeechEndRef.current = Date.now();
+      await startListening();
+      return;
+    }
+
     // Don't interrupt Bobby while speaking — let him finish naturally
     if (machineRef.current === "SPEAKING" || machineRef.current === "PROCESSING") {
       console.log("[BobbyVoiceCore] 🔇 Tap ignored — Bobby is", machineRef.current);

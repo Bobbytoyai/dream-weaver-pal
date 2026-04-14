@@ -114,24 +114,25 @@ function getPlayableTracks(): MusicTrack[] {
 }
 
 // ── Detect if user is requesting music ──
+// IMPORTANT: These must be specific to music requests only!
+// Avoid broad patterns that match general conversation.
 const MUSIC_TRIGGERS = [
   /(?:joue|mets|chante|écouter?|lance|passe)\s+(?:moi\s+)?(?:la?\s+)?(?:chanson|musique|comptine|berceuse|hymne)/i,
-  /(?:joue|mets|chante|écouter?|lance|passe)\s+(?:moi\s+)?/i,
-  /(?:je\s+veux\s+(?:écouter?|entendre))\s+/i,
-  /(?:tu\s+(?:peux|connais)\s+(?:jouer|chanter|mettre))\s+/i,
-  /(?:une?\s+(?:chanson|musique|comptine|berceuse))/i,
+  /(?:je\s+veux\s+(?:écouter?|entendre))\s+(?:une?\s+)?(?:chanson|musique|comptine|berceuse)/i,
+  /(?:tu\s+(?:peux|connais)\s+(?:jouer|chanter|mettre))\s+(?:une?\s+)?(?:chanson|musique|comptine|berceuse)/i,
+  /(?:une?\s+(?:chanson|musique|comptine|berceuse))\s+(?:s'?il\s+(?:te|vous)\s+pla[iî]t)/i,
   /(?:je\s+veux\s+(?:dormir|faire\s+dodo|une?\s+berceuse))/i,
-  /\b(?:dodo|dormir)\b/i,
+  /\bjoue\s+(?:moi\s+)?(?:bobby\s+tu\s+es\s+la|au\s+clair|alouette|frere\s+bobby|petit\s+navire|marseillaise|dort\s+doucement)/i,
 ];
 
 const MUSIC_WORD_VARIANTS = [
-  "musique", "chanson", "comptine", "berceuse",
-  "chane", "chancon", "chançon", "muzik", "muzique", "muszique",
-  "contine", "conptine", "comtine", "dodo",
+  "comptine", "berceuse",
+  "contine", "conptine", "comtine",
 ];
 
 export function detectMusicRequest(text: string): boolean {
   const lower = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  // Must match a specific music trigger or contain a music-specific word
   return MUSIC_TRIGGERS.some(r => r.test(lower)) || 
     MUSIC_WORD_VARIANTS.some(w => lower.includes(w));
 }
@@ -205,13 +206,12 @@ export async function handleMusicAnswer(text: string): Promise<{ handled: boolea
   if (!state.waitingForReplayAnswer) return { handled: false, text: "" };
   
   const norm = normalize(text);
-  const isYes = /oui|encore|rejoue|re(joue|mets)|la même|pareil|s'il te pla[iî]t|ouais|ouai|ok|d'accord/i.test(norm);
-  const isNo = /non|autre|change|suivant|prochaine?|stop|arrête|pas|rien|c'est bon/i.test(norm);
+  const isYes = /^(?:oui|encore|rejoue|re(?:joue|mets)|la m[eê]me|pareil|ouais|ouai|ok|d'accord)\s*[.!?]*$/i.test(norm.trim());
+  const isNo = /^(?:non|stop|arr[eê]te|c'est bon|rien)\s*[.!?]*$/i.test(norm.trim());
   const isNewRequest = detectMusicRequest(text);
   
-  state.waitingForReplayAnswer = false;
-  
   if (isNewRequest) {
+    state.waitingForReplayAnswer = false;
     const track = await matchTrack(text);
     if (track && track.file_path) {
       return {
@@ -223,6 +223,7 @@ export async function handleMusicAnswer(text: string): Promise<{ handled: boolea
   }
   
   if (isYes && state.currentTrack?.file_path) {
+    state.waitingForReplayAnswer = false;
     return {
       handled: true,
       text: `C'est reparti ! 🎵 On réécoute "${state.currentTrack.title}" !`,
@@ -231,6 +232,7 @@ export async function handleMusicAnswer(text: string): Promise<{ handled: boolea
   }
   
   if (isNo) {
+    state.waitingForReplayAnswer = false;
     state.currentTrack = null;
     return {
       handled: true,
@@ -238,11 +240,10 @@ export async function handleMusicAnswer(text: string): Promise<{ handled: boolea
     };
   }
   
+  // Not a clear music-related answer — let it fall through to normal conversation
+  state.waitingForReplayAnswer = false;
   state.currentTrack = null;
-  return {
-    handled: true,
-    text: "OK ! Dis-moi ce que tu veux faire maintenant 😊",
-  };
+  return { handled: false, text: "" };
 }
 
 // ── Play a track (returns the public URL) ──
