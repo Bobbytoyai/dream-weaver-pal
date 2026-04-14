@@ -154,7 +154,13 @@ export async function queryKnowledgeBase(
       const priorityFactor = 0.5 + ((entry.priority || 5) / 10) * 0.5;
       const finalScore = rawScore * priorityFactor;
 
-      if (finalScore > bestScore && finalScore >= 0.12) {
+      // Require minimum 2 token overlap for short inputs to prevent
+      // single-word false positives like "trou" → "trou noir"
+      if (inputTokens.length <= 3 && qScore < 0.4 && kwScore < 0.5 && containment < 0.5) {
+        continue; // Skip weak single-word matches
+      }
+
+      if (finalScore > bestScore && finalScore >= 0.25) {
         bestScore = finalScore;
         bestMatch = entry;
       }
