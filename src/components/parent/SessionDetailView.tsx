@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import {
   MessageSquare, Star, Loader2,
-  Download, CloudUpload, Trash2,
+  Download, CloudUpload, Trash2, RefreshCw,
 } from "lucide-react";
 import {
   type Analysis, type Session, type ParentSessionMessage,
@@ -18,7 +18,7 @@ interface SessionDetailViewProps {
   sessionMessages: ParentSessionMessage[];
   analyzing: boolean;
   displayName: string;
-  analyzeSession: (session: Session) => void;
+  analyzeSession: (session: Session, forceReanalyze?: boolean) => void;
   toggleFavorite: (session: Session) => void;
   exportSessionPDF: (session: Session, analysis: Analysis | null) => void;
   deleteSession: (sessionId: string) => void;
