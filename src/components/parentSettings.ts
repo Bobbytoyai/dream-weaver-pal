@@ -37,6 +37,7 @@ export interface ParentSettings {
   consentImprovement: boolean;
   consentStats: boolean;
   disabledExpressions: string[];
+  parentMode: "normal" | "nuit" | "ecole" | "calme" | "educatif";
   bilingualMode: "off" | "pending";
   bobbyColor: string;
   bobbyColors: {
