@@ -381,7 +381,10 @@ export async function buildBobbyReply({
   }
   if (localReply.confidence >= LAYER1_CONFIDENCE) {
     const reply = postProcess(localReply, childName, childAge, personalityCtx);
-    if (shouldAddFollowUp && cognitionFollowUp && Math.random() < 0.5) {
+    // V6: Memory injection when cognition suggests it
+    if (cognition.shouldInjectMemory && Math.random() < 0.4) {
+      reply.text = maybeInjectMemory(reply.text, userText, childName, mem.currentTopic, emotion.type);
+    } else if (shouldAddFollowUp && cognitionFollowUp && Math.random() < 0.5) {
       reply.text = reply.text.replace(/[.!?…]*$/, ". ") + cognitionFollowUp;
     } else {
       const smartFollowUp = getSmartFollowUp(childName);
