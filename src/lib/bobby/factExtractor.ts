@@ -51,9 +51,9 @@ function cap(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }
 
-// Clean trailing punctuation/spaces
+// Clean trailing punctuation/spaces and leading articles
 function clean(s: string): string {
-  return s.replace(/[.!?,;…]+$/, "").trim();
+  return s.replace(/^(?:les? |la |l'|du |des |un[e]? )/i, "").replace(/[.!?,;…]+$/, "").trim();
 }
 
 const RULES: ExtractionRule[] = [
