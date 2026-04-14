@@ -499,3 +499,81 @@ function buildCognitionFollowUp(cognition: CognitionOutput, _childName: string):
 
   return pool[Math.floor(Math.random() * pool.length)];
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MEMORY-DRIVEN CALLBACKS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const MEMORY_TEMPLATES: Record<string, (fact: string, childName: string) => string> = {
+  animaux: (f, n) => `Au fait ${n}, tu m'avais parlé de ${extractFactValue(f)} ! Comment ça va ? 🐾`,
+  famille: (f, n) => `Tu sais, je me souviens que ${extractFactValue(f)}. C'est chouette ! 💙`,
+  amis: (f, n) => `Oh, ça me rappelle, tu m'avais dit que ${extractFactValue(f)} ! 😊`,
+  préférence: (f, n) => `Tiens ${n}, tu m'avais dit que tu adorais ${extractFactValue(f)} ! C'est toujours le cas ? 🌟`,
+  activité: (f, n) => `${n}, tu fais toujours ${extractFactValue(f)} ? Tu me racontes ? 😄`,
+  école: (f, n) => `Au fait, tu m'avais dit que ${extractFactValue(f)}. Ça se passe bien ? 📚`,
+  peur: (f, _n) => `Je me souviens que ${extractFactValue(f)}. Si tu veux en parler, je suis là. 💙`,
+  rêve: (f, n) => `${n}, tu rêves toujours de ${extractFactValue(f)} ? C'est un super rêve ! ✨`,
+  identité: (f, _n) => `Je me souviens bien, ${extractFactValue(f)} ! 😄`,
+  objet: (f, n) => `Au fait ${n}, ${extractFactValue(f)}, il va bien ? 🧸`,
+  aversion: (f, _n) => `Je me souviens que tu n'aimais pas trop ${extractFactValue(f)}, c'est toujours pareil ? 😅`,
+  lieu: (f, _n) => `Tu m'avais dit que ${extractFactValue(f)} ! C'est cool ! 🏠`,
+  santé: (f, _n) => `Je me souviens, ${extractFactValue(f)}. J'espère que tout va bien ! 💙`,
+};
+
+function extractFactValue(factText: string): string {
+  // "Adore : les dinosaures" → "les dinosaures"
+  // "A un(e) chat : Moustache" → "ton chat Moustache"
+  const colonIdx = factText.indexOf(":");
+  if (colonIdx !== -1) {
+    const value = factText.slice(colonIdx + 1).trim();
+    const prefix = factText.slice(0, colonIdx).trim().toLowerCase();
+    if (prefix.startsWith("a un")) return `ton ${value.toLowerCase()}`;
+    if (prefix.startsWith("adore")) return value.toLowerCase();
+    if (prefix === "animal préféré") return `les ${value.toLowerCase()}`;
+    return value.toLowerCase();
+  }
+  return factText.toLowerCase();
+}
+
+/**
+ * Build a memory-based callback using a relevant fact from persistent memory.
+ * Returns null if no suitable fact found or random chance says skip.
+ */
+function buildMemoryCallback(
+  userText: string,
+  childName: string,
+  currentTopic: string | null,
+  currentEmotion: string,
+): string | null {
+  const relevantFacts = getRelevantFacts(
+    { currentTopic, currentEmotion, userText },
+    3,
+  );
+
+  if (relevantFacts.length === 0) return null;
+
+  // Pick the most relevant fact
+  const fact = relevantFacts[0];
+  const templateFn = MEMORY_TEMPLATES[fact.category] || MEMORY_TEMPLATES.préférence;
+  if (!templateFn) return null;
+
+  return templateFn(fact.text, childName);
+}
+
+/**
+ * Try to inject a memory reference into a reply.
+ * Called when cognition.shouldInjectMemory is true.
+ */
+function maybeInjectMemory(
+  replyText: string,
+  userText: string,
+  childName: string,
+  currentTopic: string | null,
+  currentEmotion: string,
+): string {
+  const callback = buildMemoryCallback(userText, childName, currentTopic, currentEmotion);
+  if (!callback) return replyText;
+
+  console.log(`[Brain V6] 🧠 Memory injection: "${callback.slice(0, 60)}..."`);
+  return replyText.replace(/[.!?…]*\s*$/, ". ") + callback;
+}
