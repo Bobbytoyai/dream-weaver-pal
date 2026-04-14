@@ -20,7 +20,7 @@ interface HomeTabProps {
 
 const HomeTab: React.FC<HomeTabProps> = ({
   sessions, analyses, displayName, cloudProfile,
-  unreadAlertCount, onOpenNotifPanel, onNavigate,
+  unreadAlertCount, settings, onOpenNotifPanel, onNavigate, onUpdateMode,
 }) => {
   // ─── Daily summary ───
   const todayStr = new Date().toLocaleDateString("fr-FR");
