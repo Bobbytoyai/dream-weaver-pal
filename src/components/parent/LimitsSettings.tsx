@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SaveButton from "./SaveButton";
 import { ChevronLeft, Sun, X } from "lucide-react";
 import type { ParentSettings } from "@/components/parentSettings";
 
@@ -244,16 +245,7 @@ const LimitsSettings = ({ settings, onUpdate, onUpdateNested, todayDuration, onB
         </div>
       </div>
 
-      {/* Save */}
-      <button onClick={onSave}
-        className={`w-full py-3.5 text-[14px] font-black transition-all border-4 border-black uppercase ${
-          saved
-            ? "bg-[var(--retro-green)] text-black"
-            : "bg-foreground text-background hover:opacity-90"
-        }`}
-        style={{ boxShadow: "5px 5px 0px rgba(0,0,0,0.3)" }}>
-        {saved ? "✅ ENREGISTRÉ !" : "💾 ENREGISTRER"}
-      </button>
+      <SaveButton onSave={onSave} saved={saved} />
     </div>
   );
 };

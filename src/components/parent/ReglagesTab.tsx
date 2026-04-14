@@ -16,6 +16,7 @@ interface ReglagesTabProps {
   childName: string;
   allInterests: [string, number][];
   settingsSaved: boolean;
+  settingsSaving?: boolean;
   reglagesSection: "voix" | "limites" | "personnalisation" | "profil" | null;
   setReglagesSection: (s: "voix" | "limites" | "personnalisation" | "profil" | null) => void;
   onUpdate: <K extends keyof ParentSettings>(key: K, value: ParentSettings[K]) => void;

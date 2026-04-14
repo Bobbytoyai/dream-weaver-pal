@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SaveButton from "./SaveButton";
 import { ArrowLeft, X } from "lucide-react";
 import type { ParentSettings } from "@/components/parentSettings";
 
@@ -135,18 +136,8 @@ const ProfilTab = ({
           className="w-full px-3 py-2 bg-white text-[11px] text-black placeholder:text-black/40 border-4 border-black outline-none font-bold" />
       </div>
 
-      {/* Save */}
       <div className="pt-1 pb-2">
-        <button
-          onClick={onSave}
-          className={`w-full py-3.5 text-[14px] font-black transition-all border-4 border-black uppercase ${
-            saved
-              ? "bg-[var(--retro-green)] text-black"
-              : "bg-foreground text-background hover:opacity-90"
-          }`}
-          style={{ boxShadow: "5px 5px 0px rgba(0,0,0,0.3)" }}>
-          {saved ? "✅ ENREGISTRÉ !" : "💾 ENREGISTRER"}
-        </button>
+        <SaveButton onSave={onSave} saved={saved} />
       </div>
     </div>
   );

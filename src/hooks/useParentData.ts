@@ -302,7 +302,11 @@ export function useParentData({ childName, bobbyCodeId, parentSettings, onSettin
     // Don't auto-save to cloud on every keystroke — wait for explicit save
   };
 
+  const [settingsSaving, setSettingsSaving] = useState(false);
+
   const handleSave = async () => {
+    if (settingsSaving) return;
+    setSettingsSaving(true);
     try {
       await onSettingsChange?.(settings);
       setSettingsSaved(true);
@@ -310,6 +314,8 @@ export function useParentData({ childName, bobbyCodeId, parentSettings, onSettin
     } catch (e: any) {
       console.error("[ParentData] Save failed:", e);
       toast.error("Erreur de sauvegarde", { description: e.message || "Impossible d'enregistrer les réglages" });
+    } finally {
+      setSettingsSaving(false);
     }
   };
 
@@ -448,7 +454,7 @@ export function useParentData({ childName, bobbyCodeId, parentSettings, onSettin
     user, sessions, analyses, loading, displayName,
     selectedSession, setSelectedSession, selectedAnalysis, setSelectedAnalysis,
     analyzing, sessionMessages, setSessionMessages,
-    settings, settingsSaved, reglagesSection, setReglagesSection,
+    settings, settingsSaved, settingsSaving, reglagesSection, setReglagesSection,
     updateSetting, updateNested, handleSave,
     pendingNameChange, setPendingNameChange,
     safetyAlerts, showSafetyAlerts, setShowSafetyAlerts, clearSafetyAlerts,

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import SaveButton from "./SaveButton";
 import { ChevronLeft, Shuffle, ChevronDown } from "lucide-react";
 import type { ParentSettings } from "@/components/parentSettings";
 import { LazyHologramFace as HologramFace } from "@/components/hologram/LazyHologramFace";
@@ -339,16 +340,7 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
         })}
       </div>
 
-      {/* Save */}
-      <button onClick={onSave}
-        className={`w-full py-2 text-[11px] font-black border-3 border-black uppercase transition-all duration-300 ${
-          saved
-            ? "bg-[var(--retro-green)] text-black scale-[0.97] border-black/60"
-            : "bg-foreground text-background hover:scale-[1.02] active:scale-95"
-        }`}
-        style={{ boxShadow: saved ? "2px 2px 0px rgba(0,0,0,0.15)" : "3px 3px 0px rgba(0,0,0,0.3)" }}>
-        {saved ? "✅ ENREGISTRÉ" : "💾 ENREGISTRER"}
-      </button>
+      <SaveButton onSave={onSave} saved={saved} className="py-2 text-[11px] border-3" />
     </div>
   );
 };
