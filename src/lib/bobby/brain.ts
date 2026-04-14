@@ -440,7 +440,9 @@ export async function buildBobbyReply({
 
   // ── FALLBACK: Use Layer 1 response (always available offline) ──
   const reply = postProcess(localReply, childName, childAge, personalityCtx);
-  if (shouldAddFollowUp && cognitionFollowUp) {
+  if (cognition.shouldInjectMemory && Math.random() < 0.4) {
+    reply.text = maybeInjectMemory(reply.text, userText, childName, mem.currentTopic, emotion.type);
+  } else if (shouldAddFollowUp && cognitionFollowUp) {
     reply.text = reply.text.replace(/[.!?…]*$/, ". ") + cognitionFollowUp;
   } else {
     const smartFollowUp = getSmartFollowUp(childName);
