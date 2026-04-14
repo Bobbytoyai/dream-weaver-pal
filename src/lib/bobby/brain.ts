@@ -162,6 +162,7 @@ export function resetBobbyBrainSession() {
   resetLocalBrain();
   clearConversationContext();
   resetPersistentMemoryCache();
+  resetGames();
 }
 
 /** Call at session start to load persistent memory from cloud/local */
@@ -211,6 +212,37 @@ export async function buildBobbyReply({ childName, childAge, userText = "", pend
     // Extract and persist key facts from child's message
     const newFacts = extractFactsFromMessage(userText);
     if (newFacts.length > 0) mergeNewFacts(newFacts);
+  }
+
+  // ─── 0. Active game — process game turn first ───
+  if (isGameActive() && userText) {
+    const gameReply = processGameTurn(userText);
+    if (gameReply) {
+      return {
+        text: simplifyForAge(gameReply, childAge),
+        intent: "GAME",
+        source: "offline_games",
+        emotion: "playful" as FaceState,
+        confidence: 1,
+        isOffline: true,
+      };
+    }
+  }
+
+  // ─── 0b. Detect game request ───
+  if (userText) {
+    const gameType = detectGameRequest(userText);
+    if (gameType) {
+      const gameStart = startGame(gameType, childAge);
+      return {
+        text: simplifyForAge(gameStart, childAge),
+        intent: "GAME",
+        source: "offline_games",
+        emotion: "playful" as FaceState,
+        confidence: 1,
+        isOffline: true,
+      };
+    }
   }
 
   // ─── 1. Library (stories, jokes) — always high confidence ───
