@@ -24,6 +24,8 @@ export interface KBEntry {
   age_max: number;
   source_content_id: string | null;
   is_active: boolean;
+  trust_score: number;
+  learning_source: string;
 }
 
 // ─── IndexedDB Layer ────────────────────────────────────────────────
