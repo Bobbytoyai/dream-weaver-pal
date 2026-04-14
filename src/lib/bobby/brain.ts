@@ -414,7 +414,7 @@ export async function buildBobbyReply({
   }
 
   // ═══════════════════════════════════════════════════════════
-  // GEMINI-FIRST PIPELINE — Online priority, minimal local overhead
+  // GEMINI-FIRST PIPELINE — Online priority, V8 modules on all paths
   // ═══════════════════════════════════════════════════════════
 
   if (!userText) {
@@ -429,6 +429,76 @@ export async function buildBobbyReply({
   personalityCtx.emotionType = localEmotion.type;
   personalityCtx.emotionIntensity = localEmotion.intensity;
 
+  // ── V8: Pre-pipeline updates (run on ALL paths, <5ms total) ──
+  recordChildResponse(userText, childAge);
+  recordInteraction(userText, localEmotion.type);
+
+  // V7: Build understanding frame for ToM & orchestrator
+  const v7Session: V7Session = {
+    turnCount: mem.turnCount,
+    sessionMood: mem.sessionMood as "positive" | "neutral" | "negative",
+    currentTopic: null,
+    topicDepth: 0,
+    lastExplicitIntent: null,
+    lastImplicitIntent: null,
+  };
+  const understanding = extractDeepUnderstanding(userText, { age: childAge, name: childName, relationshipScore: 0 }, v7Session);
+
+  // V8: Update mental model (Theory of Mind)
+  updateMentalModel(understanding, userText, childAge);
+  const tomSnap = getToMSnapshot();
+
+  // V8: Rebuild world model with latest ToM
+  buildWorldModel(childAge, tomSnap);
+
+  // V8: Check confusion zones
+  const confusionCheck = checkConfusionZones(userText, childAge);
+  if (confusionCheck.activeZones.length > 0) {
+    console.log(`[Brain V8] ⚠️ Confusion zones: ${confusionCheck.warnings.join("; ")}`);
+  }
+
+  // V8: Uncertainty check (garbled/STT errors)
+  if (isLikelyGarbled(userText)) {
+    const uncertaintyResult = assessUncertainty({
+      intentConfidence: 0.2,
+      nluLayer: "fallback",
+      detectedIntent: "UNKNOWN",
+      childAge,
+      childName,
+      userText,
+      consecutiveUncertainties: 0,
+    });
+    if (uncertaintyResult.clarificationText) {
+      return {
+        text: uncertaintyResult.clarificationText,
+        intent: "CLARIFICATION",
+        source: "uncertainty_engine",
+        emotion: "attentive",
+        confidence: 0.3,
+        isOffline: true,
+      };
+    }
+  }
+
+  // V7: Build cognition plan & orchestration directive
+  const cognitionPlan = buildCognitionPlan(understanding, v7Session, createDefaultMemoryContext());
+  const orchestrationDirective = orchestrate(understanding, v7Session);
+
+  // V8: Check proactive initiative
+  const proactiveCtx: ProactiveContext = {
+    turnCount: mem.turnCount,
+    sessionMood: mem.sessionMood as "positive" | "neutral" | "negative",
+    currentTopic: understanding.explicitIntent,
+    silenceDurationMs: 0,
+    isChildSpeaking: false,
+    isEmotionalSceneActive: localEmotion.type === "sadness" || localEmotion.type === "fear",
+    isSafetySceneActive: false,
+    childName,
+    childAge,
+    totalInteractions: 0,
+  };
+  const proactiveInitiative = maybeInitiate(proactiveCtx);
+
   // ═══════════════════════════════════════════════════════════
   // LAYER 1 (PRIMARY): GEMINI AI — Always try online first
   // ═══════════════════════════════════════════════════════════
@@ -438,11 +508,13 @@ export async function buildBobbyReply({
     const llmMs = performance.now() - llmStart;
 
     if (llmReply) {
-      // Light post-processing only (age simplification)
-      let text = simplifyForAge(llmReply.text, childAge);
+      // V8: Full post-processing pipeline on Gemini reply
+      let reply = postProcess(llmReply, childName, childAge, personalityCtx, tomSnap);
+      reply = applyOrchestration(reply, orchestrationDirective, understanding, v7Session, cognitionPlan, proactiveInitiative);
+
       const totalMs = performance.now() - pipelineStart;
-      console.log(`[Brain] ✅ Gemini reply (${llmMs.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
-      return { ...llmReply, text };
+      console.log(`[Brain] ✅ Gemini + V8 reply (${llmMs.toFixed(0)}ms LLM, ${totalMs.toFixed(0)}ms total)`);
+      return reply;
     }
   } catch (e) {
     console.warn("[Brain] Gemini failed:", e);
@@ -454,20 +526,22 @@ export async function buildBobbyReply({
   console.log("[Brain] ⚠️ Gemini unavailable — falling back to local brain");
 
   const localReply = getLocalBrainReply(userText, childName, childAge);
-  let reply = postProcess(localReply, childName, childAge, personalityCtx);
+  let reply = postProcess(localReply, childName, childAge, personalityCtx, tomSnap);
+  reply = applyOrchestration(reply, orchestrationDirective, understanding, v7Session, cognitionPlan, proactiveInitiative);
 
   // Try KB if local confidence is low
   if (localReply.confidence < LAYER1_CONFIDENCE) {
     try {
       const kbReply = await queryKnowledgeBase(userText, childAge);
       if (kbReply && kbReply.confidence >= LAYER2_CONFIDENCE) {
-        reply = postProcess(kbReply, childName, childAge, personalityCtx);
+        reply = postProcess(kbReply, childName, childAge, personalityCtx, tomSnap);
+        reply = applyOrchestration(reply, orchestrationDirective, understanding, v7Session, cognitionPlan, proactiveInitiative);
       }
     } catch { /* KB failed, use local */ }
   }
 
   const totalMs = performance.now() - pipelineStart;
-  console.log(`[Brain] ⚡ Local fallback: ${localReply.intent} (${totalMs.toFixed(0)}ms total)`);
+  console.log(`[Brain] ⚡ Local fallback + V8: ${localReply.intent} (${totalMs.toFixed(0)}ms total)`);
   return reply;
 }
 
