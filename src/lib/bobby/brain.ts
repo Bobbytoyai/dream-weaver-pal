@@ -31,7 +31,7 @@ import { getPersonalityProfile, applyPersonalityToText, type PersonalityContext 
 import { mem } from "./localBrain/memory";
 import { detectLocalIntent } from "./localBrain/intentEngine";
 import { detectEmotion } from "./localBrain/emotionEngine";
-import { getPersistentMemory } from "./persistentMemory";
+import { getPersistentMemory, getRelevantFacts } from "./persistentMemory";
 import {
   loadPersistentMemory,
   savePersistentMemory,
