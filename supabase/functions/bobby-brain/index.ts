@@ -565,7 +565,22 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, childName, childAge, personality, contextSummary, stream, userId, sessionId, blockedTopics } = await req.json();
+    const body = await req.json();
+    const { messages, childName, childAge, personality, contextSummary, stream, userId, sessionId, blockedTopics } = body;
+
+    // ── Payload validation ──
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "Invalid payload: 'messages' must be a non-empty array" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (!messages.every((m: any) => typeof m?.role === "string" && typeof m?.content === "string")) {
+      return new Response(
+        JSON.stringify({ error: "Invalid payload: each message must have 'role' and 'content' strings" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
