@@ -228,12 +228,16 @@ export function resetBobbyBrainSession() {
   resetFeedbackLoop();
   resetCognitionV7();
   resetToM();
+  resetWorldModel();
   clearResponseCache().catch(() => {});
 }
 
 export async function initBobbySession(childName: string, childAge?: number): Promise<void> {
   await loadPersistentMemory(childName);
-  if (childAge) initToM(childAge);
+  if (childAge) {
+    initToM(childAge);
+    buildWorldModel(childAge);
+  }
   console.log("[Brain] 🧠 Persistent memory loaded for", childName);
 }
 
