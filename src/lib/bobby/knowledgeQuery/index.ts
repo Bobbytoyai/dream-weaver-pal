@@ -84,7 +84,8 @@ export async function debugScoreQuery(
     const focusPen = focusPenalty(focusWords, entry.keywords || []);
     const rawScore = (Math.max(kwScore, qScore, containment) + ctxBonus) * focusPen;
     const priorityFactor = 0.5 + ((entry.priority || 5) / 10) * 0.5;
-    const finalScore = rawScore * priorityFactor;
+    const trustFactor = (entry as any).trust_score ?? 1.0;
+    const finalScore = rawScore * priorityFactor * (0.5 + trustFactor * 0.5);
 
     if (finalScore > 0.01) {
       scored.push({
