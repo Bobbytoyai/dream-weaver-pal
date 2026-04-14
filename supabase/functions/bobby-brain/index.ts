@@ -79,7 +79,7 @@ serve(async (req) => {
         ? " Utilise un vocabulaire simple mais pas bébé."
         : " Tu peux utiliser un vocabulaire un peu plus riche.";
 
-    const systemContent = `${SYSTEM_PROMPT}\n\nCONTEXTE DE SESSION :\n- L'enfant s'appelle ${childName}. Utilise EXACTEMENT "${childName}" quand tu t'adresses à lui/elle. NE JAMAIS écrire "childName", "child_name", "l'enfant", ou tout autre placeholder.\n- Il/elle a ${childAge} ans.${ageHint}${personalityHint}\n- RAPPEL CRITIQUE : le prénom est "${childName}". Utilise-le tel quel ~30% du temps.`;
+    const systemContent = `${SYSTEM_PROMPT}\n\nCONTEXTE DE SESSION :\n- L'enfant a ${childAge} ans.${ageHint}${personalityHint}\n- IMPORTANT : Ne mentionne JAMAIS le prénom de l'enfant dans tes réponses. Utilise "tu" ou "toi" uniquement.`;
 
     // Inject a reminder about the child's name in the conversation if history is long
     const sanitizedMessages = (messages || []).slice(-12).map((m: { role: string; content: string }) => ({
@@ -154,7 +154,7 @@ serve(async (req) => {
     ];
 
     if (BLOCKED_PHRASES.some(p => p.test(reply))) {
-      reply = `Je serai là tant que tu voudras jouer avec moi, ${childName} ! 😊 Tu veux faire quelque chose de fun ?`;
+      reply = `Je serai là tant que tu voudras jouer avec moi ! 😊 Tu veux faire quelque chose de fun ?`;
     }
 
     return new Response(JSON.stringify({ reply }), {
