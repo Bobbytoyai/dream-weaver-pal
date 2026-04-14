@@ -43,6 +43,7 @@ import { buildWorldModel, adaptToChildWorld, checkConfusionZones, resetWorldMode
 import { maybeInitiate, resetProactiveEngine, type ProactiveContext } from "./v8/proactiveEngine";
 import { applyVariation, resetVariationEngine } from "./v8/variationEngine";
 import { initSilenceEngine, recordChildResponse, analyzeSilence, getAttentionState, getAttentionSummary } from "./v8/silenceEngine";
+import { assessUncertainty, resetUncertaintyEngine, isLikelyGarbled, type UncertaintyAssessment } from "./v8/uncertaintyEngine";
 import { loadRelationship, recordInteraction, getInsideJokeReference, getPhaseBehavior, resetRelationshipEngine } from "./v8/relationshipEngine";
 import {
   loadPersistentMemory,
