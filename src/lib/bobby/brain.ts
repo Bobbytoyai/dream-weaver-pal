@@ -35,6 +35,7 @@ import { getPersistentMemory, getRelevantFacts } from "./persistentMemory";
 import { extractDeepUnderstanding, type UnderstandingFrame, type SessionContext as V7Session } from "./v7/deepUnderstanding";
 import { computePriority, createDefaultMemoryContext, type PriorityDecision } from "./v7/priorityEngine";
 import { orchestrate, recordBobbyResponse, resetOrchestrator, type OrchestrationDirective } from "./v7/orchestrator";
+import { checkUnderstanding, applyUnderstandingCheck, detectCorrectionSignal, resetFeedbackLoop } from "./v7/understandingLoop";
 import {
   loadPersistentMemory,
   savePersistentMemory,
@@ -146,6 +147,8 @@ function postProcess(
 function applyOrchestration(
   reply: BobbyBrainReply,
   directive: OrchestrationDirective | null,
+  understanding?: UnderstandingFrame,
+  session?: V7Session,
 ): BobbyBrainReply {
   if (!directive) return reply;
 
@@ -157,6 +160,15 @@ function applyOrchestration(
   // Append resume prompt if available
   if (directive.resumePrompt && Math.random() < 0.4) {
     reply.text = reply.text.replace(/[.!?…]*\s*$/, ". ") + directive.resumePrompt;
+  }
+
+  // V7: Understanding Feedback Loop — verify comprehension
+  if (understanding && session) {
+    const check = checkUnderstanding(understanding, reply.text, session);
+    if (check.type !== "no_check") {
+      console.log(`[Brain V7] 🔁 Feedback Loop: ${check.type} — ${check.triggerReason}`);
+      reply.text = applyUnderstandingCheck(reply.text, check);
+    }
   }
 
   // Record Bobby's response in the scene
@@ -201,6 +213,7 @@ export function resetBobbyBrainSession() {
   resetFlows();
   resetCognition();
   resetOrchestrator();
+  resetFeedbackLoop();
   clearResponseCache().catch(() => {});
 }
 
@@ -242,7 +255,15 @@ export async function buildBobbyReply({
     }
   }
 
-  // Build personality context once for the whole pipeline
+  // ── V7: CORRECTION DETECTION — did the child correct Bobby? ──
+  if (userText) {
+    const correction = detectCorrectionSignal(userText);
+    if (correction.corrected && correction.extractedClarification) {
+      console.log(`[Brain V7] 🔄 Correction detected → using clarification: "${correction.extractedClarification}"`);
+      userText = correction.extractedClarification;
+    }
+  }
+
   const personalityCtx: PersonalityContext = {
     childAge,
     sessionMood: mem.sessionMood,
@@ -468,7 +489,7 @@ export async function buildBobbyReply({
     const totalMs = performance.now() - pipelineStart;
     console.log(`[Brain V6] ✅ L1 direct → ${localReply.intent} | goal=${cognition.goal} (${totalMs.toFixed(0)}ms total)`);
     cacheReply(userText, reply).catch(() => {});
-    return applyOrchestration(reply, directive);
+    return applyOrchestration(reply, directive, understanding, v7Session);
   }
 
   // ── LAYER 2: Knowledge Base (semantic TF-IDF scoring) ──
@@ -485,7 +506,7 @@ export async function buildBobbyReply({
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain V6] ✅ L2 KB → conf=${kbReply.confidence.toFixed(2)} | goal=${cognition.goal} (L2: ${layer2Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
       cacheReply(userText, reply).catch(() => {});
-      return applyOrchestration(reply, directive);
+      return applyOrchestration(reply, directive, understanding, v7Session);
       console.log(`[Brain V6] L2 KB: conf=${kbReply.confidence.toFixed(2)} → escalate to L3`);
     }
   } catch (e) {
@@ -502,7 +523,7 @@ export async function buildBobbyReply({
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain V6] ✅ L3 LLM → goal=${cognition.goal} (L3: ${layer3Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
       cacheReply(userText, llmReply).catch(() => {});
-      return applyOrchestration(llmReply, directive);
+      return applyOrchestration(llmReply, directive, understanding, v7Session);
     }
   } catch (e) {
     console.warn("[Brain V6] L3 LLM failed:", e);
@@ -524,7 +545,7 @@ export async function buildBobbyReply({
   const totalMs = performance.now() - pipelineStart;
   console.log(`[Brain V6] ⚡ Fallback L1 → ${localReply.intent} | goal=${cognition.goal} (${totalMs.toFixed(0)}ms total)`);
   cacheReply(userText, reply).catch(() => {});
-  return applyOrchestration(reply, directive);
+  return applyOrchestration(reply, directive, understanding, v7Session);
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
