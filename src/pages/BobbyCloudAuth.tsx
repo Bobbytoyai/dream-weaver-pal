@@ -71,7 +71,11 @@ export default function BobbyCloudAuth() {
     });
 
     if (error) {
-      toast.error(error.message);
+      if (error.message?.toLowerCase().includes("hibp") || error.message?.toLowerCase().includes("pwned") || error.message?.toLowerCase().includes("breached") || error.message?.toLowerCase().includes("leaked")) {
+        toast.error("🔒 Ce mot de passe a été compromis lors d'une fuite de données connue. Choisissez un mot de passe plus sûr.", { duration: 6000 });
+      } else {
+        toast.error(error.message);
+      }
     } else {
       setStep("confirm-email");
     }
