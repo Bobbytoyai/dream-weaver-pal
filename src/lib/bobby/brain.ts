@@ -82,6 +82,8 @@ interface BuildBobbyReplyOptions {
   userText?: string;
   pendingNarration?: PendingNarration | null;
   parentSettings?: ParentSettings;
+  userId?: string | null;
+  sessionId?: string | null;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -295,7 +297,7 @@ export async function endBobbySession(childName: string): Promise<void> {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export async function buildBobbyReply({
-  childName, childAge, userText = "", pendingNarration, parentSettings,
+  childName, childAge, userText = "", pendingNarration, parentSettings, userId, sessionId,
 }: BuildBobbyReplyOptions): Promise<BobbyBrainReply> {
   const personality = parentSettings?.personality ?? "balanced";
   const blockedTopics = parentSettings?.blockedTopics ?? [];
@@ -465,7 +467,7 @@ export async function buildBobbyReply({
   // ═══════════════════════════════════════════════════════════
   try {
     const llmStart = performance.now();
-    const llmReply = await getLLMReply(childName, childAge, userText, personality);
+    const llmReply = await getLLMReply(childName, childAge, userText, personality, undefined, userId, sessionId);
     const llmMs = performance.now() - llmStart;
 
     if (llmReply) {

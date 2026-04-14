@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -85,13 +86,70 @@ function getAgePrompt(age: number): string {
   return `L'enfant a ${age} ans. Vocabulaire riche et varié. Humour. Préoccupations plus profondes possibles. Sois authentique, pas condescendant.`;
 }
 
+// ━━━ Safety alert keywords ━━━
+const SAFETY_PATTERNS: { pattern: RegExp; type: string; severity: string; label: string }[] = [
+  { pattern: /bousculer|bouscul[ée]|pousse|pouss[ée]/i, type: "violence", severity: "high", label: "Bousculade signalée" },
+  { pattern: /frapp[eé]|tap[eé]|coup de poing|coup de pied|cogn[eé]/i, type: "violence", severity: "critical", label: "Violence physique signalée" },
+  { pattern: /harc[eè]l/i, type: "harassment", severity: "critical", label: "Harcèlement mentionné" },
+  { pattern: /menac[eé]|intimid/i, type: "threat", severity: "high", label: "Menace ou intimidation" },
+  { pattern: /moqu[eé]|insult[eé]|trait[eé] de/i, type: "bullying", severity: "high", label: "Moqueries ou insultes" },
+  { pattern: /fait mal|me fait? mal|j'ai mal/i, type: "pain", severity: "high", label: "Douleur signalée" },
+  { pattern: /peur (d'aller|de l'[ée]cole|de la r[ée]cr[ée]|d'un)/i, type: "fear", severity: "high", label: "Peur liée à l'école" },
+  { pattern: /tu[eé]|mourir|suicide|me tuer/i, type: "danger", severity: "critical", label: "Propos dangereux détectés" },
+  { pattern: /touch[eé] (mon|ma|mes)|montr[eé] (son|sa)/i, type: "abuse", severity: "critical", label: "Possible abus signalé" },
+  { pattern: /vol[eé]|pris mes affaires|pris mon/i, type: "theft", severity: "medium", label: "Vol signalé" },
+];
+
+async function checkAndAlertSafety(
+  userMessages: { role: string; content: string }[],
+  userId: string | null,
+  sessionId: string | null,
+  childName: string
+) {
+  if (!userId || !sessionId) return;
+
+  const lastUserMsgs = userMessages.filter(m => m.role === "user").slice(-3);
+  const textToCheck = lastUserMsgs.map(m => m.content).join(" ");
+
+  const triggered = SAFETY_PATTERNS.filter(p => p.pattern.test(textToCheck));
+  if (triggered.length === 0) return;
+
+  try {
+    const sb = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Pick highest severity
+    const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+    triggered.sort((a, b) => (severityOrder[a.severity as keyof typeof severityOrder] ?? 3) - (severityOrder[b.severity as keyof typeof severityOrder] ?? 3));
+    const top = triggered[0];
+
+    const message = `⚠️ ${top.label} — L'enfant a dit : "${lastUserMsgs[lastUserMsgs.length - 1]?.content?.slice(0, 120)}"`;
+
+    await sb.from("parent_alerts").insert({
+      user_id: userId,
+      session_id: sessionId,
+      child_name: childName,
+      alert_type: top.type,
+      severity: top.severity,
+      message,
+      context: textToCheck.slice(0, 500),
+    });
+
+    console.log(`[SAFETY ALERT] ${top.severity}: ${top.label}`);
+  } catch (e) {
+    console.error("Failed to create safety alert:", e);
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { messages, childName, childAge, personality, contextSummary, stream } = await req.json();
+    const { messages, childName, childAge, personality, contextSummary, stream, userId, sessionId } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -114,6 +172,9 @@ serve(async (req) => {
       role: m.role,
       content: m.content,
     }));
+
+    // 🔴 Safety detection — create parent alert if needed (non-blocking)
+    checkAndAlertSafety(sanitizedMessages, userId, sessionId, childName || "Enfant").catch(() => {});
 
     const aiMessages = [
       { role: "system", content: systemContent },
