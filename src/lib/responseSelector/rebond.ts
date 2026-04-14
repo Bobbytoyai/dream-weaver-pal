@@ -43,9 +43,6 @@ export function getConversationalRebond(childName?: string): string | null {
       const fresh = rebonds.filter(r => !isRecentlyUsed(r));
       if (fresh.length > 0) {
         let text = fresh[Math.floor(Math.random() * fresh.length)];
-        if (childName && !text.includes(childName) && Math.random() > 0.5) {
-          text = `${childName}, ${text.charAt(0).toLowerCase() + text.slice(1)}`;
-        }
         return text;
       }
     }

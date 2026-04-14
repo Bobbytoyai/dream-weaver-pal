@@ -186,11 +186,11 @@ export function getOfflineResponse(text: string, childName?: string): string {
 }
 
 // ── Welcome message ────────────────────────────────────────
-export function getWelcomeMessage(childName: string): string {
+export function getWelcomeMessage(_childName: string): string {
   const picks = [
-    `Salut ${childName} ! Je suis Bobby. Appuie sur moi pour me parler !`,
-    `Coucou ${childName} ! Je t'attendais ! Appuie pour commencer !`,
-    `Bonjour ${childName} ! C'est moi Bobby. Touche l'écran pour discuter !`,
+    `Salut ! Je suis Bobby. Appuie sur moi pour me parler !`,
+    `Coucou ! Je t'attendais ! Appuie pour commencer !`,
+    `Bonjour ! C'est moi Bobby. Touche l'écran pour discuter !`,
   ];
   return pick(picks);
 }

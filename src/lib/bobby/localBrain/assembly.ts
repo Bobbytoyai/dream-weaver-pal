@@ -70,30 +70,7 @@ export function assembleResponse(
     }
   }
 
-  // Smart name injection:
-  // - Always on first turn of session
-  // - ~70% for emotional intents (intensity >= 3)
-  // - ~40% for normal conversation
-  // - ~20% for trivial/fun intents
-  if (childName && !text.includes(childName)) {
-    const emotionalIntents: LocalIntent[] = [
-      "PEUR", "TRISTESSE", "COLERE", "HONTE", "SOLITUDE", "HARCELEMENT",
-      "MANQUE_CONFIANCE", "CRISE_SECURITE", "PEUR_ABANDON", "PEUR_ECHEC",
-      "ABANDON", "FATIGUE_EMOTIONNELLE", "ANXIETE", "IDENTITE_PEUR",
-    ];
-    const isEmotional = emotionalIntents.includes(intent) || emotion.intensity >= 3;
-    const isFirstTurn = mem.turnCount <= 2;
-    const nameChance = isFirstTurn ? 1.0 : isEmotional ? 0.7 : 0.35;
-
-    if (Math.random() < nameChance) {
-      // Place name at start with 💛 for emotional, plain for others
-      if (isEmotional) {
-        text = `${childName} 💛 ${text.charAt(0).toLowerCase() + text.slice(1)}`;
-      } else {
-        text = `${childName}, ${text.charAt(0).toLowerCase() + text.slice(1)}`;
-      }
-    }
-  }
+  // Name injection disabled — Bobby ne mentionne plus le prénom
 
   // Age adaptation
   if (childAge <= 4) {

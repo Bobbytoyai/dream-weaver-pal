@@ -18,8 +18,8 @@ const STORY_THEME_KEYWORDS: Record<string, string[]> = {
   dodo: ["dodo", "nuit", "rêve", "reve", "berceuse", "sommeil"],
 };
 
-function personalize(text: string, childName: string): string {
-  return text.replace(/\{child_name\}/g, childName || "toi");
+function personalize(text: string, _childName: string): string {
+  return text.replace(/\{child_name\}/g, "");
 }
 
 function detectStoryTheme(text: string): string | undefined {

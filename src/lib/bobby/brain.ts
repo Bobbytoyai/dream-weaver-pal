@@ -96,11 +96,11 @@ function isTopicBlocked(text: string, blockedTopics: string[]): boolean {
   return blockedTopics.some(topic => normalized.includes(topic.toLowerCase()));
 }
 
-function getBlockedTopicReply(childName: string): BobbyBrainReply {
+function getBlockedTopicReply(_childName: string): BobbyBrainReply {
   const responses = [
-    `${childName}, parlons d'autre chose ! Tu veux qu'on joue ou que je te raconte une histoire ?`,
-    `Hmm, j'ai une meilleure idée ${childName} ! Et si on parlait d'un truc super cool ?`,
-    `${childName}, Bobby préfère qu'on parle d'aventures et de découvertes ! 🚀`,
+    `Parlons d'autre chose ! Tu veux qu'on joue ou que je te raconte une histoire ?`,
+    `Hmm, j'ai une meilleure idée ! Et si on parlait d'un truc super cool ?`,
+    `Bobby préfère qu'on parle d'aventures et de découvertes ! 🚀`,
   ];
   return {
     text: responses[Math.floor(Math.random() * responses.length)],
@@ -112,29 +112,18 @@ function getBlockedTopicReply(childName: string): BobbyBrainReply {
   };
 }
 
-// ─── Personalized name injection ────────────────────────────────────────
-// Makes Bobby say the child's name naturally in ~30% of responses
-function personalizeWithName(text: string, childName: string): string {
-  // Don't double-inject if the name is already present
-  if (text.includes(childName)) return text;
-  // Only inject ~30% of the time
-  if (Math.random() > 0.3) return text;
-
-  const injections = [
-    () => `${childName}, ${text.charAt(0).toLowerCase() + text.slice(1)}`,
-    () => `${text} ${childName} !`.replace(/ !$/, ` ${childName} !`),
-    () => text.replace(/\.$/, ` ${childName}.`),
-  ];
-  return injections[Math.floor(Math.random() * injections.length)]();
+// Name injection disabled — Bobby ne mentionne plus le prénom
+function personalizeWithName(text: string, _childName: string): string {
+  return text;
 }
 
 // ─── Public API ─────────────────────────────────────────────────────────
 
-export function getBobbyWelcomeMessage(childName: string): string {
+export function getBobbyWelcomeMessage(_childName: string): string {
   const greetings = [
-    `Salut ${childName} ! Touche Bobby pour me parler. Je suis là rien que pour toi ! 🌟`,
-    `Hey ${childName} ! C'est Bobby ! Touche-moi et dis-moi ce que tu veux faire aujourd'hui !`,
-    `Coucou ${childName} ! Bobby est prêt à jouer, discuter ou raconter des histoires ! Touche-moi !`,
+    `Salut ! Touche Bobby pour me parler. Je suis là rien que pour toi ! 🌟`,
+    `Hey ! C'est Bobby ! Touche-moi et dis-moi ce que tu veux faire aujourd'hui !`,
+    `Coucou ! Bobby est prêt à jouer, discuter ou raconter des histoires ! Touche-moi !`,
   ];
   return greetings[Math.floor(Math.random() * greetings.length)];
 }
