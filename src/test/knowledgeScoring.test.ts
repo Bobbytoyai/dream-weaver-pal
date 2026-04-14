@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import { normalize, stem, tokenize } from "@/lib/bobby/knowledgeQuery/textProcessing";
 import {
   fuzzyMatch,
@@ -9,8 +9,16 @@ import {
   expandWithSemantics,
   clearConversationContext,
   pushConversationContext,
+  preloadSemanticFields,
 } from "@/lib/bobby/knowledgeQuery/scoring";
 import { extractFocus, focusPenalty } from "@/lib/bobby/knowledgeQuery/focusExtraction";
+
+// Pre-warm semantic fields for synchronous tests
+beforeAll(async () => {
+  preloadSemanticFields();
+  // Wait for the dynamic import to resolve
+  await new Promise(r => setTimeout(r, 100));
+});
 
 // ── Text Processing ──────────────────────────────────────────
 
