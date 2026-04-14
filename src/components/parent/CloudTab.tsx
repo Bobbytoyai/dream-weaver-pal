@@ -30,13 +30,22 @@ const CloudTab = ({
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const totalSessions = sessions.length;
-  const totalMessages = sessions.reduce((s, sess) => s + (sess.message_count || 0), 0);
-  const totalAnalyses = analyses.length;
+  const [quota, setQuota] = useState<CloudUsage | null>(null);
 
-  const estimatedStorageKB = (totalSessions * 2) + (totalMessages * 0.5) + (totalAnalyses * 5);
-  const estimatedStorageMB = Math.max(0.01, estimatedStorageKB / 1024);
-  const storageLabel = estimatedStorageMB < 1 ? `${Math.round(estimatedStorageKB)} Ko` : `${estimatedStorageMB.toFixed(1)} Mo`;
+  useEffect(() => {
+    if (user) {
+      getCloudUsage().then(setQuota).catch(() => {});
+    }
+  }, [user]);
+
+  const totalSessions = quota?.sessions ?? sessions.length;
+  const totalMessages = quota?.messages ?? sessions.reduce((s, sess) => s + (sess.message_count || 0), 0);
+  const totalAnalyses = quota?.analyses ?? analyses.length;
+  const usedMB = quota?.usedMB ?? 0.01;
+  const quotaMB = quota?.quotaMB ?? 500;
+  const storageLabel = formatStorage(usedMB);
+  const quotaLabel = formatStorage(quotaMB);
+  const usedPercent = quotaMB > 0 ? Math.min(100, (usedMB / quotaMB) * 100) : 0;
 
   const plans = [
     {
