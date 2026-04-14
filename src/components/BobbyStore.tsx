@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Search, Download, Check, Star, Sparkles, Users, Zap, Loader2, Trash2, ArrowLeft, Clock, Award, BookOpen, ChevronRight, Globe, Shield, Heart, X } from "lucide-react";
+import { Search, Download, Check, Star, Sparkles, Users, Zap, Loader2, Trash2, ArrowLeft, Clock, Award, BookOpen, ChevronRight, Globe, Shield, Heart, X, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { installContentPack, uninstallContentPack, getLocalCacheSize, type InstallResult } from "@/lib/bobby/contentInstaller";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 // ─── Types ──────────────────────────────────────────────────────────
 
-type StoreCategory = "all" | "jeux" | "histoires" | "educatif" | "blagues" | "nouveautes" | "langues";
+type StoreCategory = "all" | "jeux" | "histoires" | "educatif" | "blagues" | "nouveautes" | "langues" | "musique";
 
 interface ContentItem {
   title: string;
@@ -59,7 +59,11 @@ const CATEGORIES: { id: StoreCategory; emoji: string; label: string; bg: string 
   { id: "educatif", emoji: "🧠", label: "Éducatif", bg: "var(--retro-green)" },
   { id: "histoires", emoji: "📚", label: "Histoires", bg: "var(--retro-red)" },
   { id: "blagues", emoji: "😂", label: "Blagues", bg: "var(--retro-orange)" },
+  { id: "musique", emoji: "🎵", label: "Musique", bg: "var(--retro-purple)" },
 ];
+
+type RatingFilter = "all" | "4+" | "4.5+";
+type AgeFilter = "all" | "3-5" | "5-7" | "7-9" | "9-12";
 
 const LANG_LABELS: Record<string, string> = { fr: "🇫🇷 Français", en: "🇬🇧 English", es: "🇪🇸 Español", ar: "🇸🇦 العربية", de: "🇩🇪 Deutsch" };
 
