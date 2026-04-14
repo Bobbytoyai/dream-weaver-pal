@@ -312,7 +312,7 @@ export async function buildBobbyReply({
   }
 
   // ═══════════════════════════════════════════════════════════
-  // V6 3-LAYER PIPELINE + COGNITION
+  // V7 DEEP UNDERSTANDING + V6 3-LAYER PIPELINE + COGNITION
   // ═══════════════════════════════════════════════════════════
 
   if (!userText) {
@@ -320,6 +320,37 @@ export async function buildBobbyReply({
       text: `Je suis là ! Dis-moi ce que tu veux faire 😊`,
       intent: "GENERAL", source: "local_brain", emotion: "attentive", confidence: 0.4, isOffline: true,
     };
+  }
+
+  // ── V7: DEEP UNDERSTANDING — 4-level intent analysis ──
+  const v7Session: V7Session = {
+    turnCount: mem.turnCount,
+    sessionMood: mem.sessionMood,
+    currentTopic: mem.currentTopic,
+    topicDepth: mem.topicDepth,
+    lastExplicitIntent: null,
+    lastImplicitIntent: null,
+  };
+  const understanding = extractDeepUnderstanding(userText, v7Session, {
+    age: childAge,
+    name: childName,
+    relationshipScore: 50,
+  });
+  console.log(
+    `[Brain V7] 🧠 Deep Understanding: explicit=${understanding.explicitIntent} implicit=${understanding.implicitIntent} need=${understanding.emotionalNeed}(${understanding.needIntensity}) goal=${understanding.userGoal} ambiguity=${understanding.ambiguityScore.toFixed(2)}${understanding.requiresConfirmation ? " ⚠️ CONFIRM" : ""}`
+  );
+
+  // ── V7: If ambiguity is very high, ask for clarification ──
+  if (understanding.requiresConfirmation && understanding.confirmationPrompt && understanding.ambiguityScore > 0.7) {
+    const confirmReply: BobbyBrainReply = {
+      text: simplifyForAge(understanding.confirmationPrompt, childAge),
+      intent: understanding.explicitIntent,
+      source: "local_brain",
+      emotion: "attentive",
+      confidence: 0.5,
+      isOffline: true,
+    };
+    return postProcess(confirmReply, childName, childAge, personalityCtx);
   }
 
   // ── CACHE CHECK: L1 RAM → L2 IndexedDB (~0-3ms) ──
@@ -335,10 +366,10 @@ export async function buildBobbyReply({
   const localReply = getLocalBrainReply(userText, childName, childAge);
   const layer1Ms = performance.now() - layer1Start;
 
-  console.log(`[Brain V6] L1 LocalBrain: intent=${localReply.intent} confidence=${localReply.confidence.toFixed(2)} (${layer1Ms.toFixed(1)}ms)`);
+  console.log(`[Brain V7] L1 LocalBrain: intent=${localReply.intent} confidence=${localReply.confidence.toFixed(2)} | goal=${understanding.userGoal} (${layer1Ms.toFixed(1)}ms)`);
 
   // ── ★ COGNITION LAYER: decide HOW to respond ──
-  const emotion = detectEmotion(userText);
+  const emotion = understanding.emotion;
   // Update personality context with detected emotion
   personalityCtx.emotionType = emotion.type;
   personalityCtx.emotionIntensity = emotion.intensity;
