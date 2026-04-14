@@ -5,6 +5,7 @@
 
 import type { BobbyBrainReply } from "./types";
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
+import { buildContextSummary } from "./conversationEnricher";
 
 const FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bobby-brain`;
 

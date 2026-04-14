@@ -72,7 +72,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, childName, childAge, personality } = await req.json();
+    const { messages, childName, childAge, personality, contextSummary } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -93,7 +93,10 @@ serve(async (req) => {
         ? " Utilise un vocabulaire simple mais pas bébé."
         : " Tu peux utiliser un vocabulaire un peu plus riche.";
 
-    const systemContent = `${SYSTEM_PROMPT}\n\nCONTEXTE DE SESSION :\n- L'enfant a ${childAge} ans.${ageHint}${personalityHint}\n- IMPORTANT : Ne mentionne JAMAIS le prénom de l'enfant dans tes réponses. Utilise "tu" ou "toi" uniquement.`;
+    // Inject context summary if available
+    const contextBlock = contextSummary ? `\n\n${contextSummary}` : "";
+
+    const systemContent = `${SYSTEM_PROMPT}\n\nCONTEXTE DE SESSION :\n- L'enfant a ${childAge} ans.${ageHint}${personalityHint}${contextBlock}\n- IMPORTANT : Ne mentionne JAMAIS le prénom de l'enfant dans tes réponses. Utilise "tu" ou "toi" uniquement.`;
 
     // Inject a reminder about the child's name in the conversation if history is long
     const sanitizedMessages = (messages || []).slice(-12).map((m: { role: string; content: string }) => ({
