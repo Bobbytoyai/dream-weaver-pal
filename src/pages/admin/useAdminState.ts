@@ -257,6 +257,20 @@ export function useAdminState() {
   }, []);
 
   // ─── Init ───────────────────────────────────────────────────────
+  const createDevice = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.rpc("create_bobby_device" as any);
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      toast.success(`Appareil créé ! Bobby: ${row.bobby_code} | Parent: ${row.parent_code}`);
+      await fetchDevices();
+      return row;
+    } catch (e: any) {
+      toast.error("Erreur création appareil: " + e.message);
+      return null;
+    }
+  }, [fetchDevices]);
+
   const refreshAll = useCallback(() => {
     fetchEntries(); fetchCloudStories(); fetchStoreItems(); fetchCloudUsers();
     loadInteractions(); fetchRealConversations(); fetchLiveStats(); fetchChartData(); fetchDevices();
@@ -683,6 +697,7 @@ export function useAdminState() {
     fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers,
     fetchRealConversations, fetchLiveStats, fetchChartData, fetchDevices,
     learnFromSession, refreshAll,
+    createDevice,
     navigate,
   };
 }
