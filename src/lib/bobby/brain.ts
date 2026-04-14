@@ -455,6 +455,9 @@ export async function buildBobbyReply({
     console.log(`[Brain V8] 🌍 Confusion zones: ${activeZones.map(z => z.topic).join(", ")} | ${confusionWarnings[0]}`);
   }
 
+  // ── V8: RELATIONSHIP — record per-turn interaction ──
+  recordInteraction(userText, understanding.emotion.primary);
+
   // ── V7: PRIORITY ENGINE — 5-dimension scoring ──
   const priority = computePriority(understanding, v7Session, createDefaultMemoryContext());
   console.log(
