@@ -11,7 +11,7 @@ import type { VoiceProfile } from "@/lib/voicePipeline";
 import { eventBus } from "@/lib/eventBus";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 
-type Step = "loading" | "invalid" | "claimed" | "onboarding-name" | "onboarding-age" | "sleeping" | "active" | "parent";
+type Step = "loading" | "invalid" | "claimed" | "onboarding" | "sleeping" | "active" | "parent";
 
 export default function BobbyQR() {
   const { code } = useParams<{ code: string }>();
