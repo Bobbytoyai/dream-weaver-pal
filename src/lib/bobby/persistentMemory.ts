@@ -115,59 +115,14 @@ export async function savePersistentMemory(childName: string): Promise<void> {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Fact extraction & merge
+// Fact extraction & merge (delegates to factExtractor)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-interface ExtractedFact {
-  text: string;
-  category: string;
-}
+import { extractFacts, type ExtractedFact } from "./factExtractor";
 
-/** Extract facts from a user message */
+/** Extract facts from a user message (delegates to factExtractor module) */
 export function extractFactsFromMessage(message: string): ExtractedFact[] {
-  const facts: ExtractedFact[] = [];
-
-  // Pet/person names: "mon chat s'appelle X"
-  const nameMatch = message.match(/(?:mon|ma|mes)\s+(\w+)\s+(?:s'appelle|c'est)\s+([A-ZÀ-Ü][a-zà-ü]+)/i);
-  if (nameMatch) {
-    facts.push({ text: `Son ${nameMatch[1]} s'appelle ${nameMatch[2]}`, category: "nom" });
-  }
-
-  // Preferences: "j'aime / j'adore X"
-  const likeMatch = message.match(/(?:j'aime|j'adore|je préfère|mon (?:truc|jeu|plat|sport|animal) préféré c'est)\s+(.{3,40}?)(?:\.|!|\?|,|$)/i);
-  if (likeMatch) {
-    facts.push({ text: `Aime : ${likeMatch[1].trim()}`, category: "préférence" });
-  }
-
-  // Dislikes: "j'aime pas / je déteste X"
-  const dislikeMatch = message.match(/(?:j'aime pas|je déteste|je n'aime pas|j'ai horreur)\s+(.{3,40}?)(?:\.|!|\?|,|$)/i);
-  if (dislikeMatch) {
-    facts.push({ text: `N'aime pas : ${dislikeMatch[1].trim()}`, category: "préférence" });
-  }
-
-  // Siblings
-  if (/(?:mon frère|ma sœur|mon petit frère|ma petite sœur|mes frères|mes sœurs)/i.test(message)) {
-    const sibMatch = message.match(/(?:mon frère|ma sœur|mon petit frère|ma petite sœur)\s+(?:s'appelle\s+)?([A-ZÀ-Ü][a-zà-ü]+)?/i);
-    if (sibMatch?.[1]) {
-      facts.push({ text: `A un frère/sœur : ${sibMatch[1]}`, category: "famille" });
-    } else {
-      facts.push({ text: "A mentionné avoir un frère ou une sœur", category: "famille" });
-    }
-  }
-
-  // Age
-  const ageMatch = message.match(/j'ai\s+(\d+)\s+ans/i);
-  if (ageMatch) {
-    facts.push({ text: `Dit avoir ${ageMatch[1]} ans`, category: "identité" });
-  }
-
-  // School
-  const schoolMatch = message.match(/(?:je suis en|ma classe c'est)\s+(.{3,20}?)(?:\.|!|\?|,|$)/i);
-  if (schoolMatch) {
-    facts.push({ text: `Classe : ${schoolMatch[1].trim()}`, category: "école" });
-  }
-
-  return facts;
+  return extractFacts(message);
 }
 
 /** Merge new facts into persistent memory (dedup by similarity) */
