@@ -167,6 +167,7 @@ export const INTENT_FACE_MAP: Partial<Record<LocalIntent, FaceState>> = {
   SALUT: "happy",
   AU_REVOIR: "calm",
   IDENTITE_BOBBY: "proud",
+  IDENTITE_ENFANT: "happy",
   COMPLIMENT: "proud",
   CONTENU_BLOQUE: "reassuring",
   CRISE_SECURITE: "reassuring",
