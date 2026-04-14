@@ -65,6 +65,18 @@
     <script type="module" src="/src/main.tsx"></script>
 
     <script>
+      // Apply saved background color to fallback
+      try {
+        var raw = localStorage.getItem('bobby_parent_settings');
+        if (raw) {
+          var bgMap = {"soft-blue":"#E8F0FE","soft-green":"#E8FEF0","soft-pink":"#FEE8F0","soft-purple":"#F0E8FE","soft-yellow":"#FEF8E8","white":"#FFFFFF","dark":"#1A1A2E","night":"#0D1B2A"};
+          var s = JSON.parse(raw);
+          var bgId = s && s.bobbyColors && s.bobbyColors.background || "soft-blue";
+          var el = document.getElementById('bobby-sleep-fallback');
+          if (el && bgMap[bgId]) el.style.background = bgMap[bgId];
+        }
+      } catch(e) {}
+
       // If React hasn't rendered within 8s, show Bobby sleeping
       window.__bobby_loaded = false;
       setTimeout(function() {
