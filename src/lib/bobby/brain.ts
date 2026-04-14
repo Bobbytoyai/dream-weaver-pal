@@ -26,6 +26,7 @@ import { getLocalBrainReply, resetLocalBrain } from "./localBrain";
 import { queryKnowledgeBase, clearConversationContext } from "./knowledgeQuery";
 import { getCachedReply, cacheReply, clearResponseCache } from "./responseCache";
 import { cogitate, resetCognition, type CognitionOutput } from "./cognition";
+import { getPersonalityProfile, applyPersonalityToText, type PersonalityContext } from "./personality";
 import { mem } from "./localBrain/memory";
 import { detectLocalIntent } from "./localBrain/intentEngine";
 import { detectEmotion } from "./localBrain/emotionEngine";
@@ -80,20 +81,8 @@ const INTENT_EMOTION_MAP: Record<string, FaceState> = {
 // PERSONALITY MODIFIERS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-const PERSONALITY_PREFIXES: Record<string, string[]> = {
-  calm: ["Doucement… ", "Tranquillement, ", "Tout en douceur, "],
-  energetic: ["Génial ! ", "Trop cool ! ", "Trop bien ! "],
-  educational: ["Bonne question ! ", "Intéressant ! ", "Tu sais quoi ? "],
-  balanced: [],
-};
-
-function applyPersonality(text: string, personality: string): string {
-  const prefixes = PERSONALITY_PREFIXES[personality];
-  if (!prefixes?.length) return text;
-  if (Math.random() > 0.4) return text;
-  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-  return prefix + text.charAt(0).toLowerCase() + text.slice(1);
-}
+// Personality is now handled by src/lib/bobby/personality/
+// See getPersonalityProfile() + applyPersonalityToText()
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // SAFETY & CONTENT FILTERING
@@ -125,9 +114,17 @@ function getBlockedTopicReply(): BobbyBrainReply {
 // POST-PROCESSING
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-function postProcess(reply: BobbyBrainReply, childName: string, childAge: number, personality: string): BobbyBrainReply {
+function postProcess(
+  reply: BobbyBrainReply,
+  childName: string,
+  childAge: number,
+  personalityCtx: PersonalityContext | null,
+): BobbyBrainReply {
   let text = simplifyForAge(reply.text, childAge);
-  text = applyPersonality(text, personality);
+  if (personalityCtx) {
+    const profile = getPersonalityProfile(personalityCtx);
+    text = applyPersonalityToText(text, profile);
+  }
   return { ...reply, text };
 }
 
@@ -194,6 +191,17 @@ export async function buildBobbyReply({
   const personality = parentSettings?.personality ?? "balanced";
   const blockedTopics = parentSettings?.blockedTopics ?? [];
   const pipelineStart = performance.now();
+
+  // Build personality context once for the whole pipeline
+  const personalityCtx: PersonalityContext = {
+    childAge,
+    sessionMood: mem.sessionMood,
+    emotionType: "neutral",
+    emotionIntensity: 0,
+    turnCount: mem.turnCount,
+    hour: new Date().getHours(),
+    parentPersonality: personality,
+  };
 
   // ═══════════════════════════════════════════════════════════
   // PRE-PIPELINE: Bypasses (narration, safety, games)
@@ -264,7 +272,7 @@ export async function buildBobbyReply({
   // ── Library (stories, jokes) — curated content ──
   const libraryReply = getLibraryReply(userText, childName, childAge);
   if (libraryReply) {
-    return postProcess(libraryReply, childName, childAge, personality);
+    return postProcess(libraryReply, childName, childAge, personalityCtx);
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -283,7 +291,7 @@ export async function buildBobbyReply({
   if (cached) {
     const totalMs = performance.now() - pipelineStart;
     console.log(`[Brain V6] ⚡ Cache hit → ${cached.intent} (${totalMs.toFixed(0)}ms total)`);
-    return postProcess(cached, childName, childAge, personality);
+    return postProcess(cached, childName, childAge, personalityCtx);
   }
 
   // ── LAYER 1: LocalBrain (Regex + SmartClassifier + Templates) ──
@@ -295,6 +303,9 @@ export async function buildBobbyReply({
 
   // ── ★ COGNITION LAYER: decide HOW to respond ──
   const emotion = detectEmotion(userText);
+  // Update personality context with detected emotion
+  personalityCtx.emotionType = emotion.type;
+  personalityCtx.emotionIntensity = emotion.intensity;
   const persistentMem = getPersistentMemory();
   const cognition = cogitate({
     intent: localReply.intent as any,
@@ -321,7 +332,7 @@ export async function buildBobbyReply({
 
   // High-confidence Layer 1 → respond directly (skip KB + LLM)
   if (localReply.confidence >= LAYER1_CONFIDENCE) {
-    const reply = postProcess(localReply, childName, childAge, personality);
+    const reply = postProcess(localReply, childName, childAge, personalityCtx);
     if (shouldAddFollowUp && cognitionFollowUp && Math.random() < 0.5) {
       reply.text = reply.text.replace(/[.!?…]*$/, ". ") + cognitionFollowUp;
     } else {
@@ -343,7 +354,7 @@ export async function buildBobbyReply({
     const layer2Ms = performance.now() - layer2Start;
 
     if (kbReply && kbReply.confidence >= LAYER2_CONFIDENCE) {
-      const reply = postProcess(kbReply, childName, childAge, personality);
+      const reply = postProcess(kbReply, childName, childAge, personalityCtx);
       if (shouldAddFollowUp && cognitionFollowUp && Math.random() < 0.4) {
         reply.text = reply.text.replace(/[.!?…]*$/, ". ") + cognitionFollowUp;
       }
@@ -377,7 +388,7 @@ export async function buildBobbyReply({
   }
 
   // ── FALLBACK: Use Layer 1 response (always available offline) ──
-  const reply = postProcess(localReply, childName, childAge, personality);
+  const reply = postProcess(localReply, childName, childAge, personalityCtx);
   if (shouldAddFollowUp && cognitionFollowUp) {
     reply.text = reply.text.replace(/[.!?…]*$/, ". ") + cognitionFollowUp;
   } else {
