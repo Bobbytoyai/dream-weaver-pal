@@ -70,7 +70,7 @@ function resolveVoiceProfile(parentSettings?: ParentSettings): "child" | "female
     case "brother":
       return parentSettings.voiceType;
     default:
-      return "female";
+      return "child";
   }
 }
 
