@@ -495,12 +495,26 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
         i.tags.some(t => t.toLowerCase().includes(q))
       );
     }
+
+    // Age filter
+    if (ageFilter !== "all") {
+      const [minStr, maxStr] = ageFilter.split("-");
+      const fMin = parseInt(minStr);
+      const fMax = parseInt(maxStr);
+      filtered = filtered.filter(i => i.age_min <= fMax && i.age_max >= fMin);
+    }
+
+    // Rating filter
+    if (ratingFilter === "4+") filtered = filtered.filter(i => i.rating >= 4);
+    else if (ratingFilter === "4.5+") filtered = filtered.filter(i => i.rating >= 4.5);
+
     return filtered;
-  }, [items, activeCategory, search]);
+  }, [items, activeCategory, search, ageFilter, ratingFilter]);
 
   const featuredItems = useMemo(() => items.filter(i => i.is_featured), [items]);
   const newCount = useMemo(() => items.filter(i => i.is_new).length, [items]);
   const installedCount = installedIds.size;
+  const hasActiveFilters = ageFilter !== "all" || ratingFilter !== "all";
 
   if (loading) {
     return (
