@@ -99,3 +99,14 @@ export async function saveMusicPackItems(
     items,
   });
 }
+
+export async function updateMusicTrack(
+  adminCode: string,
+  trackId: string,
+  updates: Record<string, unknown>,
+) {
+  return callAdminStore<{ ok: boolean }>(adminCode, "update_music_track", {
+    trackId,
+    ...updates,
+  });
+}
