@@ -25,7 +25,7 @@ import {
 
 // Re-export for external consumers
 export { pushConversationContext, clearConversationContext } from "./scoring";
-export type { KBScoreBreakdown } from "./scoring";
+
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // DEBUG SCORING — exported for admin debug panel
