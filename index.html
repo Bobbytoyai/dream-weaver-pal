@@ -35,12 +35,19 @@
       #bobby-sleep-fallback {
         display: none;
         position: fixed; inset: 0; z-index: 99999;
-        background: #E8F0FE;
+        background: #f5f3f0;
         flex-direction: column; align-items: center; justify-content: center;
         cursor: pointer; user-select: none; font-family: 'Nunito', sans-serif;
       }
       #bobby-sleep-fallback.visible { display: flex; }
-      #bobby-sleep-fallback p { margin-top: 16px; font-size: 14px; color: rgba(0,0,0,0.35); font-weight: 700; }
+      #bobby-sleep-fallback img {
+        width: 100%; height: 100%; object-fit: contain;
+        position: absolute; inset: 0;
+      }
+      #bobby-sleep-fallback p {
+        position: absolute; bottom: 24px; left: 0; right: 0; text-align: center;
+        font-size: 14px; color: rgba(0,0,0,0.35); font-weight: 700; z-index: 1;
+      }
       @keyframes bZ1 { 0%,100% { transform: translateY(0); opacity: 0.9; } 50% { transform: translateY(-6px); opacity: 0.5; } }
       @keyframes bZ2 { 0%,100% { transform: translateY(0); opacity: 0.7; } 50% { transform: translateY(-8px); opacity: 0.3; } }
       @keyframes bZ3 { 0%,100% { transform: translateY(0); opacity: 0.5; } 50% { transform: translateY(-10px); opacity: 0.2; } }
@@ -50,24 +57,8 @@
   <body>
     <!-- Fallback sleep screen shown if JS fails to load -->
     <div id="bobby-sleep-fallback" onclick="location.reload()">
-      <svg viewBox="0 0 200 200" width="200" height="200">
-        <!-- Closed eyes — gentle arcs -->
-        <path d="M 58 95 Q 72 105 86 95" fill="none" stroke="rgba(80,160,120,0.6)" stroke-width="3" stroke-linecap="round" />
-        <path d="M 114 95 Q 128 105 142 95" fill="none" stroke="rgba(80,160,120,0.6)" stroke-width="3" stroke-linecap="round" />
-        <!-- Eyelids -->
-        <rect x="55" y="76" width="34" height="14" rx="4" fill="rgba(160,170,180,0.5)" />
-        <rect x="111" y="76" width="34" height="14" rx="4" fill="rgba(160,170,180,0.5)" />
-        <!-- Tiny smile -->
-        <path d="M 85 130 Q 100 138 115 130" fill="none" stroke="rgba(220,80,120,0.5)" stroke-width="2" stroke-linecap="round" />
-        <!-- Cheeks -->
-        <ellipse cx="65" cy="118" rx="14" ry="9" fill="rgba(255,200,200,0.25)" />
-        <ellipse cx="135" cy="118" rx="14" ry="9" fill="rgba(255,200,200,0.25)" />
-        <!-- Zzz -->
-        <text x="148" y="68" fill="#7C3AED" font-size="20" font-weight="900" opacity="0.9" style="animation:bZ1 3s ease-in-out infinite">Z</text>
-        <text x="160" y="50" fill="#7C3AED" font-size="14" font-weight="900" opacity="0.7" style="animation:bZ2 3s ease-in-out infinite 0.3s">z</text>
-        <text x="168" y="36" fill="#7C3AED" font-size="10" font-weight="900" opacity="0.5" style="animation:bZ3 3s ease-in-out infinite 0.6s">z</text>
-      </svg>
-      <p>😴 Bobby dort... touche pour réveiller</p>
+      <img src="/bobby-sleep.png" alt="Bobby dort" />
+      <p>💤 Bobby dort... touche pour réveiller !</p>
     </div>
 
     <div id="root"></div>
