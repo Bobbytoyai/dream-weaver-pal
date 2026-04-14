@@ -24,6 +24,7 @@ import { formatDate, formatDuration, emotionScoreLabels } from "@/components/par
 
 interface UseParentDataParams {
   childName: string;
+  bobbyCodeId?: string;
   parentSettings?: ParentSettings;
   onSettingsChange?: (s: ParentSettings) => void;
   onNavigateTab?: (tab: string) => void;
@@ -36,7 +37,7 @@ type ParentAlert = {
 
 // ─── Hook ───────────────────────────────────────────────────────
 
-export function useParentData({ childName, parentSettings, onSettingsChange, onNavigateTab }: UseParentDataParams) {
+export function useParentData({ childName, bobbyCodeId, parentSettings, onSettingsChange, onNavigateTab }: UseParentDataParams) {
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -94,7 +95,7 @@ export function useParentData({ childName, parentSettings, onSettingsChange, onN
 
   const loadData = async () => {
     setLoading(true);
-    const snapshot = await loadParentDashboardSnapshot(50);
+    const snapshot = await loadParentDashboardSnapshot(50, bobbyCodeId);
     setSessions(snapshot.sessions.filter(s => s.message_count > 0));
     setAnalyses(snapshot.analyses);
     setLoading(false);
