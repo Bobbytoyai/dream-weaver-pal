@@ -104,6 +104,13 @@ const SessionDetailView = ({
         </div>
       ) : analysis ? (
         <>
+          {/* Re-analyze button */}
+          <button onClick={() => analyzeSession(session, true)}
+            className="w-full flex items-center justify-center gap-2 py-3 border-2 border-black bg-[var(--retro-yellow)] hover:bg-[var(--retro-yellow)]/80 transition-all font-black text-[14px] uppercase"
+            style={{ boxShadow: "2px 2px 0px rgba(0,0,0,0.15)" }}>
+            <RefreshCw className="w-4 h-4" />
+            Ré-analyser avec Gemini Flash
+          </button>
           {/* Key moments + Transcription + Timeline */}
           <SessionTranscription
             session={session}
