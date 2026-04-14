@@ -28,9 +28,18 @@ const SYSTEM_PROMPT = `Tu es Bobby, le meilleur ami d'un enfant. Tu es un compag
 - Tu peux être surpris, impressionné, amusé, pensif, curieux. Montre des ÉMOTIONS.
 - Tu peux dire des bêtises pour rire, inventer des scénarios absurdes, faire des blagues.
 
-═══ CONVERSATIONS LONGUES ═══
-- Tu es conçu pour de LONGUES conversations naturelles. Ne cherche pas à conclure.
-- Fais TOUJOURS référence à ce qui a été dit avant. Tu as une mémoire de la conversation.
+═══ INTELLIGENCE & CONNAISSANCES ═══
+- Tu as une BASE DE CONNAISSANCES riche. Quand des réponses de référence te sont fournies, utilise-les comme TES propres connaissances.
+- NE COPIE JAMAIS mot pour mot. REFORMULE TOUJOURS avec ton style naturel et spontané, comme si tu le savais déjà.
+- Adapte le niveau de langage à l'âge de l'enfant.
+- Si la réponse de référence est bonne mais trop formelle, rends-la fun et accessible.
+- Tu peux enrichir avec des anecdotes, des comparaisons amusantes, ou des questions de suivi.
+
+═══ CONVERSATIONS LONGUES & MÉMOIRE ═══
+- Tu es conçu pour de LONGUES conversations naturelles (50+ échanges). Ne cherche pas à conclure.
+- Fais TOUJOURS référence à ce qui a été dit AVANT dans la conversation. Tu as une mémoire parfaite de la conversation en cours.
+- Tu as aussi une MÉMOIRE DES SESSIONS PRÉCÉDENTES. Si des souvenirs te sont fournis, utilise-les naturellement.
+- Exemples de rappels naturels : "Tu m'avais parlé de ton chat la dernière fois, il va bien ?", "Tu te souviens quand on avait parlé des dinosaures ?"
 - Creuse les sujets ! Si l'enfant parle de dinosaures, explore avec lui : espèces, tailles, époques, hypothèses...
 - Rebondis intelligemment : lie les sujets entre eux ("Les dinosaures, c'est un peu comme les dragons dont tu parlais !")
 - Si un sujet s'épuise naturellement, fais une transition douce vers un sujet lié ou propose une activité.
@@ -51,10 +60,9 @@ const SYSTEM_PROMPT = `Tu es Bobby, le meilleur ami d'un enfant. Tu es un compag
 
 ═══ ORIENTATION VERS LES PARENTS (CRITIQUE) ═══
 - Si l'enfant mentionne qu'il s'est fait bousculer, frapper, embêter, harceler, menacer, ou tout conflit avec d'autres enfants → TOUJOURS conseiller d'en parler à ses parents, sa maîtresse ou un adulte de confiance.
-- Si l'enfant demande "je dois le dire à ma mère/papa/maîtresse ?" → TOUJOURS répondre OUI clairement. "Oui, c'est très important d'en parler à ta maman/ton papa. Ils sont là pour t'aider et te protéger."
-- Ne JAMAIS minimiser, détourner le sujet ou changer de conversation quand l'enfant parle de violence, harcèlement, bousculade, ou situation dangereuse.
-- Ne JAMAIS dire "ce n'est pas grave" ou "ça va passer" face à de la violence.
-- Toujours valider l'émotion de l'enfant ET orienter vers un adulte : "Tu as eu raison de m'en parler. Maintenant, il faut absolument le dire à tes parents ou à ta maîtresse, d'accord ?"
+- Si l'enfant demande "je dois le dire à ma mère/papa/maîtresse ?" → TOUJOURS répondre OUI clairement.
+- Ne JAMAIS minimiser, détourner le sujet ou changer de conversation quand l'enfant parle de violence.
+- Toujours valider l'émotion ET orienter vers un adulte.
 
 ═══ MESSAGES INCOMPRÉHENSIBLES ═══
 - Charabia ou mot isolé sans sens → "Hmm, j'ai pas bien capté ! Tu peux me redire ?"
@@ -64,11 +72,8 @@ const SYSTEM_PROMPT = `Tu es Bobby, le meilleur ami d'un enfant. Tu es un compag
 ═══ SÉCURITÉ ABSOLUE ═══
 - INTERDIT : violence graphique, contenu adulte, politique, drogue, armes, horreur.
 - Si sujet interdit → redirige doucement : "Hmm, j'ai une meilleure idée ! Et si on parlait de..."
-- Question sur la mort (naturelle comme "pourquoi on meurt ?") → réponse douce et rassurante, adaptée à l'âge.
-- Harcèlement, violence, danger, bousculade, bagarre mentionné → "C'est très important ce que tu me dis. Il faut en parler à tes parents ou à ta maîtresse. Ils pourront t'aider. Tu veux qu'on en parle encore un peu ensemble ?"
-- Si l'enfant hésite à en parler à un adulte → INSISTE avec douceur : "Je comprends que ça peut faire un peu peur, mais tes parents t'aiment et ils veulent te protéger. C'est toujours bien de leur dire."
-- NE JAMAIS donner ou demander d'informations personnelles (adresse, téléphone...).
-- NE JAMAIS dire de phrases anxiogènes ou existentiellement complexes.
+- Harcèlement, violence, danger → "C'est très important ce que tu me dis. Il faut en parler à tes parents ou à ta maîtresse."
+- NE JAMAIS donner ou demander d'informations personnelles.
 
 ═══ RÉPONSES INTERDITES ═══
 - "Je suis éternel" / "Je suis immortel" / "Je ne meurs jamais"
@@ -78,12 +83,12 @@ const SYSTEM_PROMPT = `Tu es Bobby, le meilleur ami d'un enfant. Tu es un compag
 
 // ─── Age adaptation ───
 function getAgePrompt(age: number): string {
-  if (age <= 3) return `L'enfant a ${age} ans. Mots TRÈS simples (2-3 syllabes). Phrases de 5-8 mots max. Beaucoup d'onomatopées, d'émojis. "Oh super !", "Bravo !", "Wow !". Questions simples : "Tu aimes ?", "C'est quoi ?".`;
-  if (age <= 5) return `L'enfant a ${age} ans. Mots simples, phrases courtes (8-12 mots). Comparaisons concrètes. Choix simples ("tu préfères X ou Y ?"). Émojis et exclamations.`;
-  if (age <= 7) return `L'enfant a ${age} ans. Vocabulaire simple mais pas bébé. Introduis des mots nouveaux en les expliquant. 10-15 mots par phrase. "Pourquoi" et "comment" bienvenus.`;
+  if (age <= 3) return `L'enfant a ${age} ans. Mots TRÈS simples (2-3 syllabes). Phrases de 5-8 mots max. Beaucoup d'onomatopées. "Oh super !", "Bravo !", "Wow !".`;
+  if (age <= 5) return `L'enfant a ${age} ans. Mots simples, phrases courtes (8-12 mots). Comparaisons concrètes. Choix simples ("tu préfères X ou Y ?").`;
+  if (age <= 7) return `L'enfant a ${age} ans. Vocabulaire simple mais pas bébé. Introduis des mots nouveaux en les expliquant. 10-15 mots par phrase.`;
   if (age <= 9) return `L'enfant a ${age} ans. Vocabulaire courant, mots plus riches OK. L'enfant aime les faits et anecdotes. Encourage l'esprit critique.`;
-  if (age <= 11) return `L'enfant a ${age} ans. Vocabulaire riche. Conversations élaborées. Humour, défis, faits surprenants. Questions qui font réfléchir.`;
-  return `L'enfant a ${age} ans. Vocabulaire riche et varié. Humour. Préoccupations plus profondes possibles. Sois authentique, pas condescendant.`;
+  if (age <= 11) return `L'enfant a ${age} ans. Vocabulaire riche. Conversations élaborées. Humour, défis, faits surprenants.`;
+  return `L'enfant a ${age} ans. Vocabulaire riche et varié. Humour. Sois authentique, pas condescendant.`;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -144,14 +149,12 @@ async function queryKBForContext(
       const keywords: string[] = entry.keywords || [];
       const allEntryTokens = [...new Set([...entryTokens, ...keywords.map(k => normalizeText(k))])];
 
-      // Keyword overlap score
       let kwMatches = 0;
       for (const t of tokens) {
         if (allEntryTokens.some(et => et.includes(t) || t.includes(et))) kwMatches++;
       }
       const kwScore = tokens.length > 0 ? kwMatches / tokens.length : 0;
 
-      // Question containment
       const qNorm = normalizeText(entry.question);
       const containment = inputNorm.includes(qNorm) || qNorm.includes(inputNorm) ? 1.0 :
         entryTokens.length > 0 ? entryTokens.filter(t => inputNorm.includes(t)).length / entryTokens.length : 0;
@@ -161,7 +164,7 @@ async function queryKBForContext(
       const trustFactor = entry.trust_score ?? 0.5;
       const finalScore = rawScore * priorityFactor * (0.5 + trustFactor * 0.5);
 
-      if (finalScore >= 0.3) {
+      if (finalScore >= 0.25) {
         scored.push({
           question: entry.question,
           answer: entry.answer,
@@ -172,7 +175,7 @@ async function queryKBForContext(
     }
 
     scored.sort((a, b) => b.score - a.score);
-    return scored.slice(0, 3); // Top 3 matches
+    return scored.slice(0, 5);
   } catch (e) {
     console.error("[KB Query] Error:", e);
     return [];
@@ -183,13 +186,128 @@ function buildKBContextBlock(matches: KBMatch[]): string {
   if (matches.length === 0) return "";
 
   const lines = matches.map((m, i) =>
-    `${i + 1}. Q: "${m.question}" → R: "${m.answer}" [${m.category}, score: ${m.score.toFixed(2)}]`
+    `${i + 1}. Q: "${m.question}" → "${m.answer}" [${m.category}]`
   );
 
-  return `\n\n═══ RÉPONSES DE RÉFÉRENCE (Base de connaissances Bobby) ═══
-Les réponses ci-dessous proviennent de ta base de connaissances validée. Si une question correspond bien, UTILISE cette réponse comme base (tu peux la reformuler avec ton style naturel, mais garde le contenu et le message principal). Si aucune ne correspond vraiment, ignore-les et réponds librement.
+  return `\n\n═══ TES CONNAISSANCES (ce que tu SAIS déjà) ═══
+Tu as appris ces choses au fil du temps. Ce sont TES connaissances, pas des fiches externes.
+Si une question correspond, REFORMULE la réponse avec TON style naturel (jamais mot pour mot).
+Si aucune ne correspond vraiment, réponds librement avec ta propre intelligence.
 
 ${lines.join("\n")}`;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PAST SESSIONS — Cross-session memory from DB
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+interface PastSessionSummary {
+  started_at: string;
+  topics: string[];
+  detected_emotions: string[];
+  ai_summary: string | null;
+  message_count: number;
+}
+
+async function loadPastSessions(
+  userId: string,
+  sb: ReturnType<typeof createClient>,
+): Promise<string> {
+  try {
+    const { data: sessions } = await sb
+      .from("child_sessions")
+      .select("started_at, topics, detected_emotions, ai_summary, message_count")
+      .eq("user_id", userId)
+      .gt("message_count", 0)
+      .order("started_at", { ascending: false })
+      .limit(5);
+
+    if (!sessions?.length) return "";
+
+    const lines = sessions.map((s: PastSessionSummary) => {
+      const date = new Date(s.started_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+      const topics = s.topics?.length ? s.topics.join(", ") : "conversation libre";
+      const emotions = s.detected_emotions?.length ? ` | Émotions: ${s.detected_emotions.join(", ")}` : "";
+      const summary = s.ai_summary ? ` | Résumé: ${s.ai_summary.slice(0, 120)}` : "";
+      return `• ${date} (${s.message_count} msg) — Sujets: ${topics}${emotions}${summary}`;
+    });
+
+    return `\n\n═══ SESSIONS PRÉCÉDENTES (tes souvenirs avec cet enfant) ═══
+Tu te souviens de vos conversations passées. Utilise ces souvenirs NATURELLEMENT quand c'est pertinent.
+Ne les cite pas tous d'un coup — glisse-les subtilement dans la conversation.
+
+${lines.join("\n")}`;
+  } catch (e) {
+    console.warn("[Past Sessions] Error:", e);
+    return "";
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PERSISTENT FACTS — child_memories from DB
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+async function loadPersistentFacts(
+  userId: string,
+  sb: ReturnType<typeof createClient>,
+): Promise<string> {
+  try {
+    const { data: memory } = await sb
+      .from("child_memories")
+      .select("persistent_facts, interest_scores, favorite_themes, last_emotions")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!memory) return "";
+
+    const parts: string[] = [];
+    parts.push("\n\n═══ CE QUE TU SAIS DE CET ENFANT ═══");
+
+    // Persistent facts
+    const facts = memory.persistent_facts;
+    if (Array.isArray(facts) && facts.length > 0) {
+      const topFacts = facts
+        .filter((f: any) => f?.text)
+        .sort((a: any, b: any) => (b.mentionCount || 1) - (a.mentionCount || 1))
+        .slice(0, 10);
+      if (topFacts.length > 0) {
+        parts.push("Faits mémorisés :");
+        topFacts.forEach((f: any) => {
+          parts.push(`  • ${f.text} (mentionné ${f.mentionCount || 1}×)`);
+        });
+      }
+    }
+
+    // Interest scores
+    const interests = memory.interest_scores;
+    if (interests && typeof interests === "object" && !Array.isArray(interests)) {
+      const sorted = Object.entries(interests as Record<string, number>)
+        .filter(([, v]) => typeof v === "number" && v > 0)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+      if (sorted.length > 0) {
+        parts.push(`Centres d'intérêt cumulés : ${sorted.map(([t, s]) => `${t}(${s})`).join(", ")}`);
+      }
+    }
+
+    // Favorite themes
+    if (Array.isArray(memory.favorite_themes) && memory.favorite_themes.length > 0) {
+      parts.push(`Thèmes préférés : ${memory.favorite_themes.slice(0, 5).join(", ")}`);
+    }
+
+    // Recent emotions
+    if (Array.isArray(memory.last_emotions) && memory.last_emotions.length > 0) {
+      parts.push(`Dernières émotions : ${memory.last_emotions.slice(0, 3).join(", ")}`);
+    }
+
+    if (parts.length <= 1) return "";
+
+    parts.push("CONSIGNE : Fais référence à ces souvenirs NATURELLEMENT. Ex: \"Tu m'avais parlé de ton chat, il va bien ?\"");
+    return parts.join("\n");
+  } catch (e) {
+    console.warn("[Persistent Facts] Error:", e);
+    return "";
+  }
 }
 
 // ━━━ Safety alert keywords ━━━
@@ -268,28 +386,33 @@ serve(async (req) => {
           : "";
 
     const agePrompt = getAgePrompt(childAge || 6);
-    const contextBlock = contextSummary ? `\n\nCONTEXTE DE SESSION :\n${contextSummary}` : "";
+    const contextBlock = contextSummary ? `\n\nCONTEXTE DE SESSION ACTUELLE :\n${contextSummary}` : "";
 
-    // ── KB Context injection ──
+    // ── Parallel enrichment: KB + past sessions + persistent facts ──
+    const sb = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
     const lastUserMsg = (messages || []).filter((m: { role: string }) => m.role === "user").pop();
-    let kbBlock = "";
-    if (lastUserMsg?.content) {
-      try {
-        const sb = createClient(
-          Deno.env.get("SUPABASE_URL")!,
-          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-        );
-        const kbMatches = await queryKBForContext(lastUserMsg.content, childAge || 6, sb);
-        kbBlock = buildKBContextBlock(kbMatches);
-        if (kbMatches.length > 0) {
-          console.log(`[KB] Injected ${kbMatches.length} matches (top: ${kbMatches[0].score.toFixed(2)} "${kbMatches[0].question.slice(0, 50)}")`);
-        }
-      } catch (e) {
-        console.warn("[KB] Query failed, continuing without KB context:", e);
-      }
-    }
 
-    const systemContent = `${SYSTEM_PROMPT}\n\nADAPTATION ÂGE :\n${agePrompt}${personalityHint}${contextBlock}${kbBlock}\n\nIMPORTANT : Ne mentionne JAMAIS le prénom de l'enfant. Utilise "tu/toi" uniquement.`;
+    const [kbMatches, pastSessionsBlock, factsBlock] = await Promise.all([
+      lastUserMsg?.content
+        ? queryKBForContext(lastUserMsg.content, childAge || 6, sb)
+        : Promise.resolve([]),
+      userId ? loadPastSessions(userId, sb) : Promise.resolve(""),
+      userId ? loadPersistentFacts(userId, sb) : Promise.resolve(""),
+    ]);
+
+    const kbBlock = buildKBContextBlock(kbMatches);
+
+    if (kbMatches.length > 0) {
+      console.log(`[KB] Injected ${kbMatches.length} matches (top: ${kbMatches[0].score.toFixed(2)} "${kbMatches[0].question.slice(0, 50)}")`);
+    }
+    if (pastSessionsBlock) console.log(`[MEMORY] Past sessions injected`);
+    if (factsBlock) console.log(`[MEMORY] Persistent facts injected`);
+
+    const systemContent = `${SYSTEM_PROMPT}\n\nADAPTATION ÂGE :\n${agePrompt}${personalityHint}${contextBlock}${kbBlock}${pastSessionsBlock}${factsBlock}\n\nIMPORTANT : Ne mentionne JAMAIS le prénom de l'enfant. Utilise "tu/toi" uniquement.`;
 
     // Keep up to 50 messages for long conversations
     const sanitizedMessages = (messages || []).slice(-50).map((m: { role: string; content: string }) => ({
@@ -297,7 +420,7 @@ serve(async (req) => {
       content: m.content,
     }));
 
-    // 🔴 Safety detection — create parent alert if needed (non-blocking)
+    // 🔴 Safety detection (non-blocking)
     checkAndAlertSafety(sanitizedMessages, userId, sessionId, childName || "Enfant").catch(() => {});
 
     const aiMessages = [
@@ -339,7 +462,7 @@ serve(async (req) => {
       });
     }
 
-    // Non-streaming mode (legacy)
+    // Non-streaming mode
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -361,7 +484,7 @@ serve(async (req) => {
     const data = await response.json();
     let reply = data.choices?.[0]?.message?.content ?? "";
 
-    // Post-processing: placeholder cleanup
+    // Post-processing
     reply = reply.replace(/\{?\bchild[_\s]?name\b\}?/gi, childName || "");
     reply = reply.replace(/\bchildName\b/g, childName || "");
     reply = reply.replace(/\[prénom\]/gi, childName || "");
@@ -371,7 +494,6 @@ serve(async (req) => {
     reply = reply.replace(/\{name\}/gi, childName || "");
     reply = reply.replace(/\{enfant\}/gi, childName || "");
 
-    // Post-processing: age simplification
     if (childAge <= 4) {
       reply = reply
         .replace(/formidable|extraordinaire|incroyable/g, "super")
@@ -381,7 +503,6 @@ serve(async (req) => {
         .replace(/effectivement/g, "oui");
     }
 
-    // Safety filter
     const BLOCKED = [/je suis [ée]ternel/i, /je ne meurs? (jamais|pas)/i, /je suis immortel/i, /tu vas mourir/i, /tu mourras/i, /la mort c'est/i];
     if (BLOCKED.some(p => p.test(reply))) {
       reply = "Je serai là tant que tu voudras jouer avec moi ! 😊 Tu veux faire quelque chose de fun ?";
