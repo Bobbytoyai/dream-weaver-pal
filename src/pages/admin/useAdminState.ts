@@ -255,8 +255,8 @@ export function useAdminState() {
   // ─── Init ───────────────────────────────────────────────────────
   const refreshAll = useCallback(() => {
     fetchEntries(); fetchCloudStories(); fetchStoreItems(); fetchCloudUsers();
-    loadInteractions(); fetchRealConversations(); fetchLiveStats(); fetchChartData();
-  }, [fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers, fetchLiveStats, fetchChartData, loadInteractions, fetchRealConversations]);
+    loadInteractions(); fetchRealConversations(); fetchLiveStats(); fetchChartData(); fetchDevices();
+  }, [fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers, fetchLiveStats, fetchChartData, loadInteractions, fetchRealConversations, fetchDevices]);
 
   // Auto-refresh live stats every 30s
   useEffect(() => {
