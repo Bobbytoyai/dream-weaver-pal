@@ -50,11 +50,11 @@ const App = () => (
               <LazyImportBoundary label="route">
                 <Suspense fallback={<RetroLoader />}>
                   <Routes>
-                    <Route path="/b/:code" element={<BobbyQR />} />
-                    <Route path="/parent/:code" element={<BobbyParent />} />
-                    <Route path="/bobby-cloud" element={<BobbyCloudAuth />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/admin" element={<Admin />} />
+                    <Route path="b/:code" element={<BobbyQR />} />
+                    <Route path="parent/:code" element={<BobbyParent />} />
+                    <Route path="bobby-cloud" element={<BobbyCloudAuth />} />
+                    <Route path="reset-password" element={<ResetPassword />} />
+                    <Route path="admin" element={<Admin />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
