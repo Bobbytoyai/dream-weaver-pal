@@ -25,7 +25,7 @@ import {
 import { extractFocus, focusPenalty } from "./focusExtraction";
 
 // Re-export for external consumers
-export { pushConversationContext, clearConversationContext } from "./scoring";
+export { pushConversationContext, clearConversationContext, preloadSemanticFields } from "./scoring";
 
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

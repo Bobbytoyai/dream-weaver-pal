@@ -2,8 +2,34 @@
  * Scoring Engine v2 — Semantic-aware KB matching
  */
 
-import { SEMANTIC_FIELDS } from "./semanticFields";
 import { normalize, stem, tokenize } from "./textProcessing";
+
+// Lazy-load the heavy semantic fields map (72KB) — only needed on first KB query
+let _semanticFields: Record<string, string[]> | null = null;
+let _semanticFieldsPromise: Promise<Record<string, string[]>> | null = null;
+
+function getSemanticFields(): Record<string, string[]> {
+  if (_semanticFields) return _semanticFields;
+  // Trigger async load for next call
+  if (!_semanticFieldsPromise) {
+    _semanticFieldsPromise = import("./semanticFields").then(m => {
+      _semanticFields = m.SEMANTIC_FIELDS;
+      return _semanticFields;
+    });
+  }
+  return {}; // Return empty on first call, populated on subsequent calls
+}
+
+/** Pre-warm the semantic fields cache (call early in session) */
+export function preloadSemanticFields(): void {
+  if (_semanticFields) return;
+  if (!_semanticFieldsPromise) {
+    _semanticFieldsPromise = import("./semanticFields").then(m => {
+      _semanticFields = m.SEMANTIC_FIELDS;
+      return _semanticFields;
+    });
+  }
+}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CONVERSATIONAL CONTEXT — Remember recent topics
@@ -36,7 +62,7 @@ export function expandWithSemantics(tokens: string[]): Set<string> {
   for (const t of tokens) {
     const stemmed = stem(t);
     // Check semantic fields for the token and its stem
-    for (const [key, related] of Object.entries(SEMANTIC_FIELDS)) {
+    for (const [key, related] of Object.entries(getSemanticFields())) {
       if (key === t || key === stemmed || t.includes(key) || key.includes(t.length >= 4 ? t : "__")) {
         for (const r of related) expanded.add(r);
       }
