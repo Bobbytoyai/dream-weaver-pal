@@ -432,7 +432,39 @@ export async function buildBobbyReply({
     }
   }
 
-  // ── Active flow — advance scenario ──
+  // ── Music: waiting for replay/next answer ──
+  if (isWaitingForMusicAnswer() && userText) {
+    const musicAnswer = await handleMusicAnswer(userText);
+    if (musicAnswer.handled) {
+      const reply: BobbyBrainReply = {
+        text: simplifyForAge(musicAnswer.text, childAge),
+        intent: "MUSIC_REQUEST", source: "music_engine", emotion: "happy",
+        confidence: 1, isOffline: false,
+      };
+      if (musicAnswer.playTrack) {
+        (reply as any).musicTrack = musicAnswer.playTrack;
+        (reply as any).musicUrl = getTrackUrl(musicAnswer.playTrack);
+      }
+      return reply;
+    }
+  }
+
+  // ── Music: new music request ──
+  if (userText && detectMusicRequest(userText)) {
+    const musicResult = await processMusicRequest(userText);
+    const reply: BobbyBrainReply = {
+      text: simplifyForAge(musicResult.text, childAge),
+      intent: "MUSIC_REQUEST", source: "music_engine", emotion: "happy",
+      confidence: 1, isOffline: false,
+    };
+    if (musicResult.track && musicResult.shouldPlay) {
+      (reply as any).musicTrack = musicResult.track;
+      (reply as any).musicUrl = getTrackUrl(musicResult.track);
+    }
+    return reply;
+  }
+
+
   if (isFlowActive() && userText) {
     const flowIntent = detectLocalIntent(userText);
     const flowResult = advanceFlow(userText, flowIntent, childName, childAge);
