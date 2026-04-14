@@ -115,8 +115,10 @@ async function fetchAllFromCloud(): Promise<KBEntry[]> {
   while (true) {
     const { data, error } = await supabase
       .from("knowledge_base")
-      .select("id, question, answer, keywords, emotion, priority, category, age_min, age_max, source_content_id, is_active")
+      .select("id, question, answer, keywords, emotion, priority, category, age_min, age_max, source_content_id, is_active, trust_score, learning_source, validation_status")
       .eq("is_active", true)
+      .neq("validation_status", "rejected")
+      .gte("trust_score", 0.15)
       .range(offset, offset + BATCH_SIZE - 1)
       .order("id");
 
@@ -138,6 +140,8 @@ async function fetchAllFromCloud(): Promise<KBEntry[]> {
       age_max: d.age_max ?? 12,
       source_content_id: d.source_content_id,
       is_active: true,
+      trust_score: (d as any).trust_score ?? 1.0,
+      learning_source: (d as any).learning_source ?? "manual",
     })));
 
     if (data.length < BATCH_SIZE) break;
