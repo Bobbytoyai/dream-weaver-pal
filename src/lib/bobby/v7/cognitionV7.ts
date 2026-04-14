@@ -304,11 +304,22 @@ function decideStyle(
     }
   }
 
-  // Target length
+  // Target length — vary naturally between short/medium/long
   let targetLength: "short" | "medium" | "long";
-  if (goal === "ecouter" || goal === "rassurer") targetLength = "medium";
-  else if (goal === "enseigner" || goal === "approfondir") targetLength = "medium";
-  else targetLength = "short";
+  const lengthRoll = Math.random();
+  if (goal === "enseigner" || goal === "approfondir") {
+    // Educational: mostly medium, sometimes long, rarely short
+    targetLength = lengthRoll < 0.15 ? "short" : lengthRoll < 0.7 ? "medium" : "long";
+  } else if (goal === "ecouter" || goal === "rassurer") {
+    // Emotional: mostly medium, sometimes short (gentle brevity)
+    targetLength = lengthRoll < 0.3 ? "short" : lengthRoll < 0.85 ? "medium" : "long";
+  } else if (goal === "jouer") {
+    // Play: mostly short & punchy, sometimes medium
+    targetLength = lengthRoll < 0.6 ? "short" : lengthRoll < 0.9 ? "medium" : "long";
+  } else {
+    // Default: balanced mix favoring short
+    targetLength = lengthRoll < 0.45 ? "short" : lengthRoll < 0.85 ? "medium" : "long";
+  }
 
   // Opening type
   let openingType: OpeningType;

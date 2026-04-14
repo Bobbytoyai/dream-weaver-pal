@@ -204,17 +204,18 @@ export function assembleResponse(
     opening = null;
   }
 
-  // ── 2. CONTENT ── (raw reply, trimmed)
+  // ── 2. CONTENT ── (raw reply, adjusted for target length)
   let content = rawReply.text.replace(/^\s+|\s+$/g, "");
+  const sentences = content.match(/[^.!?…]+[.!?…]+/g);
 
-  // Apply target length adjustments
-  if (how.targetLength === "short" && content.length > 120) {
-    // Truncate to first 2 sentences
-    const sentences = content.match(/[^.!?…]+[.!?…]+/g);
-    if (sentences && sentences.length > 2) {
-      content = sentences.slice(0, 2).join("").trim();
-    }
+  if (how.targetLength === "short" && content.length > 100 && sentences && sentences.length > 2) {
+    // Keep only 1-2 sentences for punchy, dynamic replies
+    content = sentences.slice(0, Math.random() < 0.5 ? 1 : 2).join("").trim();
+  } else if (how.targetLength === "medium" && sentences && sentences.length > 4) {
+    // Cap at 3-4 sentences
+    content = sentences.slice(0, Math.random() < 0.5 ? 3 : 4).join("").trim();
   }
+  // "long" — keep full content as-is
 
   // ── 3. CLOSING ──
   let closing: string | null = null;
