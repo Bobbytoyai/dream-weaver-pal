@@ -147,12 +147,13 @@ function flatNorm(s: string): string {
 
 // Detect if this is a generic music request (no specific song named)
 const GENERIC_MUSIC_PATTERNS = [
-  /^(?:joue|mets|lance|passe)\s+(?:moi\s+)?(?:une?\s+)?(?:chanson|musique|comptine|berceuse)$/i,
-  /^(?:je\s+veux\s+)?(?:écouter?|entendre)\s+(?:une?\s+)?(?:chanson|musique|comptine|berceuse)$/i,
+  /^(?:joue|mets|lance|passe)\s+(?:moi\s+)?(?:une?\s+)?(?:chanson|musique|comptine|berceuse)(?:\s+.+)?$/i,
+  /^(?:je\s+veux\s+)?(?:écouter?|entendre)\s+(?:une?\s+)?(?:chanson|musique|comptine|berceuse)(?:\s+.+)?$/i,
   /^(?:une?\s+)?(?:chanson|musique|comptine|berceuse)\s*(?:s'?il\s+(?:te|vous)\s+pla[iî]t)?$/i,
-  /^(?:chante|bobby\s+chante|tu\s+peux\s+chanter)(?:\s+(?:pour\s+moi|s'?il\s+te\s+pla[iî]t))?$/i,
+  /^(?:chante|bobby\s+chante|tu\s+peux\s+chanter)(?:\s+(?:pour\s+moi|s'?il\s+te\s+pla[iî]t|une?\s+\w+))?$/i,
   /^(?:je\s+veux\s+)?(?:dormir|faire\s+dodo|dodo)$/i,
-  /^(?:joue|mets|lance)\s+(?:moi\s+)?(?:de\s+la\s+)?musique$/i,
+  /^(?:joue|mets|lance)\s+(?:moi\s+)?(?:de\s+la\s+)?musique(?:\s+.+)?$/i,
+  /(?:comptine|berceuse|chanson|musique)\s+(?:pour\s+)?(?:enfants?|dormir|bebe|bébé|dodo)/i,
 ];
 
 function isGenericMusicRequest(text: string): boolean {
@@ -291,8 +292,15 @@ export async function processMusicRequest(text: string): Promise<{
   // Increment play count (fire and forget)
   Promise.resolve(supabase.rpc("increment_music_play" as any, { track_id: track.id })).catch(() => {});
   
+  const intros = [
+    `Avec plaisir ! 🎵 Je te lance "${track.title}" ! Écoute bien…`,
+    `Oh oui ! 🎵 C'est parti pour "${track.title}" ! Bonne écoute !`,
+    `Super choix ! 🎵 Voilà "${track.title}" de ${track.artist} ! Profite bien !`,
+  ];
+  const intro = intros[Math.floor(Math.random() * intros.length)];
+  
   return {
-    text: `🎵 C'est parti ! Je lance "${track.title}" de ${track.artist} ! Écoute bien… Après, dis-moi si tu veux la réécouter ou entendre une autre chanson !`,
+    text: `${intro} Après, dis-moi si tu veux la réécouter ou entendre une autre chanson !`,
     track,
     shouldPlay: true,
   };

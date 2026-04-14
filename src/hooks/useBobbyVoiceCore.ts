@@ -520,18 +520,47 @@ export function useBobbyVoiceCore({
       const musicUrl = (reply as any).musicUrl;
       if (musicUrl) {
         try {
+          // Stop STT during music playback so Bobby doesn't hear the song
+          stopSttRef.current();
+          setMicArmed(false);
+          go("SPEAKING");
+
           const musicAudio = new Audio(musicUrl);
           musicAudio.volume = 0.7;
-          musicAudio.play().catch(e => console.warn("[Music] Playback failed:", e));
           musicAudioRef.current = musicAudio;
+
+          // Wait for music to finish before resuming listening
+          await new Promise<void>((resolve) => {
+            musicAudio.onended = () => {
+              console.log("[Music] ✅ Playback finished, resuming STT");
+              resolve();
+            };
+            musicAudio.onerror = (e) => {
+              console.warn("[Music] Playback error:", e);
+              resolve();
+            };
+            musicAudio.play().catch(e => {
+              console.warn("[Music] Playback failed:", e);
+              resolve();
+            });
+          });
+
+          musicAudioRef.current = null;
+
+          // Resume listening after music ends
+          lastSpeechEndRef.current = Date.now();
+          await new Promise(r => setTimeout(r, ANTI_ECHO_COOLDOWN_MS));
+          void startListeningRef.current();
         } catch (e) {
           console.warn("[Music] Failed to play track:", e);
+          // Ensure we go back to listening even on error
+          void startListeningRef.current();
         }
       }
     } finally {
       processingRef.current = false;
     }
-  }, [addMessage, childAge, childName, clearSilenceTimer, ensureSession, handleSttError, parentSettings, speakReply]);
+  }, [addMessage, childAge, childName, clearSilenceTimer, ensureSession, go, handleSttError, parentSettings, speakReply]);
 
   // ─── Schedule natural acknowledgment sound ──────────
   const scheduleAck = useCallback(() => {
