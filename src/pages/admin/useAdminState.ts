@@ -659,6 +659,7 @@ export function useAdminState() {
     realConversations, realConvLoading, learningSessionId,
     liveStats, chartSessions, chartEmotions,
     liveInstallCounts, kbActiveCount, kbTotalCount, autoLearnCount,
+    devices, devicesLoading,
     // Editing
     editingEntry, setEditingEntry, saving,
     editingStory, setEditingStory, savingStory, setSavingStory,
@@ -676,7 +677,7 @@ export function useAdminState() {
     openQADetail, openBlagueDetail, openHistoireDetail, openQuizDetail,
     // Fetchers
     fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers,
-    fetchRealConversations, fetchLiveStats, fetchChartData,
+    fetchRealConversations, fetchLiveStats, fetchChartData, fetchDevices,
     learnFromSession, refreshAll,
     navigate,
   };
