@@ -136,8 +136,8 @@ const RULES: ExtractionRule[] = [
 
   // ━━━ PRÉFÉRENCES ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  // "j'adore / j'aime X" (strip leading articles)
-  { pattern: /(?:j'adore|j'aime (?:trop |beaucoup |bien )?)(?:le |la |les |l')?(.{3,35}?)(?:\s*[.!?,;]|$)/i,
+  // "j'adore / j'aime X" (exclude "j'aime pas")
+  { pattern: /(?:j'adore|j'aime (?:trop |beaucoup |bien )?)(?!pas\b)(?:le |la |les |l')?(.{3,35}?)(?:\s*[.!?,;]|$)/i,
     category: "préférence", confidence: 0.8,
     extract: m => `Adore : ${clean(m[1])}` },
 
@@ -159,7 +159,7 @@ const RULES: ExtractionRule[] = [
   // ━━━ AVERSIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   // "j'aime pas / je déteste X"
-  { pattern: /(?:j'aime pas|je n'aime pas|je d[ée]teste|j'ai horreur de|je supporte pas|je peux pas (?:sentir|supporter))\s+(?:le|la|les|l')?\s*(.{3,35}?)(?:\s*[.!?,;]|$)/i,
+  { pattern: /(?:j'aime pas|je n'aime pas|je d[ée]teste|j'ai horreur de|je supporte pas|je peux pas (?:sentir|supporter))\s+(?:le |la |les |l')?(.{3,35}?)(?:\s*[.!?,;]|$)/i,
     category: "aversion", confidence: 0.8,
     extract: m => `N'aime pas : ${clean(m[1])}` },
 
