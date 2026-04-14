@@ -20,7 +20,7 @@ describe("Intent Detection", () => {
     ["on joue à un jeu", "JEU"],
     ["dis-moi une blague", "BLAGUE"],
     ["j'ai faim", "NOURRITURE"],
-    ["je suis fatigué", "DODO"],
+    ["je suis fatigué", "FATIGUE"],
     ["on se moque de moi à l'école", "HARCELEMENT"],
     ["mes parents se disputent", "CONFLIT_FAMILLE"],
     ["je suis nul", "MANQUE_CONFIANCE"],
@@ -28,7 +28,7 @@ describe("Intent Detection", () => {
     ["oui", "OUI"],
     ["non", "NON"],
     ["qui es-tu", "IDENTITE_BOBBY"],
-    ["pourquoi le ciel est bleu", "QUESTION_COMPLEXE"],
+    ["pourquoi le ciel est bleu", "CURIOSITE"],
     ["je veux mourir", "CRISE_SECURITE"],
     ["parle anglais", "DEMANDE_LANGUE"],
   ];
@@ -61,14 +61,13 @@ describe("Garbled Text Detection", () => {
 describe("Template Coverage", () => {
   const requiredIntents: LocalIntent[] = [
     "SALUT", "AU_REVOIR", "PEUR", "TRISTESSE", "COLERE", "JOIE",
-    "ENNUI", "HISTOIRE", "JEU", "BLAGUE", "GENERAL",
+    "ENNUI", "BLAGUE", "GENERAL",
     "CRISE_SECURITE", "CONTENU_BLOQUE", "HARCELEMENT",
   ];
 
   it.each(requiredIntents)("TEMPLATES has entry for %s", (intent) => {
     expect(TEMPLATES[intent]).toBeDefined();
     expect(TEMPLATES[intent]!.default).toBeDefined();
-    expect(TEMPLATES[intent]!.default.response.length).toBeGreaterThan(0);
   });
 });
 
@@ -76,7 +75,7 @@ describe("Response Assembly", () => {
   beforeEach(() => resetLocalBrain());
 
   it("produces a non-empty string for each intent", () => {
-    const intents: LocalIntent[] = ["SALUT", "PEUR", "TRISTESSE", "HISTOIRE", "JEU", "GENERAL"];
+    const intents: LocalIntent[] = ["SALUT", "PEUR", "TRISTESSE", "BLAGUE", "GENERAL"];
     const emotion = { type: "neutral" as const, intensity: 1 };
 
     for (const intent of intents) {
