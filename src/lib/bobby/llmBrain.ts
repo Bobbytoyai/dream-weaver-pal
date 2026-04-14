@@ -190,6 +190,8 @@ export async function getLLMReply(
   userText: string,
   personality: string = "balanced",
   signal?: AbortSignal,
+  userId?: string | null,
+  sessionId?: string | null,
 ): Promise<BobbyBrainReply | null> {
   try {
     const controller = new AbortController();
@@ -214,6 +216,8 @@ export async function getLLMReply(
         childAge,
         personality,
         contextSummary,
+        userId: userId || null,
+        sessionId: sessionId || null,
       }),
       signal: controller.signal,
     });
