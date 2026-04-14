@@ -1,8 +1,9 @@
 import type { ConversationTurn, ShortTermMemory } from "./types";
 import { resetScenarios } from "../emotionalScenarios";
 
-const MAX_TURNS = 5;
-const MAX_RECENT = 15;
+const MAX_TURNS = 15;
+const MAX_RECENT = 25;
+const SUMMARY_THRESHOLD = 10; // Compress oldest turns into summary after this count
 
 export const mem: ShortTermMemory = {
   turns: [],
@@ -15,10 +16,46 @@ export const mem: ShortTermMemory = {
   recentResponses: [],
 };
 
+// Compressed summary of older conversation turns
+let conversationSummary = "";
+
+export function getConversationSummary(): string {
+  return conversationSummary;
+}
+
 export function addTurn(turn: ConversationTurn) {
   mem.turns.push(turn);
-  if (mem.turns.length > MAX_TURNS) mem.turns.shift();
   mem.turnCount++;
+
+  // When turns exceed threshold, compress oldest into summary
+  if (mem.turns.length > MAX_TURNS) {
+    compressOldTurns();
+  }
+}
+
+/** Compress oldest turns into a text summary to preserve context without memory bloat */
+function compressOldTurns() {
+  if (mem.turns.length <= SUMMARY_THRESHOLD) return;
+
+  // Take the oldest 5 turns and summarize them
+  const toCompress = mem.turns.splice(0, 5);
+  const summaryParts: string[] = [];
+
+  for (const t of toCompress) {
+    const role = t.role === "child" ? "Enfant" : "Bobby";
+    summaryParts.push(`${role}: ${t.text.slice(0, 60)}`);
+  }
+
+  // Append to existing summary
+  const newSummary = summaryParts.join(" | ");
+  conversationSummary = conversationSummary
+    ? `${conversationSummary} ‖ ${newSummary}`
+    : newSummary;
+
+  // Keep summary from growing infinitely (max ~500 chars)
+  if (conversationSummary.length > 500) {
+    conversationSummary = conversationSummary.slice(-500);
+  }
 }
 
 export function addBobbyResponse(text: string) {
@@ -47,7 +84,16 @@ export function getLastChildTurn(): ConversationTurn | null {
 }
 
 export function getConversationContext(): string {
-  return mem.turns.map(t => `${t.role === "child" ? "Enfant" : "Bobby"}: ${t.text}`).join("\n");
+  const parts: string[] = [];
+  // Include compressed summary if any
+  if (conversationSummary) {
+    parts.push(`[Résumé précédent] ${conversationSummary}`);
+  }
+  // Then current turns
+  for (const t of mem.turns) {
+    parts.push(`${t.role === "child" ? "Enfant" : "Bobby"}: ${t.text}`);
+  }
+  return parts.join("\n");
 }
 
 export function resetLocalBrain() {
@@ -59,5 +105,6 @@ export function resetLocalBrain() {
   mem.sessionMood = "neutral";
   mem.turnCount = 0;
   mem.recentResponses = [];
+  conversationSummary = "";
   resetScenarios();
 }
