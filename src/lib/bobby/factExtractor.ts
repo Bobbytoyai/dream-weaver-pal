@@ -175,10 +175,10 @@ const RULES: ExtractionRule[] = [
     category: "école", confidence: 0.95,
     extract: m => `Classe : ${m[1].toUpperCase()}` },
 
-  // "ma maîtresse s'appelle X"
-  { pattern: /(?:ma|mon)\s+(ma[iî]tresse|ma[iî]tre|professeur[e]?|prof)\s+(?:s'appelle|c'est)\s+(?:ma[iî]tre(?:sse)?\s+)?([a-zà-ÿ]+)/i,
+  // "ma maîtresse s'appelle X" (supports "Madame Dupont")
+  { pattern: /(?:ma|mon)\s+(ma[iî]tresse|ma[iî]tre|professeur[e]?|prof)\s+(?:s'appelle|c'est)\s+(?:ma[iî]tre(?:sse)?\s+)?([a-zà-ÿ]+(?:\s+[a-zà-ÿ]+)?)/i,
     category: "école", confidence: 0.9,
-    extract: m => `${cap(m[1])} : ${cap(m[2])}` },
+    extract: m => `${cap(m[1])} : ${m[2].split(/\s+/).map(cap).join(" ")}` },
 
   // "mon école s'appelle X"
   { pattern: /(?:mon [ée]cole|ma [ée]cole)\s+(?:s'appelle|c'est)\s+(.{3,30}?)(?:\s*[.!?,;]|$)/i,
