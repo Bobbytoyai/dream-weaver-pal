@@ -39,6 +39,7 @@ import { checkUnderstanding, applyUnderstandingCheck, detectCorrectionSignal, re
 import { buildCognitionPlan, resetCognitionV7, type CognitionPlan } from "./v7/cognitionV7";
 import { assembleAndMerge } from "./v7/responseAssembly";
 import { initToM, updateMentalModel, getToMSnapshot, applyToMToResponse, resetToM } from "./v8/theoryOfMind";
+import { buildWorldModel, adaptToChildWorld, checkConfusionZones, resetWorldModel } from "./v8/childWorldModel";
 import {
   loadPersistentMemory,
   savePersistentMemory,
@@ -146,6 +147,15 @@ function postProcess(
   if (tomSnap) {
     text = applyToMToResponse(text, tomSnap);
   }
+  // V8: Apply Child World Model adaptation (working memory, abstract→concrete, time)
+  const worldCheck = adaptToChildWorld(text, childAge, tomSnap);
+  if (worldCheck.appliedRules.length > 0) {
+    console.log(`[Brain V8] 🌍 World Model: ${worldCheck.appliedRules.join(", ")}`);
+  }
+  if (worldCheck.warnings.length > 0) {
+    console.log(`[Brain V8] 🌍 World warnings: ${worldCheck.warnings.join("; ")}`);
+  }
+  text = worldCheck.adjusted;
   return { ...reply, text };
 }
 
@@ -227,12 +237,16 @@ export function resetBobbyBrainSession() {
   resetFeedbackLoop();
   resetCognitionV7();
   resetToM();
+  resetWorldModel();
   clearResponseCache().catch(() => {});
 }
 
 export async function initBobbySession(childName: string, childAge?: number): Promise<void> {
   await loadPersistentMemory(childName);
-  if (childAge) initToM(childAge);
+  if (childAge) {
+    initToM(childAge);
+    buildWorldModel(childAge);
+  }
   console.log("[Brain] 🧠 Persistent memory loaded for", childName);
 }
 
@@ -409,6 +423,13 @@ export async function buildBobbyReply({
   console.log(
     `[Brain V8] 🧠 ToM: cognitive=${mentalModel.understanding.cognitiveLevel} vocab=${mentalModel.understanding.vocabularyLevel} surface=${mentalModel.emotionalState.surfaceEmotion} inferred=${mentalModel.emotionalState.inferredEmotion} delta=${mentalModel.emotionalState.emotionDelta.toFixed(2)} trajectory=${mentalModel.emotionalState.emotionalTrajectory} | ${tomSnapshot.tomInfluence}`
   );
+
+  // ── V8: CHILD WORLD MODEL — update & check confusion zones ──
+  buildWorldModel(childAge, tomSnapshot);
+  const { activeZones, warnings: confusionWarnings } = checkConfusionZones(userText, childAge);
+  if (activeZones.length > 0) {
+    console.log(`[Brain V8] 🌍 Confusion zones: ${activeZones.map(z => z.topic).join(", ")} | ${confusionWarnings[0]}`);
+  }
 
   // ── V7: PRIORITY ENGINE — 5-dimension scoring ──
   const priority = computePriority(understanding, v7Session, createDefaultMemoryContext());
