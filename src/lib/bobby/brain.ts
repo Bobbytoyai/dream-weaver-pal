@@ -549,7 +549,7 @@ export async function buildBobbyReply({
     const totalMs = performance.now() - pipelineStart;
     console.log(`[Brain V7] ✅ L1 direct → ${localReply.intent} | goal=${cognitionPlan.why.primaryGoal} (${totalMs.toFixed(0)}ms total)`);
     cacheReply(userText, reply).catch(() => {});
-    return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan);
+    return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan, initiative);
   }
 
   // ── LAYER 2: Knowledge Base (semantic TF-IDF scoring) ──
@@ -564,7 +564,7 @@ export async function buildBobbyReply({
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain V7] ✅ L2 KB → conf=${kbReply.confidence.toFixed(2)} | goal=${cognitionPlan.why.primaryGoal} (L2: ${layer2Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
       cacheReply(userText, reply).catch(() => {});
-      return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan);
+      return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan, initiative);
     }
   } catch (e) {
     console.warn("[Brain V7] L2 KB error:", e);
@@ -581,7 +581,7 @@ export async function buildBobbyReply({
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain V7] ✅ L3 LLM → goal=${cognitionPlan.why.primaryGoal} (L3: ${layer3Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
       cacheReply(userText, enrichedReply).catch(() => {});
-      return applyOrchestration(enrichedReply, directive, understanding, v7Session, cognitionPlan);
+      return applyOrchestration(enrichedReply, directive, understanding, v7Session, cognitionPlan, initiative);
     }
   } catch (e) {
     console.warn("[Brain V7] L3 LLM failed:", e);
@@ -594,7 +594,7 @@ export async function buildBobbyReply({
   const totalMs = performance.now() - pipelineStart;
   console.log(`[Brain V7] ⚡ Fallback L1 → ${localReply.intent} | goal=${cognitionPlan.why.primaryGoal} (${totalMs.toFixed(0)}ms total)`);
   cacheReply(userText, reply).catch(() => {});
-  return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan);
+  return applyOrchestration(reply, directive, understanding, v7Session, cognitionPlan, initiative);
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
