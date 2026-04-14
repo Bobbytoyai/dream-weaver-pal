@@ -59,8 +59,8 @@ interface AdminStoreManagerProps {
   onBack: () => void;
 }
 
-const STORE_CATEGORIES = ["jeux", "educatif", "histoires", "blagues", "langues"];
-const DATA_TYPES = ["qa", "story", "joke", "game", "song", "exercise"];
+const STORE_CATEGORIES = ["jeux", "educatif", "histoires", "blagues", "langues", "musique"];
+const DATA_TYPES = ["qa", "story", "joke", "game", "song", "exercise", "music"];
 const EMOTIONS = ["happy", "curious", "excited", "calm", "surprised", "proud", "playful", "sad", "scared"];
 
 const CAT_COLORS: Record<string, string> = {
@@ -68,10 +68,11 @@ const CAT_COLORS: Record<string, string> = {
   educatif: "from-emerald-500/30 to-teal-500/20",
   histoires: "from-purple-500/30 to-pink-500/20",
   blagues: "from-amber-500/30 to-orange-500/20",
+  musique: "from-rose-500/30 to-pink-500/20",
 };
 
 const CAT_EMOJI: Record<string, string> = {
-  jeux: "🎮", educatif: "🧠", histoires: "📚", blagues: "😂",
+  jeux: "🎮", educatif: "🧠", histoires: "📚", blagues: "😂", musique: "🎵",
 };
 
 const TYPE_EMOJI: Record<string, string> = {

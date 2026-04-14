@@ -503,6 +503,68 @@ export type Database = {
           },
         ]
       }
+      music_tracks: {
+        Row: {
+          age_max: number
+          age_min: number
+          artist: string
+          category: string
+          content_id: string | null
+          created_at: string
+          duration_seconds: number | null
+          file_path: string | null
+          id: string
+          is_active: boolean
+          play_count: number
+          sort_order: number
+          title: string
+          trigger_phrases: string[]
+          updated_at: string
+        }
+        Insert: {
+          age_max?: number
+          age_min?: number
+          artist?: string
+          category?: string
+          content_id?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          file_path?: string | null
+          id?: string
+          is_active?: boolean
+          play_count?: number
+          sort_order?: number
+          title: string
+          trigger_phrases?: string[]
+          updated_at?: string
+        }
+        Update: {
+          age_max?: number
+          age_min?: number
+          artist?: string
+          category?: string
+          content_id?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          file_path?: string | null
+          id?: string
+          is_active?: boolean
+          play_count?: number
+          sort_order?: number
+          title?: string
+          trigger_phrases?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "music_tracks_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "store_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pack_reviews: {
         Row: {
           child_name: string
@@ -873,6 +935,7 @@ export type Database = {
         Returns: boolean
       }
       increment_kb_usage: { Args: { entry_id: string }; Returns: undefined }
+      increment_music_play: { Args: { track_id: string }; Returns: undefined }
       update_bobby_child_name: {
         Args: { p_bobby_code: string; p_child_name: string }
         Returns: boolean
