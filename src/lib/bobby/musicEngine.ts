@@ -191,7 +191,7 @@ export async function processMusicRequest(text: string): Promise<{
   state.waitingForReplayAnswer = true;
   
   // Increment play count (fire and forget)
-  supabase.rpc("increment_music_play" as any, { track_id: track.id }).then(() => {}).catch(() => {});
+  Promise.resolve(supabase.rpc("increment_music_play" as any, { track_id: track.id })).catch(() => {});
   
   return {
     text: `🎵 C'est parti ! Je lance "${track.title}" de ${track.artist} ! Écoute bien… Après, dis-moi si tu veux la réécouter ou entendre une autre chanson !`,
