@@ -22,6 +22,7 @@ import {
   pushConversationContext,
   clearConversationContext,
 } from "./scoring";
+import { extractFocus, focusPenalty } from "./focusExtraction";
 
 // Re-export for external consumers
 export { pushConversationContext, clearConversationContext } from "./scoring";
@@ -43,11 +44,13 @@ export interface KBScoreBreakdown {
   qScore: number;
   containment: number;
   ctxBonus: number;
+  focusPen: number;
   rawScore: number;
   priorityFactor: number;
   finalScore: number;
   expandedTokens: string[];
   inputTokens: string[];
+  focusWords: string[];
 }
 
 export async function debugScoreQuery(
@@ -69,6 +72,7 @@ export async function debugScoreQuery(
 
   const expandedInput = expandWithSemantics(inputTokens);
   const inputNorm = normalize(userText);
+  const focusWords = extractFocus(userText);
 
   const scored: KBScoreBreakdown[] = [];
 
@@ -77,7 +81,8 @@ export async function debugScoreQuery(
     const qScore = scoreQuestion(inputTokens, entry.question);
     const containment = scoreFullContainment(inputNorm, normalize(entry.question));
     const ctxBonus = contextBonus(entry.keywords || []);
-    const rawScore = Math.max(kwScore, qScore, containment) + ctxBonus;
+    const focusPen = focusPenalty(focusWords, entry.keywords || []);
+    const rawScore = (Math.max(kwScore, qScore, containment) + ctxBonus) * focusPen;
     const priorityFactor = 0.5 + ((entry.priority || 5) / 10) * 0.5;
     const finalScore = rawScore * priorityFactor;
 
@@ -94,11 +99,13 @@ export async function debugScoreQuery(
         qScore,
         containment,
         ctxBonus,
+        focusPen,
         rawScore,
         priorityFactor,
         finalScore,
         expandedTokens: [...expandedInput],
         inputTokens,
+        focusWords,
       });
     }
   }
@@ -131,6 +138,7 @@ export async function queryKnowledgeBase(
     
     const expandedInput = expandWithSemantics(inputTokens);
     const inputNorm = normalize(userText);
+    const focusWords = extractFocus(userText);
 
     let bestMatch: KBEntry | null = null;
     let bestScore = 0;
@@ -140,8 +148,9 @@ export async function queryKnowledgeBase(
       const qScore = scoreQuestion(inputTokens, entry.question);
       const containment = scoreFullContainment(inputNorm, normalize(entry.question));
       const ctxBonus = contextBonus(entry.keywords || []);
+      const focusPen = focusPenalty(focusWords, entry.keywords || []);
       
-      const rawScore = Math.max(kwScore, qScore, containment) + ctxBonus;
+      const rawScore = (Math.max(kwScore, qScore, containment) + ctxBonus) * focusPen;
       const priorityFactor = 0.5 + ((entry.priority || 5) / 10) * 0.5;
       const finalScore = rawScore * priorityFactor;
 
