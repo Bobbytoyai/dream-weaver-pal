@@ -97,13 +97,13 @@ Sinon laisse le tableau vide.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
+        model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "Tu es un psychologue pour enfants expert en analyse conversationnelle. Réponds uniquement en JSON valide." },
+          { role: "system", content: "Tu es un psychologue pour enfants expert en analyse conversationnelle. Analyse en profondeur les échanges, les émotions sous-jacentes, et les centres d'intérêt. Réponds uniquement en JSON valide." },
           { role: "user", content: analysisPrompt },
         ],
         temperature: 0.3,
-        max_tokens: 800,
+        max_tokens: 1500,
       }),
     });
 

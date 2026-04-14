@@ -224,12 +224,15 @@ export function useParentData({ childName, parentSettings, onSettingsChange, onN
   // SESSION ACTIONS
   // ═══════════════════════════════════════════════════════════════
 
-  const analyzeSession = async (session: Session) => {
+  const analyzeSession = async (session: Session, forceReanalyze = false) => {
     setSelectedSession(session);
     setSessionMessages(await loadParentSessionMessages(session.id));
-    const existing = analyses.find(a => a.session_id === session.id);
-    if (existing?.summary) { setSelectedAnalysis(existing); return; }
+    if (!forceReanalyze) {
+      const existing = analyses.find(a => a.session_id === session.id);
+      if (existing?.summary) { setSelectedAnalysis(existing); return; }
+    }
     setAnalyzing(true);
+    setSelectedAnalysis(null);
     try {
       const analysis = await requestParentSessionAnalysis(session.id);
       if (analysis) { setSelectedAnalysis(analysis); loadData(); }
