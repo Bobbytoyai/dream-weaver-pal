@@ -253,11 +253,13 @@ export function resetBobbyBrainSession() {
   resetWorldModel();
   resetProactiveEngine();
   resetVariationEngine();
+  resetRelationshipEngine();
   clearResponseCache().catch(() => {});
 }
 
 export async function initBobbySession(childName: string, childAge?: number): Promise<void> {
   await loadPersistentMemory(childName);
+  loadRelationship();
   if (childAge) {
     initToM(childAge);
     buildWorldModel(childAge);
