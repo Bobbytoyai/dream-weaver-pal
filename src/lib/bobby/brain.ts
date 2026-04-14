@@ -268,7 +268,7 @@ export async function buildBobbyReply({
   }
 
   // ═══════════════════════════════════════════════════════════
-  // V5 3-LAYER PIPELINE (with multi-level cache)
+  // V6 3-LAYER PIPELINE + COGNITION
   // ═══════════════════════════════════════════════════════════
 
   if (!userText) {
@@ -282,7 +282,7 @@ export async function buildBobbyReply({
   const cached = await getCachedReply(userText);
   if (cached) {
     const totalMs = performance.now() - pipelineStart;
-    console.log(`[Brain V5] ⚡ Cache hit → ${cached.intent} (${totalMs.toFixed(0)}ms total)`);
+    console.log(`[Brain V6] ⚡ Cache hit → ${cached.intent} (${totalMs.toFixed(0)}ms total)`);
     return postProcess(cached, childName, childAge, personality);
   }
 
@@ -291,17 +291,47 @@ export async function buildBobbyReply({
   const localReply = getLocalBrainReply(userText, childName, childAge);
   const layer1Ms = performance.now() - layer1Start;
 
-  console.log(`[Brain V5] L1 LocalBrain: intent=${localReply.intent} confidence=${localReply.confidence.toFixed(2)} (${layer1Ms.toFixed(1)}ms)`);
+  console.log(`[Brain V6] L1 LocalBrain: intent=${localReply.intent} confidence=${localReply.confidence.toFixed(2)} (${layer1Ms.toFixed(1)}ms)`);
+
+  // ── ★ COGNITION LAYER: decide HOW to respond ──
+  const emotion = detectEmotion(userText);
+  const persistentMem = getPersistentMemory();
+  const cognition = cogitate({
+    intent: localReply.intent as any,
+    intentConfidence: localReply.confidence,
+    emotion,
+    childAge,
+    session: {
+      turnCount: mem.turnCount,
+      sessionMood: mem.sessionMood,
+      topicDepth: mem.topicDepth,
+      currentTopic: mem.currentTopic,
+      lastBobbyGoal: null,
+    },
+    memory: {
+      facts: persistentMem.facts,
+      interests: persistentMem.interestScores,
+      relationshipScore: 50, // TODO: compute from interaction count
+    },
+  });
+
+  // ── Apply cognition to follow-up strategy ──
+  const shouldAddFollowUp = cognition.suggestedFollowUp !== "none";
+  const cognitionFollowUp = buildCognitionFollowUp(cognition, childName);
 
   // High-confidence Layer 1 → respond directly (skip KB + LLM)
   if (localReply.confidence >= LAYER1_CONFIDENCE) {
     const reply = postProcess(localReply, childName, childAge, personality);
-    const smartFollowUp = getSmartFollowUp(childName);
-    if (smartFollowUp && Math.random() < 0.3) {
-      reply.text = reply.text.replace(/[.!?…]*$/, ". ") + smartFollowUp;
+    if (shouldAddFollowUp && cognitionFollowUp && Math.random() < 0.5) {
+      reply.text = reply.text.replace(/[.!?…]*$/, ". ") + cognitionFollowUp;
+    } else {
+      const smartFollowUp = getSmartFollowUp(childName);
+      if (smartFollowUp && Math.random() < 0.3) {
+        reply.text = reply.text.replace(/[.!?…]*$/, ". ") + smartFollowUp;
+      }
     }
     const totalMs = performance.now() - pipelineStart;
-    console.log(`[Brain V5] ✅ L1 direct → ${localReply.intent} (${totalMs.toFixed(0)}ms total)`);
+    console.log(`[Brain V6] ✅ L1 direct → ${localReply.intent} | goal=${cognition.goal} (${totalMs.toFixed(0)}ms total)`);
     cacheReply(userText, reply).catch(() => {});
     return reply;
   }
@@ -314,17 +344,20 @@ export async function buildBobbyReply({
 
     if (kbReply && kbReply.confidence >= LAYER2_CONFIDENCE) {
       const reply = postProcess(kbReply, childName, childAge, personality);
+      if (shouldAddFollowUp && cognitionFollowUp && Math.random() < 0.4) {
+        reply.text = reply.text.replace(/[.!?…]*$/, ". ") + cognitionFollowUp;
+      }
       const totalMs = performance.now() - pipelineStart;
-      console.log(`[Brain V5] ✅ L2 KB → confidence=${kbReply.confidence.toFixed(2)} (L2: ${layer2Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
+      console.log(`[Brain V6] ✅ L2 KB → conf=${kbReply.confidence.toFixed(2)} | goal=${cognition.goal} (L2: ${layer2Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
       cacheReply(userText, reply).catch(() => {});
       return reply;
     }
 
     if (kbReply) {
-      console.log(`[Brain V5] L2 KB: confidence=${kbReply.confidence.toFixed(2)} (below ${LAYER2_CONFIDENCE}) → escalate to L3`);
+      console.log(`[Brain V6] L2 KB: conf=${kbReply.confidence.toFixed(2)} → escalate to L3`);
     }
   } catch (e) {
-    console.warn("[Brain V5] L2 KB error:", e);
+    console.warn("[Brain V6] L2 KB error:", e);
   }
 
   // ── LAYER 3: LLM (Gemini via edge function) ──
@@ -335,23 +368,77 @@ export async function buildBobbyReply({
 
     if (llmReply) {
       const totalMs = performance.now() - pipelineStart;
-      console.log(`[Brain V5] ✅ L3 LLM → (L3: ${layer3Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
+      console.log(`[Brain V6] ✅ L3 LLM → goal=${cognition.goal} (L3: ${layer3Ms.toFixed(0)}ms, total: ${totalMs.toFixed(0)}ms)`);
       cacheReply(userText, llmReply).catch(() => {});
       return llmReply;
     }
   } catch (e) {
-    console.warn("[Brain V5] L3 LLM failed:", e);
+    console.warn("[Brain V6] L3 LLM failed:", e);
   }
 
   // ── FALLBACK: Use Layer 1 response (always available offline) ──
   const reply = postProcess(localReply, childName, childAge, personality);
-  const smartFollowUp = getSmartFollowUp(childName);
-  if (smartFollowUp && localReply.confidence >= 0.5 && Math.random() < 0.3) {
-    reply.text = reply.text.replace(/[.!?…]*$/, ". ") + smartFollowUp;
+  if (shouldAddFollowUp && cognitionFollowUp) {
+    reply.text = reply.text.replace(/[.!?…]*$/, ". ") + cognitionFollowUp;
+  } else {
+    const smartFollowUp = getSmartFollowUp(childName);
+    if (smartFollowUp && localReply.confidence >= 0.5 && Math.random() < 0.3) {
+      reply.text = reply.text.replace(/[.!?…]*$/, ". ") + smartFollowUp;
+    }
   }
 
   const totalMs = performance.now() - pipelineStart;
-  console.log(`[Brain V5] ⚡ Fallback L1 → ${localReply.intent} (${totalMs.toFixed(0)}ms total)`);
+  console.log(`[Brain V6] ⚡ Fallback L1 → ${localReply.intent} | goal=${cognition.goal} (${totalMs.toFixed(0)}ms total)`);
   cacheReply(userText, reply).catch(() => {});
+  return reply;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// COGNITION-DRIVEN FOLLOW-UPS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function buildCognitionFollowUp(cognition: CognitionOutput, _childName: string): string | null {
+  const { suggestedFollowUp, goal } = cognition;
+
+  if (suggestedFollowUp === "none") return null;
+
+  const followUps: Record<string, string[]> = {
+    open_question: [
+      "Et toi, tu en penses quoi ?",
+      "Qu'est-ce que tu voudrais faire ?",
+      "Tu veux m'en dire plus ?",
+      "Dis-moi ce qui te ferait plaisir !",
+    ],
+    related_question: [
+      "Tu veux en savoir plus là-dessus ?",
+      "Ça t'intéresse d'en apprendre plus ?",
+      "Tu as d'autres questions ?",
+    ],
+    deeper_question: [
+      "Et tu sais pourquoi c'est comme ça ?",
+      "Tu veux que je t'explique comment ça marche ?",
+      "C'est fascinant, non ? Tu veux creuser ?",
+    ],
+    topic_bridge: [
+      "Au fait, tu veux qu'on fasse un jeu ?",
+      "Sinon, je peux te raconter une histoire !",
+      "On pourrait aussi parler d'autre chose, qu'est-ce qui te tente ?",
+    ],
+    game_turn: [
+      "À toi de jouer !",
+      "Alors, tu devines ?",
+      "C'est ton tour !",
+    ],
+    memory_callback: [
+      "Tu m'avais parlé de trucs super la dernière fois !",
+      "Je me souviens qu'on avait discuté de plein de choses cool !",
+    ],
+  };
+
+  const pool = followUps[suggestedFollowUp];
+  if (!pool?.length) return null;
+
+  return pool[Math.floor(Math.random() * pool.length)];
+}
   return reply;
 }
