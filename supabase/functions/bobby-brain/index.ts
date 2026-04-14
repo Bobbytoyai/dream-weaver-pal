@@ -638,10 +638,14 @@ serve(async (req) => {
       ...sanitizedMessages,
     ];
 
+    // Adaptive max_tokens: short at start, longer as conversation deepens
+    const conversationLength = sanitizedMessages.filter((m: {role: string}) => m.role === "user").length;
+    const adaptiveMaxTokens = conversationLength <= 3 ? 80 : conversationLength <= 8 ? 150 : 300;
+
     const aiBody: Record<string, unknown> = {
       model: "google/gemini-2.5-flash",
       messages: aiMessages,
-      max_tokens: 300,
+      max_tokens: adaptiveMaxTokens,
       temperature: 0.85,
     };
 
