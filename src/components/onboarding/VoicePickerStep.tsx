@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Volume2, Loader2, Play, Pause } from "lucide-react";
 import { fetchTTSAudio, type VoiceProfile } from "@/lib/voicePipeline";
-import { HologramFace } from "../hologram/HologramFace";
+import { LazyHologramFace as HologramFace } from "../hologram/LazyHologramFace";
 
 interface VoicePickerStepProps {
   childName: string;
