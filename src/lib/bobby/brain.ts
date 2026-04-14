@@ -205,6 +205,13 @@ function applyOrchestration(
   const { text: variedText } = applyVariation(reply.text, plan?.how?.openingType);
   reply.text = variedText;
 
+  // V8: Inject inside joke reference based on relationship phase
+  const jokeRef = getInsideJokeReference();
+  if (jokeRef) {
+    reply.text = reply.text.replace(/[.!?…]*\s*$/, ". ") + jokeRef;
+    console.log(`[Brain V8] 🤫 Inside joke injected`);
+  }
+
   // Record Bobby's response in the scene
   recordBobbyResponse(reply.text);
 
