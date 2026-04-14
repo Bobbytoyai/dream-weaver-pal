@@ -560,7 +560,7 @@ export function useBobbyVoiceCore({
     } finally {
       processingRef.current = false;
     }
-  }, [addMessage, childAge, childName, clearSilenceTimer, ensureSession, handleSttError, parentSettings, speakReply]);
+  }, [addMessage, childAge, childName, clearSilenceTimer, ensureSession, go, handleSttError, parentSettings, speakReply]);
 
   // ─── Schedule natural acknowledgment sound ──────────
   const scheduleAck = useCallback(() => {
