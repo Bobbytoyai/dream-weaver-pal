@@ -106,39 +106,6 @@ export default function BobbyQR() {
       .eq("id", bobbyCode.id);
   };
 
-  const handleOnboardingComplete = async (name: string, age: number, voice: VoiceProfile, interests: string[]) => {
-    if (!bobbyCode || !code) return;
-
-    const sessionToken = crypto.randomUUID();
-    const tokenKey = `bobby_session_${code.toUpperCase()}`;
-
-    const initialSettings: ParentSettings = {
-      ...DEFAULT_PARENT_SETTINGS,
-      childName: name,
-      childAge: age,
-      voiceType: voice as ParentSettings["voiceType"],
-      enabledThemes: interests.length > 0 ? interests : DEFAULT_PARENT_SETTINGS.enabledThemes,
-    };
-
-    const { error } = await supabase
-      .from("bobby_codes")
-      .update({
-        claimed_at: new Date().toISOString(),
-        child_name: name,
-        child_age: age,
-        session_data: { sessionToken, parentSettings: initialSettings } as any,
-      })
-      .eq("id", bobbyCode.id);
-
-    if (!error) {
-      localStorage.setItem(tokenKey, sessionToken);
-      setChildName(name);
-      setChildAge(age);
-      setParentSettings(initialSettings);
-      setStep("sleeping");
-    }
-  };
-
   const updateSetting = <K extends keyof ParentSettings>(key: K, val: ParentSettings[K]) => {
     const updated = { ...parentSettings, [key]: val };
     setParentSettings(updated);
@@ -236,12 +203,6 @@ export default function BobbyQR() {
           <span className="text-[10px] font-black text-black/30 uppercase tracking-widest">Bobby™ — Activation unique & permanente</span>
         </div>
       </div>
-    );
-  }
-
-  if (step === "onboarding") {
-    return (
-      <OnboardingScreen onComplete={handleOnboardingComplete} />
     );
   }
 
