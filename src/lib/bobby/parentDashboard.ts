@@ -69,11 +69,16 @@ function normalizeRuntimeAnalysis(analysis: Partial<RawParentAnalysis> & { alert
   };
 }
 
-export async function loadParentDashboardSnapshot(limit = 50): Promise<ParentDashboardSnapshot> {
-  const [sessionsRes, analysesRes] = await Promise.all([
-    supabase.from("child_sessions").select("*").order("started_at", { ascending: false }).limit(limit),
-    supabase.from("conversation_analyses").select("*").order("created_at", { ascending: false }).limit(limit),
-  ]);
+export async function loadParentDashboardSnapshot(limit = 50, filterUserId?: string): Promise<ParentDashboardSnapshot> {
+  let sessionsQuery = supabase.from("child_sessions").select("*").order("started_at", { ascending: false }).limit(limit);
+  let analysesQuery = supabase.from("conversation_analyses").select("*").order("created_at", { ascending: false }).limit(limit);
+
+  if (filterUserId) {
+    sessionsQuery = sessionsQuery.eq("user_id", filterUserId);
+    analysesQuery = analysesQuery.eq("user_id", filterUserId);
+  }
+
+  const [sessionsRes, analysesRes] = await Promise.all([sessionsQuery, analysesQuery]);
 
   return {
     sessions: (sessionsRes.data ?? []) as ParentSession[],

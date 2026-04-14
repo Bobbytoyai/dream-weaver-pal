@@ -1,14 +1,24 @@
 import { useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+const BOBBY_CODE_KEY = "bobby_lcd_code_id";
+
 export function useSessionTracker(childName: string, childAge: number) {
   const sessionIdRef = useRef<string | null>(null);
   const startTimeRef = useRef<Date | null>(null);
   const messageCountRef = useRef(0);
 
-  const getUserId = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    return user?.id ?? null;
+  /**
+   * Get a user_id for session tracking.
+   * Priority: 1) Supabase auth user  2) bobby_codes.id from localStorage
+   */
+  const getUserId = async (): Promise<string | null> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) return user.id;
+    } catch { /* no auth */ }
+    // Fallback: use bobby_codes.id stored by LCD page
+    return localStorage.getItem(BOBBY_CODE_KEY);
   };
 
   const startSession = useCallback(async () => {
@@ -16,7 +26,7 @@ export function useSessionTracker(childName: string, childAge: number) {
     messageCountRef.current = 0;
     try {
       const userId = await getUserId();
-      if (!userId) { console.warn("[Session] No authenticated user"); return undefined; }
+      if (!userId) { console.warn("[Session] No user ID (no auth & no bobby code)"); return undefined; }
 
       const { data, error } = await supabase
         .from("child_sessions")
@@ -26,6 +36,7 @@ export function useSessionTracker(childName: string, childAge: number) {
 
       if (!error && data) {
         sessionIdRef.current = data.id;
+        console.log("[Session] ✅ Session created:", data.id);
       } else {
         console.warn("[Session] Failed to create session:", error?.message);
       }
@@ -41,6 +52,7 @@ export function useSessionTracker(childName: string, childAge: number) {
     messageCountRef.current++;
     try {
       const userId = await getUserId();
+      if (!userId) return;
       await supabase
         .from("session_messages")
         .insert({
@@ -81,6 +93,8 @@ export function useSessionTracker(childName: string, childAge: number) {
           message_count: messageCountRef.current,
         })
         .eq("id", id);
+
+      console.log(`[Session] ✅ Session ended: ${messageCountRef.current} msgs, ${durationSeconds}s`);
 
       if (messageCountRef.current >= 4) {
         supabase.functions.invoke("session-analysis", { body: { sessionId: id } })
