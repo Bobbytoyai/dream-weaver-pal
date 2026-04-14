@@ -283,9 +283,56 @@ export default function BobbyQR() {
       "dark": "#1A1A2E", "night": "#0D1B2A",
     };
     const bgHex = bgColors[parentSettings.bobbyColors?.background || "soft-blue"] || "#E8F0FE";
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
     return (
       <div className="min-h-screen flex flex-col items-center justify-center relative" style={{ backgroundColor: bgHex }}>
+
+        {/* PWA Install Banner — Android (native prompt) */}
+        {canInstall && !isInstalled && showInstallBanner && (
+          <div className="absolute top-4 left-4 right-4 z-50 animate-in slide-in-from-top">
+            <div className="retro-card p-4 space-y-3 text-center" style={{ backgroundColor: "white" }}>
+              <p className="text-sm font-black text-black uppercase">📲 Installe Bobby sur ton écran</p>
+              <p className="text-xs font-bold text-black">
+                Bobby s'ouvrira comme une vraie app, sans barre de recherche !
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowInstallBanner(false)}
+                  className="flex-1 py-2 text-xs font-black uppercase border-4 border-black bg-white text-black"
+                >
+                  Plus tard
+                </button>
+                <button
+                  onClick={async () => { await promptInstall(); setShowInstallBanner(false); }}
+                  className="flex-1 py-2 text-xs font-black uppercase border-4 border-black bg-black text-white"
+                  style={{ boxShadow: "3px 3px 0px rgba(0,0,0,0.25)" }}
+                >
+                  Installer ✨
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* iOS Install Guide — iOS doesn't support beforeinstallprompt */}
+        {isIOS && !isInstalled && showInstallBanner && !canInstall && (
+          <div className="absolute top-4 left-4 right-4 z-50 animate-in slide-in-from-top">
+            <div className="retro-card p-4 space-y-2 text-center" style={{ backgroundColor: "white" }}>
+              <p className="text-sm font-black text-black uppercase">📲 Installe Bobby</p>
+              <p className="text-xs font-bold text-black leading-relaxed">
+                Appuie sur <strong>Partager</strong> (⬆️) puis <strong>"Sur l'écran d'accueil"</strong> pour ouvrir Bobby sans barre URL.
+              </p>
+              <button
+                onClick={() => setShowInstallBanner(false)}
+                className="w-full py-2 text-xs font-black uppercase border-4 border-black bg-black text-white"
+              >
+                Compris 👍
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="w-full max-w-md aspect-square cursor-pointer" onClick={() => setStep("active")}>
           <HologramFace
             voiceState="idle"
@@ -298,6 +345,10 @@ export default function BobbyQR() {
         <p className="text-center text-muted-foreground font-bold text-lg mt-4 animate-pulse">
           Touche Bobby pour le réveiller ! 👆
         </p>
+
+        {isInstalled && (
+          <p className="absolute bottom-4 text-xs font-bold text-black/30">✅ App installée</p>
+        )}
       </div>
     );
   }
