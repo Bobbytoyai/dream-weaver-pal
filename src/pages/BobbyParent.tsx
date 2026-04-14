@@ -4,10 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import RetroLoader from "@/components/RetroLoader";
 import LazyImportBoundary from "@/components/LazyImportBoundary";
 import { ParentSettings, DEFAULT_PARENT_SETTINGS } from "@/components/parentSettings";
+import ParentOnboarding from "@/components/parent/ParentOnboarding";
 
 const ParentMode = lazy(() => import("@/components/ParentMode"));
 
-type Step = "loading" | "invalid" | "claimed" | "pin" | "welcome" | "active";
+type Step = "loading" | "invalid" | "claimed" | "pin" | "onboarding" | "active";
 
 export default function BobbyParent() {
   const { code } = useParams<{ code: string }>();
@@ -76,7 +77,7 @@ export default function BobbyParent() {
         setStep("pin");
       } else if (isFirstTime && !alreadyWelcomed) {
         localStorage.setItem(welcomeKey, "1");
-        setStep("welcome");
+        setStep("onboarding");
       } else {
         setStep("active");
       }
@@ -164,23 +165,32 @@ export default function BobbyParent() {
     );
   }
 
-  if (step === "welcome") {
+  if (step === "onboarding") {
+    const handleOnboardingComplete = async (newChildName: string, newPin: string, newPersonality: ParentSettings["personality"]) => {
+      const updatedSettings: ParentSettings = {
+        ...parentSettings,
+        childName: newChildName,
+        parentPin: newPin,
+        personality: newPersonality,
+      };
+      await handleSettingsChange(updatedSettings);
+
+      // Also update child_name on bobby_codes
+      if (bobbyCode && newChildName !== bobbyCode.child_name) {
+        await supabase
+          .from("bobby_codes")
+          .update({ child_name: newChildName })
+          .eq("id", bobbyCode.id);
+      }
+
+      setStep("active");
+    };
+
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 p-6">
-        <div className="w-full max-w-sm border-4 border-foreground bg-white p-8 text-center space-y-5"
-          style={{ boxShadow: "6px 6px 0 hsl(var(--foreground)/0.2)" }}>
-          <span className="text-5xl block">👋</span>
-          <h2 className="text-xl font-black text-black uppercase">Bienvenue, Parent !</h2>
-          <p className="text-sm font-bold text-muted-foreground">
-            Appareil lié avec succès. Accédez au tableau de bord de {bobbyCode?.child_name || "votre enfant"}.
-          </p>
-          <button onClick={() => setStep("active")}
-            className="w-full py-3 text-sm font-black uppercase border-4 border-foreground bg-primary text-primary-foreground hover:opacity-90 transition-all"
-            style={{ boxShadow: "4px 4px 0 rgba(0,0,0,0.25)" }}>
-            Accéder au Mode Parent →
-          </button>
-        </div>
-      </div>
+      <ParentOnboarding
+        currentChildName={bobbyCode?.child_name || "Mon ami"}
+        onComplete={handleOnboardingComplete}
+      />
     );
   }
 
