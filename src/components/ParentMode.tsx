@@ -241,7 +241,7 @@ const ParentMode = ({ childName, bobbyCodeId, onClose, parentSettings, onSetting
   // ═══════════════════════════════════════════════════════════════
 
   return (
-    <div className="min-h-screen bg-background max-w-lg mx-auto flex flex-col transition-colors duration-300 parent-light">
+    <div className="min-h-screen bg-background max-w-5xl mx-auto flex flex-col transition-colors duration-300 parent-light">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 bg-card border-b-4 border-black">
         {(activeTab !== "home" || data.selectedSession) && (

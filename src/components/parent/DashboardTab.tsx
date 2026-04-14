@@ -186,14 +186,14 @@ const DashboardTab = ({
   const hasData = totalSessions > 0;
 
   return (
-    <div className="p-4 space-y-4" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif" }}>
+    <div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif" }}>
       {/* KPI HERO */}
       <div className="animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         <div className="flex items-center gap-2.5 mb-3">
           <span className="text-xl">📊</span>
           <h3 className="text-[17px] font-black text-black uppercase">Statistiques</h3>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 md:grid-cols-3 gap-3 md:gap-4">
           {[
             { value: totalSessions, label: "Sessions", emoji: "💬", bg: "var(--retro-blue)" },
             { value: totalMessages, label: "Messages", emoji: "📝", bg: "var(--retro-green)" },
@@ -343,7 +343,7 @@ const DashboardTab = ({
             <span className="text-lg">🧠</span>
             <h3 className="text-[15px] font-black text-black uppercase">Développement</h3>
           </div>
-          <div className="grid grid-cols-3 gap-2 mb-2">
+          <div className="grid grid-cols-3 gap-2 md:gap-4 mb-2">
             <ScoreGauge label="Sociabilité" score={avgScores.sociability} emoji="🤝" color="hsl(var(--foreground))" size="lg" />
             <ScoreGauge label="Curiosité" score={avgScores.curiosity} emoji="🔍" color="hsl(var(--foreground))" size="lg" />
             <ScoreGauge label="Stabilité" score={avgScores.stability} emoji="⚖️" color="hsl(var(--foreground))" size="lg" />
@@ -394,7 +394,7 @@ const DashboardTab = ({
             <span className="text-lg">💖</span>
             <h3 className="text-[15px] font-black text-black uppercase">Émotions</h3>
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2 md:gap-3">
             {Object.entries(avgEmotions).filter(([, v]) => v > 0).sort(([, a], [, b]) => b - a).slice(0, 6).map(([key, value], ei) => {
               const info = emotionScoreLabels[key] || { label: key, emoji: "❓" };
               const retroBgs = ["var(--retro-green)", "var(--retro-blue)", "var(--retro-yellow)", "var(--retro-red)", "var(--retro-purple)", "var(--retro-orange)"];
