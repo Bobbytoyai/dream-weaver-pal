@@ -756,12 +756,12 @@ function StoreEditForm({ item, onSave, onCancel }: {
 
 // ─── Main Component ─────────────────────────────────────────────────
 
-export default function AdminStoreManager({ storeItems, installCounts, onRefresh, onBack }: AdminStoreManagerProps) {
+export default function AdminStoreManager({ adminCode, storeItems, installCounts, onRefresh, onBack }: AdminStoreManagerProps) {
   const [catFilter, setCatFilter] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState<StoreItem | null>(null);
   const [editingItem, setEditingItem] = useState<Partial<StoreItem> | null>(null);
-  const [managingContentFor, setManagingContentFor] = useState<{ id: string; name: string } | null>(null);
+  const [managingContentFor, setManagingContentFor] = useState<{ id: string; name: string; category: string } | null>(null);
 
   const filteredItems = useMemo(() => {
     return storeItems.filter(item => {
@@ -812,6 +812,16 @@ export default function AdminStoreManager({ storeItems, installCounts, onRefresh
 
   // ── Content editor view ──
   if (managingContentFor) {
+    if (managingContentFor.category === "musique") {
+      return (
+        <MusicTracksEditor
+          adminCode={adminCode}
+          contentId={managingContentFor.id}
+          contentName={managingContentFor.name}
+          onBack={() => { setManagingContentFor(null); onRefresh(); }}
+        />
+      );
+    }
     return (
       <ContentDataEditor
         contentId={managingContentFor.id}
@@ -877,7 +887,7 @@ export default function AdminStoreManager({ storeItems, installCounts, onRefresh
           onClose={() => setSelectedItem(null)}
           onEdit={() => { setEditingItem(selectedItem); setSelectedItem(null); }}
           onDelete={() => handleDelete(selectedItem.id)}
-          onManageContent={() => { setManagingContentFor({ id: selectedItem.id, name: selectedItem.name }); setSelectedItem(null); }}
+          onManageContent={() => { setManagingContentFor({ id: selectedItem.id, name: selectedItem.name, category: selectedItem.category }); setSelectedItem(null); }}
         />
       )}
     </div>
