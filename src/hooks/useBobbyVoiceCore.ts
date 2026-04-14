@@ -23,14 +23,24 @@ import { useSmartSTT } from "./useSmartSTT";
 import { useConversationRecorder } from "./useConversationRecorder";
 
 // ─── Timing constants ────────────────────────────────
-const WAIT_SILENCE_BEFORE_RELANCE_MS = 60_000;   // 60s no voice in LISTENING → relance
-const RELANCE_SILENCE_BEFORE_OFF_MS = 30_000;     // 30s no voice after relance → off
-const CONV_SILENCE_RELANCE_MS = 30_000;            // 30s silence during conversation → relance
-const CONV_SILENCE_OFF_MS = 60_000;                // 60s silence after conv relance → goodbye
-const MIN_SESSION_MS = 90_000;                      // 90s minimum session guarantee
-const SLEEP_TIMER_MS = 120_000;                     // 2min idle → sleep
+const WAIT_SILENCE_BEFORE_RELANCE_MS = 60_000;
+const RELANCE_SILENCE_BEFORE_OFF_MS = 30_000;
+const CONV_SILENCE_RELANCE_MS = 30_000;
+const CONV_SILENCE_OFF_MS = 60_000;
+const MIN_SESSION_MS = 90_000;
+const SLEEP_TIMER_MS = 120_000;
 const ANTI_ECHO_COOLDOWN_MS = 400;
-const UTTERANCE_BUFFER_MS = 7500;                   // 7.5s buffer — let the child finish speaking without interruption
+const UTTERANCE_BUFFER_MS = 7500;
+const ACK_MIN_INTERVAL_MS = 4000;
+const ACK_MAX_INTERVAL_MS = 8000;
+
+// ─── Natural acknowledgment sounds (breathing/hmm) ──────
+const ACK_SOUNDS = [
+  "hmm", "hmm hmm", "ah", "oui", "ah oui", "mmh", "oh", "d'accord", "mh mh",
+];
+function pickAck(): string {
+  return ACK_SOUNDS[Math.floor(Math.random() * ACK_SOUNDS.length)];
+}
 
 const RELANCE_MESSAGES: string[] = [];
 const GOODBYE_MESSAGES: string[] = [];
