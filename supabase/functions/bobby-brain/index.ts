@@ -94,32 +94,236 @@ function getAgePrompt(age: number): string {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // KB SEMANTIC SEARCH — server-side scoring
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEXT PROCESSING — French-aware normalize, stem, tokenize
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function normalizeText(text: string): string {
   return text.toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9àâäéèêëïîôùûüÿçœæ\s'-]/g, " ")
+    .replace(/['']/g, " ")
+    .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, " ").trim();
 }
 
-function tokenize(text: string): string[] {
-  const stopwords = new Set([
-    "le","la","les","un","une","des","du","de","et","en","est","que","qui",
-    "quoi","dans","pour","pas","sur","avec","ce","se","son","sa","ses","au",
-    "aux","tu","je","il","elle","on","nous","vous","ils","elles","mon","ma",
-    "mes","ton","ta","tes","a","ai","as","es","suis","sont","ne","ni","ou",
-    "mais","donc","car","si","ca","ça","très","plus","bien","aussi","tout",
-    "faire","fait","dit","dire","peut","faut","quel","quelle","quels","quelles",
-    "comment","pourquoi","quand","où","moi","toi","lui","y","c","d","l","n","s","j",
-  ]);
-  return normalizeText(text).split(/\s+/).filter(w => w.length > 1 && !stopwords.has(w));
+function stem(word: string): string {
+  if (word.length <= 3) return word;
+  if (word.endsWith("eaux")) return word.slice(0, -4) + "eau";
+  if (word.endsWith("aux")) return word.slice(0, -3) + "al";
+  if (word.endsWith("ement")) return word.slice(0, -5);
+  if (word.endsWith("ment")) return word.slice(0, -4);
+  if (word.endsWith("tion")) return word.slice(0, -4);
+  if (word.endsWith("sion")) return word.slice(0, -4);
+  if (word.endsWith("ais")) return word.slice(0, -3);
+  if (word.endsWith("ait")) return word.slice(0, -3);
+  if (word.endsWith("ent")) return word.slice(0, -3);
+  if (word.endsWith("eur")) return word.slice(0, -3);
+  if (word.endsWith("euse")) return word.slice(0, -4);
+  if (word.endsWith("eux")) return word.slice(0, -3);
+  if (word.endsWith("er")) return word.slice(0, -2);
+  if (word.endsWith("ir")) return word.slice(0, -2);
+  if (word.endsWith("re")) return word.slice(0, -2);
+  if (word.endsWith("es")) return word.slice(0, -2);
+  if (word.endsWith("s") && word.length > 3) return word.slice(0, -1);
+  return word;
 }
+
+const STOPWORDS = new Set([
+  "le","la","les","un","une","des","du","de","et","en","est","que","qui",
+  "quoi","dans","pour","pas","sur","avec","ce","se","son","sa","ses","au",
+  "aux","tu","je","il","elle","on","nous","vous","ils","elles","mon","ma",
+  "mes","ton","ta","tes","a","ai","as","es","suis","sont","ne","ni","ou",
+  "mais","donc","car","si","ca","tres","plus","bien","aussi","tout",
+  "faire","fait","dit","dire","peut","faut","quel","quelle","quels","quelles",
+  "comment","pourquoi","quand","moi","toi","lui","y","c","d","l","n","s","j",
+]);
+
+function tokenize(text: string): string[] {
+  return normalizeText(text).split(/\s+/).filter(w => w.length > 1 && !STOPWORDS.has(w));
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SEMANTIC FIELDS — associate related concepts
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const SEMANTIC_FIELDS: Record<string, string[]> = {
+  planete: ["terre","mars","jupiter","saturne","venus","mercure","neptune","uranus","systeme","solaire","espace"],
+  etoile: ["soleil","constellation","galaxie","univers","lumiere","briller","astronomie","ciel","nuit"],
+  dinosaure: ["tyrannosaure","triceratops","velociraptor","jurassique","fossile","extinction","prehistoire"],
+  animal: ["chat","chien","lion","tigre","elephant","girafe","ours","loup","dauphin","baleine","oiseau","poisson"],
+  ocean: ["mer","eau","vague","maree","poisson","baleine","dauphin","corail","plage","profondeur"],
+  langue: ["parler","mot","francais","anglais","espagnol","chinois","arabe","japonais","thailandais","thai","langage","ecrire","alphabet","communication"],
+  thailandais: ["thai","thailande","asie","bangkok","langue","parler"],
+  musique: ["chanson","instrument","guitare","piano","violon","batterie","melodie","rythme","chanter","danser"],
+  espace: ["fusee","astronaute","lune","soleil","planete","etoile","galaxie","orbite","satellite","nasa"],
+  corps: ["coeur","cerveau","muscle","os","sang","poumon","estomac","peau","organe","squelette"],
+  meteo: ["pluie","neige","vent","soleil","nuage","orage","temperature","arc-en-ciel","tempete"],
+  famille: ["papa","maman","frere","soeur","grand-parent","cousin","oncle","tante","bebe"],
+  ecole: ["maitre","maitresse","classe","eleve","apprendre","lire","ecrire","calculer","recreation"],
+  nourriture: ["manger","fruit","legume","gateau","chocolat","cuisine","recette","repas"],
+  couleur: ["rouge","bleu","vert","jaune","orange","violet","rose","noir","blanc","marron"],
+  sport: ["football","basket","tennis","natation","courir","sauter","equipe","match","gagner"],
+};
+
+function expandWithSemantics(tokens: string[]): Set<string> {
+  const expanded = new Set(tokens);
+  for (const t of tokens) {
+    const st = stem(t);
+    for (const [key, related] of Object.entries(SEMANTIC_FIELDS)) {
+      if (key === t || key === st || t.includes(key) || key.includes(t.length >= 4 ? t : "__")) {
+        for (const r of related) expanded.add(r);
+      }
+    }
+  }
+  return expanded;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// FUZZY MATCHING — stem + prefix + substring
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function fuzzyMatch(a: string, b: string): number {
+  if (a === b) return 1.0;
+  const sa = stem(a), sb = stem(b);
+  if (sa === sb) return 0.9;
+  const longer = Math.max(a.length, b.length);
+  if (a.length >= 4 && b.includes(a) && a.length / longer >= 0.85) return 0.8;
+  if (b.length >= 4 && a.includes(b) && b.length / longer >= 0.85) return 0.8;
+  const minLen = Math.min(a.length, b.length);
+  if (minLen >= 4) {
+    let shared = 0;
+    for (let i = 0; i < minLen; i++) {
+      if (a[i] === b[i]) shared++; else break;
+    }
+    if (shared >= 4 && shared / minLen >= 0.8) return 0.6 + (shared / minLen) * 0.2;
+  }
+  return 0;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// FOCUS EXTRACTION — what is the question ABOUT?
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const FOCUS_PATTERNS: { regex: RegExp; focusGroup: number }[] = [
+  { regex: /(?:l'|la |le |les )(\w+)\s+(?:de|du|des|d')\s+(.+)/i, focusGroup: 2 },
+  { regex: /(?:parle|dis|raconte)(?:-moi|-nous)?\s+(?:de|du|des|d'|sur|quelque chose sur)\s+(.+)/i, focusGroup: 1 },
+  { regex: /(?:c'est quoi|qu'est-ce que?|qu'est-ce qu[e'])\s+(.+)/i, focusGroup: 1 },
+  { regex: /(?:on peut|tu peux|peut-on|peux-tu)\s+(.+)/i, focusGroup: 1 },
+  { regex: /pourquoi\s+(.+)/i, focusGroup: 1 },
+  { regex: /comment\s+(.+)/i, focusGroup: 1 },
+  { regex: /^(.+?)\s*,?\s*c'est quoi/i, focusGroup: 1 },
+  { regex: /(?:je veux savoir|explique|apprends-moi)\s+(.+)/i, focusGroup: 1 },
+  { regex: /(?:tu connais|tu sais)\s+(.+)/i, focusGroup: 1 },
+];
+
+const FOCUS_STOP = new Set([
+  "le","la","les","un","une","des","de","du","d","l",
+  "mon","ma","mes","ton","ta","tes","son","sa","ses",
+  "et","ou","mais","donc","car","qui","que","quoi","dont",
+  "est","sont","suis","es","a","en","au","aux","sur","dans","par","pour","avec",
+]);
+
+function extractFocus(text: string): string[] {
+  const lower = text.toLowerCase().trim();
+  for (const { regex, focusGroup } of FOCUS_PATTERNS) {
+    const match = lower.match(regex);
+    if (match && match[focusGroup]) {
+      const words = match[focusGroup].trim()
+        .replace(/[^a-zà-ÿ\s'-]/g, " ")
+        .split(/\s+/)
+        .map(w => normalizeText(w))
+        .filter(w => w.length > 1 && !FOCUS_STOP.has(w));
+      if (words.length > 0) return words.slice(0, 4);
+    }
+  }
+  return [];
+}
+
+function focusPenalty(focusWords: string[], keywords: string[]): number {
+  if (focusWords.length === 0) return 1.0;
+  const normalizedKw = keywords.map(k => normalizeText(k));
+  let hits = 0;
+  for (const fw of focusWords) {
+    if (normalizedKw.some(kw =>
+      kw === fw || kw.includes(fw) || fw.includes(kw) ||
+      (fw.length >= 4 && kw.length >= 4 && stem(fw) === stem(kw))
+    )) hits++;
+  }
+  const coverage = hits / focusWords.length;
+  if (coverage === 0) return 0.3;
+  if (coverage < 0.5) return 0.6;
+  return 1.0;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// COMPOSITE SCORING ENGINE v2
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 interface KBMatch {
   question: string;
   answer: string;
   category: string;
   score: number;
+}
+
+function scoreEntry(
+  inputTokens: string[],
+  expandedInput: Set<string>,
+  inputNorm: string,
+  focusWords: string[],
+  entry: { question: string; keywords: string[]; priority: number; trust_score: number | null }
+): number {
+  const entryKw = (entry.keywords || []).map(k => normalizeText(k)).filter(k => k.length >= 2);
+  const qTokens = tokenize(entry.question);
+  const allKw = [...new Set([...entryKw, ...qTokens])];
+
+  // 1) Keyword scoring with fuzzy + semantic
+  let kwTotal = 0, kwMatch = 0;
+  for (const kw of allKw) {
+    kwTotal += 1;
+    let best = 0;
+    for (const tok of inputTokens) {
+      const f = fuzzyMatch(tok, kw);
+      if (f > best) best = f;
+    }
+    if (best < 0.5 && expandedInput.has(kw)) best = Math.max(best, 0.5);
+    kwMatch += best;
+  }
+  const kwScore = kwTotal > 0 ? kwMatch / kwTotal : 0;
+
+  // 2) Bi-directional question similarity
+  let fwdShared = 0;
+  for (const iw of inputTokens) {
+    for (const qw of qTokens) {
+      if (fuzzyMatch(iw, qw) >= 0.6) { fwdShared++; break; }
+    }
+  }
+  let revShared = 0;
+  for (const qw of qTokens) {
+    for (const iw of inputTokens) {
+      if (fuzzyMatch(qw, iw) >= 0.6) { revShared++; break; }
+    }
+  }
+  const fwd = fwdShared / Math.max(inputTokens.length, 1);
+  const rev = revShared / Math.max(qTokens.length, 1);
+  const qScore = (fwd + rev) / 2;
+
+  // 3) Full-text containment
+  const qNorm = normalizeText(entry.question);
+  let containment = 0;
+  if (inputNorm.includes(qNorm) && qNorm.length >= 8) containment = 0.95;
+  else if (qNorm.includes(inputNorm) && inputNorm.length >= 8) containment = 0.85;
+
+  // 4) Composite raw score
+  const rawScore = Math.max(kwScore * 0.6 + qScore * 0.4, containment);
+
+  // 5) Focus penalty
+  const fp = focusPenalty(focusWords, [...entryKw, ...qTokens]);
+
+  // 6) Priority & trust factors
+  const priorityFactor = 0.5 + ((entry.priority || 5) / 10) * 0.5;
+  const trustFactor = entry.trust_score ?? 0.5;
+
+  return rawScore * fp * priorityFactor * (0.5 + trustFactor * 0.5);
 }
 
 async function queryKBForContext(
@@ -129,6 +333,10 @@ async function queryKBForContext(
 ): Promise<KBMatch[]> {
   const tokens = tokenize(userText);
   if (tokens.length === 0) return [];
+
+  const inputNorm = normalizeText(userText);
+  const expandedInput = expandWithSemantics(tokens);
+  const focusWords = extractFocus(userText);
 
   try {
     const { data: entries, error } = await sb
@@ -142,29 +350,11 @@ async function queryKBForContext(
     if (error || !entries?.length) return [];
 
     const scored: KBMatch[] = [];
-    const inputNorm = normalizeText(userText);
 
     for (const entry of entries) {
-      const entryTokens = tokenize(entry.question);
-      const keywords: string[] = entry.keywords || [];
-      const allEntryTokens = [...new Set([...entryTokens, ...keywords.map(k => normalizeText(k))])];
+      const finalScore = scoreEntry(tokens, expandedInput, inputNorm, focusWords, entry);
 
-      let kwMatches = 0;
-      for (const t of tokens) {
-        if (allEntryTokens.some(et => et.includes(t) || t.includes(et))) kwMatches++;
-      }
-      const kwScore = tokens.length > 0 ? kwMatches / tokens.length : 0;
-
-      const qNorm = normalizeText(entry.question);
-      const containment = inputNorm.includes(qNorm) || qNorm.includes(inputNorm) ? 1.0 :
-        entryTokens.length > 0 ? entryTokens.filter(t => inputNorm.includes(t)).length / entryTokens.length : 0;
-
-      const rawScore = Math.max(kwScore, containment);
-      const priorityFactor = 0.5 + ((entry.priority || 5) / 10) * 0.5;
-      const trustFactor = entry.trust_score ?? 0.5;
-      const finalScore = rawScore * priorityFactor * (0.5 + trustFactor * 0.5);
-
-      if (finalScore >= 0.25) {
+      if (finalScore >= 0.2) {
         scored.push({
           question: entry.question,
           answer: entry.answer,
@@ -175,6 +365,7 @@ async function queryKBForContext(
     }
 
     scored.sort((a, b) => b.score - a.score);
+    console.log(`[KB Scoring] "${userText}" → ${scored.length} matches (top: ${scored[0]?.score.toFixed(3)} "${scored[0]?.question?.slice(0, 50)}")`);
     return scored.slice(0, 5);
   } catch (e) {
     console.error("[KB Query] Error:", e);
