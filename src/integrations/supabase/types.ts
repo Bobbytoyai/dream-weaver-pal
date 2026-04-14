@@ -443,11 +443,15 @@ export type Database = {
           id: string
           is_active: boolean
           keywords: string[]
+          learning_source: string
           priority: number
+          quality_score: number
           question: string
           source_content_id: string | null
+          trust_score: number
           updated_at: string
           usage_count: number
+          validation_status: string
         }
         Insert: {
           age_max?: number
@@ -459,11 +463,15 @@ export type Database = {
           id?: string
           is_active?: boolean
           keywords?: string[]
+          learning_source?: string
           priority?: number
+          quality_score?: number
           question: string
           source_content_id?: string | null
+          trust_score?: number
           updated_at?: string
           usage_count?: number
+          validation_status?: string
         }
         Update: {
           age_max?: number
@@ -475,11 +483,15 @@ export type Database = {
           id?: string
           is_active?: boolean
           keywords?: string[]
+          learning_source?: string
           priority?: number
+          quality_score?: number
           question?: string
           source_content_id?: string | null
+          trust_score?: number
           updated_at?: string
           usage_count?: number
+          validation_status?: string
         }
         Relationships: [
           {
