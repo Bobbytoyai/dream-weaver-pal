@@ -6,6 +6,7 @@
 import type { BobbyBrainReply } from "./types";
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import { buildContextSummary } from "./conversationEnricher";
+import { trackInterests } from "./interestTracker";
 
 const FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bobby-brain`;
 
@@ -53,7 +54,10 @@ export async function getLLMReply(
       signal.addEventListener("abort", () => controller.abort(), { once: true });
     }
 
-    // Build context summary for chaining
+    // Track interests from user text before sending to LLM
+    trackInterests(userText);
+
+    // Build context summary with interests and key facts
     const contextSummary = buildContextSummary(conversationHistory);
 
     const response = await fetch(FUNCTION_URL, {
@@ -94,7 +98,6 @@ export async function getLLMReply(
     replyText = replyText.replace(/\{prénom\}/gi, childName);
     replyText = replyText.replace(/\{name\}/gi, childName);
     replyText = replyText.replace(/\{enfant\}/gi, childName);
-    // Catch "child name" as two words
     replyText = replyText.replace(/\bchild name\b/gi, childName);
 
     if (!replyText) return null;
