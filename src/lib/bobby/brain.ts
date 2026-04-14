@@ -169,6 +169,7 @@ function applyOrchestration(
   understanding?: UnderstandingFrame,
   session?: V7Session,
   plan?: CognitionPlan | null,
+  proactiveInitiative?: import("./v8/proactiveEngine").ProactiveInitiative | null,
 ): BobbyBrainReply {
   if (!directive) return reply;
 
