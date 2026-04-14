@@ -35,12 +35,13 @@ serve(async (req) => {
     // Fetch session info
     const { data: session } = await sb
       .from("child_sessions")
-      .select("child_name, child_age")
+      .select("child_name, child_age, user_id")
       .eq("id", sessionId)
       .single();
 
     const childName = session?.child_name ?? "l'enfant";
     const childAge = session?.child_age ?? 6;
+    const userId = session?.user_id;
 
     // Build transcript
     const transcript = messages
@@ -132,6 +133,7 @@ Sinon laisse le tableau vide.`;
       .from("conversation_analyses")
       .upsert({
         session_id: sessionId,
+        user_id: userId,
         summary: analysis.summary ?? null,
         topics_detected: analysis.topics_detected ?? [],
         emotions: analysis.emotions ?? {},
