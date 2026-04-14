@@ -249,7 +249,7 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       const cheekHex = CHEEK_HEX[bobbyColors.cheek];
       if (cheekHex) {
         blushMat.color.set(cheekHex);
-        blushMat.opacity = 0.35;
+        blushMat.opacity = 0.55;
       } else {
         blushMat.opacity = 0;
       }
