@@ -517,7 +517,7 @@ export async function buildBobbyReply({
     childAge,
     totalInteractions: 0,
   };
-  const proactiveInitiative = maybeInitiate(proactiveCtx);
+  const proactiveInitiative = masterControl.suppressProactive ? null : maybeInitiate(proactiveCtx);
 
   // ═══════════════════════════════════════════════════════════
   // LAYER 1 (PRIMARY): GEMINI AI — Always try online first
@@ -532,6 +532,10 @@ export async function buildBobbyReply({
       let reply = postProcess(llmReply, childName, childAge, personalityCtx, tomSnap);
       reply = applyOrchestration(reply, orchestrationDirective, understanding, v7Session, cognitionPlan, proactiveInitiative);
 
+      // V9: Enforce word limit from Master Control
+      if (masterControl.maxWords > 0) {
+        reply.text = enforceWordLimit(reply.text, masterControl.maxWords);
+      }
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain] ✅ Gemini + V8 reply (${llmMs.toFixed(0)}ms LLM, ${totalMs.toFixed(0)}ms total)`);
       return reply;
