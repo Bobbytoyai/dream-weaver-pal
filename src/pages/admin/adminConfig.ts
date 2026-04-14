@@ -2,7 +2,7 @@ import {
   Brain, MessageSquare, BookOpen, Laugh, Gamepad2, Heart, Music,
   Star, Sparkles, Globe, Microscope, Dog,
   GraduationCap, HelpCircle, Lightbulb, Home, Utensils, Cpu,
-  CloudLightning, Eye, Users, Zap, Search,
+  CloudLightning, Eye, Users, Zap, Search, Smartphone,
   type LucideIcon,
 } from "lucide-react";
 
@@ -37,6 +37,18 @@ export interface CloudUser {
   last_synced_at: string; created_at: string; updated_at: string;
 }
 
+export interface BobbyDevice {
+  bobby_code: string;
+  bobby_id: string;
+  child_name: string | null;
+  child_age: number | null;
+  bobby_claimed_at: string | null;
+  parent_code: string;
+  parent_claimed_at: string | null;
+  parent_device_token: string | null;
+  is_active: boolean;
+}
+
 export interface RealConversation {
   session_id: string;
   child_name: string;
@@ -59,7 +71,7 @@ export interface LiveStats {
 export interface DayData { day: string; sessions: number; messages: number; }
 export interface EmotionData { name: string; value: number; color: string; }
 
-export type TopSection = "interactions" | "multiresponses" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons" | "store" | "expressions" | "autolearn" | "cloudusers" | "kbdebug";
+export type TopSection = "interactions" | "multiresponses" | "qa" | "blagues" | "histoires" | "cerveau" | "cloud" | "jeux" | "chansons" | "store" | "expressions" | "autolearn" | "cloudusers" | "kbdebug" | "devices";
 
 // ─── Category configs ──────────────────────────────────────────────
 export interface CategoryConfig {
@@ -147,6 +159,7 @@ export const TOP_SECTIONS_CONFIG: {
   { id: "autolearn", label: "Auto-Learning", icon: Microscope, color: "text-lime-500", bgColor: "bg-lime-500/20", desc: "IA auto-complétion depuis les conversations", emoji: "🧬" },
   { id: "cloudusers", label: "Bobby Cloud", icon: Users, color: "text-sky-500", bgColor: "bg-sky-500/20", desc: "Utilisateurs Bobby Cloud, profils sync", emoji: "☁️👥" },
   { id: "kbdebug", label: "KB Debug", icon: Search, color: "text-emerald-500", bgColor: "bg-emerald-500/20", desc: "Debug scoring sémantique KB en temps réel", emoji: "🔍" },
+  { id: "devices", label: "Appareils Bobby", icon: Smartphone, color: "text-orange-500", bgColor: "bg-orange-500/20", desc: "Tous les Bobby créés, statut et activation", emoji: "📱" },
 ];
 
 export const EMOTION_COLORS: Record<string, string> = {

@@ -14,7 +14,7 @@ import {
   BLAGUES as GAME_BLAGUES,
 } from "@/lib/gameEngine";
 import {
-  type KBEntry, type StoreContentItem, type CloudUser, type RealConversation,
+  type KBEntry, type StoreContentItem, type CloudUser, type BobbyDevice, type RealConversation,
   type LiveStats, type DayData, type EmotionData, type TopSection,
   BRAIN_SECTIONS, ALL_DB_CATEGORIES, AGE_GROUPS, EMOTION_COLORS,
 } from "./adminConfig";
@@ -78,7 +78,28 @@ export function useAdminState() {
   const [realConvLoading, setRealConvLoading] = useState(false);
   const [learningSessionId, setLearningSessionId] = useState<string | null>(null);
 
+  // Devices
+  const [devices, setDevices] = useState<BobbyDevice[]>([]);
+  const [devicesLoading, setDevicesLoading] = useState(false);
+
   // ─── Fetchers ───────────────────────────────────────────────────
+  const fetchDevices = useCallback(async () => {
+    setDevicesLoading(true);
+    const { data: codes } = await supabase.from("bobby_codes").select("id, code, child_name, child_age, claimed_at").order("code");
+    const { data: parentCodes } = await supabase.from("bobby_parent_codes").select("bobby_code_id, code, claimed_at, device_token, is_active");
+    const devs: BobbyDevice[] = (codes || []).map((bc: any) => {
+      const pc = (parentCodes || []).find((p: any) => p.bobby_code_id === bc.id);
+      return {
+        bobby_code: bc.code, bobby_id: bc.id, child_name: bc.child_name, child_age: bc.child_age,
+        bobby_claimed_at: bc.claimed_at, parent_code: pc?.code || "—",
+        parent_claimed_at: pc?.claimed_at || null, parent_device_token: pc?.device_token || null,
+        is_active: pc?.is_active ?? false,
+      };
+    });
+    setDevices(devs);
+    setDevicesLoading(false);
+  }, []);
+
   const fetchLiveStats = useCallback(async () => {
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
@@ -234,8 +255,8 @@ export function useAdminState() {
   // ─── Init ───────────────────────────────────────────────────────
   const refreshAll = useCallback(() => {
     fetchEntries(); fetchCloudStories(); fetchStoreItems(); fetchCloudUsers();
-    loadInteractions(); fetchRealConversations(); fetchLiveStats(); fetchChartData();
-  }, [fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers, fetchLiveStats, fetchChartData, loadInteractions, fetchRealConversations]);
+    loadInteractions(); fetchRealConversations(); fetchLiveStats(); fetchChartData(); fetchDevices();
+  }, [fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers, fetchLiveStats, fetchChartData, loadInteractions, fetchRealConversations, fetchDevices]);
 
   // Auto-refresh live stats every 30s
   useEffect(() => {
@@ -620,6 +641,7 @@ export function useAdminState() {
       store: storeItems.length,
       cloudusers: cloudUsers.length,
       kbdebug: "🔍",
+      devices: devices.length,
     } as Record<string, string | number>;
   }, [interactions, entries, cloudStories, storeItems, cloudUsers, autoLearnCount]);
 
@@ -637,6 +659,7 @@ export function useAdminState() {
     realConversations, realConvLoading, learningSessionId,
     liveStats, chartSessions, chartEmotions,
     liveInstallCounts, kbActiveCount, kbTotalCount, autoLearnCount,
+    devices, devicesLoading,
     // Editing
     editingEntry, setEditingEntry, saving,
     editingStory, setEditingStory, savingStory, setSavingStory,
@@ -654,7 +677,7 @@ export function useAdminState() {
     openQADetail, openBlagueDetail, openHistoireDetail, openQuizDetail,
     // Fetchers
     fetchEntries, fetchCloudStories, fetchStoreItems, fetchCloudUsers,
-    fetchRealConversations, fetchLiveStats, fetchChartData,
+    fetchRealConversations, fetchLiveStats, fetchChartData, fetchDevices,
     learnFromSession, refreshAll,
     navigate,
   };
