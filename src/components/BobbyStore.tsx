@@ -307,7 +307,20 @@ function ProductDetail({ item, installed, installing, detailsLoading, onInstall,
           </div>
         </div>
 
-        {/* Audio Preview for music items */}
+        {/* Audio status + Preview for music items */}
+        {item.category === "musique" && (
+          <div className="mt-3 flex items-center gap-2">
+            {getAudioUrl(item.slug) ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 border-2 border-black bg-[var(--retro-green)] text-[11px] font-black text-black uppercase">
+                <Volume2 className="w-3.5 h-3.5" /> Audio disponible
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 border-2 border-black bg-[var(--retro-yellow)] text-[11px] font-black text-black uppercase">
+                <Clock className="w-3.5 h-3.5" /> Audio bientôt disponible
+              </span>
+            )}
+          </div>
+        )}
         {item.category === "musique" && <AudioPreview slug={item.slug} />}
 
         {/* Install Button */}
