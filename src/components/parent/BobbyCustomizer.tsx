@@ -341,13 +341,13 @@ const BobbyCustomizer = ({ settings, onUpdate, onBack, onSave, saved }: BobbyCus
 
       {/* Save */}
       <button onClick={onSave}
-        className={`w-full py-3 text-[13px] font-black transition-all border-4 border-black uppercase ${
+        className={`w-full py-2 text-[11px] font-black border-3 border-black uppercase transition-all duration-300 ${
           saved
-            ? "bg-[var(--retro-green)] text-black"
-            : "bg-foreground text-background hover:opacity-90"
+            ? "bg-[var(--retro-green)] text-black scale-[0.97] border-black/60"
+            : "bg-foreground text-background hover:scale-[1.02] active:scale-95"
         }`}
-        style={{ boxShadow: "5px 5px 0px rgba(0,0,0,0.3)" }}>
-        {saved ? "✅ ENREGISTRÉ !" : "💾 ENREGISTRER"}
+        style={{ boxShadow: saved ? "2px 2px 0px rgba(0,0,0,0.15)" : "3px 3px 0px rgba(0,0,0,0.3)" }}>
+        {saved ? "✅ ENREGISTRÉ" : "💾 ENREGISTRER"}
       </button>
     </div>
   );
