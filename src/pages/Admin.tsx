@@ -929,12 +929,21 @@ const Admin = () => {
 
   // ── Cerveau ──
   if (topSection === "cerveau") {
+    const toItems = (obj: unknown): string[] => {
+      if (Array.isArray(obj)) return obj.map(String);
+      if (typeof obj === "object" && obj !== null) {
+        return Object.entries(obj).map(([k, v]) =>
+          Array.isArray(v) ? `${k}: ${v.join(", ")}` : `${k}: ${String(v)}`
+        );
+      }
+      return [String(obj)];
+    };
     const sections = [
-      { title: "🎭 Personnalité", items: BOBBY_PERSONALITY },
-      { title: "🤖 Réactions naturelles", items: BOBBY_NATURAL_REACTIONS },
-      { title: "🔇 Relances silence", items: SILENCE_RELAUNCHES },
-      { title: "👋 Accueil", items: WELCOME_PHRASES },
-      { title: "🌙 Au revoir", items: FAREWELL_PHRASES },
+      { title: "🎭 Personnalité", items: toItems(BOBBY_PERSONALITY) },
+      { title: "🤖 Réactions naturelles", items: toItems(BOBBY_NATURAL_REACTIONS) },
+      { title: "🔇 Relances silence", items: toItems(SILENCE_RELAUNCHES) },
+      { title: "👋 Accueil", items: toItems(WELCOME_PHRASES) },
+      { title: "🌙 Au revoir", items: toItems(FAREWELL_PHRASES) },
     ];
     return (
       <div className="min-h-screen bg-[#0a0a0f] p-4"><div className="max-w-4xl mx-auto space-y-4">
