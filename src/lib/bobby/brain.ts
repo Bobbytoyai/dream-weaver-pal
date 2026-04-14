@@ -247,6 +247,7 @@ export function getBobbySleepMessage(): string {
 }
 
 export function resetBobbyBrainSession() {
+  preloadSemanticFields(); // Pre-warm heavy 72KB semantic data
   resetConversationContext();
   resetMemory();
   resetScenario();
