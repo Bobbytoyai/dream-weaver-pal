@@ -6,10 +6,18 @@ import type { BobbyBrainReply, PendingNarration } from "./types";
 import { simplifyForAge } from "@/lib/adaptiveEngine";
 import { resetMemory } from "@/lib/responseSelector";
 import { resetScenario } from "@/lib/scenarioEngine";
-import { trackInterests, getSmartFollowUp, resetInterestTracker } from "./interestTracker";
+import { trackInterests, getSmartFollowUp, resetInterestTracker, getInterestSnapshot } from "./interestTracker";
 import { getLLMReply, clearHistory } from "./llmBrain";
 import { getLocalBrainReply, resetLocalBrain } from "./localBrain";
 import { queryKnowledgeBase, clearConversationContext } from "./knowledgeQuery";
+import {
+  loadPersistentMemory,
+  savePersistentMemory,
+  extractFactsFromMessage,
+  mergeNewFacts,
+  mergeInterestScores,
+  resetPersistentMemoryCache,
+} from "./persistentMemory";
 
 interface BuildBobbyReplyOptions {
   childName: string;
@@ -146,6 +154,27 @@ export function resetBobbyBrainSession() {
   clearHistory();
   resetLocalBrain();
   clearConversationContext();
+  resetPersistentMemoryCache();
+}
+
+/** Call at session start to load persistent memory from cloud/local */
+export async function initBobbySession(childName: string): Promise<void> {
+  await loadPersistentMemory(childName);
+  console.log("[Brain] 🧠 Persistent memory loaded for", childName);
+}
+
+/** Call at session end to save accumulated facts & interests */
+export async function endBobbySession(childName: string): Promise<void> {
+  // Merge current session interest scores into persistent totals
+  const snapshot = getInterestSnapshot();
+  const sessionScores: Record<string, number> = {};
+  for (const { topic, score } of snapshot.topInterests) {
+    sessionScores[topic] = score;
+  }
+  mergeInterestScores(sessionScores);
+
+  await savePersistentMemory(childName);
+  console.log("[Brain] 💾 Persistent memory saved for", childName);
 }
 
 export async function buildBobbyReply({ childName, childAge, userText = "", pendingNarration, parentSettings }: BuildBobbyReplyOptions): Promise<BobbyBrainReply> {
