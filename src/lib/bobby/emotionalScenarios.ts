@@ -1003,14 +1003,7 @@ export function getScenarioResponse(userText: string, childName?: string): {
   let text = responses[Math.floor(Math.random() * responses.length)];
   const faceState = scenario.faceStates[currentStep] || "attentive";
 
-  // Inject child name at acknowledge stage (~80%) or support stage (~50%)
-  if (childName && !text.includes(childName)) {
-    const isEmotionalStage = step.stage === "acknowledge" || step.stage === "support";
-    const nameChance = step.stage === "acknowledge" ? 0.8 : isEmotionalStage ? 0.5 : 0.2;
-    if (Math.random() < nameChance) {
-      text = `${childName} 💛 ${text.charAt(0).toLowerCase() + text.slice(1)}`;
-    }
-  }
+  // Name injection disabled — Bobby ne mentionne plus le prénom
 
   // Determine if we should advance
   let shouldAdvance = false;
