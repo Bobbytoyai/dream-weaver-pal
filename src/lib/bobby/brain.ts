@@ -280,8 +280,8 @@ export async function buildBobbyReply({
 
   // ── Active flow — advance scenario ──
   if (isFlowActive() && userText) {
-    const intentForFlow = detectLocalIntent(userText);
-    const flowResult = advanceFlow(userText, intentForFlow.intent, childName, childAge);
+    const { intent: flowIntent } = detectLocalIntent(userText);
+    const flowResult = advanceFlow(userText, flowIntent, childName, childAge);
     if (flowResult.handled) {
       return {
         text: simplifyForAge(flowResult.text, childAge),
