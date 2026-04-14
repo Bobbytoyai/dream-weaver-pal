@@ -264,6 +264,9 @@ const VoiceScreen = ({
           />
         </div>
 
+        {/* Music note particles during music playback */}
+        {sm.musicPlaying && <FloatingMusicNotes />}
+
 
         {/* Bobby text removed from here — now in bottom section */}
       </div>
