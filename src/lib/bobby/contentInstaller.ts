@@ -124,8 +124,10 @@ export async function installContentPack(contentId: string, childName: string): 
       .order("sort_order", { ascending: true });
 
     if (fetchError || !contentData?.length) {
-      console.warn("[ContentInstaller] No content data found for pack:", contentId);
-      return { success: true, itemsInstalled: 0, cachedLocally: false, error: "Aucune donnée de contenu trouvée" };
+      // Rollback: remove from installed_content since pack is empty
+      await supabase.from("installed_content").delete().eq("child_name", childName).eq("content_id", contentId);
+      console.warn("[ContentInstaller] Pack vide, installation annulée:", contentId);
+      return { success: false, itemsInstalled: 0, cachedLocally: false, error: "Ce pack ne contient pas encore de contenu. Installation annulée." };
     }
 
     // 3. Inject Q&A entries into knowledge_base
