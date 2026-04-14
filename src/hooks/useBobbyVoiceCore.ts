@@ -534,6 +534,7 @@ export function useBobbyVoiceCore({
           // Stay in SPEAKING state but emit MUSIC_START so the face shows
           // music particles instead of mouth animation
           setCurrentEmotion("happy");
+          setMusicPlaying(true);
           eventBus.emit({ type: "SPEECH_STOP" });
           eventBus.emit({ type: "MUSIC_START", title: musicTitle || "" });
 
