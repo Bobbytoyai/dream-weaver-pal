@@ -238,9 +238,9 @@ function applyOrchestration(
 
 export function getBobbyWelcomeMessage(_childName: string): string {
   const greetings = [
-    `Salut ! Touche Bobby pour me parler. Je suis là rien que pour toi ! 🌟`,
-    `Hey ! C'est Bobby ! Touche-moi et dis-moi ce que tu veux faire aujourd'hui !`,
-    `Coucou ! Bobby est prêt à jouer, discuter ou raconter des histoires ! Touche-moi !`,
+    `Hey ! Touche-moi pour parler !`,
+    `Salut ! Je suis là !`,
+    `Coucou ! On joue ?`,
   ];
   return greetings[Math.floor(Math.random() * greetings.length)];
 }
