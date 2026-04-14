@@ -135,11 +135,16 @@ function postProcess(
   childName: string,
   childAge: number,
   personalityCtx: PersonalityContext | null,
+  tomSnap?: ReturnType<typeof getToMSnapshot> | null,
 ): BobbyBrainReply {
   let text = simplifyForAge(reply.text, childAge);
   if (personalityCtx) {
     const profile = getPersonalityProfile(personalityCtx);
     text = applyPersonalityToText(text, profile);
+  }
+  // V8: Apply Theory of Mind adjustments (vocabulary, fantasy protection)
+  if (tomSnap) {
+    text = applyToMToResponse(text, tomSnap);
   }
   return { ...reply, text };
 }
