@@ -153,7 +153,7 @@ const GENERIC_MUSIC_PATTERNS = [
   /^(?:chante|bobby\s+chante|tu\s+peux\s+chanter)(?:\s+(?:pour\s+moi|s'?il\s+te\s+pla[iî]t|une?\s+\w+))?$/i,
   /^(?:je\s+veux\s+)?(?:dormir|faire\s+dodo|dodo)$/i,
   /^(?:joue|mets|lance)\s+(?:moi\s+)?(?:de\s+la\s+)?musique(?:\s+.+)?$/i,
-  /(?:comptine|berceuse|chanson|musique)\s+(?:pour\s+)?(?:enfants?|dormir|bébé|dodo)/i,
+  /(?:comptine|berceuse|chanson|musique)\s+(?:pour\s+)?(?:enfants?|dormir|bebe|bébé|dodo)/i,
 ];
 
 function isGenericMusicRequest(text: string): boolean {
