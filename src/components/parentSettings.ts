@@ -108,6 +108,7 @@ export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
   consentImprovement: false,
   consentStats: false,
   disabledExpressions: [],
+  parentMode: "normal",
   bilingualMode: "off",
   bobbyColor: "blue",
   bobbyColors: {
