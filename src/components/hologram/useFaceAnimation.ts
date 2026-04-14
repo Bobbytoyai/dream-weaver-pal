@@ -533,11 +533,19 @@ export function useFaceAnimation(
       speechHeadNod = Math.sin(breathPhase.current * 4.5) * Math.max(rawAmp, 0.05) * 0.035;
       speechCheekBoost = rawAmp > 0.15 ? rawAmp * 0.16 : 0;
     } else {
-      // Non-speaking: mouth stays CLOSED. Breath affects only curve (smile), NOT openness.
-      mouthOpenTarget = 0;
+      // Non-speaking: use emotion targets for open-mouth states (surprised, excited, playful, happy)
+      const emotionOpen = targets.mouthOpenness ?? 0;
+      const emotionRound = targets.mouthRound ?? 0;
+      const emotionJaw = targets.jawDrop ?? 0;
+      mouthOpenTarget = emotionOpen + mouthQuirkOpenAdd;
       mouthWidthTarget = (targets.mouthWidth ?? 0.5) + mouthBreathWidth + mouthQuirkWidthAdd;
-      mouthRoundTarget = 0;
-      jawDropTarget = 0;
+      mouthRoundTarget = emotionRound;
+      jawDropTarget = emotionJaw;
+      // Add subtle breathing movement to curve only
+      if (emotionOpen < 0.05) {
+        // Closed mouth: breath affects curve
+        mouthOpenTarget = 0;
+      }
     }
 
     // --- LERP ALL VALUES ---
