@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { HologramFace } from "@/components/hologram/HologramFace";
+import { LazyHologramFace as HologramFace } from "@/components/hologram/LazyHologramFace";
 import { EYES, EYEBROWS, MOUTHS, ANIMATIONS, type ExpressionCombo } from "@/lib/bobby/expressionLibrary";
 import { type BobbyEmotion, emotionToExpression } from "@/lib/bobby/expressionEngine";
 import { DEFAULT_PARENT_SETTINGS } from "@/components/parentSettings";
