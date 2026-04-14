@@ -1,8 +1,10 @@
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { Loader2, CloudUpload, LogIn, Trash2 } from "lucide-react";
 import type { ParentSession as Session, ParentAnalysis as Analysis } from "@/lib/bobby/parentDashboard";
 import { formatSyncTime, type CloudProfile } from "@/lib/bobby/cloudSync";
+import { getCloudUsage, formatStorage, type CloudUsage } from "@/lib/bobby/cloudQuota";
 
 interface CloudTabProps {
   sessions: Session[];
@@ -28,13 +30,22 @@ const CloudTab = ({
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const totalSessions = sessions.length;
-  const totalMessages = sessions.reduce((s, sess) => s + (sess.message_count || 0), 0);
-  const totalAnalyses = analyses.length;
+  const [quota, setQuota] = useState<CloudUsage | null>(null);
 
-  const estimatedStorageKB = (totalSessions * 2) + (totalMessages * 0.5) + (totalAnalyses * 5);
-  const estimatedStorageMB = Math.max(0.01, estimatedStorageKB / 1024);
-  const storageLabel = estimatedStorageMB < 1 ? `${Math.round(estimatedStorageKB)} Ko` : `${estimatedStorageMB.toFixed(1)} Mo`;
+  useEffect(() => {
+    if (user) {
+      getCloudUsage().then(setQuota).catch(() => {});
+    }
+  }, [user]);
+
+  const totalSessions = quota?.sessions ?? sessions.length;
+  const totalMessages = quota?.messages ?? sessions.reduce((s, sess) => s + (sess.message_count || 0), 0);
+  const totalAnalyses = quota?.analyses ?? analyses.length;
+  const usedMB = quota?.usedMB ?? 0.01;
+  const quotaMB = quota?.quotaMB ?? 500;
+  const storageLabel = formatStorage(usedMB);
+  const quotaLabel = formatStorage(quotaMB);
+  const usedPercent = quotaMB > 0 ? Math.min(100, (usedMB / quotaMB) * 100) : 0;
 
   const plans = [
     {
@@ -220,9 +231,9 @@ const CloudTab = ({
       {/* TARIFS */}
       <div className="space-y-3">
         <h3 className="text-[16px] font-black text-black px-1 uppercase">💾 TARIFS BOBBY CLOUD</h3>
-        <p className="text-[11px] text-black/60 px-1 -mt-1 font-bold">Utilisation actuelle : <span className="font-black text-black">{storageLabel}</span> / 500 Mo</p>
+        <p className="text-[11px] text-black/60 px-1 -mt-1 font-bold">Utilisation actuelle : <span className="font-black text-black">{storageLabel}</span> / {quotaLabel}</p>
         <div className="mx-1 h-3 bg-white border-2 border-black overflow-hidden">
-          <div className="h-full bg-foreground transition-all" style={{ width: `${Math.min(100, (estimatedStorageMB / 500) * 100)}%` }} />
+          <div className={`h-full transition-all ${usedPercent > 90 ? 'bg-red-500' : usedPercent > 70 ? 'bg-amber-500' : 'bg-foreground'}`} style={{ width: `${usedPercent}%` }} />
         </div>
         {plans.map((plan, pi) => {
           const planBgs = ["white", "var(--retro-blue)", "var(--retro-yellow)"];
