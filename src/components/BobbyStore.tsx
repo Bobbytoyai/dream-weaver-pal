@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Search, Download, Check, Star, Sparkles, Users, Zap, Loader2, Trash2, ArrowLeft, Clock, Award, BookOpen, ChevronRight, Globe, Shield, Heart, X, SlidersHorizontal, ChevronDown } from "lucide-react";
+import { Search, Download, Check, Star, Sparkles, Users, Zap, Loader2, Trash2, ArrowLeft, Clock, Award, BookOpen, ChevronRight, Globe, Shield, Heart, X, SlidersHorizontal, ChevronDown, Play, Pause, Volume2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { installContentPack, uninstallContentPack, getLocalCacheSize, type InstallResult } from "@/lib/bobby/contentInstaller";
 import { invalidateMusicCache } from "@/lib/bobby/musicEngine";
@@ -138,7 +138,126 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
   );
 }
 
-// ─── Product Detail Page ────────────────────────────────────────────
+// ─── Audio Preview for Music Items ──────────────────────────────────
+
+const SLUG_TO_AUDIO: Record<string, string> = {
+  "bobby-tu-es-la": "bobby_tu_est_la.mp3",
+  "ecole-amusant": "comptines/a_lecole_cest_amusant.mp3",
+  "dort-doucement": "berceuses/dort_doucement_ami_de_bobby.mp3",
+};
+
+function getAudioUrl(slug: string): string | null {
+  const path = SLUG_TO_AUDIO[slug];
+  if (!path) return null;
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  return `https://${projectId}.supabase.co/storage/v1/object/public/bobby-music/${path}`;
+}
+
+function AudioPreview({ slug, compact = false }: { slug: string; compact?: boolean }) {
+  const url = getAudioUrl(slug);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const audioRef = useCallback(() => {
+    // singleton per slug
+    const existing = document.querySelector(`audio[data-slug="${slug}"]`) as HTMLAudioElement | null;
+    if (existing) return existing;
+    const el = new Audio(url!);
+    el.setAttribute("data-slug", slug);
+    el.preload = "metadata";
+    return el;
+  }, [slug, url]);
+
+  if (!url) return null;
+
+  const toggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const audio = audioRef();
+
+    // Stop any other preview playing
+    document.querySelectorAll("audio[data-slug]").forEach(el => {
+      if ((el as HTMLAudioElement).getAttribute("data-slug") !== slug) {
+        (el as HTMLAudioElement).pause();
+      }
+    });
+
+    if (playing) {
+      audio.pause();
+      setPlaying(false);
+    } else {
+      audio.play().catch(() => {});
+      setPlaying(true);
+
+      audio.ontimeupdate = () => {
+        if (audio.duration) {
+          setProgress((audio.currentTime / audio.duration) * 100);
+          setDuration(audio.duration);
+        }
+      };
+      audio.onended = () => {
+        setPlaying(false);
+        setProgress(0);
+      };
+    }
+  };
+
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  if (compact) {
+    return (
+      <div
+        onClick={toggle}
+        className={`w-8 h-8 rounded-full border-2 border-black flex items-center justify-center cursor-pointer transition-all ${
+          playing ? "bg-[var(--retro-red)] scale-110" : "bg-[var(--retro-green)]"
+        }`}
+        style={{ boxShadow: "2px 2px 0px rgba(0,0,0,0.2)" }}
+        title={playing ? "Pause" : "Écouter un extrait"}
+      >
+        {playing ? <Pause className="w-3.5 h-3.5 text-black" /> : <Play className="w-3.5 h-3.5 text-black ml-0.5" />}
+      </div>
+    );
+  }
+
+  return (
+    <div className="retro-card p-3" style={{ backgroundColor: "var(--retro-green)" }}>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={toggle}
+          className={`w-10 h-10 shrink-0 border-2 border-black flex items-center justify-center transition-all ${
+            playing ? "bg-[var(--retro-red)]" : "bg-white"
+          }`}
+          style={{ boxShadow: "2px 2px 0px rgba(0,0,0,0.15)" }}
+        >
+          {playing ? <Pause className="w-5 h-5 text-black" /> : <Play className="w-5 h-5 text-black ml-0.5" />}
+        </button>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <Volume2 className="w-3 h-3 text-black/60" />
+            <span className="text-[10px] font-black text-black uppercase">
+              {playing ? "En écoute…" : "Écouter un extrait"}
+            </span>
+            {duration > 0 && (
+              <span className="text-[9px] font-bold text-black/50 ml-auto">{formatTime(duration)}</span>
+            )}
+          </div>
+          <div className="w-full h-2 bg-black/10 border border-black/20 overflow-hidden">
+            <div
+              className="h-full bg-black transition-all duration-200"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 
 function ProductDetail({ item, installed, installing, detailsLoading, onInstall, onBack, onRatingUpdate }: {
   item: StoreItem;
@@ -187,6 +306,9 @@ function ProductDetail({ item, installed, installing, detailsLoading, onInstall,
             </div>
           </div>
         </div>
+
+        {/* Audio Preview for music items */}
+        {item.category === "musique" && <AudioPreview slug={item.slug} />}
 
         {/* Install Button */}
         <button onClick={onInstall} disabled={installing}
@@ -872,10 +994,16 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
                 onClick={() => openItem(item)}
                 className={`retro-card ${tiltClass} w-full overflow-hidden text-left`}>
                 <div className="flex items-center gap-3 p-3">
-                  <div className="w-14 h-14 border-2 border-black bg-white flex items-center justify-center shrink-0 text-3xl overflow-hidden">
+                  <div className="w-14 h-14 border-2 border-black bg-white flex items-center justify-center shrink-0 text-3xl overflow-hidden relative">
                     {item.cover_image_url ? (
                       <img src={item.cover_image_url} alt={item.name} className="w-full h-full object-cover" loading="eager" />
                     ) : item.emoji}
+                    {/* Compact audio play button overlay for music */}
+                    {item.category === "musique" && getAudioUrl(item.slug) && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                        <AudioPreview slug={item.slug} compact />
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
