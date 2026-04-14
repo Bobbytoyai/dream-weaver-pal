@@ -320,6 +320,12 @@ export function invalidateMusicCache(): void {
   state.removedTrackIds = new Set();
 }
 
+// ── Clear music conversation state (after playback) ──
+export function clearMusicState(): void {
+  state.waitingForReplayAnswer = false;
+  state.currentTrack = null;
+}
+
 // ── Reset ──
 export function resetMusicEngine(): void {
   state.isPlaying = false;

@@ -558,12 +558,17 @@ export function useBobbyVoiceCore({
             });
           });
 
-          musicAudioRef.current = null;
+           musicAudioRef.current = null;
           setMusicPlaying(false);
           eventBus.emit({ type: "MUSIC_STOP" });
 
+          // Clear music answer state so next input goes to Gemini
+          const { clearMusicState } = await import("@/lib/bobby/musicEngine");
+          clearMusicState();
+
           // Resume listening after music ends
           lastSpeechEndRef.current = Date.now();
+          console.log("[BobbyVoiceCore] 🎵 Music ended — resuming conversation mode");
           await new Promise(r => setTimeout(r, ANTI_ECHO_COOLDOWN_MS));
           void startListeningRef.current();
         } catch (e) {
