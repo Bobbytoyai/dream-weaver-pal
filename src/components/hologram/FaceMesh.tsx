@@ -587,9 +587,19 @@ export function FaceMesh({ faceState, gazeRef, audioAmplitude, viseme, emotionIn
       {/* Mouth interior — dark fill */}
       <mesh ref={mouthInteriorRef} position={[0, -0.44, 0.005]} geometry={mouthInteriorGeo} material={mouthInteriorMat} />
 
-      {/* Tongue */}
+      {/* Tongue — flat oval shape */}
       <mesh ref={tongueRef} position={[0, -0.52, 0.006]} material={tongueMat}>
-        <circleGeometry args={[0.06, 24]} />
+        <shapeGeometry args={[(() => {
+          const s = new THREE.Shape();
+          // Flat wide oval: rx=0.07 (wide), ry=0.035 (flat)
+          // Slightly rounded tip at front
+          s.moveTo(-0.07, 0);
+          s.bezierCurveTo(-0.07, 0.025, -0.04, 0.038, 0, 0.038);
+          s.bezierCurveTo(0.04, 0.038, 0.07, 0.025, 0.07, 0);
+          s.bezierCurveTo(0.07, -0.02, 0.04, -0.032, 0, -0.032);
+          s.bezierCurveTo(-0.04, -0.032, -0.07, -0.02, -0.07, 0);
+          return s;
+        })(), 24]} />
       </mesh>
     </group>
   );
