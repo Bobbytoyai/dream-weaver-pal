@@ -1,6 +1,7 @@
 import type { FaceState } from "@/components/hologram/useFaceAnimation";
 import type { ParentSettings } from "@/components/parentSettings";
 import { resetConversationContext } from "@/lib/offlineEngine";
+import { isBlockedContent, getSafetyLevel, getSafeRedirect } from "@/lib/offline-intents";
 import { getLibraryReply, getNarrationText } from "./library";
 import type { BobbyBrainReply, PendingNarration } from "./types";
 import { simplifyForAge } from "@/lib/adaptiveEngine";
