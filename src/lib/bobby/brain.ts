@@ -147,6 +147,8 @@ function postProcess(
 function applyOrchestration(
   reply: BobbyBrainReply,
   directive: OrchestrationDirective | null,
+  understanding?: UnderstandingFrame,
+  session?: V7Session,
 ): BobbyBrainReply {
   if (!directive) return reply;
 
@@ -158,6 +160,15 @@ function applyOrchestration(
   // Append resume prompt if available
   if (directive.resumePrompt && Math.random() < 0.4) {
     reply.text = reply.text.replace(/[.!?…]*\s*$/, ". ") + directive.resumePrompt;
+  }
+
+  // V7: Understanding Feedback Loop — verify comprehension
+  if (understanding && session) {
+    const check = checkUnderstanding(understanding, reply.text, session);
+    if (check.type !== "no_check") {
+      console.log(`[Brain V7] 🔁 Feedback Loop: ${check.type} — ${check.triggerReason}`);
+      reply.text = applyUnderstandingCheck(reply.text, check);
+    }
   }
 
   // Record Bobby's response in the scene
