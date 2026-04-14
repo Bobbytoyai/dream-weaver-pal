@@ -10,8 +10,7 @@ import { smartClassify } from "../smartClassifier";
 import { tryStartScenario, isScenarioActive, getScenarioResponse, resetScenarios, getActiveScenarioInfo, getScenarioTriggerIntents } from "../emotionalScenarios";
 import { mem, addTurn, addBobbyResponse, resetLocalBrain as resetMem } from "./memory";
 import { detectLocalIntent } from "./intentEngine";
-import { detectEmotion } from "./emotionEngine";
-import { detectTopic } from "./assembly";
+import { detectEmotion, detectTopic } from "./emotionEngine";
 import { assembleResponse, INTENT_FACE_MAP } from "./assembly";
 
 // Re-exports
