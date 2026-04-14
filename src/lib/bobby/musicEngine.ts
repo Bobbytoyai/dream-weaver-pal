@@ -77,20 +77,31 @@ async function ensureLoaded(): Promise<void> {
 async function refreshRemovedTracks() {
   try {
     const childName = localStorage.getItem("bobby_child_name") || "Ami";
+    const storeIds = Object.values(TRACK_TO_STORE);
     
-    // Check if the music pack is installed — if NOT installed, user removed it
+    // Check which music store items are disabled
     const { data: installed } = await supabase
       .from("installed_content")
       .select("content_id, is_enabled")
       .eq("child_name", childName)
-      .eq("content_id", MUSIC_STORE_CONTENT_ID);
+      .in("content_id", storeIds);
     
-    // If pack exists and is_enabled = false, all its tracks are disabled
-    if (installed && installed.length > 0 && !(installed[0] as any).is_enabled) {
-      // User disabled the music pack — mark all tracks as removed
-      state.removedTrackIds = new Set(state.tracks.map(t => t.id));
-    } else {
-      state.removedTrackIds = new Set();
+    // Build set of disabled store content IDs
+    const disabledStoreIds = new Set<string>();
+    if (installed) {
+      for (const row of installed) {
+        if ((row as any).is_enabled === false) {
+          disabledStoreIds.add((row as any).content_id);
+        }
+      }
+    }
+    
+    // Map back to track IDs
+    state.removedTrackIds = new Set<string>();
+    for (const [trackId, storeId] of Object.entries(TRACK_TO_STORE)) {
+      if (disabledStoreIds.has(storeId)) {
+        state.removedTrackIds.add(trackId);
+      }
     }
   } catch {
     // Non-critical — keep all tracks available
