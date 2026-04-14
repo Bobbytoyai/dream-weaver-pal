@@ -830,14 +830,11 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
                       </span>
                       <span className="text-[9px] text-black/30">•</span>
                       <span className="text-[9px] text-black/50 font-bold">{item.size_label}</span>
-                      {item.rating_count > 0 && (
-                        <>
-                          <span className="text-[9px] text-black/30">•</span>
-                          <span className="text-[9px] text-amber-600 font-black flex items-center gap-0.5">
-                            <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" /> {item.rating}
-                          </span>
-                        </>
-                      )}
+                      <span className="text-[9px] text-black/30">•</span>
+                      <span className="text-[9px] text-amber-600 font-black flex items-center gap-0.5">
+                        <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" /> {item.rating_count > 0 ? item.rating : "—"}
+                        {item.rating_count > 0 && <span className="text-black/40 font-bold">({item.rating_count})</span>}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
