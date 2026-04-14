@@ -14,7 +14,7 @@ const VOICE_MAP: Record<string, string> = {
   sister:  "peyvUWe56gn85sJg24CF",   // Fallback → Bobby enfant (bientôt dispo)
 };
 
-// Speed multiplier per profile
+// Base speed per voice profile
 const SPEED_MAP: Record<string, number> = {
   female: 1.05,
   child:  1.05,
@@ -22,6 +22,15 @@ const SPEED_MAP: Record<string, number> = {
   sister: 1.05,
   brother: 1.0,
 };
+
+// Age-adaptive speed: younger children need slower speech
+function getSpeedForAge(voiceProfile: string, childAge?: number): number {
+  const baseSpeed = SPEED_MAP[voiceProfile || "child"] || 1.05;
+  if (childAge == null || childAge < 1) return baseSpeed;
+  if (childAge <= 5) return 0.92;   // 3-5 ans: lent et clair
+  if (childAge <= 7) return 1.0;    // 5-7 ans: vitesse normale
+  return 1.05;                       // 7-10 ans: légèrement plus rapide
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -37,7 +46,7 @@ serve(async (req) => {
       });
     }
 
-    const { text, voiceProfile } = await req.json();
+    const { text, voiceProfile, childAge } = await req.json();
     if (!text || text.trim().length < 1) {
       return new Response(JSON.stringify({ error: "No text provided" }), {
         status: 400,
@@ -46,7 +55,8 @@ serve(async (req) => {
     }
 
     const voiceId = VOICE_MAP[voiceProfile || "child"] || VOICE_MAP.child;
-    const speed = SPEED_MAP[voiceProfile || "child"] || 1.05;
+    const speed = getSpeedForAge(voiceProfile || "child", childAge);
+    console.log(`[TTS] voice=${voiceProfile}, age=${childAge}, speed=${speed}`);
 
     // Turbo model for lowest latency + expressive cartoon-like settings
     const response = await fetch(
