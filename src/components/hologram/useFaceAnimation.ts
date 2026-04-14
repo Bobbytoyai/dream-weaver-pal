@@ -417,10 +417,10 @@ export function useFaceAnimation(
       playfulTiltZ = Math.sin(breathPhase.current * 2) * 0.1;
     }
 
-    // --- PROUD: subtle head-up ---
+    // --- PROUD: dramatic head-up ---
     let proudHeadUp = 0;
     if (faceState === "proud") {
-      proudHeadUp = -0.04 * intensity;
+      proudHeadUp = -0.08 * intensity;
     }
 
     // --- IDLE MOUTH ANIMATION (natural, like breathing through mouth) ---
