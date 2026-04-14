@@ -22,6 +22,7 @@ import {
   pushConversationContext,
   clearConversationContext,
 } from "./scoring";
+import { extractFocus, focusPenalty } from "./focusExtraction";
 
 // Re-export for external consumers
 export { pushConversationContext, clearConversationContext } from "./scoring";
