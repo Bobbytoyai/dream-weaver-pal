@@ -24,7 +24,7 @@ import { resetScenario } from "@/lib/scenarioEngine";
 import { trackInterests, getSmartFollowUp, resetInterestTracker, getInterestSnapshot } from "./interestTracker";
 import { getLLMReply, streamLLMReply, clearHistory, addToHistory } from "./llmBrain";
 import { getLocalBrainReply, resetLocalBrain } from "./localBrain";
-import { queryKnowledgeBase, clearConversationContext } from "./knowledgeQuery";
+import { queryKnowledgeBase, clearConversationContext, preloadSemanticFields } from "./knowledgeQuery";
 import { getCachedReply, cacheReply, clearResponseCache } from "./responseCache";
 import { cogitate, resetCognition, type CognitionOutput } from "./cognition";
 import { getPersonalityProfile, applyPersonalityToText, type PersonalityContext } from "./personality";
