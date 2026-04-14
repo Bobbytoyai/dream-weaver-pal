@@ -114,24 +114,25 @@ function getPlayableTracks(): MusicTrack[] {
 }
 
 // ── Detect if user is requesting music ──
+// IMPORTANT: These must be specific to music requests only!
+// Avoid broad patterns that match general conversation.
 const MUSIC_TRIGGERS = [
   /(?:joue|mets|chante|écouter?|lance|passe)\s+(?:moi\s+)?(?:la?\s+)?(?:chanson|musique|comptine|berceuse|hymne)/i,
-  /(?:joue|mets|chante|écouter?|lance|passe)\s+(?:moi\s+)?/i,
-  /(?:je\s+veux\s+(?:écouter?|entendre))\s+/i,
-  /(?:tu\s+(?:peux|connais)\s+(?:jouer|chanter|mettre))\s+/i,
-  /(?:une?\s+(?:chanson|musique|comptine|berceuse))/i,
+  /(?:je\s+veux\s+(?:écouter?|entendre))\s+(?:une?\s+)?(?:chanson|musique|comptine|berceuse)/i,
+  /(?:tu\s+(?:peux|connais)\s+(?:jouer|chanter|mettre))\s+(?:une?\s+)?(?:chanson|musique|comptine|berceuse)/i,
+  /(?:une?\s+(?:chanson|musique|comptine|berceuse))\s+(?:s'?il\s+(?:te|vous)\s+pla[iî]t)/i,
   /(?:je\s+veux\s+(?:dormir|faire\s+dodo|une?\s+berceuse))/i,
-  /\b(?:dodo|dormir)\b/i,
+  /\bjoue\s+(?:moi\s+)?(?:bobby\s+tu\s+es\s+la|au\s+clair|alouette|frere\s+bobby|petit\s+navire|marseillaise|dort\s+doucement)/i,
 ];
 
 const MUSIC_WORD_VARIANTS = [
-  "musique", "chanson", "comptine", "berceuse",
-  "chane", "chancon", "chançon", "muzik", "muzique", "muszique",
-  "contine", "conptine", "comtine", "dodo",
+  "comptine", "berceuse",
+  "contine", "conptine", "comtine",
 ];
 
 export function detectMusicRequest(text: string): boolean {
   const lower = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  // Must match a specific music trigger or contain a music-specific word
   return MUSIC_TRIGGERS.some(r => r.test(lower)) || 
     MUSIC_WORD_VARIANTS.some(w => lower.includes(w));
 }
