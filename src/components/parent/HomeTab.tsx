@@ -117,7 +117,7 @@ const HomeTab: React.FC<HomeTabProps> = ({
   ];
 
   return (
-    <div className="p-4 space-y-4" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif" }}>
+    <div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6" style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif" }}>
       {/* Quick alerts */}
       {unreadAlertCount > 0 && (
         <button onClick={onOpenNotifPanel}
@@ -147,7 +147,7 @@ const HomeTab: React.FC<HomeTabProps> = ({
         </div>
 
         {todaySessions.length > 0 && (
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 gap-2 md:gap-3">
             {[
               { emoji: "💬", value: todayMessages, label: "Messages", bg: "var(--retro-green)" },
               { emoji: "⏱️", value: todayDuration >= 60 ? `${Math.round(todayDuration / 60)}m` : `${todayDuration}s`, label: "Durée", bg: "var(--retro-yellow)" },
@@ -167,7 +167,7 @@ const HomeTab: React.FC<HomeTabProps> = ({
       {/* Master Control — Mode selector */}
       <div className="hero-fade-in retro-card p-4" style={{ backgroundColor: 'var(--retro-yellow)' }}>
         <h3 className="text-[14px] font-black text-gray-800 mb-3 uppercase">🎛️ Mode Bobby</h3>
-        <div className="grid grid-cols-5 gap-1.5">
+        <div className="grid grid-cols-5 gap-1.5 md:gap-3">
           {([
             { id: "normal" as ParentMode, emoji: "✨", label: "Normal" },
             { id: "nuit" as ParentMode, emoji: "🌙", label: "Nuit" },
@@ -206,10 +206,10 @@ const HomeTab: React.FC<HomeTabProps> = ({
       {chartContent}
 
       {/* Navigation cards */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {navCards.map((card, i) => (
           <button key={card.id} onClick={() => onNavigate(card.id)}
-            className={`card-stagger-${i + 1} retro-card relative p-3 flex flex-col items-center justify-center aspect-square`}
+            className={`card-stagger-${i + 1} retro-card relative p-3 flex flex-col items-center justify-center aspect-square md:aspect-auto md:py-5`}
             style={{ backgroundColor: card.bg }}>
             <span className="text-[32px] mb-1 drop-shadow-sm">{card.emoji}</span>
             <span className="text-[11px] font-black text-gray-800 leading-tight text-center whitespace-pre-line">{card.label}</span>

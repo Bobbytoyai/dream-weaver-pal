@@ -87,7 +87,7 @@ const SessionsListTab = ({
   ], [tagFilter, sessionFavFilter, setTagFilter, setSessionFavFilter]);
 
   return (
-    <div className="p-4 space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
+    <div className="p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6" style={{ fontFamily: "'Nunito', sans-serif" }}>
       {/* Search bar */}
       <div className="relative">
         <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-black/40" />
@@ -97,7 +97,7 @@ const SessionsListTab = ({
       </div>
 
       {/* Category cards — retro grid */}
-      <div className="grid grid-cols-6 gap-1.5 mt-2">
+      <div className="grid grid-cols-6 md:grid-cols-8 gap-1.5 md:gap-2 mt-2">
         {categoryCards.map((card, ci) => {
           const retroBgs = ["var(--retro-blue)", "var(--retro-yellow)", "var(--retro-red)", "var(--retro-blue)", "var(--retro-yellow)", "var(--retro-green)"];
           return (

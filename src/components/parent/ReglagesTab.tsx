@@ -189,7 +189,7 @@ const RGPDPage = ({ settings, onUpdate, onBack, onSave, saved }: {
       <p className="text-[10px] text-black/60 font-bold leading-tight -mt-1">
         Gérez la protection des données de votre enfant conformément au RGPD
       </p>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
         {([
           { id: "info" as const, emoji: "📋", label: "Informations", desc: "Base légale, données collectées, sécurité", bg: "var(--retro-blue)" },
           { id: "droits" as const, emoji: "⚖️", label: "Vos droits", desc: "Accès, portabilité, effacement, opposition", bg: "var(--retro-green)" },
@@ -306,9 +306,9 @@ const ReglagesTab = ({
   }
 
   return (
-    <div className="p-4 space-y-3" style={{ fontFamily: "'Nunito', sans-serif" }}>
+    <div className="p-4 md:p-6 lg:p-8 space-y-3 md:space-y-4" style={{ fontFamily: "'Nunito', sans-serif" }}>
       <h2 className="text-[18px] font-black text-black animate-fadeInUp uppercase">⚙️ Réglages</h2>
-      <div className="grid grid-cols-2 gap-3 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 animate-fadeInUp" style={{ animationDelay: "0.05s" }}>
         {([
           ["voix", "🎤", "Voix & Sons", "Profils vocaux, vitesse, ton", "var(--retro-blue)"],
           ["limites", "⏱️", "Limites & Contrôle", "Temps, nuit, interactions, sujets", "var(--retro-yellow)"],
