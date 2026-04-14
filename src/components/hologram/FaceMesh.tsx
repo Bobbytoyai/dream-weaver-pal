@@ -88,7 +88,7 @@ function buildMouthShape(curve: number, width: number, openness: number, round: 
   const halfW = (0.14 + width * 0.08) * (1 - round * 0.2);
   const thickness = 0.040;
   
-  const isOpen = openness > 0.10 || round > 0.08;
+  const isOpen = openness > 0.15 || round > 0.10;
   
   if (!isOpen) {
     // ── CLOSED MOUTH — bezier smile/neutral/sad arc ──
