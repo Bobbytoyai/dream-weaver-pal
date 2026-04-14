@@ -88,26 +88,35 @@ export default function BobbyQR() {
       .eq("id", bobbyCode.id);
   };
 
-  const claimCode = async () => {
-    if (!bobbyCode || !childName.trim() || !childAge || !code) return;
+  const handleOnboardingComplete = async (name: string, age: number, voice: VoiceProfile, interests: string[]) => {
+    if (!bobbyCode || !code) return;
 
-    // Generate a unique session token for anti-piracy
     const sessionToken = crypto.randomUUID();
     const tokenKey = `bobby_session_${code.toUpperCase()}`;
+
+    const initialSettings: ParentSettings = {
+      ...DEFAULT_PARENT_SETTINGS,
+      childName: name,
+      childAge: age,
+      voiceType: voice as ParentSettings["voiceType"],
+      enabledThemes: interests.length > 0 ? interests : DEFAULT_PARENT_SETTINGS.enabledThemes,
+    };
 
     const { error } = await supabase
       .from("bobby_codes")
       .update({
         claimed_at: new Date().toISOString(),
-        child_name: childName.trim(),
-        child_age: childAge,
-        session_data: { sessionToken } as any,
+        child_name: name,
+        child_age: age,
+        session_data: { sessionToken, parentSettings: initialSettings } as any,
       })
       .eq("id", bobbyCode.id);
 
     if (!error) {
-      // Store token on this device so only this device can re-access
       localStorage.setItem(tokenKey, sessionToken);
+      setChildName(name);
+      setChildAge(age);
+      setParentSettings(initialSettings);
       setStep("sleeping");
     }
   };
