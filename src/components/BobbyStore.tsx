@@ -307,6 +307,9 @@ function ProductDetail({ item, installed, installing, detailsLoading, onInstall,
           </div>
         </div>
 
+        {/* Audio Preview for music items */}
+        {item.category === "musique" && <AudioPreview slug={item.slug} />}
+
         {/* Install Button */}
         <button onClick={onInstall} disabled={installing}
           className={`w-full mt-4 py-3 text-[15px] font-black transition-all flex items-center justify-center gap-2 border-4 border-black uppercase ${
@@ -991,10 +994,16 @@ export default function BobbyStore({ childName = "enfant", childAge = 7 }: Bobby
                 onClick={() => openItem(item)}
                 className={`retro-card ${tiltClass} w-full overflow-hidden text-left`}>
                 <div className="flex items-center gap-3 p-3">
-                  <div className="w-14 h-14 border-2 border-black bg-white flex items-center justify-center shrink-0 text-3xl overflow-hidden">
+                  <div className="w-14 h-14 border-2 border-black bg-white flex items-center justify-center shrink-0 text-3xl overflow-hidden relative">
                     {item.cover_image_url ? (
                       <img src={item.cover_image_url} alt={item.name} className="w-full h-full object-cover" loading="eager" />
                     ) : item.emoji}
+                    {/* Compact audio play button overlay for music */}
+                    {item.category === "musique" && getAudioUrl(item.slug) && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                        <AudioPreview slug={item.slug} compact />
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
