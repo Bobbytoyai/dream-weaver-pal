@@ -199,7 +199,7 @@ export async function getLLMReply(
 ): Promise<BobbyBrainReply | null> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
+    const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
     if (signal) {
       signal.addEventListener("abort", () => controller.abort(), { once: true });
