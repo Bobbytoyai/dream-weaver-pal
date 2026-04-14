@@ -2,13 +2,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import LazyImportBoundary from "@/components/LazyImportBoundary";
+import BobbyErrorBoundary from "@/components/BobbyErrorBoundary";
 import RetroLoader from "@/components/RetroLoader";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 
-const Index = lazy(() => import("./pages/Index.tsx"));
+// Index is NOT lazy — it's the Bobby LCD, must never show loading/error UI
+import Index from "./pages/Index";
+
 const Admin = lazy(() => import("./pages/Admin.tsx"));
 const BobbyQR = lazy(() => import("./pages/BobbyQR.tsx"));
 const BobbyParent = lazy(() => import("./pages/BobbyParent.tsx"));
@@ -34,25 +37,30 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <LazyImportBoundary label="route">
-            <Suspense fallback={<RetroLoader />}>
-              <Routes>
-                {/* Bobby accessible sans auth — QR code only */}
-                <Route path="/" element={<Index />} />
-                <Route path="/b/:code" element={<BobbyQR />} />
-                <Route path="/parent/:code" element={<BobbyParent />} />
-                
-                {/* Cloud auth dédié */}
-                <Route path="/bobby-cloud" element={<BobbyCloudAuth />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                
-                {/* Admin (pas de gate, vérification interne) */}
-                <Route path="/admin" element={<Admin />} />
-                
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </LazyImportBoundary>
+          <Routes>
+            {/* Bobby LCD — dedicated error boundary, no lazy loading, no loader */}
+            <Route path="/" element={
+              <BobbyErrorBoundary>
+                <Index />
+              </BobbyErrorBoundary>
+            } />
+            
+            {/* All other routes — lazy loaded with standard error boundary */}
+            <Route path="*" element={
+              <LazyImportBoundary label="route">
+                <Suspense fallback={<RetroLoader />}>
+                  <Routes>
+                    <Route path="/b/:code" element={<BobbyQR />} />
+                    <Route path="/parent/:code" element={<BobbyParent />} />
+                    <Route path="/bobby-cloud" element={<BobbyCloudAuth />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/admin" element={<Admin />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </LazyImportBoundary>
+            } />
+          </Routes>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
