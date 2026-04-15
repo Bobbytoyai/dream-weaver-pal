@@ -241,6 +241,11 @@ const Landing = () => {
               </RetroSection>
             ))}
           </div>
+          <div className="flex justify-center pt-4">
+            <RetroButton onClick={() => navigate("/store")} variant="primary" size="lg">
+              <span className="flex items-center gap-2">🛒 Visiter le Bobby Store</span>
+            </RetroButton>
+          </div>
         </div>
 
         {/* ── PARENT DASHBOARD ── */}

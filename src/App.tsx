@@ -28,6 +28,7 @@ const Guide = lazy(() => import("./pages/Guide.tsx"));
 const FAQ = lazy(() => import("./pages/FAQ.tsx"));
 const Contact = lazy(() => import("./pages/Contact.tsx"));
 const MentionsLegales = lazy(() => import("./pages/MentionsLegales.tsx"));
+const StorePage = lazy(() => import("./pages/StorePage.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -78,6 +79,7 @@ const App = () => (
                     <Route path="faq" element={<FAQ />} />
                     <Route path="contact" element={<Contact />} />
                     <Route path="mentions-legales" element={<MentionsLegales />} />
+                    <Route path="store" element={<StorePage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
