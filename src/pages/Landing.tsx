@@ -405,6 +405,7 @@ const Landing = () => {
             </div>
             <div className="max-w-2xl mx-auto mt-6">
               <video
+                ref={(el) => { if (el) el.playbackRate = 0.75; }}
                 src="/videos/bobby-tv.mp4"
                 controls
                 playsInline
