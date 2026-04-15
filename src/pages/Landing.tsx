@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShoppingCart, Sparkles, Shield, Brain, Mic, CloudLightning, Star, ChevronDown, Play, MessageCircle, BookOpen, Gamepad2, Music, Heart } from "lucide-react";
 import bobbyHero from "@/assets/bobby-hero.png";
-import companionAvatar from "@/assets/companion-avatar.png";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // RETRO UI PRIMITIVES (same design system as Parent Mode)
