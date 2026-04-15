@@ -145,7 +145,7 @@ const Landing = () => {
           <div className="relative flex justify-center items-start">
             <video
               ref={(el) => { if (el) el.playbackRate = 0.7; }}
-              src="/bobby-demo.mov"
+              src="/bobby-demo.mp4"
               autoPlay
               loop
               muted
