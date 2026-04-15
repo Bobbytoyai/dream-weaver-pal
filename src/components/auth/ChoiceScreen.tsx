@@ -13,11 +13,11 @@ const plans = [
     storage: "500 Mo", current: true,
   },
   {
-    name: "Bobby+", price: "9,99€", period: "/mois", emoji: "⭐",
+    name: "Bobby+", price: "4,99€", period: "/mois", emoji: "⭐",
     storage: "5 Go", popular: true,
   },
   {
-    name: "Bobby Pro", price: "19,99€", period: "/mois", emoji: "🚀",
+    name: "Bobby Pro", price: "9,99€", period: "/mois", emoji: "🚀",
     storage: "20 Go",
   },
 ];
