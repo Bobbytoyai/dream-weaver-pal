@@ -49,21 +49,21 @@ const CloudTab = ({
 
   const plans = [
     {
-      name: "Découverte", price: "0€", period: "", emoji: "🆓",
+      name: "Gratuit", price: "0€", period: "/mois", emoji: "🆓",
       storage: "500 Mo",
-      features: ["500 Mo de stockage cloud"],
+      features: ["5 min/jour", "Voix basique", "3 histoires/jour"],
       cta: "Actuel", disabled: true,
     },
     {
-      name: "Famille", price: "4,99€", period: "/mois", emoji: "👨‍👩‍👧‍👦",
+      name: "Bobby+", price: "9,99€", period: "/mois", emoji: "⭐",
       storage: "5 Go",
-      features: ["5 Go de stockage cloud"],
+      features: ["Conversation illimitée", "Toutes les voix OSAI", "Bobby Store complet", "Dashboard parent", "MemoryGraph™ Cloud"],
       cta: "Bientôt disponible", disabled: true, popular: true,
     },
     {
-      name: "Pro", price: "9,99€", period: "/mois", emoji: "🚀",
+      name: "Bobby Pro", price: "19,99€", period: "/mois", emoji: "🚀",
       storage: "20 Go",
-      features: ["20 Go de stockage cloud"],
+      features: ["Tout Bobby+", "Multi-enfants (x3)", "Analyse IA avancée", "Alertes prioritaires", "Support dédié 24h"],
       cta: "Bientôt disponible", disabled: true,
     },
   ];

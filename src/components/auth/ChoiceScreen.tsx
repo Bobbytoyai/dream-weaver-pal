@@ -9,15 +9,15 @@ interface Props {
 
 const plans = [
   {
-    name: "Découverte", price: "0€", period: "", emoji: "🆓",
+    name: "Gratuit", price: "0€", period: "/mois", emoji: "🆓",
     storage: "500 Mo", current: true,
   },
   {
-    name: "Famille", price: "4,99€", period: "/mois", emoji: "👨‍👩‍👧‍👦",
+    name: "Bobby+", price: "9,99€", period: "/mois", emoji: "⭐",
     storage: "5 Go", popular: true,
   },
   {
-    name: "Pro", price: "9,99€", period: "/mois", emoji: "🚀",
+    name: "Bobby Pro", price: "19,99€", period: "/mois", emoji: "🚀",
     storage: "20 Go",
   },
 ];
