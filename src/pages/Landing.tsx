@@ -397,39 +397,38 @@ const Landing = () => {
             </div>
             <div>
               <h4 className="text-xs font-black uppercase mb-2 text-white">Produit</h4>
-              <ul className="space-y-1.5 text-xs text-white font-bold">
-                <li><a href="#features" className="hover:text-white transition-colors">Fonctionnalités</a></li>
-                <li><a href="#pricing" className="hover:text-white transition-colors">Tarifs</a></li>
-                <li><a href="#store" className="hover:text-white transition-colors">Bobby Store</a></li>
-                <li><a href="#demo" className="hover:text-white transition-colors">Démo live</a></li>
+              <ul className="space-y-1.5 text-xs text-white font-black">
+                <li><a href="/fonctionnalites" className="hover:underline">Fonctionnalités</a></li>
+                <li><a href="#pricing" className="hover:underline">Tarifs</a></li>
+                <li><a href="#store" className="hover:underline">Bobby Store</a></li>
+                <li><a href="/technologie" className="hover:underline">Technologie</a></li>
               </ul>
             </div>
             <div>
               <h4 className="text-xs font-black uppercase mb-2 text-white">Parents</h4>
-              <ul className="space-y-1.5 text-xs text-white font-bold">
-                <li>Dashboard parent</li>
-                <li>Sécurité & confidentialité</li>
-                <li>Guide d'utilisation</li>
-                <li>FAQ</li>
+              <ul className="space-y-1.5 text-xs text-white font-black">
+                <li><a href="/guide" className="hover:underline">Guide d'utilisation</a></li>
+                <li><a href="/securite" className="hover:underline">Sécurité & confidentialité</a></li>
+                <li><a href="/faq" className="hover:underline">FAQ</a></li>
               </ul>
             </div>
             <div>
               <h4 className="text-xs font-black uppercase mb-2 text-white">Contact</h4>
-              <ul className="space-y-1.5 text-xs text-white font-bold">
-                <li>hello@bobby-toy.shop</li>
-                <li>Support</li>
-                <li>Presse</li>
-                <li>Investisseurs</li>
+              <ul className="space-y-1.5 text-xs text-white font-black">
+                <li><a href="mailto:hello@bobby-toy.shop" className="hover:underline">hello@bobby-toy.shop</a></li>
+                <li><a href="/contact" className="hover:underline">Support</a></li>
+                <li><a href="/contact" className="hover:underline">Presse</a></li>
+                <li><a href="/contact" className="hover:underline">Investisseurs</a></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-white/20 mt-6 pt-4 flex flex-col md:flex-row items-center justify-between gap-3">
-            <p className="text-[10px] text-white font-bold">© 2026 Bobby — Tous droits réservés</p>
-            <div className="flex gap-4 text-[10px] text-white font-bold">
-              <span>Mentions légales</span>
-              <span>CGV</span>
-              <span>Politique de confidentialité</span>
-              <span>RGPD</span>
+            <p className="text-[10px] text-white font-black">© 2026 Bobby — Tous droits réservés</p>
+            <div className="flex gap-4 text-[10px] text-white font-black">
+              <a href="/mentions-legales" className="hover:underline">Mentions légales</a>
+              <a href="/mentions-legales" className="hover:underline">CGV</a>
+              <a href="/mentions-legales" className="hover:underline">Politique de confidentialité</a>
+              <a href="/mentions-legales" className="hover:underline">RGPD</a>
             </div>
           </div>
         </div>
