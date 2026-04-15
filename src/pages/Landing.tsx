@@ -127,10 +127,7 @@ const Landing = () => {
               Histoires, jeux, apprentissage — le tout dans un cadre 100% sécurisé.
             </p>
             <div className="flex flex-wrap gap-3">
-              <RetroButton onClick={() => navigate("/app")} variant="primary" size="lg">
-                <span className="flex items-center gap-2"><Play className="w-5 h-5" /> Essayer gratuitement</span>
-              </RetroButton>
-              <RetroButton onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })} variant="secondary" size="lg">
+              <RetroButton onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })} variant="primary" size="lg">
                 <span className="flex items-center gap-2"><ShoppingCart className="w-5 h-5" /> Précommander</span>
               </RetroButton>
             </div>
