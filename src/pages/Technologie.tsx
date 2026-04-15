@@ -345,10 +345,10 @@ function CloudBusinessPlan() {
       {/* Revenue Projections */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "100 users", revenue: "899€/mois", profit: "789€", color: "#FDE68A" },
-          { label: "1 000 users", revenue: "8 990€/mois", profit: "7 890€", color: "#86EFAC" },
-          { label: "10 000 users", revenue: "89 900€/mois", profit: "78 900€", color: "#93C5FD" },
-          { label: "100 000 users", revenue: "899K€/mois", profit: "789K€", color: "#C084FC" },
+          { label: "100 users", revenue: "449€/mois", profit: "339€", color: "#FDE68A" },
+          { label: "1 000 users", revenue: "4 490€/mois", profit: "3 390€", color: "#86EFAC" },
+          { label: "10 000 users", revenue: "44 900€/mois", profit: "33 900€", color: "#93C5FD" },
+          { label: "100 000 users", revenue: "449K€/mois", profit: "339K€", color: "#C084FC" },
         ].map((p, i) => (
           <div key={i} className="border-3 border-black p-3 text-center" style={{ borderWidth: "3px", backgroundColor: p.color, boxShadow: "3px 3px 0px rgba(0,0,0,0.15)" }}>
             <p className="text-xs font-black text-black">{p.label}</p>
