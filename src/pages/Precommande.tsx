@@ -159,7 +159,7 @@ export default function Precommande() {
         {/* ── PRIX — APPAREIL SEUL vs COQUE SEULE ── */}
         <div className="grid md:grid-cols-2 gap-4">
           <RetroSection bg="var(--retro-green)" className="text-center">
-            <span className="text-4xl block mb-2">🤖</span>
+            <img src="/images/bobby-device.png" alt="Bobby Device" className="w-28 h-28 mx-auto object-contain mb-2 rounded-xl" />
             <h3 className="text-lg font-black text-black">Bobby — Appareil seul</h3>
             <p className="text-[10px] font-black text-black/60 mb-3">Device + coque chat incluse + câble USB-C</p>
             <div className="border-3 border-black bg-white inline-block px-6 py-3" style={{ borderWidth: "3px", boxShadow: "4px 4px 0 rgba(0,0,0,0.15)" }}>
