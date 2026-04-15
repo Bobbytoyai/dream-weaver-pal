@@ -643,7 +643,7 @@ serve(async (req) => {
     const adaptiveMaxTokens = conversationLength <= 3 ? 80 : conversationLength <= 8 ? 150 : 300;
 
     const aiBody: Record<string, unknown> = {
-      model: "google/gemini-2.5-flash",
+      model: "google/gemini-3-flash-preview",
       messages: aiMessages,
       max_tokens: adaptiveMaxTokens,
       temperature: 0.85,
