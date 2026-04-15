@@ -138,13 +138,17 @@ export default function Precommande() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              { emoji: "🤖", label: "Bobby Device", desc: "Le compagnon IA", bg: "var(--retro-yellow)" },
-              { emoji: "🐱", label: "Coque Chat", desc: "Silicone premium incluse", bg: "var(--retro-green)" },
-              { emoji: "🔌", label: "Câble USB-C", desc: "Charge rapide", bg: "var(--retro-purple)" },
-              { emoji: "📖", label: "Guide démarrage", desc: "QR + setup parent", bg: "var(--retro-red)" },
+              { label: "Bobby Device", desc: "Le compagnon IA", bg: "var(--retro-yellow)", img: "/images/bobby-device.png" },
+              { label: "Coque Chat", desc: "Silicone premium incluse", bg: "var(--retro-green)", img: "/images/cases/chat.png" },
+              { label: "Câble USB-C", desc: "Charge rapide", bg: "var(--retro-purple)", img: "/images/usbc-cable.png" },
+              { label: "Guide démarrage", desc: "QR + setup parent", bg: "var(--retro-red)", img: null },
             ].map(item => (
               <div key={item.label} className="border-3 border-black p-4 text-center" style={{ borderWidth: "3px", backgroundColor: item.bg }}>
-                <span className="text-3xl block mb-2">{item.emoji}</span>
+                {item.img ? (
+                  <img src={item.img} alt={item.label} className="w-20 h-20 mx-auto object-contain mb-2" />
+                ) : (
+                  <span className="text-3xl block mb-2">📖</span>
+                )}
                 <p className="text-xs font-black text-black">{item.label}</p>
                 <p className="text-[9px] font-black text-black/60">{item.desc}</p>
               </div>
