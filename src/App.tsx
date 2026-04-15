@@ -21,6 +21,13 @@ const BobbyCloudAuth = lazy(() => import("./pages/BobbyCloudAuth.tsx"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
 const ParentTest = lazy(() => import("./pages/ParentTest.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
+const Technologie = lazy(() => import("./pages/Technologie.tsx"));
+const Fonctionnalites = lazy(() => import("./pages/Fonctionnalites.tsx"));
+const Securite = lazy(() => import("./pages/Securite.tsx"));
+const Guide = lazy(() => import("./pages/Guide.tsx"));
+const FAQ = lazy(() => import("./pages/FAQ.tsx"));
+const Contact = lazy(() => import("./pages/Contact.tsx"));
+const MentionsLegales = lazy(() => import("./pages/MentionsLegales.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -64,6 +71,13 @@ const App = () => (
                     <Route path="reset-password" element={<ResetPassword />} />
                     <Route path="parent-test" element={<ParentTest />} />
                     <Route path="admin" element={<Admin />} />
+                    <Route path="technologie" element={<Technologie />} />
+                    <Route path="fonctionnalites" element={<Fonctionnalites />} />
+                    <Route path="securite" element={<Securite />} />
+                    <Route path="guide" element={<Guide />} />
+                    <Route path="faq" element={<FAQ />} />
+                    <Route path="contact" element={<Contact />} />
+                    <Route path="mentions-legales" element={<MentionsLegales />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
