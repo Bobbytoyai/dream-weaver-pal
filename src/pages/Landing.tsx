@@ -414,7 +414,7 @@ const Landing = () => {
         {/* ── VIDEO TV PLEINE LARGEUR ── */}
         <div className="mt-8">
           <video
-            ref={(el) => { if (el) el.playbackRate = 0.75; }}
+            ref={undefined}
             src="/videos/bobby-tv.mp4"
             controls
             playsInline
