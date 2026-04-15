@@ -100,7 +100,7 @@ const Landing = () => {
             <a href="#pricing" className="hover:opacity-70 transition-opacity">Prix</a>
             <a href="/technologie" className="hover:opacity-70 transition-opacity">Technologie</a>
           </div>
-          <RetroButton onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })} size="sm"><span className="flex items-center gap-1.5"><ShoppingCart className="w-4 h-4" /> Précommander</span></RetroButton>
+          <RetroButton onClick={() => navigate("/precommande")} size="sm"><span className="flex items-center gap-1.5"><ShoppingCart className="w-4 h-4" /> Précommander</span></RetroButton>
         </div>
       </nav>
 
@@ -127,7 +127,7 @@ const Landing = () => {
               Histoires, jeux, apprentissage — le tout dans un cadre 100% sécurisé.
             </p>
             <div className="flex flex-wrap gap-3">
-              <RetroButton onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })} variant="primary" size="lg">
+              <RetroButton onClick={() => navigate("/precommande")} variant="primary" size="lg">
                 <span className="flex items-center gap-2"><ShoppingCart className="w-5 h-5" /> Précommander</span>
               </RetroButton>
             </div>
@@ -345,36 +345,6 @@ const Landing = () => {
           </div>
         </div>
 
-        {/* ── PREORDER CTA ── */}
-        <RetroSection bg="var(--retro-yellow)">
-          <div className="text-center space-y-4">
-            <RetroTag bg="var(--retro-red)">🚀 Lancement Q3 2026</RetroTag>
-            <h2 className="text-2xl md:text-4xl font-black text-black">Précommandez Bobby</h2>
-            <p className="text-sm font-black text-black max-w-lg mx-auto">
-              Soyez parmi les premiers à recevoir Bobby. 
-              Précommande à <strong className="text-black">89€</strong> au lieu de 129€.
-            </p>
-            <div className="flex items-center justify-center gap-4 flex-wrap">
-              <div className="text-center">
-                <p className="text-3xl font-black text-black line-through opacity-40">129€</p>
-                <p className="text-[10px] font-black text-black">Prix public</p>
-              </div>
-              <div className="text-center border-3 border-black bg-white px-6 py-3" style={{ borderWidth: "3px", boxShadow: "4px 4px 0 rgba(0,0,0,0.2)" }}>
-                <p className="text-4xl font-black text-black">89€</p>
-                <p className="text-[10px] font-black text-black">Précommande</p>
-              </div>
-            </div>
-            <div className="flex justify-center gap-3 flex-wrap">
-              <RetroButton variant="primary" size="lg">
-                <span className="flex items-center gap-2"><ShoppingCart className="w-5 h-5" /> Précommander — 89€</span>
-              </RetroButton>
-            </div>
-            <div className="flex justify-center mt-4">
-              <img src="/images/bobby-product.jpg" alt="Bobby - Compagnon intelligent pour enfants" className="w-full max-w-md border-4 border-black" style={{ boxShadow: "6px 6px 0 rgba(0,0,0,0.2)" }} loading="lazy" />
-            </div>
-            <p className="text-[10px] font-black text-black">🔒 Paiement sécurisé • Livraison gratuite • Satisfait ou remboursé 30 jours</p>
-          </div>
-        </RetroSection>
 
         {/* ── TESTIMONIALS ── */}
         <div className="space-y-4">
