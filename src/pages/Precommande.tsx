@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShoppingCart, ArrowLeft, Cpu, Camera, Speaker, Monitor, Wifi, Battery, CircuitBoard, Shield, X } from "lucide-react";
+import RetroMobileNav from "@/components/RetroMobileNav";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // RETRO UI
