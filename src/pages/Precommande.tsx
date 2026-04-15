@@ -145,7 +145,7 @@ export default function Precommande() {
             ].map(item => (
               <div key={item.label} className="border-3 border-black p-4 text-center" style={{ borderWidth: "3px", backgroundColor: item.bg }}>
                 {item.img ? (
-                  <img src={item.img} alt={item.label} className="w-20 h-20 mx-auto object-contain mb-2" />
+                  <img src={item.img} alt={item.label} className="w-32 h-32 mx-auto object-contain mb-2 rounded-lg" />
                 ) : (
                   <span className="text-3xl block mb-2">📖</span>
                 )}
@@ -159,7 +159,7 @@ export default function Precommande() {
         {/* ── PRIX — APPAREIL SEUL vs COQUE SEULE ── */}
         <div className="grid md:grid-cols-2 gap-4">
           <RetroSection bg="var(--retro-green)" className="text-center">
-            <img src="/images/bobby-device.png" alt="Bobby Device" className="w-28 h-28 mx-auto object-contain mb-2 rounded-xl" />
+            <img src="/images/bobby-device.png" alt="Bobby Device" className="w-44 h-44 mx-auto object-contain mb-3 rounded-xl" />
             <h3 className="text-lg font-black text-black">Bobby — Appareil seul</h3>
             <p className="text-[10px] font-black text-black/60 mb-3">Device + coque chat incluse + câble USB-C</p>
             <div className="border-3 border-black bg-white inline-block px-6 py-3" style={{ borderWidth: "3px", boxShadow: "4px 4px 0 rgba(0,0,0,0.15)" }}>
@@ -168,7 +168,7 @@ export default function Precommande() {
             </div>
           </RetroSection>
           <RetroSection bg="var(--retro-purple)" className="text-center">
-            <span className="text-4xl block mb-2">🎨</span>
+            <img src="/images/cases/chat.png" alt="Coque silicone" className="w-44 h-44 mx-auto object-contain mb-3 rounded-xl" />
             <h3 className="text-lg font-black text-black">Coque silicone seule</h3>
             <p className="text-[10px] font-black text-black/60 mb-3">Compatible tous Bobby — silicone alimentaire CE</p>
             <div className="border-3 border-black bg-white inline-block px-6 py-3" style={{ borderWidth: "3px", boxShadow: "4px 4px 0 rgba(0,0,0,0.15)" }}>
@@ -195,7 +195,7 @@ export default function Precommande() {
                 <div className="text-center space-y-3">
                   <div className="mx-auto rounded-2xl border-3 border-black p-3 flex items-center justify-center" 
                     style={{ borderWidth: "3px", backgroundColor: c.color + "30" }}>
-                    <img src={c.img} alt={c.name} className="w-28 h-28 object-contain" />
+                    <img src={c.img} alt={c.name} className="w-40 h-40 object-contain rounded-lg" />
                   </div>
                   <div>
                     <p className="text-sm font-black text-black">{c.name}</p>
