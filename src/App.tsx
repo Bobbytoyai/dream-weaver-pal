@@ -9,9 +9,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 
-// Index is NOT lazy — it's the Bobby LCD, must never show loading/error UI
-import Index from "./pages/Index";
+// Landing is light — import directly for fast first paint
+import Landing from "./pages/Landing";
 
+// Bobby LCD (voice screen) is now lazy-loaded at /app
+const Index = lazy(() => import("./pages/Index"));
 const Admin = lazy(() => import("./pages/Admin.tsx"));
 const BobbyQR = lazy(() => import("./pages/BobbyQR.tsx"));
 const BobbyParent = lazy(() => import("./pages/BobbyParent.tsx"));
@@ -39,10 +41,15 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Bobby LCD — dedicated error boundary, no lazy loading, no loader */}
-            <Route path="/" element={
+            {/* Landing page — bobby-toy.shop */}
+            <Route path="/" element={<Landing />} />
+
+            {/* Bobby LCD — moved to /app */}
+            <Route path="/app" element={
               <BobbyErrorBoundary>
-                <Index />
+                <Suspense fallback={<RetroLoader />}>
+                  <Index />
+                </Suspense>
               </BobbyErrorBoundary>
             } />
             
