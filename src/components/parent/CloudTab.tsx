@@ -266,6 +266,11 @@ const CloudTab = ({
                 ))}
               </div>
               <button disabled={plan.disabled}
+                onClick={() => {
+                  if (plan.disabled && plan.cta === "Bientôt disponible") {
+                    toast("🚧 Cette offre sera disponible prochainement !", { duration: 3000 });
+                  }
+                }}
                 className={`w-full py-2.5 font-black text-[13px] transition-all border-4 border-black uppercase ${
                   plan.disabled
                     ? "bg-white/50 text-black/40 cursor-not-allowed"
