@@ -282,13 +282,13 @@ function CloudBusinessPlan() {
       strategy: "Conversion vers Bobby+",
     },
     {
-      name: "Bobby+", price: "9.99€", color: "#93C5FD", margin: "+8.89€",
+      name: "Bobby+", price: "9,99€", color: "#93C5FD", margin: "+8,89€",
       marginColor: "#86EFAC", marginLabel: "Marge/utilisateur",
       features: ["Conversation illimitée", "Toutes les voix OSAI", "Bobby Store complet", "Dashboard parent", "MemoryGraph™ Cloud"],
       strategy: "Cœur de revenus — 80% des users",
     },
     {
-      name: "Bobby Pro", price: "19.99€", color: "#C084FC", margin: "+18.89€",
+      name: "Bobby Pro", price: "19,99€", color: "#C084FC", margin: "+18,89€",
       marginColor: "#86EFAC", marginLabel: "Marge/utilisateur",
       features: ["Tout Bobby+", "Multi-enfants (x3)", "Analyse IA avancée", "Alertes prioritaires", "Support dédié 24h"],
       strategy: "Premium — familles nombreuses",
