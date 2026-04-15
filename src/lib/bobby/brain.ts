@@ -90,10 +90,10 @@ const LAYER3_TIMEOUT_MS = 12000; // LLM timeout
 // First few turns → short/fast, then progressively longer
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function getProgressiveWordLimit(turnCount: number): number {
-  if (turnCount <= 1) return 20;   // First reply: short but complete sentences
-  if (turnCount <= 3) return 35;   // Warm-up: short
-  if (turnCount <= 6) return 50;   // Building rapport: medium
-  if (turnCount <= 10) return 65;  // Active conversation: fuller
+  if (turnCount <= 1) return 30;   // First reply: complete sentences
+  if (turnCount <= 3) return 45;   // Warm-up: medium
+  if (turnCount <= 6) return 65;   // Building rapport: fuller
+  if (turnCount <= 10) return 80;  // Active conversation: rich
   return 0;                         // After 10 turns: no limit (natural length)
 }
 
