@@ -94,7 +94,7 @@ const Landing = () => {
             <span className="text-xl font-black text-black">Bobby</span>
             <RetroTag bg="var(--retro-red)">Précommande</RetroTag>
           </div>
-          <div className="hidden md:flex items-center gap-6 text-xs font-black uppercase text-black/70">
+          <div className="hidden md:flex items-center gap-6 text-xs font-black uppercase text-black">
             <a href="#features" className="hover:text-black transition-colors">Fonctions</a>
             <a href="#store" className="hover:text-black transition-colors">Store</a>
             <a href="#pricing" className="hover:text-black transition-colors">Prix</a>
@@ -122,7 +122,7 @@ const Landing = () => {
               <br />
               de votre enfant
             </h1>
-            <p className="text-base md:text-lg font-bold text-black/70 max-w-lg">
+            <p className="text-base md:text-lg font-black text-black max-w-lg">
               Bobby est un compagnon IA qui écoute, comprend et s'adapte à chaque enfant. 
               Histoires, jeux, apprentissage — le tout dans un cadre 100% sécurisé.
             </p>
@@ -142,7 +142,7 @@ const Landing = () => {
               </div>
               <div>
                 <div className="flex gap-0.5">{Array.from({ length: 5 }, (_, i) => <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />)}</div>
-                <p className="text-[10px] font-black text-black/60">+2000 familles en attente</p>
+                <p className="text-[10px] font-black text-black">+2000 familles en attente</p>
               </div>
             </div>
           </div>
@@ -159,7 +159,7 @@ const Landing = () => {
           </div>
         </div>
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 animate-bounce">
-          <ChevronDown className="w-6 h-6 text-black/40" />
+          <ChevronDown className="w-6 h-6 text-black" />
         </div>
       </header>
 
@@ -171,7 +171,7 @@ const Landing = () => {
           <RetroSection bg="var(--retro-yellow)">
             <div className="text-center space-y-4">
               <h2 className="text-2xl md:text-3xl font-black text-black">🎬 Bobby en action</h2>
-              <p className="text-sm font-bold text-black/70 max-w-2xl mx-auto">
+              <p className="text-sm font-black text-black max-w-2xl mx-auto">
                 Touchez Bobby pour lui parler. Il écoute, comprend et répond avec sa voix d'enfant. 
                 Chaque conversation est unique et adaptée à l'âge de votre enfant.
               </p>
@@ -185,7 +185,7 @@ const Landing = () => {
                   <div key={item.label} className="border-3 border-black bg-white p-3 text-center" style={{ borderWidth: "3px" }}>
                     <span className="text-3xl block mb-1">{item.emoji}</span>
                     <p className="text-xs font-black text-black">{item.label}</p>
-                    <p className="text-[9px] font-bold text-black/60">{item.desc}</p>
+                    <p className="text-[9px] font-black text-black">{item.desc}</p>
                   </div>
                 ))}
               </div>
@@ -199,7 +199,7 @@ const Landing = () => {
         {/* ── FEATURES ── */}
         <div id="features" className="space-y-4">
           <h2 className="text-2xl md:text-3xl font-black text-black text-center">✨ Pourquoi Bobby ?</h2>
-          <p className="text-sm font-bold text-black/60 text-center max-w-xl mx-auto">
+          <p className="text-sm font-black text-black text-center max-w-xl mx-auto">
             Bien plus qu'un jouet — Bobby est le premier compagnon IA vraiment conçu pour les enfants.
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -207,7 +207,7 @@ const Landing = () => {
               <RetroSection key={i} bg={f.bg} className="hover:translate-y-[-4px] transition-transform cursor-default">
                 <f.icon className="w-8 h-8 text-black mb-3" />
                 <h3 className="text-base font-black text-black mb-1">{f.title}</h3>
-                <p className="text-xs font-bold text-black/70 leading-relaxed">{f.desc}</p>
+                <p className="text-xs font-black text-black leading-relaxed">{f.desc}</p>
               </RetroSection>
             ))}
           </div>
@@ -226,7 +226,7 @@ const Landing = () => {
                 <div className="absolute -top-4 -left-2 w-8 h-8 bg-black text-white flex items-center justify-center font-black text-sm">{s.step}</div>
                 <span className="text-4xl block mb-3">{s.emoji}</span>
                 <h3 className="text-sm font-black text-black mb-1">{s.title}</h3>
-                <p className="text-xs font-bold text-black/70">{s.desc}</p>
+                <p className="text-xs font-black text-black">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -235,7 +235,7 @@ const Landing = () => {
         {/* ── BOBBY STORE ── */}
         <div id="store" className="space-y-4">
           <h2 className="text-2xl md:text-3xl font-black text-black text-center">🛒 Bobby Store</h2>
-          <p className="text-sm font-bold text-black/60 text-center max-w-xl mx-auto">
+          <p className="text-sm font-black text-black text-center max-w-xl mx-auto">
             Enrichissez Bobby avec des packs de contenu éducatif, des histoires et des jeux.
           </p>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -243,7 +243,7 @@ const Landing = () => {
               <RetroSection key={i} bg={p.bg} className="hover:translate-y-[-4px] transition-transform cursor-pointer">
                 <span className="text-4xl block mb-2">{p.emoji}</span>
                 <h3 className="text-sm font-black text-black mb-1">{p.name}</h3>
-                <p className="text-[10px] font-bold text-black/70 leading-relaxed">{p.desc}</p>
+                <p className="text-[10px] font-black text-black leading-relaxed">{p.desc}</p>
               </RetroSection>
             ))}
           </div>
@@ -254,7 +254,7 @@ const Landing = () => {
           <div className="grid md:grid-cols-2 gap-6 items-center">
             <div className="space-y-4">
               <h2 className="text-2xl md:text-3xl font-black text-black">📊 Dashboard Parent</h2>
-              <p className="text-sm font-bold text-black/70 leading-relaxed">
+              <p className="text-sm font-black text-black leading-relaxed">
                 Suivez chaque interaction en temps réel. Bobby analyse les émotions, 
                 les centres d'intérêt et les comportements de votre enfant.
               </p>
@@ -266,7 +266,7 @@ const Landing = () => {
                   "Graphiques d'évolution sur 7 jours",
                   "Contrôle total : modes Nuit, École, Calme",
                 ].map((item, i) => (
-                  <li key={i} className="flex items-start gap-2 text-xs font-bold text-black/80">
+                  <li key={i} className="flex items-start gap-2 text-xs font-black text-black">
                     <span className="text-black font-black">✓</span> {item}
                   </li>
                 ))}
@@ -282,7 +282,7 @@ const Landing = () => {
                 <div key={s.label} className="border-3 border-black p-3 text-center" style={{ borderWidth: "3px", backgroundColor: s.bg }}>
                   <span className="text-2xl block">{s.emoji}</span>
                   <p className="text-lg font-black text-black">{s.value}</p>
-                  <p className="text-[9px] font-bold text-black/60 uppercase">{s.label}</p>
+                  <p className="text-[9px] font-black text-black uppercase">{s.label}</p>
                 </div>
               ))}
             </div>
@@ -293,7 +293,7 @@ const Landing = () => {
         <RetroSection bg="#fff">
           <div className="text-center space-y-4">
             <h2 className="text-2xl md:text-3xl font-black text-black">🔒 Sécurité absolue</h2>
-            <p className="text-sm font-bold text-black/60 max-w-2xl mx-auto">
+            <p className="text-sm font-black text-black max-w-2xl mx-auto">
               Bobby est le jouet connecté le plus sécurisé du marché. 
               Chaque mot est filtré, chaque conversation est analysée.
             </p>
@@ -307,7 +307,7 @@ const Landing = () => {
                 <div key={s.label} className="border-3 border-black p-3 text-center" style={{ borderWidth: "3px", backgroundColor: "var(--retro-green)" }}>
                   <span className="text-2xl block mb-1">{s.emoji}</span>
                   <p className="text-[11px] font-black text-black">{s.label}</p>
-                  <p className="text-[9px] font-bold text-black/60">{s.desc}</p>
+                  <p className="text-[9px] font-black text-black">{s.desc}</p>
                 </div>
               ))}
             </div>
@@ -317,7 +317,7 @@ const Landing = () => {
         {/* ── PRICING ── */}
         <div id="pricing" className="space-y-4">
           <h2 className="text-2xl md:text-3xl font-black text-black text-center">💰 Tarifs Bobby Cloud</h2>
-          <p className="text-sm font-bold text-black/60 text-center">Choisissez le plan adapté à votre famille</p>
+          <p className="text-sm font-black text-black text-center">Choisissez le plan adapté à votre famille</p>
           <div className="grid md:grid-cols-3 gap-4">
             {CLOUD_PLANS.map((plan, i) => (
               <RetroSection key={i} bg={plan.bg} className={`relative ${plan.popular ? "scale-[1.02] md:scale-105" : ""}`}>
@@ -330,11 +330,11 @@ const Landing = () => {
                   <h3 className="text-lg font-black text-black">{plan.name}</h3>
                   <div>
                     <span className="text-3xl font-black text-black">{plan.price}</span>
-                    <span className="text-xs font-bold text-black/60">{plan.period}</span>
+                    <span className="text-xs font-black text-black">{plan.period}</span>
                   </div>
                   <ul className="space-y-2 text-left">
                     {plan.features.map((f, j) => (
-                      <li key={j} className="text-xs font-bold text-black/80 flex items-start gap-2">
+                      <li key={j} className="text-xs font-black text-black flex items-start gap-2">
                         <span className="text-black font-black">✓</span> {f}
                       </li>
                     ))}
@@ -353,18 +353,18 @@ const Landing = () => {
           <div className="text-center space-y-4">
             <RetroTag bg="var(--retro-red)">🚀 Lancement Q3 2026</RetroTag>
             <h2 className="text-2xl md:text-4xl font-black text-black">Précommandez Bobby</h2>
-            <p className="text-sm font-bold text-black/70 max-w-lg mx-auto">
+            <p className="text-sm font-black text-black max-w-lg mx-auto">
               Soyez parmi les premiers à recevoir Bobby. 
               Précommande à <strong className="text-black">89€</strong> au lieu de 129€.
             </p>
             <div className="flex items-center justify-center gap-4 flex-wrap">
               <div className="text-center">
                 <p className="text-3xl font-black text-black line-through opacity-40">129€</p>
-                <p className="text-[10px] font-bold text-black/50">Prix public</p>
+                <p className="text-[10px] font-black text-black">Prix public</p>
               </div>
               <div className="text-center border-3 border-black bg-white px-6 py-3" style={{ borderWidth: "3px", boxShadow: "4px 4px 0 rgba(0,0,0,0.2)" }}>
                 <p className="text-4xl font-black text-black">89€</p>
-                <p className="text-[10px] font-bold text-black/70">Précommande</p>
+                <p className="text-[10px] font-black text-black">Précommande</p>
               </div>
             </div>
             <div className="flex justify-center gap-3 flex-wrap">
@@ -375,7 +375,7 @@ const Landing = () => {
                 <span className="flex items-center gap-2"><Play className="w-5 h-5" /> Essayer d'abord</span>
               </RetroButton>
             </div>
-            <p className="text-[10px] font-bold text-black/50">🔒 Paiement sécurisé • Livraison gratuite • Satisfait ou remboursé 30 jours</p>
+            <p className="text-[10px] font-black text-black">🔒 Paiement sécurisé • Livraison gratuite • Satisfait ou remboursé 30 jours</p>
           </div>
         </RetroSection>
 
@@ -386,8 +386,8 @@ const Landing = () => {
             {TESTIMONIALS.map((t, i) => (
               <RetroSection key={i} bg="#fff" className="hover:translate-y-[-2px] transition-transform">
                 <div className="flex gap-0.5 mb-2">{Array.from({ length: t.stars }, (_, j) => <Star key={j} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />)}</div>
-                <p className="text-xs font-bold text-black/80 italic leading-relaxed">"{t.text}"</p>
-                <p className="text-[10px] font-black text-black/60 mt-2">— {t.name}</p>
+                <p className="text-xs font-black text-black italic leading-relaxed">"{t.text}"</p>
+                <p className="text-[10px] font-black text-black mt-2">— {t.name}</p>
               </RetroSection>
             ))}
           </div>
@@ -402,11 +402,11 @@ const Landing = () => {
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-lg font-black">Bobby</span>
               </div>
-              <p className="text-xs text-white/60 font-bold">Le compagnon IA intelligent et sécurisé pour les enfants de 3 à 12 ans.</p>
+              <p className="text-xs text-white font-bold">Le compagnon IA intelligent et sécurisé pour les enfants de 3 à 12 ans.</p>
             </div>
             <div>
-              <h4 className="text-xs font-black uppercase mb-2 text-white/80">Produit</h4>
-              <ul className="space-y-1.5 text-xs text-white/60 font-bold">
+              <h4 className="text-xs font-black uppercase mb-2 text-white">Produit</h4>
+              <ul className="space-y-1.5 text-xs text-white font-bold">
                 <li><a href="#features" className="hover:text-white transition-colors">Fonctionnalités</a></li>
                 <li><a href="#pricing" className="hover:text-white transition-colors">Tarifs</a></li>
                 <li><a href="#store" className="hover:text-white transition-colors">Bobby Store</a></li>
@@ -414,8 +414,8 @@ const Landing = () => {
               </ul>
             </div>
             <div>
-              <h4 className="text-xs font-black uppercase mb-2 text-white/80">Parents</h4>
-              <ul className="space-y-1.5 text-xs text-white/60 font-bold">
+              <h4 className="text-xs font-black uppercase mb-2 text-white">Parents</h4>
+              <ul className="space-y-1.5 text-xs text-white font-bold">
                 <li>Dashboard parent</li>
                 <li>Sécurité & confidentialité</li>
                 <li>Guide d'utilisation</li>
@@ -423,8 +423,8 @@ const Landing = () => {
               </ul>
             </div>
             <div>
-              <h4 className="text-xs font-black uppercase mb-2 text-white/80">Contact</h4>
-              <ul className="space-y-1.5 text-xs text-white/60 font-bold">
+              <h4 className="text-xs font-black uppercase mb-2 text-white">Contact</h4>
+              <ul className="space-y-1.5 text-xs text-white font-bold">
                 <li>hello@bobby-toy.shop</li>
                 <li>Support</li>
                 <li>Presse</li>
@@ -433,8 +433,8 @@ const Landing = () => {
             </div>
           </div>
           <div className="border-t border-white/20 mt-6 pt-4 flex flex-col md:flex-row items-center justify-between gap-3">
-            <p className="text-[10px] text-white/40 font-bold">© 2026 Bobby — Tous droits réservés</p>
-            <div className="flex gap-4 text-[10px] text-white/40 font-bold">
+            <p className="text-[10px] text-white font-bold">© 2026 Bobby — Tous droits réservés</p>
+            <div className="flex gap-4 text-[10px] text-white font-bold">
               <span>Mentions légales</span>
               <span>CGV</span>
               <span>Politique de confidentialité</span>
