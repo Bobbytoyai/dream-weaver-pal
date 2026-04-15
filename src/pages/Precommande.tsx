@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { ShoppingCart, ArrowLeft, Cpu, Camera, Speaker, Monitor, Wifi, Battery, CircuitBoard, Shield } from "lucide-react";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// RETRO UI (same design system)
+// RETRO UI
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const RetroSection = ({ children, bg = "#fff", className = "" }: { children: React.ReactNode; bg?: string; className?: string }) => (
@@ -38,36 +38,43 @@ const RetroTag = ({ children, bg = "var(--retro-yellow)" }: { children: React.Re
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const SILICONE_CASES = [
-  { name: "Bobby Chat", emoji: "🐱", color: "#D4A574", desc: "Coque chat en silicone premium", price: "14.99€", included: true },
-  { name: "Bobby Panda", emoji: "🐼", color: "#2D2D2D", desc: "Coque panda noir & blanc", price: "14.99€", included: false },
-  { name: "Bobby Lapin", emoji: "🐰", color: "#F5C6D0", desc: "Coque lapin rose pastel", price: "14.99€", included: false },
-  { name: "Bobby Dino", emoji: "🦕", color: "#7BC47F", desc: "Coque dinosaure vert aventure", price: "14.99€", included: false },
-  { name: "Bobby Renard", emoji: "🦊", color: "#E8803A", desc: "Coque renard orange malicieux", price: "14.99€", included: false },
-  { name: "Bobby Licorne", emoji: "🦄", color: "#C8A2E0", desc: "Coque licorne violet magique", price: "14.99€", included: false },
+  { name: "Bobby Chat", emoji: "🐱", color: "#D4A574", desc: "Coque chat en silicone premium", salePrice: "14.99€", prodCost: "2.80€", included: true },
+  { name: "Bobby Panda", emoji: "🐼", color: "#2D2D2D", desc: "Coque panda noir & blanc", salePrice: "14.99€", prodCost: "2.80€", included: false },
+  { name: "Bobby Lapin", emoji: "🐰", color: "#F5C6D0", desc: "Coque lapin rose pastel", salePrice: "14.99€", prodCost: "2.80€", included: false },
+  { name: "Bobby Dino", emoji: "🦕", color: "#7BC47F", desc: "Coque dinosaure vert aventure", salePrice: "14.99€", prodCost: "2.80€", included: false },
+  { name: "Bobby Renard", emoji: "🦊", color: "#E8803A", desc: "Coque renard orange malicieux", salePrice: "14.99€", prodCost: "2.80€", included: false },
+  { name: "Bobby Licorne", emoji: "🦄", color: "#C8A2E0", desc: "Coque licorne violet magique", salePrice: "14.99€", prodCost: "2.80€", included: false },
 ];
 
 const DEVICE_COMPONENTS = [
-  { icon: Cpu, name: "ESP32-S3 SoC", desc: "Dual-core 240MHz, 16MB Flash, 8MB PSRAM, NPU intégré", cost: "3.20€" },
-  { icon: Camera, name: "Caméra OV2640", desc: "2MP, reconnaissance faciale, détection de présence", cost: "1.80€" },
-  { icon: Speaker, name: "Haut-parleur 3W", desc: "Ampli MAX98357A classe D, qualité audio HD enfant", cost: "1.50€" },
-  { icon: Monitor, name: "Écran LCD IPS 1.28\"", desc: "240×240px rond, SPI 40MHz, 65K couleurs", cost: "2.40€" },
-  { icon: CircuitBoard, name: "PCB 4 couches", desc: "FR4 1.6mm, composants CMS, test AOI automatisé", cost: "1.60€" },
-  { icon: Wifi, name: "Antenne Wi-Fi/BLE", desc: "802.11 b/g/n 2.4GHz + Bluetooth 5.0 LE", cost: "0.40€" },
-  { icon: Battery, name: "Batterie Li-ion 3000mAh", desc: "8h autonomie active, USB-C charge rapide", cost: "3.50€" },
-  { icon: Shield, name: "2× Microphones MEMS", desc: "INMP441, réduction de bruit, I²S 24-bit", cost: "1.20€" },
+  { icon: Cpu, name: "ESP32-S3 SoC", desc: "Dual-core 240MHz, 16MB Flash, 8MB PSRAM, NPU intégré", cost: "2.80€", bg: "var(--retro-blue)" },
+  { icon: Camera, name: "Caméra OV2640", desc: "2MP, reconnaissance faciale, détection de présence", cost: "1.50€", bg: "var(--retro-purple)" },
+  { icon: Speaker, name: "Haut-parleur 3W", desc: "Ampli classe D, qualité audio HD enfant", cost: "1.30€", bg: "var(--retro-green)" },
+  { icon: Monitor, name: "Écran LCD IPS 1.28\"", desc: "240×240px rond, SPI 40MHz, 65K couleurs", cost: "2.10€", bg: "var(--retro-yellow)" },
+  { icon: CircuitBoard, name: "PCB 4 couches", desc: "FR4 1.6mm, composants CMS, test AOI automatisé", cost: "1.40€", bg: "var(--retro-red)" },
+  { icon: Wifi, name: "Antenne Wi-Fi/BLE", desc: "802.11 b/g/n 2.4GHz + Bluetooth 5.0 LE", cost: "0.35€", bg: "var(--retro-blue)" },
+  { icon: Battery, name: "Batterie Li-ion 3000mAh", desc: "8h autonomie active, USB-C charge rapide", cost: "3.00€", bg: "var(--retro-green)" },
+  { icon: Shield, name: "2× Microphones MEMS", desc: "Réduction de bruit, I²S 24-bit", cost: "1.05€", bg: "var(--retro-purple)" },
 ];
 
-const COST_BREAKDOWN = {
-  bom: 18.60,
-  assembly: 3.50,
-  siliconeCase: 2.80,
+// Total BOM: 13.50€
+const DEVICE_COST = {
+  bom: 13.50,
+  assembly: 3.00,
   packaging: 1.50,
   testing: 0.80,
   shipping: 2.20,
-  totalProduction: 29.40,
-  margin: 59.60,
-  retailPrice: 89,
-  msrp: 129,
+  totalDevice: 21.00,
+  deviceSalePrice: 89,
+};
+
+const CASE_COST = {
+  mouldAmortized: 0.30,
+  silicone: 1.80,
+  paint: 0.40,
+  packaging: 0.30,
+  totalCase: 2.80,
+  caseSalePrice: 14.99,
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -92,43 +99,53 @@ export default function Precommande() {
 
       <div className="max-w-6xl mx-auto px-4 py-10 space-y-10">
 
-        {/* ── HERO PRICING ── */}
-        <div className="text-center space-y-4">
-          <RetroTag bg="var(--retro-red)">Précommande ouverte</RetroTag>
-          <h1 className="text-3xl md:text-5xl font-black text-black">Précommandez Bobby</h1>
-          <p className="text-sm md:text-base font-black text-black/70 max-w-xl mx-auto">
-            Soyez parmi les premiers à recevoir Bobby. Livraison Q3 2026.
-          </p>
-          <div className="flex items-center justify-center gap-6 pt-2">
-            <div className="text-center">
-              <p className="text-3xl font-black text-black line-through opacity-30">129€</p>
-              <p className="text-[10px] font-black text-black/50">Prix public</p>
-            </div>
-            <div className="border-4 border-black bg-white px-8 py-4" style={{ boxShadow: "6px 6px 0 rgba(0,0,0,0.2)" }}>
-              <p className="text-5xl font-black text-black">89€</p>
-              <p className="text-[10px] font-black text-black">Précommande</p>
-            </div>
+        {/* ── HERO — PHOTO LEFT + PRICING RIGHT ── */}
+        <div className="grid md:grid-cols-2 gap-8 items-center">
+          <div>
+            <img 
+              src="/images/bobby-box.jpg" 
+              alt="Bobby dans sa boîte avec coque chat" 
+              className="w-full border-4 border-black rounded-lg"
+              style={{ boxShadow: "6px 6px 0 rgba(0,0,0,0.2)" }}
+            />
           </div>
-          <RetroButton onClick={() => {}} variant="primary" size="lg">
-            <span className="flex items-center gap-2"><ShoppingCart className="w-5 h-5" /> Précommander — 89€</span>
-          </RetroButton>
-          <p className="text-[10px] font-black text-black/50">🔒 Paiement sécurisé • Livraison gratuite • Satisfait ou remboursé 30 jours</p>
+          <div className="text-center md:text-left space-y-5">
+            <RetroTag bg="var(--retro-red)">Précommande ouverte</RetroTag>
+            <h1 className="text-3xl md:text-5xl font-black text-black">Précommandez Bobby</h1>
+            <p className="text-sm md:text-base font-black text-black/70 max-w-xl">
+              Soyez parmi les premiers à recevoir Bobby. Livraison Q3 2026.
+            </p>
+            <div className="flex items-center justify-center md:justify-start gap-6 pt-2">
+              <div className="text-center">
+                <p className="text-3xl font-black text-black line-through opacity-30">129€</p>
+                <p className="text-[10px] font-black text-black/50">Prix public</p>
+              </div>
+              <div className="border-4 border-black bg-white px-8 py-4" style={{ boxShadow: "6px 6px 0 rgba(0,0,0,0.2)" }}>
+                <p className="text-5xl font-black text-black">89€</p>
+                <p className="text-[10px] font-black text-black">Précommande</p>
+              </div>
+            </div>
+            <RetroButton onClick={() => {}} variant="primary" size="lg">
+              <span className="flex items-center gap-2"><ShoppingCart className="w-5 h-5" /> Précommander — 89€</span>
+            </RetroButton>
+            <p className="text-[10px] font-black text-black/50">🔒 Paiement sécurisé • Livraison gratuite • Satisfait ou remboursé 30 jours</p>
+          </div>
         </div>
 
         {/* ── CONTENU DU PACK ── */}
-        <RetroSection bg="#fff">
+        <RetroSection bg="var(--retro-blue)">
           <div className="text-center space-y-2 mb-6">
             <h2 className="text-2xl font-black text-black">📦 Contenu du pack</h2>
             <p className="text-xs font-black text-black/60">Tout ce dont votre enfant a besoin pour démarrer</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              { emoji: "🤖", label: "Bobby Device", desc: "Le compagnon IA" },
-              { emoji: "🐱", label: "Coque Chat", desc: "Silicone premium incluse" },
-              { emoji: "🔌", label: "Câble USB-C", desc: "Charge rapide" },
-              { emoji: "📖", label: "Guide démarrage", desc: "QR + setup parent" },
+              { emoji: "🤖", label: "Bobby Device", desc: "Le compagnon IA", bg: "var(--retro-yellow)" },
+              { emoji: "🐱", label: "Coque Chat", desc: "Silicone premium incluse", bg: "var(--retro-green)" },
+              { emoji: "🔌", label: "Câble USB-C", desc: "Charge rapide", bg: "var(--retro-purple)" },
+              { emoji: "📖", label: "Guide démarrage", desc: "QR + setup parent", bg: "var(--retro-red)" },
             ].map(item => (
-              <div key={item.label} className="border-3 border-black p-4 text-center" style={{ borderWidth: "3px", backgroundColor: "var(--retro-green)" }}>
+              <div key={item.label} className="border-3 border-black p-4 text-center" style={{ borderWidth: "3px", backgroundColor: item.bg }}>
                 <span className="text-3xl block mb-2">{item.emoji}</span>
                 <p className="text-xs font-black text-black">{item.label}</p>
                 <p className="text-[9px] font-black text-black/60">{item.desc}</p>
@@ -136,6 +153,28 @@ export default function Precommande() {
             ))}
           </div>
         </RetroSection>
+
+        {/* ── PRIX — APPAREIL SEUL vs COQUE SEULE ── */}
+        <div className="grid md:grid-cols-2 gap-4">
+          <RetroSection bg="var(--retro-green)" className="text-center">
+            <span className="text-4xl block mb-2">🤖</span>
+            <h3 className="text-lg font-black text-black">Bobby — Appareil seul</h3>
+            <p className="text-[10px] font-black text-black/60 mb-3">Device + coque chat incluse + câble USB-C</p>
+            <div className="border-3 border-black bg-white inline-block px-6 py-3" style={{ borderWidth: "3px", boxShadow: "4px 4px 0 rgba(0,0,0,0.15)" }}>
+              <p className="text-3xl font-black text-black">89€</p>
+              <p className="text-[9px] font-black text-black/50">Précommande</p>
+            </div>
+          </RetroSection>
+          <RetroSection bg="var(--retro-purple)" className="text-center">
+            <span className="text-4xl block mb-2">🎨</span>
+            <h3 className="text-lg font-black text-black">Coque silicone seule</h3>
+            <p className="text-[10px] font-black text-black/60 mb-3">Compatible tous Bobby — silicone alimentaire CE</p>
+            <div className="border-3 border-black bg-white inline-block px-6 py-3" style={{ borderWidth: "3px", boxShadow: "4px 4px 0 rgba(0,0,0,0.15)" }}>
+              <p className="text-3xl font-black text-black">14.99€</p>
+              <p className="text-[9px] font-black text-black/50">Par coque</p>
+            </div>
+          </RetroSection>
+        </div>
 
         {/* ── COQUES SILICONE ── */}
         <div className="space-y-4">
@@ -161,7 +200,7 @@ export default function Precommande() {
                     <p className="text-[10px] font-black text-black/60">{c.desc}</p>
                   </div>
                   <div className="border-2 border-black bg-black text-white px-3 py-1.5 inline-block">
-                    <span className="font-black text-sm">{c.included ? "Incluse" : c.price}</span>
+                    <span className="font-black text-sm">{c.included ? "Incluse" : c.salePrice}</span>
                   </div>
                 </div>
               </RetroSection>
@@ -180,7 +219,7 @@ export default function Precommande() {
               <RetroSection key={comp.name} bg="#fff" className="hover:translate-y-[-1px] transition-transform">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 border-3 border-black flex items-center justify-center shrink-0" 
-                    style={{ borderWidth: "3px", backgroundColor: "var(--retro-blue)" }}>
+                    style={{ borderWidth: "3px", backgroundColor: comp.bg }}>
                     <comp.icon className="w-6 h-6 text-black" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -196,44 +235,39 @@ export default function Precommande() {
           </div>
         </div>
 
-        {/* ── BUSINESS PLAN / COST BREAKDOWN ── */}
+        {/* ── BUSINESS PLAN — DEVICE ── */}
         <RetroSection bg="var(--retro-yellow)">
           <div className="text-center space-y-2 mb-6">
-            <h2 className="text-2xl font-black text-black">📊 Transparence des coûts</h2>
-            <p className="text-xs font-black text-black/60">Bobby croit en la transparence — voici comment votre argent est utilisé</p>
+            <h2 className="text-2xl font-black text-black">📊 Business Plan — Appareil Bobby</h2>
+            <p className="text-xs font-black text-black/60">Transparence totale sur les coûts de production</p>
           </div>
-
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Cost column */}
             <div className="space-y-2">
               <h3 className="text-sm font-black text-black uppercase mb-3">💰 Coûts de production (par unité)</h3>
               {[
-                { label: "Composants électroniques (BOM)", value: `${COST_BREAKDOWN.bom}€`, bar: (COST_BREAKDOWN.bom / COST_BREAKDOWN.totalProduction) * 100 },
-                { label: "Assemblage & soudure SMT", value: `${COST_BREAKDOWN.assembly}€`, bar: (COST_BREAKDOWN.assembly / COST_BREAKDOWN.totalProduction) * 100 },
-                { label: "Coque silicone + moule", value: `${COST_BREAKDOWN.siliconeCase}€`, bar: (COST_BREAKDOWN.siliconeCase / COST_BREAKDOWN.totalProduction) * 100 },
-                { label: "Packaging & documentation", value: `${COST_BREAKDOWN.packaging}€`, bar: (COST_BREAKDOWN.packaging / COST_BREAKDOWN.totalProduction) * 100 },
-                { label: "Tests qualité & certification CE", value: `${COST_BREAKDOWN.testing}€`, bar: (COST_BREAKDOWN.testing / COST_BREAKDOWN.totalProduction) * 100 },
-                { label: "Logistique & expédition", value: `${COST_BREAKDOWN.shipping}€`, bar: (COST_BREAKDOWN.shipping / COST_BREAKDOWN.totalProduction) * 100 },
+                { label: "Composants électroniques (BOM)", value: `${DEVICE_COST.bom}€`, bar: (DEVICE_COST.bom / DEVICE_COST.totalDevice) * 100, color: "var(--retro-blue)" },
+                { label: "Assemblage & soudure SMT", value: `${DEVICE_COST.assembly}€`, bar: (DEVICE_COST.assembly / DEVICE_COST.totalDevice) * 100, color: "var(--retro-purple)" },
+                { label: "Packaging & documentation", value: `${DEVICE_COST.packaging}€`, bar: (DEVICE_COST.packaging / DEVICE_COST.totalDevice) * 100, color: "var(--retro-green)" },
+                { label: "Tests qualité & certification CE", value: `${DEVICE_COST.testing}€`, bar: (DEVICE_COST.testing / DEVICE_COST.totalDevice) * 100, color: "var(--retro-red)" },
+                { label: "Logistique & expédition", value: `${DEVICE_COST.shipping}€`, bar: (DEVICE_COST.shipping / DEVICE_COST.totalDevice) * 100, color: "var(--retro-yellow)" },
               ].map(item => (
                 <div key={item.label} className="border-2 border-black bg-white p-3">
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-[10px] font-black text-black">{item.label}</span>
                     <span className="text-xs font-black text-black">{item.value}</span>
                   </div>
-                  <div className="w-full h-2 bg-black/10 border border-black">
-                    <div className="h-full bg-black" style={{ width: `${item.bar}%` }} />
+                  <div className="w-full h-2.5 bg-black/10 border border-black">
+                    <div className="h-full" style={{ width: `${item.bar}%`, backgroundColor: item.color }} />
                   </div>
                 </div>
               ))}
               <div className="border-3 border-black bg-black text-white p-3 mt-3" style={{ borderWidth: "3px" }}>
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-black">TOTAL PRODUCTION</span>
-                  <span className="text-lg font-black">{COST_BREAKDOWN.totalProduction}€</span>
+                  <span className="text-lg font-black">{DEVICE_COST.totalDevice}€</span>
                 </div>
               </div>
             </div>
-
-            {/* Price breakdown */}
             <div className="space-y-4">
               <h3 className="text-sm font-black text-black uppercase mb-3">📈 Répartition du prix de vente</h3>
               <div className="border-3 border-black bg-white p-5 text-center space-y-4" style={{ borderWidth: "3px" }}>
@@ -241,30 +275,29 @@ export default function Precommande() {
                   <p className="text-[10px] font-black text-black/50 uppercase">Prix précommande</p>
                   <p className="text-5xl font-black text-black">89€</p>
                 </div>
-                <div className="w-full h-6 border-2 border-black overflow-hidden flex">
-                  <div className="h-full bg-black flex items-center justify-center" style={{ width: `${(COST_BREAKDOWN.totalProduction / COST_BREAKDOWN.retailPrice) * 100}%` }}>
+                <div className="w-full h-8 border-2 border-black overflow-hidden flex rounded">
+                  <div className="h-full bg-black flex items-center justify-center" style={{ width: `${(DEVICE_COST.totalDevice / DEVICE_COST.deviceSalePrice) * 100}%` }}>
                     <span className="text-[8px] font-black text-white">Production</span>
                   </div>
-                  <div className="h-full flex items-center justify-center" style={{ width: `${(COST_BREAKDOWN.margin / COST_BREAKDOWN.retailPrice) * 100}%`, backgroundColor: "var(--retro-green)" }}>
-                    <span className="text-[8px] font-black text-black">R&D + IA + Support</span>
+                  <div className="h-full flex items-center justify-center" style={{ width: `${((DEVICE_COST.deviceSalePrice - DEVICE_COST.totalDevice) / DEVICE_COST.deviceSalePrice) * 100}%`, backgroundColor: "var(--retro-green)" }}>
+                    <span className="text-[8px] font-black text-black">R&D + Cloud + Support</span>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-left">
                   <div className="border-2 border-black p-2">
                     <p className="text-[9px] font-black text-black/50">Production</p>
-                    <p className="text-sm font-black text-black">{COST_BREAKDOWN.totalProduction}€ <span className="text-[9px] text-black/40">({Math.round((COST_BREAKDOWN.totalProduction / COST_BREAKDOWN.retailPrice) * 100)}%)</span></p>
+                    <p className="text-sm font-black text-black">{DEVICE_COST.totalDevice}€ <span className="text-[9px] text-black/40">({Math.round((DEVICE_COST.totalDevice / DEVICE_COST.deviceSalePrice) * 100)}%)</span></p>
                   </div>
                   <div className="border-2 border-black p-2" style={{ backgroundColor: "var(--retro-green)" }}>
-                    <p className="text-[9px] font-black text-black/50">R&D, IA, Cloud, Support</p>
-                    <p className="text-sm font-black text-black">{COST_BREAKDOWN.margin}€ <span className="text-[9px] text-black/40">({Math.round((COST_BREAKDOWN.margin / COST_BREAKDOWN.retailPrice) * 100)}%)</span></p>
+                    <p className="text-[9px] font-black text-black/50">R&D, Cloud, Support</p>
+                    <p className="text-sm font-black text-black">{DEVICE_COST.deviceSalePrice - DEVICE_COST.totalDevice}€ <span className="text-[9px] text-black/40">({Math.round(((DEVICE_COST.deviceSalePrice - DEVICE_COST.totalDevice) / DEVICE_COST.deviceSalePrice) * 100)}%)</span></p>
                   </div>
                 </div>
                 <p className="text-[9px] font-black text-black/40">
-                  La marge finance le développement IA (Gemini, ElevenLabs), l'infrastructure cloud, les mises à jour logicielles et le support technique.
+                  La marge finance le développement logiciel, l'infrastructure cloud, les mises à jour et le support technique.
                 </p>
               </div>
-
-              {/* Comparison */}
+              {/* Comparatif */}
               <div className="border-3 border-black bg-white p-4" style={{ borderWidth: "3px" }}>
                 <p className="text-[10px] font-black text-black/50 uppercase mb-2">Comparatif marché</p>
                 {[
@@ -279,6 +312,73 @@ export default function Precommande() {
                     <span className={`text-xs font-black ${item.highlight ? "text-white" : "text-black"}`}>{item.price}</span>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        </RetroSection>
+
+        {/* ── BUSINESS PLAN — COQUE SILICONE ── */}
+        <RetroSection bg="var(--retro-purple)">
+          <div className="text-center space-y-2 mb-6">
+            <h2 className="text-2xl font-black text-black">🎨 Business Plan — Coque Silicone</h2>
+            <p className="text-xs font-black text-black/60">Accessoire à forte marge, moteur de récurrence</p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <h3 className="text-sm font-black text-black uppercase mb-3">💰 Coûts de production (par coque)</h3>
+              {[
+                { label: "Silicone alimentaire", value: `${CASE_COST.silicone}€`, bar: (CASE_COST.silicone / CASE_COST.totalCase) * 100, color: "var(--retro-green)" },
+                { label: "Peinture & finition", value: `${CASE_COST.paint}€`, bar: (CASE_COST.paint / CASE_COST.totalCase) * 100, color: "var(--retro-yellow)" },
+                { label: "Moule amorti (10k unités)", value: `${CASE_COST.mouldAmortized}€`, bar: (CASE_COST.mouldAmortized / CASE_COST.totalCase) * 100, color: "var(--retro-blue)" },
+                { label: "Packaging coque", value: `${CASE_COST.packaging}€`, bar: (CASE_COST.packaging / CASE_COST.totalCase) * 100, color: "var(--retro-red)" },
+              ].map(item => (
+                <div key={item.label} className="border-2 border-black bg-white p-3">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] font-black text-black">{item.label}</span>
+                    <span className="text-xs font-black text-black">{item.value}</span>
+                  </div>
+                  <div className="w-full h-2.5 bg-black/10 border border-black">
+                    <div className="h-full" style={{ width: `${item.bar}%`, backgroundColor: item.color }} />
+                  </div>
+                </div>
+              ))}
+              <div className="border-3 border-black bg-black text-white p-3 mt-3" style={{ borderWidth: "3px" }}>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-black">TOTAL PRODUCTION</span>
+                  <span className="text-lg font-black">{CASE_COST.totalCase}€</span>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-sm font-black text-black uppercase mb-3">📈 Marge par coque</h3>
+              <div className="border-3 border-black bg-white p-5 text-center space-y-4" style={{ borderWidth: "3px" }}>
+                <div>
+                  <p className="text-[10px] font-black text-black/50 uppercase">Prix de vente</p>
+                  <p className="text-5xl font-black text-black">14.99€</p>
+                </div>
+                <div className="w-full h-8 border-2 border-black overflow-hidden flex rounded">
+                  <div className="h-full bg-black flex items-center justify-center" style={{ width: `${(CASE_COST.totalCase / CASE_COST.caseSalePrice) * 100}%` }}>
+                    <span className="text-[8px] font-black text-white">Prod.</span>
+                  </div>
+                  <div className="h-full flex items-center justify-center" style={{ width: `${((CASE_COST.caseSalePrice - CASE_COST.totalCase) / CASE_COST.caseSalePrice) * 100}%`, backgroundColor: "var(--retro-green)" }}>
+                    <span className="text-[8px] font-black text-black">Marge brute</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-left">
+                  <div className="border-2 border-black p-3">
+                    <p className="text-[9px] font-black text-black/50">Production</p>
+                    <p className="text-lg font-black text-black">{CASE_COST.totalCase}€</p>
+                  </div>
+                  <div className="border-2 border-black p-3" style={{ backgroundColor: "var(--retro-green)" }}>
+                    <p className="text-[9px] font-black text-black/50">Marge brute</p>
+                    <p className="text-lg font-black text-black">{(CASE_COST.caseSalePrice - CASE_COST.totalCase).toFixed(2)}€</p>
+                    <p className="text-[9px] font-black text-black/40">({Math.round(((CASE_COST.caseSalePrice - CASE_COST.totalCase) / CASE_COST.caseSalePrice) * 100)}%)</p>
+                  </div>
+                </div>
+                <div className="border-2 border-black p-3 text-left" style={{ backgroundColor: "var(--retro-yellow)" }}>
+                  <p className="text-[9px] font-black text-black/50 uppercase">Projection 10k coques vendues</p>
+                  <p className="text-lg font-black text-black">{((CASE_COST.caseSalePrice - CASE_COST.totalCase) * 10000).toLocaleString("fr-FR")}€ <span className="text-[9px] text-black/40">de marge brute</span></p>
+                </div>
               </div>
             </div>
           </div>
