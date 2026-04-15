@@ -82,7 +82,7 @@ const CASE_COST = {
 
 export default function Precommande() {
   const navigate = useNavigate();
-
+  const [lightbox, setLightbox] = useState<{ img: string; name: string } | null>(null);
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#FDF6EC" }}>
       {/* NAV */}
@@ -194,9 +194,10 @@ export default function Precommande() {
                   </div>
                 )}
                 <div className="text-center space-y-3">
-                  <div className="mx-auto rounded-2xl border-3 border-black p-3 flex items-center justify-center" 
-                    style={{ borderWidth: "3px", backgroundColor: c.color + "30" }}>
-                    <img src={c.img} alt={c.name} className="w-40 h-40 object-contain rounded-lg" />
+                  <div className="mx-auto rounded-2xl border-3 border-black p-3 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform" 
+                    style={{ borderWidth: "3px", backgroundColor: c.color + "30" }}
+                    onClick={() => setLightbox({ img: c.img, name: c.name })}>
+                    <img src={c.img} alt={c.name} className="w-40 h-40 object-contain rounded-lg pointer-events-none" />
                   </div>
                   <div>
                     <p className="text-sm font-black text-black">{c.name}</p>
