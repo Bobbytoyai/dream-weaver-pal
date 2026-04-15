@@ -85,6 +85,18 @@ const LAYER1_CONFIDENCE = 0.75; // LocalBrain confident enough → skip KB & LLM
 const LAYER2_CONFIDENCE = 0.50; // KB match good enough → skip LLM
 const LAYER3_TIMEOUT_MS = 12000; // LLM timeout
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PROGRESSIVE RESPONSE LENGTH
+// First few turns → short/fast, then progressively longer
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function getProgressiveWordLimit(turnCount: number): number {
+  if (turnCount <= 1) return 15;   // First reply: very short (1-2 sentences)
+  if (turnCount <= 3) return 25;   // Warm-up: short
+  if (turnCount <= 6) return 40;   // Building rapport: medium
+  if (turnCount <= 10) return 55;  // Active conversation: fuller
+  return 0;                         // After 10 turns: no limit (natural length)
+}
+
 interface BuildBobbyReplyOptions {
   childName: string;
   childAge: number;
@@ -579,9 +591,13 @@ export async function buildBobbyReply({
       let reply = postProcess(llmReply, childName, childAge, personalityCtx, tomSnap);
       reply = applyOrchestration(reply, orchestrationDirective, understanding, v7Session, cognitionPlan, proactiveInitiative);
 
-      // V9: Enforce word limit from Master Control
-      if (masterControl.maxWords > 0) {
-        reply.text = enforceWordLimit(reply.text, masterControl.maxWords);
+      // V9: Enforce word limit from Master Control OR progressive length
+      const progressiveLimit = getProgressiveWordLimit(mem.turnCount);
+      const effectiveLimit = masterControl.maxWords > 0 
+        ? Math.min(masterControl.maxWords, progressiveLimit || masterControl.maxWords) 
+        : progressiveLimit;
+      if (effectiveLimit > 0) {
+        reply.text = enforceWordLimit(reply.text, effectiveLimit);
       }
       const totalMs = performance.now() - pipelineStart;
       console.log(`[Brain] ✅ Gemini + V8 reply (${llmMs.toFixed(0)}ms LLM, ${totalMs.toFixed(0)}ms total)`);
@@ -611,9 +627,13 @@ export async function buildBobbyReply({
     } catch { /* KB failed, use local */ }
   }
 
-  // V9: Enforce word limit from Master Control
-  if (masterControl.maxWords > 0) {
-    reply.text = enforceWordLimit(reply.text, masterControl.maxWords);
+  // V9: Enforce word limit from Master Control OR progressive length
+  const progressiveLimit2 = getProgressiveWordLimit(mem.turnCount);
+  const effectiveLimit2 = masterControl.maxWords > 0 
+    ? Math.min(masterControl.maxWords, progressiveLimit2 || masterControl.maxWords) 
+    : progressiveLimit2;
+  if (effectiveLimit2 > 0) {
+    reply.text = enforceWordLimit(reply.text, effectiveLimit2);
   }
   const totalMs = performance.now() - pipelineStart;
   console.log(`[Brain] ⚡ Local fallback + V8: ${localReply.intent} (${totalMs.toFixed(0)}ms total)`);
