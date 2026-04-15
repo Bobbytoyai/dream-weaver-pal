@@ -1,5 +1,5 @@
 // @refresh reset
-/* v5 — Thin UI shell — logic extracted to useConversationStateMachine */
+/* v6 — Clear interaction states: who speaks, who listens, processing indicator */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { eventBus } from "@/lib/eventBus";
 import { getUnreadAlertCount } from "@/lib/offlineEngine";
@@ -51,6 +51,56 @@ const MicListeningAnimation = ({ hasVoice }: { hasVoice: boolean }) => {
           @keyframes soundbar-${i} { 0% { height: ${5 + (i % 3) * 3}px; } 100% { height: ${16 + ((i + 1) % bars) * 4}px; } }
         `).join("")}`}</style>
       </div>
+    </div>
+  );
+};
+
+/** Thinking dots animation for PROCESSING state */
+const ThinkingAnimation = () => (
+  <div className="flex flex-col items-center gap-2">
+    <div className="flex items-center gap-2">
+      {[0, 1, 2].map(i => (
+        <div key={i} className="w-3 h-3 rounded-full bg-amber-400"
+          style={{
+            animation: `thinking-bounce 1.2s ease-in-out infinite`,
+            animationDelay: `${i * 0.2}s`,
+          }} />
+      ))}
+    </div>
+    <p className="text-xs font-bold text-amber-600/80">Bobby réfléchit…</p>
+    <style>{`
+      @keyframes thinking-bounce {
+        0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+        40% { transform: scale(1.1); opacity: 1; }
+      }
+    `}</style>
+  </div>
+);
+
+/** State badge showing current interaction mode */
+const StateBadge = ({ state, musicPlaying }: { state: ConversationState; musicPlaying: boolean }) => {
+  if (musicPlaying) return (
+    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-100 border border-pink-300">
+      <span className="text-xs">🎵</span>
+      <span className="text-[10px] font-bold text-pink-600">Musique</span>
+    </div>
+  );
+  
+  const config: Record<string, { emoji: string; label: string; bg: string; border: string; text: string }> = {
+    LISTENING: { emoji: "🎤", label: "Bobby écoute…", bg: "bg-green-100", border: "border-green-300", text: "text-green-700" },
+    PROCESSING: { emoji: "🧠", label: "Bobby réfléchit…", bg: "bg-amber-100", border: "border-amber-300", text: "text-amber-700" },
+    SPEAKING: { emoji: "💬", label: "Bobby parle", bg: "bg-blue-100", border: "border-blue-300", text: "text-blue-700" },
+    IDLE: { emoji: "😊", label: "Prêt", bg: "bg-gray-100", border: "border-gray-300", text: "text-gray-600" },
+    SLEEP: { emoji: "💤", label: "Bobby dort", bg: "bg-indigo-100", border: "border-indigo-300", text: "text-indigo-600" },
+    ERROR: { emoji: "⚠️", label: "Petit souci", bg: "bg-red-100", border: "border-red-300", text: "text-red-600" },
+    RELANCE: { emoji: "👋", label: "Bobby attend", bg: "bg-purple-100", border: "border-purple-300", text: "text-purple-600" },
+  };
+  
+  const c = config[state] || config.IDLE;
+  return (
+    <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full ${c.bg} border ${c.border} transition-all duration-300`}>
+      <span className="text-xs">{c.emoji}</span>
+      <span className={`text-[10px] font-bold ${c.text}`}>{c.label}</span>
     </div>
   );
 };
@@ -160,8 +210,6 @@ const VoiceScreen = ({
     setDisabledExpressions(parentSettings?.disabledExpressions || []);
   }, [parentSettings?.disabledExpressions]);
 
-  // (Snoring sound removed)
-
   // Launch game activity when selected from Activities menu
   const lastGameRef = useRef<string | null>(null);
   useEffect(() => {
@@ -176,11 +224,9 @@ const VoiceScreen = ({
     };
     const prompt = GAME_PROMPTS[activeGameCategory];
     if (prompt) {
-      // Small delay to let the screen mount
       setTimeout(() => {
-        sm.handleTapBobby(); // Wake Bobby
+        sm.handleTapBobby();
         setTimeout(() => {
-          // Speak the game intro then listen for the child's answer
           eventBus.emit({ type: "SFX_PLAY", sound: "speaking_chime" });
         }, 300);
       }, 500);
@@ -191,7 +237,6 @@ const VoiceScreen = ({
   const [showDebug, setShowDebug] = useState(false);
   const [safetyBadge, setSafetyBadge] = useState(() => getUnreadAlertCount());
 
-  // Refresh safety badge when a new SAFETY_ALERT is emitted
   useEffect(() => {
     return eventBus.on("SAFETY_ALERT", () => {
       setSafetyBadge(getUnreadAlertCount());
@@ -211,8 +256,6 @@ const VoiceScreen = ({
     }
   }, []);
 
-  // stateLabel removed — transcription shown directly at bottom
-
   // Background color from customization
   const BG_HEX_MAP: Record<string, string> = {
     "soft-blue": "#E8F0FE", "soft-pink": "#FDE8F0", "soft-green": "#E8FEF0",
@@ -221,6 +264,7 @@ const VoiceScreen = ({
   };
   const bgId = parentSettings?.bobbyColors?.background || "soft-blue";
   const bgHex = BG_HEX_MAP[bgId] || "#E8F0FE";
+  const isDark = bgId === "dark" || bgId === "night";
 
   return (
     <div className="child-light flex flex-col items-center justify-between h-screen w-screen px-4 py-6 select-none overflow-hidden relative"
@@ -237,16 +281,24 @@ const VoiceScreen = ({
         />
       )}
 
-      {/* No UI chrome — LCD screen shows only Bobby's face */}
+      {/* Top — State badge */}
+      <div className="w-full flex justify-center pt-2 pb-1 relative z-20">
+        <StateBadge state={sm.machineState} musicPlaying={sm.musicPlaying} />
+      </div>
 
       {/* Hologram area */}
       <div className="flex-1 flex flex-col items-center justify-center w-full min-h-0 relative z-10">
         <div className="absolute w-80 h-80 md:w-[28rem] md:h-[28rem] lg:w-[34rem] lg:h-[34rem] rounded-full pointer-events-none transition-all duration-500"
           style={{
             background: sm.partialText && sm.machineState === "LISTENING"
-              ? `radial-gradient(circle, hsla(210, 100%, 65%, 0.35) 0%, hsla(210, 90%, 60%, 0.2) 30%, hsla(230, 70%, 65%, 0.08) 55%, transparent 75%)`
-              : `radial-gradient(circle, hsla(215, 85%, 70%, ${sm.displayState === "speaking" ? 0.2 : 0.12}) 0%, hsla(270, 50%, 70%, ${sm.displayState === "speaking" ? 0.12 : 0.06}) 35%, hsla(320, 40%, 70%, 0.03) 55%, transparent 75%)`,
-            animation: sm.partialText && sm.machineState === "LISTENING" ? "glow-voice 1.2s ease-in-out infinite alternate" : undefined,
+              ? `radial-gradient(circle, hsla(120, 80%, 55%, 0.30) 0%, hsla(120, 70%, 50%, 0.15) 30%, hsla(150, 60%, 55%, 0.06) 55%, transparent 75%)`
+              : sm.machineState === "PROCESSING"
+                ? `radial-gradient(circle, hsla(40, 90%, 60%, 0.25) 0%, hsla(40, 80%, 55%, 0.12) 30%, transparent 60%)`
+                : sm.machineState === "SPEAKING"
+                  ? `radial-gradient(circle, hsla(215, 85%, 65%, 0.25) 0%, hsla(215, 80%, 60%, 0.12) 30%, transparent 60%)`
+                  : `radial-gradient(circle, hsla(215, 85%, 70%, 0.12) 0%, hsla(270, 50%, 70%, 0.06) 35%, transparent 55%)`,
+            animation: sm.partialText && sm.machineState === "LISTENING" ? "glow-voice 1.2s ease-in-out infinite alternate" : 
+              sm.machineState === "PROCESSING" ? "glow-think 2s ease-in-out infinite alternate" : undefined,
           }}
         />
 
@@ -264,26 +316,54 @@ const VoiceScreen = ({
           />
         </div>
 
-        {/* Music note particles during music playback */}
         {sm.musicPlaying && <FloatingMusicNotes />}
-
-
-        {/* Bobby text removed from here — now in bottom section */}
       </div>
 
-      {/* Bottom section — fixed at bottom */}
-      <div className="w-full flex flex-col items-center gap-3 pb-6 relative z-10">
+      {/* Bottom section — interaction feedback */}
+      <div className="w-full flex flex-col items-center gap-2 pb-6 relative z-10">
 
-        {/* Bobby's response text only — no child transcript */}
-        <div className="w-full px-5 flex flex-col gap-2 max-h-24 overflow-y-auto">
-          {(sm.machineState === "SPEAKING" || sm.musicPlaying) && sm.bobbyText && (
-            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <p className="text-xs font-bold text-black/60 text-center leading-snug">
+        {/* Child's speech — bold, prominent */}
+        {sm.machineState === "LISTENING" && sm.partialText && (
+          <div className="animate-in fade-in slide-in-from-bottom-1 duration-200 w-full px-5">
+            <div className="flex items-start gap-2 justify-center">
+              <span className="text-green-500 text-sm mt-0.5">🎤</span>
+              <p className={`text-sm font-black ${isDark ? 'text-white' : 'text-black'} text-center leading-snug`}>
+                {sm.partialText}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Child's recognized text (after finalization) — bold black */}
+        {(sm.machineState === "PROCESSING" || sm.machineState === "SPEAKING") && sm.lastRecognized && (
+          <div className="animate-in fade-in duration-300 w-full px-5">
+            <div className="flex items-start gap-2 justify-center">
+              <span className="text-sm mt-0.5">👦</span>
+              <p className={`text-sm font-black ${isDark ? 'text-white/90' : 'text-black/90'} text-center leading-snug italic`}>
+                « {sm.lastRecognized} »
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Processing animation */}
+        {sm.machineState === "PROCESSING" && (
+          <div className="animate-in fade-in zoom-in-95 duration-300">
+            <ThinkingAnimation />
+          </div>
+        )}
+
+        {/* Bobby's response text */}
+        {(sm.machineState === "SPEAKING" || sm.musicPlaying) && sm.bobbyText && (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 w-full px-5">
+            <div className="flex items-start gap-2 justify-center">
+              <span className="text-blue-500 text-sm mt-0.5">💬</span>
+              <p className={`text-xs font-bold ${isDark ? 'text-white/60' : 'text-black/60'} text-center leading-snug`}>
                 {sm.bobbyText}
               </p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Listening animation */}
         {sm.machineState === "LISTENING" && (
@@ -292,16 +372,24 @@ const VoiceScreen = ({
 
         {/* Idle / Sleep labels */}
         {sm.machineState === "IDLE" && (
-          <p className="text-sm font-semibold text-black/50 text-center">
+          <p className={`text-sm font-semibold ${isDark ? 'text-white/50' : 'text-black/50'} text-center`}>
             Touche Bobby pour parler !
           </p>
         )}
         {sm.machineState === "SLEEP" && (
-          <p className="text-sm font-semibold text-black/50 text-center">
+          <p className={`text-sm font-semibold ${isDark ? 'text-white/50' : 'text-black/50'} text-center`}>
             💤 Bobby dort… touche Bobby pour le réveiller !
           </p>
         )}
       </div>
+
+      {/* Thinking glow keyframe */}
+      <style>{`
+        @keyframes glow-think {
+          0% { opacity: 0.7; transform: scale(0.98); }
+          100% { opacity: 1; transform: scale(1.02); }
+        }
+      `}</style>
     </div>
   );
 };

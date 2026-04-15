@@ -31,7 +31,7 @@ const CONV_SILENCE_OFF_MS = 60_000;
 const MIN_SESSION_MS = 90_000;
 const SLEEP_TIMER_MS = 120_000;
 const ANTI_ECHO_COOLDOWN_MS = 250;
-const UTTERANCE_BUFFER_MS = 1200;
+const UTTERANCE_BUFFER_MS = 900;
 const ACK_MIN_INTERVAL_MS = 6000;
 const ACK_MAX_INTERVAL_MS = 12000;
 
@@ -502,6 +502,9 @@ export function useBobbyVoiceCore({
       utteranceBufferRef.current = [];
       if (utteranceTimerRef.current) { clearTimeout(utteranceTimerRef.current); utteranceTimerRef.current = null; }
       setLastRecognized(trimmedText);
+
+      // Show PROCESSING state immediately so the child sees Bobby is thinking
+      go("PROCESSING");
 
       // Empathetic pre-reaction (sync import — no dynamic import delay)
       const childExpr = detectBobbyExpression(trimmedText, parentSettings?.childAge ?? 7);
