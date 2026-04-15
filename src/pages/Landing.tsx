@@ -154,11 +154,7 @@ const Landing = () => {
               muted
               playsInline
               className="relative w-72 md:w-[420px] rounded-2xl border-4 border-black drop-shadow-2xl"
-              style={{
-                boxShadow: "6px 6px 0px rgba(0,0,0,0.25)",
-                maskImage: "linear-gradient(to bottom, black 85%, transparent 100%)",
-                WebkitMaskImage: "linear-gradient(to bottom, black 85%, transparent 100%)",
-              }}
+              style={{ boxShadow: "6px 6px 0px rgba(0,0,0,0.25)" }}
             />
           </div>
         </div>
