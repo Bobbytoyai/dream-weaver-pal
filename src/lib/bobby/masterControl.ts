@@ -241,5 +241,32 @@ export function enforceWordLimit(text: string, maxWords: number): string {
   if (maxWords <= 0) return text;
   const words = text.split(/\s+/);
   if (words.length <= maxWords) return text;
-  return words.slice(0, maxWords).join(" ") + "…";
+
+  // Find the end of the nearest sentence within or just after the word limit
+  const sentenceEnders = /[.!?…]+/;
+  let bestCut = maxWords;
+
+  // Look forward up to 10 extra words to find a sentence boundary
+  const searchEnd = Math.min(words.length, maxWords + 10);
+  for (let i = maxWords - 1; i < searchEnd; i++) {
+    if (sentenceEnders.test(words[i])) {
+      bestCut = i + 1;
+      break;
+    }
+  }
+
+  // If no sentence boundary found ahead, look backward from the limit
+  if (bestCut === maxWords) {
+    for (let i = maxWords - 1; i >= Math.max(0, maxWords - 10); i--) {
+      if (sentenceEnders.test(words[i])) {
+        bestCut = i + 1;
+        break;
+      }
+    }
+  }
+
+  const result = words.slice(0, bestCut).join(" ");
+  // Ensure it ends with punctuation
+  if (!/[.!?…]$/.test(result)) return result + ".";
+  return result;
 }
