@@ -404,7 +404,6 @@ const Landing = () => {
           <div className="grid md:grid-cols-4 gap-6">
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <img src={companionAvatar} alt="Bobby" className="w-8 h-8 rounded-full border-2 border-white" />
                 <span className="text-lg font-black">Bobby</span>
               </div>
               <p className="text-xs text-white/60 font-bold">Le compagnon IA intelligent et sécurisé pour les enfants de 3 à 12 ans.</p>
