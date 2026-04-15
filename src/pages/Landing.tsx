@@ -222,32 +222,6 @@ const Landing = () => {
           </div>
         </div>
 
-        {/* ── BOBBY EN ACTION ── */}
-        <div id="demo">
-          <RetroSection bg="var(--retro-yellow)">
-            <div className="text-center space-y-4">
-              <h2 className="text-2xl md:text-3xl font-black text-black">🎬 Bobby en action</h2>
-              <p className="text-sm font-black text-black max-w-2xl mx-auto">
-                Touchez Bobby pour lui parler. Il écoute, comprend et répond avec sa voix d'enfant. 
-                Chaque conversation est unique et adaptée à l'âge de votre enfant.
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-4">
-                {[
-                  { emoji: "💬", label: "Conversation", desc: "Il comprend tout" },
-                  { emoji: "📖", label: "Histoires", desc: "Contes interactifs" },
-                  { emoji: "🎮", label: "Jeux", desc: "Quiz & devinettes" },
-                  { emoji: "🎵", label: "Musique", desc: "Comptines & berceuses" },
-                ].map(item => (
-                  <div key={item.label} className="border-3 border-black bg-white p-3 text-center" style={{ borderWidth: "3px" }}>
-                    <span className="text-3xl block mb-1">{item.emoji}</span>
-                    <p className="text-xs font-black text-black">{item.label}</p>
-                    <p className="text-[9px] font-black text-black">{item.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </RetroSection>
-        </div>
 
         {/* ── PARENT DASHBOARD ── */}
         <RetroSection bg="var(--retro-red)">
