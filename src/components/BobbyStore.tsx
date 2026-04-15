@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Search, Download, Check, Star, Sparkles, Users, Zap, Loader2, Trash2, ArrowLeft, Clock, Award, BookOpen, ChevronRight, Globe, Shield, Heart, X, SlidersHorizontal, ChevronDown, Play, Pause, Volume2, Music, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { installContentPack, uninstallContentPack, getLocalCacheSize, type InstallResult } from "@/lib/bobby/contentInstaller";
@@ -158,47 +158,52 @@ function AudioPreview({ slug, compact = false }: { slug: string; compact?: boole
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
-  const audioRef = useCallback(() => {
-    // singleton per slug
-    const existing = document.querySelector(`audio[data-slug="${slug}"]`) as HTMLAudioElement | null;
-    if (existing) return existing;
-    const el = new Audio(url!);
-    el.setAttribute("data-slug", slug);
-    el.preload = "metadata";
-    return el;
-  }, [slug, url]);
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (audioElRef.current) {
+        audioElRef.current.pause();
+        audioElRef.current.ontimeupdate = null;
+        audioElRef.current.onended = null;
+        audioElRef.current = null;
+      }
+    };
+  }, []);
 
   if (!url) return null;
+
+  const getAudio = () => {
+    if (!audioElRef.current) {
+      const el = new Audio(url);
+      el.preload = "metadata";
+      el.ontimeupdate = () => {
+        if (el.duration) {
+          setProgress((el.currentTime / el.duration) * 100);
+          setDuration(el.duration);
+        }
+      };
+      el.onended = () => {
+        setPlaying(false);
+        setProgress(0);
+      };
+      audioElRef.current = el;
+    }
+    return audioElRef.current;
+  };
 
   const toggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    const audio = audioRef();
+    const audio = getAudio();
 
-    // Stop any other preview playing
-    document.querySelectorAll("audio[data-slug]").forEach(el => {
-      if ((el as HTMLAudioElement).getAttribute("data-slug") !== slug) {
-        (el as HTMLAudioElement).pause();
-      }
-    });
-
-    if (playing) {
+    if (!audio.paused) {
       audio.pause();
       setPlaying(false);
     } else {
       audio.play().catch(() => {});
       setPlaying(true);
-
-      audio.ontimeupdate = () => {
-        if (audio.duration) {
-          setProgress((audio.currentTime / audio.duration) * 100);
-          setDuration(audio.duration);
-        }
-      };
-      audio.onended = () => {
-        setPlaying(false);
-        setProgress(0);
-      };
     }
   };
 
