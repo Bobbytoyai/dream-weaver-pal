@@ -73,7 +73,7 @@ export const DEFAULT_PARENT_SETTINGS: ParentSettings = {
   childName: "Mon ami",
   personality: "balanced",
   childAge: 7,
-  voiceType: "female",
+  voiceType: "child",
   voiceSpeed: "normal",
   sfxVolume: 0.7,
   enableCamera: false,

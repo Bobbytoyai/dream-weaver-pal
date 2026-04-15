@@ -30,8 +30,8 @@ const CONV_SILENCE_RELANCE_MS = 30_000;
 const CONV_SILENCE_OFF_MS = 60_000;
 const MIN_SESSION_MS = 90_000;
 const SLEEP_TIMER_MS = 120_000;
-const ANTI_ECHO_COOLDOWN_MS = 400;
-const UTTERANCE_BUFFER_MS = 1800;
+const ANTI_ECHO_COOLDOWN_MS = 250;
+const UTTERANCE_BUFFER_MS = 1200;
 const ACK_MIN_INTERVAL_MS = 6000;
 const ACK_MAX_INTERVAL_MS = 12000;
 
@@ -331,15 +331,14 @@ export function useBobbyVoiceCore({
     lastAiResponseRef.current = reply.text;
     recentBobbyMessagesRef.current = [reply.text.toLowerCase(), ...recentBobbyMessagesRef.current.slice(0, 4)];
 
-    // Don't emit SPEAKING/SPEECH_START yet — wait for audio to be ready
+    // Start TTS fetch immediately — don't wait
     eventBus.emit({ type: "RESPONSE_READY", text: reply.text });
-
     stopSttRef.current();
 
     try {
       const audioUrl = await fetchTTSAudio(reply.text, controller.signal, resolveVoiceProfile(parentSettings));
       if (!controller.signal.aborted) {
-        // Audio is ready — NOW start speaking state & mouth animation
+        // Audio ready — play immediately
         go("SPEAKING");
         eventBus.emit({ type: "SPEECH_START" });
         stopSttRef.current();
@@ -355,7 +354,8 @@ export function useBobbyVoiceCore({
       eventBus.emit({ type: "SPEECH_STOP" });
       lastSpeechEndRef.current = Date.now();
       convRelanceCountRef.current = 0;
-      await new Promise(r => setTimeout(r, ANTI_ECHO_COOLDOWN_MS));
+      // Minimal delay before resuming listening — ChatGPT-like instant turnaround
+      await new Promise(r => setTimeout(r, 150));
       if (!abortRef.current?.signal.aborted && machineRef.current === "SPEAKING") {
         void startListeningRef.current();
       }
@@ -511,15 +511,20 @@ export function useBobbyVoiceCore({
 
       eventBus.emit({ type: "VOICE_INPUT", transcript: trimmedText });
 
-      // Parallelize session + auth
-      const [, , authResult] = await Promise.all([
-        ensureSession(),
-        addMessage("user", trimmedText),
-        import("@/integrations/supabase/client").then(m => m.supabase.auth.getUser()),
+      // Launch brain reply + session/auth in parallel for max speed
+      const authPromise = import("@/integrations/supabase/client").then(m => m.supabase.auth.getUser());
+      const sessionPromise = ensureSession();
+      const messagePromise = addMessage("user", trimmedText);
+
+      // Don't wait for session/auth before starting AI — fire brain immediately
+      const [authResult, reply] = await Promise.all([
+        authPromise,
+        buildBobbyReply({ childName, childAge, userText: trimmedText, parentSettings, userId: undefined, sessionId: sessionIdRef.current }),
       ]);
-      const currentUser = authResult.data?.user;
-      const reply = await buildBobbyReply({ childName, childAge, userText: trimmedText, parentSettings, userId: currentUser?.id, sessionId: sessionIdRef.current });
-      await addMessage("assistant", reply.text, reply.emotion);
+      // Background: save session data (don't block speech)
+      sessionPromise.catch(console.warn);
+      messagePromise.catch(console.warn);
+      addMessage("assistant", reply.text, reply.emotion).catch(console.warn);
       await speakReply(reply);
 
       // If this reply includes a music track, play it after TTS
