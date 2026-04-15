@@ -186,9 +186,6 @@ const Landing = () => {
                   </div>
                 ))}
               </div>
-              <RetroButton onClick={() => navigate("/app")} variant="accent" size="lg">
-                <span className="flex items-center gap-2"><Mic className="w-5 h-5" /> Parler à Bobby maintenant</span>
-              </RetroButton>
             </div>
           </RetroSection>
         </div>
@@ -368,10 +365,6 @@ const Landing = () => {
               <RetroButton variant="primary" size="lg">
                 <span className="flex items-center gap-2"><ShoppingCart className="w-5 h-5" /> Précommander — 89€</span>
               </RetroButton>
-              <RetroButton onClick={() => navigate("/app")} variant="secondary" size="lg">
-                <span className="flex items-center gap-2"><Play className="w-5 h-5" /> Essayer d'abord</span>
-              </RetroButton>
-            </div>
             <p className="text-[10px] font-black text-black">🔒 Paiement sécurisé • Livraison gratuite • Satisfait ou remboursé 30 jours</p>
           </div>
         </RetroSection>
