@@ -331,15 +331,14 @@ export function useBobbyVoiceCore({
     lastAiResponseRef.current = reply.text;
     recentBobbyMessagesRef.current = [reply.text.toLowerCase(), ...recentBobbyMessagesRef.current.slice(0, 4)];
 
-    // Don't emit SPEAKING/SPEECH_START yet — wait for audio to be ready
+    // Start TTS fetch immediately — don't wait
     eventBus.emit({ type: "RESPONSE_READY", text: reply.text });
-
     stopSttRef.current();
 
     try {
       const audioUrl = await fetchTTSAudio(reply.text, controller.signal, resolveVoiceProfile(parentSettings));
       if (!controller.signal.aborted) {
-        // Audio is ready — NOW start speaking state & mouth animation
+        // Audio ready — play immediately
         go("SPEAKING");
         eventBus.emit({ type: "SPEECH_START" });
         stopSttRef.current();
@@ -355,7 +354,8 @@ export function useBobbyVoiceCore({
       eventBus.emit({ type: "SPEECH_STOP" });
       lastSpeechEndRef.current = Date.now();
       convRelanceCountRef.current = 0;
-      await new Promise(r => setTimeout(r, ANTI_ECHO_COOLDOWN_MS));
+      // Minimal delay before resuming listening — ChatGPT-like instant turnaround
+      await new Promise(r => setTimeout(r, 150));
       if (!abortRef.current?.signal.aborted && machineRef.current === "SPEAKING") {
         void startListeningRef.current();
       }
