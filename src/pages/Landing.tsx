@@ -95,10 +95,10 @@ const Landing = () => {
             <RetroTag bg="var(--retro-red)">Précommande</RetroTag>
           </div>
           <div className="hidden md:flex items-center gap-6 text-xs font-black uppercase text-black">
-            <a href="#features" className="hover:text-black transition-colors">Fonctions</a>
-            <a href="#store" className="hover:text-black transition-colors">Store</a>
-            <a href="#pricing" className="hover:text-black transition-colors">Prix</a>
-            <a href="#demo" className="hover:text-black transition-colors">Démo</a>
+            <a href="#features" className="hover:opacity-70 transition-opacity">Fonctions</a>
+            <a href="#store" className="hover:opacity-70 transition-opacity">Store</a>
+            <a href="#pricing" className="hover:opacity-70 transition-opacity">Prix</a>
+            <a href="/technologie" className="hover:opacity-70 transition-opacity">Technologie</a>
           </div>
           <RetroButton onClick={() => navigate("/app")} size="sm">Essayer Bobby</RetroButton>
         </div>
