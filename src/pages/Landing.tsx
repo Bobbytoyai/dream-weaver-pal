@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShoppingCart, Sparkles, Shield, Brain, Mic, CloudLightning, Star, ChevronDown, Play, MessageCircle, BookOpen, Gamepad2, Music, Heart } from "lucide-react";
 import bobbyHero from "@/assets/bobby-hero.png";
-import companionAvatar from "@/assets/companion-avatar.png";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // RETRO UI PRIMITIVES (same design system as Parent Mode)
@@ -92,7 +91,6 @@ const Landing = () => {
       <nav className="sticky top-0 z-50 border-b-4 border-black bg-white/95 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={companionAvatar} alt="Bobby" className="w-10 h-10 rounded-full border-2 border-black" />
             <span className="text-xl font-black text-black">Bobby</span>
             <RetroTag bg="var(--retro-red)">Précommande</RetroTag>
           </div>
@@ -148,11 +146,20 @@ const Landing = () => {
               </div>
             </div>
           </div>
-          <div className="relative flex justify-center">
-            <div className="absolute -inset-10 rounded-full opacity-30" style={{ background: "radial-gradient(circle, var(--retro-blue) 0%, transparent 70%)" }} />
-            <img src={bobbyHero} alt="Bobby - Compagnon IA pour enfants"
-              className="relative w-72 md:w-96 drop-shadow-2xl"
-              style={{ animation: "float 4s ease-in-out infinite", transform: `translateY(${Math.sin(scrollY * 0.005) * 5}px)` }} />
+          <div className="relative flex justify-center items-center">
+            <video
+              src="/bobby-demo.mov"
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="relative w-72 md:w-[420px] rounded-2xl border-4 border-black drop-shadow-2xl"
+              style={{
+                boxShadow: "6px 6px 0px rgba(0,0,0,0.25)",
+                maskImage: "linear-gradient(to bottom, black 85%, transparent 100%)",
+                WebkitMaskImage: "linear-gradient(to bottom, black 85%, transparent 100%)",
+              }}
+            />
           </div>
         </div>
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 animate-bounce">
@@ -397,7 +404,6 @@ const Landing = () => {
           <div className="grid md:grid-cols-4 gap-6">
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <img src={companionAvatar} alt="Bobby" className="w-8 h-8 rounded-full border-2 border-white" />
                 <span className="text-lg font-black">Bobby</span>
               </div>
               <p className="text-xs text-white/60 font-bold">Le compagnon IA intelligent et sécurisé pour les enfants de 3 à 12 ans.</p>
