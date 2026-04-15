@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShoppingCart, Sparkles, Shield, Brain, Mic, CloudLightning, Star, ChevronDown, Play, MessageCircle, BookOpen, Gamepad2, Music, Heart } from "lucide-react";
+import RetroMobileNav from "@/components/RetroMobileNav";
 import bobbyHero from "@/assets/bobby-hero.png";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -91,6 +92,7 @@ const Landing = () => {
       <nav className="sticky top-0 z-50 border-b-4 border-black bg-white/95 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <RetroMobileNav />
             <span className="text-xl font-black text-black">Bobby</span>
             <RetroTag bg="var(--retro-red)">Précommande</RetroTag>
           </div>
