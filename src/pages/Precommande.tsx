@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShoppingCart, ArrowLeft, Cpu, Camera, Speaker, Monitor, Wifi, Battery, CircuitBoard, Shield } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Cpu, Camera, Speaker, Monitor, Wifi, Battery, CircuitBoard, Shield, X } from "lucide-react";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // RETRO UI
@@ -81,7 +82,7 @@ const CASE_COST = {
 
 export default function Precommande() {
   const navigate = useNavigate();
-
+  const [lightbox, setLightbox] = useState<{ img: string; name: string } | null>(null);
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#FDF6EC" }}>
       {/* NAV */}
@@ -193,9 +194,10 @@ export default function Precommande() {
                   </div>
                 )}
                 <div className="text-center space-y-3">
-                  <div className="mx-auto rounded-2xl border-3 border-black p-3 flex items-center justify-center" 
-                    style={{ borderWidth: "3px", backgroundColor: c.color + "30" }}>
-                    <img src={c.img} alt={c.name} className="w-40 h-40 object-contain rounded-lg" />
+                  <div className="mx-auto rounded-2xl border-3 border-black p-3 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform" 
+                    style={{ borderWidth: "3px", backgroundColor: c.color + "30" }}
+                    onClick={() => setLightbox({ img: c.img, name: c.name })}>
+                    <img src={c.img} alt={c.name} className="w-40 h-40 object-contain rounded-lg pointer-events-none" />
                   </div>
                   <div>
                     <p className="text-sm font-black text-black">{c.name}</p>
@@ -468,6 +470,21 @@ export default function Precommande() {
           <p className="text-[10px] font-black text-white/50">© 2026 OSAI × Silverlit — Bobby™ est une marque déposée</p>
         </div>
       </footer>
+
+      {/* LIGHTBOX */}
+      {lightbox && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setLightbox(null)}>
+          <div className="relative bg-white border-4 border-black rounded-2xl p-4 max-w-lg w-[90vw]" 
+            style={{ boxShadow: "8px 8px 0 rgba(0,0,0,0.3)" }}
+            onClick={e => e.stopPropagation()}>
+            <button onClick={() => setLightbox(null)} className="absolute -top-3 -right-3 bg-black text-white rounded-full w-8 h-8 flex items-center justify-center border-2 border-white hover:bg-gray-800 transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+            <img src={lightbox.img} alt={lightbox.name} className="w-full object-contain rounded-xl max-h-[70vh]" />
+            <p className="text-center font-black text-black text-sm mt-3">{lightbox.name}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
