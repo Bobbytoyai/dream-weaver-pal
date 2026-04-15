@@ -396,10 +396,15 @@ const Landing = () => {
         <RetroSection bg="#000" className="mt-8">
           <div className="text-center space-y-6">
             <h2 className="text-2xl font-black text-white uppercase tracking-wide">📺 On nous a vu sur</h2>
-            <div className="flex items-center justify-center gap-6 md:gap-10 flex-wrap">
-              {["TF1", "M6", "W9", "DISNEY CHANNEL"].map((channel) => (
-                <div key={channel} className="px-5 py-3 border-3 border-white bg-white/10 text-white font-black text-lg md:text-xl uppercase tracking-wider" style={{ borderWidth: "3px" }}>
-                  {channel}
+            <div className="flex items-center justify-center gap-8 md:gap-12 flex-wrap">
+              {[
+                { name: "TF1", src: "/images/logos/tf1.png" },
+                { name: "M6", src: "/images/logos/m6.png" },
+                { name: "W9", src: "/images/logos/w9.png" },
+                { name: "Disney Channel", src: "/images/logos/disney-channel.png" },
+              ].map((channel) => (
+                <div key={channel.name} className="px-4 py-3 bg-white rounded-lg flex items-center justify-center" style={{ minWidth: "100px" }}>
+                  <img src={channel.src} alt={channel.name} className="h-12 md:h-16 w-auto object-contain" loading="lazy" />
                 </div>
               ))}
             </div>
