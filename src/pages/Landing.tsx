@@ -371,6 +371,9 @@ const Landing = () => {
                 <span className="flex items-center gap-2"><ShoppingCart className="w-5 h-5" /> Précommander — 89€</span>
               </RetroButton>
             </div>
+            <div className="flex justify-center mt-4">
+              <img src="/images/bobby-product.jpg" alt="Bobby - Compagnon intelligent pour enfants" className="w-full max-w-md border-4 border-black" style={{ boxShadow: "6px 6px 0 rgba(0,0,0,0.2)" }} loading="lazy" />
+            </div>
             <p className="text-[10px] font-black text-black">🔒 Paiement sécurisé • Livraison gratuite • Satisfait ou remboursé 30 jours</p>
           </div>
         </RetroSection>
