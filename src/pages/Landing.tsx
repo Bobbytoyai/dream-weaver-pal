@@ -390,24 +390,6 @@ const Landing = () => {
           </div>
         </div>
 
-        {/* ── VU À LA TV ── */}
-        <RetroSection bg="#000" className="mt-8">
-          <div className="text-center space-y-6">
-            <h2 className="text-2xl font-black text-white uppercase tracking-wide">📺 On nous a vu sur</h2>
-            <div className="flex items-center justify-center gap-8 md:gap-12 flex-wrap">
-              {[
-                { name: "TF1", src: "/images/logos/tf1.png" },
-                { name: "M6", src: "/images/logos/m6.png" },
-                { name: "W9", src: "/images/logos/w9.png" },
-                { name: "Disney Channel", src: "/images/logos/disney-channel.png" },
-              ].map((channel) => (
-                <div key={channel.name} className="px-4 py-3 bg-white rounded-lg flex items-center justify-center" style={{ minWidth: "100px" }}>
-                  <img src={channel.src} alt={channel.name} className="h-12 md:h-16 w-auto object-contain" loading="lazy" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </RetroSection>
 
         {/* ── VIDEO TV + TEXTE ── */}
         <div className="mt-8 flex flex-col md:flex-row items-center gap-6">
