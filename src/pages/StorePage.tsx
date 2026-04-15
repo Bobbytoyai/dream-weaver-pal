@@ -28,7 +28,7 @@ const StorePage = () => {
           <div className="flex items-center gap-3">
             <span className="text-sm font-black text-black">🛒 Bobby Store</span>
             <button
-              onClick={() => navigate("/bobby-cloud")}
+              onClick={() => navigate("/bobby-cloud?returnTo=/store")}
               className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-black uppercase border-2 border-black bg-white text-black hover:bg-gray-100 transition-colors"
               style={{ boxShadow: "2px 2px 0px rgba(0,0,0,0.2)" }}
             >
