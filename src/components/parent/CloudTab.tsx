@@ -51,19 +51,19 @@ const CloudTab = ({
     {
       name: "Découverte", price: "0€", period: "", emoji: "🆓",
       storage: "500 Mo",
-      features: ["500 Mo de stockage cloud", "Bobby Brain V4 de base", "1 profil enfant", "Sync 1 appareil", "Bobby Store — packs gratuits"],
+      features: ["500 Mo de stockage cloud"],
       cta: "Actuel", disabled: true,
     },
     {
       name: "Famille", price: "4,99€", period: "/mois", emoji: "👨‍👩‍👧‍👦",
       storage: "5 Go",
-      features: ["5 Go de stockage cloud", "Bobby Brain Intelligence V4", "3 profils enfants", "Sync 3 appareils", "Bobby Store complet", "Export MP3 sessions", "Analyses IA détaillées"],
+      features: ["5 Go de stockage cloud"],
       cta: "Bientôt disponible", disabled: true, popular: true,
     },
     {
       name: "Pro", price: "9,99€", period: "/mois", emoji: "🚀",
-      storage: "50 Go",
-      features: ["50 Go de stockage cloud", "Bobby Brain Intelligence V4 max", "Profils illimités", "Appareils illimités", "Bobby Store Premium", "API développeur", "Support dédié 24/7"],
+      storage: "20 Go",
+      features: ["20 Go de stockage cloud"],
       cta: "Bientôt disponible", disabled: true,
     },
   ];

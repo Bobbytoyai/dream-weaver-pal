@@ -61,9 +61,9 @@ const STORE_PACKS = [
 ];
 
 const CLOUD_PLANS = [
-  { name: "Découverte", price: "0€", period: "", features: ["500 Mo de stockage cloud", "Bobby Brain V4 de base", "1 profil enfant", "Sync 1 appareil", "Bobby Store — packs gratuits"], bg: "var(--retro-green)", popular: false },
-  { name: "Famille", price: "4,99€", period: "/mois", features: ["5 Go de stockage cloud", "Bobby Brain Intelligence V4", "3 profils enfants", "Sync 3 appareils", "Bobby Store complet", "Export MP3 sessions", "Analyses IA détaillées"], bg: "var(--retro-blue)", popular: true },
-  { name: "Pro", price: "9,99€", period: "/mois", features: ["50 Go de stockage cloud", "Bobby Brain Intelligence V4 max", "Profils illimités", "Appareils illimités", "Bobby Store Premium", "API développeur", "Support dédié 24/7"], bg: "var(--retro-purple)", popular: false },
+  { name: "Découverte", price: "0€", period: "", features: ["500 Mo de stockage cloud"], bg: "var(--retro-green)", popular: false },
+  { name: "Famille", price: "4,99€", period: "/mois", features: ["5 Go de stockage cloud"], bg: "var(--retro-blue)", popular: true },
+  { name: "Pro", price: "9,99€", period: "/mois", features: ["20 Go de stockage cloud"], bg: "var(--retro-purple)", popular: false },
 ];
 
 const TESTIMONIALS = [
