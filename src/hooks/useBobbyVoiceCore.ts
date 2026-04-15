@@ -503,6 +503,9 @@ export function useBobbyVoiceCore({
       if (utteranceTimerRef.current) { clearTimeout(utteranceTimerRef.current); utteranceTimerRef.current = null; }
       setLastRecognized(trimmedText);
 
+      // Show PROCESSING state immediately so the child sees Bobby is thinking
+      go("PROCESSING");
+
       // Empathetic pre-reaction (sync import — no dynamic import delay)
       const childExpr = detectBobbyExpression(trimmedText, parentSettings?.childAge ?? 7);
       setCurrentEmotion(childExpr.faceState);
