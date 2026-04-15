@@ -33,7 +33,7 @@ const RetroButton = ({ children, onClick, variant = "primary", size = "md" }: {
 };
 
 const RetroTag = ({ children, bg = "var(--retro-yellow)" }: { children: React.ReactNode; bg?: string }) => (
-  <span className="inline-block px-3 py-1 text-[10px] font-black uppercase border-2 border-black"
+  <span className="inline-block px-3 py-1 text-[10px] font-black uppercase border-2 border-black text-black"
     style={{ backgroundColor: bg }}>
     {children}
   </span>
