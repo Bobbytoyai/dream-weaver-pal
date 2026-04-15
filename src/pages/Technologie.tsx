@@ -25,16 +25,16 @@ function BrainTreeDiagram() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const nodes = [
-    { id: "core", x: 50, y: 18, label: "OSAI NeuralCore™", icon: "🧠", color: "#C084FC", desc: "Moteur LLM propriétaire multi-couches avec raisonnement adaptatif enfant" },
-    { id: "safety", x: 15, y: 40, label: "SafeGuard™", icon: "🛡️", color: "#FCA5A5", desc: "Pipeline de sécurité pré-traitement avec détection sémantique temps réel" },
-    { id: "voice", x: 85, y: 40, label: "VoiceLab™", icon: "🎤", color: "#93C5FD", desc: "Synthèse vocale neurale avec prosodie émotionnelle et lip-sync visémique" },
-    { id: "emotion", x: 8, y: 65, label: "EmotiSense™", icon: "💜", color: "#F0ABFC", desc: "Détection émotionnelle multi-signal avec modèle Theory of Mind enfant" },
-    { id: "memory", x: 35, y: 70, label: "MemoryGraph™", icon: "🔗", color: "#86EFAC", desc: "Mémoire persistante à graphe relationnel — faits, préférences, contexte" },
-    { id: "intent", x: 65, y: 70, label: "IntentNet™", icon: "🎯", color: "#FDE68A", desc: "Classification d'intention 50+ catégories avec scoring composite hybride" },
-    { id: "kb", x: 92, y: 65, label: "KnowledgeBase™", icon: "📚", color: "#67E8F9", desc: "4900+ entrées validées avec recherche sémantique et scoring contextuel" },
-    { id: "proactive", x: 20, y: 92, label: "ProActive™", icon: "⚡", color: "#FDBA74", desc: "Moteur d'initiative spontanée basé sur 15 catégories d'intérêt trackées" },
-    { id: "variation", x: 50, y: 95, label: "VariaGen™", icon: "🔄", color: "#A5B4FC", desc: "Anti-répétition sur 20 tours — structure, vocabulaire et format variés" },
-    { id: "assembly", x: 80, y: 92, label: "ResponseForge™", icon: "⚙️", color: "#6EE7B7", desc: "Assemblage 3 phases : Empathie → Contenu → Relance proactive" },
+    { id: "core", x: 50, y: 14, label: "OSAI NeuralCore™", icon: "🧠", color: "#C084FC", desc: "Moteur LLM propriétaire multi-couches avec raisonnement adaptatif enfant" },
+    { id: "safety", x: 15, y: 34, label: "SafeGuard™", icon: "🛡️", color: "#FCA5A5", desc: "Pipeline de sécurité pré-traitement avec détection sémantique temps réel" },
+    { id: "voice", x: 85, y: 34, label: "VoiceLab™", icon: "🎤", color: "#93C5FD", desc: "Synthèse vocale neurale avec prosodie émotionnelle et lip-sync visémique" },
+    { id: "emotion", x: 8, y: 54, label: "EmotiSense™", icon: "💜", color: "#F0ABFC", desc: "Détection émotionnelle multi-signal avec modèle Theory of Mind enfant" },
+    { id: "memory", x: 35, y: 58, label: "MemoryGraph™", icon: "🔗", color: "#86EFAC", desc: "Mémoire persistante à graphe relationnel — faits, préférences, contexte" },
+    { id: "intent", x: 65, y: 58, label: "IntentNet™", icon: "🎯", color: "#FDE68A", desc: "Classification d'intention 50+ catégories avec scoring composite hybride" },
+    { id: "kb", x: 92, y: 54, label: "KnowledgeBase™", icon: "📚", color: "#67E8F9", desc: "4900+ entrées validées avec recherche sémantique et scoring contextuel" },
+    { id: "proactive", x: 20, y: 76, label: "ProActive™", icon: "⚡", color: "#FDBA74", desc: "Moteur d'initiative spontanée basé sur 15 catégories d'intérêt trackées" },
+    { id: "variation", x: 50, y: 78, label: "VariaGen™", icon: "🔄", color: "#A5B4FC", desc: "Anti-répétition sur 20 tours — structure, vocabulaire et format variés" },
+    { id: "assembly", x: 80, y: 76, label: "ResponseForge™", icon: "⚙️", color: "#6EE7B7", desc: "Assemblage 3 phases : Empathie → Contenu → Relance proactive" },
   ];
 
   // Connections from core to all children
@@ -110,7 +110,7 @@ function BrainTreeDiagram() {
   }, [activeNode, pulsePhase]);
 
   return (
-    <div className="relative w-full" style={{ minHeight: "520px" }}>
+    <div className="relative w-full" style={{ minHeight: "620px" }}>
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 1 }} />
       {nodes.map((node, i) => (
         <div
