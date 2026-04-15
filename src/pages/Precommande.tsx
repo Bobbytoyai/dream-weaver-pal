@@ -386,6 +386,63 @@ export default function Precommande() {
           </div>
         </RetroSection>
 
+        {/* ── ROADMAP 12 MOIS ── */}
+        <RetroSection bg="#fff">
+          <h2 className="text-xl md:text-2xl font-black text-black text-center mb-6">🗓️ Roadmap Bobby — 12 mois</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {[
+              { q: "T1", month: "Mois 1-3", bg: "var(--retro-blue)", items: [
+                "🧪 Version Bêta prête",
+                "👨‍👩‍👧 200-500 familles testeurs",
+                "🐛 Corrections & optimisations",
+                "📊 Dashboard analytics interne",
+              ]},
+              { q: "T2", month: "Mois 4-6", bg: "var(--retro-green)", items: [
+                "📱 App Store & Play Store",
+                "👪 Dashboard Parent public",
+                "📚 +200 contenus Bobby Store",
+                "🔄 Auto-learning hebdomadaire",
+              ]},
+              { q: "T3", month: "Mois 7-9", bg: "var(--retro-purple)", items: [
+                "🌍 Multi-langues (EN, ES, DE…)",
+                "🤝 Collabs coques licences",
+                "🎬 Micro dessins animés & vidéos",
+                "🧠 IA contextuelle avancée",
+              ]},
+              { q: "T4", month: "Mois 10-12", bg: "var(--retro-yellow)", items: [
+                "🏬 Grande & moyenne surface",
+                "📦 Packs cadeaux saisonniers",
+                "🎮 Nouveaux jeux éducatifs",
+                "🔐 Certifications RGPD / COPPA",
+              ]},
+            ].map((phase, i) => (
+              <div key={i} className="border-3 border-black p-3 flex flex-col gap-2" style={{ borderWidth: "3px", backgroundColor: phase.bg, boxShadow: "4px 4px 0px rgba(0,0,0,0.2)" }}>
+                <div className="flex items-center gap-2">
+                  <span className="bg-black text-white text-[10px] font-black px-2 py-0.5 uppercase">{phase.q}</span>
+                  <span className="text-[10px] font-black text-black/60">{phase.month}</span>
+                </div>
+                <ul className="space-y-1">
+                  {phase.items.map((item, j) => (
+                    <li key={j} className="text-[11px] font-bold text-black leading-tight">{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+            {[
+              { label: "En continu", bg: "var(--retro-red)", items: ["🔄 MAJ logiciel auto chaque semaine", "🧠 Auto-learning permanent", "🛡️ Audits sécurité mensuels", "📈 Analyse feedback parents"] },
+            ].map((block, i) => (
+              <div key={i} className="col-span-2 md:col-span-4 border-3 border-black p-3 flex flex-wrap gap-3 items-center justify-center" style={{ borderWidth: "3px", backgroundColor: block.bg, boxShadow: "4px 4px 0px rgba(0,0,0,0.2)" }}>
+                <span className="bg-black text-white text-[10px] font-black px-2 py-0.5 uppercase">{block.label}</span>
+                {block.items.map((item, j) => (
+                  <span key={j} className="text-[11px] font-bold text-black bg-white/50 px-2 py-1 border border-black/20">{item}</span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </RetroSection>
+
         {/* ── CTA FINAL ── */}
         <RetroSection bg="#000">
           <div className="text-center space-y-4">
