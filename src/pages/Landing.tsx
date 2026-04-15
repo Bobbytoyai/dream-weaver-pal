@@ -44,8 +44,8 @@ const RetroTag = ({ children, bg = "var(--retro-yellow)" }: { children: React.Re
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const FEATURES = [
-  { icon: Brain, title: "IA Conversationnelle", desc: "Bobby comprend, s'adapte et répond naturellement grâce à Gemini 3 Flash.", bg: "var(--retro-purple)" },
-  { icon: Mic, title: "Voix Naturelle", desc: "Synthèse vocale ElevenLabs avec voix enfant expressive et chaleureuse.", bg: "var(--retro-green)" },
+  { icon: Brain, title: "IA Conversationnelle", desc: "Bobby comprend, s'adapte et répond naturellement grâce à OSAI NeuralCore™.", bg: "var(--retro-purple)" },
+  { icon: Mic, title: "Voix Naturelle", desc: "Synthèse vocale OSAI VoiceLab™ avec voix enfant expressive et chaleureuse.", bg: "var(--retro-green)" },
   { icon: Shield, title: "100% Sécurisé", desc: "Filtrage strict, sujets bloqués, alertes parent en temps réel.", bg: "var(--retro-red)" },
   { icon: CloudLightning, title: "Bobby Cloud", desc: "Mémoire persistante, sync multi-appareils, tableau de bord parent.", bg: "var(--retro-blue)" },
   { icon: BookOpen, title: "Histoires & Contes", desc: "Bibliothèque d'histoires interactives adaptées à l'âge de l'enfant.", bg: "var(--retro-yellow)" },

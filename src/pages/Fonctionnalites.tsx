@@ -12,8 +12,8 @@ const RetroTag = ({ children, bg = "var(--retro-yellow)" }: { children: React.Re
 );
 
 const FEATURES = [
-  { icon: Brain, title: "IA Conversationnelle Gemini 3 Flash", desc: "Bobby utilise le dernier modèle Google Gemini pour comprendre et répondre naturellement. Chaque réponse est structurée en 3 phases : empathie, contenu et relance. L'historique de 50 messages garantit une cohérence totale.", bg: "var(--retro-purple)" },
-  { icon: Mic, title: "Voix Naturelle ElevenLabs", desc: "Synthèse vocale avec le profil 'Enfant' exclusif. La voix est chaleureuse, expressive et adaptée à chaque émotion détectée. Lip sync en temps réel avec le visage 3D holographique.", bg: "var(--retro-green)" },
+  { icon: Brain, title: "IA Conversationnelle OSAI NeuralCore™", desc: "Bobby utilise le dernier modèle Google Gemini pour comprendre et répondre naturellement. Chaque réponse est structurée en 3 phases : empathie, contenu et relance. L'historique de 50 messages garantit une cohérence totale.", bg: "var(--retro-purple)" },
+  { icon: Mic, title: "Voix Naturelle OSAI VoiceLab™", desc: "Synthèse vocale avec le profil 'Enfant' exclusif. La voix est chaleureuse, expressive et adaptée à chaque émotion détectée. Lip sync en temps réel avec le visage 3D holographique.", bg: "var(--retro-green)" },
   { icon: Shield, title: "Sécurité Absolue", desc: "Le Safety Pipeline traite AVANT toute autre logique. Filtrage IA des contenus inappropriés, sujets bloqués configurables, alertes parent en temps réel, redirection vers un adulte en cas critique.", bg: "var(--retro-red)" },
   { icon: CloudLightning, title: "Bobby Cloud", desc: "Mémoire persistante entre les sessions. Synchronisation multi-appareils. Tableau de bord parent complet avec analyse émotionnelle IA, transcriptions et graphiques d'évolution.", bg: "var(--retro-blue)" },
   { icon: BookOpen, title: "Histoires Interactives", desc: "Bibliothèque de 50+ contes avec choix multiples. Lecteur style YouTube avec pause, reprise et navigation. Préchargement de 3 segments pour une expérience fluide.", bg: "var(--retro-yellow)" },
