@@ -266,7 +266,7 @@ const VoiceScreen = ({
   const isDark = bgId === "dark" || bgId === "night";
 
   return (
-    <div className="child-light flex flex-col items-center justify-between h-screen w-screen px-4 py-6 select-none overflow-hidden relative"
+    <div className="child-light flex flex-col items-center justify-between h-screen w-screen px-8 py-10 select-none overflow-hidden relative"
       style={{ background: bgHex }}>
 
       {showDebug && (
