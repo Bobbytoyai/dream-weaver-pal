@@ -142,7 +142,7 @@ const Landing = () => {
               </a>
             </div>
           </div>
-          <div className="relative flex justify-center items-center">
+          <div className="relative flex justify-center items-start">
             <video
               ref={(el) => { if (el) el.playbackRate = 0.7; }}
               src="/bobby-demo.mov"
@@ -150,7 +150,7 @@ const Landing = () => {
               loop
               muted
               playsInline
-              className="relative w-72 md:w-[420px] rounded-2xl border-4 border-black drop-shadow-2xl"
+              className="relative w-80 md:w-[500px] rounded-2xl border-4 border-black drop-shadow-2xl object-cover"
               style={{ boxShadow: "6px 6px 0px rgba(0,0,0,0.25)" }}
             />
           </div>
