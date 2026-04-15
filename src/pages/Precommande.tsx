@@ -184,7 +184,7 @@ export default function Precommande() {
             <h2 className="text-2xl md:text-3xl font-black text-black">🎨 Coques silicone Bobby</h2>
             <p className="text-xs font-black text-black/60 mt-1">Interchangeables, lavables, certifiées CE — silicone alimentaire</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {SILICONE_CASES.map(c => (
               <RetroSection key={c.name} bg="#fff" className="relative hover:translate-y-[-2px] transition-transform">
                 {c.included && (
@@ -193,9 +193,9 @@ export default function Precommande() {
                   </div>
                 )}
                 <div className="text-center space-y-3">
-                  <div className="w-20 h-20 mx-auto rounded-2xl border-3 border-black flex items-center justify-center" 
-                    style={{ borderWidth: "3px", backgroundColor: c.color }}>
-                    <span className="text-4xl">{c.emoji}</span>
+                  <div className="mx-auto rounded-2xl border-3 border-black p-3 flex items-center justify-center" 
+                    style={{ borderWidth: "3px", backgroundColor: c.color + "30" }}>
+                    <img src={c.img} alt={c.name} className="w-28 h-28 object-contain" />
                   </div>
                   <div>
                     <p className="text-sm font-black text-black">{c.name}</p>
