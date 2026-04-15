@@ -110,7 +110,7 @@ function BrainTreeDiagram() {
   }, [activeNode, pulsePhase]);
 
   return (
-    <div className="relative w-full" style={{ minHeight: "520px" }}>
+    <div className="relative w-full" style={{ minHeight: "620px" }}>
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 1 }} />
       {nodes.map((node, i) => (
         <div
