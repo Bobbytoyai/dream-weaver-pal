@@ -313,8 +313,8 @@ export function useBobbyVoiceCore({
     }
   }, [parentSettings, stopPlayback]);
 
-  // ─── Speak a brain reply ───────────────────────────
-  const speakReply = useCallback(async (reply: BobbyBrainReply) => {
+  // ─── Speak a brain reply (accepts pre-fetched TTS promise for parallel pipeline) ───
+  const speakReply = useCallback(async (reply: BobbyBrainReply, prefetchedAudioPromise?: Promise<string>) => {
     stopPlayback();
     stopSttRef.current();
     setMicArmed(false);
@@ -331,14 +331,15 @@ export function useBobbyVoiceCore({
     lastAiResponseRef.current = reply.text;
     recentBobbyMessagesRef.current = [reply.text.toLowerCase(), ...recentBobbyMessagesRef.current.slice(0, 4)];
 
-    // Start TTS fetch immediately — don't wait
     eventBus.emit({ type: "RESPONSE_READY", text: reply.text });
     stopSttRef.current();
 
     try {
-      const audioUrl = await fetchTTSAudio(reply.text, controller.signal, resolveVoiceProfile(parentSettings));
+      // Use pre-fetched TTS if available (parallel pipeline), otherwise fetch now
+      const audioUrl = prefetchedAudioPromise
+        ? await prefetchedAudioPromise
+        : await fetchTTSAudio(reply.text, controller.signal, resolveVoiceProfile(parentSettings));
       if (!controller.signal.aborted) {
-        // Audio ready — play immediately
         go("SPEAKING");
         eventBus.emit({ type: "SPEECH_START" });
         stopSttRef.current();
@@ -354,7 +355,6 @@ export function useBobbyVoiceCore({
       eventBus.emit({ type: "SPEECH_STOP" });
       lastSpeechEndRef.current = Date.now();
       convRelanceCountRef.current = 0;
-      // Minimal delay before resuming listening — ChatGPT-like instant turnaround
       await new Promise(r => setTimeout(r, 150));
       if (!abortRef.current?.signal.aborted && machineRef.current === "SPEAKING") {
         void startListeningRef.current();
@@ -524,11 +524,16 @@ export function useBobbyVoiceCore({
         authPromise,
         buildBobbyReply({ childName, childAge, userText: trimmedText, parentSettings, userId: undefined, sessionId: sessionIdRef.current }),
       ]);
+
+      // 🚀 PARALLEL TTS+BRAIN: Start TTS fetch immediately while we do setup
+      // This saves ~200-500ms by overlapping TTS network call with UI state updates
+      const ttsPromise = fetchTTSAudio(reply.text, abortRef.current?.signal, resolveVoiceProfile(parentSettings));
+
       // Background: save session data (don't block speech)
       sessionPromise.catch(console.warn);
       messagePromise.catch(console.warn);
       addMessage("assistant", reply.text, reply.emotion).catch(console.warn);
-      await speakReply(reply);
+      await speakReply(reply, ttsPromise);
 
       // If this reply includes a music track, play it after TTS
       const musicUrl = (reply as any).musicUrl;
