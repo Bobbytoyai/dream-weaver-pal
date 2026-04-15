@@ -408,7 +408,6 @@ const Landing = () => {
                 </div>
               ))}
             </div>
-            </div>
           </div>
         </RetroSection>
 
