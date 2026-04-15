@@ -38,7 +38,8 @@ export default function BobbyCloudAuth() {
 
   useEffect(() => {
     if (!loading && user) {
-      navigate(returnTo, { replace: true });
+      const target = returnTo && returnTo !== "/" ? returnTo : "/store";
+      navigate(target, { replace: true });
     }
   }, [loading, navigate, returnTo, user]);
 
