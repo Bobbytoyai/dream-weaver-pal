@@ -134,16 +134,13 @@ const Landing = () => {
                 <span className="flex items-center gap-2"><ShoppingCart className="w-5 h-5" /> Précommander</span>
               </RetroButton>
             </div>
-            <div className="flex items-center gap-4 pt-2">
-              <div className="flex -space-x-2">
-                {["😊", "🥰", "😄"].map((e, i) => (
-                  <div key={i} className="w-8 h-8 rounded-full border-2 border-black bg-white flex items-center justify-center text-sm">{e}</div>
-                ))}
-              </div>
-              <div>
-                <div className="flex gap-0.5">{Array.from({ length: 5 }, (_, i) => <Star key={i} className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />)}</div>
-                <p className="text-[10px] font-black text-black">+2000 familles en attente</p>
-              </div>
+            <div className="flex items-center gap-3 pt-2 flex-wrap">
+              <a href="https://apps.apple.com" target="_blank" rel="noopener noreferrer">
+                <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/fr-fr?size=250x83" alt="Télécharger sur l'App Store" className="h-10" />
+              </a>
+              <a href="https://play.google.com/store" target="_blank" rel="noopener noreferrer">
+                <img src="https://play.google.com/intl/en_us/badges/static/images/badges/fr_badge_web_generic.png" alt="Disponible sur Google Play" className="h-[60px]" />
+              </a>
             </div>
           </div>
           <div className="relative flex justify-center items-center">
