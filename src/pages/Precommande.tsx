@@ -88,9 +88,12 @@ export default function Precommande() {
       {/* NAV */}
       <nav className="sticky top-0 z-50 border-b-4 border-black px-4 py-3" style={{ backgroundColor: "#FDF6EC" }}>
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <button onClick={() => navigate("/")} className="flex items-center gap-2 font-black text-black text-sm uppercase hover:opacity-70 transition-opacity">
-            <ArrowLeft className="w-4 h-4" /> Retour
-          </button>
+          <div className="flex items-center gap-2">
+            <RetroMobileNav />
+            <button onClick={() => navigate("/")} className="hidden md:flex items-center gap-2 font-black text-black text-sm uppercase hover:opacity-70 transition-opacity">
+              <ArrowLeft className="w-4 h-4" /> Retour
+            </button>
+          </div>
           <span className="font-black text-black text-lg tracking-tight">BOBBY</span>
           <RetroTag bg="var(--retro-red)">🚀 Q3 2026</RetroTag>
         </div>
