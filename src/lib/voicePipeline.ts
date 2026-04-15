@@ -126,7 +126,7 @@ export async function fetchTTSAudio(
   if (!spokenText) return "__silent__";
   if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
-  const profile = (voiceId as VoiceProfile) || "child";
+  const profile: VoiceProfile = (voiceId as VoiceProfile) || "child";
 
   // 1. Check in-memory cache
   const cacheKey = getCacheKey(spokenText, profile, emotion);
