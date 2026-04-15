@@ -470,6 +470,21 @@ export default function Precommande() {
           <p className="text-[10px] font-black text-white/50">© 2026 OSAI × Silverlit — Bobby™ est une marque déposée</p>
         </div>
       </footer>
+
+      {/* LIGHTBOX */}
+      {lightbox && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setLightbox(null)}>
+          <div className="relative bg-white border-4 border-black rounded-2xl p-4 max-w-lg w-[90vw]" 
+            style={{ boxShadow: "8px 8px 0 rgba(0,0,0,0.3)" }}
+            onClick={e => e.stopPropagation()}>
+            <button onClick={() => setLightbox(null)} className="absolute -top-3 -right-3 bg-black text-white rounded-full w-8 h-8 flex items-center justify-center border-2 border-white hover:bg-gray-800 transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+            <img src={lightbox.img} alt={lightbox.name} className="w-full object-contain rounded-xl max-h-[70vh]" />
+            <p className="text-center font-black text-black text-sm mt-3">{lightbox.name}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
