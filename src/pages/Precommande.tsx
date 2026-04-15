@@ -38,12 +38,10 @@ const RetroTag = ({ children, bg = "var(--retro-yellow)" }: { children: React.Re
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const SILICONE_CASES = [
-  { name: "Bobby Chat", emoji: "🐱", color: "#D4A574", desc: "Coque chat en silicone premium", salePrice: "14.99€", prodCost: "2.80€", included: true },
-  { name: "Bobby Panda", emoji: "🐼", color: "#2D2D2D", desc: "Coque panda noir & blanc", salePrice: "14.99€", prodCost: "2.80€", included: false },
-  { name: "Bobby Lapin", emoji: "🐰", color: "#F5C6D0", desc: "Coque lapin rose pastel", salePrice: "14.99€", prodCost: "2.80€", included: false },
-  { name: "Bobby Dino", emoji: "🦕", color: "#7BC47F", desc: "Coque dinosaure vert aventure", salePrice: "14.99€", prodCost: "2.80€", included: false },
-  { name: "Bobby Renard", emoji: "🦊", color: "#E8803A", desc: "Coque renard orange malicieux", salePrice: "14.99€", prodCost: "2.80€", included: false },
-  { name: "Bobby Licorne", emoji: "🦄", color: "#C8A2E0", desc: "Coque licorne violet magique", salePrice: "14.99€", prodCost: "2.80€", included: false },
+  { name: "Bobby Chat", emoji: "🐱", color: "#D4A574", desc: "Coque chat en silicone premium", salePrice: "14.99€", prodCost: "2.80€", included: true, img: "/images/cases/chat.png" },
+  { name: "Bobby Panda", emoji: "🐼", color: "#2D2D2D", desc: "Coque panda noir & blanc", salePrice: "14.99€", prodCost: "2.80€", included: false, img: "/images/cases/panda.png" },
+  { name: "Bobby Ourson", emoji: "🧸", color: "#C8A06A", desc: "Coque ourson miel chaleureux", salePrice: "14.99€", prodCost: "2.80€", included: false, img: "/images/cases/ourson.png" },
+  { name: "Bobby Lapin", emoji: "🐰", color: "#E0E0E0", desc: "Coque lapin blanc doux", salePrice: "14.99€", prodCost: "2.80€", included: false, img: "/images/cases/lapin.png" },
 ];
 
 const DEVICE_COMPONENTS = [
@@ -140,13 +138,17 @@ export default function Precommande() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              { emoji: "🤖", label: "Bobby Device", desc: "Le compagnon IA", bg: "var(--retro-yellow)" },
-              { emoji: "🐱", label: "Coque Chat", desc: "Silicone premium incluse", bg: "var(--retro-green)" },
-              { emoji: "🔌", label: "Câble USB-C", desc: "Charge rapide", bg: "var(--retro-purple)" },
-              { emoji: "📖", label: "Guide démarrage", desc: "QR + setup parent", bg: "var(--retro-red)" },
+              { label: "Bobby Device", desc: "Le compagnon IA", bg: "var(--retro-yellow)", img: "/images/bobby-device.png" },
+              { label: "Coque Chat", desc: "Silicone premium incluse", bg: "var(--retro-green)", img: "/images/cases/chat.png" },
+              { label: "Câble USB-C", desc: "Charge rapide", bg: "var(--retro-purple)", img: "/images/usbc-cable.png" },
+              { label: "Guide démarrage", desc: "QR + setup parent", bg: "var(--retro-red)", img: null },
             ].map(item => (
               <div key={item.label} className="border-3 border-black p-4 text-center" style={{ borderWidth: "3px", backgroundColor: item.bg }}>
-                <span className="text-3xl block mb-2">{item.emoji}</span>
+                {item.img ? (
+                  <img src={item.img} alt={item.label} className="w-20 h-20 mx-auto object-contain mb-2" />
+                ) : (
+                  <span className="text-3xl block mb-2">📖</span>
+                )}
                 <p className="text-xs font-black text-black">{item.label}</p>
                 <p className="text-[9px] font-black text-black/60">{item.desc}</p>
               </div>
@@ -182,7 +184,7 @@ export default function Precommande() {
             <h2 className="text-2xl md:text-3xl font-black text-black">🎨 Coques silicone Bobby</h2>
             <p className="text-xs font-black text-black/60 mt-1">Interchangeables, lavables, certifiées CE — silicone alimentaire</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {SILICONE_CASES.map(c => (
               <RetroSection key={c.name} bg="#fff" className="relative hover:translate-y-[-2px] transition-transform">
                 {c.included && (
@@ -191,9 +193,9 @@ export default function Precommande() {
                   </div>
                 )}
                 <div className="text-center space-y-3">
-                  <div className="w-20 h-20 mx-auto rounded-2xl border-3 border-black flex items-center justify-center" 
-                    style={{ borderWidth: "3px", backgroundColor: c.color }}>
-                    <span className="text-4xl">{c.emoji}</span>
+                  <div className="mx-auto rounded-2xl border-3 border-black p-3 flex items-center justify-center" 
+                    style={{ borderWidth: "3px", backgroundColor: c.color + "30" }}>
+                    <img src={c.img} alt={c.name} className="w-28 h-28 object-contain" />
                   </div>
                   <div>
                     <p className="text-sm font-black text-black">{c.name}</p>
