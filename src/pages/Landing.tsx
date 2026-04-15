@@ -408,20 +408,22 @@ const Landing = () => {
                 </div>
               ))}
             </div>
-            <div className="max-w-2xl mx-auto mt-6">
-              <video
-                ref={(el) => { if (el) el.playbackRate = 0.75; }}
-                src="/videos/bobby-tv.mp4"
-                controls
-                playsInline
-                preload="metadata"
-                className="w-full border-4 border-white"
-                style={{ boxShadow: "6px 6px 0 rgba(255,255,255,0.2)" }}
-                poster=""
-              />
             </div>
           </div>
         </RetroSection>
+
+        {/* ── VIDEO TV PLEINE LARGEUR ── */}
+        <div className="mt-8">
+          <video
+            ref={(el) => { if (el) el.playbackRate = 0.75; }}
+            src="/videos/bobby-tv.mp4"
+            controls
+            playsInline
+            preload="auto"
+            className="w-full border-4 border-black"
+            style={{ boxShadow: "6px 6px 0 rgba(0,0,0,0.2)" }}
+          />
+        </div>
       </div>
 
       {/* ── FOOTER ── */}
