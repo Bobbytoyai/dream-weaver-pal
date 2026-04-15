@@ -511,15 +511,20 @@ export function useBobbyVoiceCore({
 
       eventBus.emit({ type: "VOICE_INPUT", transcript: trimmedText });
 
-      // Parallelize session + auth
-      const [, , authResult] = await Promise.all([
-        ensureSession(),
-        addMessage("user", trimmedText),
-        import("@/integrations/supabase/client").then(m => m.supabase.auth.getUser()),
+      // Launch brain reply + session/auth in parallel for max speed
+      const authPromise = import("@/integrations/supabase/client").then(m => m.supabase.auth.getUser());
+      const sessionPromise = ensureSession();
+      const messagePromise = addMessage("user", trimmedText);
+
+      // Don't wait for session/auth before starting AI — fire brain immediately
+      const [authResult, reply] = await Promise.all([
+        authPromise,
+        buildBobbyReply({ childName, childAge, userText: trimmedText, parentSettings, userId: undefined, sessionId: sessionIdRef.current }),
       ]);
-      const currentUser = authResult.data?.user;
-      const reply = await buildBobbyReply({ childName, childAge, userText: trimmedText, parentSettings, userId: currentUser?.id, sessionId: sessionIdRef.current });
-      await addMessage("assistant", reply.text, reply.emotion);
+      // Background: save session data (don't block speech)
+      sessionPromise.catch(console.warn);
+      messagePromise.catch(console.warn);
+      addMessage("assistant", reply.text, reply.emotion).catch(console.warn);
       await speakReply(reply);
 
       // If this reply includes a music track, play it after TTS
