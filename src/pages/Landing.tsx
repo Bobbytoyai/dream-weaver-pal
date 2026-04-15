@@ -100,7 +100,7 @@ const Landing = () => {
             <a href="#pricing" className="hover:opacity-70 transition-opacity">Prix</a>
             <a href="/technologie" className="hover:opacity-70 transition-opacity">Technologie</a>
           </div>
-          <RetroButton onClick={() => navigate("/app")} size="sm">Essayer Bobby</RetroButton>
+          <RetroButton onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })} size="sm"><span className="flex items-center gap-1.5"><ShoppingCart className="w-4 h-4" /> Précommander</span></RetroButton>
         </div>
       </nav>
 
