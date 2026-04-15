@@ -391,6 +391,31 @@ const Landing = () => {
             ))}
           </div>
         </div>
+
+        {/* ── VU À LA TV ── */}
+        <RetroSection bg="#000" className="mt-8">
+          <div className="text-center space-y-6">
+            <h2 className="text-2xl font-black text-white uppercase tracking-wide">📺 On nous a vu sur</h2>
+            <div className="flex items-center justify-center gap-6 md:gap-10 flex-wrap">
+              {["TF1", "M6", "W9", "DISNEY CHANNEL"].map((channel) => (
+                <div key={channel} className="px-5 py-3 border-3 border-white bg-white/10 text-white font-black text-lg md:text-xl uppercase tracking-wider" style={{ borderWidth: "3px" }}>
+                  {channel}
+                </div>
+              ))}
+            </div>
+            <div className="max-w-2xl mx-auto mt-6">
+              <video
+                src="/videos/bobby-tv.mp4"
+                controls
+                playsInline
+                preload="metadata"
+                className="w-full border-4 border-white"
+                style={{ boxShadow: "6px 6px 0 rgba(255,255,255,0.2)" }}
+                poster=""
+              />
+            </div>
+          </div>
+        </RetroSection>
       </div>
 
       {/* ── FOOTER ── */}
