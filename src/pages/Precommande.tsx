@@ -38,12 +38,10 @@ const RetroTag = ({ children, bg = "var(--retro-yellow)" }: { children: React.Re
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const SILICONE_CASES = [
-  { name: "Bobby Chat", emoji: "🐱", color: "#D4A574", desc: "Coque chat en silicone premium", salePrice: "14.99€", prodCost: "2.80€", included: true },
-  { name: "Bobby Panda", emoji: "🐼", color: "#2D2D2D", desc: "Coque panda noir & blanc", salePrice: "14.99€", prodCost: "2.80€", included: false },
-  { name: "Bobby Lapin", emoji: "🐰", color: "#F5C6D0", desc: "Coque lapin rose pastel", salePrice: "14.99€", prodCost: "2.80€", included: false },
-  { name: "Bobby Dino", emoji: "🦕", color: "#7BC47F", desc: "Coque dinosaure vert aventure", salePrice: "14.99€", prodCost: "2.80€", included: false },
-  { name: "Bobby Renard", emoji: "🦊", color: "#E8803A", desc: "Coque renard orange malicieux", salePrice: "14.99€", prodCost: "2.80€", included: false },
-  { name: "Bobby Licorne", emoji: "🦄", color: "#C8A2E0", desc: "Coque licorne violet magique", salePrice: "14.99€", prodCost: "2.80€", included: false },
+  { name: "Bobby Chat", emoji: "🐱", color: "#D4A574", desc: "Coque chat en silicone premium", salePrice: "14.99€", prodCost: "2.80€", included: true, img: "/images/cases/chat.png" },
+  { name: "Bobby Panda", emoji: "🐼", color: "#2D2D2D", desc: "Coque panda noir & blanc", salePrice: "14.99€", prodCost: "2.80€", included: false, img: "/images/cases/panda.png" },
+  { name: "Bobby Ourson", emoji: "🧸", color: "#C8A06A", desc: "Coque ourson miel chaleureux", salePrice: "14.99€", prodCost: "2.80€", included: false, img: "/images/cases/ourson.png" },
+  { name: "Bobby Lapin", emoji: "🐰", color: "#E0E0E0", desc: "Coque lapin blanc doux", salePrice: "14.99€", prodCost: "2.80€", included: false, img: "/images/cases/lapin.png" },
 ];
 
 const DEVICE_COMPONENTS = [
