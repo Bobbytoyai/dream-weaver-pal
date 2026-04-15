@@ -365,6 +365,7 @@ const Landing = () => {
               <RetroButton variant="primary" size="lg">
                 <span className="flex items-center gap-2"><ShoppingCart className="w-5 h-5" /> Précommander — 89€</span>
               </RetroButton>
+            </div>
             <p className="text-[10px] font-black text-black">🔒 Paiement sécurisé • Livraison gratuite • Satisfait ou remboursé 30 jours</p>
           </div>
         </RetroSection>
