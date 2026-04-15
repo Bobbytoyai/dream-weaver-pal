@@ -390,36 +390,35 @@ const Landing = () => {
           </div>
         </div>
 
-        {/* ── VU À LA TV ── */}
-        <RetroSection bg="#000" className="mt-8">
-          <div className="text-center space-y-6">
-            <h2 className="text-2xl font-black text-white uppercase tracking-wide">📺 On nous a vu sur</h2>
-            <div className="flex items-center justify-center gap-8 md:gap-12 flex-wrap">
+
+        {/* ── VIDEO TV + TEXTE ── */}
+        <div className="mt-8 flex flex-col md:flex-row items-center gap-6">
+          <div className="md:w-1/2">
+            <video
+              src="/videos/bobby-tv.mp4"
+              controls
+              playsInline
+              preload="auto"
+              className="w-full border-4 border-black rounded-lg"
+              style={{ boxShadow: "6px 6px 0 rgba(0,0,0,0.2)" }}
+            />
+          </div>
+          <div className="md:w-1/2 text-center md:text-left space-y-4">
+            <h2 className="text-3xl md:text-4xl font-black text-black uppercase">📺 Ils nous ont vu</h2>
+            <p className="text-lg font-black text-black/70">Bobby a été présenté sur les plus grandes chaînes françaises. Découvrez le reportage complet !</p>
+            <div className="flex items-center justify-center md:justify-start gap-4 flex-wrap">
               {[
                 { name: "TF1", src: "/images/logos/tf1.png" },
                 { name: "M6", src: "/images/logos/m6.png" },
                 { name: "W9", src: "/images/logos/w9.png" },
                 { name: "Disney Channel", src: "/images/logos/disney-channel.png" },
               ].map((channel) => (
-                <div key={channel.name} className="px-4 py-3 bg-white rounded-lg flex items-center justify-center" style={{ minWidth: "100px" }}>
-                  <img src={channel.src} alt={channel.name} className="h-12 md:h-16 w-auto object-contain" loading="lazy" />
+                <div key={channel.name} className="px-3 py-2 bg-white rounded-lg border-2 border-black">
+                  <img src={channel.src} alt={channel.name} className="h-8 md:h-10 w-auto object-contain" loading="lazy" />
                 </div>
               ))}
             </div>
           </div>
-        </RetroSection>
-
-        {/* ── VIDEO TV PLEINE LARGEUR ── */}
-        <div className="mt-8">
-          <video
-            ref={undefined}
-            src="/videos/bobby-tv.mp4"
-            controls
-            playsInline
-            preload="auto"
-            className="w-full border-4 border-black"
-            style={{ boxShadow: "6px 6px 0 rgba(0,0,0,0.2)" }}
-          />
         </div>
       </div>
 
