@@ -113,7 +113,7 @@ export default function Precommande() {
             </span>
           </div>
         </div>
-      )}
+      </div>
 
       <div className="max-w-6xl mx-auto px-4 py-10 space-y-10">
 
