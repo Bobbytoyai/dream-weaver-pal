@@ -653,6 +653,42 @@ export type Database = {
           },
         ]
       }
+      preorders: {
+        Row: {
+          created_at: string
+          email: string
+          extra_cases: string[] | null
+          first_name: string
+          id: string
+          notes: string | null
+          phone: string | null
+          quantity: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          extra_cases?: string[] | null
+          first_name?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          quantity?: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          extra_cases?: string[] | null
+          first_name?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          quantity?: number
+          status?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           bobby_code: string | null
