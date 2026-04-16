@@ -31,7 +31,7 @@ export default function ChoiceScreen({ setStep, onBack }: Props) {
         </div>
 
         {/* Pricing plans */}
-        <div className="grid grid-cols-3 gap-2 pt-1">
+        <div className="grid grid-cols-2 gap-3 pt-1">
           {plans.map((plan) => (
             <button
               key={plan.name}
