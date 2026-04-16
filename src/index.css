@@ -6,6 +6,11 @@
 
 @layer base {
   :root {
+    --retro-blue: #a3d5ff;
+    --retro-red: #ffb3b3;
+    --retro-green: #a8e6c1;
+    --retro-purple: #d4b5f0;
+    --retro-yellow: #ffe4a3;
     --background: 220 20% 8%;
     --foreground: 200 20% 90%;
 
