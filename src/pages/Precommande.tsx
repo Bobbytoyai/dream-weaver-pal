@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShoppingCart, ArrowLeft, X, CheckCircle, Loader2 } from "lucide-react";
+import { ShoppingCart, ArrowLeft, X, CheckCircle, Loader2, Users } from "lucide-react";
 import RetroMobileNav from "@/components/RetroMobileNav";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
