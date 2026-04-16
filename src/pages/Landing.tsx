@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShoppingCart, Sparkles, Shield, Brain, Mic, CloudLightning, Star, ChevronDown, BookOpen, Gamepad2 } from "lucide-react";
+import { ShoppingCart, Sparkles, Shield, Brain, Mic, CloudLightning, Star, ChevronDown, BookOpen, Gamepad2, Users } from "lucide-react";
 import RetroMobileNav from "@/components/RetroMobileNav";
+import { supabase } from "@/integrations/supabase/client";
 import bobbyHero from "@/assets/bobby-hero.png";
 
 const RetroSection = ({ children, bg = "var(--retro-blue)", className = "" }: { children: React.ReactNode; bg?: string; className?: string }) => (
@@ -67,6 +68,13 @@ const TESTIMONIALS = [
 const Landing = () => {
   const navigate = useNavigate();
   const [scrollY, setScrollY] = useState(0);
+  const [preorderCount, setPreorderCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    supabase.rpc("get_preorder_count").then(({ data }) => {
+      if (typeof data === "number") setPreorderCount(data);
+    });
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -115,10 +123,17 @@ const Landing = () => {
               Bobby est un compagnon IA qui écoute, comprend et s'adapte à chaque enfant. 
               Histoires, jeux, apprentissage — le tout dans un cadre 100% sécurisé.
             </p>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 items-center">
               <RetroButton onClick={() => navigate("/precommande")} variant="primary" size="lg">
                 <span className="flex items-center gap-2"><ShoppingCart className="w-5 h-5" /> Précommander</span>
               </RetroButton>
+              {preorderCount !== null && preorderCount > 0 && (
+                <div className="flex items-center gap-2 border-3 border-black px-4 py-2"
+                  style={{ borderWidth: "3px", backgroundColor: "var(--retro-green)", boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
+                  <Users className="w-4 h-4 text-black" />
+                  <span className="text-xs font-black text-black">{preorderCount} / 10 000 réservés</span>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-3 pt-2 flex-wrap">
               <a href="https://apps.apple.com" target="_blank" rel="noopener noreferrer">
