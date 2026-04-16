@@ -110,7 +110,7 @@ export default function Precommande() {
             style={{ backgroundColor: "var(--retro-green)", boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}>
             <Users className="w-5 h-5 text-black" />
             <span className="font-black text-black text-sm md:text-base">
-              🎉 {preorderCount} Bobby déjà réservé{preorderCount > 1 ? "s" : ""} !
+              🎉 {preorderCount ?? 216} Bobby déjà réservé{(preorderCount ?? 216) > 1 ? "s" : ""} sur 10 000 — Édition limitée !
             </span>
           </div>
         </div>
