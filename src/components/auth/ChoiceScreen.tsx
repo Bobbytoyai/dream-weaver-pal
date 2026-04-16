@@ -9,16 +9,12 @@ interface Props {
 
 const plans = [
   {
-    name: "Gratuit", price: "0€", period: "/mois", emoji: "🆓",
+    name: "Gratuit", price: "0€", period: "", emoji: "🆓",
     storage: "500 Mo", current: true,
   },
   {
-    name: "Bobby+", price: "4,99€", period: "/mois", emoji: "⭐",
-    storage: "5 Go", popular: true,
-  },
-  {
-    name: "Bobby Pro", price: "9,99€", period: "/mois", emoji: "🚀",
-    storage: "20 Go",
+    name: "Cloud+", price: "9,99€", period: "/mois", emoji: "☁️",
+    storage: "20 Go", popular: true,
   },
 ];
 
