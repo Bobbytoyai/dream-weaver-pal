@@ -68,6 +68,13 @@ const TESTIMONIALS = [
 const Landing = () => {
   const navigate = useNavigate();
   const [scrollY, setScrollY] = useState(0);
+  const [preorderCount, setPreorderCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    supabase.rpc("get_preorder_count").then(({ data }) => {
+      if (typeof data === "number") setPreorderCount(data);
+    });
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
