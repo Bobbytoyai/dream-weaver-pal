@@ -55,10 +55,16 @@ const CloudTab = ({
       cta: "Actuel", disabled: true,
     },
     {
-      name: "Cloud+", price: "9,99€", period: "/mois", emoji: "☁️",
-      storage: "20 Go",
-      features: ["Tout le gratuit +", "Mémoire étendue", "Base de connaissances enrichie", "Synchronisation multi-appareils", "MemoryGraph™ Cloud"],
+      name: "Cloud 5", price: "4,90€", period: "/mois", emoji: "☁️",
+      storage: "5 Go",
+      features: ["Tout le gratuit +", "Mémoire étendue", "Synchronisation multi-appareils"],
       cta: "Bientôt disponible", disabled: true, popular: true,
+    },
+    {
+      name: "Cloud 20", price: "9,90€", period: "/mois", emoji: "🚀",
+      storage: "20 Go",
+      features: ["Tout Cloud 5 +", "Base de connaissances enrichie", "MemoryGraph™ Cloud", "Historique illimité"],
+      cta: "Bientôt disponible", disabled: true,
     },
   ];
 

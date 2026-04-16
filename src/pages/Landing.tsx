@@ -54,9 +54,9 @@ const STORE_PACKS = [
 ];
 
 const CLOUD_PLANS = [
-  { name: "Découverte", price: "0€", period: "", features: ["Fonctions de base gratuites"], bg: "var(--retro-green)", popular: false },
-  { name: "Famille", price: "4,99€", period: "/mois", features: ["Conversation illimitée", "Bobby Store complet", "Dashboard parent"], bg: "var(--retro-blue)", popular: true },
-  { name: "Pro", price: "9,99€", period: "/mois", features: ["Tout Famille", "Multi-enfants", "Analyse avancée"], bg: "var(--retro-purple)", popular: false },
+  { name: "Gratuit", price: "0€", period: "", features: ["500 Mo de stockage Cloud", "Toutes les fonctions Bobby", "Bobby Store complet", "Dashboard parent"], bg: "var(--retro-green)", popular: false },
+  { name: "Cloud 5", price: "4,90€", period: "/mois", features: ["5 Go de stockage Cloud", "Mémoire étendue", "Synchronisation multi-appareils"], bg: "var(--retro-blue)", popular: true },
+  { name: "Cloud 20", price: "9,90€", period: "/mois", features: ["20 Go de stockage Cloud", "Base de connaissances enrichie", "MemoryGraph™ Cloud"], bg: "var(--retro-purple)", popular: false },
 ];
 
 const TESTIMONIALS = [

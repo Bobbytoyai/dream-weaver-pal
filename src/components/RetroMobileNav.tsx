@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 
@@ -30,8 +31,8 @@ export default function RetroMobileNav() {
         <Menu className="w-5 h-5 text-black" />
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-[998] flex">
+      {open && createPortal(
+        <div className="fixed inset-0 z-[9999] flex">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
           <div
             className="relative z-10 w-[280px] max-w-[85vw] h-full overflow-y-auto border-r-4 border-black animate-in slide-in-from-left duration-200"
@@ -72,7 +73,8 @@ export default function RetroMobileNav() {
               <p className="text-[9px] font-black text-black/40 text-center">© 2026 Bobby</p>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
