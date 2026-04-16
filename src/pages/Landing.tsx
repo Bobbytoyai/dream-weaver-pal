@@ -124,7 +124,7 @@ const Landing = () => {
               Histoires, jeux, apprentissage — le tout dans un cadre 100% sécurisé.
             </p>
             <div className="flex flex-wrap gap-3 items-center">
-              <RetroButton onClick={() => navigate("/precommande")} variant="primary" size="lg">
+              <RetroButton onClick={() => navigate("/precommande")} variant="primary" size="lg" className="hidden md:inline-flex">
                 <span className="flex items-center gap-2"><ShoppingCart className="w-5 h-5" /> Précommander</span>
               </RetroButton>
               {preorderCount !== null && preorderCount > 0 && (
