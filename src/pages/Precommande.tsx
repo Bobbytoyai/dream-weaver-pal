@@ -103,6 +103,19 @@ export default function Precommande() {
         </div>
       </nav>
 
+      {/* ── COUNTER BANNER ── */}
+      {preorderCount !== null && preorderCount > 0 && (
+        <div className="max-w-6xl mx-auto px-4 pt-6">
+          <div className="border-4 border-black px-5 py-3 flex items-center justify-center gap-3"
+            style={{ backgroundColor: "var(--retro-green)", boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}>
+            <Users className="w-5 h-5 text-black" />
+            <span className="font-black text-black text-sm md:text-base">
+              🎉 {preorderCount} Bobby déjà réservé{preorderCount > 1 ? "s" : ""} !
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-6xl mx-auto px-4 py-10 space-y-10">
 
         {/* ── HERO ── */}
