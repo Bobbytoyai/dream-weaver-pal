@@ -6,6 +6,8 @@ const RetroTag = ({ children, bg = "var(--retro-yellow)" }: { children: React.Re
   <span className="inline-block px-3 py-1 text-[10px] font-black uppercase border-2 border-black text-black" style={{ backgroundColor: bg }}>{children}</span>
 );
 
+const COLORS = ["var(--retro-blue)", "var(--retro-green)", "var(--retro-yellow)", "var(--retro-purple)", "var(--retro-red)"];
+
 const FAQS = [
   { q: "À partir de quel âge Bobby est-il adapté ?", a: "Bobby est conçu pour les enfants de 3 à 12 ans. L'IA adapte automatiquement son langage, sa complexité et ses activités en fonction de l'âge configuré par les parents." },
   { q: "Bobby fonctionne-t-il sans internet ?", a: "Bobby dispose d'un mode offline avec des jeux (quiz, devinettes) et des réponses pré-enregistrées. La connexion internet permet d'accéder à des conversations plus riches et au Bobby Store." },
@@ -19,16 +21,16 @@ const FAQS = [
   { q: "Bobby parle-t-il d'autres langues ?", a: "Bobby est actuellement optimisé pour le français. Le support multilingue est prévu dans les futures mises à jour." },
 ];
 
-function FAQItem({ q, a }: { q: string; a: string }) {
+function FAQItem({ q, a, color }: { q: string; a: string; color: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border-4 border-black" style={{ boxShadow: "4px 4px 0px rgba(0,0,0,0.2)" }}>
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between p-4 bg-white text-left hover:bg-gray-50 transition-colors">
+    <div className="border-4 border-black" style={{ backgroundColor: color, boxShadow: "4px 4px 0px rgba(0,0,0,0.2)" }}>
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between p-4 text-left hover:opacity-90 transition-opacity">
         <span className="text-sm font-black text-black pr-4">{q}</span>
         <ChevronDown className={`w-5 h-5 text-black flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="p-4 border-t-3 border-black" style={{ borderTopWidth: "3px", backgroundColor: "var(--retro-blue)" }}>
+        <div className="p-4 border-t-3 border-black bg-white/50" style={{ borderTopWidth: "3px" }}>
           <p className="text-xs font-black text-black leading-relaxed">{a}</p>
         </div>
       )}
@@ -54,7 +56,7 @@ const FAQ = () => {
           <p className="text-sm font-black text-black">Tout ce que les parents veulent savoir sur Bobby.</p>
         </div>
         <div className="space-y-3">
-          {FAQS.map((faq, i) => <FAQItem key={i} {...faq} />)}
+          {FAQS.map((faq, i) => <FAQItem key={i} {...faq} color={COLORS[i % COLORS.length]} />)}
         </div>
       </div>
       <footer className="border-t-4 border-black bg-black text-white py-6 mt-12">
