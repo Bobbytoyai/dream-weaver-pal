@@ -128,10 +128,15 @@ const Landing = () => {
                 <span className="flex items-center gap-2"><ShoppingCart className="w-5 h-5" /> Précommander</span>
               </RetroButton>
               {preorderCount !== null && preorderCount > 0 && (
-                <div className="flex items-center gap-2 border-3 border-black px-4 py-2"
-                  style={{ borderWidth: "3px", backgroundColor: "var(--retro-green)", boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
-                  <Users className="w-4 h-4 text-black" />
-                  <span className="text-xs font-black text-black">{preorderCount} / 10 000 réservés</span>
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center gap-2 border-3 border-black px-4 py-2"
+                    style={{ borderWidth: "3px", backgroundColor: "var(--retro-green)", boxShadow: "3px 3px 0px rgba(0,0,0,0.2)" }}>
+                    <Users className="w-4 h-4 text-black" />
+                    <span className="text-xs font-black text-black">{preorderCount} / 10 000 réservés</span>
+                  </div>
+                  <div className="w-full h-3 border-2 border-black bg-white" style={{ boxShadow: "2px 2px 0px rgba(0,0,0,0.15)" }}>
+                    <div className="h-full transition-all duration-700" style={{ width: `${Math.min((preorderCount / 10000) * 100, 100)}%`, backgroundColor: "var(--retro-green)" }} />
+                  </div>
                 </div>
               )}
             </div>

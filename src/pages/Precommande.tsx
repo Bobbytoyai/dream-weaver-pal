@@ -104,7 +104,7 @@ export default function Precommande() {
       </nav>
 
       {/* ── COUNTER BANNER ── */}
-      <div className="max-w-6xl mx-auto px-4 pt-6">
+      <div className="max-w-6xl mx-auto px-4 pt-6 space-y-2">
         <div className="border-4 border-black px-5 py-3 flex items-center justify-center gap-3"
           style={{ backgroundColor: "var(--retro-green)", boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}>
           <Users className="w-5 h-5 text-black" />
@@ -112,6 +112,10 @@ export default function Precommande() {
             🎉 {preorderCount ?? 216} Bobby déjà réservé{(preorderCount ?? 216) > 1 ? "s" : ""} sur 10 000 — Édition limitée !
           </span>
         </div>
+        <div className="w-full h-4 border-3 border-black bg-white" style={{ borderWidth: "3px", boxShadow: "3px 3px 0px rgba(0,0,0,0.15)" }}>
+          <div className="h-full transition-all duration-700" style={{ width: `${Math.min(((preorderCount ?? 216) / 10000) * 100, 100)}%`, backgroundColor: "var(--retro-green)" }} />
+        </div>
+        <p className="text-center text-[10px] font-black text-black/50">{((preorderCount ?? 216) / 10000 * 100).toFixed(1)}% de l'édition limitée réservée</p>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-10 space-y-10">
