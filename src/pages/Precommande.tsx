@@ -43,6 +43,41 @@ const SILICONE_CASES = [
 export default function Precommande() {
   const navigate = useNavigate();
   const [lightbox, setLightbox] = useState<{ img: string; name: string } | null>(null);
+  const [formData, setFormData] = useState({ email: "", firstName: "", phone: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handlePreorder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.email || !formData.firstName) {
+      toast.error("Veuillez remplir votre prénom et email.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("preorders").insert({
+        email: formData.email.trim().toLowerCase(),
+        first_name: formData.firstName.trim(),
+        phone: formData.phone.trim(),
+      });
+      if (error) {
+        if (error.code === "23505") {
+          toast.error("Cet email est déjà enregistré pour la précommande !");
+        } else {
+          throw error;
+        }
+      } else {
+        setSubmitted(true);
+        toast.success("Précommande enregistrée ! 🎉");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Erreur lors de l'enregistrement. Réessayez.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#FDF6EC" }}>
       {/* NAV */}
