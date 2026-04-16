@@ -104,8 +104,7 @@ export default function Precommande() {
       </nav>
 
       {/* ── COUNTER BANNER ── */}
-      {preorderCount !== null && preorderCount > 0 && (
-        <div className="max-w-6xl mx-auto px-4 pt-6">
+      <div>
           <div className="border-4 border-black px-5 py-3 flex items-center justify-center gap-3"
             style={{ backgroundColor: "var(--retro-green)", boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}>
             <Users className="w-5 h-5 text-black" />
