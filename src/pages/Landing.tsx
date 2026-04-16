@@ -385,6 +385,7 @@ const Landing = () => {
               <h4 className="text-xs font-black uppercase mb-2 text-white">Produit</h4>
               <ul className="space-y-1.5 text-xs text-white font-black">
                 <li><a href="/fonctionnalites" className="hover:underline">Fonctionnalités</a></li>
+                <li><a href="/technologie" className="hover:underline">Technologie</a></li>
                 <li><a href="#pricing" className="hover:underline">Tarifs</a></li>
                 <li><a href="#store" className="hover:underline">Bobby Store</a></li>
               </ul>
