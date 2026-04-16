@@ -62,7 +62,7 @@ const SECTIONS = [
       <div className="space-y-2 text-xs font-black text-black leading-relaxed">
         <p><strong>Données collectées :</strong> Prénom de l'enfant, âge, transcriptions de conversation, émotions détectées, centres d'intérêt.</p>
         <p><strong>Finalité :</strong> Personnalisation de l'expérience, analyse pour le dashboard parent, amélioration du service.</p>
-        <p><strong>Durée de conservation :</strong> Les données sont conservées pendant la durée de l'abonnement et supprimées sous 30 jours après résiliation.</p>
+        <p><strong>Durée de conservation :</strong> Les données sont conservées pendant la durée d'utilisation du service et supprimées sous 30 jours après demande de suppression.</p>
         <p><strong>Droits :</strong> Accès, rectification, suppression, portabilité — contactez privacy@bobby-toy.shop.</p>
         <p><strong>Cookies :</strong> Bobby utilise uniquement des cookies techniques nécessaires au fonctionnement du service.</p>
       </div>
