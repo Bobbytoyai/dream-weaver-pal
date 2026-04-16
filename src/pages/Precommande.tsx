@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShoppingCart, ArrowLeft, X } from "lucide-react";
+import { ShoppingCart, ArrowLeft, X, CheckCircle, Loader2 } from "lucide-react";
 import RetroMobileNav from "@/components/RetroMobileNav";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const RetroSection = ({ children, bg = "#fff", className = "" }: { children: React.ReactNode; bg?: string; className?: string }) => (
   <section className={`border-4 border-black p-5 md:p-8 ${className}`}
