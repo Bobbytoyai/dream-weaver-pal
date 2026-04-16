@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShoppingCart, Sparkles, Shield, Brain, Mic, CloudLightning, Star, ChevronDown, BookOpen, Gamepad2 } from "lucide-react";
+import { ShoppingCart, Sparkles, Shield, Brain, Mic, CloudLightning, Star, ChevronDown, BookOpen, Gamepad2, Users } from "lucide-react";
 import RetroMobileNav from "@/components/RetroMobileNav";
+import { supabase } from "@/integrations/supabase/client";
 import bobbyHero from "@/assets/bobby-hero.png";
 
 const RetroSection = ({ children, bg = "var(--retro-blue)", className = "" }: { children: React.ReactNode; bg?: string; className?: string }) => (
