@@ -1,12 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShoppingCart, Sparkles, Shield, Brain, Mic, CloudLightning, Star, ChevronDown, Play, MessageCircle, BookOpen, Gamepad2, Music, Heart } from "lucide-react";
+import { ShoppingCart, Sparkles, Shield, Brain, Mic, CloudLightning, Star, ChevronDown, BookOpen, Gamepad2 } from "lucide-react";
 import RetroMobileNav from "@/components/RetroMobileNav";
 import bobbyHero from "@/assets/bobby-hero.png";
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// RETRO UI PRIMITIVES (same design system as Parent Mode)
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const RetroSection = ({ children, bg = "var(--retro-blue)", className = "" }: { children: React.ReactNode; bg?: string; className?: string }) => (
   <section className={`border-4 border-black p-5 md:p-8 ${className}`}
@@ -40,13 +36,9 @@ const RetroTag = ({ children, bg = "var(--retro-yellow)" }: { children: React.Re
   </span>
 );
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// FEATURE DATA
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
 const FEATURES = [
-  { icon: Brain, title: "IA Conversationnelle", desc: "Bobby comprend, s'adapte et répond naturellement grâce à OSAI NeuralCore™.", bg: "var(--retro-purple)" },
-  { icon: Mic, title: "Voix Naturelle", desc: "Synthèse vocale OSAI VoiceLab™ avec voix enfant expressive et chaleureuse.", bg: "var(--retro-green)" },
+  { icon: Brain, title: "IA Conversationnelle", desc: "Bobby comprend, s'adapte et répond naturellement à votre enfant.", bg: "var(--retro-purple)" },
+  { icon: Mic, title: "Voix Naturelle", desc: "Une voix d'enfant chaleureuse et expressive qui s'adapte aux émotions.", bg: "var(--retro-green)" },
   { icon: Shield, title: "100% Sécurisé", desc: "Filtrage strict, sujets bloqués, alertes parent en temps réel.", bg: "var(--retro-red)" },
   { icon: CloudLightning, title: "Bobby Cloud", desc: "Mémoire persistante, sync multi-appareils, tableau de bord parent.", bg: "var(--retro-blue)" },
   { icon: BookOpen, title: "Histoires & Contes", desc: "Bibliothèque d'histoires interactives adaptées à l'âge de l'enfant.", bg: "var(--retro-yellow)" },
@@ -54,16 +46,16 @@ const FEATURES = [
 ];
 
 const STORE_PACKS = [
-  { emoji: "🧠", name: "Pack Science", desc: "200+ réponses sur l'espace, les animaux, le corps humain", bg: "var(--retro-blue)" },
-  { emoji: "📖", name: "Pack Histoires", desc: "50 contes interactifs avec choix multiples", bg: "var(--retro-green)" },
+  { emoji: "🧠", name: "Pack Science", desc: "Réponses sur l'espace, les animaux, le corps humain", bg: "var(--retro-blue)" },
+  { emoji: "📖", name: "Pack Histoires", desc: "Contes interactifs avec choix multiples", bg: "var(--retro-green)" },
   { emoji: "🎵", name: "Pack Musique", desc: "Comptines, berceuses et chansons éducatives", bg: "var(--retro-yellow)" },
   { emoji: "🎮", name: "Pack Jeux", desc: "Quiz animaux, devinettes, vrai/faux éducatif", bg: "var(--retro-purple)" },
 ];
 
 const CLOUD_PLANS = [
-  { name: "Découverte", price: "0€", period: "", features: ["500 Mo de stockage cloud"], bg: "var(--retro-green)", popular: false },
-  { name: "Famille", price: "4,99€", period: "/mois", features: ["5 Go de stockage cloud"], bg: "var(--retro-blue)", popular: true },
-  { name: "Pro", price: "9,99€", period: "/mois", features: ["20 Go de stockage cloud"], bg: "var(--retro-purple)", popular: false },
+  { name: "Découverte", price: "0€", period: "", features: ["Fonctions de base gratuites"], bg: "var(--retro-green)", popular: false },
+  { name: "Famille", price: "4,99€", period: "/mois", features: ["Conversation illimitée", "Bobby Store complet", "Dashboard parent"], bg: "var(--retro-blue)", popular: true },
+  { name: "Pro", price: "9,99€", period: "/mois", features: ["Tout Famille", "Multi-enfants", "Analyse avancée"], bg: "var(--retro-purple)", popular: false },
 ];
 
 const TESTIMONIALS = [
@@ -71,10 +63,6 @@ const TESTIMONIALS = [
   { name: "Thomas P.", text: "Le dashboard parent est incroyable. On voit exactement les émotions de notre fille.", stars: 5 },
   { name: "Sophie K.", text: "Enfin un jouet intelligent vraiment sécurisé. Bobby ne dit jamais rien d'inapproprié.", stars: 5 },
 ];
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// LANDING PAGE COMPONENT
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -100,7 +88,6 @@ const Landing = () => {
             <a href="#features" className="hover:opacity-70 transition-opacity">Fonctions</a>
             <a href="#store" className="hover:opacity-70 transition-opacity">Store</a>
             <a href="#pricing" className="hover:opacity-70 transition-opacity">Prix</a>
-            <a href="/technologie" className="hover:opacity-70 transition-opacity">Technologie</a>
           </div>
           <RetroButton onClick={() => navigate("/precommande")} size="sm"><span className="flex items-center gap-1.5"><ShoppingCart className="w-4 h-4" /> Précommander</span></RetroButton>
         </div>
@@ -160,9 +147,7 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* ── WHAT IS BOBBY ── */}
       <div className="max-w-6xl mx-auto px-4 py-12 space-y-12">
-
 
         {/* ── FEATURES ── */}
         <div id="features" className="space-y-4">
@@ -188,7 +173,7 @@ const Landing = () => {
             {[
               { step: "1", emoji: "📦", title: "Recevez Bobby", desc: "Un jouet physique ou l'app web. Bobby est prêt en 30 secondes.", bg: "var(--retro-blue)" },
               { step: "2", emoji: "🗣️", title: "Parlez-lui", desc: "Touchez Bobby et parlez naturellement. Il comprend le français des enfants.", bg: "var(--retro-green)" },
-              { step: "3", emoji: "📊", title: "Suivez tout", desc: "Dashboard parent avec émotions, sujets, alertes et analyse IA des sessions.", bg: "var(--retro-purple)" },
+              { step: "3", emoji: "📊", title: "Suivez tout", desc: "Dashboard parent avec émotions, sujets, alertes et analyse des sessions.", bg: "var(--retro-purple)" },
             ].map(s => (
               <div key={s.step} className="border-3 border-black p-5 text-center relative" style={{ borderWidth: "3px", backgroundColor: s.bg }}>
                 <div className="absolute -top-4 -left-2 w-8 h-8 bg-black text-white flex items-center justify-center font-black text-sm">{s.step}</div>
@@ -222,7 +207,6 @@ const Landing = () => {
           </div>
         </div>
 
-
         {/* ── PARENT DASHBOARD ── */}
         <RetroSection bg="var(--retro-red)">
           <div className="grid md:grid-cols-2 gap-6 items-center">
@@ -234,10 +218,10 @@ const Landing = () => {
               </p>
               <ul className="space-y-2">
                 {[
-                  "Analyse émotionnelle IA par session",
+                  "Analyse émotionnelle par session",
                   "Transcription complète des conversations",
                   "Alertes automatiques sur sujets sensibles",
-                  "Graphiques d'évolution sur 7 jours",
+                  "Graphiques d'évolution",
                   "Contrôle total : modes Nuit, École, Calme",
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-2 text-xs font-black text-black">
@@ -274,7 +258,7 @@ const Landing = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
               {[
                 { emoji: "🛡️", label: "Filtrage IA", desc: "Contenu inapproprié bloqué" },
-                { emoji: "🔐", label: "Chiffrement", desc: "Données cryptées E2E" },
+                { emoji: "🔐", label: "Chiffrement", desc: "Données cryptées" },
                 { emoji: "👨‍👩‍👧", label: "Contrôle parent", desc: "PIN + alertes temps réel" },
                 { emoji: "🇫🇷", label: "RGPD", desc: "Données en Europe" },
               ].map(s => (
@@ -322,7 +306,6 @@ const Landing = () => {
           </div>
         </div>
 
-
         {/* ── TESTIMONIALS ── */}
         <div className="space-y-4">
           <h2 className="text-2xl font-black text-black text-center">💬 Ce que disent les parents</h2>
@@ -337,8 +320,7 @@ const Landing = () => {
           </div>
         </div>
 
-
-        {/* ── VIDEO TV + TEXTE ── */}
+        {/* ── VIDEO TV ── */}
         <div className="mt-8 flex flex-col md:flex-row items-center gap-6">
           <div className="md:w-1/2">
             <video
@@ -385,7 +367,6 @@ const Landing = () => {
                 <li><a href="/fonctionnalites" className="hover:underline">Fonctionnalités</a></li>
                 <li><a href="#pricing" className="hover:underline">Tarifs</a></li>
                 <li><a href="#store" className="hover:underline">Bobby Store</a></li>
-                <li><a href="/technologie" className="hover:underline">Technologie</a></li>
               </ul>
             </div>
             <div>
@@ -402,7 +383,6 @@ const Landing = () => {
                 <li><a href="mailto:hello@bobby-toy.shop" className="hover:underline">hello@bobby-toy.shop</a></li>
                 <li><a href="/contact" className="hover:underline">Support</a></li>
                 <li><a href="/contact" className="hover:underline">Presse</a></li>
-                <li><a href="/contact" className="hover:underline">Investisseurs</a></li>
               </ul>
             </div>
           </div>

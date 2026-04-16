@@ -5,7 +5,6 @@ import { Menu, X } from "lucide-react";
 const NAV_ITEMS = [
   { label: "Accueil", path: "/", emoji: "🏠", bg: "var(--retro-yellow)" },
   { label: "Précommande", path: "/precommande", emoji: "🛒", bg: "var(--retro-red)" },
-  { label: "Technologie", path: "/technologie", emoji: "🧠", bg: "var(--retro-blue)" },
   { label: "Fonctionnalités", path: "/fonctionnalites", emoji: "⚡", bg: "var(--retro-purple)" },
   { label: "Sécurité", path: "/securite", emoji: "🛡️", bg: "var(--retro-green)" },
   { label: "Bobby Store", path: "/store", emoji: "🏪", bg: "var(--retro-yellow)" },
@@ -22,7 +21,6 @@ export default function RetroMobileNav() {
 
   return (
     <>
-      {/* Hamburger button — visible only on mobile */}
       <button
         onClick={() => setOpen(true)}
         className="md:hidden flex items-center justify-center w-10 h-10 border-3 border-black bg-white hover:bg-gray-100 transition-colors"
@@ -32,18 +30,13 @@ export default function RetroMobileNav() {
         <Menu className="w-5 h-5 text-black" />
       </button>
 
-      {/* Overlay + Drawer */}
       {open && (
         <div className="fixed inset-0 z-[998] flex">
-          {/* Backdrop */}
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
-
-          {/* Panel */}
           <div
             className="relative z-10 w-[280px] max-w-[85vw] h-full overflow-y-auto border-r-4 border-black animate-in slide-in-from-left duration-200"
             style={{ backgroundColor: "#FDF6EC" }}
           >
-            {/* Header */}
             <div className="flex items-center justify-between p-4 border-b-4 border-black">
               <span className="font-black text-black text-lg tracking-tight">BOBBY</span>
               <button
@@ -54,7 +47,6 @@ export default function RetroMobileNav() {
               </button>
             </div>
 
-            {/* Links */}
             <nav className="p-3 space-y-2">
               {NAV_ITEMS.map((item) => {
                 const active = location.pathname === item.path;
@@ -76,9 +68,8 @@ export default function RetroMobileNav() {
               })}
             </nav>
 
-            {/* Footer */}
             <div className="p-4 mt-4 border-t-4 border-black">
-              <p className="text-[9px] font-black text-black/40 text-center">© 2026 OSAI × Silverlit</p>
+              <p className="text-[9px] font-black text-black/40 text-center">© 2026 Bobby</p>
             </div>
           </div>
         </div>
