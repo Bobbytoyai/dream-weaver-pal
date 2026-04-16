@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mail, Headphones, Newspaper, TrendingUp } from "lucide-react";
+import { ArrowLeft, Mail, Headphones, Newspaper } from "lucide-react";
 
 const RetroSection = ({ children, bg = "var(--retro-blue)", className = "" }: { children: React.ReactNode; bg?: string; className?: string }) => (
   <section className={`border-4 border-black p-5 md:p-8 ${className}`}
@@ -10,10 +10,9 @@ const RetroTag = ({ children, bg = "var(--retro-yellow)" }: { children: React.Re
 );
 
 const CONTACTS = [
-  { icon: Mail, title: "Contact Général", email: "hello@bobby-toy.shop", desc: "Pour toute question générale sur Bobby, nos produits ou nos services.", bg: "var(--retro-blue)" },
-  { icon: Headphones, title: "Support Technique", email: "support@bobby-toy.shop", desc: "Problème technique ? Notre équipe vous répond sous 24h. Incluez votre code Bobby dans le message.", bg: "var(--retro-green)" },
-  { icon: Newspaper, title: "Presse & Médias", email: "presse@bobby-toy.shop", desc: "Demandes presse, interviews, dossiers de presse et visuels HD disponibles sur demande.", bg: "var(--retro-yellow)" },
-  { icon: TrendingUp, title: "Investisseurs & Partenaires", email: "invest@bobby-toy.shop", desc: "Rejoignez l'aventure Bobby. Technologie OSAI, distribution Silverlit, marché mondial de l'EdTech.", bg: "var(--retro-purple)" },
+  { icon: Mail, title: "Contact Général", email: "hello@bobby-toy.shop", desc: "Pour toute question sur Bobby, nos produits ou nos services.", bg: "var(--retro-blue)" },
+  { icon: Headphones, title: "Support Technique", email: "support@bobby-toy.shop", desc: "Problème technique ? Notre équipe vous répond sous 24h.", bg: "var(--retro-green)" },
+  { icon: Newspaper, title: "Presse & Médias", email: "presse@bobby-toy.shop", desc: "Demandes presse, interviews et visuels HD disponibles sur demande.", bg: "var(--retro-yellow)" },
 ];
 
 const Contact = () => {
@@ -33,7 +32,7 @@ const Contact = () => {
           <h1 className="text-3xl md:text-5xl font-black text-black">📬 Nous contacter</h1>
           <p className="text-sm font-black text-black">Une question ? Nous sommes là pour vous aider.</p>
         </div>
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid md:grid-cols-3 gap-4">
           {CONTACTS.map((c, i) => (
             <RetroSection key={i} bg={c.bg}>
               <c.icon className="w-8 h-8 text-black mb-3" />
@@ -45,8 +44,8 @@ const Contact = () => {
         </div>
         <RetroSection bg="#fff">
           <div className="text-center space-y-3">
-            <h2 className="text-xl font-black text-black">🏢 OSAI (Orange Agency)</h2>
-            <p className="text-xs font-black text-black">Développeur exclusif de la technologie Bobby Brain pour Silverlit</p>
+            <h2 className="text-xl font-black text-black">🇫🇷 Conçu en France</h2>
+            <p className="text-xs font-black text-black">Bobby est conçu et développé en France avec passion.</p>
             <p className="text-xs font-black text-black">Paris, France</p>
           </div>
         </RetroSection>
