@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShoppingCart, ArrowLeft, X, CheckCircle, Loader2 } from "lucide-react";
+import { ShoppingCart, ArrowLeft, X, CheckCircle, Loader2, Users } from "lucide-react";
 import RetroMobileNav from "@/components/RetroMobileNav";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -46,6 +46,15 @@ export default function Precommande() {
   const [formData, setFormData] = useState({ email: "", firstName: "", phone: "" });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [preorderCount, setPreorderCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      const { data } = await supabase.rpc("get_preorder_count");
+      if (typeof data === "number") setPreorderCount(data);
+    };
+    fetchCount();
+  }, [submitted]);
 
   const handlePreorder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,6 +102,19 @@ export default function Precommande() {
           <RetroTag bg="var(--retro-red)">🚀 Q3 2026</RetroTag>
         </div>
       </nav>
+
+      {/* ── COUNTER BANNER ── */}
+      {preorderCount !== null && preorderCount > 0 && (
+        <div className="max-w-6xl mx-auto px-4 pt-6">
+          <div className="border-4 border-black px-5 py-3 flex items-center justify-center gap-3"
+            style={{ backgroundColor: "var(--retro-green)", boxShadow: "4px 4px 0px rgba(0,0,0,0.25)" }}>
+            <Users className="w-5 h-5 text-black" />
+            <span className="font-black text-black text-sm md:text-base">
+              🎉 {preorderCount} Bobby déjà réservé{preorderCount > 1 ? "s" : ""} !
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-6xl mx-auto px-4 py-10 space-y-10">
 

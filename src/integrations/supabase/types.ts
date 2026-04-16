@@ -978,6 +978,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_preorder_count: { Args: never; Returns: number }
       increment_kb_usage: { Args: { entry_id: string }; Returns: undefined }
       increment_music_play: { Args: { track_id: string }; Returns: undefined }
       update_bobby_child_name: {
