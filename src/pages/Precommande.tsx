@@ -46,6 +46,15 @@ export default function Precommande() {
   const [formData, setFormData] = useState({ email: "", firstName: "", phone: "" });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [preorderCount, setPreorderCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      const { data } = await supabase.rpc("get_preorder_count");
+      if (typeof data === "number") setPreorderCount(data);
+    };
+    fetchCount();
+  }, [submitted]);
 
   const handlePreorder = async (e: React.FormEvent) => {
     e.preventDefault();
