@@ -122,7 +122,7 @@ export default function Precommande() {
                 <p className="text-[10px] font-black text-black">Précommande</p>
               </div>
             </div>
-            <RetroButton onClick={() => {}} variant="primary" size="lg">
+            <RetroButton onClick={() => document.getElementById("preorder-form")?.scrollIntoView({ behavior: "smooth" })} variant="primary" size="lg">
               <span className="flex items-center gap-2"><ShoppingCart className="w-5 h-5" /> Précommander — 89€</span>
             </RetroButton>
             <p className="text-[10px] font-black text-black/50">🔒 Paiement sécurisé • Livraison gratuite • Satisfait ou remboursé 30 jours</p>
