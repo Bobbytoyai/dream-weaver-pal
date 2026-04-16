@@ -233,7 +233,7 @@ export default function Precommande() {
         </RetroSection>
 
         {/* ── FORMULAIRE PRÉCOMMANDE ── */}
-        <RetroSection bg="#000" className="scroll-mt-20" id="preorder-form" as-id>
+        <RetroSection bg="#000" className="scroll-mt-20" id="preorder-form">
           {submitted ? (
             <div className="text-center space-y-4 py-6">
               <CheckCircle className="w-16 h-16 text-green-400 mx-auto" />
