@@ -232,22 +232,79 @@ export default function Precommande() {
           </div>
         </RetroSection>
 
-        {/* ── CTA FINAL ── */}
+        {/* ── FORMULAIRE PRÉCOMMANDE ── */}
         <RetroSection bg="#000">
-          <div className="text-center space-y-4">
-            <h2 className="text-2xl md:text-3xl font-black text-white">Prêt à offrir Bobby ?</h2>
-            <p className="text-sm font-black text-white/70 max-w-lg mx-auto">
-              Rejoignez les premiers parents à recevoir le compagnon IA le plus avancé pour enfants.
-            </p>
-            <div className="flex justify-center gap-3 flex-wrap">
-              <RetroButton onClick={() => {}} variant="secondary" size="lg">
-                <span className="flex items-center gap-2"><ShoppingCart className="w-5 h-5" /> Précommander — 89€</span>
-              </RetroButton>
+          {submitted ? (
+            <div className="text-center space-y-4 py-6">
+              <CheckCircle className="w-16 h-16 text-green-400 mx-auto" />
+              <h2 className="text-2xl md:text-3xl font-black text-white">Merci {formData.firstName} !</h2>
+              <p className="text-sm font-black text-white/70 max-w-lg mx-auto">
+                Votre précommande est enregistrée. Vous recevrez un email de confirmation avec les prochaines étapes.
+              </p>
+              <p className="text-[10px] font-black text-white/40">Livraison prévue Q3 2026</p>
             </div>
-            <p className="text-[10px] font-black text-white/40">
-              🔒 Paiement sécurisé • Livraison gratuite France • Satisfait ou remboursé 30 jours
-            </p>
-          </div>
+          ) : (
+            <div className="max-w-md mx-auto space-y-5">
+              <div className="text-center space-y-2">
+                <h2 className="text-2xl md:text-3xl font-black text-white">Précommandez Bobby</h2>
+                <p className="text-sm font-black text-white/70">
+                  Réservez votre Bobby dès maintenant — aucun paiement requis. Vous serez contacté pour finaliser votre commande.
+                </p>
+              </div>
+              <form onSubmit={handlePreorder} className="space-y-3">
+                <div>
+                  <label className="block text-[10px] font-black text-white/60 uppercase mb-1">Prénom *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.firstName}
+                    onChange={e => setFormData(p => ({ ...p, firstName: e.target.value }))}
+                    placeholder="Votre prénom"
+                    className="w-full px-4 py-3 border-3 border-white bg-white/10 text-white font-black text-sm placeholder:text-white/30 focus:outline-none focus:bg-white/20 transition-colors"
+                    style={{ borderWidth: "3px" }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-white/60 uppercase mb-1">Email *</label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={e => setFormData(p => ({ ...p, email: e.target.value }))}
+                    placeholder="votre@email.com"
+                    className="w-full px-4 py-3 border-3 border-white bg-white/10 text-white font-black text-sm placeholder:text-white/30 focus:outline-none focus:bg-white/20 transition-colors"
+                    style={{ borderWidth: "3px" }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-white/60 uppercase mb-1">Téléphone (optionnel)</label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))}
+                    placeholder="+33 6 12 34 56 78"
+                    className="w-full px-4 py-3 border-3 border-white bg-white/10 text-white font-black text-sm placeholder:text-white/30 focus:outline-none focus:bg-white/20 transition-colors"
+                    style={{ borderWidth: "3px" }}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full py-4 px-8 font-black uppercase text-base border-3 border-white bg-white text-black hover:bg-gray-100 transition-all hover:translate-y-[-2px] active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  style={{ borderWidth: "3px", boxShadow: "4px 4px 0px rgba(255,255,255,0.25)" }}
+                >
+                  {submitting ? (
+                    <><Loader2 className="w-5 h-5 animate-spin" /> Envoi en cours...</>
+                  ) : (
+                    <><ShoppingCart className="w-5 h-5" /> Réserver ma précommande — 89€</>
+                  )}
+                </button>
+              </form>
+              <p className="text-[10px] font-black text-white/40 text-center">
+                🔒 Aucun paiement maintenant • Livraison Q3 2026 • Annulation gratuite
+              </p>
+            </div>
+          )}
         </RetroSection>
       </div>
 
