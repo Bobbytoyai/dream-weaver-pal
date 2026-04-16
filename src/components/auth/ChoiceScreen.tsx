@@ -13,8 +13,12 @@ const plans = [
     storage: "500 Mo", current: true,
   },
   {
-    name: "Cloud+", price: "9,99€", period: "/mois", emoji: "☁️",
-    storage: "20 Go", popular: true,
+    name: "Cloud 5", price: "4,90€", period: "/mois", emoji: "☁️",
+    storage: "5 Go", popular: true,
+  },
+  {
+    name: "Cloud 20", price: "9,90€", period: "/mois", emoji: "🚀",
+    storage: "20 Go",
   },
 ];
 
@@ -31,7 +35,7 @@ export default function ChoiceScreen({ setStep, onBack }: Props) {
         </div>
 
         {/* Pricing plans */}
-        <div className="grid grid-cols-2 gap-3 pt-1">
+        <div className="grid grid-cols-3 gap-2 pt-1">
           {plans.map((plan) => (
             <button
               key={plan.name}
