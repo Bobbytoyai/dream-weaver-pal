@@ -51,7 +51,7 @@ const SECTIONS = [
         <p><strong>Prix :</strong> Bobby est proposé en précommande à 89€ TTC (prix public : 129€ TTC).</p>
         <p><strong>Livraison :</strong> Gratuite en France métropolitaine.</p>
         <p><strong>Retours :</strong> Satisfait ou remboursé sous 30 jours après réception.</p>
-        <p><strong>Abonnements Cloud :</strong> Bobby+ (9.99€/mois) et Bobby Pro (19.99€/mois), résiliables à tout moment.</p>
+        <p><strong>Abonnement Cloud :</strong> Bobby Cloud+ (9.99€/mois) pour augmenter la mémoire et la base de connaissances de Bobby, résiliable à tout moment. Bobby est 100% gratuit sans abonnement.</p>
       </div>
     ),
   },
