@@ -5,8 +5,8 @@ import RetroMobileNav from "@/components/RetroMobileNav";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const RetroSection = ({ children, bg = "#fff", className = "" }: { children: React.ReactNode; bg?: string; className?: string }) => (
-  <section className={`border-4 border-black p-5 md:p-8 ${className}`}
+const RetroSection = ({ children, bg = "#fff", className = "", id }: { children: React.ReactNode; bg?: string; className?: string; id?: string }) => (
+  <section id={id} className={`border-4 border-black p-5 md:p-8 ${className}`}
     style={{ backgroundColor: bg, boxShadow: "6px 6px 0px rgba(0,0,0,0.25)" }}>
     {children}
   </section>
