@@ -90,7 +90,7 @@ const Landing = () => {
           <div className="flex items-center gap-3">
             <RetroMobileNav />
             <span className="text-xl font-black text-black">Bobby</span>
-            <RetroTag bg="var(--retro-red)">Précommande</RetroTag>
+            <span className="hidden md:inline-flex"><RetroTag bg="var(--retro-red)">Précommande</RetroTag></span>
           </div>
           <div className="hidden md:flex items-center gap-6 text-xs font-black uppercase text-black">
             <a href="#features" className="hover:opacity-70 transition-opacity">Fonctions</a>
