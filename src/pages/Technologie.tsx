@@ -338,8 +338,8 @@ const Technologie = () => {
       </section>
 
       {/* SCROLL-SCRUB SECTION (tall — drives video) */}
-      <section ref={scrubRef} className="relative" style={{ height: "250vh" }}>
-        <div className="sticky top-0 h-screen w-full overflow-hidden" style={{ backgroundColor: "#FDF6EC" }}>
+      <section ref={scrubRef} className="relative" style={{ height: isMobile ? "180vh" : "250vh" }}>
+        <div className="sticky top-0 h-[100svh] w-full overflow-hidden" style={{ backgroundColor: "#FDF6EC" }}>
           {/* Faint engineering grid background */}
           <div
             className="absolute inset-0 opacity-[0.08] pointer-events-none"
@@ -353,11 +353,11 @@ const Technologie = () => {
           {/* Video stage — cadre rétro avec pins qui sortent.
              Vidéo source 1440x1440 (carrée). Le cadre s'agrandit au max disponible
              tout en laissant la place aux labels externes (jusqu'à 260px). */}
-          <div className="relative w-full h-full flex items-center justify-center px-2 py-3 md:px-4 md:py-4">
+          <div className="relative w-full h-full flex items-center justify-center px-1 py-2 md:px-4 md:py-4">
             <div
               className="relative"
               style={{
-                width: "min(72vw, 78vh, 760px)",
+                width: isMobile ? "min(94vw, 70vh)" : "min(72vw, 78vh, 760px)",
                 aspectRatio: "1 / 1",
               }}
             >
@@ -452,12 +452,12 @@ const Technologie = () => {
               </div>
             </div>
             {/* Chip visual */}
-            <div className="relative aspect-square max-w-sm mx-auto">
-              <div className="absolute inset-8 border-[6px] border-[#FDE68A] bg-[#1A1A1A] rounded-sm flex items-center justify-center"
+            <div className="relative aspect-square w-full max-w-[260px] md:max-w-sm mx-auto">
+              <div className="absolute inset-6 md:inset-8 border-[6px] border-[#FDE68A] bg-[#1A1A1A] rounded-sm flex items-center justify-center"
                    style={{ boxShadow: "0 0 60px rgba(253, 230, 138, 0.4)" }}>
                 <div className="text-center">
-                  <div className="font-black text-[#FDE68A] text-3xl tracking-tight">OSAÏ</div>
-                  <div className="font-black text-white text-5xl tracking-tighter">V9</div>
+                  <div className="font-black text-[#FDE68A] text-2xl md:text-3xl tracking-tight">OSAÏ</div>
+                  <div className="font-black text-white text-4xl md:text-5xl tracking-tighter">V9</div>
                   <div className="text-[9px] font-bold text-white/50 mt-2 tracking-widest">OSAÏ INSIDE</div>
                 </div>
               </div>
