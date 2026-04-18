@@ -56,10 +56,19 @@ const useScrollVideoScrub = (
 
     // Hint: décodage rapide
     video.preload = "auto";
+    video.muted = true;
+    (video as any).playsInline = true;
     (video as any).disableRemotePlayback = true;
 
     const onLoaded = () => {
       duration = video.duration || 0;
+      // Débloquer le scrub : play+pause force le décodeur à initialiser
+      video.play().then(() => {
+        video.pause();
+        video.currentTime = 0;
+      }).catch(() => {
+        // Autoplay bloqué : le scrub fonctionnera après le 1er scroll
+      });
     };
     video.addEventListener("loadedmetadata", onLoaded);
     if (video.readyState >= 1) onLoaded();
