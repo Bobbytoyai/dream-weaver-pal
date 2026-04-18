@@ -448,11 +448,11 @@ const Technologie = () => {
 
         <div className="space-y-3">
           {[
-            { n: "01", t: "Capture vocale", d: "Micro INMP441 → I2S → buffer 1800ms", c: "#FDE68A" },
-            { n: "02", t: "Détection éveil", d: "Wake word local sur OSAÏ V9", c: "#86EFAC" },
-            { n: "03", t: "Cerveau hybride", d: "Local Brain (offline) ou Gemini Flash (cloud)", c: "#C084FC" },
-            { n: "04", t: "Synthèse vocale", d: "ElevenLabs streaming → MAX98357A", c: "#FCA5A5" },
-            { n: "05", t: "Expression faciale", d: "GC9A01 SPI → animation hologramme", c: "#93C5FD" },
+            { n: "01", t: "Capture vocale", d: "Micro OSAÏ Voice → buffer 1800ms", c: "#FDE68A" },
+            { n: "02", t: "Détection éveil", d: "Wake word local OSAÏ V9", c: "#86EFAC" },
+            { n: "03", t: "Cerveau hybride", d: "OSAÏ Brain (offline) ou OSAÏ Cloud", c: "#C084FC" },
+            { n: "04", t: "Synthèse vocale", d: "OSAÏ Voice Engine → haut-parleur", c: "#FCA5A5" },
+            { n: "05", t: "Expression faciale", d: "OSAÏ Display → animation hologramme", c: "#93C5FD" },
           ].map((step, i) => (
             <div key={step.n} className="flex items-stretch gap-3">
               <div
