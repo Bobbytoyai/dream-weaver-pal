@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { label: "Accueil", path: "/", emoji: "🏠", bg: "var(--retro-yellow)" },
   { label: "Précommande", path: "/precommande", emoji: "🛒", bg: "var(--retro-red)" },
   { label: "Fonctionnalités", path: "/fonctionnalites", emoji: "⚡", bg: "var(--retro-purple)" },
+  { label: "Technologie", path: "/technologie", emoji: "🔬", bg: "var(--retro-blue)" },
   { label: "Sécurité", path: "/securite", emoji: "🛡️", bg: "var(--retro-green)" },
   { label: "Bobby Store", path: "/store", emoji: "🏪", bg: "var(--retro-yellow)" },
   { label: "Guide", path: "/guide", emoji: "📖", bg: "var(--retro-blue)" },

@@ -94,6 +94,7 @@ const Landing = () => {
           </div>
           <div className="hidden md:flex items-center gap-6 text-xs font-black uppercase text-black">
             <a href="#features" className="hover:opacity-70 transition-opacity">Fonctions</a>
+            <a href="/technologie" className="hover:opacity-70 transition-opacity">Technologie</a>
             <a href="#store" className="hover:opacity-70 transition-opacity">Store</a>
             <a href="#pricing" className="hover:opacity-70 transition-opacity">Prix</a>
           </div>
