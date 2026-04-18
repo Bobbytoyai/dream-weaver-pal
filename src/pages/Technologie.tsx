@@ -169,14 +169,15 @@ const Pin = ({
   lineLength?: number;
 }) => (
   <div
-    className="absolute z-20 transition-all duration-500 ease-out pointer-events-none"
+    className="absolute z-20 pointer-events-none"
     style={{
       left: x,
       top: y,
       opacity: show ? 1 : 0,
+      transition: "opacity 260ms ease-out",
+      willChange: "opacity",
     }}
   >
-    {/* Connector line + dot anchor (BLANC pour contraste sur vidéo) */}
     <div
       className="absolute top-1/2 h-[2px] bg-white"
       style={{
@@ -194,14 +195,12 @@ const Pin = ({
         boxShadow: "0 0 4px rgba(0,0,0,0.6)",
       }}
     />
-    {/* Label box, offset by line length */}
     <div
       className="absolute top-1/2 flex items-center gap-2"
       style={{
         [align === "left" ? "right" : "left"]: `${lineLength + 6}px`,
-        transform: `translateY(-50%) scale(${show ? 1 : 0.9})`,
+        transform: "translateY(-50%)",
         flexDirection: align === "left" ? "row-reverse" : "row",
-        transition: "transform 0.5s ease-out",
       }}
     >
       <div
