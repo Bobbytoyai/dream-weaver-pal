@@ -353,17 +353,7 @@ const Technologie = () => {
             </div>
           </div>
 
-          {/* Progress indicator (top right) */}
-          <div className="absolute top-4 right-4 z-30 border-4 border-black bg-white px-3 py-2 font-black text-xs uppercase"
-               style={{ boxShadow: "4px 4px 0 rgba(0,0,0,0.85)" }}>
-            <div className="flex items-center gap-2">
-              <span className="text-black/50">VUE ÉCLATÉE</span>
-              <span className="tabular-nums">{Math.round(progress * 100).toString().padStart(2, "0")}%</span>
-            </div>
-            <div className="mt-1.5 h-2 w-32 border-2 border-black bg-[#FDF6EC] overflow-hidden">
-              <div className="h-full bg-black transition-[width] duration-150" style={{ width: `${progress * 100}%` }} />
-            </div>
-          </div>
+          {/* Indicateur % retiré */}
 
         </div>
       </section>
