@@ -262,7 +262,7 @@ const Technologie = () => {
         <div className="flex justify-center gap-2 flex-wrap">
           <RetroTag bg="#C084FC">OSAÏ V9</RetroTag>
           <RetroTag bg="#86EFAC">Made in France</RetroTag>
-          <RetroTag bg="#FDE68A">Édition Silverlit</RetroTag>
+          <RetroTag bg="#FDE68A">Développé pour Silverlit · Exclusivité</RetroTag>
         </div>
         <h1 className="text-4xl md:text-6xl font-black text-black leading-[0.95] tracking-tight">
           Sous le capot
