@@ -262,7 +262,7 @@ const Technologie = () => {
         <div className="flex justify-center gap-2 flex-wrap">
           <RetroTag bg="#C084FC">OSAÏ V9</RetroTag>
           <RetroTag bg="#86EFAC">Made in France</RetroTag>
-          <RetroTag bg="#FDE68A">Édition Silverlit</RetroTag>
+          <RetroTag bg="#FDE68A">Développé pour Silverlit · Exclusivité</RetroTag>
         </div>
         <h1 className="text-4xl md:text-6xl font-black text-black leading-[0.95] tracking-tight">
           Sous le capot
@@ -347,18 +347,18 @@ const Technologie = () => {
                     {/* 0.00–0.15  Coque s'ouvre */}
                     <Pin n={1} label="Coque ABS" sub="Ø 67 mm" x="25%" y="35%" show={inWindow(0.02, 0.18)} align="left" lineLength={220} />
                     {/* 0.15–0.30  Haut-parleur + USB-C (même frame visible) */}
-                    <Pin n={2} label="Haut-parleur" sub="28mm · 3W" x="40%" y="55%" show={inWindow(0.15, 0.32)} align="left" lineLength={260} />
+                    <Pin n={2} label="Haut-parleur" sub="OSAÏ Sound 3W" x="40%" y="55%" show={inWindow(0.15, 0.32)} align="left" lineLength={260} />
                     <Pin n={3} label="USB-C" sub="Charge · 5V/2A" x="55%" y="88%" show={inWindow(0.15, 0.32)} lineLength={240} />
                     {/* 0.30–0.45  Micro */}
-                    <Pin n={4} label="Micro INMP441" sub="I2S MEMS" x="40%" y="25%" show={inWindow(0.32, 0.48)} align="left" lineLength={260} />
+                    <Pin n={4} label="Micro" sub="OSAÏ Voice" x="40%" y="25%" show={inWindow(0.32, 0.48)} align="left" lineLength={260} />
                     {/* 0.45–0.60  Caméra */}
-                    <Pin n={5} label="Caméra OV2640" sub="2 MP" x="60%" y="38%" show={inWindow(0.45, 0.62)} lineLength={240} />
+                    <Pin n={5} label="Caméra" sub="OSAÏ Vision 2 MP" x="60%" y="38%" show={inWindow(0.45, 0.62)} lineLength={240} />
                     {/* 0.60–0.78  OSAÏ V9 (cœur, plus long affichage) */}
-                    <Pin n={6} label="OSAÏ V9" sub="MCU Silverlit" x="55%" y="60%" show={inWindow(0.58, 0.78)} lineLength={260} />
+                    <Pin n={6} label="OSAÏ V9" sub="Cerveau propriétaire" x="55%" y="60%" show={inWindow(0.58, 0.78)} lineLength={260} />
                     {/* 0.78–0.90  Batterie */}
                     <Pin n={8} label="Batterie" sub="LiPo 1500mAh" x="35%" y="78%" show={inWindow(0.74, 0.90)} align="left" lineLength={240} />
                     {/* 0.90–1.00  Écran */}
-                    <Pin n={9} label="Écran GC9A01" sub='1.28" IPS' x="65%" y="50%" show={inWindow(0.86, 1.01)} lineLength={240} />
+                    <Pin n={9} label="Écran" sub='OSAÏ Display 1.28"' x="65%" y="50%" show={inWindow(0.86, 1.01)} lineLength={240} />
                   </>
                 );
               })()}
@@ -379,11 +379,11 @@ const Technologie = () => {
               <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
                 OSAÏ V9
                 <br />
-                <span className="text-[#FDE68A]">Silverlit Edition</span>
+                <span className="text-[#FDE68A]">Le cerveau de Bobby</span>
               </h2>
               <p className="font-bold text-white/70 leading-relaxed">
-                Une puce propriétaire conçue par OSAI, embarquant un MCU dual-core 240 MHz, 8 Mo de PSRAM
-                et un moteur de traitement vocal hybride local-cloud.
+                Une puce propriétaire conçue par OSAÏ, embarquant un MCU dual-core 240 MHz, 8 Mo de PSRAM
+                et un moteur de traitement vocal hybride 100% OSAÏ.
               </p>
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <div className="border-2 border-white/40 p-3">
@@ -403,7 +403,7 @@ const Technologie = () => {
                 <div className="text-center">
                   <div className="font-black text-[#FDE68A] text-3xl tracking-tight">OSAÏ</div>
                   <div className="font-black text-white text-5xl tracking-tighter">V9</div>
-                  <div className="text-[9px] font-bold text-white/50 mt-2 tracking-widest">SILVERLIT</div>
+                  <div className="text-[9px] font-bold text-white/50 mt-2 tracking-widest">OSAÏ INSIDE</div>
                 </div>
               </div>
               {/* Pins */}
@@ -428,10 +428,10 @@ const Technologie = () => {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Spec icon={Cpu} label="Processeur" value="OSAÏ V9 · 240MHz" bg="#FDE68A" />
-          <Spec icon={Mic} label="Micro" value="INMP441 I2S" bg="#86EFAC" />
-          <Spec icon={Volume2} label="Audio" value="3W · MAX98357A" bg="#FCA5A5" />
-          <Spec icon={Eye} label="Écran" value='1.28" 240×240' bg="#C084FC" />
-          <Spec icon={Eye} label="Caméra" value="OV2640 2MP" bg="#93C5FD" />
+          <Spec icon={Mic} label="Micro" value="OSAÏ Voice I2S" bg="#86EFAC" />
+          <Spec icon={Volume2} label="Audio" value="OSAÏ Sound 3W" bg="#FCA5A5" />
+          <Spec icon={Eye} label="Écran" value='OSAÏ Display 1.28"' bg="#C084FC" />
+          <Spec icon={Eye} label="Caméra" value="OSAÏ Vision 2MP" bg="#93C5FD" />
           <Spec icon={Battery} label="Batterie" value="1500 mAh" bg="#FDE68A" />
           <Spec icon={Wifi} label="Connexion" value="Wi-Fi + BLE" bg="#86EFAC" />
           <Spec icon={Zap} label="Charge" value="USB-C 5V/2A" bg="#FCA5A5" />
@@ -448,11 +448,11 @@ const Technologie = () => {
 
         <div className="space-y-3">
           {[
-            { n: "01", t: "Capture vocale", d: "Micro INMP441 → I2S → buffer 1800ms", c: "#FDE68A" },
-            { n: "02", t: "Détection éveil", d: "Wake word local sur OSAÏ V9", c: "#86EFAC" },
-            { n: "03", t: "Cerveau hybride", d: "Local Brain (offline) ou Gemini Flash (cloud)", c: "#C084FC" },
-            { n: "04", t: "Synthèse vocale", d: "ElevenLabs streaming → MAX98357A", c: "#FCA5A5" },
-            { n: "05", t: "Expression faciale", d: "GC9A01 SPI → animation hologramme", c: "#93C5FD" },
+            { n: "01", t: "Capture vocale", d: "Micro OSAÏ Voice → buffer 1800ms", c: "#FDE68A" },
+            { n: "02", t: "Détection éveil", d: "Wake word local OSAÏ V9", c: "#86EFAC" },
+            { n: "03", t: "Cerveau hybride", d: "OSAÏ Brain (offline) ou OSAÏ Cloud", c: "#C084FC" },
+            { n: "04", t: "Synthèse vocale", d: "OSAÏ Voice Engine → haut-parleur", c: "#FCA5A5" },
+            { n: "05", t: "Expression faciale", d: "OSAÏ Display → animation hologramme", c: "#93C5FD" },
           ].map((step, i) => (
             <div key={step.n} className="flex items-stretch gap-3">
               <div
