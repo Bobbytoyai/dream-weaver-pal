@@ -343,18 +343,22 @@ const Technologie = () => {
                 const inWindow = (start: number, end: number) => progress >= start && progress < end;
                 return (
                   <>
-                    {/* Ancres SUR les composants dans la vidéo, traits longs sortent du cadre */}
-                    {/* Gauche — ancre intérieure, trait part vers la gauche */}
-                    <Pin n={1} label="Coque ABS" sub="Ø 67 mm" x="25%" y="35%" show={inWindow(0.05, 0.18)} align="left" lineLength={220} />
-                    <Pin n={2} label="Haut-parleur" sub="28mm · 3W" x="40%" y="55%" show={inWindow(0.18, 0.32)} align="left" lineLength={260} />
-                    <Pin n={4} label="Micro INMP441" sub="I2S MEMS" x="40%" y="25%" show={inWindow(0.40, 0.50)} align="left" lineLength={260} />
-                    <Pin n={8} label="Batterie" sub="LiPo 1500mAh" x="35%" y="78%" show={inWindow(0.78, 0.86)} align="left" lineLength={240} />
-                    {/* Droite — ancre intérieure, trait part vers la droite */}
-                    <Pin n={5} label="Caméra OV2640" sub="2 MP" x="60%" y="38%" show={inWindow(0.48, 0.62)} lineLength={240} />
-                    <Pin n={6} label="OSAÏ V9" sub="MCU Silverlit" x="55%" y="60%" show={inWindow(0.60, 0.76)} lineLength={260} />
-                    <Pin n={9} label="Écran GC9A01" sub='1.28" IPS' x="65%" y="50%" show={inWindow(0.90, 1.01)} lineLength={240} />
-                    {/* USB-C — ancre sur le port, trait sort à droite */}
-                    <Pin n={3} label="USB-C" sub="Charge · 5V/2A" x="55%" y="88%" show={inWindow(0.18, 0.32)} lineLength={240} />
+                    {/* Fenêtres continues sans trou — chaque pin reste visible jusqu'au suivant */}
+                    {/* 0.00–0.15  Coque s'ouvre */}
+                    <Pin n={1} label="Coque ABS" sub="Ø 67 mm" x="25%" y="35%" show={inWindow(0.02, 0.18)} align="left" lineLength={220} />
+                    {/* 0.15–0.30  Haut-parleur + USB-C (même frame visible) */}
+                    <Pin n={2} label="Haut-parleur" sub="28mm · 3W" x="40%" y="55%" show={inWindow(0.15, 0.32)} align="left" lineLength={260} />
+                    <Pin n={3} label="USB-C" sub="Charge · 5V/2A" x="55%" y="88%" show={inWindow(0.15, 0.32)} lineLength={240} />
+                    {/* 0.30–0.45  Micro */}
+                    <Pin n={4} label="Micro INMP441" sub="I2S MEMS" x="40%" y="25%" show={inWindow(0.32, 0.48)} align="left" lineLength={260} />
+                    {/* 0.45–0.60  Caméra */}
+                    <Pin n={5} label="Caméra OV2640" sub="2 MP" x="60%" y="38%" show={inWindow(0.45, 0.62)} lineLength={240} />
+                    {/* 0.60–0.78  OSAÏ V9 (cœur, plus long affichage) */}
+                    <Pin n={6} label="OSAÏ V9" sub="MCU Silverlit" x="55%" y="60%" show={inWindow(0.58, 0.78)} lineLength={260} />
+                    {/* 0.78–0.90  Batterie */}
+                    <Pin n={8} label="Batterie" sub="LiPo 1500mAh" x="35%" y="78%" show={inWindow(0.74, 0.90)} align="left" lineLength={240} />
+                    {/* 0.90–1.00  Écran */}
+                    <Pin n={9} label="Écran GC9A01" sub='1.28" IPS' x="65%" y="50%" show={inWindow(0.86, 1.01)} lineLength={240} />
                   </>
                 );
               })()}
