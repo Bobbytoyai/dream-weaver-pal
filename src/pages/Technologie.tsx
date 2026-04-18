@@ -183,8 +183,8 @@ const Pin = ({
   lineLength?: number;
   isMobile?: boolean;
 }) => {
-  // Mobile : trait court (~32% du desktop) pour rester dans 375px
-  const effectiveLine = isMobile ? Math.max(28, Math.round(lineLength * 0.32)) : lineLength;
+  // Mobile : trait très court (~18% du desktop) pour que les labels restent dans 375px
+  const effectiveLine = isMobile ? Math.max(18, Math.round(lineLength * 0.18)) : lineLength;
   const badgeSize = isMobile ? 24 : 36;
   return (
     <div
