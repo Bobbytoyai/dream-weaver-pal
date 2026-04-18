@@ -428,10 +428,10 @@ const Technologie = () => {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Spec icon={Cpu} label="Processeur" value="OSAÏ V9 · 240MHz" bg="#FDE68A" />
-          <Spec icon={Mic} label="Micro" value="INMP441 I2S" bg="#86EFAC" />
-          <Spec icon={Volume2} label="Audio" value="3W · MAX98357A" bg="#FCA5A5" />
-          <Spec icon={Eye} label="Écran" value='1.28" 240×240' bg="#C084FC" />
-          <Spec icon={Eye} label="Caméra" value="OV2640 2MP" bg="#93C5FD" />
+          <Spec icon={Mic} label="Micro" value="OSAÏ Voice I2S" bg="#86EFAC" />
+          <Spec icon={Volume2} label="Audio" value="OSAÏ Sound 3W" bg="#FCA5A5" />
+          <Spec icon={Eye} label="Écran" value='OSAÏ Display 1.28"' bg="#C084FC" />
+          <Spec icon={Eye} label="Caméra" value="OSAÏ Vision 2MP" bg="#93C5FD" />
           <Spec icon={Battery} label="Batterie" value="1500 mAh" bg="#FDE68A" />
           <Spec icon={Wifi} label="Connexion" value="Wi-Fi + BLE" bg="#86EFAC" />
           <Spec icon={Zap} label="Charge" value="USB-C 5V/2A" bg="#FCA5A5" />
