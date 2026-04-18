@@ -148,7 +148,20 @@ const PIN_COLORS: Record<number, string> = {
   9: "#34D399", // émeraude — Écran
 };
 
-/* ----- Diagram callout pin with connector line (épuré) ----- */
+/* ----- Hook viewport (mobile = <640px) ----- */
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < 640 : false,
+  );
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  return isMobile;
+};
+
+/* ----- Diagram callout pin with connector line (épuré + responsive) ----- */
 const Pin = ({
   n,
   label,
@@ -158,6 +171,7 @@ const Pin = ({
   show,
   align = "right",
   lineLength = 80,
+  isMobile = false,
 }: {
   n: number;
   label: string;
@@ -167,55 +181,64 @@ const Pin = ({
   show: boolean;
   align?: "left" | "right";
   lineLength?: number;
-}) => (
-  <div
-    className="absolute z-20 pointer-events-none"
-    style={{
-      left: x,
-      top: y,
-      opacity: show ? 1 : 0,
-      transition: "opacity 260ms ease-out",
-      willChange: "opacity",
-    }}
-  >
+  isMobile?: boolean;
+}) => {
+  // Mobile : trait court (~32% du desktop) pour rester dans 375px
+  const effectiveLine = isMobile ? Math.max(28, Math.round(lineLength * 0.32)) : lineLength;
+  const badgeSize = isMobile ? 24 : 36;
+  return (
     <div
-      className="absolute top-1/2 h-[2px] bg-white"
-      style={{
-        width: `${lineLength}px`,
-        [align === "left" ? "right" : "left"]: "0",
-        transform: "translateY(-50%)",
-        boxShadow: "0 0 4px rgba(0,0,0,0.6)",
-      }}
-    />
-    <div
-      className="absolute top-1/2 w-2 h-2 rounded-full bg-white border-2 border-white"
-      style={{
-        [align === "left" ? "right" : "left"]: "-4px",
-        transform: "translateY(-50%)",
-        boxShadow: "0 0 4px rgba(0,0,0,0.6)",
-      }}
-    />
-    <div
-      className="absolute top-1/2 flex items-center gap-2"
-      style={{
-        [align === "left" ? "right" : "left"]: `${lineLength + 6}px`,
-        transform: "translateY(-50%)",
-        flexDirection: align === "left" ? "row-reverse" : "row",
-      }}
+      className="absolute z-20 pointer-events-none"
+      style={{ left: x, top: y, opacity: show ? 1 : 0, transition: "opacity 260ms ease-out", willChange: "opacity" }}
     >
       <div
-        className="w-9 h-9 rounded-full border-2 border-black flex items-center justify-center font-black text-white text-sm shrink-0"
-        style={{ backgroundColor: PIN_COLORS[n] || "#C084FC", boxShadow: "2px 2px 0 rgba(0,0,0,0.6)" }}
+        className="absolute top-1/2 h-[2px] bg-white"
+        style={{
+          width: `${effectiveLine}px`,
+          [align === "left" ? "right" : "left"]: "0",
+          transform: "translateY(-50%)",
+          boxShadow: "0 0 4px rgba(0,0,0,0.6)",
+        }}
+      />
+      <div
+        className="absolute top-1/2 w-2 h-2 rounded-full bg-white border-2 border-white"
+        style={{
+          [align === "left" ? "right" : "left"]: "-4px",
+          transform: "translateY(-50%)",
+          boxShadow: "0 0 4px rgba(0,0,0,0.6)",
+        }}
+      />
+      <div
+        className="absolute top-1/2 flex items-center gap-1.5"
+        style={{
+          [align === "left" ? "right" : "left"]: `${effectiveLine + 4}px`,
+          transform: "translateY(-50%)",
+          flexDirection: align === "left" ? "row-reverse" : "row",
+        }}
       >
-        {n}
-      </div>
-      <div className="leading-tight whitespace-nowrap" style={{ textShadow: "0 1px 4px rgba(255,255,255,0.95), 0 0 8px rgba(255,255,255,0.8)" }}>
-        <div className="font-black text-black text-sm md:text-base uppercase">{label}</div>
-        {sub && <div className="text-xs font-bold text-black/70">{sub}</div>}
+        <div
+          className="rounded-full border-2 border-black flex items-center justify-center font-black text-white shrink-0"
+          style={{
+            width: badgeSize,
+            height: badgeSize,
+            fontSize: isMobile ? 11 : 14,
+            backgroundColor: PIN_COLORS[n] || "#C084FC",
+            boxShadow: "2px 2px 0 rgba(0,0,0,0.6)",
+          }}
+        >
+          {n}
+        </div>
+        <div
+          className="leading-tight whitespace-nowrap"
+          style={{ textShadow: "0 1px 4px rgba(255,255,255,0.95), 0 0 8px rgba(255,255,255,0.8)" }}
+        >
+          <div className="font-black text-black uppercase" style={{ fontSize: isMobile ? 10 : 14 }}>{label}</div>
+          {sub && <div className="font-bold text-black/70" style={{ fontSize: isMobile ? 9 : 12 }}>{sub}</div>}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 /* ----- Spec stat ----- */
 const Spec = ({ icon: Icon, label, value, bg }: { icon: any; label: string; value: string; bg: string }) => (
