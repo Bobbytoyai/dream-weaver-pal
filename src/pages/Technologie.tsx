@@ -62,15 +62,14 @@ const useScrollVideoScrub = (
 
     const onLoaded = () => {
       duration = video.duration || 0;
-      // Débloquer le scrub : play+pause force le décodeur à initialiser
+      // Débloquer le scrub : play+pause force le décodeur à pré-décoder TOUTES les frames
       video.play().then(() => {
         video.pause();
         video.currentTime = 0;
-      }).catch(() => {
-        // Autoplay bloqué : le scrub fonctionnera après le 1er scroll
-      });
+      }).catch(() => {});
     };
     video.addEventListener("loadedmetadata", onLoaded);
+    video.addEventListener("loadeddata", onLoaded);
     if (video.readyState >= 1) onLoaded();
 
     const computeTarget = () => {
@@ -81,27 +80,35 @@ const useScrollVideoScrub = (
       targetProgressRef.current = total > 0 ? scrolled / total : 0;
     };
 
-    // rAF loop : lerp progress + scrub video
+    // rAF loop : lerp progress + scrub video synchronisés (même frame)
+    let pendingSeek = false;
     const tick = () => {
       if (!mounted) return;
       const target = targetProgressRef.current;
       const current = currentProgressRef.current;
-      // Lerp ultra doux (0.06) pour scrub Apple-like fluide
-      const next = current + (target - current) * 0.06;
+      // Lerp plus réactif (0.18) : pins suivent le scroll sans décalage perceptible
+      const delta = target - current;
+      const next = Math.abs(delta) < 0.0005 ? target : current + delta * 0.18;
       currentProgressRef.current = next;
 
-      // Update React state seulement si delta visible (>0.2%)
-      if (Math.abs(next - current) > 0.002 || target === 0) {
+      // Update React state à chaque frame quand ça bouge → pins SYNCHRO avec vidéo
+      if (Math.abs(delta) > 0.0005) {
         setProgress(next);
       }
 
-      if (duration > 0) {
+      if (duration > 0 && !pendingSeek) {
         const t = next * duration;
-        // Seuil: ~1 frame à 30fps
-        if (Math.abs(video.currentTime - t) > 0.04) {
+        // Seuil fin (~1 frame à 60fps source)
+        if (Math.abs(video.currentTime - t) > 0.016) {
+          pendingSeek = true;
           try {
             video.currentTime = t;
           } catch {}
+          // Libère le seek dès que la nouvelle frame est prête → zéro saccade
+          const release = () => { pendingSeek = false; video.removeEventListener("seeked", release); };
+          video.addEventListener("seeked", release);
+          // Failsafe si seeked ne déclenche pas
+          setTimeout(() => { pendingSeek = false; }, 80);
         }
       }
       raf = requestAnimationFrame(tick);
@@ -121,6 +128,7 @@ const useScrollVideoScrub = (
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       video.removeEventListener("loadedmetadata", onLoaded);
+      video.removeEventListener("loadeddata", onLoaded);
       cancelAnimationFrame(raf);
     };
   }, [videoRef, sectionRef]);
@@ -161,14 +169,15 @@ const Pin = ({
   lineLength?: number;
 }) => (
   <div
-    className="absolute z-20 transition-all duration-500 ease-out pointer-events-none"
+    className="absolute z-20 pointer-events-none"
     style={{
       left: x,
       top: y,
       opacity: show ? 1 : 0,
+      transition: "opacity 260ms ease-out",
+      willChange: "opacity",
     }}
   >
-    {/* Connector line + dot anchor (BLANC pour contraste sur vidéo) */}
     <div
       className="absolute top-1/2 h-[2px] bg-white"
       style={{
@@ -186,14 +195,12 @@ const Pin = ({
         boxShadow: "0 0 4px rgba(0,0,0,0.6)",
       }}
     />
-    {/* Label box, offset by line length */}
     <div
       className="absolute top-1/2 flex items-center gap-2"
       style={{
         [align === "left" ? "right" : "left"]: `${lineLength + 6}px`,
-        transform: `translateY(-50%) scale(${show ? 1 : 0.9})`,
+        transform: "translateY(-50%)",
         flexDirection: align === "left" ? "row-reverse" : "row",
-        transition: "transform 0.5s ease-out",
       }}
     >
       <div
@@ -336,18 +343,22 @@ const Technologie = () => {
                 const inWindow = (start: number, end: number) => progress >= start && progress < end;
                 return (
                   <>
-                    {/* Ancres SUR les composants dans la vidéo, traits longs sortent du cadre */}
-                    {/* Gauche — ancre intérieure, trait part vers la gauche */}
-                    <Pin n={1} label="Coque ABS" sub="Ø 67 mm" x="25%" y="35%" show={inWindow(0.05, 0.18)} align="left" lineLength={220} />
-                    <Pin n={2} label="Haut-parleur" sub="28mm · 3W" x="40%" y="55%" show={inWindow(0.18, 0.32)} align="left" lineLength={260} />
-                    <Pin n={4} label="Micro INMP441" sub="I2S MEMS" x="40%" y="25%" show={inWindow(0.40, 0.50)} align="left" lineLength={260} />
-                    <Pin n={8} label="Batterie" sub="LiPo 1500mAh" x="35%" y="78%" show={inWindow(0.78, 0.86)} align="left" lineLength={240} />
-                    {/* Droite — ancre intérieure, trait part vers la droite */}
-                    <Pin n={5} label="Caméra OV2640" sub="2 MP" x="60%" y="38%" show={inWindow(0.48, 0.62)} lineLength={240} />
-                    <Pin n={6} label="OSAÏ V9" sub="MCU Silverlit" x="55%" y="60%" show={inWindow(0.60, 0.76)} lineLength={260} />
-                    <Pin n={9} label="Écran GC9A01" sub='1.28" IPS' x="65%" y="50%" show={inWindow(0.90, 1.01)} lineLength={240} />
-                    {/* USB-C — ancre sur le port, trait sort à droite */}
-                    <Pin n={3} label="USB-C" sub="Charge · 5V/2A" x="55%" y="88%" show={inWindow(0.18, 0.32)} lineLength={240} />
+                    {/* Fenêtres continues sans trou — chaque pin reste visible jusqu'au suivant */}
+                    {/* 0.00–0.15  Coque s'ouvre */}
+                    <Pin n={1} label="Coque ABS" sub="Ø 67 mm" x="25%" y="35%" show={inWindow(0.02, 0.18)} align="left" lineLength={220} />
+                    {/* 0.15–0.30  Haut-parleur + USB-C (même frame visible) */}
+                    <Pin n={2} label="Haut-parleur" sub="28mm · 3W" x="40%" y="55%" show={inWindow(0.15, 0.32)} align="left" lineLength={260} />
+                    <Pin n={3} label="USB-C" sub="Charge · 5V/2A" x="55%" y="88%" show={inWindow(0.15, 0.32)} lineLength={240} />
+                    {/* 0.30–0.45  Micro */}
+                    <Pin n={4} label="Micro INMP441" sub="I2S MEMS" x="40%" y="25%" show={inWindow(0.32, 0.48)} align="left" lineLength={260} />
+                    {/* 0.45–0.60  Caméra */}
+                    <Pin n={5} label="Caméra OV2640" sub="2 MP" x="60%" y="38%" show={inWindow(0.45, 0.62)} lineLength={240} />
+                    {/* 0.60–0.78  OSAÏ V9 (cœur, plus long affichage) */}
+                    <Pin n={6} label="OSAÏ V9" sub="MCU Silverlit" x="55%" y="60%" show={inWindow(0.58, 0.78)} lineLength={260} />
+                    {/* 0.78–0.90  Batterie */}
+                    <Pin n={8} label="Batterie" sub="LiPo 1500mAh" x="35%" y="78%" show={inWindow(0.74, 0.90)} align="left" lineLength={240} />
+                    {/* 0.90–1.00  Écran */}
+                    <Pin n={9} label="Écran GC9A01" sub='1.28" IPS' x="65%" y="50%" show={inWindow(0.86, 1.01)} lineLength={240} />
                   </>
                 );
               })()}
