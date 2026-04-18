@@ -90,7 +90,7 @@ const useScrollVideoScrub = (videoRef: React.RefObject<HTMLVideoElement>, sectio
   return progress;
 };
 
-/* ----- Diagram callout pin (Apple-style numbered) ----- */
+/* ----- Diagram callout pin with connector line (épuré) ----- */
 const Pin = ({
   n,
   label,
@@ -99,6 +99,7 @@ const Pin = ({
   y,
   show,
   align = "right",
+  lineLength = 80,
 }: {
   n: number;
   label: string;
@@ -107,29 +108,53 @@ const Pin = ({
   y: string;
   show: boolean;
   align?: "left" | "right";
+  lineLength?: number;
 }) => (
   <div
-    className="absolute z-20 transition-all duration-500 ease-out"
+    className="absolute z-20 transition-all duration-500 ease-out pointer-events-none"
     style={{
       left: x,
       top: y,
       opacity: show ? 1 : 0,
-      transform: `translate(-50%, -50%) scale(${show ? 1 : 0.85})`,
     }}
   >
-    <div className={`flex items-center gap-2 ${align === "left" ? "flex-row-reverse" : ""}`}>
+    {/* Connector line + dot anchor */}
+    <div
+      className="absolute top-1/2 h-[2px] bg-black"
+      style={{
+        width: `${lineLength}px`,
+        [align === "left" ? "right" : "left"]: "0",
+        transform: "translateY(-50%)",
+        transformOrigin: align === "left" ? "right center" : "left center",
+        transition: "transform 0.6s ease-out",
+        transformBox: "fill-box",
+      }}
+    />
+    <div
+      className="absolute top-1/2 w-2 h-2 rounded-full bg-black border-2 border-black"
+      style={{
+        [align === "left" ? "right" : "left"]: "-4px",
+        transform: "translateY(-50%)",
+      }}
+    />
+    {/* Label box, offset by line length */}
+    <div
+      className="absolute top-1/2 flex items-center gap-2"
+      style={{
+        [align === "left" ? "right" : "left"]: `${lineLength + 6}px`,
+        transform: `translateY(-50%) scale(${show ? 1 : 0.9})`,
+        flexDirection: align === "left" ? "row-reverse" : "row",
+        transition: "transform 0.5s ease-out",
+      }}
+    >
       <div
-        className="w-9 h-9 rounded-full border-[3px] border-black flex items-center justify-center font-black text-black text-sm shrink-0"
-        style={{ backgroundColor: "#FDE68A", boxShadow: "3px 3px 0 rgba(0,0,0,0.9)" }}
+        className="w-7 h-7 rounded-full border-2 border-black flex items-center justify-center font-black text-black text-xs shrink-0 bg-white"
       >
         {n}
       </div>
-      <div
-        className="px-3 py-1.5 border-[3px] border-black bg-white"
-        style={{ boxShadow: "3px 3px 0 rgba(0,0,0,0.9)" }}
-      >
-        <div className="font-black text-black text-xs uppercase leading-tight whitespace-nowrap">{label}</div>
-        {sub && <div className="text-[10px] font-bold text-black/60 leading-tight whitespace-nowrap">{sub}</div>}
+      <div className="leading-tight whitespace-nowrap">
+        <div className="font-black text-black text-xs uppercase">{label}</div>
+        {sub && <div className="text-[10px] font-bold text-black/50">{sub}</div>}
       </div>
     </div>
   </div>
@@ -229,16 +254,25 @@ const Technologie = () => {
               // Critical: disable autoplay so we control via currentTime
             />
 
-            {/* Apple-style numbered pins — appear progressively */}
-            <Pin n={1} label="Coque ABS" sub="Ø 67 mm" x="22%" y="38%" show={showPin(0.1)} align="left" />
-            <Pin n={2} label="Haut-parleur" sub="28mm · 3W" x="32%" y="58%" show={showPin(0.18)} align="left" />
-            <Pin n={3} label="OSAÏ V9" sub="MCU Silverlit" x="50%" y="50%" show={showPin(0.32)} />
-            <Pin n={4} label="Micro INMP441" sub="I2S MEMS" x="46%" y="32%" show={showPin(0.4)} align="left" />
-            <Pin n={5} label="Caméra OV2640" sub="2 MP" x="68%" y="28%" show={showPin(0.5)} />
-            <Pin n={6} label="Écran GC9A01" sub='1.28" IPS' x="72%" y="50%" show={showPin(0.6)} />
-            <Pin n={7} label="Pogo Pins" sub="5P · 2.54mm" x="50%" y="72%" show={showPin(0.72)} />
-            <Pin n={8} label="Batterie" sub="LiPo 1500mAh" x="42%" y="86%" show={showPin(0.82)} align="left" />
-            <Pin n={9} label="USB-C" sub="Charge latérale" x="60%" y="90%" show={showPin(0.9)} />
+            {/* Pins épurés avec lignes — séquencés selon l'ouverture du device */}
+            {/* 1. Coque ABS : visible uniquement avant l'ouverture (0.05 → 0.22) */}
+            <Pin n={1} label="Coque ABS" sub="Ø 67 mm" x="22%" y="38%" show={progress > 0.05 && progress < 0.22} align="left" lineLength={70} />
+            {/* 2. Haut-parleur : apparaît quand la coque s'ouvre (0.22) */}
+            <Pin n={2} label="Haut-parleur" sub="28mm · 3W" x="30%" y="58%" show={showPin(0.22)} align="left" lineLength={90} />
+            {/* 3. USB-C : juste après le haut-parleur */}
+            <Pin n={3} label="USB-C" sub="Charge latérale" x="60%" y="88%" show={showPin(0.3)} lineLength={80} />
+            {/* 4. Micro */}
+            <Pin n={4} label="Micro INMP441" sub="I2S MEMS" x="46%" y="32%" show={showPin(0.42)} align="left" lineLength={100} />
+            {/* 5. Caméra (ralentie) */}
+            <Pin n={5} label="Caméra OV2640" sub="2 MP" x="68%" y="28%" show={showPin(0.62)} lineLength={90} />
+            {/* 6. OSAÏ V9 (ralentie — révélation centrale) */}
+            <Pin n={6} label="OSAÏ V9" sub="MCU Silverlit" x="50%" y="50%" show={showPin(0.55)} lineLength={120} />
+            {/* 7. Pogo pins */}
+            <Pin n={7} label="Pogo Pins" sub="5P · 2.54mm" x="50%" y="72%" show={showPin(0.72)} lineLength={80} />
+            {/* 8. Batterie dans le socle */}
+            <Pin n={8} label="Batterie" sub="LiPo 1500mAh" x="42%" y="86%" show={showPin(0.8)} align="left" lineLength={90} />
+            {/* 9. LCD : à la fin, lors de la refermeture */}
+            <Pin n={9} label="Écran GC9A01" sub='1.28" IPS' x="72%" y="50%" show={showPin(0.9)} lineLength={100} />
           </div>
 
           {/* Progress indicator (top right) */}
