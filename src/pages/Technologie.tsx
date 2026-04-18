@@ -156,23 +156,22 @@ const Pin = ({
       opacity: show ? 1 : 0,
     }}
   >
-    {/* Connector line + dot anchor */}
+    {/* Connector line + dot anchor (BLANC pour contraste sur vidéo) */}
     <div
-      className="absolute top-1/2 h-[2px] bg-black"
+      className="absolute top-1/2 h-[2px] bg-white"
       style={{
         width: `${lineLength}px`,
         [align === "left" ? "right" : "left"]: "0",
         transform: "translateY(-50%)",
-        transformOrigin: align === "left" ? "right center" : "left center",
-        transition: "transform 0.6s ease-out",
-        transformBox: "fill-box",
+        boxShadow: "0 0 4px rgba(0,0,0,0.6)",
       }}
     />
     <div
-      className="absolute top-1/2 w-2 h-2 rounded-full bg-black border-2 border-black"
+      className="absolute top-1/2 w-2 h-2 rounded-full bg-white border-2 border-white"
       style={{
         [align === "left" ? "right" : "left"]: "-4px",
         transform: "translateY(-50%)",
+        boxShadow: "0 0 4px rgba(0,0,0,0.6)",
       }}
     />
     {/* Label box, offset by line length */}
@@ -186,13 +185,14 @@ const Pin = ({
       }}
     >
       <div
-        className="w-7 h-7 rounded-full border-2 border-black flex items-center justify-center font-black text-black text-xs shrink-0 bg-white"
+        className="w-7 h-7 rounded-full border-2 border-black flex items-center justify-center font-black text-white text-xs shrink-0"
+        style={{ backgroundColor: PIN_COLORS[n] || "#C084FC" }}
       >
         {n}
       </div>
-      <div className="leading-tight whitespace-nowrap">
+      <div className="leading-tight whitespace-nowrap" style={{ textShadow: "0 1px 3px rgba(255,255,255,0.9), 0 0 6px rgba(255,255,255,0.7)" }}>
         <div className="font-black text-black text-xs uppercase">{label}</div>
-        {sub && <div className="text-[10px] font-bold text-black/50">{sub}</div>}
+        {sub && <div className="text-[10px] font-bold text-black/60">{sub}</div>}
       </div>
     </div>
   </div>
