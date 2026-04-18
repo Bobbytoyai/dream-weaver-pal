@@ -62,15 +62,14 @@ const useScrollVideoScrub = (
 
     const onLoaded = () => {
       duration = video.duration || 0;
-      // Débloquer le scrub : play+pause force le décodeur à initialiser
+      // Débloquer le scrub : play+pause force le décodeur à pré-décoder TOUTES les frames
       video.play().then(() => {
         video.pause();
         video.currentTime = 0;
-      }).catch(() => {
-        // Autoplay bloqué : le scrub fonctionnera après le 1er scroll
-      });
+      }).catch(() => {});
     };
     video.addEventListener("loadedmetadata", onLoaded);
+    video.addEventListener("loadeddata", onLoaded);
     if (video.readyState >= 1) onLoaded();
 
     const computeTarget = () => {
@@ -81,27 +80,35 @@ const useScrollVideoScrub = (
       targetProgressRef.current = total > 0 ? scrolled / total : 0;
     };
 
-    // rAF loop : lerp progress + scrub video
+    // rAF loop : lerp progress + scrub video synchronisés (même frame)
+    let pendingSeek = false;
     const tick = () => {
       if (!mounted) return;
       const target = targetProgressRef.current;
       const current = currentProgressRef.current;
-      // Lerp ultra doux (0.06) pour scrub Apple-like fluide
-      const next = current + (target - current) * 0.06;
+      // Lerp plus réactif (0.18) : pins suivent le scroll sans décalage perceptible
+      const delta = target - current;
+      const next = Math.abs(delta) < 0.0005 ? target : current + delta * 0.18;
       currentProgressRef.current = next;
 
-      // Update React state seulement si delta visible (>0.2%)
-      if (Math.abs(next - current) > 0.002 || target === 0) {
+      // Update React state à chaque frame quand ça bouge → pins SYNCHRO avec vidéo
+      if (Math.abs(delta) > 0.0005) {
         setProgress(next);
       }
 
-      if (duration > 0) {
+      if (duration > 0 && !pendingSeek) {
         const t = next * duration;
-        // Seuil: ~1 frame à 30fps
-        if (Math.abs(video.currentTime - t) > 0.04) {
+        // Seuil fin (~1 frame à 60fps source)
+        if (Math.abs(video.currentTime - t) > 0.016) {
+          pendingSeek = true;
           try {
             video.currentTime = t;
           } catch {}
+          // Libère le seek dès que la nouvelle frame est prête → zéro saccade
+          const release = () => { pendingSeek = false; video.removeEventListener("seeked", release); };
+          video.addEventListener("seeked", release);
+          // Failsafe si seeked ne déclenche pas
+          setTimeout(() => { pendingSeek = false; }, 80);
         }
       }
       raf = requestAnimationFrame(tick);
