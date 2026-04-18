@@ -379,11 +379,11 @@ const Technologie = () => {
               <h2 className="text-4xl md:text-5xl font-black text-white leading-tight">
                 OSAÏ V9
                 <br />
-                <span className="text-[#FDE68A]">Silverlit Edition</span>
+                <span className="text-[#FDE68A]">Le cerveau de Bobby</span>
               </h2>
               <p className="font-bold text-white/70 leading-relaxed">
-                Une puce propriétaire conçue par OSAI, embarquant un MCU dual-core 240 MHz, 8 Mo de PSRAM
-                et un moteur de traitement vocal hybride local-cloud.
+                Une puce propriétaire conçue par OSAÏ, embarquant un MCU dual-core 240 MHz, 8 Mo de PSRAM
+                et un moteur de traitement vocal hybride 100% OSAÏ.
               </p>
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <div className="border-2 border-white/40 p-3">
