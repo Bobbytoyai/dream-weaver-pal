@@ -347,7 +347,6 @@ const Technologie = () => {
                     <Pin n={9} label="Écran GC9A01" sub='1.28" IPS' x="78%" y="50%" show={inWindow(0.90, 1.01)} lineLength={140} />
                     {/* USB-C synchronisé avec Haut-parleur (même frame) */}
                     <Pin n={3} label="USB-C" sub="Charge · 5V/2A" x="75%" y="92%" show={inWindow(0.18, 0.32)} lineLength={130} />
-                    <Pin n={7} label="Pogo Pins" sub="5P · 2.54mm" x="50%" y="95%" show={inWindow(0.74, 0.82)} align="left" lineLength={130} />
                   </>
                 );
               })()}
