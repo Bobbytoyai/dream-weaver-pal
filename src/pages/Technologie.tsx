@@ -235,6 +235,32 @@ const Technologie = () => {
   const scrubRef = useRef<HTMLElement>(null);
   const progress = useScrollVideoScrub(videoRef, scrubRef);
 
+  // Préchargement actif des 3 formats vidéo + poster pour démarrer le décodage ASAP.
+  // Le navigateur ne téléchargera réellement que le format qu'il sait décoder grâce
+  // à l'attribut `type` (Safari → HEVC, Chrome/FF → WebM, fallback → H.264).
+  useEffect(() => {
+    const assets: Array<{ href: string; as: "video" | "image"; type?: string }> = [
+      { href: "/videos/bobby-exploded-poster.jpg", as: "image", type: "image/jpeg" },
+      { href: "/videos/bobby-exploded-hevc.mp4", as: "video", type: 'video/mp4; codecs="hvc1"' },
+      { href: "/videos/bobby-exploded.webm", as: "video", type: "video/webm" },
+      { href: "/videos/bobby-exploded-scrub.mp4", as: "video", type: "video/mp4" },
+    ];
+    const links: HTMLLinkElement[] = assets.map(({ href, as, type }) => {
+      const link = document.createElement("link");
+      link.rel = "preload";
+      link.as = as;
+      link.href = href;
+      if (type) link.type = type;
+      // Hint priorité haute (Chrome) — accélère le démarrage du décodage
+      (link as any).fetchPriority = "high";
+      document.head.appendChild(link);
+      return link;
+    });
+    return () => {
+      links.forEach((l) => l.parentNode && l.parentNode.removeChild(l));
+    };
+  }, []);
+
   // Reveal pins progressively
   const showPin = (threshold: number) => progress > threshold;
 
