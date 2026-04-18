@@ -86,8 +86,8 @@ const useScrollVideoScrub = (
       if (!mounted) return;
       const target = targetProgressRef.current;
       const current = currentProgressRef.current;
-      // Lerp très doux (0.09) pour scrub Apple-like ultra fluide
-      const next = current + (target - current) * 0.09;
+      // Lerp ultra doux (0.06) pour scrub Apple-like fluide
+      const next = current + (target - current) * 0.06;
       currentProgressRef.current = next;
 
       // Update React state seulement si delta visible (>0.2%)
@@ -128,6 +128,18 @@ const useScrollVideoScrub = (
   return progress;
 };
 
+/* ----- Couleurs des numéros de pins (rétro pop) ----- */
+const PIN_COLORS: Record<number, string> = {
+  1: "#FCA5A5", // rose — Coque
+  2: "#FDE68A", // jaune — Haut-parleur
+  3: "#86EFAC", // vert — USB-C
+  4: "#93C5FD", // bleu — Micro
+  5: "#C084FC", // violet — Caméra
+  6: "#F97316", // orange — OSAÏ V9
+  8: "#A78BFA", // mauve — Batterie
+  9: "#34D399", // émeraude — Écran
+};
+
 /* ----- Diagram callout pin with connector line (épuré) ----- */
 const Pin = ({
   n,
@@ -156,23 +168,22 @@ const Pin = ({
       opacity: show ? 1 : 0,
     }}
   >
-    {/* Connector line + dot anchor */}
+    {/* Connector line + dot anchor (BLANC pour contraste sur vidéo) */}
     <div
-      className="absolute top-1/2 h-[2px] bg-black"
+      className="absolute top-1/2 h-[2px] bg-white"
       style={{
         width: `${lineLength}px`,
         [align === "left" ? "right" : "left"]: "0",
         transform: "translateY(-50%)",
-        transformOrigin: align === "left" ? "right center" : "left center",
-        transition: "transform 0.6s ease-out",
-        transformBox: "fill-box",
+        boxShadow: "0 0 4px rgba(0,0,0,0.6)",
       }}
     />
     <div
-      className="absolute top-1/2 w-2 h-2 rounded-full bg-black border-2 border-black"
+      className="absolute top-1/2 w-2 h-2 rounded-full bg-white border-2 border-white"
       style={{
         [align === "left" ? "right" : "left"]: "-4px",
         transform: "translateY(-50%)",
+        boxShadow: "0 0 4px rgba(0,0,0,0.6)",
       }}
     />
     {/* Label box, offset by line length */}
@@ -186,13 +197,14 @@ const Pin = ({
       }}
     >
       <div
-        className="w-7 h-7 rounded-full border-2 border-black flex items-center justify-center font-black text-black text-xs shrink-0 bg-white"
+        className="w-7 h-7 rounded-full border-2 border-black flex items-center justify-center font-black text-white text-xs shrink-0"
+        style={{ backgroundColor: PIN_COLORS[n] || "#C084FC" }}
       >
         {n}
       </div>
-      <div className="leading-tight whitespace-nowrap">
+      <div className="leading-tight whitespace-nowrap" style={{ textShadow: "0 1px 3px rgba(255,255,255,0.9), 0 0 6px rgba(255,255,255,0.7)" }}>
         <div className="font-black text-black text-xs uppercase">{label}</div>
-        {sub && <div className="text-[10px] font-bold text-black/50">{sub}</div>}
+        {sub && <div className="text-[10px] font-bold text-black/60">{sub}</div>}
       </div>
     </div>
   </div>
@@ -335,24 +347,13 @@ const Technologie = () => {
                     <Pin n={9} label="Écran GC9A01" sub='1.28" IPS' x="78%" y="50%" show={inWindow(0.90, 1.01)} lineLength={140} />
                     {/* USB-C synchronisé avec Haut-parleur (même frame) */}
                     <Pin n={3} label="USB-C" sub="Charge · 5V/2A" x="75%" y="92%" show={inWindow(0.18, 0.32)} lineLength={130} />
-                    <Pin n={7} label="Pogo Pins" sub="5P · 2.54mm" x="50%" y="95%" show={inWindow(0.74, 0.82)} align="left" lineLength={130} />
                   </>
                 );
               })()}
             </div>
           </div>
 
-          {/* Progress indicator (top right) */}
-          <div className="absolute top-4 right-4 z-30 border-4 border-black bg-white px-3 py-2 font-black text-xs uppercase"
-               style={{ boxShadow: "4px 4px 0 rgba(0,0,0,0.85)" }}>
-            <div className="flex items-center gap-2">
-              <span className="text-black/50">VUE ÉCLATÉE</span>
-              <span className="tabular-nums">{Math.round(progress * 100).toString().padStart(2, "0")}%</span>
-            </div>
-            <div className="mt-1.5 h-2 w-32 border-2 border-black bg-[#FDF6EC] overflow-hidden">
-              <div className="h-full bg-black transition-[width] duration-150" style={{ width: `${progress * 100}%` }} />
-            </div>
-          </div>
+          {/* Indicateur % retiré */}
 
         </div>
       </section>
