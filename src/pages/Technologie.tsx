@@ -403,7 +403,7 @@ const Technologie = () => {
                 <div className="text-center">
                   <div className="font-black text-[#FDE68A] text-3xl tracking-tight">OSAÏ</div>
                   <div className="font-black text-white text-5xl tracking-tighter">V9</div>
-                  <div className="text-[9px] font-bold text-white/50 mt-2 tracking-widest">SILVERLIT</div>
+                  <div className="text-[9px] font-bold text-white/50 mt-2 tracking-widest">OSAÏ INSIDE</div>
                 </div>
               </div>
               {/* Pins */}
