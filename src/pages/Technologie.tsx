@@ -325,13 +325,14 @@ const Technologie = () => {
             }}
           />
 
-          {/* Video stage — cadre rétro avec pins qui sortent */}
-          <div className="relative w-full h-full flex items-center justify-center p-6 md:p-10">
-            {/* Conteneur relatif : cadre + pins (les pins peuvent dépasser) */}
+          {/* Video stage — cadre rétro avec pins qui sortent.
+             Vidéo source 1440x1440 (carrée). Le cadre s'agrandit au max disponible
+             tout en laissant la place aux labels externes (jusqu'à 260px). */}
+          <div className="relative w-full h-full flex items-center justify-center px-2 py-3 md:px-4 md:py-4">
             <div
               className="relative"
               style={{
-                width: "min(60vw, 60vh)",
+                width: "min(72vw, 78vh, 760px)",
                 aspectRatio: "1 / 1",
               }}
             >
