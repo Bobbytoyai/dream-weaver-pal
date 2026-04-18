@@ -86,8 +86,8 @@ const useScrollVideoScrub = (
       if (!mounted) return;
       const target = targetProgressRef.current;
       const current = currentProgressRef.current;
-      // Lerp très doux (0.09) pour scrub Apple-like ultra fluide
-      const next = current + (target - current) * 0.09;
+      // Lerp ultra doux (0.06) pour scrub Apple-like fluide
+      const next = current + (target - current) * 0.06;
       currentProgressRef.current = next;
 
       // Update React state seulement si delta visible (>0.2%)
