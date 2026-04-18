@@ -128,6 +128,7 @@ const useScrollVideoScrub = (
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       video.removeEventListener("loadedmetadata", onLoaded);
+      video.removeEventListener("loadeddata", onLoaded);
       cancelAnimationFrame(raf);
     };
   }, [videoRef, sectionRef]);
