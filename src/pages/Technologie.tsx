@@ -280,35 +280,57 @@ const Technologie = () => {
             }}
           />
 
-          {/* Video stage */}
-          <div className="relative w-full h-full flex items-center justify-center">
-            <video
-              ref={videoRef}
-              src="/videos/bobby-exploded.mp4"
-              className="w-full h-full object-contain"
-              muted
-              playsInline
-              preload="auto"
-              // Critical: disable autoplay so we control via currentTime
-            />
+          {/* Video stage — encadrée façon écran rétro */}
+          <div className="relative w-full h-full flex items-center justify-center p-6 md:p-10">
+            <div
+              className="relative border-4 border-black bg-[#FDF6EC] overflow-hidden"
+              style={{
+                width: "min(70vw, 70vh)",
+                aspectRatio: "1 / 1",
+                boxShadow: "10px 10px 0 rgba(0,0,0,0.85)",
+              }}
+            >
+              {/* Coins type vis */}
+              {[
+                { top: 6, left: 6 },
+                { top: 6, right: 6 },
+                { bottom: 6, left: 6 },
+                { bottom: 6, right: 6 },
+              ].map((pos, i) => (
+                <div
+                  key={i}
+                  className="absolute w-2 h-2 rounded-full bg-black z-10"
+                  style={pos as any}
+                />
+              ))}
 
-            {/* Pins séquencés : chacun apparaît puis disparaît avant le suivant */}
-            {(() => {
-              const inWindow = (start: number, end: number) => progress >= start && progress < end;
-              return (
-                <>
-                  <Pin n={1} label="Coque ABS" sub="Ø 67 mm" x="22%" y="38%" show={inWindow(0.05, 0.18)} align="left" lineLength={70} />
-                  <Pin n={2} label="Haut-parleur" sub="28mm · 3W" x="30%" y="58%" show={inWindow(0.18, 0.30)} align="left" lineLength={90} />
-                  <Pin n={3} label="USB-C" sub="Charge latérale" x="60%" y="88%" show={inWindow(0.30, 0.42)} lineLength={80} />
-                  <Pin n={4} label="Micro INMP441" sub="I2S MEMS" x="46%" y="32%" show={inWindow(0.42, 0.54)} align="left" lineLength={100} />
-                  <Pin n={5} label="Caméra OV2640" sub="2 MP" x="68%" y="28%" show={inWindow(0.54, 0.66)} lineLength={90} />
-                  <Pin n={6} label="OSAÏ V9" sub="MCU Silverlit" x="50%" y="50%" show={inWindow(0.66, 0.78)} lineLength={120} />
-                  <Pin n={7} label="Pogo Pins" sub="5P · 2.54mm" x="50%" y="72%" show={inWindow(0.78, 0.86)} lineLength={80} />
-                  <Pin n={8} label="Batterie" sub="LiPo 1500mAh" x="42%" y="86%" show={inWindow(0.86, 0.93)} align="left" lineLength={90} />
-                  <Pin n={9} label="Écran GC9A01" sub='1.28" IPS' x="72%" y="50%" show={inWindow(0.93, 1.01)} lineLength={100} />
-                </>
-              );
-            })()}
+              <video
+                ref={videoRef}
+                src="/videos/bobby-exploded.mp4"
+                className="w-full h-full object-contain"
+                muted
+                playsInline
+                preload="auto"
+              />
+
+              {/* Pins séquencés — positions ajustées au cadre */}
+              {(() => {
+                const inWindow = (start: number, end: number) => progress >= start && progress < end;
+                return (
+                  <>
+                    <Pin n={1} label="Coque ABS" sub="Ø 67 mm" x="20%" y="40%" show={inWindow(0.05, 0.18)} align="left" lineLength={50} />
+                    <Pin n={2} label="Haut-parleur" sub="28mm · 3W" x="28%" y="58%" show={inWindow(0.18, 0.30)} align="left" lineLength={60} />
+                    <Pin n={3} label="USB-C" sub="Charge latérale" x="55%" y="92%" show={inWindow(0.30, 0.42)} align="left" lineLength={60} />
+                    <Pin n={4} label="Micro INMP441" sub="I2S MEMS" x="44%" y="32%" show={inWindow(0.42, 0.54)} align="left" lineLength={70} />
+                    <Pin n={5} label="Caméra OV2640" sub="2 MP" x="68%" y="28%" show={inWindow(0.54, 0.66)} lineLength={60} />
+                    <Pin n={6} label="OSAÏ V9" sub="MCU Silverlit" x="50%" y="50%" show={inWindow(0.66, 0.78)} lineLength={80} />
+                    <Pin n={7} label="Pogo Pins" sub="5P · 2.54mm" x="50%" y="72%" show={inWindow(0.78, 0.86)} lineLength={60} />
+                    <Pin n={8} label="Batterie" sub="LiPo 1500mAh" x="42%" y="86%" show={inWindow(0.86, 0.93)} align="left" lineLength={60} />
+                    <Pin n={9} label="Écran GC9A01" sub='1.28" IPS' x="72%" y="50%" show={inWindow(0.93, 1.01)} lineLength={70} />
+                  </>
+                );
+              })()}
+            </div>
           </div>
 
           {/* Progress indicator (top right) */}
