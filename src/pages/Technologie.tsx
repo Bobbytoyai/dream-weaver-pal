@@ -284,6 +284,8 @@ const Technologie = () => {
     };
   }, []);
 
+  const isMobile = useIsMobile();
+
   // Reveal pins progressively
   const showPin = (threshold: number) => progress > threshold;
 
