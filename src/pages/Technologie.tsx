@@ -197,14 +197,14 @@ const Pin = ({
       }}
     >
       <div
-        className="w-7 h-7 rounded-full border-2 border-black flex items-center justify-center font-black text-white text-xs shrink-0"
-        style={{ backgroundColor: PIN_COLORS[n] || "#C084FC" }}
+        className="w-9 h-9 rounded-full border-2 border-black flex items-center justify-center font-black text-white text-sm shrink-0"
+        style={{ backgroundColor: PIN_COLORS[n] || "#C084FC", boxShadow: "2px 2px 0 rgba(0,0,0,0.6)" }}
       >
         {n}
       </div>
-      <div className="leading-tight whitespace-nowrap" style={{ textShadow: "0 1px 3px rgba(255,255,255,0.9), 0 0 6px rgba(255,255,255,0.7)" }}>
-        <div className="font-black text-black text-xs uppercase">{label}</div>
-        {sub && <div className="text-[10px] font-bold text-black/60">{sub}</div>}
+      <div className="leading-tight whitespace-nowrap" style={{ textShadow: "0 1px 4px rgba(255,255,255,0.95), 0 0 8px rgba(255,255,255,0.8)" }}>
+        <div className="font-black text-black text-sm md:text-base uppercase">{label}</div>
+        {sub && <div className="text-xs font-bold text-black/70">{sub}</div>}
       </div>
     </div>
   </div>
@@ -336,17 +336,18 @@ const Technologie = () => {
                 const inWindow = (start: number, end: number) => progress >= start && progress < end;
                 return (
                   <>
-                    {/* Gauche (labels sortent à gauche) */}
-                    <Pin n={1} label="Coque ABS" sub="Ø 67 mm" x="15%" y="35%" show={inWindow(0.05, 0.18)} align="left" lineLength={140} />
-                    <Pin n={2} label="Haut-parleur" sub="28mm · 3W" x="20%" y="55%" show={inWindow(0.18, 0.32)} align="left" lineLength={160} />
-                    <Pin n={4} label="Micro INMP441" sub="I2S MEMS" x="35%" y="20%" show={inWindow(0.40, 0.50)} align="left" lineLength={160} />
-                    <Pin n={8} label="Batterie" sub="LiPo 1500mAh" x="30%" y="80%" show={inWindow(0.78, 0.86)} align="left" lineLength={150} />
-                    {/* Droite — caméra plus tôt, OSAÏ V9 quand PCB visible, écran à la fermeture */}
-                    <Pin n={5} label="Caméra OV2640" sub="2 MP" x="55%" y="40%" show={inWindow(0.48, 0.62)} lineLength={140} />
-                    <Pin n={6} label="OSAÏ V9" sub="MCU Silverlit" x="50%" y="62%" show={inWindow(0.60, 0.76)} lineLength={140} />
-                    <Pin n={9} label="Écran GC9A01" sub='1.28" IPS' x="78%" y="50%" show={inWindow(0.90, 1.01)} lineLength={140} />
-                    {/* USB-C synchronisé avec Haut-parleur (même frame) */}
-                    <Pin n={3} label="USB-C" sub="Charge · 5V/2A" x="75%" y="92%" show={inWindow(0.18, 0.32)} lineLength={130} />
+                    {/* Ancres ON THE EDGE (0% ou 100%) → labels totalement à l'extérieur */}
+                    {/* Gauche */}
+                    <Pin n={1} label="Coque ABS" sub="Ø 67 mm" x="0%" y="30%" show={inWindow(0.05, 0.18)} align="left" lineLength={80} />
+                    <Pin n={2} label="Haut-parleur" sub="28mm · 3W" x="0%" y="50%" show={inWindow(0.18, 0.32)} align="left" lineLength={80} />
+                    <Pin n={4} label="Micro INMP441" sub="I2S MEMS" x="0%" y="20%" show={inWindow(0.40, 0.50)} align="left" lineLength={80} />
+                    <Pin n={8} label="Batterie" sub="LiPo 1500mAh" x="0%" y="75%" show={inWindow(0.78, 0.86)} align="left" lineLength={80} />
+                    {/* Droite */}
+                    <Pin n={5} label="Caméra OV2640" sub="2 MP" x="100%" y="35%" show={inWindow(0.48, 0.62)} lineLength={80} />
+                    <Pin n={6} label="OSAÏ V9" sub="MCU Silverlit" x="100%" y="55%" show={inWindow(0.60, 0.76)} lineLength={80} />
+                    <Pin n={9} label="Écran GC9A01" sub='1.28" IPS' x="100%" y="50%" show={inWindow(0.90, 1.01)} lineLength={80} />
+                    {/* USB-C bas droite */}
+                    <Pin n={3} label="USB-C" sub="Charge · 5V/2A" x="100%" y="88%" show={inWindow(0.18, 0.32)} lineLength={80} />
                   </>
                 );
               })()}
