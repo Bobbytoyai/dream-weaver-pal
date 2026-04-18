@@ -268,7 +268,7 @@ const Technologie = () => {
       </section>
 
       {/* SCROLL-SCRUB SECTION (tall — drives video) */}
-      <section ref={scrubRef} className="relative" style={{ height: "400vh" }}>
+      <section ref={scrubRef} className="relative" style={{ height: "250vh" }}>
         <div className="sticky top-0 h-screen w-full overflow-hidden" style={{ backgroundColor: "#FDF6EC" }}>
           {/* Faint engineering grid background */}
           <div
