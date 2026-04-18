@@ -330,12 +330,21 @@ const Technologie = () => {
 
                 <video
                   ref={videoRef}
-                  src="/videos/bobby-exploded.mp4"
                   className="w-full h-full object-contain"
                   muted
                   playsInline
                   preload="auto"
-                />
+                  poster="/videos/bobby-exploded-poster.jpg"
+                >
+                  {/* HEVC pour Safari/iOS — décodage matériel ultra-rapide */}
+                  <source src="/videos/bobby-exploded-hevc.mp4" type='video/mp4; codecs="hvc1"' />
+                  {/* WebM VP9 pour Chrome/Firefox — petits keyframes = scrub fluide */}
+                  <source src="/videos/bobby-exploded.webm" type="video/webm" />
+                  {/* H.264 GOP=6 fallback universel */}
+                  <source src="/videos/bobby-exploded-scrub.mp4" type="video/mp4" />
+                  {/* Original en dernier recours */}
+                  <source src="/videos/bobby-exploded.mp4" type="video/mp4" />
+                </video>
               </div>
 
               {/* Pins — positionnés sur le cadre mais labels SORTENT (lineLength long) */}
