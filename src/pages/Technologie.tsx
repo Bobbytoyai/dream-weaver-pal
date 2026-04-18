@@ -327,15 +327,15 @@ const Technologie = () => {
                     {/* Gauche (labels sortent à gauche) */}
                     <Pin n={1} label="Coque ABS" sub="Ø 67 mm" x="15%" y="35%" show={inWindow(0.05, 0.18)} align="left" lineLength={140} />
                     <Pin n={2} label="Haut-parleur" sub="28mm · 3W" x="20%" y="55%" show={inWindow(0.18, 0.32)} align="left" lineLength={160} />
-                    <Pin n={4} label="Micro INMP441" sub="I2S MEMS" x="35%" y="20%" show={inWindow(0.42, 0.54)} align="left" lineLength={160} />
-                    <Pin n={8} label="Batterie" sub="LiPo 1500mAh" x="30%" y="80%" show={inWindow(0.86, 0.93)} align="left" lineLength={150} />
-                    {/* Droite (labels sortent à droite) */}
-                    <Pin n={5} label="Caméra OV2640" sub="2 MP" x="80%" y="22%" show={inWindow(0.54, 0.66)} lineLength={140} />
-                    <Pin n={6} label="OSAÏ V9" sub="MCU Silverlit" x="85%" y="48%" show={inWindow(0.66, 0.78)} lineLength={140} />
-                    <Pin n={9} label="Écran GC9A01" sub='1.28" IPS' x="82%" y="65%" show={inWindow(0.93, 1.01)} lineLength={140} />
+                    <Pin n={4} label="Micro INMP441" sub="I2S MEMS" x="35%" y="20%" show={inWindow(0.40, 0.50)} align="left" lineLength={160} />
+                    <Pin n={8} label="Batterie" sub="LiPo 1500mAh" x="30%" y="80%" show={inWindow(0.78, 0.86)} align="left" lineLength={150} />
+                    {/* Droite — caméra plus tôt, OSAÏ V9 quand PCB visible, écran à la fermeture */}
+                    <Pin n={5} label="Caméra OV2640" sub="2 MP" x="55%" y="40%" show={inWindow(0.48, 0.62)} lineLength={140} />
+                    <Pin n={6} label="OSAÏ V9" sub="MCU Silverlit" x="50%" y="62%" show={inWindow(0.60, 0.76)} lineLength={140} />
+                    <Pin n={9} label="Écran GC9A01" sub='1.28" IPS' x="78%" y="50%" show={inWindow(0.90, 1.01)} lineLength={140} />
                     {/* USB-C synchronisé avec Haut-parleur (même frame) */}
                     <Pin n={3} label="USB-C" sub="Charge · 5V/2A" x="75%" y="92%" show={inWindow(0.18, 0.32)} lineLength={130} />
-                    <Pin n={7} label="Pogo Pins" sub="5P · 2.54mm" x="50%" y="95%" show={inWindow(0.78, 0.86)} align="left" lineLength={130} />
+                    <Pin n={7} label="Pogo Pins" sub="5P · 2.54mm" x="50%" y="95%" show={inWindow(0.74, 0.82)} align="left" lineLength={130} />
                   </>
                 );
               })()}
