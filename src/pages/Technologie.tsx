@@ -34,9 +34,16 @@ const RetroCard = ({
   </div>
 );
 
-/* ----- Scroll-driven video scrubber (Apple AirPods style) ----- */
-const useScrollVideoScrub = (videoRef: React.RefObject<HTMLVideoElement>, sectionRef: React.RefObject<HTMLElement>) => {
+/* ----- Scroll-driven video scrubber (Apple AirPods style)
+   Optimisé : lerp continu via rAF, cible séparée du currentTime,
+   ne touche le DOM que si delta > seuil. ----- */
+const useScrollVideoScrub = (
+  videoRef: React.RefObject<HTMLVideoElement>,
+  sectionRef: React.RefObject<HTMLElement>,
+) => {
   const [progress, setProgress] = useState(0);
+  const targetProgressRef = useRef(0);
+  const currentProgressRef = useRef(0);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -45,6 +52,11 @@ const useScrollVideoScrub = (videoRef: React.RefObject<HTMLVideoElement>, sectio
 
     let duration = 0;
     let raf = 0;
+    let mounted = true;
+
+    // Hint: décodage rapide
+    video.preload = "auto";
+    (video as any).disableRemotePlayback = true;
 
     const onLoaded = () => {
       duration = video.duration || 0;
@@ -52,34 +64,51 @@ const useScrollVideoScrub = (videoRef: React.RefObject<HTMLVideoElement>, sectio
     video.addEventListener("loadedmetadata", onLoaded);
     if (video.readyState >= 1) onLoaded();
 
-    const update = () => {
+    const computeTarget = () => {
       const rect = section.getBoundingClientRect();
       const vh = window.innerHeight;
       const total = rect.height - vh;
       const scrolled = Math.min(Math.max(-rect.top, 0), total);
-      const p = total > 0 ? scrolled / total : 0;
-      setProgress(p);
+      targetProgressRef.current = total > 0 ? scrolled / total : 0;
+    };
+
+    // rAF loop : lerp progress + scrub video
+    const tick = () => {
+      if (!mounted) return;
+      const target = targetProgressRef.current;
+      const current = currentProgressRef.current;
+      // Lerp doux (0.18) pour amortir et garder la fluidité
+      const next = current + (target - current) * 0.18;
+      currentProgressRef.current = next;
+
+      // Update React state seulement si delta visible (>0.2%)
+      if (Math.abs(next - current) > 0.002 || target === 0) {
+        setProgress(next);
+      }
+
       if (duration > 0) {
-        const target = p * duration;
-        // Smooth seeking
-        if (Math.abs(video.currentTime - target) > 0.03) {
+        const t = next * duration;
+        // Seuil: ~1 frame à 30fps
+        if (Math.abs(video.currentTime - t) > 0.04) {
           try {
-            video.currentTime = target;
+            video.currentTime = t;
           } catch {}
         }
       }
+      raf = requestAnimationFrame(tick);
     };
 
     const onScroll = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(update);
+      computeTarget();
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    update();
+    window.addEventListener("resize", onScroll, { passive: true });
+    computeTarget();
+    raf = requestAnimationFrame(tick);
 
     return () => {
+      mounted = false;
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       video.removeEventListener("loadedmetadata", onLoaded);
