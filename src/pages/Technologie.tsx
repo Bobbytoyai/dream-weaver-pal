@@ -452,12 +452,12 @@ const Technologie = () => {
               </div>
             </div>
             {/* Chip visual */}
-            <div className="relative aspect-square max-w-sm mx-auto">
-              <div className="absolute inset-8 border-[6px] border-[#FDE68A] bg-[#1A1A1A] rounded-sm flex items-center justify-center"
+            <div className="relative aspect-square w-full max-w-[260px] md:max-w-sm mx-auto">
+              <div className="absolute inset-6 md:inset-8 border-[6px] border-[#FDE68A] bg-[#1A1A1A] rounded-sm flex items-center justify-center"
                    style={{ boxShadow: "0 0 60px rgba(253, 230, 138, 0.4)" }}>
                 <div className="text-center">
-                  <div className="font-black text-[#FDE68A] text-3xl tracking-tight">OSAÏ</div>
-                  <div className="font-black text-white text-5xl tracking-tighter">V9</div>
+                  <div className="font-black text-[#FDE68A] text-2xl md:text-3xl tracking-tight">OSAÏ</div>
+                  <div className="font-black text-white text-4xl md:text-5xl tracking-tighter">V9</div>
                   <div className="text-[9px] font-bold text-white/50 mt-2 tracking-widest">OSAÏ INSIDE</div>
                 </div>
               </div>
