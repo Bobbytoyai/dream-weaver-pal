@@ -128,6 +128,18 @@ const useScrollVideoScrub = (
   return progress;
 };
 
+/* ----- Couleurs des numéros de pins (rétro pop) ----- */
+const PIN_COLORS: Record<number, string> = {
+  1: "#FCA5A5", // rose — Coque
+  2: "#FDE68A", // jaune — Haut-parleur
+  3: "#86EFAC", // vert — USB-C
+  4: "#93C5FD", // bleu — Micro
+  5: "#C084FC", // violet — Caméra
+  6: "#F97316", // orange — OSAÏ V9
+  8: "#A78BFA", // mauve — Batterie
+  9: "#34D399", // émeraude — Écran
+};
+
 /* ----- Diagram callout pin with connector line (épuré) ----- */
 const Pin = ({
   n,
