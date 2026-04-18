@@ -254,25 +254,23 @@ const Technologie = () => {
               // Critical: disable autoplay so we control via currentTime
             />
 
-            {/* Pins épurés avec lignes — séquencés selon l'ouverture du device */}
-            {/* 1. Coque ABS : visible uniquement avant l'ouverture (0.05 → 0.22) */}
-            <Pin n={1} label="Coque ABS" sub="Ø 67 mm" x="22%" y="38%" show={progress > 0.05 && progress < 0.22} align="left" lineLength={70} />
-            {/* 2. Haut-parleur : apparaît quand la coque s'ouvre (0.22) */}
-            <Pin n={2} label="Haut-parleur" sub="28mm · 3W" x="30%" y="58%" show={showPin(0.22)} align="left" lineLength={90} />
-            {/* 3. USB-C : juste après le haut-parleur */}
-            <Pin n={3} label="USB-C" sub="Charge latérale" x="60%" y="88%" show={showPin(0.3)} lineLength={80} />
-            {/* 4. Micro */}
-            <Pin n={4} label="Micro INMP441" sub="I2S MEMS" x="46%" y="32%" show={showPin(0.42)} align="left" lineLength={100} />
-            {/* 5. Caméra (ralentie) */}
-            <Pin n={5} label="Caméra OV2640" sub="2 MP" x="68%" y="28%" show={showPin(0.62)} lineLength={90} />
-            {/* 6. OSAÏ V9 (ralentie — révélation centrale) */}
-            <Pin n={6} label="OSAÏ V9" sub="MCU Silverlit" x="50%" y="50%" show={showPin(0.55)} lineLength={120} />
-            {/* 7. Pogo pins */}
-            <Pin n={7} label="Pogo Pins" sub="5P · 2.54mm" x="50%" y="72%" show={showPin(0.72)} lineLength={80} />
-            {/* 8. Batterie dans le socle */}
-            <Pin n={8} label="Batterie" sub="LiPo 1500mAh" x="42%" y="86%" show={showPin(0.8)} align="left" lineLength={90} />
-            {/* 9. LCD : à la fin, lors de la refermeture */}
-            <Pin n={9} label="Écran GC9A01" sub='1.28" IPS' x="72%" y="50%" show={showPin(0.9)} lineLength={100} />
+            {/* Pins séquencés : chacun apparaît puis disparaît avant le suivant */}
+            {(() => {
+              const inWindow = (start: number, end: number) => progress >= start && progress < end;
+              return (
+                <>
+                  <Pin n={1} label="Coque ABS" sub="Ø 67 mm" x="22%" y="38%" show={inWindow(0.05, 0.18)} align="left" lineLength={70} />
+                  <Pin n={2} label="Haut-parleur" sub="28mm · 3W" x="30%" y="58%" show={inWindow(0.18, 0.30)} align="left" lineLength={90} />
+                  <Pin n={3} label="USB-C" sub="Charge latérale" x="60%" y="88%" show={inWindow(0.30, 0.42)} lineLength={80} />
+                  <Pin n={4} label="Micro INMP441" sub="I2S MEMS" x="46%" y="32%" show={inWindow(0.42, 0.54)} align="left" lineLength={100} />
+                  <Pin n={5} label="Caméra OV2640" sub="2 MP" x="68%" y="28%" show={inWindow(0.54, 0.66)} lineLength={90} />
+                  <Pin n={6} label="OSAÏ V9" sub="MCU Silverlit" x="50%" y="50%" show={inWindow(0.66, 0.78)} lineLength={120} />
+                  <Pin n={7} label="Pogo Pins" sub="5P · 2.54mm" x="50%" y="72%" show={inWindow(0.78, 0.86)} lineLength={80} />
+                  <Pin n={8} label="Batterie" sub="LiPo 1500mAh" x="42%" y="86%" show={inWindow(0.86, 0.93)} align="left" lineLength={90} />
+                  <Pin n={9} label="Écran GC9A01" sub='1.28" IPS' x="72%" y="50%" show={inWindow(0.93, 1.01)} lineLength={100} />
+                </>
+              );
+            })()}
           </div>
 
           {/* Progress indicator (top right) */}
