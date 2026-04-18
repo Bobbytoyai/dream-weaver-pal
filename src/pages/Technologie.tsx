@@ -287,16 +287,6 @@ const Technologie = () => {
             </div>
           </div>
 
-          {/* Stage label (bottom) */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 text-center pointer-events-none">
-            <div className="inline-block border-4 border-black bg-[#FDE68A] px-4 py-2 font-black text-sm uppercase tracking-wider"
-                 style={{ boxShadow: "5px 5px 0 rgba(0,0,0,0.85)" }}>
-              {progress < 0.25 && "01 · Sphère intacte"}
-              {progress >= 0.25 && progress < 0.55 && "02 · Ouverture des coques"}
-              {progress >= 0.55 && progress < 0.85 && "03 · OSAÏ V9 révélée"}
-              {progress >= 0.85 && "04 · Architecture complète"}
-            </div>
-          </div>
         </div>
       </section>
 
