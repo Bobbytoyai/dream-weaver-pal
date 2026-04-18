@@ -197,14 +197,14 @@ const Pin = ({
       }}
     >
       <div
-        className="w-7 h-7 rounded-full border-2 border-black flex items-center justify-center font-black text-white text-xs shrink-0"
-        style={{ backgroundColor: PIN_COLORS[n] || "#C084FC" }}
+        className="w-9 h-9 rounded-full border-2 border-black flex items-center justify-center font-black text-white text-sm shrink-0"
+        style={{ backgroundColor: PIN_COLORS[n] || "#C084FC", boxShadow: "2px 2px 0 rgba(0,0,0,0.6)" }}
       >
         {n}
       </div>
-      <div className="leading-tight whitespace-nowrap" style={{ textShadow: "0 1px 3px rgba(255,255,255,0.9), 0 0 6px rgba(255,255,255,0.7)" }}>
-        <div className="font-black text-black text-xs uppercase">{label}</div>
-        {sub && <div className="text-[10px] font-bold text-black/60">{sub}</div>}
+      <div className="leading-tight whitespace-nowrap" style={{ textShadow: "0 1px 4px rgba(255,255,255,0.95), 0 0 8px rgba(255,255,255,0.8)" }}>
+        <div className="font-black text-black text-sm md:text-base uppercase">{label}</div>
+        {sub && <div className="text-xs font-bold text-black/70">{sub}</div>}
       </div>
     </div>
   </div>
