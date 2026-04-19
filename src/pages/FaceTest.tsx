@@ -542,11 +542,11 @@ export default function FaceTest() {
                   shineOpacity={sBigL.opacity}
                 />
 
-                {/* Right eye socket */}
+                {/* Right eye socket — uses same shine assets for symmetry */}
                 <EyeSocket
-                  eyeSrc={yeuxDroit}
-                  shineBigSrc={shineBigR}
-                  shineSmallSrc={shineSmallR}
+                  eyeSrc={yeuxGauche}
+                  shineBigSrc={shineBigL}
+                  shineSmallSrc={shineSmallL}
                   x={rig.rightEye.x} y={rig.rightEye.y}
                   scale={rig.rightEye.scale}
                   scaleY={rightEyeScaleY}
