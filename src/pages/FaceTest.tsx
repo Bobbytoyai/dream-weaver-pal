@@ -697,9 +697,26 @@ function EyeSocket({
         containerType: "inline-size",
       }}
     >
-      {/* Eye base (black) */}
+      {/* Eye base (black outer ring / sclère) */}
       <img src={eyeSrc} alt="" draggable={false}
         className="absolute inset-0 w-full h-full" />
+      {/* Iris bleu (comme version prod QR) — suit le regard, clippé dans l'œil */}
+      <div
+        className="absolute inset-0"
+        style={{ clipPath: "ellipse(50% 50% at 50% 50%)" }}
+      >
+        <div
+          className="absolute rounded-full"
+          style={{
+            width: "78%",
+            height: "78%",
+            left: `${50 + (gx / EYE_W) * 100}%`,
+            top: `${50 + (gy / EYE_W) * 100}%`,
+            transform: "translate(-50%, -50%)",
+            background: "radial-gradient(circle at 50% 50%, #4FB3E8 0%, #3A9AD4 55%, #1F5F8C 100%)",
+          }}
+        />
+      </div>
       {/* Reflections — clipped to eye ellipse, both follow gaze together */}
       <div
         className="absolute inset-0"
