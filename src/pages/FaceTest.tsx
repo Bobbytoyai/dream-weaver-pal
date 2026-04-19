@@ -615,10 +615,10 @@ function EyeSocket({
 }) {
   // Eye is 155x152 in original SVG, rendered as 155/600 of canvas
   const EYE_W = 155, EYE_H = 152;
-  // Big white reflection (highlight) — top-left area of eye, larger
-  const BIG = { x: -28, y: -32, w: 60, h: 62 };
-  // Small white reflection — sits to bottom-right of big shine
-  const SMALL = { x: 28, y: 22, w: 22, h: 22 };
+  // Big white reflection (main highlight) — top-left quadrant of eye
+  const BIG = { x: -22, y: -22, w: 78, h: 80 };
+  // Small white reflection — small accent dot offset from big shine
+  const SMALL = { x: 22, y: 18, w: 26, h: 26 };
   // Clamp gaze so reflections stay inside the eye
   const maxX = 28, maxY = 22;
   const gx = Math.max(-maxX, Math.min(maxX, gazeX));
