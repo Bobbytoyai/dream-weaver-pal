@@ -653,9 +653,11 @@ function EyeSocket({
           src={shineBigSrc} alt="" draggable={false}
           className="absolute"
           style={{
-            width: `${(BIG.w / EYE_W) * 100}%`,
-            left: "50%", top: "50%",
-            transform: `translate(calc(-50% + ${(BIG.x + gx) / EYE_W * 100}%), calc(-50% + ${(BIG.y + gy) / EYE_H * 100}%))`,
+            width: `${(BIG.w / EYE_W) * 100}cqw`,
+            height: `${(BIG.h / EYE_W) * 100}cqw`,
+            left: `${50 + ((BIG.x + gx) / EYE_W) * 100}cqw`,
+            top: `${50 + ((BIG.y + gy) / EYE_W) * 100}cqw`,
+            transform: "translate(-50%, -50%)",
           }}
         />
         {/* Small white highlight — sits near big one */}
@@ -663,9 +665,11 @@ function EyeSocket({
           src={shineSmallSrc} alt="" draggable={false}
           className="absolute"
           style={{
-            width: `${(SMALL.w / EYE_W) * 100}%`,
-            left: "50%", top: "50%",
-            transform: `translate(calc(-50% + ${(SMALL.x + gx) / EYE_W * 100}%), calc(-50% + ${(SMALL.y + gy) / EYE_H * 100}%))`,
+            width: `${(SMALL.w / EYE_W) * 100}cqw`,
+            height: `${(SMALL.h / EYE_W) * 100}cqw`,
+            left: `${50 + ((SMALL.x + gx) / EYE_W) * 100}cqw`,
+            top: `${50 + ((SMALL.y + gy) / EYE_W) * 100}cqw`,
+            transform: "translate(-50%, -50%)",
           }}
         />
       </div>
