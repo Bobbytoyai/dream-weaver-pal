@@ -461,10 +461,10 @@ export default function FaceTest() {
                 <FacePart src={joueDroite} w={124} h={61}
                   x={180} y={90} scale={rig.cheekScale} opacity={rig.cheekOpacity} />
 
-                {/* Brows */}
-                <FacePart src={sourcilGauche} w={94} h={52}
+                {/* Brows — new shape: rounded rectangles 191x69 */}
+                <FacePart src={sourcilGauche} w={130} h={47}
                   x={rig.leftBrow.x} y={rig.leftBrow.y} rotate={rig.leftBrow.rotate} />
-                <FacePart src={sourcilDroit} w={94} h={53}
+                <FacePart src={sourcilDroit} w={130} h={47}
                   x={rig.rightBrow.x} y={rig.rightBrow.y} rotate={rig.rightBrow.rotate} />
 
                 {/* Left eye socket — clips shines inside */}
