@@ -196,7 +196,7 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       rightBrow: { x:  110, y: -135, rotate:   8 },
       gaze: { x: 8, y: -6 },
       mouth: { x: 0, y: 95, scale: 0.9, rotate: 0, openness: 0.2 },
-      mouthShape: "open-small",
+      mouthShape: "talk2",
       headTilt: 6,
     },
   },
@@ -207,7 +207,7 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       rightEye: { x:  110, y: -40, openness: 0.4, scale: 1 },
       cheekScale: 1.15, cheekOpacity: 1,
       mouth: { x: 0, y: 95, scale: 1.0, rotate: 0, openness: 0.5 },
-      mouthShape: "open-mid",
+      mouthShape: "talk3",
     },
   },
   sleepy: {
@@ -232,7 +232,7 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       rightBrow: { x:  110, y: -180, rotate:  8 },
       cheekScale: 1.25, cheekOpacity: 1,
       mouth: { x: 0, y: 95, scale: 1.05, rotate: 0, openness: 0.7 },
-      mouthShape: "laugh2",
+      mouthShape: "laugh",
     },
   },
   shy: {
@@ -483,7 +483,7 @@ export default function FaceTest() {
   let activeShape: MouthShape = rig.mouthShape;
   if (talking && rig.mouth.openness > 0.05) {
     // Map openness 0..1 → viseme index — but only when current shape is "talkable"
-    const talkable: MouthShape[] = ["smile", "line", "closed", "open-small", "open-mid", "laugh", "laugh2"];
+    const talkable: MouthShape[] = ["smile", "line", "talk1", "talk2", "talk3", "talk4", "laugh"];
     if (talkable.includes(rig.mouthShape)) {
       const idx = Math.min(
         TALK_VISEMES.length - 1,
