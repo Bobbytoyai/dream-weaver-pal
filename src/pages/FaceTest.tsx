@@ -8,9 +8,18 @@ import sourcilGauche from "@/assets/bobby-face/sourcil_gauche.svg";
 import sourcilDroit from "@/assets/bobby-face/sourcil_droit.svg";
 import joueGauche from "@/assets/bobby-face/joue_gauche.svg";
 import joueDroite from "@/assets/bobby-face/joue_droite.svg";
-import mouthSmile from "@/assets/bobby-face/mouth.svg";
-import mouthOpen from "@/assets/bobby-face/mouth-1.svg";
 import langue from "@/assets/bobby-face/langue.svg";
+// Mouth shapes — ordered from most open to closed (visemes / emotion shapes)
+import bouche0 from "@/assets/bobby-face/bouche.png";       // grande ouverte + langue (rire)
+import bouche1 from "@/assets/bobby-face/bouche-1.png";     // grande ouverte + langue (variant)
+import bouche2 from "@/assets/bobby-face/bouche-2.png";     // triste (courbe inversée)
+import bouche3 from "@/assets/bobby-face/bouche-3.png";     // sourire courbé vers le haut
+import bouche4 from "@/assets/bobby-face/bouche-4.png";     // mi-ouverte avec langue
+import bouche5 from "@/assets/bobby-face/bouche-5.png";     // peu ouverte avec langue
+import bouche6 from "@/assets/bobby-face/bouche-6.png";     // presque fermée avec ligne rose
+import bouche7 from "@/assets/bobby-face/bouche-7.png";     // fermée trait
+import boucheShock from "@/assets/bobby-face/bouche-shock.png"; // choc rectangulaire
+import boucheO from "@/assets/bobby-face/bouche-o.png";     // étonnement rond "O"
 import shineBigL from "@/assets/bobby-face/ellipse_grand_gauche.svg";
 import shineBigR from "@/assets/bobby-face/ellipse_grand_droit.svg";
 import shineSmallL from "@/assets/bobby-face/ellipse_petit_gauche.svg";
@@ -29,7 +38,37 @@ import shineSmallR from "@/assets/bobby-face/ellipse_petit_droit.svg";
 
 type Emotion =
   | "neutral" | "joy" | "sadness" | "surprise" | "anger"
-  | "love" | "curious" | "silly" | "sleepy" | "excited" | "shy";
+  | "love" | "curious" | "silly" | "sleepy" | "excited" | "shy" | "shock";
+
+// Mouth shape IDs — used to pick a sprite + width
+type MouthShape =
+  | "laugh"      // bouche-1: bouche grande ouverte + langue (joie/rire)
+  | "laugh2"     // bouche.png: variante rire
+  | "open-mid"   // bouche-4: mi-ouverte avec langue
+  | "open-small" // bouche-5: peu ouverte avec langue
+  | "smile"      // bouche-3: sourire courbé
+  | "sad"        // bouche-2: triste (courbe inversée)
+  | "line"       // bouche-6: presque fermée
+  | "closed"     // bouche-7: fermée
+  | "shock"      // bouche-shock: rectangle choc
+  | "o";         // bouche-o: rond étonnement
+
+interface MouthSprite { src: string; w: number; h: number; }
+const MOUTH_SPRITES: Record<MouthShape, MouthSprite> = {
+  laugh:      { src: bouche1,     w: 220, h: 105 },
+  laugh2:     { src: bouche0,     w: 220, h: 105 },
+  "open-mid": { src: bouche4,     w: 220, h: 70  },
+  "open-small": { src: bouche5,   w: 200, h: 60  },
+  smile:      { src: bouche3,     w: 220, h: 60  },
+  sad:        { src: bouche2,     w: 220, h: 60  },
+  line:       { src: bouche6,     w: 200, h: 22  },
+  closed:     { src: bouche7,     w: 200, h: 18  },
+  shock:      { src: boucheShock, w: 175, h: 130 },
+  o:          { src: boucheO,     w: 110, h: 130 },
+};
+
+// Visemes for talking — ordered by openness (low→high)
+const TALK_VISEMES: MouthShape[] = ["closed", "line", "open-small", "open-mid", "laugh"];
 
 interface RigState {
   // Eye sockets (anchor points — shines follow these)
@@ -45,7 +84,7 @@ interface RigState {
   cheekOpacity: number;
   // Mouth
   mouth: { x: number; y: number; scale: number; rotate: number; openness: number };
-  mouthVariant: "smile" | "open";
+  mouthShape: MouthShape;
   showTongue: boolean;
   tongueY: number;
   // Whole face
@@ -62,7 +101,7 @@ const NEUTRAL: RigState = {
   cheekScale: 1,
   cheekOpacity: 0.85,
   mouth: { x: 0, y: 90, scale: 1, rotate: 0, openness: 0 },
-  mouthVariant: "smile",
+  mouthShape: "smile",
   showTongue: false,
   tongueY: 110,
   headTilt: 0,
@@ -73,7 +112,7 @@ const NEUTRAL: RigState = {
 const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Partial<RigState> }> = {
   neutral: {
     emoji: "🙂", label: "Neutre",
-    rig: {},
+    rig: { mouthShape: "smile" },
   },
   joy: {
     emoji: "😄", label: "Joie",
@@ -83,9 +122,9 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftBrow:  { x: -110, y: -170, rotate: -6 },
       rightBrow: { x:  110, y: -170, rotate:  6 },
       cheekScale: 1.2, cheekOpacity: 1,
-      mouth: { x: 0, y: 95, scale: 1.15, rotate: 0, openness: 0.4 },
-      mouthVariant: "open",
-      showTongue: true,
+      mouth: { x: 0, y: 95, scale: 1.0, rotate: 0, openness: 0.4 },
+      mouthShape: "laugh",
+      showTongue: false,
     },
   },
   sadness: {
@@ -97,8 +136,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftBrow:  { x: -110, y: -135, rotate:  22 },
       rightBrow: { x:  110, y: -135, rotate: -22 },
       cheekScale: 0.85, cheekOpacity: 0.5,
-      mouth: { x: 0, y: 110, scale: 0.9, rotate: 180, openness: 0 },
-      mouthVariant: "smile",
+      mouth: { x: 0, y: 105, scale: 1.0, rotate: 0, openness: 0 },
+      mouthShape: "sad",
       headTilt: -3,
     },
   },
@@ -109,8 +148,20 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       rightEye: { x:  110, y: -40, openness: 1.25, scale: 1.1 },
       leftBrow:  { x: -110, y: -185, rotate: -2 },
       rightBrow: { x:  110, y: -185, rotate:  2 },
-      mouth: { x: 0, y: 100, scale: 0.6, rotate: 0, openness: 1 },
-      mouthVariant: "open",
+      mouth: { x: 0, y: 100, scale: 1.0, rotate: 0, openness: 1 },
+      mouthShape: "o",
+    },
+  },
+  shock: {
+    emoji: "😱", label: "Choc",
+    rig: {
+      leftEye:  { x: -110, y: -40, openness: 1.35, scale: 1.15 },
+      rightEye: { x:  110, y: -40, openness: 1.35, scale: 1.15 },
+      leftBrow:  { x: -110, y: -195, rotate: -4 },
+      rightBrow: { x:  110, y: -195, rotate:  4 },
+      cheekOpacity: 0.3,
+      mouth: { x: 0, y: 105, scale: 1.0, rotate: 0, openness: 1 },
+      mouthShape: "shock",
     },
   },
   anger: {
@@ -121,8 +172,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftBrow:  { x: -100, y: -120, rotate: -28 },
       rightBrow: { x:  100, y: -120, rotate:  28 },
       cheekOpacity: 0.4,
-      mouth: { x: 0, y: 100, scale: 0.85, rotate: 180, openness: 0.1 },
-      mouthVariant: "smile",
+      mouth: { x: 0, y: 100, scale: 0.9, rotate: 0, openness: 0 },
+      mouthShape: "sad",
     },
   },
   love: {
@@ -133,8 +184,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftBrow:  { x: -110, y: -165, rotate: -4 },
       rightBrow: { x:  110, y: -165, rotate:  4 },
       cheekScale: 1.3, cheekOpacity: 1,
-      mouth: { x: 0, y: 95, scale: 1.2, rotate: 0, openness: 0.2 },
-      mouthVariant: "smile",
+      mouth: { x: 0, y: 95, scale: 1.05, rotate: 0, openness: 0 },
+      mouthShape: "smile",
       headTilt: 4,
     },
   },
@@ -144,7 +195,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftBrow:  { x: -110, y: -175, rotate: -10 },
       rightBrow: { x:  110, y: -135, rotate:   8 },
       gaze: { x: 8, y: -6 },
-      mouth: { x: 0, y: 95, scale: 0.85, rotate: 0, openness: 0.15 },
+      mouth: { x: 0, y: 95, scale: 0.9, rotate: 0, openness: 0.2 },
+      mouthShape: "open-small",
       headTilt: 6,
     },
   },
@@ -154,9 +206,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftEye:  { x: -110, y: -40, openness: 0.4, scale: 1 },
       rightEye: { x:  110, y: -40, openness: 0.4, scale: 1 },
       cheekScale: 1.15, cheekOpacity: 1,
-      mouth: { x: 0, y: 95, scale: 1.05, rotate: 0, openness: 0.5 },
-      mouthVariant: "open",
-      showTongue: true, tongueY: 130,
+      mouth: { x: 0, y: 95, scale: 1.0, rotate: 0, openness: 0.5 },
+      mouthShape: "open-mid",
     },
   },
   sleepy: {
@@ -167,8 +218,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftBrow:  { x: -110, y: -110, rotate: 4 },
       rightBrow: { x:  110, y: -110, rotate: -4 },
       cheekOpacity: 0.6,
-      mouth: { x: 0, y: 95, scale: 0.8, rotate: 0, openness: 0.05 },
-      mouthVariant: "smile",
+      mouth: { x: 0, y: 95, scale: 0.85, rotate: 0, openness: 0 },
+      mouthShape: "line",
       headTilt: -5,
     },
   },
@@ -180,8 +231,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftBrow:  { x: -110, y: -180, rotate: -8 },
       rightBrow: { x:  110, y: -180, rotate:  8 },
       cheekScale: 1.25, cheekOpacity: 1,
-      mouth: { x: 0, y: 95, scale: 1.2, rotate: 0, openness: 0.7 },
-      mouthVariant: "open",
+      mouth: { x: 0, y: 95, scale: 1.05, rotate: 0, openness: 0.7 },
+      mouthShape: "laugh2",
     },
   },
   shy: {
@@ -191,8 +242,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       rightEye: { x:  110, y: -35, openness: 0.7, scale: 0.95 },
       gaze: { x: -10, y: 8 },
       cheekScale: 1.4, cheekOpacity: 1,
-      mouth: { x: 0, y: 95, scale: 0.75, rotate: 0, openness: 0.05 },
-      mouthVariant: "smile",
+      mouth: { x: 0, y: 95, scale: 0.85, rotate: 0, openness: 0 },
+      mouthShape: "line",
       headTilt: -3,
     },
   },
@@ -234,7 +285,7 @@ function lerpRig(a: RigState, b: RigState, t: number): RigState {
       rotate: lerp(a.mouth.rotate, b.mouth.rotate, t),
       openness: lerp(a.mouth.openness, b.mouth.openness, t),
     },
-    mouthVariant: t > 0.5 ? b.mouthVariant : a.mouthVariant,
+    mouthShape: t > 0.5 ? b.mouthShape : a.mouthShape,
     showTongue: t > 0.5 ? b.showTongue : a.showTongue,
     tongueY: lerp(a.tongueY, b.tongueY, t),
     headTilt: lerp(a.headTilt, b.headTilt, t),
@@ -428,9 +479,21 @@ export default function FaceTest() {
   const sSmL  = shineL(SHINE_SMALL.x, SHINE_SMALL.y);
   const sSmR  = shineR(SHINE_SMALL.x, SHINE_SMALL.y);
 
-  // Mouth: always use mouth-1 (open variant only)
-  const mouthSrc = mouthOpen;
-  const mouthScaleY = rig.mouth.scale * (1 + rig.mouth.openness * 0.4);
+  // Mouth: pick sprite based on shape, override with viseme when talking
+  let activeShape: MouthShape = rig.mouthShape;
+  if (talking && rig.mouth.openness > 0.05) {
+    // Map openness 0..1 → viseme index — but only when current shape is "talkable"
+    const talkable: MouthShape[] = ["smile", "line", "closed", "open-small", "open-mid", "laugh", "laugh2"];
+    if (talkable.includes(rig.mouthShape)) {
+      const idx = Math.min(
+        TALK_VISEMES.length - 1,
+        Math.floor(rig.mouth.openness * TALK_VISEMES.length)
+      );
+      activeShape = TALK_VISEMES[idx];
+    }
+  }
+  const sprite = MOUTH_SPRITES[activeShape];
+  const mouthScaleY = rig.mouth.scale;
 
   return (
     <div className="min-h-screen bg-[#FDF6EC] p-4 md:p-6">
@@ -491,16 +554,13 @@ export default function FaceTest() {
                   shineOpacity={sBigR.opacity}
                 />
 
-                {/* Mouth socket — contains tongue clipped inside */}
+                {/* Mouth socket — sprite-based */}
                 <MouthSocket
-                  mouthSrc={mouthSrc}
-                  tongueSrc={langue}
+                  sprite={sprite}
                   x={rig.mouth.x} y={rig.mouth.y}
                   scale={rig.mouth.scale}
                   scaleY={mouthScaleY}
                   rotate={rig.mouth.rotate}
-                  openness={rig.mouth.openness}
-                  showTongue={rig.showTongue}
                 />
               </div>
             </div>
@@ -677,56 +737,34 @@ function EyeSocket({
   );
 }
 
-// ─── MouthSocket: tongue clipped inside mouth shape ───────
+// ─── MouthSocket: renders a single mouth sprite (tongue baked-in) ───
 function MouthSocket({
-  mouthSrc, tongueSrc, x, y, scale, scaleY, rotate, openness, showTongue,
+  sprite, x, y, scale, scaleY, rotate,
 }: {
-  mouthSrc: string; tongueSrc: string;
+  sprite: { src: string; w: number; h: number };
   x: number; y: number; scale: number; scaleY: number; rotate: number;
-  openness: number; showTongue: boolean;
 }) {
-  const MOUTH_W = 175, MOUTH_H = 76;
-  const TONGUE_W = 89, TONGUE_H = 44;
-  // Tongue sits at the bottom-center of the mouth opening
-  // mouth-1 has an opening that occupies most of the shape
   return (
     <div
       className="absolute pointer-events-none will-change-transform"
       style={{
         left: "50%",
         top: "50%",
-        width: `${(MOUTH_W / 600) * 100}%`,
-        aspectRatio: `${MOUTH_W} / ${MOUTH_H}`,
+        width: `${(sprite.w / 600) * 100}%`,
+        aspectRatio: `${sprite.w} / ${sprite.h}`,
         transform: `translate(calc(-50% + ${(x / 600) * 100}cqw), calc(-50% + ${(y / 600) * 100}cqw)) scale(${scale}, ${scaleY}) rotate(${rotate}deg)`,
         transformOrigin: "center",
         containerType: "inline-size",
+        transition: "width 180ms ease, aspect-ratio 180ms ease",
       }}
     >
-      {/* Mouth base */}
-      <img src={mouthSrc} alt="" draggable={false}
-        className="absolute inset-0 w-full h-full" />
-      {/* Tongue clipped inside mouth opening */}
-      {showTongue && (
-        <div
-          className="absolute inset-0 overflow-hidden"
-          style={{
-            // The mouth-1 opening is roughly an ellipse — clip tongue to stay inside
-            clipPath: "ellipse(46% 44% at 50% 52%)",
-          }}
-        >
-          <img
-            src={tongueSrc} alt="" draggable={false}
-            className="absolute"
-            style={{
-              width: `${(TONGUE_W / MOUTH_W) * 100}%`,
-              left: "50%",
-              bottom: `${-TONGUE_H * 0.3 / MOUTH_H * 100}%`,
-              transform: `translateX(-50%) scaleY(${0.6 + openness * 0.6})`,
-              transformOrigin: "bottom center",
-            }}
-          />
-        </div>
-      )}
+      <img
+        src={sprite.src}
+        alt=""
+        draggable={false}
+        className="absolute inset-0 w-full h-full"
+        style={{ objectFit: "contain" }}
+      />
     </div>
   );
 }
