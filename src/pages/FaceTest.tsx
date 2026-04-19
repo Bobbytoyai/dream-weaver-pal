@@ -285,7 +285,7 @@ function lerpRig(a: RigState, b: RigState, t: number): RigState {
       rotate: lerp(a.mouth.rotate, b.mouth.rotate, t),
       openness: lerp(a.mouth.openness, b.mouth.openness, t),
     },
-    mouthVariant: t > 0.5 ? b.mouthVariant : a.mouthVariant,
+    mouthShape: t > 0.5 ? b.mouthShape : a.mouthShape,
     showTongue: t > 0.5 ? b.showTongue : a.showTongue,
     tongueY: lerp(a.tongueY, b.tongueY, t),
     headTilt: lerp(a.headTilt, b.headTilt, t),
