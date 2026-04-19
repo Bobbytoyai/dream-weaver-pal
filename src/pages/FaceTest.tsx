@@ -617,8 +617,8 @@ function EyeSocket({
   const EYE_W = 155, EYE_H = 152;
   // Big white reflection (main highlight) — slightly off-center top-left
   const BIG = { x: -14, y: -16, w: 70, h: 72 };
-  // Small white reflection — bottom-right next to big shine, inside eye
-  const SMALL = { x: 22, y: 22, w: 20, h: 20 };
+  // Small white reflection — bottom-right next to big shine
+  const SMALL = { x: 26, y: 26, w: 28, h: 28 };
   // Clamp gaze so reflections stay inside the eye
   const maxX = 28, maxY = 22;
   const gx = Math.max(-maxX, Math.min(maxX, gazeX));
