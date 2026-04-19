@@ -172,8 +172,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftBrow:  { x: -100, y: -120, rotate: -28 },
       rightBrow: { x:  100, y: -120, rotate:  28 },
       cheekOpacity: 0.4,
-      mouth: { x: 0, y: 100, scale: 0.9, rotate: 0, openness: 0 },
-      mouthShape: "sad",
+      mouth: { x: 0, y: 100, scale: 1.0, rotate: 0, openness: 0 },
+      mouthShape: "line",
     },
   },
   love: {
@@ -542,11 +542,11 @@ export default function FaceTest() {
                   shineOpacity={sBigL.opacity}
                 />
 
-                {/* Right eye socket */}
+                {/* Right eye socket — uses same shine assets for symmetry */}
                 <EyeSocket
-                  eyeSrc={yeuxDroit}
-                  shineBigSrc={shineBigR}
-                  shineSmallSrc={shineSmallR}
+                  eyeSrc={yeuxGauche}
+                  shineBigSrc={shineBigL}
+                  shineSmallSrc={shineSmallL}
                   x={rig.rightEye.x} y={rig.rightEye.y}
                   scale={rig.rightEye.scale}
                   scaleY={rightEyeScaleY}
