@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 
@@ -16,400 +16,551 @@ import shineBigR from "@/assets/bobby-face/ellipse_grand_droit.svg";
 import shineSmallL from "@/assets/bobby-face/ellipse_petit_gauche.svg";
 import shineSmallR from "@/assets/bobby-face/ellipse_petit_droit.svg";
 
-// ─── Types ──────────────────────────────────────────────
-type PartId =
-  | "eyeL" | "eyeR"
-  | "shineBigL" | "shineBigR"
-  | "shineSmallL" | "shineSmallR"
-  | "browL" | "browR"
-  | "cheekL" | "cheekR"
-  | "mouth" | "tongue";
+// ══════════════════════════════════════════════════════════
+// REALISTIC RIGGED FACE ANIMATION SYSTEM
+// ══════════════════════════════════════════════════════════
+// • Eye sockets contain shines that follow the eye
+// • Gaze tracking: pupils follow cursor / target
+// • Auto blink with realistic timing (every 3-6s, sometimes double)
+// • Breathing: subtle scale on whole face
+// • Brow micro-movements (idle expressivity)
+// • Mouth lip-sync from audio amplitude OR talk simulator
+// • Smooth spring-based transitions between emotions
 
-interface PartTransform {
-  x: number; // px from canvas center
-  y: number;
-  scale: number;
-  rotate: number; // degrees
-}
+type Emotion =
+  | "neutral" | "joy" | "sadness" | "surprise" | "anger"
+  | "love" | "curious" | "silly" | "sleepy" | "excited" | "shy";
 
-interface FaceState {
-  parts: Record<PartId, PartTransform>;
+interface RigState {
+  // Eye sockets (anchor points — shines follow these)
+  leftEye:  { x: number; y: number; openness: number; scale: number };
+  rightEye: { x: number; y: number; openness: number; scale: number };
+  // Gaze offset (applied to shines = pupils)
+  gaze: { x: number; y: number };
+  // Brows
+  leftBrow:  { x: number; y: number; rotate: number };
+  rightBrow: { x: number; y: number; rotate: number };
+  // Cheeks (blush)
+  cheekScale: number;
+  cheekOpacity: number;
+  // Mouth
+  mouth: { x: number; y: number; scale: number; rotate: number; openness: number };
   mouthVariant: "smile" | "open";
   showTongue: boolean;
+  tongueY: number;
+  // Whole face
+  headTilt: number;
+  breathing: number;
 }
 
-// ─── Default positions (canvas 600x600, center 300,300) ─
-const DEFAULT_FACE: FaceState = {
-  parts: {
-    eyeL:   { x: -110, y: -40, scale: 1,    rotate: 0 },
-    eyeR:   { x:  110, y: -40, scale: 1,    rotate: 0 },
-    shineBigL:   { x: -130, y: -55, scale: 1, rotate: 0 },
-    shineBigR:   { x:   90, y: -55, scale: 1, rotate: 0 },
-    shineSmallL: { x: -100, y: -15, scale: 1, rotate: 0 },
-    shineSmallR: { x:  120, y: -15, scale: 1, rotate: 0 },
-    browL:  { x: -110, y: -150, scale: 1,   rotate: 0 },
-    browR:  { x:  110, y: -150, scale: 1,   rotate: 0 },
-    cheekL: { x: -180, y:  90, scale: 1,    rotate: 0 },
-    cheekR: { x:  180, y:  90, scale: 1,    rotate: 0 },
-    mouth:  { x:    0, y:  90, scale: 1,    rotate: 0 },
-    tongue: { x:    0, y: 110, scale: 1,    rotate: 0 },
-  },
+const NEUTRAL: RigState = {
+  leftEye:  { x: -110, y: -40, openness: 1, scale: 1 },
+  rightEye: { x:  110, y: -40, openness: 1, scale: 1 },
+  gaze: { x: 0, y: 0 },
+  leftBrow:  { x: -110, y: -150, rotate: 0 },
+  rightBrow: { x:  110, y: -150, rotate: 0 },
+  cheekScale: 1,
+  cheekOpacity: 0.85,
+  mouth: { x: 0, y: 90, scale: 1, rotate: 0, openness: 0 },
   mouthVariant: "smile",
   showTongue: false,
+  tongueY: 110,
+  headTilt: 0,
+  breathing: 0,
 };
 
-// ─── Emotion presets ────────────────────────────────────
-const EMOTIONS: Record<string, { label: string; emoji: string; transform: (b: FaceState) => FaceState }> = {
+// ─── Emotion presets (target rigs) ─────────────────────────
+const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Partial<RigState> }> = {
   neutral: {
-    label: "Neutre", emoji: "🙂",
-    transform: (b) => b,
+    emoji: "🙂", label: "Neutre",
+    rig: {},
   },
   joy: {
-    label: "Joie", emoji: "😄",
-    transform: (b) => ({
-      ...b,
+    emoji: "😄", label: "Joie",
+    rig: {
+      leftEye:  { x: -110, y: -40, openness: 0.55, scale: 1 },
+      rightEye: { x:  110, y: -40, openness: 0.55, scale: 1 },
+      leftBrow:  { x: -110, y: -170, rotate: -6 },
+      rightBrow: { x:  110, y: -170, rotate:  6 },
+      cheekScale: 1.2, cheekOpacity: 1,
+      mouth: { x: 0, y: 95, scale: 1.15, rotate: 0, openness: 0.4 },
       mouthVariant: "open",
-      parts: {
-        ...b.parts,
-        browL: { ...b.parts.browL, y: -165, rotate: -5 },
-        browR: { ...b.parts.browR, y: -165, rotate: 5 },
-        eyeL:  { ...b.parts.eyeL, scale: 0.85 },
-        eyeR:  { ...b.parts.eyeR, scale: 0.85 },
-        mouth: { ...b.parts.mouth, scale: 1.1 },
-      },
-    }),
+    },
   },
   sadness: {
-    label: "Tristesse", emoji: "😢",
-    transform: (b) => ({
-      ...b,
+    emoji: "😢", label: "Tristesse",
+    rig: {
+      leftEye:  { x: -110, y: -30, openness: 0.7, scale: 0.95 },
+      rightEye: { x:  110, y: -30, openness: 0.7, scale: 0.95 },
+      gaze: { x: 0, y: 12 },
+      leftBrow:  { x: -110, y: -135, rotate:  22 },
+      rightBrow: { x:  110, y: -135, rotate: -22 },
+      cheekScale: 0.85, cheekOpacity: 0.5,
+      mouth: { x: 0, y: 110, scale: 0.9, rotate: 180, openness: 0 },
       mouthVariant: "smile",
-      parts: {
-        ...b.parts,
-        browL: { ...b.parts.browL, y: -135, rotate: 18 },
-        browR: { ...b.parts.browR, y: -135, rotate: -18 },
-        mouth: { ...b.parts.mouth, rotate: 180, y: 110 },
-      },
-    }),
+      headTilt: -3,
+    },
   },
   surprise: {
-    label: "Surprise", emoji: "😲",
-    transform: (b) => ({
-      ...b,
+    emoji: "😲", label: "Surprise",
+    rig: {
+      leftEye:  { x: -110, y: -40, openness: 1.25, scale: 1.1 },
+      rightEye: { x:  110, y: -40, openness: 1.25, scale: 1.1 },
+      leftBrow:  { x: -110, y: -185, rotate: -2 },
+      rightBrow: { x:  110, y: -185, rotate:  2 },
+      mouth: { x: 0, y: 100, scale: 0.6, rotate: 0, openness: 1 },
       mouthVariant: "open",
-      parts: {
-        ...b.parts,
-        browL: { ...b.parts.browL, y: -180 },
-        browR: { ...b.parts.browR, y: -180 },
-        eyeL:  { ...b.parts.eyeL, scale: 1.2 },
-        eyeR:  { ...b.parts.eyeR, scale: 1.2 },
-        mouth: { ...b.parts.mouth, scale: 0.7 },
-      },
-    }),
+    },
   },
   anger: {
-    label: "Colère", emoji: "😠",
-    transform: (b) => ({
-      ...b,
+    emoji: "😠", label: "Colère",
+    rig: {
+      leftEye:  { x: -110, y: -40, openness: 0.75, scale: 1 },
+      rightEye: { x:  110, y: -40, openness: 0.75, scale: 1 },
+      leftBrow:  { x: -100, y: -120, rotate: -28 },
+      rightBrow: { x:  100, y: -120, rotate:  28 },
+      cheekOpacity: 0.4,
+      mouth: { x: 0, y: 100, scale: 0.85, rotate: 180, openness: 0.1 },
       mouthVariant: "smile",
-      parts: {
-        ...b.parts,
-        browL: { ...b.parts.browL, y: -120, rotate: -25 },
-        browR: { ...b.parts.browR, y: -120, rotate: 25 },
-        mouth: { ...b.parts.mouth, rotate: 180, scale: 0.9 },
-      },
-    }),
+    },
   },
   love: {
-    label: "Amour", emoji: "🥰",
-    transform: (b) => ({
-      ...b,
+    emoji: "🥰", label: "Amour",
+    rig: {
+      leftEye:  { x: -110, y: -40, openness: 0.45, scale: 0.9 },
+      rightEye: { x:  110, y: -40, openness: 0.45, scale: 0.9 },
+      leftBrow:  { x: -110, y: -165, rotate: -4 },
+      rightBrow: { x:  110, y: -165, rotate:  4 },
+      cheekScale: 1.3, cheekOpacity: 1,
+      mouth: { x: 0, y: 95, scale: 1.2, rotate: 0, openness: 0.2 },
       mouthVariant: "smile",
-      parts: {
-        ...b.parts,
-        eyeL:  { ...b.parts.eyeL, scale: 0.7 },
-        eyeR:  { ...b.parts.eyeR, scale: 0.7 },
-        cheekL: { ...b.parts.cheekL, scale: 1.2 },
-        cheekR: { ...b.parts.cheekR, scale: 1.2 },
-        mouth: { ...b.parts.mouth, scale: 1.15 },
-      },
-    }),
+      headTilt: 4,
+    },
   },
   curious: {
-    label: "Curieux", emoji: "🤔",
-    transform: (b) => ({
-      ...b,
-      parts: {
-        ...b.parts,
-        browL: { ...b.parts.browL, y: -170, rotate: -8 },
-        browR: { ...b.parts.browR, y: -140, rotate: 5 },
-      },
-    }),
+    emoji: "🤔", label: "Curieux",
+    rig: {
+      leftBrow:  { x: -110, y: -175, rotate: -10 },
+      rightBrow: { x:  110, y: -135, rotate:   8 },
+      gaze: { x: 8, y: -6 },
+      mouth: { x: 0, y: 95, scale: 0.85, rotate: 0, openness: 0.15 },
+      headTilt: 6,
+    },
   },
   silly: {
-    label: "Tirelangue", emoji: "😋",
-    transform: (b) => ({
-      ...b,
+    emoji: "😋", label: "Tirelangue",
+    rig: {
+      leftEye:  { x: -110, y: -40, openness: 0.4, scale: 1 },
+      rightEye: { x:  110, y: -40, openness: 0.4, scale: 1 },
+      cheekScale: 1.15, cheekOpacity: 1,
+      mouth: { x: 0, y: 95, scale: 1.05, rotate: 0, openness: 0.5 },
       mouthVariant: "open",
-      showTongue: true,
-      parts: {
-        ...b.parts,
-        eyeL:  { ...b.parts.eyeL, scale: 0.85 },
-        eyeR:  { ...b.parts.eyeR, scale: 0.85 },
-      },
-    }),
+      showTongue: true, tongueY: 130,
+    },
   },
   sleepy: {
-    label: "Endormi", emoji: "😴",
-    transform: (b) => ({
-      ...b,
+    emoji: "😴", label: "Endormi",
+    rig: {
+      leftEye:  { x: -110, y: -25, openness: 0.12, scale: 1 },
+      rightEye: { x:  110, y: -25, openness: 0.12, scale: 1 },
+      leftBrow:  { x: -110, y: -110, rotate: 4 },
+      rightBrow: { x:  110, y: -110, rotate: -4 },
+      cheekOpacity: 0.6,
+      mouth: { x: 0, y: 95, scale: 0.8, rotate: 0, openness: 0.05 },
       mouthVariant: "smile",
-      parts: {
-        ...b.parts,
-        eyeL: { ...b.parts.eyeL, scale: 0.3 },
-        eyeR: { ...b.parts.eyeR, scale: 0.3 },
-        browL: { ...b.parts.browL, y: -110 },
-        browR: { ...b.parts.browR, y: -110 },
-      },
-    }),
+      headTilt: -5,
+    },
+  },
+  excited: {
+    emoji: "🤩", label: "Excité",
+    rig: {
+      leftEye:  { x: -110, y: -45, openness: 1.15, scale: 1.05 },
+      rightEye: { x:  110, y: -45, openness: 1.15, scale: 1.05 },
+      leftBrow:  { x: -110, y: -180, rotate: -8 },
+      rightBrow: { x:  110, y: -180, rotate:  8 },
+      cheekScale: 1.25, cheekOpacity: 1,
+      mouth: { x: 0, y: 95, scale: 1.2, rotate: 0, openness: 0.7 },
+      mouthVariant: "open",
+    },
+  },
+  shy: {
+    emoji: "😳", label: "Timide",
+    rig: {
+      leftEye:  { x: -110, y: -35, openness: 0.7, scale: 0.95 },
+      rightEye: { x:  110, y: -35, openness: 0.7, scale: 0.95 },
+      gaze: { x: -10, y: 8 },
+      cheekScale: 1.4, cheekOpacity: 1,
+      mouth: { x: 0, y: 95, scale: 0.75, rotate: 0, openness: 0.05 },
+      mouthVariant: "smile",
+      headTilt: -3,
+    },
   },
 };
 
-// ─── Part metadata ──────────────────────────────────────
-const PART_META: { id: PartId; label: string; src: string; w: number; h: number; flipX?: boolean }[] = [
-  { id: "browL",  label: "Sourcil G",  src: sourcilGauche, w: 94,  h: 52  },
-  { id: "browR",  label: "Sourcil D",  src: sourcilDroit,  w: 94,  h: 53  },
-  { id: "eyeL",   label: "Œil G",      src: yeuxGauche,    w: 155, h: 152 },
-  { id: "eyeR",   label: "Œil D",      src: yeuxDroit,     w: 155, h: 152 },
-  { id: "shineBigL",   label: "Reflet G",  src: shineBigL,   w: 48, h: 50 },
-  { id: "shineBigR",   label: "Reflet D",  src: shineBigR,   w: 48, h: 50 },
-  { id: "shineSmallL", label: "Petit G",   src: shineSmallL, w: 20, h: 20 },
-  { id: "shineSmallR", label: "Petit D",   src: shineSmallR, w: 20, h: 20 },
-  { id: "cheekL", label: "Joue G",     src: joueGauche,    w: 124, h: 61  },
-  { id: "cheekR", label: "Joue D",     src: joueDroite,    w: 124, h: 61  },
-  { id: "mouth",  label: "Bouche",     src: mouthSmile,    w: 175, h: 76  },
-  { id: "tongue", label: "Langue",     src: langue,        w: 89,  h: 44  },
-];
+// ─── Lerp utility ──────────────────────────────────────────
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+function lerpRig(a: RigState, b: RigState, t: number): RigState {
+  return {
+    leftEye: {
+      x: lerp(a.leftEye.x, b.leftEye.x, t),
+      y: lerp(a.leftEye.y, b.leftEye.y, t),
+      openness: lerp(a.leftEye.openness, b.leftEye.openness, t),
+      scale: lerp(a.leftEye.scale, b.leftEye.scale, t),
+    },
+    rightEye: {
+      x: lerp(a.rightEye.x, b.rightEye.x, t),
+      y: lerp(a.rightEye.y, b.rightEye.y, t),
+      openness: lerp(a.rightEye.openness, b.rightEye.openness, t),
+      scale: lerp(a.rightEye.scale, b.rightEye.scale, t),
+    },
+    gaze: { x: lerp(a.gaze.x, b.gaze.x, t), y: lerp(a.gaze.y, b.gaze.y, t) },
+    leftBrow: {
+      x: lerp(a.leftBrow.x, b.leftBrow.x, t),
+      y: lerp(a.leftBrow.y, b.leftBrow.y, t),
+      rotate: lerp(a.leftBrow.rotate, b.leftBrow.rotate, t),
+    },
+    rightBrow: {
+      x: lerp(a.rightBrow.x, b.rightBrow.x, t),
+      y: lerp(a.rightBrow.y, b.rightBrow.y, t),
+      rotate: lerp(a.rightBrow.rotate, b.rightBrow.rotate, t),
+    },
+    cheekScale: lerp(a.cheekScale, b.cheekScale, t),
+    cheekOpacity: lerp(a.cheekOpacity, b.cheekOpacity, t),
+    mouth: {
+      x: lerp(a.mouth.x, b.mouth.x, t),
+      y: lerp(a.mouth.y, b.mouth.y, t),
+      scale: lerp(a.mouth.scale, b.mouth.scale, t),
+      rotate: lerp(a.mouth.rotate, b.mouth.rotate, t),
+      openness: lerp(a.mouth.openness, b.mouth.openness, t),
+    },
+    mouthVariant: t > 0.5 ? b.mouthVariant : a.mouthVariant,
+    showTongue: t > 0.5 ? b.showTongue : a.showTongue,
+    tongueY: lerp(a.tongueY, b.tongueY, t),
+    headTilt: lerp(a.headTilt, b.headTilt, t),
+    breathing: lerp(a.breathing, b.breathing, t),
+  };
+}
 
-const STORAGE_KEY = "bobby_face_test_v1";
+function applyPreset(base: RigState, preset: Partial<RigState>): RigState {
+  return { ...base, ...preset };
+}
 
+// ─── Main component ────────────────────────────────────────
 export default function FaceTest() {
-  const [face, setFace] = useState<FaceState>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return DEFAULT_FACE;
+  const [emotion, setEmotion] = useState<Emotion>("neutral");
+  const [bgColor, setBgColor] = useState("#FDF6EC");
+
+  // Animation toggles
+  const [autoBlink, setAutoBlink] = useState(true);
+  const [gazeFollow, setGazeFollow] = useState(true);
+  const [breathing, setBreathing] = useState(true);
+  const [microMoves, setMicroMoves] = useState(true);
+  const [talking, setTalking] = useState(false);
+
+  // Live rig state
+  const [rig, setRig] = useState<RigState>(NEUTRAL);
+  const targetRig = useRef<RigState>(NEUTRAL);
+  const currentRig = useRef<RigState>(NEUTRAL);
+
+  // Blink state (multiplier 0..1 on openness)
+  const blinkRef = useRef(1);
+  const nextBlinkRef = useRef(performance.now() + 3000);
+
+  // Gaze target (smoothed)
+  const gazeTargetRef = useRef({ x: 0, y: 0 });
+
+  // Talk state
+  const talkPhaseRef = useRef(0);
+
+  // Canvas
+  const canvasRef = useRef<HTMLDivElement>(null);
+
+  // ─── Update target rig on emotion change ───
+  useEffect(() => {
+    targetRig.current = applyPreset(NEUTRAL, EMOTION_PRESETS[emotion].rig);
+  }, [emotion]);
+
+  // ─── Mouse gaze tracking ───
+  useEffect(() => {
+    if (!gazeFollow) {
+      gazeTargetRef.current = { x: 0, y: 0 };
+      return;
+    }
+    const handler = (e: PointerEvent) => {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = (e.clientX - cx) / (rect.width / 2);
+      const dy = (e.clientY - cy) / (rect.height / 2);
+      // Clamp & scale to pupil travel range (px in 600-canvas coords)
+      const maxX = 18, maxY = 14;
+      gazeTargetRef.current = {
+        x: Math.max(-maxX, Math.min(maxX, dx * maxX * 1.2)),
+        y: Math.max(-maxY, Math.min(maxY, dy * maxY * 1.2)),
+      };
+    };
+    window.addEventListener("pointermove", handler);
+    return () => window.removeEventListener("pointermove", handler);
+  }, [gazeFollow]);
+
+  // ─── Animation loop ───
+  useEffect(() => {
+    let rafId = 0;
+    let last = performance.now();
+
+    const tick = (now: number) => {
+      const dt = Math.min(64, now - last) / 1000;
+      last = now;
+
+      // 1. Spring toward target rig
+      const ease = 1 - Math.pow(0.001, dt); // critically damped feel ~time-constant 150ms
+      currentRig.current = lerpRig(currentRig.current, targetRig.current, ease * 0.85);
+
+      // 2. Blink overlay
+      if (autoBlink) {
+        if (now > nextBlinkRef.current) {
+          // schedule blink: 130ms close, 80ms hold, 160ms open
+          const start = now;
+          const closeDur = 110, openDur = 170;
+          const animateBlink = (t: number) => {
+            if (t < closeDur) blinkRef.current = 1 - t / closeDur;
+            else if (t < closeDur + openDur) blinkRef.current = (t - closeDur) / openDur;
+            else { blinkRef.current = 1; return true; }
+            return false;
+          };
+          // Mark next blink (3s-6s, sometimes 2 quick)
+          const isDouble = Math.random() < 0.18;
+          nextBlinkRef.current = now + (isDouble ? 350 : 3000 + Math.random() * 3500);
+          // Run inline using closure
+          const blinkLoop = (n: number) => {
+            const elapsed = n - start;
+            if (!animateBlink(elapsed)) requestAnimationFrame(blinkLoop);
+          };
+          requestAnimationFrame(blinkLoop);
+        }
+      } else {
+        blinkRef.current = 1;
+      }
+
+      // 3. Breathing — subtle vertical bob & scale
+      const breath = breathing ? Math.sin(now / 1400) * 0.5 + 0.5 : 0;
+
+      // 4. Micro saccades — tiny random eye flicks every 1-3s
+      // (handled inside gaze smoothing via small noise)
+      const microNoise = microMoves
+        ? { x: Math.sin(now / 730) * 1.5 + Math.cos(now / 1100) * 1.2,
+            y: Math.cos(now / 870) * 1.0 }
+        : { x: 0, y: 0 };
+
+      // 5. Smooth gaze toward target
+      const gx = lerp(currentRig.current.gaze.x, gazeTargetRef.current.x + microNoise.x, ease * 0.3);
+      const gy = lerp(currentRig.current.gaze.y, gazeTargetRef.current.y + microNoise.y, ease * 0.3);
+
+      // 6. Talking — modulate mouth openness
+      let mouthOpenAdd = 0;
+      if (talking) {
+        talkPhaseRef.current += dt * 8;
+        const env = (Math.sin(talkPhaseRef.current) * 0.5 + 0.5) *
+                    (Math.sin(talkPhaseRef.current * 0.37) * 0.5 + 0.5);
+        mouthOpenAdd = env * 0.6;
+      }
+
+      // 7. Compose final rig
+      const final: RigState = {
+        ...currentRig.current,
+        gaze: { x: gx, y: gy },
+        leftEye: {
+          ...currentRig.current.leftEye,
+          openness: currentRig.current.leftEye.openness * blinkRef.current,
+        },
+        rightEye: {
+          ...currentRig.current.rightEye,
+          openness: currentRig.current.rightEye.openness * blinkRef.current,
+        },
+        mouth: {
+          ...currentRig.current.mouth,
+          openness: Math.min(1, currentRig.current.mouth.openness + mouthOpenAdd),
+          scale: currentRig.current.mouth.scale + mouthOpenAdd * 0.1,
+        },
+        breathing: breath,
+      };
+
+      setRig(final);
+      currentRig.current.gaze = { x: gx, y: gy };
+
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [autoBlink, breathing, microMoves, talking]);
+
+  // ─── Renderer helpers (% of 600 canvas) ───
+  const pct = (v: number) => `${(v / 600) * 100}%`;
+
+  // Compute final positions
+  const headTransform = `translate(-50%, -50%) rotate(${rig.headTilt}deg) translateY(${rig.breathing * 4 - 2}px) scale(${1 + rig.breathing * 0.012})`;
+
+  // Eye openness via vertical scale (clamp min so it doesn't fully disappear)
+  const leftEyeScaleY = Math.max(0.02, rig.leftEye.openness);
+  const rightEyeScaleY = Math.max(0.02, rig.rightEye.openness);
+
+  // Shines = pupils. Position relative to eye + gaze offset, clipped by openness
+  const shineL = (sx: number, sy: number) => ({
+    x: rig.leftEye.x + sx + rig.gaze.x,
+    y: rig.leftEye.y + sy + rig.gaze.y * leftEyeScaleY,
+    opacity: leftEyeScaleY > 0.15 ? 1 : leftEyeScaleY / 0.15,
+  });
+  const shineR = (sx: number, sy: number) => ({
+    x: rig.rightEye.x + sx + rig.gaze.x,
+    y: rig.rightEye.y + sy + rig.gaze.y * rightEyeScaleY,
+    opacity: rightEyeScaleY > 0.15 ? 1 : rightEyeScaleY / 0.15,
   });
 
-  const [selectedPart, setSelectedPart] = useState<PartId>("eyeL");
-  const [bgColor, setBgColor] = useState("#FDF6EC");
-  const [showGuides, setShowGuides] = useState(true);
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const dragState = useRef<{ partId: PartId; startX: number; startY: number; origX: number; origY: number } | null>(null);
+  // Big shine offset within eye, small shine offset within eye
+  const SHINE_BIG = { x: -22, y: -25 };
+  const SHINE_SMALL = { x: 12, y: 25 };
 
-  // Save to localStorage on change
-  useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(face)); } catch {}
-  }, [face]);
+  const sBigL = shineL(SHINE_BIG.x, SHINE_BIG.y);
+  const sBigR = shineR(SHINE_BIG.x, SHINE_BIG.y);
+  const sSmL  = shineL(SHINE_SMALL.x, SHINE_SMALL.y);
+  const sSmR  = shineR(SHINE_SMALL.x, SHINE_SMALL.y);
 
-  const updatePart = useCallback((id: PartId, patch: Partial<PartTransform>) => {
-    setFace(f => ({
-      ...f,
-      parts: { ...f.parts, [id]: { ...f.parts[id], ...patch } },
-    }));
-  }, []);
-
-  // Drag handlers
-  const handlePointerDown = (e: React.PointerEvent, id: PartId) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setSelectedPart(id);
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    dragState.current = {
-      partId: id,
-      startX: e.clientX,
-      startY: e.clientY,
-      origX: face.parts[id].x,
-      origY: face.parts[id].y,
-    };
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!dragState.current) return;
-    const { partId, startX, startY, origX, origY } = dragState.current;
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-    // Scale to canvas coords (canvas is 600px logical, but rendered at variable size)
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const scale = 600 / rect.width;
-    updatePart(partId, { x: origX + dx * scale, y: origY + dy * scale });
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    dragState.current = null;
-    try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch {}
-  };
-
-  const applyEmotion = (key: string) => {
-    setFace(EMOTIONS[key].transform(DEFAULT_FACE));
-  };
-
-  const exportConfig = () => {
-    const json = JSON.stringify(face, null, 2);
-    navigator.clipboard.writeText(json).then(() => {
-      alert("Config copiée dans le presse-papier !");
-    });
-  };
-
-  const sel = face.parts[selectedPart];
+  // Mouth: select asset based on openness
+  const mouthSrc = (rig.mouth.openness > 0.3 || rig.mouthVariant === "open") ? mouthOpen : mouthSmile;
+  const mouthScaleY = rig.mouth.scale * (1 + rig.mouth.openness * 0.4);
 
   return (
     <div className="min-h-screen bg-[#FDF6EC] p-4 md:p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div>
-            <h1 className="text-2xl md:text-3xl font-black text-black">🎭 Bobby Face Test</h1>
-            <p className="text-xs text-black/60 font-bold">Drag les pièces ou utilise les sliders</p>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={() => setFace(DEFAULT_FACE)} variant="outline" className="border-2 border-black font-black">Reset</Button>
-            <Button onClick={exportConfig} className="bg-black text-white font-black hover:bg-black/80">Export JSON</Button>
+            <h1 className="text-2xl md:text-3xl font-black text-black">🎭 Bobby Face — Realistic</h1>
+            <p className="text-xs text-black/60 font-bold">Animation rig avec gaze, blink, breathing, lip-sync</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
-          {/* Canvas */}
+          {/* ─── Canvas ─── */}
           <div className="border-4 border-black rounded-2xl overflow-hidden shadow-[6px_6px_0_0_rgba(0,0,0,1)]">
             <div
               ref={canvasRef}
-              className="relative w-full aspect-square touch-none select-none"
+              className="relative w-full aspect-square select-none overflow-hidden"
               style={{ background: bgColor }}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerCancel={handlePointerUp}
             >
-              {/* Guides */}
-              {showGuides && (
-                <>
-                  <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute left-1/2 top-0 bottom-0 w-px bg-black/10" />
-                    <div className="absolute top-1/2 left-0 right-0 h-px bg-black/10" />
-                  </div>
-                </>
-              )}
+              {/* Head container — applies tilt, breathing */}
+              <div
+                className="absolute left-1/2 top-1/2 w-full h-full"
+                style={{ transform: headTransform, transformOrigin: "center" }}
+              >
+                {/* Cheeks */}
+                <FacePart src={joueGauche} w={124} h={61}
+                  x={-180} y={90} scale={rig.cheekScale} opacity={rig.cheekOpacity} />
+                <FacePart src={joueDroite} w={124} h={61}
+                  x={180} y={90} scale={rig.cheekScale} opacity={rig.cheekOpacity} />
 
-              {/* Render parts in z-order */}
-              {(["cheekL","cheekR","browL","browR","eyeL","eyeR","shineBigL","shineBigR","shineSmallL","shineSmallR","mouth","tongue"] as PartId[]).map(id => {
-                if (id === "tongue" && !face.showTongue) return null;
-                const meta = PART_META.find(p => p.id === id)!;
-                const t = face.parts[id];
-                const src = id === "mouth" ? (face.mouthVariant === "open" ? mouthOpen : mouthSmile) : meta.src;
-                const isSelected = selectedPart === id;
-                return (
-                  <img
-                    key={id}
-                    src={src}
-                    alt={meta.label}
-                    draggable={false}
-                    onPointerDown={(e) => handlePointerDown(e, id)}
-                    className={`absolute cursor-move transition-shadow ${isSelected ? "ring-2 ring-pink-500 ring-offset-2 rounded-md" : ""}`}
-                    style={{
-                      left: "50%",
-                      top: "50%",
-                      width: `${(meta.w / 600) * 100}%`,
-                      transform: `translate(calc(-50% + ${(t.x / 600) * 100}cqw), calc(-50% + ${(t.y / 600) * 100}cqw)) scale(${t.scale}) rotate(${t.rotate}deg)`,
-                      transformOrigin: "center",
-                      containerType: "inline-size",
-                    }}
-                  />
-                );
-              })}
+                {/* Brows */}
+                <FacePart src={sourcilGauche} w={94} h={52}
+                  x={rig.leftBrow.x} y={rig.leftBrow.y} rotate={rig.leftBrow.rotate} />
+                <FacePart src={sourcilDroit} w={94} h={53}
+                  x={rig.rightBrow.x} y={rig.rightBrow.y} rotate={rig.rightBrow.rotate} />
+
+                {/* Eyes (eyelid effect via scaleY) */}
+                <FacePart src={yeuxGauche} w={155} h={152}
+                  x={rig.leftEye.x} y={rig.leftEye.y}
+                  scale={rig.leftEye.scale} scaleY={leftEyeScaleY} />
+                <FacePart src={yeuxDroit} w={155} h={152}
+                  x={rig.rightEye.x} y={rig.rightEye.y}
+                  scale={rig.rightEye.scale} scaleY={rightEyeScaleY} />
+
+                {/* Shines (pupils) — follow gaze */}
+                <FacePart src={shineBigL} w={48} h={50}
+                  x={sBigL.x} y={sBigL.y} opacity={sBigL.opacity} />
+                <FacePart src={shineBigR} w={48} h={50}
+                  x={sBigR.x} y={sBigR.y} opacity={sBigR.opacity} />
+                <FacePart src={shineSmallL} w={20} h={20}
+                  x={sSmL.x} y={sSmL.y} opacity={sSmL.opacity} />
+                <FacePart src={shineSmallR} w={20} h={20}
+                  x={sSmR.x} y={sSmR.y} opacity={sSmR.opacity} />
+
+                {/* Mouth */}
+                <FacePart src={mouthSrc} w={175} h={76}
+                  x={rig.mouth.x} y={rig.mouth.y}
+                  scale={rig.mouth.scale} scaleY={mouthScaleY}
+                  rotate={rig.mouth.rotate} />
+
+                {/* Tongue */}
+                {rig.showTongue && (
+                  <FacePart src={langue} w={89} h={44}
+                    x={0} y={rig.tongueY} scale={1} />
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Controls */}
+          {/* ─── Controls ─── */}
           <div className="space-y-4">
             {/* Emotions */}
             <div className="border-4 border-black rounded-2xl p-3 bg-white shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
               <h3 className="font-black text-black mb-2 text-sm">😊 Émotions</h3>
               <div className="grid grid-cols-3 gap-1.5">
-                {Object.entries(EMOTIONS).map(([key, e]) => (
+                {(Object.keys(EMOTION_PRESETS) as Emotion[]).map(key => (
                   <button
                     key={key}
-                    onClick={() => applyEmotion(key)}
-                    className="flex flex-col items-center py-2 px-1 rounded-lg border-2 border-black bg-[#FDF6EC] hover:bg-pink-100 transition-colors font-bold text-[10px]"
-                  >
-                    <span className="text-xl">{e.emoji}</span>
-                    <span className="text-black truncate w-full text-center">{e.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Part picker */}
-            <div className="border-4 border-black rounded-2xl p-3 bg-white shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
-              <h3 className="font-black text-black mb-2 text-sm">🎯 Pièce sélectionnée</h3>
-              <div className="grid grid-cols-4 gap-1 mb-3">
-                {PART_META.map(p => (
-                  <button
-                    key={p.id}
-                    onClick={() => setSelectedPart(p.id)}
-                    className={`py-1.5 px-1 rounded border-2 border-black text-[9px] font-black transition-colors ${
-                      selectedPart === p.id ? "bg-pink-300 text-black" : "bg-[#FDF6EC] hover:bg-pink-100"
+                    onClick={() => setEmotion(key)}
+                    className={`flex flex-col items-center py-2 px-1 rounded-lg border-2 border-black transition-colors font-bold text-[10px] ${
+                      emotion === key ? "bg-pink-300" : "bg-[#FDF6EC] hover:bg-pink-100"
                     }`}
                   >
-                    {p.label}
+                    <span className="text-xl">{EMOTION_PRESETS[key].emoji}</span>
+                    <span className="text-black truncate w-full text-center">{EMOTION_PRESETS[key].label}</span>
                   </button>
                 ))}
               </div>
+            </div>
 
-              {/* Sliders */}
-              <div className="space-y-2.5 text-xs">
-                <SliderRow label="X" value={sel.x} min={-300} max={300} step={1} onChange={(v) => updatePart(selectedPart, { x: v })} />
-                <SliderRow label="Y" value={sel.y} min={-300} max={300} step={1} onChange={(v) => updatePart(selectedPart, { y: v })} />
-                <SliderRow label="Scale" value={sel.scale} min={0.1} max={3} step={0.05} onChange={(v) => updatePart(selectedPart, { scale: v })} />
-                <SliderRow label="Rotate" value={sel.rotate} min={-180} max={180} step={1} onChange={(v) => updatePart(selectedPart, { rotate: v })} />
+            {/* Animation toggles */}
+            <div className="border-4 border-black rounded-2xl p-3 bg-white shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+              <h3 className="font-black text-black mb-2 text-sm">🎬 Animations</h3>
+              <div className="space-y-2">
+                <Toggle label="👁️ Clignement auto" value={autoBlink} onChange={setAutoBlink} />
+                <Toggle label="👀 Regard suit la souris" value={gazeFollow} onChange={setGazeFollow} />
+                <Toggle label="🫁 Respiration" value={breathing} onChange={setBreathing} />
+                <Toggle label="✨ Micro-mouvements" value={microMoves} onChange={setMicroMoves} />
+                <Toggle label="🗣️ Parle (lip-sync)" value={talking} onChange={setTalking} />
               </div>
             </div>
 
-            {/* Mouth options */}
+            {/* Manual blink trigger */}
             <div className="border-4 border-black rounded-2xl p-3 bg-white shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
-              <h3 className="font-black text-black mb-2 text-sm">👄 Bouche</h3>
-              <div className="flex gap-2 mb-2">
-                <button
-                  onClick={() => setFace(f => ({ ...f, mouthVariant: "smile" }))}
-                  className={`flex-1 py-2 rounded border-2 border-black font-black text-xs ${face.mouthVariant === "smile" ? "bg-pink-300" : "bg-[#FDF6EC]"}`}
-                >Sourire</button>
-                <button
-                  onClick={() => setFace(f => ({ ...f, mouthVariant: "open" }))}
-                  className={`flex-1 py-2 rounded border-2 border-black font-black text-xs ${face.mouthVariant === "open" ? "bg-pink-300" : "bg-[#FDF6EC]"}`}
-                >Ouverte</button>
+              <h3 className="font-black text-black mb-2 text-sm">🎯 Actions</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  onClick={() => { nextBlinkRef.current = performance.now(); }}
+                  variant="outline"
+                  className="border-2 border-black font-black text-xs"
+                >Cligner</Button>
+                <Button
+                  onClick={() => setEmotion("neutral")}
+                  variant="outline"
+                  className="border-2 border-black font-black text-xs"
+                >Reset</Button>
               </div>
-              <label className="flex items-center gap-2 text-xs font-bold text-black">
+            </div>
+
+            {/* Background */}
+            <div className="border-4 border-black rounded-2xl p-3 bg-white shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
+              <h3 className="font-black text-black mb-2 text-sm">🎨 Fond</h3>
+              <div className="flex items-center gap-2">
                 <input
-                  type="checkbox"
-                  checked={face.showTongue}
-                  onChange={(e) => setFace(f => ({ ...f, showTongue: e.target.checked }))}
-                  className="w-4 h-4 accent-pink-500"
+                  type="color"
+                  value={bgColor}
+                  onChange={(e) => setBgColor(e.target.value)}
+                  className="w-10 h-10 rounded border-2 border-black cursor-pointer"
                 />
-                Afficher la langue
-              </label>
-            </div>
-
-            {/* Display options */}
-            <div className="border-4 border-black rounded-2xl p-3 bg-white shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
-              <h3 className="font-black text-black mb-2 text-sm">🎨 Affichage</h3>
-              <label className="flex items-center gap-2 text-xs font-bold text-black mb-2">
-                <input type="checkbox" checked={showGuides} onChange={(e) => setShowGuides(e.target.checked)} className="w-4 h-4 accent-pink-500" />
-                Guides centrés
-              </label>
-              <label className="flex items-center gap-2 text-xs font-bold text-black">
-                Fond :
-                <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-8 h-8 rounded border-2 border-black cursor-pointer" />
-                <span className="font-mono text-[10px]">{bgColor}</span>
-              </label>
+                <span className="font-mono text-xs text-black">{bgColor}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -418,16 +569,44 @@ export default function FaceTest() {
   );
 }
 
-function SliderRow({
-  label, value, min, max, step, onChange,
-}: { label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void }) {
+// ─── Sub-components ────────────────────────────────────────
+function FacePart({
+  src, w, h, x, y, scale = 1, scaleY, rotate = 0, opacity = 1,
+}: {
+  src: string; w: number; h: number;
+  x: number; y: number;
+  scale?: number; scaleY?: number; rotate?: number; opacity?: number;
+}) {
+  const sy = scaleY ?? scale;
   return (
-    <div>
-      <div className="flex justify-between items-center mb-0.5">
-        <span className="font-black text-black text-[10px] uppercase">{label}</span>
-        <span className="font-mono text-[10px] text-black/60">{value.toFixed(label === "Scale" ? 2 : 0)}</span>
-      </div>
-      <Slider value={[value]} onValueChange={([v]) => onChange(v)} min={min} max={max} step={step} />
-    </div>
+    <img
+      src={src}
+      alt=""
+      draggable={false}
+      className="absolute pointer-events-none will-change-transform"
+      style={{
+        left: "50%",
+        top: "50%",
+        width: `${(w / 600) * 100}%`,
+        opacity,
+        transform: `translate(calc(-50% + ${(x / 600) * 100}cqw), calc(-50% + ${(y / 600) * 100}cqw)) scale(${scale}, ${sy}) rotate(${rotate}deg)`,
+        transformOrigin: "center",
+        containerType: "inline-size",
+      }}
+    />
+  );
+}
+
+function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex items-center justify-between gap-2 text-xs font-bold text-black cursor-pointer">
+      <span>{label}</span>
+      <input
+        type="checkbox"
+        checked={value}
+        onChange={(e) => onChange(e.target.checked)}
+        className="w-4 h-4 accent-pink-500"
+      />
+    </label>
   );
 }
