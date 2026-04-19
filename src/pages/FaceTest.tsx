@@ -84,7 +84,7 @@ interface RigState {
   cheekOpacity: number;
   // Mouth
   mouth: { x: number; y: number; scale: number; rotate: number; openness: number };
-  mouthVariant: "smile" | "open";
+  mouthShape: MouthShape;
   showTongue: boolean;
   tongueY: number;
   // Whole face
@@ -101,7 +101,7 @@ const NEUTRAL: RigState = {
   cheekScale: 1,
   cheekOpacity: 0.85,
   mouth: { x: 0, y: 90, scale: 1, rotate: 0, openness: 0 },
-  mouthVariant: "smile",
+  mouthShape: "smile",
   showTongue: false,
   tongueY: 110,
   headTilt: 0,
@@ -112,7 +112,7 @@ const NEUTRAL: RigState = {
 const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Partial<RigState> }> = {
   neutral: {
     emoji: "🙂", label: "Neutre",
-    rig: {},
+    rig: { mouthShape: "smile" },
   },
   joy: {
     emoji: "😄", label: "Joie",
@@ -122,9 +122,9 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftBrow:  { x: -110, y: -170, rotate: -6 },
       rightBrow: { x:  110, y: -170, rotate:  6 },
       cheekScale: 1.2, cheekOpacity: 1,
-      mouth: { x: 0, y: 95, scale: 1.15, rotate: 0, openness: 0.4 },
-      mouthVariant: "open",
-      showTongue: true,
+      mouth: { x: 0, y: 95, scale: 1.0, rotate: 0, openness: 0.4 },
+      mouthShape: "laugh",
+      showTongue: false,
     },
   },
   sadness: {
@@ -136,8 +136,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftBrow:  { x: -110, y: -135, rotate:  22 },
       rightBrow: { x:  110, y: -135, rotate: -22 },
       cheekScale: 0.85, cheekOpacity: 0.5,
-      mouth: { x: 0, y: 110, scale: 0.9, rotate: 180, openness: 0 },
-      mouthVariant: "smile",
+      mouth: { x: 0, y: 105, scale: 1.0, rotate: 0, openness: 0 },
+      mouthShape: "sad",
       headTilt: -3,
     },
   },
@@ -148,8 +148,20 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       rightEye: { x:  110, y: -40, openness: 1.25, scale: 1.1 },
       leftBrow:  { x: -110, y: -185, rotate: -2 },
       rightBrow: { x:  110, y: -185, rotate:  2 },
-      mouth: { x: 0, y: 100, scale: 0.6, rotate: 0, openness: 1 },
-      mouthVariant: "open",
+      mouth: { x: 0, y: 100, scale: 1.0, rotate: 0, openness: 1 },
+      mouthShape: "o",
+    },
+  },
+  shock: {
+    emoji: "😱", label: "Choc",
+    rig: {
+      leftEye:  { x: -110, y: -40, openness: 1.35, scale: 1.15 },
+      rightEye: { x:  110, y: -40, openness: 1.35, scale: 1.15 },
+      leftBrow:  { x: -110, y: -195, rotate: -4 },
+      rightBrow: { x:  110, y: -195, rotate:  4 },
+      cheekOpacity: 0.3,
+      mouth: { x: 0, y: 105, scale: 1.0, rotate: 0, openness: 1 },
+      mouthShape: "shock",
     },
   },
   anger: {
@@ -160,8 +172,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftBrow:  { x: -100, y: -120, rotate: -28 },
       rightBrow: { x:  100, y: -120, rotate:  28 },
       cheekOpacity: 0.4,
-      mouth: { x: 0, y: 100, scale: 0.85, rotate: 180, openness: 0.1 },
-      mouthVariant: "smile",
+      mouth: { x: 0, y: 100, scale: 0.9, rotate: 0, openness: 0 },
+      mouthShape: "sad",
     },
   },
   love: {
@@ -172,8 +184,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftBrow:  { x: -110, y: -165, rotate: -4 },
       rightBrow: { x:  110, y: -165, rotate:  4 },
       cheekScale: 1.3, cheekOpacity: 1,
-      mouth: { x: 0, y: 95, scale: 1.2, rotate: 0, openness: 0.2 },
-      mouthVariant: "smile",
+      mouth: { x: 0, y: 95, scale: 1.05, rotate: 0, openness: 0 },
+      mouthShape: "smile",
       headTilt: 4,
     },
   },
@@ -183,7 +195,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftBrow:  { x: -110, y: -175, rotate: -10 },
       rightBrow: { x:  110, y: -135, rotate:   8 },
       gaze: { x: 8, y: -6 },
-      mouth: { x: 0, y: 95, scale: 0.85, rotate: 0, openness: 0.15 },
+      mouth: { x: 0, y: 95, scale: 0.9, rotate: 0, openness: 0.2 },
+      mouthShape: "open-small",
       headTilt: 6,
     },
   },
@@ -193,9 +206,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftEye:  { x: -110, y: -40, openness: 0.4, scale: 1 },
       rightEye: { x:  110, y: -40, openness: 0.4, scale: 1 },
       cheekScale: 1.15, cheekOpacity: 1,
-      mouth: { x: 0, y: 95, scale: 1.05, rotate: 0, openness: 0.5 },
-      mouthVariant: "open",
-      showTongue: true, tongueY: 130,
+      mouth: { x: 0, y: 95, scale: 1.0, rotate: 0, openness: 0.5 },
+      mouthShape: "open-mid",
     },
   },
   sleepy: {
@@ -206,8 +218,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftBrow:  { x: -110, y: -110, rotate: 4 },
       rightBrow: { x:  110, y: -110, rotate: -4 },
       cheekOpacity: 0.6,
-      mouth: { x: 0, y: 95, scale: 0.8, rotate: 0, openness: 0.05 },
-      mouthVariant: "smile",
+      mouth: { x: 0, y: 95, scale: 0.85, rotate: 0, openness: 0 },
+      mouthShape: "line",
       headTilt: -5,
     },
   },
@@ -219,8 +231,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftBrow:  { x: -110, y: -180, rotate: -8 },
       rightBrow: { x:  110, y: -180, rotate:  8 },
       cheekScale: 1.25, cheekOpacity: 1,
-      mouth: { x: 0, y: 95, scale: 1.2, rotate: 0, openness: 0.7 },
-      mouthVariant: "open",
+      mouth: { x: 0, y: 95, scale: 1.05, rotate: 0, openness: 0.7 },
+      mouthShape: "laugh2",
     },
   },
   shy: {
@@ -230,8 +242,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       rightEye: { x:  110, y: -35, openness: 0.7, scale: 0.95 },
       gaze: { x: -10, y: 8 },
       cheekScale: 1.4, cheekOpacity: 1,
-      mouth: { x: 0, y: 95, scale: 0.75, rotate: 0, openness: 0.05 },
-      mouthVariant: "smile",
+      mouth: { x: 0, y: 95, scale: 0.85, rotate: 0, openness: 0 },
+      mouthShape: "line",
       headTilt: -3,
     },
   },
