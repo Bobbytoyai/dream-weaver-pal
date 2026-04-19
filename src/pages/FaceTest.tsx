@@ -38,7 +38,37 @@ import shineSmallR from "@/assets/bobby-face/ellipse_petit_droit.svg";
 
 type Emotion =
   | "neutral" | "joy" | "sadness" | "surprise" | "anger"
-  | "love" | "curious" | "silly" | "sleepy" | "excited" | "shy";
+  | "love" | "curious" | "silly" | "sleepy" | "excited" | "shy" | "shock";
+
+// Mouth shape IDs — used to pick a sprite + width
+type MouthShape =
+  | "laugh"      // bouche-1: bouche grande ouverte + langue (joie/rire)
+  | "laugh2"     // bouche.png: variante rire
+  | "open-mid"   // bouche-4: mi-ouverte avec langue
+  | "open-small" // bouche-5: peu ouverte avec langue
+  | "smile"      // bouche-3: sourire courbé
+  | "sad"        // bouche-2: triste (courbe inversée)
+  | "line"       // bouche-6: presque fermée
+  | "closed"     // bouche-7: fermée
+  | "shock"      // bouche-shock: rectangle choc
+  | "o";         // bouche-o: rond étonnement
+
+interface MouthSprite { src: string; w: number; h: number; }
+const MOUTH_SPRITES: Record<MouthShape, MouthSprite> = {
+  laugh:      { src: bouche1,     w: 220, h: 105 },
+  laugh2:     { src: bouche0,     w: 220, h: 105 },
+  "open-mid": { src: bouche4,     w: 220, h: 70  },
+  "open-small": { src: bouche5,   w: 200, h: 60  },
+  smile:      { src: bouche3,     w: 220, h: 60  },
+  sad:        { src: bouche2,     w: 220, h: 60  },
+  line:       { src: bouche6,     w: 200, h: 22  },
+  closed:     { src: bouche7,     w: 200, h: 18  },
+  shock:      { src: boucheShock, w: 175, h: 130 },
+  o:          { src: boucheO,     w: 110, h: 130 },
+};
+
+// Visemes for talking — ordered by openness (low→high)
+const TALK_VISEMES: MouthShape[] = ["closed", "line", "open-small", "open-mid", "laugh"];
 
 interface RigState {
   // Eye sockets (anchor points — shines follow these)
