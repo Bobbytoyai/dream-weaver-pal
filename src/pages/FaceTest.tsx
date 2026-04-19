@@ -8,9 +8,18 @@ import sourcilGauche from "@/assets/bobby-face/sourcil_gauche.svg";
 import sourcilDroit from "@/assets/bobby-face/sourcil_droit.svg";
 import joueGauche from "@/assets/bobby-face/joue_gauche.svg";
 import joueDroite from "@/assets/bobby-face/joue_droite.svg";
-import mouthSmile from "@/assets/bobby-face/mouth.svg";
-import mouthOpen from "@/assets/bobby-face/mouth-1.svg";
 import langue from "@/assets/bobby-face/langue.svg";
+// Mouth shapes — ordered from most open to closed (visemes / emotion shapes)
+import bouche0 from "@/assets/bobby-face/bouche.png";       // grande ouverte + langue (rire)
+import bouche1 from "@/assets/bobby-face/bouche-1.png";     // grande ouverte + langue (variant)
+import bouche2 from "@/assets/bobby-face/bouche-2.png";     // triste (courbe inversée)
+import bouche3 from "@/assets/bobby-face/bouche-3.png";     // sourire courbé vers le haut
+import bouche4 from "@/assets/bobby-face/bouche-4.png";     // mi-ouverte avec langue
+import bouche5 from "@/assets/bobby-face/bouche-5.png";     // peu ouverte avec langue
+import bouche6 from "@/assets/bobby-face/bouche-6.png";     // presque fermée avec ligne rose
+import bouche7 from "@/assets/bobby-face/bouche-7.png";     // fermée trait
+import boucheShock from "@/assets/bobby-face/bouche-shock.png"; // choc rectangulaire
+import boucheO from "@/assets/bobby-face/bouche-o.png";     // étonnement rond "O"
 import shineBigL from "@/assets/bobby-face/ellipse_grand_gauche.svg";
 import shineBigR from "@/assets/bobby-face/ellipse_grand_droit.svg";
 import shineSmallL from "@/assets/bobby-face/ellipse_petit_gauche.svg";
