@@ -490,17 +490,17 @@ export default function FaceTest() {
                   shineOpacity={sBigR.opacity}
                 />
 
-                {/* Mouth */}
-                <FacePart src={mouthSrc} w={175} h={76}
+                {/* Mouth socket — contains tongue clipped inside */}
+                <MouthSocket
+                  mouthSrc={mouthSrc}
+                  tongueSrc={langue}
                   x={rig.mouth.x} y={rig.mouth.y}
-                  scale={rig.mouth.scale} scaleY={mouthScaleY}
-                  rotate={rig.mouth.rotate} />
-
-                {/* Tongue */}
-                {rig.showTongue && (
-                  <FacePart src={langue} w={89} h={44}
-                    x={0} y={rig.tongueY} scale={1} />
-                )}
+                  scale={rig.mouth.scale}
+                  scaleY={mouthScaleY}
+                  rotate={rig.mouth.rotate}
+                  openness={rig.mouth.openness}
+                  showTongue={rig.showTongue}
+                />
               </div>
             </div>
           </div>
