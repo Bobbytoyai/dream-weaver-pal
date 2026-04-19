@@ -85,6 +85,7 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       cheekScale: 1.2, cheekOpacity: 1,
       mouth: { x: 0, y: 95, scale: 1.15, rotate: 0, openness: 0.4 },
       mouthVariant: "open",
+      showTongue: true,
     },
   },
   sadness: {
