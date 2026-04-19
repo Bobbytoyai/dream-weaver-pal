@@ -9,17 +9,17 @@ import sourcilDroit from "@/assets/bobby-face/sourcil_droit.svg";
 import joueGauche from "@/assets/bobby-face/joue_gauche.svg";
 import joueDroite from "@/assets/bobby-face/joue_droite.svg";
 import langue from "@/assets/bobby-face/langue.svg";
-// Mouth shapes — ordered from most open to closed (visemes / emotion shapes)
-import bouche0 from "@/assets/bobby-face/bouche.png";       // grande ouverte + langue (rire)
-import bouche1 from "@/assets/bobby-face/bouche-1.png";     // grande ouverte + langue (variant)
-import bouche2 from "@/assets/bobby-face/bouche-2.png";     // triste (courbe inversée)
-import bouche3 from "@/assets/bobby-face/bouche-3.png";     // sourire courbé vers le haut
-import bouche4 from "@/assets/bobby-face/bouche-4.png";     // mi-ouverte avec langue
-import bouche5 from "@/assets/bobby-face/bouche-5.png";     // peu ouverte avec langue
-import bouche6 from "@/assets/bobby-face/bouche-6.png";     // presque fermée avec ligne rose
-import bouche7 from "@/assets/bobby-face/bouche-7.png";     // fermée trait
-import boucheShock from "@/assets/bobby-face/bouche-shock.png"; // choc rectangulaire
-import boucheO from "@/assets/bobby-face/bouche-o.png";     // étonnement rond "O"
+// Mouth shapes — nouvelle série officielle (sourire neutre + visemes parle + émotions)
+import mNormal from "@/assets/bobby-face/m-normal.png";       // sourire neutre (courbe vers le haut)
+import mTriste from "@/assets/bobby-face/m-triste.png";       // triste (courbe vers le bas)
+import mParle1 from "@/assets/bobby-face/m-parle1.png";       // parle - quasi fermée
+import mParle2 from "@/assets/bobby-face/m-parle2.png";       // parle - peu ouverte
+import mParle3 from "@/assets/bobby-face/m-parle3.png";       // parle - mi-ouverte
+import mParle4 from "@/assets/bobby-face/m-parle4.png";       // parle - grande ouverte
+import mRire from "@/assets/bobby-face/m-rire.png";           // rire ouvert
+import mReflechie from "@/assets/bobby-face/m-reflechie.png"; // ligne (réfléchie / colère)
+import mChoc from "@/assets/bobby-face/m-choc.png";           // choc rectangulaire
+import mSurprise from "@/assets/bobby-face/m-surprise.png";   // étonnement rond
 import shineBigL from "@/assets/bobby-face/ellipse_grand_gauche.svg";
 import shineBigR from "@/assets/bobby-face/ellipse_grand_droit.svg";
 import shineSmallL from "@/assets/bobby-face/ellipse_petit_gauche.svg";
@@ -42,33 +42,33 @@ type Emotion =
 
 // Mouth shape IDs — used to pick a sprite + width
 type MouthShape =
-  | "laugh"      // bouche-1: bouche grande ouverte + langue (joie/rire)
-  | "laugh2"     // bouche.png: variante rire
-  | "open-mid"   // bouche-4: mi-ouverte avec langue
-  | "open-small" // bouche-5: peu ouverte avec langue
-  | "smile"      // bouche-3: sourire courbé
-  | "sad"        // bouche-2: triste (courbe inversée)
-  | "line"       // bouche-6: presque fermée
-  | "closed"     // bouche-7: fermée
-  | "shock"      // bouche-shock: rectangle choc
-  | "o";         // bouche-o: rond étonnement
+  | "smile"      // m-normal: sourire neutre
+  | "sad"        // m-triste: triste
+  | "line"       // m-reflechie: ligne (réfléchie / colère)
+  | "talk1"      // m-parle1: quasi fermée
+  | "talk2"      // m-parle2: peu ouverte
+  | "talk3"      // m-parle3: mi-ouverte
+  | "talk4"      // m-parle4: grande ouverte
+  | "laugh"      // m-rire: rire
+  | "shock"      // m-choc: rectangle
+  | "o";         // m-surprise: rond
 
 interface MouthSprite { src: string; w: number; h: number; }
 const MOUTH_SPRITES: Record<MouthShape, MouthSprite> = {
-  laugh:      { src: bouche1,     w: 220, h: 105 },
-  laugh2:     { src: bouche0,     w: 220, h: 105 },
-  "open-mid": { src: bouche4,     w: 220, h: 70  },
-  "open-small": { src: bouche5,   w: 200, h: 60  },
-  smile:      { src: bouche3,     w: 220, h: 60  },
-  sad:        { src: bouche2,     w: 220, h: 60  },
-  line:       { src: bouche6,     w: 200, h: 22  },
-  closed:     { src: bouche7,     w: 200, h: 18  },
-  shock:      { src: boucheShock, w: 175, h: 130 },
-  o:          { src: boucheO,     w: 110, h: 130 },
+  smile:  { src: mNormal,    w: 230, h: 60  },
+  sad:    { src: mTriste,    w: 230, h: 60  },
+  line:   { src: mReflechie, w: 200, h: 18  },
+  talk1:  { src: mParle1,    w: 220, h: 28  },
+  talk2:  { src: mParle2,    w: 220, h: 55  },
+  talk3:  { src: mParle3,    w: 220, h: 80  },
+  talk4:  { src: mParle4,    w: 220, h: 110 },
+  laugh:  { src: mRire,      w: 220, h: 105 },
+  shock:  { src: mChoc,      w: 200, h: 145 },
+  o:      { src: mSurprise,  w: 115, h: 140 },
 };
 
 // Visemes for talking — ordered by openness (low→high)
-const TALK_VISEMES: MouthShape[] = ["closed", "line", "open-small", "open-mid", "laugh"];
+const TALK_VISEMES: MouthShape[] = ["talk1", "talk2", "talk3", "talk4", "laugh"];
 
 interface RigState {
   // Eye sockets (anchor points — shines follow these)
