@@ -615,11 +615,12 @@ function EyeSocket({
 }) {
   // Eye is 155x152 in original SVG, rendered as 155/600 of canvas
   const EYE_W = 155, EYE_H = 152;
-  // Pupil offsets inside eye (centered = 0,0)
-  const BIG = { x: -22, y: -25, w: 48, h: 50 };
-  const SMALL = { x: 12, y: 25, w: 20, h: 20 };
-  // Clamp gaze so pupils stay well inside the eye
-  const maxX = 22, maxY = 18;
+  // Big white reflection (highlight) — top-left area of eye, larger
+  const BIG = { x: -28, y: -32, w: 60, h: 62 };
+  // Small white reflection — sits to bottom-right of big shine
+  const SMALL = { x: 28, y: 22, w: 22, h: 22 };
+  // Clamp gaze so reflections stay inside the eye
+  const maxX = 28, maxY = 22;
   const gx = Math.max(-maxX, Math.min(maxX, gazeX));
   const gy = Math.max(-maxY, Math.min(maxY, gazeY * scaleY));
 
@@ -636,18 +637,18 @@ function EyeSocket({
         containerType: "inline-size",
       }}
     >
-      {/* Eye base */}
+      {/* Eye base (black) */}
       <img src={eyeSrc} alt="" draggable={false}
         className="absolute inset-0 w-full h-full" />
-      {/* Pupils — clipped to eye shape using overflow + same ellipse mask */}
+      {/* Reflections — clipped to eye ellipse, both follow gaze together */}
       <div
         className="absolute inset-0"
         style={{
-          // Match eye ellipse shape (yeux SVG is an ellipse 154x151)
           clipPath: "ellipse(50% 50% at 50% 50%)",
           opacity: shineOpacity,
         }}
       >
+        {/* Big white highlight */}
         <img
           src={shineBigSrc} alt="" draggable={false}
           className="absolute"
@@ -657,6 +658,7 @@ function EyeSocket({
             transform: `translate(calc(-50% + ${(BIG.x + gx) / EYE_W * 100}%), calc(-50% + ${(BIG.y + gy) / EYE_H * 100}%))`,
           }}
         />
+        {/* Small white highlight — sits near big one */}
         <img
           src={shineSmallSrc} alt="" draggable={false}
           className="absolute"
