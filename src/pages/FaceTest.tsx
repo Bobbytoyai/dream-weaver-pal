@@ -427,8 +427,8 @@ export default function FaceTest() {
   const sSmL  = shineL(SHINE_SMALL.x, SHINE_SMALL.y);
   const sSmR  = shineR(SHINE_SMALL.x, SHINE_SMALL.y);
 
-  // Mouth: select asset based on openness
-  const mouthSrc = (rig.mouth.openness > 0.3 || rig.mouthVariant === "open") ? mouthOpen : mouthSmile;
+  // Mouth: always use mouth-1 (open variant only)
+  const mouthSrc = mouthOpen;
   const mouthScaleY = rig.mouth.scale * (1 + rig.mouth.openness * 0.4);
 
   return (
@@ -466,23 +466,29 @@ export default function FaceTest() {
                 <FacePart src={sourcilDroit} w={94} h={53}
                   x={rig.rightBrow.x} y={rig.rightBrow.y} rotate={rig.rightBrow.rotate} />
 
-                {/* Eyes (eyelid effect via scaleY) */}
-                <FacePart src={yeuxGauche} w={155} h={152}
+                {/* Left eye socket — clips shines inside */}
+                <EyeSocket
+                  eyeSrc={yeuxGauche}
+                  shineBigSrc={shineBigL}
+                  shineSmallSrc={shineSmallL}
                   x={rig.leftEye.x} y={rig.leftEye.y}
-                  scale={rig.leftEye.scale} scaleY={leftEyeScaleY} />
-                <FacePart src={yeuxDroit} w={155} h={152}
-                  x={rig.rightEye.x} y={rig.rightEye.y}
-                  scale={rig.rightEye.scale} scaleY={rightEyeScaleY} />
+                  scale={rig.leftEye.scale}
+                  scaleY={leftEyeScaleY}
+                  gazeX={rig.gaze.x} gazeY={rig.gaze.y}
+                  shineOpacity={sBigL.opacity}
+                />
 
-                {/* Shines (pupils) — follow gaze */}
-                <FacePart src={shineBigL} w={48} h={50}
-                  x={sBigL.x} y={sBigL.y} opacity={sBigL.opacity} />
-                <FacePart src={shineBigR} w={48} h={50}
-                  x={sBigR.x} y={sBigR.y} opacity={sBigR.opacity} />
-                <FacePart src={shineSmallL} w={20} h={20}
-                  x={sSmL.x} y={sSmL.y} opacity={sSmL.opacity} />
-                <FacePart src={shineSmallR} w={20} h={20}
-                  x={sSmR.x} y={sSmR.y} opacity={sSmR.opacity} />
+                {/* Right eye socket */}
+                <EyeSocket
+                  eyeSrc={yeuxDroit}
+                  shineBigSrc={shineBigR}
+                  shineSmallSrc={shineSmallR}
+                  x={rig.rightEye.x} y={rig.rightEye.y}
+                  scale={rig.rightEye.scale}
+                  scaleY={rightEyeScaleY}
+                  gazeX={rig.gaze.x} gazeY={rig.gaze.y}
+                  shineOpacity={sBigR.opacity}
+                />
 
                 {/* Mouth */}
                 <FacePart src={mouthSrc} w={175} h={76}
