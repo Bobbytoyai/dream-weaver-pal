@@ -603,6 +603,73 @@ function FacePart({
   );
 }
 
+// ─── EyeSocket: clips pupils inside the eye ───────────────
+function EyeSocket({
+  eyeSrc, shineBigSrc, shineSmallSrc,
+  x, y, scale, scaleY, gazeX, gazeY, shineOpacity,
+}: {
+  eyeSrc: string; shineBigSrc: string; shineSmallSrc: string;
+  x: number; y: number; scale: number; scaleY: number;
+  gazeX: number; gazeY: number; shineOpacity: number;
+}) {
+  // Eye is 155x152 in original SVG, rendered as 155/600 of canvas
+  const EYE_W = 155, EYE_H = 152;
+  // Pupil offsets inside eye (centered = 0,0)
+  const BIG = { x: -22, y: -25, w: 48, h: 50 };
+  const SMALL = { x: 12, y: 25, w: 20, h: 20 };
+  // Clamp gaze so pupils stay well inside the eye
+  const maxX = 22, maxY = 18;
+  const gx = Math.max(-maxX, Math.min(maxX, gazeX));
+  const gy = Math.max(-maxY, Math.min(maxY, gazeY * scaleY));
+
+  return (
+    <div
+      className="absolute pointer-events-none will-change-transform"
+      style={{
+        left: "50%",
+        top: "50%",
+        width: `${(EYE_W / 600) * 100}%`,
+        aspectRatio: `${EYE_W} / ${EYE_H}`,
+        transform: `translate(calc(-50% + ${(x / 600) * 100}cqw), calc(-50% + ${(y / 600) * 100}cqw)) scale(${scale}, ${scaleY})`,
+        transformOrigin: "center",
+        containerType: "inline-size",
+      }}
+    >
+      {/* Eye base */}
+      <img src={eyeSrc} alt="" draggable={false}
+        className="absolute inset-0 w-full h-full" />
+      {/* Pupils — clipped to eye shape using overflow + same ellipse mask */}
+      <div
+        className="absolute inset-0"
+        style={{
+          // Match eye ellipse shape (yeux SVG is an ellipse 154x151)
+          clipPath: "ellipse(50% 50% at 50% 50%)",
+          opacity: shineOpacity,
+        }}
+      >
+        <img
+          src={shineBigSrc} alt="" draggable={false}
+          className="absolute"
+          style={{
+            width: `${(BIG.w / EYE_W) * 100}%`,
+            left: "50%", top: "50%",
+            transform: `translate(calc(-50% + ${(BIG.x + gx) / EYE_W * 100}%), calc(-50% + ${(BIG.y + gy) / EYE_H * 100}%))`,
+          }}
+        />
+        <img
+          src={shineSmallSrc} alt="" draggable={false}
+          className="absolute"
+          style={{
+            width: `${(SMALL.w / EYE_W) * 100}%`,
+            left: "50%", top: "50%",
+            transform: `translate(calc(-50% + ${(SMALL.x + gx) / EYE_W * 100}%), calc(-50% + ${(SMALL.y + gy) / EYE_H * 100}%))`,
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
     <label className="flex items-center justify-between gap-2 text-xs font-bold text-black cursor-pointer">
