@@ -427,8 +427,8 @@ export default function FaceTest() {
   const sSmL  = shineL(SHINE_SMALL.x, SHINE_SMALL.y);
   const sSmR  = shineR(SHINE_SMALL.x, SHINE_SMALL.y);
 
-  // Mouth: select asset based on openness
-  const mouthSrc = (rig.mouth.openness > 0.3 || rig.mouthVariant === "open") ? mouthOpen : mouthSmile;
+  // Mouth: always use mouth-1 (open variant only)
+  const mouthSrc = mouthOpen;
   const mouthScaleY = rig.mouth.scale * (1 + rig.mouth.openness * 0.4);
 
   return (
@@ -466,23 +466,29 @@ export default function FaceTest() {
                 <FacePart src={sourcilDroit} w={94} h={53}
                   x={rig.rightBrow.x} y={rig.rightBrow.y} rotate={rig.rightBrow.rotate} />
 
-                {/* Eyes (eyelid effect via scaleY) */}
-                <FacePart src={yeuxGauche} w={155} h={152}
+                {/* Left eye socket — clips shines inside */}
+                <EyeSocket
+                  eyeSrc={yeuxGauche}
+                  shineBigSrc={shineBigL}
+                  shineSmallSrc={shineSmallL}
                   x={rig.leftEye.x} y={rig.leftEye.y}
-                  scale={rig.leftEye.scale} scaleY={leftEyeScaleY} />
-                <FacePart src={yeuxDroit} w={155} h={152}
-                  x={rig.rightEye.x} y={rig.rightEye.y}
-                  scale={rig.rightEye.scale} scaleY={rightEyeScaleY} />
+                  scale={rig.leftEye.scale}
+                  scaleY={leftEyeScaleY}
+                  gazeX={rig.gaze.x} gazeY={rig.gaze.y}
+                  shineOpacity={sBigL.opacity}
+                />
 
-                {/* Shines (pupils) — follow gaze */}
-                <FacePart src={shineBigL} w={48} h={50}
-                  x={sBigL.x} y={sBigL.y} opacity={sBigL.opacity} />
-                <FacePart src={shineBigR} w={48} h={50}
-                  x={sBigR.x} y={sBigR.y} opacity={sBigR.opacity} />
-                <FacePart src={shineSmallL} w={20} h={20}
-                  x={sSmL.x} y={sSmL.y} opacity={sSmL.opacity} />
-                <FacePart src={shineSmallR} w={20} h={20}
-                  x={sSmR.x} y={sSmR.y} opacity={sSmR.opacity} />
+                {/* Right eye socket */}
+                <EyeSocket
+                  eyeSrc={yeuxDroit}
+                  shineBigSrc={shineBigR}
+                  shineSmallSrc={shineSmallR}
+                  x={rig.rightEye.x} y={rig.rightEye.y}
+                  scale={rig.rightEye.scale}
+                  scaleY={rightEyeScaleY}
+                  gazeX={rig.gaze.x} gazeY={rig.gaze.y}
+                  shineOpacity={sBigR.opacity}
+                />
 
                 {/* Mouth */}
                 <FacePart src={mouthSrc} w={175} h={76}
@@ -594,6 +600,73 @@ function FacePart({
         containerType: "inline-size",
       }}
     />
+  );
+}
+
+// ─── EyeSocket: clips pupils inside the eye ───────────────
+function EyeSocket({
+  eyeSrc, shineBigSrc, shineSmallSrc,
+  x, y, scale, scaleY, gazeX, gazeY, shineOpacity,
+}: {
+  eyeSrc: string; shineBigSrc: string; shineSmallSrc: string;
+  x: number; y: number; scale: number; scaleY: number;
+  gazeX: number; gazeY: number; shineOpacity: number;
+}) {
+  // Eye is 155x152 in original SVG, rendered as 155/600 of canvas
+  const EYE_W = 155, EYE_H = 152;
+  // Pupil offsets inside eye (centered = 0,0)
+  const BIG = { x: -22, y: -25, w: 48, h: 50 };
+  const SMALL = { x: 12, y: 25, w: 20, h: 20 };
+  // Clamp gaze so pupils stay well inside the eye
+  const maxX = 22, maxY = 18;
+  const gx = Math.max(-maxX, Math.min(maxX, gazeX));
+  const gy = Math.max(-maxY, Math.min(maxY, gazeY * scaleY));
+
+  return (
+    <div
+      className="absolute pointer-events-none will-change-transform"
+      style={{
+        left: "50%",
+        top: "50%",
+        width: `${(EYE_W / 600) * 100}%`,
+        aspectRatio: `${EYE_W} / ${EYE_H}`,
+        transform: `translate(calc(-50% + ${(x / 600) * 100}cqw), calc(-50% + ${(y / 600) * 100}cqw)) scale(${scale}, ${scaleY})`,
+        transformOrigin: "center",
+        containerType: "inline-size",
+      }}
+    >
+      {/* Eye base */}
+      <img src={eyeSrc} alt="" draggable={false}
+        className="absolute inset-0 w-full h-full" />
+      {/* Pupils — clipped to eye shape using overflow + same ellipse mask */}
+      <div
+        className="absolute inset-0"
+        style={{
+          // Match eye ellipse shape (yeux SVG is an ellipse 154x151)
+          clipPath: "ellipse(50% 50% at 50% 50%)",
+          opacity: shineOpacity,
+        }}
+      >
+        <img
+          src={shineBigSrc} alt="" draggable={false}
+          className="absolute"
+          style={{
+            width: `${(BIG.w / EYE_W) * 100}%`,
+            left: "50%", top: "50%",
+            transform: `translate(calc(-50% + ${(BIG.x + gx) / EYE_W * 100}%), calc(-50% + ${(BIG.y + gy) / EYE_H * 100}%))`,
+          }}
+        />
+        <img
+          src={shineSmallSrc} alt="" draggable={false}
+          className="absolute"
+          style={{
+            width: `${(SMALL.w / EYE_W) * 100}%`,
+            left: "50%", top: "50%",
+            transform: `translate(calc(-50% + ${(SMALL.x + gx) / EYE_W * 100}%), calc(-50% + ${(SMALL.y + gy) / EYE_H * 100}%))`,
+          }}
+        />
+      </div>
+    </div>
   );
 }
 
