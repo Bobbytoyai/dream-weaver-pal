@@ -133,8 +133,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftEye:  { x: -110, y: -30, openness: 0.7, scale: 0.95 },
       rightEye: { x:  110, y: -30, openness: 0.7, scale: 0.95 },
       gaze: { x: 0, y: 12 },
-      leftBrow:  { x: -110, y: -135, rotate:  22 },
-      rightBrow: { x:  110, y: -135, rotate: -22 },
+      leftBrow:  { x: -110, y: -135, rotate: -22 },
+      rightBrow: { x:  110, y: -135, rotate:  22 },
       cheekScale: 0.85, cheekOpacity: 0.5,
       mouth: { x: 0, y: 105, scale: 1.0, rotate: 0, openness: 0 },
       mouthShape: "sad",
@@ -169,8 +169,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
     rig: {
       leftEye:  { x: -110, y: -40, openness: 0.75, scale: 1 },
       rightEye: { x:  110, y: -40, openness: 0.75, scale: 1 },
-      leftBrow:  { x: -100, y: -120, rotate: -28 },
-      rightBrow: { x:  100, y: -120, rotate:  28 },
+      leftBrow:  { x: -100, y: -120, rotate:  28 },
+      rightBrow: { x:  100, y: -120, rotate: -28 },
       cheekOpacity: 0.4,
       mouth: { x: 0, y: 100, scale: 1.0, rotate: 0, openness: 0 },
       mouthShape: "line",
@@ -697,9 +697,26 @@ function EyeSocket({
         containerType: "inline-size",
       }}
     >
-      {/* Eye base (black) */}
+      {/* Eye base (black outer ring / sclère) */}
       <img src={eyeSrc} alt="" draggable={false}
         className="absolute inset-0 w-full h-full" />
+      {/* Iris bleu (comme version prod QR) — suit le regard, clippé dans l'œil */}
+      <div
+        className="absolute inset-0"
+        style={{ clipPath: "ellipse(50% 50% at 50% 50%)" }}
+      >
+        <div
+          className="absolute rounded-full"
+          style={{
+            width: "78%",
+            height: "78%",
+            left: `${50 + (gx / EYE_W) * 100}%`,
+            top: `${50 + (gy / EYE_W) * 100}%`,
+            transform: "translate(-50%, -50%)",
+            background: "radial-gradient(circle at 50% 50%, #4FB3E8 0%, #3A9AD4 55%, #1F5F8C 100%)",
+          }}
+        />
+      </div>
       {/* Reflections — clipped to eye ellipse, both follow gaze together */}
       <div
         className="absolute inset-0"
