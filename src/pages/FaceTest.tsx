@@ -694,36 +694,48 @@ function EyeSocket({
         containerType: "inline-size",
       }}
     >
-      {/* Sclère (blanc) avec contour foncé subtil */}
+      {/* Sclère (blanc) ellipse aplatie comme prod (rx=0.33, ry=0.27 → ratio H/W = 0.818) */}
       <div
-        className="absolute inset-0 rounded-[50%]"
+        className="absolute rounded-[50%]"
         style={{
+          left: "50%",
+          top: "50%",
+          width: "100%",
+          height: `${(0.27 / 0.33) * 100}%`,
+          transform: "translate(-50%, -50%)",
           background: "#FFFFFF",
           boxShadow: "inset 0 0 0 2px rgba(58,58,92,0.22)",
         }}
       />
-      {/* Iris + pupille + reflet, clippés dans l'œil */}
+      {/* Iris + pupille + reflets, clippés dans l'ellipse blanche */}
       <div
-        className="absolute inset-0"
-        style={{ clipPath: "ellipse(50% 50% at 50% 50%)" }}
+        className="absolute"
+        style={{
+          left: "50%",
+          top: "50%",
+          width: "100%",
+          height: `${(0.27 / 0.33) * 100}%`,
+          transform: "translate(-50%, -50%)",
+          clipPath: "ellipse(50% 50% at 50% 50%)",
+        }}
       >
-        {/* Iris bleu (couleur officielle prod #4A90D9) */}
+        {/* Iris bleu uni — couleur prod #4A90D9, taille 66.7% largeur (r=0.22 / rx=0.33) */}
         <div
           className="absolute rounded-full"
           style={{
-            width: "68%",
+            width: "66.7%",
             aspectRatio: "1 / 1",
             left: `${50 + (gx / EYE_W) * 100}%`,
             top: `${50 + (gy / EYE_W) * 100}%`,
             transform: "translate(-50%, -50%)",
-            background: "radial-gradient(circle at 50% 50%, #6FB5E8 0%, #4A90D9 55%, #2A6BAA 100%)",
+            background: "#4A90D9",
           }}
         />
-        {/* Pupille noire centrée sur l'iris */}
+        {/* Pupille noire — 63.6% de l'iris (r=0.14 / r=0.22) → 42.4% du blanc */}
         <div
           className="absolute rounded-full"
           style={{
-            width: "42%",
+            width: "42.4%",
             aspectRatio: "1 / 1",
             left: `${50 + (gx / EYE_W) * 100}%`,
             top: `${50 + (gy / EYE_W) * 100}%`,
@@ -731,27 +743,27 @@ function EyeSocket({
             background: "#000000",
           }}
         />
-        {/* Reflet blanc principal — top-right de la pupille */}
+        {/* Reflet large — r=0.07 → 21.2% du blanc, offset prod (+0.10, +0.10) */}
         <div
           className="absolute rounded-full"
           style={{
-            width: "18%",
+            width: "21.2%",
             aspectRatio: "1 / 1",
-            left: `${50 + (gx / EYE_W) * 100 + 10}%`,
-            top: `${50 + (gy / EYE_W) * 100 - 10}%`,
+            left: `${50 + (gx / EYE_W) * 100 + (0.10 / 0.33) * 50}%`,
+            top: `${50 - (0.10 / 0.27) * 50 + (gy / EYE_W) * 100}%`,
             transform: "translate(-50%, -50%)",
             background: "#FFFFFF",
             opacity: 0.9 * shineOpacity,
           }}
         />
-        {/* Petit reflet secondaire */}
+        {/* Petit reflet secondaire — r=0.047 → 14.2% du blanc */}
         <div
           className="absolute rounded-full"
           style={{
-            width: "9%",
+            width: "14.2%",
             aspectRatio: "1 / 1",
-            left: `${50 + (gx / EYE_W) * 100 + 4}%`,
-            top: `${50 + (gy / EYE_W) * 100 + 4}%`,
+            left: `${50 + (gx / EYE_W) * 100 + (0.04 / 0.33) * 50}%`,
+            top: `${50 - (0.04 / 0.27) * 50 + (gy / EYE_W) * 100}%`,
             transform: "translate(-50%, -50%)",
             background: "#FFFFFF",
             opacity: 0.6 * shineOpacity,
