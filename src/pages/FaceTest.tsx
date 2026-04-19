@@ -479,9 +479,21 @@ export default function FaceTest() {
   const sSmL  = shineL(SHINE_SMALL.x, SHINE_SMALL.y);
   const sSmR  = shineR(SHINE_SMALL.x, SHINE_SMALL.y);
 
-  // Mouth: always use mouth-1 (open variant only)
-  const mouthSrc = mouthOpen;
-  const mouthScaleY = rig.mouth.scale * (1 + rig.mouth.openness * 0.4);
+  // Mouth: pick sprite based on shape, override with viseme when talking
+  let activeShape: MouthShape = rig.mouthShape;
+  if (talking && rig.mouth.openness > 0.05) {
+    // Map openness 0..1 → viseme index — but only when current shape is "talkable"
+    const talkable: MouthShape[] = ["smile", "line", "closed", "open-small", "open-mid", "laugh", "laugh2"];
+    if (talkable.includes(rig.mouthShape)) {
+      const idx = Math.min(
+        TALK_VISEMES.length - 1,
+        Math.floor(rig.mouth.openness * TALK_VISEMES.length)
+      );
+      activeShape = TALK_VISEMES[idx];
+    }
+  }
+  const sprite = MOUTH_SPRITES[activeShape];
+  const mouthScaleY = rig.mouth.scale;
 
   return (
     <div className="min-h-screen bg-[#FDF6EC] p-4 md:p-6">
@@ -542,16 +554,13 @@ export default function FaceTest() {
                   shineOpacity={sBigR.opacity}
                 />
 
-                {/* Mouth socket — contains tongue clipped inside */}
+                {/* Mouth socket — sprite-based */}
                 <MouthSocket
-                  mouthSrc={mouthSrc}
-                  tongueSrc={langue}
+                  sprite={sprite}
                   x={rig.mouth.x} y={rig.mouth.y}
                   scale={rig.mouth.scale}
                   scaleY={mouthScaleY}
                   rotate={rig.mouth.rotate}
-                  openness={rig.mouth.openness}
-                  showTongue={rig.showTongue}
                 />
               </div>
             </div>
