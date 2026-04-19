@@ -11,10 +11,16 @@ import joueDroite from "@/assets/bobby-face/joue_droite.svg";
 import mouthSmile from "@/assets/bobby-face/mouth.svg";
 import mouthOpen from "@/assets/bobby-face/mouth-1.svg";
 import langue from "@/assets/bobby-face/langue.svg";
+import shineBigL from "@/assets/bobby-face/ellipse_grand_gauche.svg";
+import shineBigR from "@/assets/bobby-face/ellipse_grand_droit.svg";
+import shineSmallL from "@/assets/bobby-face/ellipse_petit_gauche.svg";
+import shineSmallR from "@/assets/bobby-face/ellipse_petit_droit.svg";
 
 // ─── Types ──────────────────────────────────────────────
 type PartId =
   | "eyeL" | "eyeR"
+  | "shineBigL" | "shineBigR"
+  | "shineSmallL" | "shineSmallR"
   | "browL" | "browR"
   | "cheekL" | "cheekR"
   | "mouth" | "tongue";
@@ -37,6 +43,10 @@ const DEFAULT_FACE: FaceState = {
   parts: {
     eyeL:   { x: -110, y: -40, scale: 1,    rotate: 0 },
     eyeR:   { x:  110, y: -40, scale: 1,    rotate: 0 },
+    shineBigL:   { x: -130, y: -55, scale: 1, rotate: 0 },
+    shineBigR:   { x:   90, y: -55, scale: 1, rotate: 0 },
+    shineSmallL: { x: -100, y: -15, scale: 1, rotate: 0 },
+    shineSmallR: { x:  120, y: -15, scale: 1, rotate: 0 },
     browL:  { x: -110, y: -150, scale: 1,   rotate: 0 },
     browR:  { x:  110, y: -150, scale: 1,   rotate: 0 },
     cheekL: { x: -180, y:  90, scale: 1,    rotate: 0 },
@@ -171,6 +181,10 @@ const PART_META: { id: PartId; label: string; src: string; w: number; h: number;
   { id: "browR",  label: "Sourcil D",  src: sourcilDroit,  w: 94,  h: 53  },
   { id: "eyeL",   label: "Œil G",      src: yeuxGauche,    w: 155, h: 152 },
   { id: "eyeR",   label: "Œil D",      src: yeuxDroit,     w: 155, h: 152 },
+  { id: "shineBigL",   label: "Reflet G",  src: shineBigL,   w: 48, h: 50 },
+  { id: "shineBigR",   label: "Reflet D",  src: shineBigR,   w: 48, h: 50 },
+  { id: "shineSmallL", label: "Petit G",   src: shineSmallL, w: 20, h: 20 },
+  { id: "shineSmallR", label: "Petit D",   src: shineSmallR, w: 20, h: 20 },
   { id: "cheekL", label: "Joue G",     src: joueGauche,    w: 124, h: 61  },
   { id: "cheekR", label: "Joue D",     src: joueDroite,    w: 124, h: 61  },
   { id: "mouth",  label: "Bouche",     src: mouthSmile,    w: 175, h: 76  },
@@ -287,7 +301,7 @@ export default function FaceTest() {
               )}
 
               {/* Render parts in z-order */}
-              {(["cheekL","cheekR","browL","browR","eyeL","eyeR","mouth","tongue"] as PartId[]).map(id => {
+              {(["cheekL","cheekR","browL","browR","eyeL","eyeR","shineBigL","shineBigR","shineSmallL","shineSmallR","mouth","tongue"] as PartId[]).map(id => {
                 if (id === "tongue" && !face.showTongue) return null;
                 const meta = PART_META.find(p => p.id === id)!;
                 const t = face.parts[id];
