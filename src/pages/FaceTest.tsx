@@ -664,23 +664,20 @@ function FacePart({
   );
 }
 
-// ─── EyeSocket: clips pupils inside the eye ───────────────
+// ─── EyeSocket: yeux officiels (version prod QR) ───────────
+// Structure identique à FaceMesh: blanc + iris bleu + pupille noire + reflet
 function EyeSocket({
-  eyeSrc, shineBigSrc, shineSmallSrc,
   x, y, scale, scaleY, gazeX, gazeY, shineOpacity,
 }: {
-  eyeSrc: string; shineBigSrc: string; shineSmallSrc: string;
+  // Legacy props gardées pour compat (ignorées maintenant)
+  eyeSrc?: string; shineBigSrc?: string; shineSmallSrc?: string;
   x: number; y: number; scale: number; scaleY: number;
   gazeX: number; gazeY: number; shineOpacity: number;
 }) {
-  // Eye is 155x152 in original SVG, rendered as 155/600 of canvas
+  // Œil officiel : ellipse blanche 155x152 (même bbox qu'avant)
   const EYE_W = 155, EYE_H = 152;
-  // Big white reflection (main highlight) — slightly off-center top-left
-  const BIG = { x: -14, y: -16, w: 70, h: 72 };
-  // Small white reflection — bottom-right next to big shine
-  const SMALL = { x: 26, y: 26, w: 28, h: 28 };
-  // Clamp gaze so reflections stay inside the eye
-  const maxX = 28, maxY = 22;
+  // Clamp gaze pour que l'iris reste dans le blanc
+  const maxX = 22, maxY = 16;
   const gx = Math.max(-maxX, Math.min(maxX, gazeX));
   const gy = Math.max(-maxY, Math.min(maxY, gazeY * scaleY));
 
@@ -697,62 +694,74 @@ function EyeSocket({
         containerType: "inline-size",
       }}
     >
-      {/* Eye base (black outer ring / sclère) */}
-      <img src={eyeSrc} alt="" draggable={false}
-        className="absolute inset-0 w-full h-full" />
-      {/* Iris bleu (comme version prod QR) — suit le regard, clippé dans l'œil */}
+      {/* Sclère (blanc) avec contour foncé subtil */}
+      <div
+        className="absolute inset-0 rounded-[50%]"
+        style={{
+          background: "#FFFFFF",
+          boxShadow: "inset 0 0 0 2px rgba(58,58,92,0.22)",
+        }}
+      />
+      {/* Iris + pupille + reflet, clippés dans l'œil */}
       <div
         className="absolute inset-0"
         style={{ clipPath: "ellipse(50% 50% at 50% 50%)" }}
       >
+        {/* Iris bleu (couleur officielle prod #4A90D9) */}
         <div
           className="absolute rounded-full"
           style={{
-            width: "78%",
-            height: "78%",
+            width: "68%",
+            aspectRatio: "1 / 1",
             left: `${50 + (gx / EYE_W) * 100}%`,
             top: `${50 + (gy / EYE_W) * 100}%`,
             transform: "translate(-50%, -50%)",
-            background: "radial-gradient(circle at 50% 50%, #4FB3E8 0%, #3A9AD4 55%, #1F5F8C 100%)",
+            background: "radial-gradient(circle at 50% 50%, #6FB5E8 0%, #4A90D9 55%, #2A6BAA 100%)",
           }}
         />
-      </div>
-      {/* Reflections — clipped to eye ellipse, both follow gaze together */}
-      <div
-        className="absolute inset-0"
-        style={{
-          clipPath: "ellipse(50% 50% at 50% 50%)",
-          opacity: shineOpacity,
-        }}
-      >
-        {/* Big white highlight */}
-        <img
-          src={shineBigSrc} alt="" draggable={false}
-          className="absolute"
+        {/* Pupille noire centrée sur l'iris */}
+        <div
+          className="absolute rounded-full"
           style={{
-            width: `${(BIG.w / EYE_W) * 100}cqw`,
-            height: `${(BIG.h / EYE_W) * 100}cqw`,
-            left: `${50 + ((BIG.x + gx) / EYE_W) * 100}cqw`,
-            top: `${50 + ((BIG.y + gy) / EYE_W) * 100}cqw`,
+            width: "42%",
+            aspectRatio: "1 / 1",
+            left: `${50 + (gx / EYE_W) * 100}%`,
+            top: `${50 + (gy / EYE_W) * 100}%`,
             transform: "translate(-50%, -50%)",
+            background: "#000000",
           }}
         />
-        {/* Small white highlight — sits near big one */}
-        <img
-          src={shineSmallSrc} alt="" draggable={false}
-          className="absolute"
+        {/* Reflet blanc principal — top-right de la pupille */}
+        <div
+          className="absolute rounded-full"
           style={{
-            width: `${(SMALL.w / EYE_W) * 100}cqw`,
-            height: `${(SMALL.h / EYE_W) * 100}cqw`,
-            left: `${50 + ((SMALL.x + gx) / EYE_W) * 100}cqw`,
-            top: `${50 + ((SMALL.y + gy) / EYE_W) * 100}cqw`,
+            width: "18%",
+            aspectRatio: "1 / 1",
+            left: `${50 + (gx / EYE_W) * 100 + 10}%`,
+            top: `${50 + (gy / EYE_W) * 100 - 10}%`,
             transform: "translate(-50%, -50%)",
+            background: "#FFFFFF",
+            opacity: 0.9 * shineOpacity,
+          }}
+        />
+        {/* Petit reflet secondaire */}
+        <div
+          className="absolute rounded-full"
+          style={{
+            width: "9%",
+            aspectRatio: "1 / 1",
+            left: `${50 + (gx / EYE_W) * 100 + 4}%`,
+            top: `${50 + (gy / EYE_W) * 100 + 4}%`,
+            transform: "translate(-50%, -50%)",
+            background: "#FFFFFF",
+            opacity: 0.6 * shineOpacity,
           }}
         />
       </div>
     </div>
   );
 }
+
 
 // ─── MouthSocket: renders a single mouth sprite (tongue baked-in) ───
 function MouthSocket({
