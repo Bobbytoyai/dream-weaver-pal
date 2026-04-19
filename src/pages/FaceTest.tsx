@@ -172,8 +172,8 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       leftBrow:  { x: -100, y: -120, rotate: -28 },
       rightBrow: { x:  100, y: -120, rotate:  28 },
       cheekOpacity: 0.4,
-      mouth: { x: 0, y: 100, scale: 0.9, rotate: 0, openness: 0 },
-      mouthShape: "sad",
+      mouth: { x: 0, y: 100, scale: 1.0, rotate: 0, openness: 0 },
+      mouthShape: "line",
     },
   },
   love: {
