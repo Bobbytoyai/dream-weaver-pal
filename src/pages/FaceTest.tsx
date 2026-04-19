@@ -85,6 +85,7 @@ const EMOTION_PRESETS: Record<Emotion, { emoji: string; label: string; rig: Part
       cheekScale: 1.2, cheekOpacity: 1,
       mouth: { x: 0, y: 95, scale: 1.15, rotate: 0, openness: 0.4 },
       mouthVariant: "open",
+      showTongue: true,
     },
   },
   sadness: {
@@ -490,17 +491,17 @@ export default function FaceTest() {
                   shineOpacity={sBigR.opacity}
                 />
 
-                {/* Mouth */}
-                <FacePart src={mouthSrc} w={175} h={76}
+                {/* Mouth socket — contains tongue clipped inside */}
+                <MouthSocket
+                  mouthSrc={mouthSrc}
+                  tongueSrc={langue}
                   x={rig.mouth.x} y={rig.mouth.y}
-                  scale={rig.mouth.scale} scaleY={mouthScaleY}
-                  rotate={rig.mouth.rotate} />
-
-                {/* Tongue */}
-                {rig.showTongue && (
-                  <FacePart src={langue} w={89} h={44}
-                    x={0} y={rig.tongueY} scale={1} />
-                )}
+                  scale={rig.mouth.scale}
+                  scaleY={mouthScaleY}
+                  rotate={rig.mouth.rotate}
+                  openness={rig.mouth.openness}
+                  showTongue={rig.showTongue}
+                />
               </div>
             </div>
           </div>
@@ -666,6 +667,60 @@ function EyeSocket({
           }}
         />
       </div>
+    </div>
+  );
+}
+
+// ─── MouthSocket: tongue clipped inside mouth shape ───────
+function MouthSocket({
+  mouthSrc, tongueSrc, x, y, scale, scaleY, rotate, openness, showTongue,
+}: {
+  mouthSrc: string; tongueSrc: string;
+  x: number; y: number; scale: number; scaleY: number; rotate: number;
+  openness: number; showTongue: boolean;
+}) {
+  const MOUTH_W = 175, MOUTH_H = 76;
+  const TONGUE_W = 89, TONGUE_H = 44;
+  // Tongue sits at the bottom-center of the mouth opening
+  // mouth-1 has an opening that occupies most of the shape
+  return (
+    <div
+      className="absolute pointer-events-none will-change-transform"
+      style={{
+        left: "50%",
+        top: "50%",
+        width: `${(MOUTH_W / 600) * 100}%`,
+        aspectRatio: `${MOUTH_W} / ${MOUTH_H}`,
+        transform: `translate(calc(-50% + ${(x / 600) * 100}cqw), calc(-50% + ${(y / 600) * 100}cqw)) scale(${scale}, ${scaleY}) rotate(${rotate}deg)`,
+        transformOrigin: "center",
+        containerType: "inline-size",
+      }}
+    >
+      {/* Mouth base */}
+      <img src={mouthSrc} alt="" draggable={false}
+        className="absolute inset-0 w-full h-full" />
+      {/* Tongue clipped inside mouth opening */}
+      {showTongue && (
+        <div
+          className="absolute inset-0 overflow-hidden"
+          style={{
+            // The mouth-1 opening is roughly an ellipse — clip tongue to stay inside
+            clipPath: "ellipse(46% 44% at 50% 52%)",
+          }}
+        >
+          <img
+            src={tongueSrc} alt="" draggable={false}
+            className="absolute"
+            style={{
+              width: `${(TONGUE_W / MOUTH_W) * 100}%`,
+              left: "50%",
+              bottom: `${-TONGUE_H * 0.3 / MOUTH_H * 100}%`,
+              transform: `translateX(-50%) scaleY(${0.6 + openness * 0.6})`,
+              transformOrigin: "bottom center",
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
