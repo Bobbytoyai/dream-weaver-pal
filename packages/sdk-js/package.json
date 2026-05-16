@@ -1,0 +1,19 @@
+{
+  "name": "@bobby/sdk-js",
+  "version": "0.1.0",
+  "description": "Bobby SDK — appel /v1/safety et /v1/bobby-brain depuis n'importe quel client JS.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@bobby/shared-types": "workspace:*",
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3"
+  }
+}

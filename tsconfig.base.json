@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "preserve",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": false,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "incremental": true,
+    "useDefineForClassFields": true,
+    "baseUrl": ".",
+    "paths": {
+      "@bobby/brain-v8": ["./packages/brain-v8/src"],
+      "@bobby/brain-v8/*": ["./packages/brain-v8/src/*"],
+      "@bobby/shared-types": ["./packages/shared-types/src"],
+      "@bobby/shared-types/*": ["./packages/shared-types/src/*"],
+      "@bobby/brand": ["./packages/brand/src"],
+      "@bobby/brand/*": ["./packages/brand/src/*"],
+      "@bobby/sdk-js": ["./packages/sdk-js/src"],
+      "@bobby/sdk-js/*": ["./packages/sdk-js/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "build", ".next", "coverage"]
+}

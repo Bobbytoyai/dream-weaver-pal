@@ -1,0 +1,44 @@
+name: ✨ Feature
+description: Idée ou amélioration produit
+labels: [feature, triage]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Quel problème enfant / parent / dev cela résout-il ?
+      description: Une feature sans problème, c'est de la dette.
+    validations: { required: true }
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solution proposée
+    validations: { required: true }
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives envisagées
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Zone
+      options:
+        - apps/web
+        - apps/parent-pwa
+        - services/cloud
+        - firmware/watcher
+        - packages/brain-v8
+        - packages/* (autre)
+        - cross-cutting
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Horizon
+      options:
+        - MVP (cette sprint)
+        - Q+1
+        - Plus tard
+        - Pas sûr

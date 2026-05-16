@@ -1,0 +1,21 @@
+Proprietary License — Bobby
+Copyright (c) 2025-2026 OSAI / Orange Agency
+All rights reserved.
+
+This source code and all associated documentation, designs, schemas, and assets
+("the Software") are confidential and proprietary to OSAI / Orange Agency.
+
+No part of the Software may be reproduced, distributed, modified, transmitted,
+or used in any form or by any means — electronic, mechanical, photocopying,
+recording, or otherwise — without the express prior written permission of
+OSAI / Orange Agency.
+
+Unauthorized copying, redistribution, reverse-engineering, or use of the
+Software is strictly prohibited and may result in civil and criminal
+penalties under French and international intellectual property law.
+
+Components vendored from third-party open-source projects (ESP-IDF, LVGL,
+React, Supabase JS SDK, etc.) remain subject to their respective licenses
+and are clearly identified in the source tree.
+
+For licensing inquiries, contact: legal@bobby.toys

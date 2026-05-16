@@ -1,0 +1,67 @@
+name: Deploy Web Apps
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - '.github/workflows/deploy-web.yml'
+  workflow_dispatch:
+
+jobs:
+  build-web:
+    name: Build apps/web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: '1.1' }
+      - run: bun install --frozen-lockfile
+      - name: Build
+        working-directory: apps/web
+        run: bun run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: apps/web/dist
+          retention-days: 7
+
+  build-parent-pwa:
+    name: Build apps/parent-pwa
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: '1.1' }
+      - run: bun install --frozen-lockfile
+      - name: Build
+        working-directory: apps/parent-pwa
+        run: bun run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: parent-pwa-dist
+          path: apps/parent-pwa/dist
+          retention-days: 7
+
+  deploy-vercel:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    needs: [build-web, build-parent-pwa]
+    environment: production
+    if: secrets.VERCEL_TOKEN != ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: web-dist, path: apps/web/dist }
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+      - name: Deploy
+        working-directory: apps/web
+        run: vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}

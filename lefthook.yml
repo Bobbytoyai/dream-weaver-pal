@@ -1,0 +1,36 @@
+# Bobby — Git hooks via Lefthook
+# https://github.com/evilmartians/lefthook
+
+pre-commit:
+  parallel: true
+  commands:
+    biome-check:
+      glob: '*.{js,jsx,ts,tsx,json,jsonc}'
+      run: bunx biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      stage_fixed: true
+
+    typecheck-changed:
+      glob: '*.{ts,tsx}'
+      run: bun run typecheck
+      skip:
+        - merge
+        - rebase
+
+    secrets-scan:
+      run: |
+        if grep -rIE '(SUPABASE_SERVICE_ROLE_KEY|ANTHROPIC_API_KEY|OPENAI_API_KEY|ELEVENLABS_API_KEY)\s*=\s*[a-zA-Z0-9-_]{20,}' {staged_files} 2>/dev/null; then
+          echo "❌ Possible API key committed. Move it to .env (gitignored)."
+          exit 1
+        fi
+
+commit-msg:
+  commands:
+    commitlint:
+      run: bunx commitlint --edit {1}
+
+pre-push:
+  commands:
+    test:
+      run: bun test
+      skip:
+        - merge
