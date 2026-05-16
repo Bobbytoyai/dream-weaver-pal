@@ -1,0 +1,58 @@
+name: 🐛 Bug
+description: Quelque chose ne marche pas comme attendu
+labels: [bug, triage]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Zone concernée
+      options:
+        - apps/web
+        - apps/parent-pwa
+        - services/cloud
+        - firmware/watcher
+        - packages/brain-v8
+        - packages/* (autre)
+        - docs / outils
+    validations: { required: true }
+
+  - type: textarea
+    id: what
+    attributes:
+      label: Que se passe-t-il ?
+      description: Décris ce que tu as observé.
+    validations: { required: true }
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Que devrait-il se passer ?
+    validations: { required: true }
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pour reproduire
+      placeholder: |
+        1. Va sur …
+        2. Clique sur …
+        3. L'erreur apparaît : …
+    validations: { required: true }
+
+  - type: textarea
+    id: env
+    attributes:
+      label: Environnement
+      placeholder: |
+        OS:
+        Navigateur (si app):
+        Version firmware (si Watcher):
+        Logs / capture d'écran:
+
+  - type: checkboxes
+    id: child-safety
+    attributes:
+      label: Sécurité enfant
+      options:
+        - label: Ce bug expose-t-il du contenu inadapté à un enfant ?
+        - label: Faut-il prévenir un parent ou déclencher une alerte SafeGuard ?

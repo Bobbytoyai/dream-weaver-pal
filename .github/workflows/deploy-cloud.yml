@@ -1,0 +1,66 @@
+name: Deploy Cloud (Supabase Edge Functions)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/cloud/**'
+      - '.github/workflows/deploy-cloud.yml'
+  workflow_dispatch:
+    inputs:
+      function:
+        description: 'Function name to deploy (empty = all)'
+        required: false
+
+concurrency:
+  group: cloud-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy Edge Functions
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link project
+        run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Apply migrations
+        run: supabase db push --linked
+        env:
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Deploy all functions
+        if: github.event.inputs.function == ''
+        working-directory: services/cloud
+        run: |
+          for fn in supabase/functions/*/; do
+            name=$(basename "$fn")
+            echo "→ Deploying $name"
+            supabase functions deploy "$name" --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+          done
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Deploy single function
+        if: github.event.inputs.function != ''
+        working-directory: services/cloud
+        run: supabase functions deploy ${{ github.event.inputs.function }} --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Smoke test /v1/safety
+        run: |
+          curl -fsS -X POST "https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co/functions/v1/safety" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"text":"bonjour","lang":"fr"}'
