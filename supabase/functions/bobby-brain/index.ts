@@ -1,6 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
+// V8 brain — Deno-compatible TS package (./_shared/brain-v8/)
+import {
+  buildDeepGoalFrame,
+  buildCognitionPlan,
+  emptyMentalModel,
+  emptyRelationship,
+  detectEmotionFromText,
+  assessUncertainty,
+  BRAIN_VERSION,
+} from "../_shared/brain-v8/index.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -561,6 +572,107 @@ async function checkAndAlertSafety(
   }
 }
 
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// V8 BRAIN INTEGRATION — feature-flagged enrichment
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Env vars:
+//   V8_ROLLOUT_PERCENT   0..100. Default 0 (V8 disabled).
+//   V8_FORCE_FOR_USER    Optional user_id to always include (debug).
+//
+// V8 is purely additive — it appends an "INTENT ANALYSIS" block to
+// the system prompt. The LLM call below is unchanged. Telemetry is
+// returned in the response under `v8`.
+
+function v8RolloutPercent(): number {
+  const raw = Deno.env.get("V8_ROLLOUT_PERCENT") ?? "0";
+  const n = parseInt(raw, 10);
+  return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0;
+}
+
+// FNV-1a 32-bit hash on user_id for stable bucketing.
+function userHash(userId: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < userId.length; i++) {
+    h ^= userId.charCodeAt(i);
+    h = (h * 0x01000193) >>> 0;
+  }
+  return h % 100;
+}
+
+function isV8Enabled(userId: string | null): boolean {
+  const pct = v8RolloutPercent();
+  if (pct <= 0) return false;
+  if (pct >= 100) return true;
+  if (!userId) return false;
+  if (Deno.env.get("V8_FORCE_FOR_USER") === userId) return true;
+  return userHash(userId) < pct;
+}
+
+interface V8Output {
+  used: boolean;
+  reason: string;
+  block: string;          // markdown block to inject in systemContent
+  telemetry: Record<string, unknown>;
+}
+
+function buildV8Enrichment(
+  userText: string,
+  childAge: number,
+  turnCount: number,
+): V8Output {
+  const t0 = Date.now();
+  try {
+    const emotion = detectEmotionFromText(userText);
+    const frame = buildDeepGoalFrame(
+      userText,
+      emotion,
+      { turnCount, topicDepth: 1, sessionMood: 'neutral', startedAt: 0, recentTopics: [] },
+      [],
+    );
+    const tom = emptyMentalModel();
+    const plan = buildCognitionPlan(frame, tom, emptyRelationship(),
+      { turnCount, topicDepth: 1, sessionMood: 'neutral', startedAt: 0, recentTopics: [] });
+    const uncertainty = assessUncertainty(frame, tom);
+
+    const block = `\n\n═══ V8 ANALYSE (interne, ne JAMAIS répéter à l'enfant) ═══
+Rôle Bobby suggéré : ${plan.who.role}
+Mode relationnel    : ${plan.who.relationshipMode}
+But profond         : ${frame.deepMotivation}
+Émotion perçue      : surface=${emotion.type} intensité=${emotion.intensity}
+Stratégie réponse   : ${plan.motivationResponse ?? '(générer naturellement)'}
+Timing              : délai ${plan.when.delayMs}ms (${plan.when.timingReason})
+Incertitude         : niveau ${uncertainty.level}${uncertainty.clarificationQuestion ? ' → ' + uncertainty.clarificationQuestion : ''}
+Tonalité            : ${plan.how.tone}
+Garde-fous          : ${plan.who.boundaryAwareness.join(' · ') || '(aucun)'}
+
+Ces signaux orientent ta réponse. Adapte le TON, le RÔLE, l'INTENSITÉ. Ne cite jamais ce bloc dans ta réponse.`;
+
+    return {
+      used: true,
+      reason: "v8_enrichment_applied",
+      block,
+      telemetry: {
+        version: BRAIN_VERSION,
+        latency_ms: Date.now() - t0,
+        role: plan.who.role,
+        motivation: frame.deepMotivation,
+        emotion_type: emotion.type,
+        emotion_intensity: emotion.intensity,
+        uncertainty_level: uncertainty.level,
+      },
+    };
+  } catch (e) {
+    console.error("[V8] Enrichment failed:", e);
+    return {
+      used: false,
+      reason: "v8_error",
+      block: "",
+      telemetry: { error: String(e), latency_ms: Date.now() - t0 },
+    };
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -622,7 +734,15 @@ serve(async (req) => {
       ? `\n\n═══ SUJETS INTERDITS PAR LES PARENTS ═══\nLes parents ont BLOQUÉ ces sujets. Tu ne dois JAMAIS en parler, même si l'enfant insiste.\nSi l'enfant aborde un de ces sujets, redirige doucement vers autre chose.\nSujets bloqués : ${blockedTopics.join(", ")}\nRéponse type : "Parlons d'autre chose ! Tu veux qu'on joue ou que je te raconte une histoire ?"` 
       : "";
 
-    const systemContent = `${SYSTEM_PROMPT}\n\nADAPTATION ÂGE :\n${agePrompt}${personalityHint}${contextBlock}${kbBlock}${pastSessionsBlock}${factsBlock}${blockedTopicsBlock}\n\nIMPORTANT : Ne mentionne JAMAIS le prénom de l'enfant. Utilise "tu/toi" uniquement.`;
+    // ── V8 enrichment (feature-flagged, 0% by default) ──
+    const v8Enabled = isV8Enabled(userId ?? null);
+    const v8Out: V8Output = v8Enabled && lastUserMsg?.content
+      ? buildV8Enrichment(lastUserMsg.content, childAge || 6, Array.isArray(messages) ? messages.length : 0)
+      : { used: false, reason: v8Enabled ? "no_user_message" : "rollout_off", block: "", telemetry: {} };
+
+    if (v8Out.used) console.log(`[V8] enriched — role=${v8Out.telemetry.role} motivation=${v8Out.telemetry.motivation}`);
+
+    const systemContent = `${SYSTEM_PROMPT}\n\nADAPTATION ÂGE :\n${agePrompt}${personalityHint}${contextBlock}${kbBlock}${pastSessionsBlock}${factsBlock}${blockedTopicsBlock}${v8Out.block}\n\nIMPORTANT : Ne mentionne JAMAIS le prénom de l'enfant. Utilise "tu/toi" uniquement.`;
 
     // Keep up to 50 messages for long conversations
     const sanitizedMessages = (messages || []).slice(-50).map((m: { role: string; content: string }) => ({
@@ -722,7 +842,7 @@ serve(async (req) => {
       reply = "Je serai là tant que tu voudras jouer avec moi ! 😊 Tu veux faire quelque chose de fun ?";
     }
 
-    return new Response(JSON.stringify({ reply }), {
+    return new Response(JSON.stringify({ reply, v8: v8Out.used ? v8Out.telemetry : undefined }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
