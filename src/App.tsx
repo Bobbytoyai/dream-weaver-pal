@@ -31,6 +31,7 @@ const MentionsLegales = lazy(() => import("./pages/MentionsLegales.tsx"));
 const StorePage = lazy(() => import("./pages/StorePage.tsx"));
 const Precommande = lazy(() => import("./pages/Precommande.tsx"));
 const FaceTest = lazy(() => import("./pages/FaceTest.tsx"));
+const Debug = lazy(() => import("./pages/Debug.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -84,6 +85,7 @@ const App = () => (
                     <Route path="store" element={<StorePage />} />
                     <Route path="precommande" element={<Precommande />} />
                     <Route path="face-test" element={<FaceTest />} />
+                    <Route path="debug" element={<Debug />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
